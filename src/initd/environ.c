@@ -2,6 +2,7 @@
 #include<stdio.h>
 #include<unistd.h>
 #include<fcntl.h>
+#include"pathnames.h"
 #include"defines.h"
 #include"logger.h"
 #include"init.h"
@@ -32,7 +33,7 @@ void dump_environ_to_file(char*path){
 
 void auto_dump_environ_file(){
 	char n[128]={0};
-	snprintf(n,127,"/tmp/environ.%d.txt",getpid());
+	snprintf(n,127,_PATH_TMP"/environ.%d.txt",getpid());
 	dump_environ_to_file(n);
 }
 

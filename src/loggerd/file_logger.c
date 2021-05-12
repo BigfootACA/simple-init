@@ -10,77 +10,84 @@
 
 struct open_file{
 	char file[PATH_MAX];
-	FILE*pointer;
+	int fd;
 };
 
 static struct open_file*files[128];
 
-FILE*open_log_file(char*path){
+int open_log_file(char*path){
 	int i;
 	struct open_file*f=NULL;
 	char tc[24]={0};
 	time_t t=time(NULL);
 	errno=0;
 	for(i=0;(f=files[i]);i++)
-		if(strcmp(path,f->file)==0&&f->pointer)
-			return f->pointer;
+		if(strcmp(path,f->file)==0)
+			return f->fd;
 	for(i=0;i<128;i++){
 		f=files[i];
-		if(f&&f->pointer)continue;
-		if(!(f=malloc(sizeof(struct open_file))))return NULL;
+		if(f&&f->fd>0)continue;
+		if(!(f=malloc(sizeof(struct open_file))))return -1;
 		memset(f->file,0,PATH_MAX);
 		strncpy(f->file,path,PATH_MAX-1);
-		if(!(f->pointer=fopen(path,"a+"))){
+		if(!(f->fd=open(path,O_WRONLY|O_SYNC|O_APPEND|O_CREAT))){
 			fprintf(stderr,"failed to open %s: %m\n",path);
 			free(f);
-			return NULL;
+			return -1;
 		}
 		files[i]=f;
-		fprintf(
-			f->pointer,
+		dprintf(
+			f->fd,
 			"-------- file %s opened at %s --------\n",
 			path,time2ndefstr(&t,tc,23)
 		);
-		fflush(f->pointer);
 		errno=0;
-		return f->pointer;
+		return f->fd;
 	}
 	fprintf(stderr,"open log files too many\n");
-	errno=ENOMEM;
-	return NULL;
+	ERET(ENOMEM);
 }
 
+static void close_log(struct open_file*f){
+	if(f->fd<=0)return;
+	char tc[24]={0};
+	time_t t=time(NULL);
+	dprintf(
+		f->fd,
+		"-------- file %s closed at %s --------\n",
+		f->file,time2ndefstr(&t,tc,23)
+	);
+	close(f->fd);
+	f->fd=-1;
+}
 void close_log_file(char*path){
 	int i;
 	struct open_file*f=NULL;
-	for(i=0;(f=files[i]);i++){
-		if(strcmp(path,f->file)==0&&f->pointer){
-			fclose(f->pointer);
-			f->pointer=NULL;
-		}
-	}
+	for(i=0;(f=files[i]);i++)
+		if(strcmp(path,f->file)==0)
+			close_log(f);
 }
 
 void close_all_file(){
 	int i;
 	struct open_file*f=NULL;
-	for(i=0;(f=files[i]);i++)if(f->pointer){
-		fclose(f->pointer);
-		f->pointer=NULL;
+	for(i=0;(f=files[i]);i++){
+		close_log(f);
 		free(f);
+		files[i]=NULL;
 	}
 }
 
 int file_logger(char*name,struct log_item*log){
 	char buff[24]={0},p[16]={0};
-	FILE*o=NULL;
-	if(strncasecmp(name,"stderr",6)==0)o=stderr;
-	else if(strncasecmp(name,"stdout",6)==0)o=stdout;
-	else o=open_log_file(name);
-	if(!o)return -errno;
+	int fd=-1;
+	if(strncasecmp(name,"stderr",6)==0)fd=STDERR_FILENO;
+	else if(strncasecmp(name,"stdout",6)==0)fd=STDOUT_FILENO;
+	else fd=open_log_file(name);
+	if(fd<0)return -errno;
 	if(!log->time)ERET(EFAULT);
 	if(log->pid>0)snprintf(p,15,"[%d]",log->pid);
-	int r=fprintf(o,
+	int r=dprintf(fd,
 		"%s %-6s %s%s: %s\n",
 		time2ndefstr(&log->time,buff,sizeof(buff)),
 		level2string(log->level),
@@ -88,6 +95,5 @@ int file_logger(char*name,struct log_item*log){
 		p,
 		log->content
 	);
-	fflush(o);
 	return r;
 }

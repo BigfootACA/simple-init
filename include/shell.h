@@ -31,4 +31,6 @@ extern int invoke_internal_cmd(struct shell_command*cmd,bool background,char**ar
 // src/shelld/cmd.c: invoke internal command
 extern int invoke_internal_cmd_nofork(struct shell_command*cmd,char**args);
 
+// src/shelld/cmd.c: install commands
+extern int install_cmds(int dfd);
 #endif

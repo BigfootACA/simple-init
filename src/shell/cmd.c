@@ -21,6 +21,20 @@ struct shell_command*find_internal_cmd(char*name){
 	EPRET(ENOENT);
 }
 
+int install_cmds(int dfd){
+	char*exe=_PATH_PROC_SELF"/exe",buff[PATH_MAX]={0};
+	if(access(exe,R_OK)!=0)return terlog_error(-errno,"cannot read %s",exe);
+	if(readlink(exe,buff,sizeof(buff))<0)return terlog_error(-errno,"readlink failed");
+	if(strlen(buff)<=0)return -1;
+
+	struct shell_command*cmd;
+	for(int i=0;(cmd=(struct shell_command*)shell_cmds[i]);i++){
+		if(!cmd->enabled||!cmd->fork)continue;
+		symlinkat(buff,dfd,cmd->name);
+	}
+	return 0;
+}
+
 int invoke_internal_cmd_nofork(struct shell_command*cmd,char**args){
 	if(!cmd||!cmd->main)ERET(EINVAL);
 	char*s1=program_invocation_name,*s2=program_invocation_short_name;

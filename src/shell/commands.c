@@ -17,6 +17,7 @@ DECLARE_MAIN(initloggerd);
 DECLARE_MAIN(initshell);
 DECLARE_MAIN(ls);
 DECLARE_MAIN(lsmod);
+DECLARE_MAIN(modprobe);
 DECLARE_MAIN(mountpoint);
 DECLARE_MAIN(uname);
 DECLARE_MAIN(unlink);
@@ -42,6 +43,7 @@ const struct shell_command*shell_cmds[]={
 	DECLARE_CMD(true,  initshell,   "Simple init builtin shell")
 	DECLARE_CMD(true,  ls,          "List directory contents")
 	DECLARE_CMD(true,  lsmod,       "Show the status of modules in the Linux Kernel")
+	DECLARE_CMD(true,  modprobe,    "Add and remove modules from the Linux Kernel")
 	DECLARE_CMD(true,  mountpoint,  "Check whether a directory or file is a mountpoint")
 	DECLARE_CMD(true,  uname,       "Print system information")
 	DECLARE_CMD(true,  unlink,      "Remove a directory entry (Direct call)")

@@ -1,0 +1,80 @@
+#include<fcntl.h>
+#include<errno.h>
+#include<unistd.h>
+#include<sys/stat.h>
+#include"cmdline.h"
+#include"assets.h"
+#include"devd.h"
+#include"system.h"
+#include"init.h"
+#include"logger.h"
+#include"pathnames.h"
+#define TAG "preinit"
+
+static int exec_init_devtmpfs(void*data __attribute__((unused))){
+	return init_devtmpfs(_PATH_DEV)<0?
+	       terlog_emerg(errno,"failed to init devtmpfs"):0;
+}
+
+static int exec_load_modalias(void*data __attribute__((unused))){
+	return load_modalias()<0?
+	       terlog_error(errno,"failed to load modalias"):0;
+}
+
+int preinit(){
+	if(access(_PATH_ETC,F_OK)!=0){
+		// init empty rootfs
+		if(errno==ENOENT){
+			int dfd=open("/",O_DIRECTORY|O_RDONLY);
+			if(dfd>0){
+				create_assets_dir(dfd,&assets_rootfs,false);
+				tlog_debug("extract assets done");
+				close(dfd);
+			}
+		}else return terlog_emerg(-errno,"cannot access "_PATH_ETC);
+	}
+
+	// ensure important folder exists
+	mkdir(_PATH_PROC,755);
+	mkdir(_PATH_SYS,755);
+	mkdir(_PATH_DEV,755);
+	mkdir(_PATH_RUN,755);
+	mkdir(_PATH_TMP,1777);
+
+	tlog_debug("preinit mountpoints");
+	exmount("sys",_PATH_SYS,"sysfs","rw,nosuid,noexec,nodev");
+	exmount("proc",_PATH_PROC,"proc","rw,nosuid,noexec,nodev");
+	exmount("run",_PATH_RUN,"tmpfs","rw,nosuid,nodev,mode=755");
+
+	// tel loggerd to listen socket
+	logger_listen_default();
+	close_logfd();
+	open_socket_logfd_default();
+
+	// setup hotplug helper
+	set_hotplug(_PATH_RUN"/initdevd");
+
+	// init /dev
+	if(xmount(false,"dev",_PATH_DEV,"devtmpfs","rw,nosuid,noexec,mode=755",false)!=0)switch(errno){
+		case EBUSY:tlog_info("devtmpfs already mounted.");break;
+		case ENODEV:
+			tlog_warn("your kernel seems not support devtmpfs.");
+			if(xmount(true,"dev",_PATH_DEV,"tmpfs","rw,nosuid,noexec,mode=755",false)!=0)
+				return terlog_emerg(errno,"failed to mount tmpfs on "_PATH_DEV);
+			// create all device nodes
+			if(fork_run("devtmpfs",true,NULL,exec_init_devtmpfs)<0)return -1;
+		break;
+		default:return terlog_warn(errno,"failed to mount devtmpfs on "_PATH_DEV);
+	}
+
+	// read kmsg to logger
+	logger_klog();
+
+	// load all modules
+	fork_run("modalias",true,NULL,exec_load_modalias);
+
+	// load cmdline
+	if(access(_PATH_PROC_CMDLINE,R_OK)!=0)return terlog_error(2,"failed to find proc mountpoint");
+	load_cmdline();
+	return 0;
+}

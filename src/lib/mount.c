@@ -1,0 +1,141 @@
+#include<errno.h>
+#include<stdlib.h>
+#include<string.h>
+#include<sys/stat.h>
+#include<libmount/libmount.h>
+#include"str.h"
+#include"logger.h"
+#include"system.h"
+#include"array.h"
+#include"defines.h"
+#define TAG "mount"
+
+int xmount(bool ex,const char*dev,const char*dir,const char*type,const char*data,bool warning){
+	int r=0,er;
+	char buf[BUFSIZ]={0},xbuf[BUFSIZ]={0};
+	struct libmnt_context *cxt=mnt_new_context();
+	if(!cxt)return return_logger_printf_error(-errno,TAG,"failed to init libmount context: %m");
+	errno=0;
+	if(mnt_context_set_options(cxt,data)!=0){
+		logger_printf_error(TAG,"failed to set mount options: %m");
+		mnt_free_context(cxt);
+		return -1;
+	}
+	errno=0;
+	if(mnt_context_set_fstype(cxt,type)!=0){
+		logger_printf_error(TAG,"failed to set mount filesystem type: %m");
+		mnt_free_context(cxt);
+		return -1;
+	}
+	errno=0;
+	if(mnt_context_set_source(cxt,dev)!=0){
+		logger_printf_error(TAG,"failed to set mount source: %m");
+		mnt_free_context(cxt);
+		return -1;
+	}
+	errno=0;
+	if(mnt_context_set_target(cxt,dir)!=0){
+		logger_printf_error(TAG,"failed to set mount target: %m");
+		mnt_free_context(cxt);
+		return -1;
+	}
+	mnt_context_mount(cxt);
+	er=errno;
+	r=mnt_context_get_excode(cxt,r,buf,sizeof(buf));
+	mnt_free_context(cxt);
+	snprintf(xbuf,BUFSIZ-1,"mount %s(%s) to %s (%s)",dev,type,dir,data);
+	if(r==0)tlog_debug("%s success.",xbuf);
+	else{
+		logger_printf(warning?LEVEL_ERROR:LEVEL_DEBUG,TAG,"%s failed: %s",xbuf,buf);
+		if(ex)exit(r);
+	}
+	errno=er;
+	return r;
+}
+
+static struct mount_item**_array_add_entry(struct mount_item**array,struct mount_item*entry){
+	size_t idx=0,s;
+	if(array)while(array[idx++]);
+	else idx++;
+	s=sizeof(struct mount_item*)*(idx+1);
+	if(!(array=array?realloc(array,s):malloc(s)))return NULL;
+	array[idx-1]=entry;
+	array[idx]=NULL;
+	return array;
+}
+
+struct mount_item**read_proc_mounts(){
+	FILE*f=fopen(_PATH_PROC_SELF"/mounts","r");
+	if(!f)return NULL;
+	size_t bs=sizeof(struct mount_item);
+	struct mount_item**array=NULL,**arr,*buff;
+	char line[BUFFER_SIZE]={0};
+	while(!feof(f)){
+		fgets(line,BUFFER_SIZE,f);
+		char**c=args2array(line,0);
+		if(!c||char_array_len(c)!=6)continue;
+		if(!(buff=malloc(bs))){
+			if(array)free_mounts(array);
+			return NULL;
+		}
+		memset(buff,0,bs);
+		buff->source=c[0];
+		buff->target=c[1];
+		buff->type=c[2];
+		buff->options=args2array(c[3],',');
+		buff->freq=parse_int(c[4],0);
+		buff->passno=parse_int(c[5],0);
+		if(c[3])free(c[3]);
+		if(c[4])free(c[4]);
+		if(c[5])free(c[5]);
+		free(c);
+		if(!(arr=_array_add_entry(array,buff))){
+			free_mounts(array);
+			array=NULL;
+			free(buff);
+			return NULL;
+		}else array=arr;
+	}
+	return array;
+}
+
+void free_mounts(struct mount_item**c){
+	if(!c)return;
+	struct mount_item*s;
+	size_t l=0;
+	while((s=c[l++])){
+		if(s->source)free(s->source);
+		if(s->target)free(s->target);
+		if(s->type)free(s->type);
+		array_free(s->options);
+		s->source=NULL;
+		s->target=NULL;
+		s->options=NULL;
+		s->type=NULL;
+		free(s);
+	}
+	free(c);
+}
+
+bool is_mountpoint(char*path){
+	struct mount_item**c=read_proc_mounts(),*s;
+	if(!c)return false;
+	bool ret=false;
+	size_t l=0;
+	while((s=c[l++]))if(strcmp(s->source,path)==0)ret=true;
+	free_mounts(c);
+	return ret;
+}
+
+char*auto_mountpoint(char*path,size_t len){
+	static char*base=_PATH_RUN"/mounts";
+	if(!path)EPRET(EINVAL);
+	mkdir(base,0755);
+	for(int i=0;i<256;i++){
+		memset(path,0,len);
+		snprintf(path,len-1,"%s/%d",base,i);
+		if(access(path,F_OK)==0)continue;
+		return mkdir(path,0755)<0?NULL:path;
+	}
+	EPRET(EMFILE);
+}

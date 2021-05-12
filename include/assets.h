@@ -1,0 +1,92 @@
+#ifndef ASSETS_H
+#define ASSETS_H
+#include<stdbool.h>
+#include<sys/types.h>
+
+// generic entry metadata
+struct entry{
+	char name[256];
+	mode_t mode;
+	uid_t owner;
+	gid_t group;
+	struct timespec atime;
+	struct timespec mtime;
+};
+typedef struct entry entry;
+
+// file entry metadata
+struct entry_file{
+	struct entry info;
+	dev_t dev;
+	char*content;
+	size_t length;
+};
+typedef struct entry_dir entry_dir;
+
+// folder entry metadata
+struct entry_dir{
+	struct entry info;
+	struct entry_dir**subdirs;
+	struct entry_file**subfiles;
+};
+typedef struct entry_file entry_file;
+
+// src/assets/terminfo.c: builtin terminfo
+extern entry_dir assets_terminfo;
+
+// src/assets/rootfs.c: generic rootfs
+extern entry_dir assets_rootfs;
+
+// src/assets/assets.c: set file owner and mode
+extern int set_assets_file_info(int fd,entry_file*file);
+
+// src/assets/assets.c: write file, call set_assets_file_info if pres=true
+extern int write_assets_file(int fd,entry_file*file,bool pres);
+
+// src/assets/assets.c: create and write file
+extern int create_assets_file(int dfd,entry_file*file,bool pres,bool override);
+
+// src/assets/assets.c: create and write folder and children items
+extern int create_assets_dir(int dfd,entry_dir*dir,bool override);
+
+// declare general folder type
+#define ASSET_DIR &(entry_dir)
+
+// declare general file type
+#define ASSET_FILE &(entry_file)
+
+// declare general sub folder type
+#define ASSET_SUBDIRS .subdirs=(entry_dir*[])
+
+// declare general sub files type
+#define ASSET_SUBFILES .subfiles=(entry_file*[])
+
+// declare simple entry metadata
+#define ASSET_SIMPLE_INFO(_name,_mode).info.name=(_name),.info.mode=_mode
+
+// declare simple folder
+#define ASSET_SIMPLE_DIR(_name,_mode) ASSET_DIR{\
+	ASSET_SIMPLE_INFO(_name,(_mode)|S_IFDIR),\
+	.subdirs=NULL,\
+	.subfiles=NULL\
+}
+
+// declare general symbolic link
+#define ASSET_SYMLINK(link,dest) ASSET_FILE{\
+	ASSET_SIMPLE_INFO(link,0755|S_IFLNK),\
+	.content=(dest),\
+}
+
+// declare general file
+#define ASSET_SIMPLE_FILE(_name,_mode,_content) ASSET_FILE{\
+	ASSET_SIMPLE_INFO(_name,(_mode)|S_IFREG),\
+	.content=(_content),\
+}
+
+// declare general file with file length
+#define ASSET_SIMPLE_SFILE(_name,_mode,_content,_length) ASSET_FILE{\
+	ASSET_SIMPLE_INFO(_name,(_mode)|S_IFREG),\
+	.content=(char*)(_content),\
+        .length=(_length)\
+}
+#endif

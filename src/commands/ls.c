@@ -54,9 +54,11 @@ static char append_char(mode_t mode){
 static void display_single(int fd,int dfd,char*op,char*name){
 	struct stat st;
 	char lpath[PATH_MAX]={0},nb[128]={0};
-	if(fstatat(dfd,name,&st,0)>=0){
-		if(S_ISLNK(st.st_mode)&&readlinkat(dfd,name,lpath,PATH_MAX-1)<0)
-			stderr_perror("%s: cannot readlink %s/%s",progname,op,name);
+	if(fstatat(dfd,name,&st,AT_SYMLINK_NOFOLLOW)>=0){
+		if(
+			S_ISLNK(st.st_mode)&&
+			readlinkat(dfd,name,lpath,PATH_MAX-1)<0
+		)stderr_perror("%s: cannot readlink %s%s%s",progname,op?op:"",op?"/":"",name);
 		if(opts.inode)dprintf(fd,"%7llu ",(long long)st.st_ino);
 		if(opts.size)dprintf(fd,"%6llu ",(long long)(st.st_blocks>>1));
 		if(opts.list){
@@ -101,10 +103,12 @@ static void display_single(int fd,int dfd,char*op,char*name){
 		if(opts.color)dprintf(fd,"\033[%u;%um",bold(st.st_mode),fgcolor(st.st_mode));
 		dprintf(fd,"%s",name);
 		if(opts.color)dprintf(fd,"\033[m");
-		if(lpath[0])dprintf(fd," -> %s",lpath);
-		if(opts.type)dprintf(fd,"%c",append_char(st.st_mode));
+		if(opts.list){
+			if(lpath[0])dprintf(fd," -> %s",lpath);
+			if(opts.type)dprintf(fd,"%c",append_char(st.st_mode));
+		}
 	}else{
-		stderr_perror("%s: cannot stat %s/%s",progname,op,name);
+		stderr_perror("%s: cannot stat %s%s%s",progname,op?op:"",op?"/":"",name);
 		dprintf(fd,"%s",name);
 	}
 	fsync(fd);
@@ -233,9 +237,16 @@ int ls_main(int argc,char**argv){
 	)opts.color=true;
 	if(b_optind==argc)list(STDOUT_FILENO,NULL);
 	else for(int i=b_optind;i<argc;i++)if(argv[i]){
-		if(argc-b_optind>1)printf("%s:\n",argv[i]);
-		list(STDOUT_FILENO,argv[i]);
-		if(i<argc-1)putchar('\n');
+		struct stat st;
+		if(stat(argv[i],&st)<0)return re_err(2,"ls: stat %s",argv[i]);
+		if(S_ISDIR(st.st_mode)){
+			if(argc-b_optind>1)printf("%s:\n",argv[i]);
+			list(STDOUT_FILENO,argv[i]);
+			if(i<argc-1)putchar('\n');
+		}else{
+			display_single(STDOUT_FILENO,AT_FDCWD,NULL,argv[i]);
+			putchar('\n');
+		}
 	}
 	return 0;
 }

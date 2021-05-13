@@ -5,7 +5,7 @@ add_definitions("-Wall -Wextra -Wno-frame-address -rdynamic")
 file(GLOB SRCS src/*/*.c)
 include_directories(include)
 add_executable(init src/main.c ${SRCS})
-set(DEPENDS libkmod mount blkid readline)
+set(DEPENDS libkmod mount blkid)
 
 option(DISABLE_WERROR "Avoid treating compiler warnings as fatal errors"  OFF)
 option(DISABLE_DEBUG  "Disable debug infomation generate"                 OFF)
@@ -13,6 +13,13 @@ option(ENABLE_STRIP   "Strip target"                                      OFF)
 option(ENABLE_STATIC  "Enable static link"                                OFF)
 option(ENABLE_PIE     "Enable Position-Independent-Executable"            OFF)
 option(ENABLE_ASAN    "Enable Address Sanitizer"                          OFF)
+
+option(ENABLE_INITSHELL   "Enable builtin shell"                              ON)
+
+if("${ENABLE_INITSHELL}" STREQUAL "ON")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_INITSHELL=1")
+    set(DEPENDS ${DEPENDS} readline)
+endif()
 
 if("${DISABLE_WERROR}" STREQUAL "OFF")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")

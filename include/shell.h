@@ -13,6 +13,8 @@ struct shell_command{
 	cmd_main*main;
 };
 
+#ifdef ENABLE_INITSHELL
+
 // src/shelld/shell.c: next status code
 extern unsigned char exit_code;
 
@@ -21,6 +23,8 @@ extern void run_shell();
 
 // src/shelld/shell.c: run_shell wrapper
 extern int initshell_main(int argc,char**argv);
+
+#endif
 
 // src/shelld/cmd.c: find internal command by name
 extern struct shell_command*find_internal_cmd(char*name);

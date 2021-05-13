@@ -1,3 +1,4 @@
+#ifdef ENABLE_INITSHELL
 #include<errno.h>
 #include<stdlib.h>
 #include<unistd.h>
@@ -14,3 +15,4 @@ int exit_main(int argc,char**argv){
 	else exit(exit_code);
 	return exit_code;
 }
+#endif

@@ -54,7 +54,9 @@ int init_main(int argc __attribute__((unused)),char**argv __attribute__((unused)
 	if((r=system_boot())!=0)return r;
 
 	// while
+	#ifdef ENABLE_INITSHELL
 	if(fork()==0)while(1)run_shell();
+	#endif
 	while(true)usleep(100000000);
 	return 0;
 }

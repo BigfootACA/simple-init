@@ -1,3 +1,4 @@
+#ifdef ENABLE_INITSHELL
 #define _GNU_SOURCE
 #include<unistd.h>
 #include<string.h>
@@ -86,3 +87,4 @@ char*shell_replace(char*dest,char*src,size_t size){
 	free(fh);
 	return r;
 }
+#endif

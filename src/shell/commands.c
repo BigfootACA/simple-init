@@ -28,6 +28,10 @@ DECLARE_MAIN(true);
 DECLARE_MAIN(false);
 
 const struct shell_command*shell_cmds[]={
+	#ifdef ENABLE_INITSHELL
+	DECLARE_CMD(false, exit,        "Exit shell")
+	DECLARE_CMD(true,  initshell,   "Simple init builtin shell")
+	#endif
 	DECLARE_CMD(true,  arch,        "Print system architecture")
 	DECLARE_CMD(true,  cat,         "Concatenate FILE(s) to standard output.")
 	DECLARE_CMD(false, cd,          "Change directory")
@@ -38,13 +42,11 @@ const struct shell_command*shell_cmds[]={
 	DECLARE_CMD(true,  logdumpargv, "Dump all arguments to initloggerd")
 	DECLARE_CMD(true,  dumpenv,     "Dump all environments variables to stdout")
 	DECLARE_CMD(true,  logdumpenv,  "Dump all environments variables to initloggerd")
-	DECLARE_CMD(false, exit,        "Exit shell")
 	DECLARE_CMD(true,  findfs,      "Find a filesystem by label or UUID")
 	DECLARE_CMD(true,  help,        "Show all shell builtin commands")
 	DECLARE_CMD(true,  init,        "Simple init")
 	DECLARE_CMD(true,  initdevd,    "Init simple device daemon")
 	DECLARE_CMD(true,  initloggerd, "Launch simple init logger daemon")
-	DECLARE_CMD(true,  initshell,   "Simple init builtin shell")
 	DECLARE_CMD(true,  ls,          "List directory contents")
 	DECLARE_CMD(true,  lsmod,       "Show the status of modules in the Linux Kernel")
 	DECLARE_CMD(true,  modprobe,    "Add and remove modules from the Linux Kernel")

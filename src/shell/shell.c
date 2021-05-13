@@ -1,3 +1,4 @@
+#ifdef ENABLE_INITSHELL
 #include<errno.h>
 #include<stdio.h>
 #include<stdlib.h>
@@ -112,3 +113,4 @@ int initshell_main(int argc __attribute__((unused)),char**argv __attribute__((un
 	run_shell();
 	return 0;
 }
+#endif

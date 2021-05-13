@@ -8,9 +8,6 @@ extern int init_devtmpfs(char*path);
 // src/devd/devd.c: handle kernel uevent helper
 extern int initdevd_main(int argc,char**argv);
 
-// src/devd/hotplug.c: write kernel uevent helper path
-extern int set_hotplug(char*vlink);
-
 // src/devd/dyndev.c: handle device node create or remove when no CONFIG_DEVTMPFS
 extern int process_new_node(int devdfd,uevent*event);
 

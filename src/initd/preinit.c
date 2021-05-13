@@ -59,7 +59,8 @@ int preinit(){
 	logger_listen_default();
 	close_logfd();
 	open_socket_logfd_default();
-	logger_open(_PATH_DEV"/logger.log");
+	chmod(DEFAULT_LOGGER,0600);
+	chown(DEFAULT_LOGGER,0,0);
 
 	// setup hotplug helper
 	simple_file_write(_PATH_PROC_SYS"/kernel/hotplug",_PATH_USR_BIN"/initdevd");
@@ -76,6 +77,12 @@ int preinit(){
 		break;
 		default:return terlog_warn(errno,"failed to mount devtmpfs on "_PATH_DEV);
 	}
+
+	// open /dev/logger.log
+	char*dev_logger=_PATH_DEV"/logger.log";
+	logger_open(dev_logger);
+	chmod(dev_logger,0600);
+	chown(dev_logger,0,0);
 
 	// read kmsg to logger
 	logger_klog();

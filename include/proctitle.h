@@ -11,5 +11,5 @@ extern int spt_copyargs(int argc,char*argv[]);
 extern void spt_init(int argc,char*argv[]);
 
 // src/lib/proctitle.c: set proctitle
-extern void setproctitle(const char*fmt,...);
+extern void setproctitle(const char*fmt,...) __attribute__((format(printf,1,2)));;
 #endif

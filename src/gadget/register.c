@@ -15,7 +15,7 @@ int gadget_register(gadget*g){
 
 int gadget_register_fd(int dir_fd,gadget*g){
 	int main=-1;
-	if(!(g&&g->name))goto er;
+	if(!(g&&g->name))return -1;
 	if(mkdirat(dir_fd,g->name,0755)<0)goto er;
 	if((main=openat(dir_fd,g->name,O_RDONLY|O_DIRECTORY))<0)goto er;
 	g->dir_fd=main;
@@ -23,7 +23,7 @@ int gadget_register_fd(int dir_fd,gadget*g){
 	tlog_info("registered gadget device '%s'",g->name);
 	return 0;
 	er:
-	telog_error("register gadget device '%s' failed");
+	telog_error("register gadget device '%s' failed",g->name);
 	if(main>=0)close(main);
 	return -1;
 }

@@ -3,7 +3,9 @@
 #include<stdbool.h>
 #include<string.h>
 #include<sys/stat.h>
+#ifdef ENABLE_BLKID
 #include<blkid/blkid.h>
+#endif
 #include"str.h"
 #include"boot.h"
 #include"init.h"
@@ -75,7 +77,6 @@ int run_boot_root(boot_config*boot){
 	struct stat st;
 	char*definit,*init,*path,*type,*xflags,flags[PATH_MAX],point[256];
 	bool ro=parse_int(kvarr_get(boot->data,"rw","0"),0)==0;
-	blkid_cache cache=NULL;
 
 	// unimportant variables
 	definit=kvarr_get(boot->data,"init",NULL);
@@ -102,12 +103,15 @@ int run_boot_root(boot_config*boot){
 	if(xflags)snprintf(flags+2,PATH_MAX-3,",%s",xflags);
 	else flags[2]=0;
 
+	#ifdef ENABLE_BLKID
 	// fstype not set, auto detect
+	blkid_cache cache=NULL;
 	if(!type){
 		blkid_get_cache(&cache,NULL);
 		if(!(type=blkid_get_tag_value(cache,"TYPE",path)))
 			telog_warn("cannot determine fstype in %s",path);
 	}
+	#endif
 
 	#ifdef ENABLE_KMOD
 	// load modules for filesystem
@@ -137,9 +141,11 @@ int run_boot_root(boot_config*boot){
 	e=run_switch_root(point,init);
 
 	ex:
+	#ifdef ENABLE_BLKID
 	if(cache){
 		if(type)free(type);
 		blkid_put_cache(cache);
 	}
+	#endif
 	return e;
 }

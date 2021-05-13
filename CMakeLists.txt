@@ -5,7 +5,7 @@ add_definitions("-Wall -Wextra -Wno-frame-address -rdynamic")
 file(GLOB SRCS src/*/*.c)
 include_directories(include)
 add_executable(init src/main.c ${SRCS})
-set(DEPENDS mount blkid)
+set(DEPENDS mount)
 
 option(DISABLE_WERROR     "Avoid treating compiler warnings as fatal errors"  OFF)
 option(DISABLE_DEBUG      "Disable debug infomation generate"                 OFF)
@@ -16,6 +16,7 @@ option(ENABLE_ASAN        "Enable Address Sanitizer"                          OF
 
 option(ENABLE_INITSHELL   "Enable builtin shell"                              ON)
 option(ENABLE_KMOD        "Enable kmod modules load or remove"                ON)
+option(ENABLE_BLKID       "Enable blkid block detect and evalaute tag"        ON)
 
 if("${ENABLE_INITSHELL}" STREQUAL "ON")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_INITSHELL=1")
@@ -27,6 +28,13 @@ if("${ENABLE_KMOD}" STREQUAL "ON")
     set(DEPENDS ${DEPENDS} libkmod)
 else()
     message(WARNING "libkmod disabled, kernel modules will not be loaded")
+endif()
+
+if("${ENABLE_BLKID}" STREQUAL "ON")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_BLKID=1")
+    set(DEPENDS ${DEPENDS} blkid)
+else()
+    message(WARNING "blkid disabled, may not find block devices by tag")
 endif()
 
 if("${DISABLE_WERROR}" STREQUAL "OFF")

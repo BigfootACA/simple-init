@@ -2,7 +2,9 @@
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
+#ifdef ENABLE_BLKID
 #include<blkid/blkid.h>
+#endif
 #include"str.h"
 #include"logger.h"
 #include"system.h"
@@ -17,10 +19,16 @@ int setup_logfs(){
 
 	if(logfile[0]==0)logfile=DEFAULT_LOGFS_FILE;
 	if(logfs[0]==0)logfs=DEFAULT_LOGFS_BLOCK;
-	if(logfs[0]!='/')logfs=blkid_evaluate_tag(logfs,NULL,NULL);
+	if(logfs[0]!='/')
+	#ifdef ENABLE_BLKID
+		logfs=blkid_evaluate_tag(logfs,NULL,NULL);
+	#else
+		tlog_alert("evaluate tag support is disabled");
+	#endif
 	if(!logfs)return tlog_warn("logfs not found");
 
-	char*type;
+	char*type=NULL;
+	#ifdef ENABLE_BLKID
 	blkid_cache cache=NULL;
 	blkid_get_cache(&cache,NULL);
 	if(!(type=blkid_get_tag_value(cache,"TYPE",logfs))){
@@ -34,6 +42,7 @@ int setup_logfs(){
 	char mod[64]={0};
 	snprintf(mod,63,"fs-%s",type);
 	insmod(mod,false);
+	#endif
 	#endif
 
 	char point[256];
@@ -70,9 +79,11 @@ int setup_logfs(){
 	}
 	e=logger_open(path);
 	ex:
+	#ifdef ENABLE_BLKID
 	if(cache){
 		if(type)free(type);
 		blkid_put_cache(cache);
 	}
+	#endif
 	return e;
 }

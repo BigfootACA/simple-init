@@ -29,9 +29,15 @@ static int _xadd_item(char*k,char*key,char*value){
 
 int cmdline_root(char*k,char*v){
 	if(!boot_options.config)boot_options.config=&boot_switchroot;
-	char*p=blkid_evaluate_tag(v,NULL,NULL);
-	if(!p)tlog_warn("unable to resolve %s",v);
-	else tlog_debug("root block path set to %s",p);
+	char*p=NULL;
+	#ifdef ENABLE_BLKID
+	if(!(p=blkid_evaluate_tag(v,NULL,NULL)))
+		tlog_warn("unable to resolve %s",v);
+	#else
+	if(v[0]=='/')p=v;
+	else tlog_alert("evaluate tag support is disabled");
+	#endif
+	if(p)tlog_debug("root block path set to %s",p);
 	return _xadd_item(k,"path",p);
 }
 

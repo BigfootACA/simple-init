@@ -1,3 +1,4 @@
+#ifdef ENABLE_BLKID
 #include<stdio.h>
 #include<blkid/blkid.h>
 #include"getopt.h"
@@ -28,3 +29,4 @@ int findfs_main(int argc,char**argv){
 	puts(dev);
 	return 0;
 }
+#endif

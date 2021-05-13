@@ -8,56 +8,81 @@
 #include"system.h"
 #include"str.h"
 
-static void _append(size_t*cur,char*dest,char*str,size_t size){
-	if(!cur||!str||!dest)return;
-	strncpy(dest+*cur,str,size-*cur);
-	*cur+=strlen(str);
-}
-
-static inline void _fappend(size_t*cur,char*dest,char*str,size_t size){
-	_append(cur,dest,str,size);
-	free(str);
-}
-
-#define xappend(str) _append(&dc,dest,str,size)
-#define xfappend(str) _fappend(&dc,dest,str,size)
-
 char*shell_replace(char*dest,char*src,size_t size){
 	if(!src||!dest)return NULL;
 	memset(dest,0,size);
-	uid_t u=geteuid();
-	size_t sc=0,dc=0;
-	char prev=0,n[PATH_MAX],sv[1024],user[128];
-	struct utsname uts;
-	memset(user,0,128);
-	memset(sv,0,1024);
-	memset(n,0,PATH_MAX);
-	strncpy(sv,src,1023);
+
+	// working directory
+	char n[PATH_MAX]={0};
 	getcwd(n,PATH_MAX-1);
+	char*sn=basename(n);
+
+	// hostname
+	struct utsname uts;
 	uname(&uts);
-	for(;;){
-		if(sv[sc]==0||size<=dc)break;
-		if(prev=='\\'){
-			switch(sv[sc]){
-				case '[':case ']':break;
-				case '\\':dest[dc++]='\\';sv[sc]=' ';break;
-				case 'e':dest[dc++]='\033';break;
-				case '$':dest[dc++]=u==0?'#':'$';break;
-				case 'u':xappend(get_username(u,user,127));break;
-				case 'w':xappend(n);break;
-				case 'W':xappend(basename(n));break;
-				case 'h':xappend(uts.nodename);break;
-				case 'H':xfappend(strrep(strdup(uts.nodename),'.',0));break;
-				case 'v':case 'V':if(exit_code!=0){
-					char code[8]={0};
-					snprintf(code,7,"%d%c",exit_code,sv[sc]=='V'?':':0);
-					xappend(code);
-				}break;
-				default:xappend(((char[]){'\\',sv[sc],0}));break;
-			}
-		}else if(sv[sc]!='\\')dest[dc++]=sv[sc];
-		prev=sv[sc];
-		sc++;
+	char*fh=strrep(strdup(uts.nodename),'.',0);
+
+	// username/uid
+	uid_t u=geteuid();
+	char user[128]={0},uid[32]={0};
+	get_username(u,user,127);
+	snprintf(uid,31,"%d",u);
+
+	// groupname/gid
+	gid_t g=getegid();
+	char group[128]={0},gid[32]={0};
+	get_groupname(g,group,127);
+	snprintf(gid,31,"%d",g);
+
+	// exit code
+	char code[8]={0},codep[8]={0};
+	if(exit_code>0){
+		snprintf(code,7,"%d",exit_code);
+		snprintf(codep,7,"%d:",exit_code);
 	}
-	return dest;
+
+	keyval*v[]={
+		&KV("[",""),&KV("]",""),
+
+		// escape char
+		&KV("e","\033"),
+
+		// if the effective UID is 0, a #, otherwise a $
+		&KV("$",u==0?"#":"$"),
+
+		// username
+		&KV("u",user),
+
+		// uid
+		&KV("U",uid),
+
+		// groupname
+		&KV("g",group),
+
+		// gid
+		&KV("G",gid),
+
+		// the current working directory
+		&KV("w",n),
+
+		// the basename of the current working directory
+		&KV("W",sn),
+
+		// full hostname
+		&KV("H",uts.nodename),
+
+		// the hostname up to the first '.'
+		&KV("h",fh),
+
+		// previous exit code (empty if 0)
+		&KV("v",code),
+
+		// previous exit code end with ':' (empty if 0)
+		&KV("V",codep),
+
+		NULL
+	};
+	char*r=replace(v,'\\',dest,src,size);
+	free(fh);
+	return r;
 }

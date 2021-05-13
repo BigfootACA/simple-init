@@ -83,5 +83,9 @@ int preinit(){
 	// load cmdline
 	if(access(_PATH_PROC_CMDLINE,R_OK)!=0)return terlog_error(2,"failed to find proc mountpoint");
 	load_cmdline();
+
+	// setup logfs and save log
+	setup_logfs();
+
 	return 0;
 }

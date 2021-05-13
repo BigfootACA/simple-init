@@ -17,6 +17,7 @@ option(ENABLE_ASAN        "Enable Address Sanitizer"                          OF
 option(ENABLE_INITSHELL   "Enable builtin shell"                              ON)
 option(ENABLE_KMOD        "Enable kmod modules load or remove"                ON)
 option(ENABLE_BLKID       "Enable blkid block detect and evalaute tag"        ON)
+option(ENABLE_TERMINFO    "Enable builtin assets terminfo"                    ON)
 
 if("${ENABLE_INITSHELL}" STREQUAL "ON")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_INITSHELL=1")
@@ -35,6 +36,10 @@ if("${ENABLE_BLKID}" STREQUAL "ON")
     set(DEPENDS ${DEPENDS} blkid)
 else()
     message(WARNING "blkid disabled, may not find block devices by tag")
+endif()
+
+if("${ENABLE_TERMINFO}" STREQUAL "ON")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_TERMINFO=1")
 endif()
 
 if("${DISABLE_WERROR}" STREQUAL "OFF")

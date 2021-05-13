@@ -1,3 +1,4 @@
+#ifdef ENABLE_TERMINFO
 #include<stddef.h>
 #include<sys/stat.h>
 #include"assets.h"
@@ -1944,3 +1945,4 @@ entry_dir assets_terminfo={
 	},
 	ASSET_SUBFILES{NULL}
 };
+#endif

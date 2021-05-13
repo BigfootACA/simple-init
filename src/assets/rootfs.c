@@ -76,7 +76,9 @@ entry_dir assets_rootfs={
 		ASSET_SIMPLE_DIR("tmp",01777),
 		ASSET_DIR{
 			ASSET_SIMPLE_INFO("etc",0755|S_IFDIR),
+			#ifdef ENABLE_TERMINFO
 			ASSET_SUBDIRS{&assets_terminfo,NULL},
+			#endif
 			ASSET_SUBFILES{
 				ASSET_SIMPLE_FILE("passwd",0644,"root:x:0:0::/:/bin/sh\n"),
 				ASSET_SIMPLE_FILE("group",0644,"root:x:0:root\n"),
@@ -99,7 +101,9 @@ entry_dir assets_rootfs={
 				ASSET_SIMPLE_DIR("lib",0755),
 				ASSET_DIR{
 					ASSET_SIMPLE_INFO("share",0755|S_IFDIR),
+					#ifdef ENABLE_TERMINFO
 					ASSET_SUBDIRS{&assets_terminfo,NULL},
+					#endif
 					ASSET_SUBFILES{NULL}
 				},
 				NULL

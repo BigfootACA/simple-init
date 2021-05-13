@@ -31,8 +31,10 @@ struct entry_dir{
 };
 typedef struct entry_file entry_file;
 
+#ifdef ENABLE_TERMINFO
 // src/assets/terminfo.c: builtin terminfo
 extern entry_dir assets_terminfo;
+#endif
 
 // src/assets/rootfs.c: generic rootfs
 extern entry_dir assets_rootfs;

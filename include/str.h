@@ -2,6 +2,7 @@
 #define STRING_H
 #include<stdbool.h>
 #include<sys/types.h>
+#include"keyval.h"
 
 // default time format
 #define _DEFAULT_TIME_FORMAT "%Y/%m/%d %H:%M:%S"
@@ -63,4 +64,6 @@ extern int parse_int(char*str,int def);
 // src/lib/strings.c: skip input to stop in fd
 extern char skips(int fd,char stop[]);
 
+// src/lib/replace.c: replace holder (eg: replace([{"a","aa"}],'%',xxxx,'bb%abb',16)="bbaabb")
+extern char*replace(keyval**table,char del,char*dest,char*src,size_t size);
 #endif

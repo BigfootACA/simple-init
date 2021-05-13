@@ -54,7 +54,7 @@ void kv_dump(keyval*kv,char*del){
 	s+=kv->key?strlen(kv->key):6;
 	s+=kv->value?strlen(kv->value):6;
 	char*buff=malloc(s);
-	if(!s)return;
+	if(!buff)return;
 	memset(buff,0,s);
 	kv_print(kv,buff,s,del);
 	puts(buff);
@@ -190,7 +190,7 @@ void kvarr_dump(keyval**kvs,char*del,char*ldel){
 		s+=kv->key?strlen(kv->key):6;
 		s+=kv->value?strlen(kv->value):6;
 		char*buff=malloc(s);
-		if(!s)return;
+		if(!buff)return;
 		memset(buff,0,s);
 		kv_print(kv,buff,s,del);
 		printf("%s%s",buff,ldel?ldel:"\n");

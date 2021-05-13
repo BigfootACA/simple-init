@@ -53,30 +53,30 @@ char skips(int fd,char stop[]){
 }
 
 int get_max_fd(){
-        struct rlimit rl;
-        rlim_t m;
-        if(getrlimit(RLIMIT_NOFILE,&rl)<0)return -errno;
-        m=MAX(rl.rlim_cur,rl.rlim_max);
-        if(m<FD_SETSIZE)return FD_SETSIZE-1;
-        if(m==RLIM_INFINITY||m>INT_MAX)return INT_MAX;
-        return (int)(m-1);
+	struct rlimit rl;
+	rlim_t m;
+	if(getrlimit(RLIMIT_NOFILE,&rl)<0)return -errno;
+	m=MAX(rl.rlim_cur,rl.rlim_max);
+	if(m<FD_SETSIZE)return FD_SETSIZE-1;
+	if(m==RLIM_INFINITY||m>INT_MAX)return INT_MAX;
+	return (int)(m-1);
 }
 
 int close_all_fd(){
-        DIR*d=NULL;
-        int r=0;
-        if(!(d=opendir(_PATH_PROC_SELF"/fd"))){
-                int fd,max_fd;
-                if((max_fd=get_max_fd())<0)return max_fd;
-                for(fd=3;fd>=0;fd=fd<max_fd?fd+1:-1)close(fd);
-                return r;
-        }
-        struct dirent*de;
-        while((de=readdir(d))){
-                int fd=-1;
-                if((fd=parse_int(de->d_name,-1))<0)continue;
-                if(fd<3||fd==dirfd(d))continue;
-                close(fd);
-        }
-        return r;
+	DIR*d=NULL;
+	int r=0;
+	if(!(d=opendir(_PATH_PROC_SELF"/fd"))){
+		int fd,max_fd;
+		if((max_fd=get_max_fd())<0)return max_fd;
+		for(fd=3;fd>=0;fd=fd<max_fd?fd+1:-1)close(fd);
+		return r;
+	}
+	struct dirent*de;
+	while((de=readdir(d))){
+		int fd=-1;
+		if((fd=parse_int(de->d_name,-1))<0)continue;
+		if(fd<3||fd==dirfd(d))continue;
+		close(fd);
+	}
+	return r;
 }

@@ -95,7 +95,7 @@ extern char*kvarr_get_value_by_key(keyval**kvs,char*key,char*def);
 extern char*kvarr_get_key_by_value(keyval**kvs,char*value,char*def);
 
 // declare a keyval
-#define KV(_key,_value){.key=(_key),.value=(_value)}
+#define KV(_key,_value)(keyval){.key=(_key),.value=(_value)}
 
 // foreach a keyval array
 #define KVARR_FOREACH(kvs,item,idx) \

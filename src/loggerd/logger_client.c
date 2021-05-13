@@ -141,28 +141,37 @@ static int logger_perror_x(enum log_level level,char*tag,const char*fmt,va_list 
 
 int logger_printf(enum log_level level,char*tag,const char*fmt,...){
 	if(!tag||!fmt)ERET(EINVAL);
+	int err=errno;
 	va_list ap;
 	va_start(ap,fmt);
+	errno=err;
 	int r=logger_printf_x(level,tag,fmt,ap);
 	va_end(ap);
+	errno=err;
 	return r;
 }
 
 int logger_perror(enum log_level level,char*tag,const char*fmt,...){
 	if(!tag||!fmt)ERET(EINVAL);
+	int err=errno;
 	va_list ap;
 	va_start(ap,fmt);
+	errno=err;
 	int r=logger_perror_x(level,tag,fmt,ap);
 	va_end(ap);
+	errno=err;
 	return r;
 }
 
 int return_logger_printf(enum log_level level,int e,char*tag,const char*fmt,...){
 	if(!tag||!fmt)ERET(EINVAL);
+	int err=errno;
 	va_list ap;
 	va_start(ap,fmt);
+	errno=err;
 	logger_printf_x(level,tag,fmt,ap);
 	va_end(ap);
+	errno=err;
 	return e;
 }
 

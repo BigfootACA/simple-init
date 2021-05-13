@@ -40,5 +40,10 @@ void dump_boot_config(char*tag,enum log_level level,boot_config*boot){
 int boot(boot_config*boot){
 	if(!boot||!boot->main)ERET(EINVAL);
 	tlog_info("try to execute boot config %s(%s)",boot->ident,boot->desc);
-	return boot->main(boot);
+	int r=boot->main(boot);
+	if(r!=0){
+		telog_error("execute boot config %s(%s) failed with %d",boot->ident,boot->desc,r);
+		dump_boot_config("bootconfig",LEVEL_NOTICE,boot);
+	}
+	return r;
 }

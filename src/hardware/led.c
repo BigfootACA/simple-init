@@ -6,6 +6,7 @@
 #define TAG "led"
 #include"str.h"
 #include"logger.h"
+#include"pathnames.h"
 
 int set_brightness_percent(char*name,int percent){
 	if(!name||percent<0||percent>100||strcmp(name,"..")==0)return -1;
@@ -14,7 +15,7 @@ int set_brightness_percent(char*name,int percent){
 	struct stat s;
 	char path[512]={0},buff[64]={0};
 	for(c=0;name[c]!=0;c++)if(name[c]=='/')return -1;
-	snprintf(path,511,"/sys/class/leds/%s",name);
+	snprintf(path,511,_PATH_SYS_CLASS"/leds/%s",name);
 	if(
 		stat(path,&s)<0||
 		!S_ISLNK(s.st_mode)||
@@ -22,7 +23,7 @@ int set_brightness_percent(char*name,int percent){
 		(dmax=openat(dir,"max_brightness",O_RDONLY))<0||
 		read(dmax,buff,64)<=0||
 		(max=parse_int(buff,-1))<0
-		){
+	){
 		telog_error("failed to open device %s",name);
 		goto end;
 	}

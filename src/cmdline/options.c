@@ -11,6 +11,8 @@ DEF_HANDLER(init);
 DEF_HANDLER(root);
 DEF_HANDLER(rootflags);
 DEF_HANDLER(rootfstype);
+DEF_HANDLER(logfs);
+DEF_HANDLER(logfile);
 
 struct cmdline_option*cmdline_options[]={
 
@@ -26,6 +28,10 @@ struct cmdline_option*cmdline_options[]={
 
 	// cmdline.c; end parse general options
 	DEF_OPTION(end,        false, OPTIONAL_VALUE),
+
+	// logfs.c; logger persistent storage
+	DEF_OPTION(logfs,      false, REQUIRED_VALUE),
+	DEF_OPTION(logfile,    false, REQUIRED_VALUE),
 	NULL
 };
 

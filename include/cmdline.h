@@ -15,6 +15,12 @@ struct boot_options{
 	// init path
 	char*init;
 
+	// logfs block path
+	char logfs_block[64];
+
+	// log file name template
+	char logfs_file[64];
+
 	// boot config
 	boot_config*config;
 };

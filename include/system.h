@@ -37,7 +37,7 @@ extern int mkdir_res(char*path);
 // src/lib/file.c: create a symbolic link
 extern int add_link(char*path,char*name,char*dest);
 
-// src/lib/stdio.h: get terminal width
+// src/lib/stdio.c: get terminal width
 extern int get_term_width(int fd,int def);
 
 // src/lib/passwd.c: get username by uid, return uid if fail

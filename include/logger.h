@@ -62,16 +62,16 @@ extern int logger_write(struct log_item*log);
 extern int logger_print(enum log_level level,char*tag,char*content);
 
 // src/loggerd/logger_client.c: send log with level, tag, formatted content
-extern int logger_printf(enum log_level level,char*tag,const char*fmt,...);
+extern int logger_printf(enum log_level level,char*tag,const char*fmt,...) __attribute__((format(printf,3,4)));
 
 // src/loggerd/logger_client.c: send log with level, tag, formatted content, strerror
-extern int logger_perror(enum log_level level,char*tag,const char*fmt,...);
+extern int logger_perror(enum log_level level,char*tag,const char*fmt,...) __attribute__((format(printf,3,4)));
 
 // src/loggerd/logger_client.c: send log with level, tag, formatted content and return e
-extern int return_logger_printf(enum log_level level,int e,char*tag,const char*fmt,...);
+extern int return_logger_printf(enum log_level level,int e,char*tag,const char*fmt,...) __attribute__((format(printf,4,5)));
 
 // src/loggerd/logger_client.c: send log with level, tag, formatted content, strerror and return e
-extern int return_logger_perror(enum log_level level,int e,char*tag,const char*fmt,...);
+extern int return_logger_perror(enum log_level level,int e,char*tag,const char*fmt,...) __attribute__((format(printf,4,5)));
 
 // src/loggerd/logger_client.c: convert log_level to string
 extern char*level2string(enum log_level level);

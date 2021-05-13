@@ -3,10 +3,13 @@
 #include<stdarg.h>
 #include<string.h>
 #include<unistd.h>
+#include<dirent.h>
 #include<sys/ioctl.h>
 #include<sys/resource.h>
+#include"pathnames.h"
 #include"defines.h"
 #include"output.h"
+#include"str.h"
 
 void fd_vperror(int fd,const char*format,va_list a){
 	char buff[BUFFER_SIZE];
@@ -57,4 +60,23 @@ int get_max_fd(){
         if(m<FD_SETSIZE)return FD_SETSIZE-1;
         if(m==RLIM_INFINITY||m>INT_MAX)return INT_MAX;
         return (int)(m-1);
+}
+
+int close_all_fd(){
+        DIR*d=NULL;
+        int r=0;
+        if(!(d=opendir(_PATH_PROC_SELF"/fd"))){
+                int fd,max_fd;
+                if((max_fd=get_max_fd())<0)return max_fd;
+                for(fd=3;fd>=0;fd=fd<max_fd?fd+1:-1)close(fd);
+                return r;
+        }
+        struct dirent*de;
+        while((de=readdir(d))){
+                int fd=-1;
+                if((fd=parse_int(de->d_name,-1))<0)continue;
+                if(fd<3||fd==dirfd(d))continue;
+                close(fd);
+        }
+        return r;
 }

@@ -94,6 +94,9 @@ extern void handle_signals(void(*handler)(int));
 // src/lib/stdio.c: get the highest possible fd
 extern int get_max_fd();
 
+// src/lib/stdio.c: close all fds
+extern int close_all_fd();
+
 // call libmount to mount and exit if failed
 #define exmount(src,tgt,fs,data) \
 	if(xmount(true,src,tgt,fs,data,false)<0)return -errno

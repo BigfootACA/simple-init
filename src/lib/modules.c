@@ -5,6 +5,7 @@
 #include<sys/utsname.h>
 #include"logger.h"
 #include"defines.h"
+#include"pathnames.h"
 #define TAG "kmod"
 
 static char modsdir[PATH_MAX]={0};
@@ -17,12 +18,12 @@ static struct kmod_ctx*_new_context_mods(bool log){
 	if(!modsdir[0]){
 		struct utsname u;
 		if(uname(&u)<0)return NULL;
-		char*mods="/lib/modules";
-		if(access(mods,F_OK)!=0)mods="/lib64/modules";
-		if(access(mods,F_OK)!=0)mods="/lib32/modules";
-		if(access(mods,F_OK)!=0)mods="/usr/lib/modules";
-		if(access(mods,F_OK)!=0)mods="/usr/lib64/modules";
-		if(access(mods,F_OK)!=0)mods="/usr/lib32/modules";
+		char*mods=_PATH_LIB_MODULES;
+		if(access(mods,F_OK)!=0)mods=_PATH_LIB64"/modules";
+		if(access(mods,F_OK)!=0)mods=_PATH_LIB32"/modules";
+		if(access(mods,F_OK)!=0)mods=_PATH_USR_LIB"/modules";
+		if(access(mods,F_OK)!=0)mods=_PATH_USR_LIB64"/modules";
+		if(access(mods,F_OK)!=0)mods=_PATH_USR_LIB32"/modules";
 		if(access(mods,F_OK)==0)snprintf(modsdir,sizeof(modsdir),"%s/%s",mods,u.release);
 		else if(log)tlog_error("failed to find modules tree");
 	}

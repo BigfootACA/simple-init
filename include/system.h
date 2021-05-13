@@ -91,6 +91,9 @@ extern int simple_file_append(char*file,char*content);
 // src/lib/signal.c: handle int,hup,chld,term,alrm,chld,usr1,usr2 signal
 extern void handle_signals(void(*handler)(int));
 
+// src/lib/stdio.c: get the highest possible fd
+extern int get_max_fd();
+
 // call libmount to mount and exit if failed
 #define exmount(src,tgt,fs,data) \
 	if(xmount(true,src,tgt,fs,data,false)<0)return -errno

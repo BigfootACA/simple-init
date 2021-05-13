@@ -4,6 +4,7 @@
 #include<string.h>
 #include<unistd.h>
 #include<sys/ioctl.h>
+#include<sys/resource.h>
 #include"defines.h"
 #include"output.h"
 
@@ -46,4 +47,14 @@ char skips(int fd,char stop[]){
 	re:
 	errno=0;
 	return bit[0];
+}
+
+int get_max_fd(){
+        struct rlimit rl;
+        rlim_t m;
+        if(getrlimit(RLIMIT_NOFILE,&rl)<0)return -errno;
+        m=MAX(rl.rlim_cur,rl.rlim_max);
+        if(m<FD_SETSIZE)return FD_SETSIZE-1;
+        if(m==RLIM_INFINITY||m>INT_MAX)return INT_MAX;
+        return (int)(m-1);
 }

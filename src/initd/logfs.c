@@ -18,7 +18,7 @@ int setup_logfs(){
 	if(logfile[0]==0)logfile=DEFAULT_LOGFS_FILE;
 	if(logfs[0]==0)logfs=DEFAULT_LOGFS_BLOCK;
 	if(logfs[0]!='/')logfs=blkid_evaluate_tag(logfs,NULL,NULL);
-	if(!logfs)return tlog_warn("logfs found not found");
+	if(!logfs)return tlog_warn("logfs not found");
 
 	char*type;
 	blkid_cache cache=NULL;
@@ -65,7 +65,7 @@ int setup_logfs(){
 		}
 		if(access(path,F_OK)==0)continue;
 		if(errno==ENOENT)break;
-		telog_error("access %s: %m",path);
+		telog_error("access %s",path);
 		goto ex;
 	}
 	e=logger_open(path);

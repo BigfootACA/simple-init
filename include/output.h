@@ -6,19 +6,19 @@
 #include<sys/types.h>
 
 // src/lib/exit.c: output formatted error to stderr and return
-extern int ret_perror(int err,bool quit,const char*format,...);
+extern int ret_perror(int err,bool quit,const char*format,...) __attribute__((format(printf,3,4)));;
 
 // src/lib/exit.c: output formatted error to stdout and return
-extern int ret_stdout_perror(int err,bool quit,const char*format,...);
+extern int ret_stdout_perror(int err,bool quit,const char*format,...) __attribute__((format(printf,3,4)));;
 
 // src/lib/exit.c: output formatted text and return
-extern int ret_printf(int err,bool quit,int fd,const char*format,...);
+extern int ret_printf(int err,bool quit,int fd,const char*format,...) __attribute__((format(printf,4,5)));;
 
 // src/lib/exit.c: output error message to fd with va_list
 extern void fd_vperror(int fd,const char*format,va_list a);
 
 // src/lib/exit.c: output formatted error message to fd
-extern void fd_perror(int fd,const char*format,...);
+extern void fd_perror(int fd,const char*format,...) __attribute__((format(printf,2,3)));;
 
 // output formatted error message to stdout
 #define stdout_perror(s...)                 fd_perror(STDOUT_FILENO,s)

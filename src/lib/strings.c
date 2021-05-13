@@ -84,6 +84,7 @@ char*gen_rand_hex(char*buff,int size,bool upper){
 }
 
 char*strrep(char*str,char from,char to){
+	if(!str)return NULL;
 	size_t s=0;
 	while(str[s]&&str[s]!=from)s++;
 	if(str[s]==from)str[s]=to;

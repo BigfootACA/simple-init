@@ -1,4 +1,6 @@
 #include<errno.h>
+#include<stdlib.h>
+#include<string.h>
 #include"boot.h"
 #include"logger.h"
 #include"defines.h"
@@ -14,6 +16,24 @@ char*bootmode2string(enum boot_mode mode){
 		case BOOT_POWEROFF:return   "Power Off";
 		case BOOT_HALT:return       "Halt";
 		default:return              "Unknown";
+	}
+}
+
+void dump_boot_config(char*tag,enum log_level level,boot_config*boot){
+	if(!tag||!boot)return;
+	logger_printf(level,tag,"Dump boot config of %s",boot->ident);
+	logger_printf(level,tag,"   Mode:        %s(%d)",bootmode2string(boot->mode),boot->mode);
+	logger_printf(level,tag,"   Description: %s",boot->desc);
+	logger_printf(level,tag,"   Enter point: %p",boot->main);
+	logger_printf(level,tag,"   Extra data: ");
+	char*buff;
+	KVARR_FOREACH(boot->data,k,i){
+		size_t s=4+(k->key?strlen(k->key):6)+(k->value?strlen(k->value):6);
+		if(!(buff=malloc(s)))break;
+		memset(buff,0,s);
+		kv_print(k,buff,s," = ");
+		logger_printf(level,tag,"      %s",buff);
+		free(buff);
 	}
 }
 

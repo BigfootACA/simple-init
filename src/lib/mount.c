@@ -43,7 +43,14 @@ int xmount(bool ex,const char*dev,const char*dir,const char*type,const char*data
 	er=errno;
 	r=mnt_context_get_excode(cxt,r,buf,sizeof(buf));
 	mnt_free_context(cxt);
-	snprintf(xbuf,BUFSIZ-1,"mount %s(%s) to %s (%s)",dev,type,dir,data);
+	snprintf(
+		xbuf,BUFSIZ-1,
+		"mount %s%s%s%s to %s with '%s'",
+		dev,
+		type?"(":"",type?type:"",type?")":"",
+		dir,
+		data
+	);
 	if(r==0)tlog_debug("%s success.",xbuf);
 	else{
 		logger_printf(warning?LEVEL_ERROR:LEVEL_DEBUG,TAG,"%s failed: %s",xbuf,buf);

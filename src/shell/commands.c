@@ -24,6 +24,8 @@ DECLARE_MAIN(uname);
 DECLARE_MAIN(unlink);
 DECLARE_MAIN(rmmod);
 DECLARE_MAIN(setsid);
+DECLARE_MAIN(true);
+DECLARE_MAIN(false);
 
 const struct shell_command*shell_cmds[]={
 	DECLARE_CMD(true,  arch,        "Print system architecture")
@@ -51,5 +53,7 @@ const struct shell_command*shell_cmds[]={
 	DECLARE_CMD(true,  unlink,      "Remove a directory entry (Direct call)")
 	DECLARE_CMD(true,  rmmod,       "Remove a module from the Linux Kernel")
 	DECLARE_CMD(true,  setsid,      "Run a program in a new session.")
+	DECLARE_CMD(true,  true,        "Always exit with 0 (true)")
+	DECLARE_CMD(true,  false,       "Always exit with 1 (false)")
 	NULL
 };

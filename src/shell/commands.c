@@ -1,6 +1,7 @@
 #include"shell_internal.h"
 DECLARE_MAIN(arch);
 DECLARE_MAIN(cd);
+DECLARE_MAIN(cat);
 DECLARE_MAIN(chdir);
 DECLARE_MAIN(clear);
 DECLARE_MAIN(dmesg);
@@ -26,6 +27,7 @@ DECLARE_MAIN(setsid);
 
 const struct shell_command*shell_cmds[]={
 	DECLARE_CMD(true,  arch,        "Print system architecture")
+	DECLARE_CMD(true,  cat,         "Concatenate FILE(s) to standard output.")
 	DECLARE_CMD(false, cd,          "Change directory")
 	DECLARE_CMD(false, chdir,       "Change directory (Direct call)")
 	DECLARE_CMD(false, clear,       "Clear screen")

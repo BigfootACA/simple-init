@@ -30,5 +30,5 @@ struct boot_config{
 extern int boot(boot_config*boot);
 
 // src/boot/boot.c: convert boot_mode to string
-char*bootmode2string(enum boot_mode mode);
+extern char*bootmode2string(enum boot_mode mode);
 #endif

@@ -80,6 +80,12 @@ extern int write_file(
 	bool trunc
 );
 
+// src/lib/file.c: one line simple write file
+extern int simple_file_write(char*file,char*content);
+
+// src/lib/file.c: one line simple append file
+extern int simple_file_append(char*file,char*content);
+
 // src/lib/signal.c: handle int,hup,chld,term,alrm,chld,usr1,usr2 signal
 extern void handle_signals(void(*handler)(int));
 

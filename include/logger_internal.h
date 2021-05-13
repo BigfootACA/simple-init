@@ -88,7 +88,7 @@ extern int internal_logger_write(struct log_item*log);
 extern int internal_logger_print(enum log_level level,char*tag,char*content);
 
 // src/loggerd/logger_internal.c: add log with level, tag, formatted content
-extern int internal_logger_printf(enum log_level level,char*tag,const char*fmt,...);
+extern int internal_logger_printf(enum log_level level,char*tag,const char*fmt,...) __attribute__((format(printf,3,4)));
 
 // src/loggerd/logger_internal.c: turn on or off logger output
 extern int internal_set_logger(char*name,bool enabled);

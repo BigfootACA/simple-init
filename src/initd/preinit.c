@@ -59,7 +59,7 @@ int preinit(){
 	open_socket_logfd_default();
 
 	// setup hotplug helper
-	set_hotplug(_PATH_RUN"/initdevd");
+	simple_file_write(_PATH_PROC_SYS"/kernel/hotplug",_PATH_USR_BIN"/initdevd");
 
 	// init /dev
 	if(xmount(false,"dev",_PATH_DEV,"devtmpfs","rw,nosuid,noexec,mode=755",false)!=0)switch(errno){

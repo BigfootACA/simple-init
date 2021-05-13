@@ -14,28 +14,28 @@ int xmount(bool ex,const char*dev,const char*dir,const char*type,const char*data
 	int r=0,er;
 	char buf[BUFSIZ]={0},xbuf[BUFSIZ]={0};
 	struct libmnt_context *cxt=mnt_new_context();
-	if(!cxt)return return_logger_printf_error(-errno,TAG,"failed to init libmount context: %m");
+	if(!cxt)return terlog_error(-errno,"failed to init libmount context");
 	errno=0;
 	if(mnt_context_set_options(cxt,data)!=0){
-		logger_printf_error(TAG,"failed to set mount options: %m");
+		telog_error("failed to set mount options");
 		mnt_free_context(cxt);
 		return -1;
 	}
 	errno=0;
 	if(mnt_context_set_fstype(cxt,type)!=0){
-		logger_printf_error(TAG,"failed to set mount filesystem type: %m");
+		telog_error("failed to set mount filesystem type");
 		mnt_free_context(cxt);
 		return -1;
 	}
 	errno=0;
 	if(mnt_context_set_source(cxt,dev)!=0){
-		logger_printf_error(TAG,"failed to set mount source: %m");
+		telog_error("failed to set mount source");
 		mnt_free_context(cxt);
 		return -1;
 	}
 	errno=0;
 	if(mnt_context_set_target(cxt,dir)!=0){
-		logger_printf_error(TAG,"failed to set mount target: %m");
+		telog_error("failed to set mount target");
 		mnt_free_context(cxt);
 		return -1;
 	}

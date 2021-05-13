@@ -60,7 +60,7 @@ int gadget_unregister_fd(int dir,char*name){
 	tlog_info("unregister %s",name);
 	return z;
 	er:
-	telog_error("unregister %s failed");
+	telog_error("unregister %s failed",name);
 	if(cs>=0)close(cs);
 	if(fs>=0)close(fs);
 	if(ss>=0)close(ss);

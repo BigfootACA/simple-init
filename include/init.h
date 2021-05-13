@@ -47,4 +47,7 @@ extern int umount_all();
 
 // src/initd/preinit.c: simple-init preinit
 extern int preinit();
+
+//src/initd/logfs.c: setup logfs
+extern int setup_logfs();
 #endif

@@ -10,6 +10,7 @@
 #include<sys/mount.h>
 #include<sys/statfs.h>
 #include"logger.h"
+#include"system.h"
 #include"defines.h"
 #include"pathnames.h"
 #define TAG "switchroot"
@@ -122,9 +123,10 @@ int run_switch_root(char*root,char*init){
 	struct stat buf;
 	if(stat(root,&buf)!=0)return terlog_error(-EINVAL,"cannot stat rootfs");
 	if(!S_ISDIR(buf.st_mode))return trlog_error(-EINVAL,"rootfs not a folder");
-	if(switchroot(root)!=0)return -1;
 	tlog_alert("switch to new root %s and execute new init %s",root,init);
 	logger_exit();
+	close_all_fd();
+	if(switchroot(root)!=0)return -1;
 	if(run_init(init)!=0){
 		tlog_emerg("failed to found working init");
 		rc=-1;

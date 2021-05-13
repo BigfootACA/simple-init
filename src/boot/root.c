@@ -23,6 +23,7 @@ bool check_init(bool force,char*root,char*init){
 	// init must start with /
 	if(init[0]!='/'){
 		tlog_error("invalid init %s",init);
+		errno=EINVAL;
 		return false;
 	}
 
@@ -39,15 +40,18 @@ bool check_init(bool force,char*root,char*init){
 	// init is a normal file
 	if(!S_ISREG(st.st_mode)){
 		tlog_error("init %s is not a file",path);
+		errno=ENOEXEC;
 		return false;
 	}
 
 	// init has execute permission
 	if(!(st.st_mode&S_IXUSR)){
 		tlog_error("init %s is not an executable file",path);
+		errno=EACCES;
 		return false;
 	}
 
+	errno=0;
 	return true;
 }
 

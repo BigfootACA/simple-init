@@ -109,12 +109,14 @@ int run_boot_root(boot_config*boot){
 			telog_warn("cannot determine fstype in %s",path);
 	}
 
+	#ifdef ENABLE_KMOD
 	// load modules for filesystem
 	if(type){
 		char mod[64]={0};
 		snprintf(mod,63,"fs-%s",type);
 		insmod(mod,false);
 	}
+	#endif
 
 	// get a mountpoint
 	if(!auto_mountpoint(point,256)){

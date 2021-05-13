@@ -16,7 +16,9 @@ int process_uevent(){
 	uevent_parse_x(environ,&event);
 	if(strcmp(event.subsystem,"firmware")==0)process_firmware_load(&event);
 	if(event.major>=0&&event.minor>=0)process_new_node(devdfd,&event);
+	#ifdef ENABLE_KMOD
 	if(event.modalias)insmod(event.modalias,false);
+	#endif
 	return 0;
 }
 

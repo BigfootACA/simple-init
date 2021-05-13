@@ -12,10 +12,12 @@ int gadget_add_function_cfg(gadget*gadget,gadget_cfg*config,gadget_func*func){
 	int d;
 	if(!gadget||!config||!func||!func->function||!func->name)return -1;
 
+	#ifdef ENABLE_KMOD
 	// try to load usb function modules
 	char module[32]={0};
 	snprintf(module,31,"usbfunc:%s",func->function);
 	insmod(module,false);
+	#endif
 
 	char cfg_name[32]={0};
 	snprintf(cfg_name,31,"%s.%d",config->type,config->id);

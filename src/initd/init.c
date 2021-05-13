@@ -45,7 +45,9 @@ int init_main(int argc __attribute__((unused)),char**argv __attribute__((unused)
 	if(getgid()!=0||getegid()!=0)return trlog_emerg(1,"must be run as GROUP 0(root)");
 
 	// start loggerd
+	#ifdef ENABLE_KMOD
 	insmod("unix",true);// load unix socket for loggerd
+	#endif
 	start_loggerd(NULL);
 	atexit(wait_loggerd);
 	tlog_info("init started");

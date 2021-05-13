@@ -17,10 +17,12 @@ static int exec_init_devtmpfs(void*data __attribute__((unused))){
 	       terlog_emerg(errno,"failed to init devtmpfs"):0;
 }
 
+#ifdef ENABLE_KMOD
 static int exec_load_modalias(void*data __attribute__((unused))){
 	return load_modalias()<0?
 	       terlog_error(errno,"failed to load modalias"):0;
 }
+#endif
 
 int preinit(){
 
@@ -78,8 +80,10 @@ int preinit(){
 	// read kmsg to logger
 	logger_klog();
 
+	#ifdef ENABLE_KMOD
 	// load all modules
 	fork_run("modalias",true,NULL,exec_load_modalias);
+	#endif
 
 	// load cmdline
 	if(access(_PATH_PROC_CMDLINE,R_OK)!=0)return terlog_error(2,"failed to find proc mountpoint");

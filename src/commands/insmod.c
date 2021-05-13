@@ -1,3 +1,4 @@
+#ifdef ENABLE_KMOD
 #include<errno.h>
 #include<stdio.h>
 #include<libkmod.h>
@@ -85,3 +86,4 @@ int insmod_main(int argc,char**argv){
 	free(opts);
 	return err>=0?0:1;
 }
+#endif

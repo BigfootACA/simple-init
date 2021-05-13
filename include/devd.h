@@ -14,6 +14,9 @@ extern int process_new_node(int devdfd,uevent*event);
 // src/devd/firmware.c: handle firmware_class helper, search cmdline.h:firmware_list to load
 extern int process_firmware_load(uevent*event);
 
+#ifdef ENABLE_KMOD
 // src/devd/modalias.c: search modalias in /sys/devices to load all modules
 extern int load_modalias();
+#endif
+
 #endif

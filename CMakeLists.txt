@@ -5,7 +5,7 @@ add_definitions("-Wall -Wextra -Wno-frame-address -rdynamic")
 file(GLOB SRCS src/*/*.c)
 include_directories(include)
 add_executable(init src/main.c ${SRCS})
-set(DEPENDS libkmod mount blkid)
+set(DEPENDS mount blkid)
 
 option(DISABLE_WERROR     "Avoid treating compiler warnings as fatal errors"  OFF)
 option(DISABLE_DEBUG      "Disable debug infomation generate"                 OFF)
@@ -15,10 +15,18 @@ option(ENABLE_PIE         "Enable Position-Independent-Executable"            OF
 option(ENABLE_ASAN        "Enable Address Sanitizer"                          OFF)
 
 option(ENABLE_INITSHELL   "Enable builtin shell"                              ON)
+option(ENABLE_KMOD        "Enable kmod modules load or remove"                ON)
 
 if("${ENABLE_INITSHELL}" STREQUAL "ON")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_INITSHELL=1")
     set(DEPENDS ${DEPENDS} readline)
+endif()
+
+if("${ENABLE_KMOD}" STREQUAL "ON")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_KMOD=1")
+    set(DEPENDS ${DEPENDS} libkmod)
+else()
+    message(WARNING "libkmod disabled, kernel modules will not be loaded")
 endif()
 
 if("${DISABLE_WERROR}" STREQUAL "OFF")

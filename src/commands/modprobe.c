@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+#ifdef ENABLE_KMOD
 #define _GNU_SOURCE
 #include<assert.h>
 #include<errno.h>
@@ -533,3 +533,4 @@ done:
 	if(argv!=orig_argv)free(argv);
 	return err>=0?0:1;
 }
+#endif

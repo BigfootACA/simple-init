@@ -30,9 +30,11 @@ int setup_logfs(){
 		cache=NULL;
 	}
 
+	#ifdef ENABLE_KMOD
 	char mod[64]={0};
 	snprintf(mod,63,"fs-%s",type);
 	insmod(mod,false);
+	#endif
 
 	char point[256];
 	if(!auto_mountpoint(point,256)){

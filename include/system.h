@@ -46,8 +46,10 @@ extern char*get_username(uid_t uid,char*buff,size_t size);
 // src/lib/passwd.c: get groupname by gid, return gid if fail
 extern char*get_groupname(gid_t gid,char*buff,size_t size);
 
+#ifdef ENABLE_KMOD
 // src/lib/modules.c: lookup and load module by alias
 extern int insmod(const char*alias,bool log);
+#endif
 
 // src/lib/file.c: remove all sub folders (depth 1)
 extern int remove_folders(int dfd,int flags);

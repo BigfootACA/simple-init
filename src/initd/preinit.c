@@ -57,6 +57,7 @@ int preinit(){
 	logger_listen_default();
 	close_logfd();
 	open_socket_logfd_default();
+	logger_open(_PATH_DEV"/logger.log");
 
 	// setup hotplug helper
 	simple_file_write(_PATH_PROC_SYS"/kernel/hotplug",_PATH_USR_BIN"/initdevd");

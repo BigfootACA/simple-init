@@ -49,11 +49,10 @@ bool check_init(bool force,char*root,char*init){
 	return true;
 }
 
-char*search_init(char*root){
+char*search_init(char*init,char*root){
 	if(!root)EPRET(EINVAL);
 
 	// init specified in kernel cmdline
-	char*init=boot_options.init;
 	if(init)return check_init(true,root,init)?init:NULL;
 
 	// search init in list
@@ -74,11 +73,12 @@ int run_boot_root(boot_config*boot){
 
 	int e;
 	struct stat st;
-	char*init,*path,*type,*xflags,flags[PATH_MAX],point[256];
+	char*definit,*init,*path,*type,*xflags,flags[PATH_MAX],point[256];
 	bool ro=parse_int(kvarr_get(boot->data,"rw","0"),0)==0;
 	blkid_cache cache=NULL;
 
 	// unimportant variables
+	definit=kvarr_get(boot->data,"init",NULL);
 	xflags=kvarr_get(boot->data,"flags",NULL);
 	type=kvarr_get(boot->data,"type",NULL);
 
@@ -129,7 +129,7 @@ int run_boot_root(boot_config*boot){
 	}
 
 	// try to search init
-	if(!(init=search_init(point)))return -errno;
+	if(!(init=search_init(definit,point)))return -errno;
 
 	// execute switchroot
 	e=run_switch_root(point,init);

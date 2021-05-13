@@ -54,3 +54,9 @@ int cmdline_ro(char*k,char*v __attribute__((unused))){
 	tlog_debug("root block set to read-only");
 	return _xadd_item(k,"rw","0");
 }
+
+int cmdline_init(char*k,char*v){
+	if(!v[0]||v[0]!='/')return trlog_error(ENUM(EINVAL),"invalid init %s",v);
+	tlog_debug("init set to %s",v);
+	return _xadd_item(k,"init",v);
+}

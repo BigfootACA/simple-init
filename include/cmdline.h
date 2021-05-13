@@ -12,9 +12,6 @@ struct boot_options{
 	// end parse general options
 	bool end;
 
-	// init path
-	char*init;
-
 	// logfs block path
 	char logfs_block[64];
 

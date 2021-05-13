@@ -22,8 +22,6 @@ struct cmdline_option*cmdline_options[]={
 	DEF_OPTION(root,       false, REQUIRED_VALUE),
 	DEF_OPTION(rootflags,  false, REQUIRED_VALUE),
 	DEF_OPTION(rootfstype, false, REQUIRED_VALUE),
-
-	// init.c; set default init
 	DEF_OPTION(init,       false, REQUIRED_VALUE),
 
 	// cmdline.c; end parse general options

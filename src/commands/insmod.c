@@ -39,7 +39,7 @@ int insmod_main(int argc,char**argv){
 		{"help",no_argument,0,'h'},
 		{NULL,0,0,0}
 	};
-	while((c=b_getlopt(argc,argv,"psfVh",lo,0)))switch(c){
+	while((c=b_getlopt(argc,argv,"psfVh",lo,0))!=-1)switch(c){
 		case 'p':case 's':break;
 		case 'f':
 			flags|=KMOD_PROBE_FORCE_MODVERSION;

@@ -16,6 +16,7 @@ DECLARE_MAIN(init);
 DECLARE_MAIN(initdevd);
 DECLARE_MAIN(initloggerd);
 DECLARE_MAIN(initshell);
+DECLARE_MAIN(insmod);
 DECLARE_MAIN(ls);
 DECLARE_MAIN(lsmod);
 DECLARE_MAIN(modprobe);
@@ -47,6 +48,7 @@ const struct shell_command*shell_cmds[]={
 	DECLARE_CMD(true,  init,        "Simple init")
 	DECLARE_CMD(true,  initdevd,    "Init simple device daemon")
 	DECLARE_CMD(true,  initloggerd, "Launch simple init logger daemon")
+	DECLARE_CMD(true,  insmod,      "Insert a module into the Linux Kernel")
 	DECLARE_CMD(true,  ls,          "List directory contents")
 	DECLARE_CMD(true,  lsmod,       "Show the status of modules in the Linux Kernel")
 	DECLARE_CMD(true,  modprobe,    "Add and remove modules from the Linux Kernel")

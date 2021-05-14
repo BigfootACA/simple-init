@@ -17,11 +17,8 @@ int process_new_node(int devdfd,uevent*event){
 		case ACTION_ADD:return init_devtmpfs(_PATH_DEV);
 		case ACTION_REMOVE:
 			if(faccessat(devdfd,event->devname,F_OK,0)!=0)return -errno;
-			if(unlinkat(
-				devdfd,
-				event->devname,
-				0
-			)!=0)return return_logger_printf_warning(
+			if(unlinkat(devdfd,event->devname,0)!=0)
+				return return_logger_printf_warning(
 					-errno,TAG,
 					"unlink %s/%s: %m",
 					_PATH_DEV,

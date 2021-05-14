@@ -75,7 +75,6 @@ static int _insmod(struct kmod_ctx*ctx,const char*alias,bool log){
 				NULL,
 				NULL
 			))<0)_mod_load_err(log,err,name);
-			else tlog_info("loaded module '%s'",name);
 			err=MIN(0,err);
 		}
 		kmod_module_unref(mod);

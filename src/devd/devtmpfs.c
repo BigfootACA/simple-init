@@ -69,7 +69,7 @@ static int do_mknod(char*path,int dir,int type){
 			case S_IFBLK:t="block";break;
 			default:t="unknown";break;
 		}
-		logger_printf_debug(TAG,"create %s device(%d:%d) %s",t,major,minor,dev);
+		tlog_debug("create %s device(%d:%d) %s",t,major,minor,dev);
 	}
 	free(name);
 	return 0;
@@ -95,7 +95,7 @@ static int scan_devices(char*path,int dir,int type){
 
 int init_devtmpfs(char*path){
 	int fd=open(_PATH_SYS_DEV,O_RDONLY|O_DIRECTORY),e=0;
-	if(fd<=0)return return_logger_printf_error(-errno,TAG,"open %s failed: %m",_PATH_SYS_DEV);
+	if(fd<=0)return terlog_error(-errno,"open %s failed",_PATH_SYS_DEV);
 	e=MIN(e,scan_devices(path,openat(fd,"char",O_RDONLY|O_DIRECTORY),S_IFCHR));
 	e=MIN(e,scan_devices(path,openat(fd,"block",O_RDONLY|O_DIRECTORY),S_IFBLK));
 	close(fd);

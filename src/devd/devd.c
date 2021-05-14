@@ -38,7 +38,7 @@ int process_uevent(){
 int initdevd_main(int argc __attribute__((unused)),char**argv __attribute__((unused))){
 	open_socket_logfd_default();
 	devdfd=open(_PATH_DEV,O_RDONLY|O_DIRECTORY);
-	if(devdfd<0)logger_printf_warning(TAG,"open %s: %m",_PATH_DEV);
+	if(devdfd<0)telog_warn("open %s",_PATH_DEV);
 	if(getenv("ACTION"))process_uevent();
 	close(devdfd);
 	return 0;

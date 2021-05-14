@@ -1,3 +1,4 @@
+#include<ctype.h>
 #include<errno.h>
 #include<stdio.h>
 #include<stdarg.h>
@@ -93,6 +94,10 @@ int logger_klog(){
 
 int logger_write(struct log_item*log){
 	if(!log)ERET(EINVAL);
+	ssize_t s=strlen(log->content)-1;
+	while(s>=0)
+		if(!isspace(log->content[s]))break;
+		else log->content[s]=0,s--;
 	if(logfd<0)return fprintf(stderr,"%s: %s\n",log->tag,log->content);
 	return log_msg_send(LOG_ADD,(void*)log,sizeof(struct log_item));
 }

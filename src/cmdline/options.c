@@ -7,6 +7,7 @@
 DEF_HANDLER(rw);
 DEF_HANDLER(ro);
 DEF_HANDLER(end);
+DEF_HANDLER(verbose);
 DEF_HANDLER(init);
 DEF_HANDLER(root);
 DEF_HANDLER(rootflags);
@@ -26,6 +27,9 @@ struct cmdline_option*cmdline_options[]={
 
 	// cmdline.c; end parse general options
 	DEF_OPTION(end,        false, OPTIONAL_VALUE),
+
+	// cmdline.c; verbose log
+	DEF_OPTION(verbose,    false, OPTIONAL_VALUE),
 
 	// logfs.c; logger persistent storage
 	DEF_OPTION(logfs,      false, REQUIRED_VALUE),

@@ -53,3 +53,8 @@ int cmdline_end(char*k __attribute__((unused)),char*v __attribute__((unused))){
 	boot_options.end=true;
 	return 0;
 }
+
+int cmdline_verbose(char*k __attribute__((unused)),char*v __attribute__((unused))){
+	boot_options.verbose=true;
+	return 0;
+}

@@ -12,6 +12,9 @@ struct boot_options{
 	// end parse general options
 	bool end;
 
+	// verbose log
+	bool verbose;
+
 	// logfs block path
 	char logfs_block[64];
 

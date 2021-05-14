@@ -25,7 +25,7 @@ int dumpargv_main(int argc,char**argv){
 int logdumpargv_main(int argc,char**argv){
 	open_socket_logfd_default();
 	for(int i=0;i<argc;i++)
-		logger_printf_info("logdumpargv","argv[%d]=%s",i,argv[i]);
+		log_info("logdumpargv","argv[%d]=%s",i,argv[i]);
 	close_logfd();
 	return 0;
 }

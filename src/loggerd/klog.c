@@ -97,7 +97,7 @@ static int read_kmsg_thread(void*data __attribute__((unused))){
 			}
 		}else if(FD_ISSET(logfd,&fs)){
 			struct log_msg l;
-			if(internal_read_msg(logfd,&l)<0){
+			if(logger_internal_read_msg(logfd,&l)<0){
 				close_logfd();
 				break;
 			}
@@ -123,7 +123,7 @@ int init_kmesg(){
 	if(lseek(klogfd,0,SEEK_DATA)<0)goto fail;
 
 	while((log=read_kmsg_item(klogfd,true))){
-		if(!(buff=internal_item2buff(log)))goto fail;
+		if(!(buff=logger_internal_item2buff(log)))goto fail;
 		if(!(item=list_new(buff)))goto fail;
 		if(conts)list_add(conts,item);
 		conts=item;
@@ -136,7 +136,7 @@ int init_kmesg(){
 
 	return fork_run("klog",false,NULL,read_kmsg_thread);
 	fail:
-	if(conts)list_free_all(conts,internal_free_buff);
+	if(conts)list_free_all(conts,logger_internal_free_buff);
 	if(buff)free(buff);
 	if(log)free(log);
 	if(klogfd>=0)close(klogfd);

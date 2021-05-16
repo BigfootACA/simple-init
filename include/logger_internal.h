@@ -76,52 +76,52 @@ extern void close_log_file(char*path);
 extern void close_all_file();
 
 // src/loggerd/logger_internal.c: free loggers
-extern void internal_clean_loggers();
+extern void logger_internal_clean();
 
 // src/loggerd/logger_internal.c: add new logger
-extern int internal_add_logger(char*name,enum log_level min_level,on_log log);
+extern int logger_internal_add(char*name,enum log_level min_level,on_log log);
 
 // src/loggerd/logger_internal.c: add raw log
-extern int internal_logger_write(struct log_item*log);
+extern int logger_internal_write(struct log_item*log);
 
 // src/loggerd/logger_internal.c: add log with level, tag, content
-extern int internal_logger_print(enum log_level level,char*tag,char*content);
+extern int logger_internal_print(enum log_level level,char*tag,char*content);
 
 // src/loggerd/logger_internal.c: add log with level, tag, formatted content
-extern int internal_logger_printf(enum log_level level,char*tag,const char*fmt,...) __attribute__((format(printf,3,4)));
+extern int logger_internal_printf(enum log_level level,char*tag,const char*fmt,...) __attribute__((format(printf,3,4)));
 
 // src/loggerd/logger_internal.c: turn on or off logger output
-extern int internal_set_logger(char*name,bool enabled);
+extern int logger_internal_set(char*name,bool enabled);
 
 // src/loggerd/logger_internal.c: set logger output level
-extern int internal_set_logger_level(char*name,enum log_level level);
+extern int logger_internal_set_level(char*name,enum log_level level);
 
 // src/loggerd/logger_internal.c: init a log packaet
-extern void internal_init_msg(struct log_msg*msg,enum log_oper oper,size_t size);
+extern void logger_internal_init_msg(struct log_msg*msg,enum log_oper oper,size_t size);
 
 // src/loggerd/logger_internal.c: read a log packet
-extern int internal_read_msg(int fd,struct log_msg*buff);
+extern int logger_internal_read_msg(int fd,struct log_msg*buff);
 
 // src/loggerd/logger_internal.c: send a log packet
-extern int internal_send_msg(int fd,enum log_oper oper,void*data,size_t size);
+extern int logger_internal_send_msg(int fd,enum log_oper oper,void*data,size_t size);
 
 // src/loggerd/logger_internal.c: read a string log packet
-extern int internal_send_msg_string(int fd,enum log_oper oper,char*data);
+extern int logger_internal_send_msg_string(int fd,enum log_oper oper,char*data);
 
 // src/loggerd/logger_internal.c: convert operation to a readable string
 extern char*oper2string(enum log_oper oper);
 
 // src/loggerd/logger_buffer.c: convert log_item to log_buff
-extern struct log_buff*internal_item2buff(struct log_item*log);
+extern struct log_buff*logger_internal_item2buff(struct log_item*log);
 
 // src/loggerd/logger_buffer.c: convert log_buff to log_item
-extern struct log_item*internal_buff2item(struct log_buff*log);
+extern struct log_item*logger_internal_buff2item(struct log_buff*log);
 
 // src/loggerd/logger_buffer.c: add log to buffer
-extern int internal_buffer_push(struct log_item*log);
+extern int logger_internal_buffer_push(struct log_item*log);
 
 // src/loggerd/logger_buffer.c: free log_buff
-extern int internal_free_buff(void*d);
+extern int logger_internal_free_buff(void*d);
 
 // src/loggerd/logger_buffer.c: clean log buffers
 extern void clean_log_buffers();

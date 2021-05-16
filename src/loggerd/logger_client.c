@@ -50,9 +50,9 @@ int open_socket_logfd(char*path){
 
 static int log_msg_send(enum log_oper oper,void*data,size_t size){
 	struct log_msg msg;
-	int x=internal_send_msg(logfd,oper,data,size);
+	int x=logger_internal_send_msg(logfd,oper,data,size);
 	if(x<0)return -1;
-	do{if(internal_read_msg(logfd,&msg)<0)return -1;}
+	do{if(logger_internal_read_msg(logfd,&msg)<0)return -1;}
 	while(msg.oper!=LOG_OK&&msg.oper!=LOG_FAIL);
 	if(msg.size>0){
 		void*d=malloc(msg.size);
@@ -202,7 +202,7 @@ int start_loggerd(pid_t*p){
 	}
 	close(fds[0]);
 	struct log_msg msg;
-	do{if(internal_read_msg(fds[1],&msg)<0)ERET(EIO);}
+	do{if(logger_internal_read_msg(fds[1],&msg)<0)ERET(EIO);}
 	while(msg.oper!=LOG_OK);
 	if(p)*p=pid;
 	return set_logfd(fds[1]);

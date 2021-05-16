@@ -14,7 +14,7 @@ static int _buff_free(void*data){
 	return 0;
 }
 
-struct log_buff*internal_item2buff(struct log_item*log){
+struct log_buff*logger_internal_item2buff(struct log_item*log){
 	errno=EINVAL;
 	if(!log)return NULL;
 	size_t s=sizeof(struct log_buff);
@@ -39,7 +39,7 @@ struct log_buff*internal_item2buff(struct log_item*log){
 	return NULL;
 }
 
-struct log_item*internal_buff2item(struct log_buff*log){
+struct log_item*logger_internal_buff2item(struct log_buff*log){
 	errno=EINVAL;
 	if(!log)return NULL;
 	size_t s=sizeof(struct log_item);
@@ -55,8 +55,8 @@ struct log_item*internal_buff2item(struct log_buff*log){
 	return item;
 }
 
-int internal_buffer_push(struct log_item*log){
-	struct log_buff*buff=internal_item2buff(log);
+int logger_internal_buffer_push(struct log_item*log){
+	struct log_buff*buff=logger_internal_item2buff(log);
 	if(!buff)return -errno;
 	if(logbuffer?
 		list_push_new(logbuffer,buff)<0:
@@ -83,7 +83,7 @@ char*oper2string(enum log_oper oper){
 	}
 }
 
-int internal_free_buff(void*d){
+int logger_internal_free_buff(void*d){
 	struct log_buff*b=(struct log_buff*)d;
 	if(!b)return -1;
 	if(b->content)free(b->content);
@@ -94,7 +94,7 @@ int internal_free_buff(void*d){
 
 void clean_log_buffers(){
 	if(!logbuffer)return;
-	list_free_all(logbuffer,internal_free_buff);
+	list_free_all(logbuffer,logger_internal_free_buff);
 }
 
 void flush_buffer(struct logger*log){
@@ -114,7 +114,7 @@ void flush_buffer(struct logger*log){
 	do{
 		next=cur->next;
 		if(!(buff=LIST_DATA(cur,struct log_buff*)))continue;
-		if(!(item=internal_buff2item(buff)))continue;
+		if(!(item=logger_internal_buff2item(buff)))continue;
 		log->logger(log->name,item);
 		free(item);
 	}while((cur=next));

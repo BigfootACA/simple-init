@@ -39,7 +39,7 @@ static int fd_item_add(int fd,char*path,bool socket){
 	else list_push(fds,new);
 	return (errno=0);
 	fail:
-	internal_logger_printf(LEVEL_ALERT,TAG,"cannot allocate new fd");
+	logger_internal_printf(LEVEL_ALERT,TAG,"cannot allocate new fd");
 	close(fd);
 	if(path)unlink(path);
 	ERET(ENOMEM);
@@ -62,31 +62,31 @@ static int loggerd_add_listen(char*path){
 	un.sun_family=AF_UNIX;
 	strncpy(un.sun_path,path,sizeof(un.sun_path)-1);
 	if(access(path,F_OK)==0){
-		internal_logger_printf(LEVEL_ERROR,"loggerd","socket %s exists",path);
+		logger_internal_printf(LEVEL_ERROR,"loggerd","socket %s exists",path);
 		ERET(EEXIST);
 	}else if(errno!=ENOENT){
-		internal_logger_printf(LEVEL_ERROR,"loggerd","failed to access %s: %m",path);
+		logger_internal_printf(LEVEL_ERROR,"loggerd","failed to access %s: %m",path);
 		return -errno;
 	}
 	if((fd=socket(AF_UNIX,SOCK_STREAM,0))<0){
-		internal_logger_printf(LEVEL_ERROR,"loggerd","cannot create socket: %m");
+		logger_internal_printf(LEVEL_ERROR,"loggerd","cannot create socket: %m");
 		return -errno;
 	}
 	if(bind(fd,(struct sockaddr*)&un,sizeof(un))<0){
 		int er=errno;
-		internal_logger_printf(LEVEL_ERROR,"loggerd","cannot bind socket: %m");
+		logger_internal_printf(LEVEL_ERROR,"loggerd","cannot bind socket: %m");
 		close(fd);
 		unlink(path);
 		ERET(er);
 	}
 	if(listen(fd,1)<0){
 		int er=errno;
-		internal_logger_printf(LEVEL_ERROR,"loggerd","cannot listen socket: %m");
+		logger_internal_printf(LEVEL_ERROR,"loggerd","cannot listen socket: %m");
 		close(fd);
 		unlink(path);
 		ERET(er);
 	}
-	internal_logger_printf(LEVEL_ALERT,"loggerd","add new listen %s",path);
+	logger_internal_printf(LEVEL_ALERT,"loggerd","add new listen %s",path);
 	return fd_item_add(fd,path,true);
 }
 
@@ -97,7 +97,7 @@ static int loggerd_read(int fd){
 	size_t s;
 	void*data=NULL;
 	struct log_msg msg;
-	if((e=internal_read_msg(fd,&msg))<0)goto ex;
+	if((e=logger_internal_read_msg(fd,&msg))<0)goto ex;
 	if(msg.size!=0){
 		if(!(data=malloc(msg.size+2)))return -2;
 		memset(data,0,msg.size+2);
@@ -120,7 +120,7 @@ static int loggerd_read(int fd){
 
 		// request add log item
 		case LOG_ADD:
-			internal_logger_write((struct log_item*)data);
+			logger_internal_write((struct log_item*)data);
 		break;
 
 		// open log file
@@ -129,14 +129,14 @@ static int loggerd_read(int fd){
 				ret=LOG_FAIL,retdata=errno;
 				break;
 			}
-			internal_add_logger(ss,LEVEL_DEBUG,&file_logger);
-			internal_set_logger(ss,true);
+			logger_internal_add(ss,LEVEL_DEBUG,&file_logger);
+			logger_internal_set(ss,true);
 		break;
 
 		// close log file
 		case LOG_CLOSE:
 			close_log_file(ss);
-			internal_set_logger(ss,false);
+			logger_internal_set(ss,false);
 		break;
 
 		// add new listen
@@ -157,20 +157,20 @@ static int loggerd_read(int fd){
 
 		// terminate loggerd
 		case LOG_QUIT:
-			internal_logger_printf(LEVEL_EMERG,"loggerd","receive exit signal");
+			logger_internal_printf(LEVEL_EMERG,"loggerd","receive exit signal");
 			e=-4;
 		break;
 
 		// unknown
 		default:
-			internal_logger_printf(
+			logger_internal_printf(
 				LEVEL_WARNING,
 				"loggerd",
 				"operation %s not implemented",
 				oper2string(msg.oper)
 			);
 	}
-	internal_send_msg(fd,ret,&retdata,sizeof(int));
+	logger_internal_send_msg(fd,ret,&retdata,sizeof(int));
 	ex:if(data)free(data);
 	return e;
 }
@@ -181,7 +181,7 @@ static void logger_cleanup(int s __attribute__((unused))){
 	close_all_file();
 	if(fds)list_free_all(fds,fd_item_remove);
 	fds=NULL;
-	internal_clean_loggers();
+	logger_internal_clean();
 }
 
 int loggerd_thread(int fd){
@@ -190,10 +190,10 @@ int loggerd_thread(int fd){
 	fd_item_add(fd,NULL,false);
 	struct timeval timeout={1,0};
 	fd_set fs;
-	internal_add_logger("stderr",LEVEL_DEBUG,&file_logger);
-	internal_set_logger("stderr",true);
-	internal_send_msg(fd,LOG_OK,NULL,0);
-	internal_logger_printf(LEVEL_INFO,TAG,"loggerd start with pid %d",getpid());
+	logger_internal_add("stderr",LEVEL_DEBUG,&file_logger);
+	logger_internal_set("stderr",true);
+	logger_internal_send_msg(fd,LOG_OK,NULL,0);
+	logger_internal_printf(LEVEL_INFO,TAG,"loggerd start with pid %d",getpid());
 	signal(SIGINT,logger_cleanup);
 	signal(SIGHUP,logger_cleanup);
 	signal(SIGTERM,logger_cleanup);
@@ -208,13 +208,13 @@ int loggerd_thread(int fd){
 			max=a->fd>max?a->fd:max;
 		}while((l=l->next));
 		if(max<0){
-			internal_logger_printf(LEVEL_ERROR,TAG,"no any stream to read, exiting");
+			logger_internal_printf(LEVEL_ERROR,TAG,"no any stream to read, exiting");
 			e=-1;
 			goto ex;
 		}
 		r=select(max+1,&fs,NULL,NULL,&timeout);
 		if(r==-1){
-			internal_logger_printf(LEVEL_ERROR,TAG,"select failed: %m");
+			logger_internal_printf(LEVEL_ERROR,TAG,"select failed: %m");
 			e=-1;
 			goto ex;
 		}else if(r==0)continue;

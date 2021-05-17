@@ -12,6 +12,7 @@ DECLARE_MAIN(logdumpenv);
 DECLARE_MAIN(exit);
 DECLARE_MAIN(findfs);
 DECLARE_MAIN(help);
+DECLARE_MAIN(hotplug);
 DECLARE_MAIN(init);
 DECLARE_MAIN(initdevd);
 DECLARE_MAIN(initloggerd);
@@ -53,6 +54,7 @@ const struct shell_command*shell_cmds[]={
 	DECLARE_CMD(true,  dumpenv,     "Dump all environments variables to stdout")
 	DECLARE_CMD(true,  logdumpenv,  "Dump all environments variables to initloggerd")
 	DECLARE_CMD(true,  help,        "Show all shell builtin commands")
+	DECLARE_CMD(true,  hotplug,     "Init simple device hotplug notifier")
 	DECLARE_CMD(true,  init,        "Simple init")
 	DECLARE_CMD(true,  initdevd,    "Init simple device daemon")
 	DECLARE_CMD(true,  initloggerd, "Launch simple init logger daemon")

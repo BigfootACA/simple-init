@@ -3,21 +3,15 @@
 #include<libgen.h>
 #include<stdio.h>
 #include"shell.h"
+#include"output.h"
 
 int main(int argc __attribute__((unused)),char**argv){
-	struct shell_command*cmd;
-	char*name,**a;
-	if((name=argv[1])){
-		a=argv+1;
-		if((cmd=find_internal_cmd(name)))goto ret;
-	}
-	a=argv;
+	char*name;
 	if(
-		((name=getenv("INIT_MAIN"))||
-		(name=basename(argv[0])))&&
-		(cmd=find_internal_cmd(name)
-	))goto ret;
-	fprintf(stderr,"%s: command not found\n",name);
-	return ENOENT;
-	ret:return invoke_internal_cmd_nofork(cmd,a);
+		!(name=getenv("INIT_MAIN"))&&
+		!(name=basename(argv[0]))
+	)return ee_printf(1,"failed to get name\n");
+	int r=invoke_internal_cmd_nofork_by_name(name,argv);
+	if(errno!=0)fprintf(stderr,"%s: command not found\n",name);
+	return r;
 }

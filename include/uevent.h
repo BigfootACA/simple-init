@@ -37,6 +37,9 @@ extern const char *uevent_actions[];
 // src/devd/uevent.c: convert environ to struct uevent
 extern uevent*uevent_parse_x(char**envs,uevent*data);
 
+// src/devd/uevent.c: convert environ string to struct uevent
+extern uevent*uevent_parse(char*envs,uevent*data);
+
 // src/devd/uevent.c: convert string to uevent_action
 extern enum uevent_action uevent_chars2action(char* act);
 

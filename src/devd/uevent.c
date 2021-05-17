@@ -48,3 +48,9 @@ uevent*uevent_parse_x(char**envs,uevent*data){
 	if(!(data->environs=kvarr_new_parse_arr(envs,'=')))return NULL;
 	return uevent_fill_summary(data);
 }
+
+uevent*uevent_parse(char*envs,uevent*data){
+	if(!envs||!data)return NULL;
+	if(!(data->environs=kvarr_new_parse(envs,'\n','=')))return NULL;
+	return uevent_fill_summary(data);
+}

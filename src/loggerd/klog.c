@@ -4,6 +4,7 @@
 #include<sys/klog.h>
 #include<sys/select.h>
 #include<sys/sysinfo.h>
+#include<signal.h>
 #define TAG "klog"
 #include"str.h"
 #include"list.h"
@@ -14,6 +15,7 @@
 #include"pathnames.h"
 #include"logger_internal.h"
 
+static bool run=true;
 static int klogfd=-1;
 static time_t boot_time=0;
 struct log_item*read_kmsg_item(int fd,bool toff){
@@ -66,6 +68,7 @@ static void kmsg_thread_exit(int p __attribute__((unused))){
 		telog_warn("klog thread finished");
 	}
 	klogctl(SYSLOG_ACTION_CONSOLE_ON,NULL,0);
+	run=false;
 }
 
 static int read_kmsg_thread(void*data __attribute__((unused))){
@@ -75,12 +78,12 @@ static int read_kmsg_thread(void*data __attribute__((unused))){
 	if(lseek(klogfd,0,SEEK_END)<0)return terlog_error(-errno,"lseek klog fd");
 
 	klogctl(SYSLOG_ACTION_CONSOLE_OFF,NULL,0);
-	handle_signals(kmsg_thread_exit);
+	handle_signals((int[]){SIGINT,SIGHUP,SIGQUIT,SIGTERM,SIGUSR1,SIGUSR2},8,kmsg_thread_exit);
 
 	fd_set fs;
 	struct log_item*item;
 	struct timeval timeout={1,0};
-	while(1){
+	while(run){
 		FD_ZERO(&fs);
 		FD_SET(klogfd,&fs);
 		FD_SET(logfd,&fs);

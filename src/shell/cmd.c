@@ -40,9 +40,10 @@ int invoke_internal_cmd_nofork(struct shell_command*cmd,char**args){
 	char*s1=program_invocation_name,*s2=program_invocation_short_name;
 	program_invocation_name=cmd->name;
 	program_invocation_short_name=basename(cmd->name);
+	char**a=args?args:(char*[]){cmd->name,NULL};
 	int argc=0;
-	while(args[++argc]);
-	int r=cmd->main(argc,args);
+	while(a[++argc]);
+	int r=cmd->main(argc,a);
 	program_invocation_name=s1;
 	program_invocation_short_name=s2;
 	return r;

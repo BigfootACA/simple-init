@@ -17,6 +17,8 @@ extern int process_firmware_load(uevent*event);
 #ifdef ENABLE_KMOD
 // src/devd/modalias.c: search modalias in /sys/devices to load all modules
 extern int load_modalias();
+#else
+static inline int load_modalias(){return 0};
 #endif
 
 #endif

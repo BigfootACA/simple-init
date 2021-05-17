@@ -176,10 +176,30 @@ keyval**kvarr_parse_arr(keyval**kvs,size_t s,char**lines,char del){
 	return kvs;
 }
 
+keyval**kvarr_parse(keyval**kvs,size_t s,char*lines,char ldel,char del){
+	size_t i=0;
+	char*d,*cur,*next;
+	if(!kvs||!lines||!(cur=d=strdup(lines)))return NULL;
+	do{
+		if((next=strchr(cur,ldel)))next[0]=0,next++;
+		kvs[i++]=kv_new_parse(cur,del);
+	}while((cur=next)&&(s==0||i<s));
+	free(d);
+	return kvs;
+}
+
 keyval**kvarr_new_parse_arr(char**lines,char del){
 	if(!lines)return NULL;
 	size_t s=(char_array_len(lines)+1);
 	return kvarr_parse_arr(kvarr_new(s),s,lines,del);
+}
+
+keyval**kvarr_new_parse(char*lines,char ldel,char del){
+	if(!lines)return NULL;
+	size_t s=0,x=strlen(lines);
+	for(size_t i=0;i<x-1;i++)if(lines[i]==ldel)s++;
+	if(lines[x]!=ldel)s++;
+	return kvarr_parse(kvarr_new(s+1),s,lines,ldel,del);
 }
 
 void kvarr_dump(keyval**kvs,char*del,char*ldel){

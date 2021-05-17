@@ -70,10 +70,16 @@ extern keyval**kvarr_xmalloc(size_t len);
 // src/lib/keyval.c: create and init a keyval array with length (call kvarr_malloc and kvarr_init)
 extern keyval**kvarr_new(int len);
 
+// src/lib/keyval.c: convert string to keyval array (eg: kvarr_parse({},["K=V\nA=B"],'\n','=') = [{"K","V"},{"A","B"}])
+extern keyval**kvarr_parse(keyval**kvs,size_t s,char*lines,char ldel,char del);
+
 // src/lib/keyval.c: convert string array to keyval array (eg: kvarr_parse_arr({},["K=V","A=B"],'=') = [{"K","V"},{"A","B"}])
 extern keyval**kvarr_parse_arr(keyval**kvs,size_t s,char**lines,char del);
 
-// src/lib/keyval.c: create and init a keyval array from a string array (call kvarr_new and kvarr_parse)
+// src/lib/keyval.c: create and init a keyval array from a string= (call kvarr_new and kvarr_parse)
+extern keyval**kvarr_new_parse(char*lines,char ldel,char del);
+
+// src/lib/keyval.c: create and init a keyval array from a string array (call kvarr_new and kvarr_parse_arr)
 extern keyval**kvarr_new_parse_arr(char**lines,char del);
 
 // src/lib/keyval.c: dump keyval array to stdout (call kv_print) (eg: kvarr_dump([{"K","V"},{"A","B"}],"=","\n") = "K=V\nA=B")

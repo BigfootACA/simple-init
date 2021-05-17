@@ -12,6 +12,7 @@
 extern boot_config boot_switchroot;
 
 static int _add_item(char*key,char*value){
+	if(!boot_options.config)boot_options.config=&boot_switchroot;
 	keyval**kv=boot_switchroot.data;
 	for(int i=0;i<64;i++){
 		if(!kv[i])ERET((kv[i]=kv_new_set_dup(key,value))?0:ENOMEM);
@@ -28,7 +29,6 @@ static int _xadd_item(char*k,char*key,char*value){
 }
 
 int cmdline_root(char*k,char*v){
-	if(!boot_options.config)boot_options.config=&boot_switchroot;
 	char*p=NULL;
 	#ifdef ENABLE_BLKID
 	if(!(p=blkid_evaluate_tag(v,NULL,NULL)))

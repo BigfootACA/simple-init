@@ -89,7 +89,7 @@ extern int simple_file_write(char*file,char*content);
 extern int simple_file_append(char*file,char*content);
 
 // src/lib/signal.c: handle int,hup,chld,term,alrm,chld,usr1,usr2 signal
-extern void handle_signals(void(*handler)(int));
+extern void handle_signals(int*sigs,int len,void(*handler)(int));
 
 // src/lib/stdio.c: get the highest possible fd
 extern int get_max_fd();

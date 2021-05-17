@@ -1,16 +1,48 @@
-#include<stdlib.h>
-#include<string.h>
-#include<fcntl.h>
+#include<errno.h>
 #include<unistd.h>
+#include<string.h>
+#include<sys/un.h>
+#include<sys/socket.h>
 #include"logger.h"
 #include"uevent.h"
 #include"system.h"
-#include"defines.h"
-#include"devd.h"
-#include"init.h"
+#include"devd_internal.h"
 #define TAG "devd"
 
-static int devdfd=-1;
+int devfd=-1;
+
+int open_devd_socket(char*tag,char*path){
+	if(devfd>=0)return devfd;
+	struct sockaddr_un n={0};
+	n.sun_family=AF_UNIX;
+	strncpy(n.sun_path,path,sizeof(n.sun_path)-1);
+	if((devfd=socket(AF_UNIX,SOCK_STREAM,0))<0)
+		return erlog_error(-errno,tag,"cannot create socket");
+	if(connect(devfd,(struct sockaddr*)&n,sizeof(n))<0){
+		elog_error(tag,"cannot connect devd socket %s",n.sun_path);
+		close(devfd);
+		devfd=-1;
+	}
+	return devfd;
+}
+
+void close_devd_socket(){
+	if(devfd<0)return;
+	close(devfd);
+	devfd=-1;
+}
+
+int devd_call_init(){
+	return devd_command(DEV_INIT);
+}
+
+int devd_call_modalias(){
+	return devd_command(DEV_MODALIAS);
+}
+
+int devd_call_quit(){
+	return devd_command(DEV_QUIT);
+}
 
 int process_module(uevent*event){
 	if(!event->devpath)return -1;
@@ -23,23 +55,15 @@ int process_module(uevent*event){
 	return 0;
 }
 
-int process_uevent(){
-	uevent event;
-	uevent_parse_x(environ,&event);
-	if(strcmp(event.subsystem,"firmware")==0)process_firmware_load(&event);
-	if(strcmp(event.subsystem,"module")==0)process_module(&event);
-	if(event.major>=0&&event.minor>=0)process_new_node(devdfd,&event);
+int process_uevent(uevent*event){
+	if(!event)return -1;
+	if(event->subsystem){
+		if(strcmp(event->subsystem,"firmware")==0)process_firmware_load(event);
+		if(strcmp(event->subsystem,"module")==0)process_module(event);
+	}
+	if(event->major>=0&&event->minor>=0)process_new_node(0,event);
 	#ifdef ENABLE_KMOD
-	if(event.modalias)insmod(event.modalias,false);
+	if(event->modalias)insmod(event->modalias,false);
 	#endif
-	return 0;
-}
-
-int initdevd_main(int argc __attribute__((unused)),char**argv __attribute__((unused))){
-	open_socket_logfd_default();
-	devdfd=open(_PATH_DEV,O_RDONLY|O_DIRECTORY);
-	if(devdfd<0)telog_warn("open %s",_PATH_DEV);
-	if(getenv("ACTION"))process_uevent();
-	close(devdfd);
 	return 0;
 }

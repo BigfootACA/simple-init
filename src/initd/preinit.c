@@ -12,18 +12,6 @@
 #include"pathnames.h"
 #define TAG "preinit"
 
-static int exec_init_devtmpfs(void*data __attribute__((unused))){
-	return init_devtmpfs(_PATH_DEV)<0?
-	       terlog_emerg(errno,"failed to init devtmpfs"):0;
-}
-
-#ifdef ENABLE_KMOD
-static int exec_load_modalias(void*data __attribute__((unused))){
-	return load_modalias()<0?
-	       terlog_error(errno,"failed to load modalias"):0;
-}
-#endif
-
 int preinit(){
 
 	// ensure important folder exists
@@ -72,11 +60,15 @@ int preinit(){
 			tlog_warn("your kernel seems not support devtmpfs.");
 			if(xmount(true,"dev",_PATH_DEV,"tmpfs","rw,nosuid,noexec,mode=755",false)!=0)
 				return terlog_emerg(errno,"failed to mount tmpfs on "_PATH_DEV);
-			// create all device nodes
-			if(fork_run("devtmpfs",true,NULL,exec_init_devtmpfs)<0)return -1;
 		break;
 		default:return terlog_warn(errno,"failed to mount devtmpfs on "_PATH_DEV);
 	}
+
+	// start devd daemon
+	start_devd(TAG,NULL);
+
+	// create all device nodes
+	devd_call_init();
 
 	// open /dev/logger.log
 	char*dev_logger=_PATH_DEV"/logger.log";
@@ -89,7 +81,7 @@ int preinit(){
 
 	#ifdef ENABLE_KMOD
 	// load all modules
-	fork_run("modalias",true,NULL,exec_load_modalias);
+	devd_call_modalias();
 	#endif
 
 	// load cmdline

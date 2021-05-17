@@ -63,6 +63,22 @@ int invoke_internal_cmd(struct shell_command*cmd,bool background,char**args){
 	return r;
 }
 
+int invoke_internal_cmd_by_name(char*name,bool background,char**args){
+	struct shell_command*cmd;
+	if(!(cmd=find_internal_cmd(name)))ERET(ENOENT);
+	int r=invoke_internal_cmd(cmd,background,args);
+	errno=0;
+	return r;
+}
+
+int invoke_internal_cmd_nofork_by_name(char*name,char**args){
+	struct shell_command*cmd;
+	if(!(cmd=find_internal_cmd(name)))ERET(ENOENT);
+	int r=invoke_internal_cmd_nofork(cmd,args);
+	errno=0;
+	return r;
+}
+
 int run_cmd(char**args,bool background){
 	if(!args)ERET(EINVAL);
 	char**argv=array_dup(args);

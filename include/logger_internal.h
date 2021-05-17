@@ -105,7 +105,7 @@ extern int logger_internal_read_msg(int fd,struct log_msg*buff);
 // src/loggerd/logger_internal.c: send a log packet
 extern int logger_internal_send_msg(int fd,enum log_oper oper,void*data,size_t size);
 
-// src/loggerd/logger_internal.c: read a string log packet
+// src/loggerd/logger_internal.c: send a string log packet
 extern int logger_internal_send_msg_string(int fd,enum log_oper oper,char*data);
 
 // src/loggerd/logger_internal.c: convert operation to a readable string

@@ -45,4 +45,8 @@ extern enum uevent_action uevent_chars2action(char* act);
 
 // src/devd/uevent.c: convert uevent_action to string
 extern const char*uevent_action2char(enum uevent_action act);
+
+// src/devd/uevent.c: auto fill summary from environs
+extern uevent*uevent_fill_summary(uevent*data);
+
 #endif

@@ -26,7 +26,7 @@ void signal_handlers(int s){
 
 void setup_signals(){
 	tlog_debug("setting signals");
-	handle_signals(signal_handlers);
+	handle_signals((int[]){SIGINT,SIGHUP,SIGQUIT,SIGTERM,SIGCHLD,SIGALRM,SIGUSR1,SIGUSR2},8,signal_handlers);
 	tlog_debug("disable ctrl-alt-delete.");
 	reboot(RB_DISABLE_CAD);
 }

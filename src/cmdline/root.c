@@ -32,6 +32,10 @@ int cmdline_root(char*k,char*v){
 	return _xadd_item(k,"path",v);
 }
 
+int cmdline_rootwait(char*k,char*v){
+	return _xadd_item(k,"wait",v?v:"0");
+}
+
 int cmdline_rootflags(char*k,char*v){
 	tlog_debug("root block flags set to %s",v);
 	return _xadd_item(k,"flags",v);

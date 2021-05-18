@@ -6,6 +6,7 @@
 #include<string.h>
 #include<sys/un.h>
 #include<sys/socket.h>
+#include"str.h"
 #include"defines.h"
 #include"system.h"
 #include"logger_internal.h"
@@ -225,4 +226,18 @@ char*level2string(enum log_level level){
 		case LEVEL_EMERG:return   "EMGCY";
 		default:return            "?????";
 	}
+}
+
+enum log_level parse_level(const char*v){
+	#define CS (const char*[])
+	if(!v)return 0;
+	if(     fuzzy_cmps(v,CS{"7","debug","dbg"      ,NULL}))return LEVEL_DEBUG;
+	else if(fuzzy_cmps(v,CS{"6","info","inf"       ,NULL}))return LEVEL_INFO;
+	else if(fuzzy_cmps(v,CS{"5","notice"           ,NULL}))return LEVEL_NOTICE;
+	else if(fuzzy_cmps(v,CS{"4","warning"          ,NULL}))return LEVEL_WARNING;
+	else if(fuzzy_cmps(v,CS{"3","error"            ,NULL}))return LEVEL_ERROR;
+	else if(fuzzy_cmps(v,CS{"2","critical"         ,NULL}))return LEVEL_CRIT;
+	else if(fuzzy_cmps(v,CS{"1","alert","alrt"     ,NULL}))return LEVEL_ALERT;
+	else if(fuzzy_cmps(v,CS{"0","emgcy","emergency",NULL}))return LEVEL_EMERG;
+	else return 0;
 }

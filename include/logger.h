@@ -82,5 +82,8 @@ extern int level2klevel(enum log_level level);
 // src/loggerd/klog.c: convert kernel level to log_level
 extern enum log_level klevel2level(int level);
 
+// src/loggerd/logger_client.c: parse log_level from a string
+extern enum log_level parse_level(const char*v);
+
 #include"logtag.h"
 #endif

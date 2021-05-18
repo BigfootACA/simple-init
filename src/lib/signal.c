@@ -1,6 +1,7 @@
 #include<signal.h>
 #include<string.h>
 #include"system.h"
+
 void handle_signals(int*sigs,int len,void(*handler)(int)){
 	sigset_t signals;
 	struct sigaction sa;

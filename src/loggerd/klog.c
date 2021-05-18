@@ -72,6 +72,7 @@ static void kmsg_thread_exit(int p __attribute__((unused))){
 }
 
 static int read_kmsg_thread(void*data __attribute__((unused))){
+	close_all_fd((int[]){klogfd},1);
 	open_socket_logfd_default();
 
 	if(fcntl(klogfd,F_SETFL,0)<0)return terlog_error(-errno,"fcntl klog fd");
@@ -100,10 +101,11 @@ static int read_kmsg_thread(void*data __attribute__((unused))){
 			}
 		}else if(FD_ISSET(logfd,&fs)){
 			struct log_msg l;
-			if(logger_internal_read_msg(logfd,&l)<0){
+			int x=logger_internal_read_msg(logfd,&l);
+			if(x<0){
 				close_logfd();
 				break;
-			}
+			}else if(x==0)continue;
 			if(l.size>0)lseek(logfd,l.size,SEEK_CUR);
 		}
 	}
@@ -137,7 +139,9 @@ int init_kmesg(){
 	else logbuffer=conts;
 	conts=NULL;
 
-	return fork_run("klog",false,NULL,read_kmsg_thread);
+	int x=fork_run("klog",false,NULL,NULL,read_kmsg_thread);
+	close(klogfd);
+	return x;
 	fail:
 	if(conts)list_free_all(conts,logger_internal_free_buff);
 	if(buff)free(buff);

@@ -166,14 +166,17 @@ int logger_internal_read_msg(int fd,struct log_msg*buff){
 	size_t size=sizeof(struct log_msg),s;
 	memset(buff,0,size);
 	errno=0;
-	s=read(fd,buff,size);
-	if(errno>0&&errno!=EAGAIN)return -2;
+	while(1){
+		s=read(fd,buff,size);
+		if(errno==0)break;
+		switch(errno){
+			case EINTR:continue;
+			case EAGAIN:return 0;
+			default:return -2;
+		}
+	}
 	if(s==0)return EOF;
-	return (
-		s!=size||
-		buff->magic0!=LOGD_MAGIC0||
-		buff->magic1!=LOGD_MAGIC1
-	)?-2:0;
+	return (s!=size||!(logger_internal_check_magic(buff)))?-2:1;
 }
 
 int logger_internal_send_msg_string(int fd,enum log_oper oper,char*data){

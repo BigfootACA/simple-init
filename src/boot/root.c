@@ -73,12 +73,45 @@ char*search_init(char*init,char*root){
 	EPRET(ENOENT);
 }
 
+static char*get_block(char*path,int wait){
+	struct stat st;
+	char*block=path;
+
+	// wait root block
+	if(wait_block(block,wait)<0){
+		telog_error("wait rootfs block %s",block);
+		return NULL;
+	}
+
+	// resolve root block tag
+	#ifdef ENABLE_BLKID
+	if(block[0]!='/'&&!(block=blkid_evaluate_tag(block,NULL,NULL))){
+		telog_error("resolve tag %s",path);
+		return NULL;
+	}
+	#endif
+
+	// stat root block
+	if(stat(block,&st)<0){
+		telog_error("stat rootfs block %s",block);
+		return NULL;
+	}
+
+	// root block is a block device
+	if(!S_ISBLK(st.st_mode)){
+		telog_error("rootfs block %s is not a block",block);
+		errno=ENOTBLK;
+		return NULL;
+	}
+
+	return block;
+}
+
 int run_boot_root(boot_config*boot){
 	if(!boot)ERET(EINVAL);
 	if(boot->mode!=BOOT_SWITCHROOT)ERET(ENOTSUP);
 
-	int e;
-	struct stat st;
+	int e,wait;
 	char*definit,*init,*path,*type,*xflags,flags[PATH_MAX],point[256];
 	bool ro=parse_int(kvarr_get(boot->data,"rw","0"),0)==0;
 
@@ -86,21 +119,14 @@ int run_boot_root(boot_config*boot){
 	definit=kvarr_get(boot->data,"init",NULL);
 	xflags=kvarr_get(boot->data,"flags",NULL);
 	type=kvarr_get(boot->data,"type",NULL);
+	wait=parse_int(kvarr_get(boot->data,"wait",NULL),5);
+	if(wait<0)wait=5;
 
 	// root block path must set
 	if(!(path=kvarr_get(boot->data,"path",NULL)))
 		return trlog_error(ENUM(EINVAL),"rootfs block path not set");
 
-	// stat root block
-	if(stat(path,&st)<0)
-		return terlog_error(errno,"stat rootfs block %s",path);
-
-	// root block is a block device
-	if(!S_ISBLK(st.st_mode))return terlog_error(
-		ENUM(ENOTBLK),
-		"rootfs block %s is not a block",
-		path
-	);
+	if(!(path=get_block(path,wait)))return -errno;
 
 	// apppend rw/ro and flags
 	flags[0]='r',flags[1]=ro?'o':'w';

@@ -3,7 +3,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
-#include"logger.h"
+#include"logger_internal.h"
 #include"defines.h"
 #include"output.h"
 #include"str.h"
@@ -28,10 +28,9 @@ int open_log_file(char*path){
 		f=files[i];
 		if(f&&f->fd>0)continue;
 		if(!(f=malloc(sizeof(struct open_file))))return -1;
-		memset(f->file,0,PATH_MAX);
-		strncpy(f->file,path,PATH_MAX-1);
-		if(!(f->fd=open(path,O_WRONLY|O_SYNC|O_APPEND|O_CREAT))){
-			fprintf(stderr,"failed to open %s: %m\n",path);
+		memset(f,0,sizeof(struct open_file));
+		strncpy(f->file,path,sizeof(f->file)-1);
+		if((f->fd=open(path,O_WRONLY|O_SYNC|O_APPEND|O_CREAT))<0){
 			free(f);
 			return -1;
 		}

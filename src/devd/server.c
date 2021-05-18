@@ -193,13 +193,18 @@ int initdevd_main(int argc __attribute__((unused)),char**argv __attribute__((unu
 }
 
 int start_devd(char*tag,pid_t*p){
-	int fds[2];
+	int fds[2],r;
 	if(devfd>=0)ERET(EEXIST);
 	if(pipe(fds)<0)return -errno;
 	pid_t pid=fork();
 	switch(pid){
 		case -1:return -errno;
-		case 0:close(fds[0]);return devd_thread(fds[1]);
+		case 0:
+			close_all_fd((int[]){fds[1]},1);
+			r=devd_thread(fds[1]);
+			exit(r);
+			_exit(r);
+			return r;
 	}
 	close(fds[1]);
 	struct devd_msg msg;

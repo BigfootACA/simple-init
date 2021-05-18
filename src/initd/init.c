@@ -21,6 +21,8 @@ static int system_boot(){
 	setup_signals();
 	init_environ();
 
+	wait_logfs();
+
 	boot(boot_options.config);
 
 	return r;

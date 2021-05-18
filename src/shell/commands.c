@@ -18,6 +18,7 @@ DECLARE_MAIN(initdevd);
 DECLARE_MAIN(initloggerd);
 DECLARE_MAIN(initshell);
 DECLARE_MAIN(insmod);
+DECLARE_MAIN(loggerctl);
 DECLARE_MAIN(ls);
 DECLARE_MAIN(lsmod);
 DECLARE_MAIN(modprobe);
@@ -51,6 +52,7 @@ const struct shell_command*shell_cmds[]={
 	DECLARE_CMD(true,  dmesg,       "Print or control the kernel ring buffer")
 	DECLARE_CMD(true,  dumpargv,    "Dump all arguments to stdout")
 	DECLARE_CMD(true,  logdumpargv, "Dump all arguments to initloggerd")
+	DECLARE_CMD(true,  loggerctl,   "Control init logger daemon")
 	DECLARE_CMD(true,  dumpenv,     "Dump all environments variables to stdout")
 	DECLARE_CMD(true,  logdumpenv,  "Dump all environments variables to initloggerd")
 	DECLARE_CMD(true,  help,        "Show all shell builtin commands")

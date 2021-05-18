@@ -3,10 +3,12 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<signal.h>
+#include<sys/prctl.h>
 #include<sys/select.h>
 #include<readline/readline.h>
 #include<readline/history.h>
 #include"shell_internal.h"
+#include"proctitle.h"
 #include"system.h"
 #include"output.h"
 #include"array.h"
@@ -84,6 +86,8 @@ void run_shell(){
 	int r;
 	fd_set fds;
 	handle_signals((int[]){SIGINT,SIGTERM,SIGQUIT,SIGWINCH,SIGHUP},5,sighand);
+	setproctitle("initshell");
+	prctl(PR_SET_NAME,"Init Shell",0,0,0);
 	if(!getenv("PS1"))setenv("PS1","\\VINIT(\\u@\\h):\\w \\$ ",1);
 	update_prompt();
 	rl_callback_handler_install(prompt,linehandler);

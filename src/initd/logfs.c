@@ -1,6 +1,7 @@
 #define _GNU_SOURCE
 #include<errno.h>
 #include<stdio.h>
+#include<stdlib.h>
 #include<string.h>
 #include<pthread.h>
 #ifdef ENABLE_BLKID

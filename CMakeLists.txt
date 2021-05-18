@@ -72,6 +72,8 @@ else()
     target_link_libraries(init ${DEPS_LIBRARIES})
 endif()
 
+target_link_libraries(init pthread)
+
 if("${ENABLE_STRIP}" STREQUAL "ON")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -s")
 endif()

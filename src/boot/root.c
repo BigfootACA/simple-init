@@ -78,7 +78,7 @@ static char*get_block(char*path,int wait){
 	char*block=path;
 
 	// wait root block
-	if(wait_block(block,wait)<0){
+	if(wait_block(block,wait,TAG)<0){
 		telog_error("wait rootfs block %s",block);
 		return NULL;
 	}

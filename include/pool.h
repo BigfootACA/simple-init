@@ -23,6 +23,9 @@ struct pool{
 // src/lib/pool.c: init a thread pool
 extern struct pool*pool_init(int t_size,int q_max);
 
+// src/lib/pool.c: init a thread pool with CPUs*2
+extern struct pool*pool_init_cpus(int q_max);
+
 // src/lib/pool.c: add to thread pool
 extern int pool_add(struct pool*pool,void*(*callback)(void*arg),void*arg);
 

@@ -2,8 +2,9 @@
 #include<stdlib.h>
 #include<stdbool.h>
 #include<pthread.h>
+#include<sys/sysinfo.h>
+#include <defines.h>
 #include"pool.h"
-
 
 static void*_pool_main(void*arg){
 	struct pool*pool=(struct pool*)arg;
@@ -50,6 +51,11 @@ struct pool*pool_init(int t_size,int q_max){
 		free(pool);
 	}
 	return NULL;
+}
+
+struct pool*pool_init_cpus(int q_max){
+	struct sysinfo si;
+	return pool_init((sysinfo(&si)<0||si.procs<=0)?2:si.procs*2,q_max);
 }
 
 int pool_add(struct pool*pool,void*(*callback)(void*arg),void*arg){

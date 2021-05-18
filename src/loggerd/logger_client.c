@@ -192,7 +192,7 @@ int return_logger_perror(enum log_level level,int e,char*tag,const char*fmt,...)
 }
 
 int start_loggerd(pid_t*p){
-	int fds[2];
+	int fds[2],r;
 	if(logfd>=0)ERET(EEXIST);
 	if(socketpair(AF_UNIX,SOCK_STREAM,0,fds)<0)return -errno;
 	pid_t pid=fork();
@@ -200,7 +200,10 @@ int start_loggerd(pid_t*p){
 		case -1:return -errno;
 		case 0:
 			close_all_fd((int[]){fds[0]},1);
-			return loggerd_thread(fds[0]);
+			r=loggerd_thread(fds[0]);
+			exit(r);
+			_exit(r);
+			return r;
 	}
 	close(fds[0]);
 	struct log_msg msg;

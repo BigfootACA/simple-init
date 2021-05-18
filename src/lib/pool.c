@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include<stdio.h>
 #include<stdlib.h>
 #include<stdbool.h>
@@ -54,8 +55,8 @@ struct pool*pool_init(int t_size,int q_max){
 }
 
 struct pool*pool_init_cpus(int q_max){
-	struct sysinfo si;
-	return pool_init((sysinfo(&si)<0||si.procs<=0)?2:si.procs*2,q_max);
+	int r=get_nprocs()*2;
+	return pool_init(r>0?r:2,q_max);
 }
 
 int pool_add(struct pool*pool,void*(*callback)(void*arg),void*arg){

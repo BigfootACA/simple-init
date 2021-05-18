@@ -1,7 +1,6 @@
 #include<errno.h>
 #include<stdlib.h>
 #include<string.h>
-#include<blkid/blkid.h>
 #include"defines.h"
 #include"logger.h"
 #include"keyval.h"
@@ -29,16 +28,8 @@ static int _xadd_item(char*k,char*key,char*value){
 }
 
 int cmdline_root(char*k,char*v){
-	char*p=NULL;
-	#ifdef ENABLE_BLKID
-	if(!(p=blkid_evaluate_tag(v,NULL,NULL)))
-		tlog_warn("unable to resolve %s",v);
-	#else
-	if(v[0]=='/')p=v;
-	else tlog_alert("evaluate tag support is disabled");
-	#endif
-	if(p)tlog_debug("root block path set to %s",p);
-	return _xadd_item(k,"path",p);
+	if(v)tlog_debug("root block set to %s",v);
+	return _xadd_item(k,"path",v);
 }
 
 int cmdline_rootflags(char*k,char*v){

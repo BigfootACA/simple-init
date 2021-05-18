@@ -2,10 +2,12 @@
 #include<errno.h>
 #include<libgen.h>
 #include<stdio.h>
+#include"proctitle.h"
 #include"shell.h"
 #include"output.h"
 
-int main(int argc __attribute__((unused)),char**argv){
+int main(int argc,char**argv){
+	spt_init(argc,argv);
 	char*name;
 	if(
 		!(name=getenv("INIT_MAIN"))&&

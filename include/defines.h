@@ -43,6 +43,10 @@
 #define ENUM(err) -(errno=(err))
 #define ERET(err) return ENUM(err)
 #define EPRET(err) {errno=(err);return NULL;}
+static inline int min_int(int a,int b){return MIN(a,b);}
+static inline long min_long(long a,long b){return MIN(a,b);}
+static inline int max_int(int a,int b){return MAX(a,b);}
+static inline long max_long(long a,long b){return MAX(a,b);}
 typedef int runnable_t(void*);
 extern char**environ;
 #endif

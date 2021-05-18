@@ -91,6 +91,9 @@ extern int simple_file_append(char*file,char*content);
 // src/lib/file.c: check block or tag is exists
 extern int has_block(char*block);
 
+// src/lib/file.c: wait block or tag exists
+extern int wait_block(char*block,long time);
+
 // src/lib/signal.c: handle int,hup,chld,term,alrm,chld,usr1,usr2 signal
 extern void handle_signals(int*sigs,int len,void(*handler)(int));
 

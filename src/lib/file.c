@@ -157,3 +157,16 @@ int has_block(char*block){
 	}
 	return true;
 }
+
+int wait_block(char*block,long time){
+	#ifndef ENABLE_BLKID
+	if(block[0]!='/')return telog_alert("evaluate tag support is disabled");
+	#endif
+	long t=0;
+	while(t++<time)switch(has_block(block)){
+		case false:sleep(1);continue;
+		case true:return 0;
+		case -1:return -errno;
+	}
+	ERET(ETIMEDOUT);
+}

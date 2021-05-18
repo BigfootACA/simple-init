@@ -46,7 +46,7 @@ extern int devd_call_quit();
 // src/devd/modalias.c: search modalias in /sys/devices to load all modules
 extern int load_modalias();
 #else
-static inline int load_modalias(){return 0};
+static inline int load_modalias(){return 0;}
 #endif
 
 #endif

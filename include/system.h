@@ -101,7 +101,7 @@ extern void handle_signals(int*sigs,int len,void(*handler)(int));
 extern int get_max_fd();
 
 // src/lib/stdio.c: close all fds
-extern int close_all_fd();
+extern int close_all_fd(const int*exclude,int count);
 
 // call libmount to mount and exit if failed
 #define exmount(src,tgt,fs,data) \

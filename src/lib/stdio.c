@@ -7,6 +7,7 @@
 #include<sys/ioctl.h>
 #include<sys/resource.h>
 #include"pathnames.h"
+#include"system.h"
 #include"defines.h"
 #include"output.h"
 #include"str.h"
@@ -62,21 +63,27 @@ int get_max_fd(){
 	return (int)(m-1);
 }
 
-int close_all_fd(){
+static bool int_in_array(int val,const int*array,int count){
+	if(!array)return false;
+	for(int i=0;i<count;i++)if(array[i]==val)return true;
+	return false;
+}
+
+int close_all_fd(const int*exclude,int count){
 	DIR*d=NULL;
-	int r=0;
+	int r=0,fd,max_fd;
 	if(!(d=opendir(_PATH_PROC_SELF"/fd"))){
-		int fd,max_fd;
 		if((max_fd=get_max_fd())<0)return max_fd;
-		for(fd=3;fd>=0;fd=fd<max_fd?fd+1:-1)close(fd);
+		for(fd=3;fd>=0;fd=fd<max_fd?fd+1:-1)
+			if(!int_in_array(fd,exclude,count))close(fd);
 		return r;
 	}
 	struct dirent*de;
 	while((de=readdir(d))){
-		int fd=-1;
 		if((fd=parse_int(de->d_name,-1))<0)continue;
 		if(fd<3||fd==dirfd(d))continue;
-		close(fd);
+		if(!int_in_array(fd,exclude,count))close(fd);
 	}
+	closedir(d);
 	return r;
 }

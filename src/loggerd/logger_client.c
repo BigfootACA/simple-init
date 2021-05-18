@@ -6,7 +6,6 @@
 #include<string.h>
 #include<sys/un.h>
 #include<sys/socket.h>
-#include"kloglevel.h"
 #include"defines.h"
 #include"logger_internal.h"
 

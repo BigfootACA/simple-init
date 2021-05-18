@@ -3,9 +3,11 @@
 #include<signal.h>
 #include<unistd.h>
 #include<sys/un.h>
+#include<sys/prctl.h>
 #include<sys/epoll.h>
 #include<sys/socket.h>
 #include"devd_internal.h"
+#include"proctitle.h"
 #include"logger.h"
 #include"system.h"
 #include"defines.h"
@@ -130,6 +132,8 @@ static int devd_thread(int cfd){
 		e=-errno;
 		goto ex;
 	}
+	setproctitle("initdevd");
+	prctl(PR_SET_NAME,"Device Daemon",0,0,0);
 	ctl_fd(efd,EPOLL_CTL_ADD,fd);
 	if(cfd>=0){
 		devd_internal_send_msg(cfd,DEV_OK,NULL,0);

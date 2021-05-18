@@ -67,7 +67,7 @@ extern int syslog_logger(char*name,struct log_item *log);
 extern int printk_logger(char*name,struct log_item *log);
 
 // src/loggerd/file_logger.c: open log file
-extern FILE*open_log_file(char*path);
+extern int open_log_file(char*path);
 
 // src/loggerd/file_logger.c: close log file
 extern void close_log_file(char*path);

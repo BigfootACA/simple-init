@@ -1,4 +1,5 @@
 #include<fcntl.h>
+#include<unistd.h>
 #include<string.h>
 #include"logger.h"
 #include"keyval.h"
@@ -45,8 +46,12 @@ int parse_cmdline(int fd){
 
 int load_cmdline(){
 	tlog_debug("loading kernel cmdline");
-	int fd=open(_PATH_PROC_CMDLINE,O_RDONLY);
-	return fd<0?telog_error("open "_PATH_PROC_CMDLINE):parse_cmdline(fd);
+	int fd,r;
+	if((fd=open(_PATH_PROC_CMDLINE,O_RDONLY))<0)
+		return telog_error("open "_PATH_PROC_CMDLINE);
+	r=parse_cmdline(fd);
+	close(fd);
+	return r;
 }
 
 int cmdline_end(char*k __attribute__((unused)),char*v __attribute__((unused))){

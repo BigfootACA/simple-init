@@ -3,6 +3,7 @@
 #include<stdlib.h>
 #include<stdbool.h>
 #include<string.h>
+#include<sys/uio.h>
 #include"defines.h"
 #include"list.h"
 #include"logger_internal.h"
@@ -148,10 +149,12 @@ int logger_internal_send_msg(int fd,enum log_oper oper,void*data,size_t size){
 	size_t xs=sizeof(struct log_msg);
 	if(fd<0)ERET(EINVAL);
 	logger_internal_init_msg(&msg,oper,size);
-	if((size_t)write(fd,&msg,xs)!=xs)return -1;
-	if(size!=0&&(size_t)write(fd,data,size)!=size)return -2;
-	fsync(fd);
-	return (int)(xs+size);
+	struct iovec i[2]={
+		{&msg,xs},
+		{data,size}
+	};
+	size_t s=xs+size;
+	return ((size_t)writev(fd,i,size==0?1:2))==s?(int)s:-1;
 }
 
 int logger_internal_read_msg(int fd,struct log_msg*buff){

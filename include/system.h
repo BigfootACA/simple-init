@@ -92,7 +92,7 @@ extern int simple_file_append(char*file,char*content);
 extern int has_block(char*block);
 
 // src/lib/file.c: wait block or tag exists
-extern int wait_block(char*block,long time);
+extern int wait_block(char*block,long time,char*tag);
 
 // src/lib/signal.c: handle int,hup,chld,term,alrm,chld,usr1,usr2 signal
 extern void handle_signals(int*sigs,int len,void(*handler)(int));

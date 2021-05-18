@@ -9,6 +9,7 @@
 #ifdef ENABLE_BLKID
 #include<blkid/blkid.h>
 #endif
+#include"logger.h"
 #include"system.h"
 #include"defines.h"
 #include"pathnames.h"
@@ -158,15 +159,25 @@ int has_block(char*block){
 	return true;
 }
 
-int wait_block(char*block,long time){
+int wait_block(char*block,long time,char*tag){
 	#ifndef ENABLE_BLKID
 	if(block[0]!='/')return telog_alert("evaluate tag support is disabled");
 	#endif
+	bool msg=false;
 	long t=0;
-	while(t++<time)switch(has_block(block)){
-		case false:sleep(1);continue;
+	while(time==0||t++<time)switch(has_block(block)){
+		case false:
+			if(tag&&!msg){
+				char x[128]={0};
+				if(time!=0)snprintf(x,127," %ld seconds",time);
+				log_notice(tag,"wait for block %s%s",tag,x);
+				msg=true;
+			}
+			sleep(1);
+		continue;
 		case true:return 0;
 		case -1:return -errno;
 	}
+	if(tag)log_error(tag,"wait for block %s timed out",tag);
 	ERET(ETIMEDOUT);
 }

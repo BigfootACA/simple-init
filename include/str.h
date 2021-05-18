@@ -66,4 +66,7 @@ extern char skips(int fd,char stop[]);
 
 // src/lib/replace.c: replace holder (eg: replace([{"a","aa"}],'%',xxxx,'bb%abb',16)="bbaabb")
 extern char*replace(keyval**table,char del,char*dest,char*src,size_t size);
+
+// src/lib/strings.c: fuzzy compare string
+extern bool fuzzy_cmp(const char*s1,const char*s2);
 #endif

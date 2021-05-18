@@ -7,6 +7,7 @@
 #include<stdbool.h>
 #include<string.h>
 #include<unistd.h>
+#include"defines.h"
 #include"str.h"
 
 char*time2nstr(time_t*time,char*format,char*buff,size_t len){
@@ -112,4 +113,13 @@ long parse_long(char*str,long def){
 
 int parse_int(char*str,int def){
 	return (int)parse_long(str,(int)def);
+}
+
+bool fuzzy_cmp(const char*s1,const char*s2){
+	if(!s1&&!s2)return true;
+	if(!s1||!s2)return false;
+	size_t l1=strlen(s1),l2=strlen(s2);
+	if(l1==0&&l2==0)return true;
+	if(l1==0||l2==0)return false;
+	return strncasecmp(s1,s2,min_int(l1,l2))==0;
 }

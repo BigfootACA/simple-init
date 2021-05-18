@@ -1,6 +1,7 @@
 #include<unistd.h>
 #include<stdbool.h>
 #include<stdlib.h>
+#include<sys/prctl.h>
 #define TAG "init"
 #include"init.h"
 #include"shell.h"
@@ -53,6 +54,10 @@ int init_main(int argc __attribute__((unused)),char**argv __attribute__((unused)
 	start_loggerd(NULL);
 	atexit(wait_loggerd);
 	tlog_info("init started");
+
+	// set title
+	setproctitle("init");
+	prctl(PR_SET_NAME,"Init Daemon",0,0,0);
 
 	// boot
 	if((r=system_boot())!=0)return r;

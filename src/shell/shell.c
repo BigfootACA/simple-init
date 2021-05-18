@@ -7,6 +7,7 @@
 #include<readline/readline.h>
 #include<readline/history.h>
 #include"shell_internal.h"
+#include"system.h"
 #include"output.h"
 #include"array.h"
 
@@ -44,7 +45,7 @@ static void sighand(int s __attribute__((unused))){
 			rl_forced_update_display();
 		return;
 		case SIGWINCH:sigwinch=true;return;
-		case SIGQUIT:case SIGTERM:shell_exit(s);
+		case SIGHUP:case SIGQUIT:case SIGTERM:shell_exit(s);
 		default:;
 	}
 }
@@ -82,10 +83,7 @@ static void linehandler(char*line){
 void run_shell(){
 	int r;
 	fd_set fds;
-	signal(SIGINT,sighand);
-	signal(SIGTERM,sighand);
-	signal(SIGQUIT,sighand);
-	signal(SIGWINCH,sighand);
+	handle_signals((int[]){SIGINT,SIGTERM,SIGQUIT,SIGWINCH,SIGHUP},5,sighand);
 	if(!getenv("PS1"))setenv("PS1","\\VINIT(\\u@\\h):\\w \\$ ",1);
 	update_prompt();
 	rl_callback_handler_install(prompt,linehandler);

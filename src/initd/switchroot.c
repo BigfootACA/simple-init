@@ -127,7 +127,7 @@ int run_switch_root(char*root,char*init){
 	tlog_alert("switch to new root %s and execute new init %s",root,init);
 	devd_call_quit();
 	logger_exit();
-	close_all_fd();
+	close_all_fd(NULL,0);
 	if(switchroot(root)!=0)return -1;
 	if(run_init(init)!=0){
 		tlog_emerg("failed to found working init");

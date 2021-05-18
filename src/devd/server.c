@@ -11,6 +11,7 @@
 #include"defines.h"
 #include"devd.h"
 #include"init.h"
+#include"pool.h"
 #define TAG "devd"
 
 static int devdfd=-1;
@@ -54,26 +55,21 @@ static void process_add(char*data){
 	process_uevent(&event);
 }
 
-static int process_data(int fd,struct devd_msg*msg){
-	if(!msg)ERET(EINVAL);
-	if(
-		msg->magic0!=DEVD_MAGIC0||
-		msg->magic1!=DEVD_MAGIC1
-	)return 1;
-	void*data=NULL;
-	if(msg->size>0){
-		if(!(data=malloc(msg->size)))return 1;
-		if((size_t)read(fd,data,msg->size)!=msg->size){
-			free(data);
-			return 1;
-		}
-	}
-	switch(msg->oper){
+static struct pool*pool;
+struct save_data{
+	int fd;
+	struct devd_msg msg;
+	char*data;
+};
+static void*process_thread(void*d){
+	if(!d)EPRET(EINVAL);
+	struct save_data*s=(struct save_data*)d;
+	switch(s->msg.oper){
 		case DEV_OK:case DEV_FAIL:break;
 
 		// process kobject uevent
 		case DEV_ADD:
-			if(data)process_add((char*)data);
+			if(s->data)process_add(s->data);
 		break;
 
 		// scan /sys/dev and init /dev (create all nodes)
@@ -93,8 +89,9 @@ static int process_data(int fd,struct devd_msg*msg){
 		// terminate devd
 		case DEV_QUIT:run=false;break;
 	}
-	devd_internal_send_msg(fd,DEV_OK,NULL,0);
-	return 0;
+	if(s->data)free(s->data);
+	devd_internal_send_msg(s->fd,DEV_OK,NULL,0);
+	return NULL;
 }
 
 static int _start_uevent_thread(void*d __attribute__((unused))){
@@ -109,9 +106,11 @@ static void ctl_fd(int efd,int oper,int fd){
 }
 
 static int devd_thread(int cfd){
-	static size_t ds=sizeof(struct devd_msg),es=sizeof(struct epoll_event);
+	static size_t
+		ss=sizeof(struct save_data),
+		ds=sizeof(struct devd_msg),
+		es=sizeof(struct epoll_event);
 	int e=0,r,fd,efd;
-	struct devd_msg msg;
 	struct epoll_event*evs;
 	if((fd=listen_devd_socket())<0)return fd;
 	tlog_info("devd start with pid %d",getpid());
@@ -123,6 +122,11 @@ static int devd_thread(int cfd){
 	if((efd=epoll_create(64))<0)return terlog_error(-errno,"epoll_create failed");
 	if(!(evs=malloc(es*64))){
 		telog_error("malloc failed");
+		e=-errno;
+		goto ex;
+	}
+	if(!(pool=pool_init_cpus(8192))){
+		telog_error("init pool failed");
 		e=-errno;
 		goto ex;
 	}
@@ -146,7 +150,10 @@ static int devd_thread(int cfd){
 				fcntl(n,F_SETFL,O_RDWR|O_NONBLOCK);
 				ctl_fd(efd,EPOLL_CTL_ADD,n);
 			}else for(;;){
-				ssize_t s=read(f,&msg,ds);
+				struct save_data*d=malloc(ss);
+				if(!d)goto ex;
+				memset(d,0,ss);
+				ssize_t s=read(f,&d->msg,ds);
 				if(s<0){
 					if(errno==EINTR)continue;
 					else if(errno==EAGAIN)break;
@@ -154,10 +161,18 @@ static int devd_thread(int cfd){
 						telog_error("read %d failed",f);
 						s=0;
 					}
-				}else if((size_t)s!=ds||process_data(f,&msg)!=0)s=0;
+				}else if(
+					(size_t)s!=ds||
+					!devd_internal_check_magic(&d->msg)||
+					(d->msg.size>0&&!(d->data=devd_read_data(f,&d->msg)))
+				)s=0;
 				if(s==0){
+					if(d->data)free(d->data);
 					ctl_fd(efd,EPOLL_CTL_DEL,f);
 					break;
+				}else{
+					d->fd=f;
+					pool_add(pool,process_thread,d);
 				}
 			}
 		}

@@ -31,6 +31,7 @@ static int init_hotplug_sock(){
 
 int uevent_netlink_thread(){
 	static size_t es=sizeof(struct epoll_event),ms=sizeof(struct devd_msg);
+	close_all_fd(NULL,0);
 	open_socket_logfd_default();
 	char buf[8192],*v;
 	size_t vs;

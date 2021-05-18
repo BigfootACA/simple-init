@@ -123,3 +123,11 @@ bool fuzzy_cmp(const char*s1,const char*s2){
 	if(l1==0||l2==0)return false;
 	return strncasecmp(s1,s2,min_int(l1,l2))==0;
 }
+
+bool fuzzy_cmps(const char*v,const char**s){
+	if(!v&&!s)return true;
+	if(!v||!s)return false;
+	for(int i=0;(s[i]);i++)
+		if(fuzzy_cmp(v,s[i]))return true;
+	return false;
+}

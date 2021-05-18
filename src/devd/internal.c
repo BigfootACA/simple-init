@@ -3,6 +3,7 @@
 #include<string.h>
 #include<sys/uio.h>
 #include<sys/un.h>
+#include<stdbool.h>
 #include"defines.h"
 #include"devd_internal.h"
 
@@ -13,6 +14,10 @@ void devd_internal_init_msg(struct devd_msg*msg,enum devd_oper oper,size_t size)
 	msg->magic1=DEVD_MAGIC1;
 	msg->oper=oper;
 	msg->size=size;
+}
+
+bool devd_internal_check_magic(struct devd_msg*msg){
+	return msg&&msg->magic0==DEVD_MAGIC0&&msg->magic1==DEVD_MAGIC1;
 }
 
 int devd_internal_send_msg(int fd,enum devd_oper oper,void*data,size_t size){
@@ -36,11 +41,7 @@ int devd_internal_read_msg(int fd,struct devd_msg*buff){
 	s=read(fd,buff,size);
 	if(errno>0&&errno!=EAGAIN)return -2;
 	if(s==0)return EOF;
-	return (
-		s!=size||
-		buff->magic0!=DEVD_MAGIC0||
-		buff->magic1!=DEVD_MAGIC1
-	)?-2:0;
+	return (s!=size||!devd_internal_check_magic(buff))?-2:0;
 }
 
 int devd_internal_send_msg_string(int fd,enum devd_oper oper,char*data){

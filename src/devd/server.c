@@ -114,7 +114,7 @@ static int devd_thread(int cfd){
 	struct epoll_event*evs;
 	if((fd=listen_devd_socket())<0)return fd;
 	tlog_info("devd start with pid %d",getpid());
-	fork_run("netlink",false,NULL,_start_uevent_thread);
+	fork_run("netlink",false,NULL,NULL,_start_uevent_thread);
 	signal(SIGCHLD,SIG_IGN);
 	handle_signals((int[]){SIGUSR1,SIGUSR2,SIGCHLD},3,SIG_IGN);
 	handle_signals((int[]){SIGINT,SIGHUP,SIGTERM,SIGQUIT},4,devd_cleanup);

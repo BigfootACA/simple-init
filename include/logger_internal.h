@@ -99,6 +99,9 @@ extern int logger_internal_set_level(char*name,enum log_level level);
 // src/loggerd/logger_internal.c: init a log packaet
 extern void logger_internal_init_msg(struct log_msg*msg,enum log_oper oper,size_t size);
 
+// src/devd/internal.c: check log packaet magic
+extern bool logger_internal_check_magic(struct log_msg*msg);
+
 // src/loggerd/logger_internal.c: read a log packet
 extern int logger_internal_read_msg(int fd,struct log_msg*buff);
 

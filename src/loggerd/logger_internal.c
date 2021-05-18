@@ -135,6 +135,10 @@ int logger_internal_set_level(char*name,enum log_level level){
 	ERET(ENOENT);
 }
 
+bool logger_internal_check_magic(struct log_msg*msg){
+	return msg&&msg->magic0==LOGD_MAGIC0&&msg->magic1==LOGD_MAGIC1;
+}
+
 void logger_internal_init_msg(struct log_msg*msg,enum log_oper oper,size_t size){
 	if(!msg)return;
 	memset(msg,0,sizeof(struct log_msg));

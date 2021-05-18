@@ -1,24 +1,33 @@
+#define _GNU_SOURCE
 #include<errno.h>
 #include<stdio.h>
 #include<string.h>
-#include<stdlib.h>
+#include<pthread.h>
 #ifdef ENABLE_BLKID
 #include<blkid/blkid.h>
 #endif
 #include"str.h"
+#include"init.h"
 #include"logger.h"
 #include"system.h"
 #include"defines.h"
 #include"cmdline.h"
+
 #define TAG "logfs"
 #define DEFAULT_LOGFS_FILE "simple-init.%N.log"
 #define DEFAULT_LOGFS_BLOCK "PARTLABEL=logfs"
-int setup_logfs(){
+
+static pthread_t t_logfs;
+
+static int _setup_logfs(){
 	int e=0;
 	char*logfs=boot_options.logfs_block,*logfile=boot_options.logfs_file;
 
 	if(logfile[0]==0)logfile=DEFAULT_LOGFS_FILE;
 	if(logfs[0]==0)logfs=DEFAULT_LOGFS_BLOCK;
+
+	wait_block(logfs,10,TAG);
+
 	if(logfs[0]!='/')
 	#ifdef ENABLE_BLKID
 		logfs=blkid_evaluate_tag(logfs,NULL,NULL);
@@ -86,4 +95,22 @@ int setup_logfs(){
 	}
 	#endif
 	return e;
+}
+
+static void*_logfs_thread(void*d __attribute__((unused))){
+	_setup_logfs();
+	return NULL;
+}
+
+int setup_logfs(){
+	pthread_create(&t_logfs,NULL,_logfs_thread,NULL);
+	if(!t_logfs)return -1;
+	pthread_setname_np(t_logfs,"LogFS Setup");
+	return 0;
+}
+
+int wait_logfs(){
+	if(!t_logfs)return -1;
+	pthread_join(t_logfs,NULL);
+	return 0;
 }

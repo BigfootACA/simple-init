@@ -48,6 +48,10 @@ extern int umount_all();
 // src/initd/preinit.c: simple-init preinit
 extern int preinit();
 
-//src/initd/logfs.c: setup logfs
+// src/initd/logfs.c: setup logfs
 extern int setup_logfs();
+
+// src/initd/logfs.c: wait logfs setup done
+extern int wait_logfs();
+
 #endif

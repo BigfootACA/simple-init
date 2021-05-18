@@ -95,8 +95,8 @@ void setproctitle(const char*fmt,...){
 	if(!SPT.reset){
 		memset(SPT.base,0,SPT.end-SPT.base);
 		SPT.reset=1;
-	}else memset(SPT.base,0,MIN(sizeof(buf),(size_t)(SPT.end-SPT.base)));
-	len=MIN(len,MIN((int)sizeof(buf),(int)(SPT.end-SPT.base)-1));
+	}else memset(SPT.base,0,min_int(sizeof(buf),(size_t)(SPT.end-SPT.base)));
+	len=min_int(len,min_int((int)sizeof(buf),(int)(SPT.end-SPT.base)-1));
 	memcpy(SPT.base,buf,len);
 	nul=&SPT.base[len];
 	if(nul<SPT.nul)*SPT.nul='.';

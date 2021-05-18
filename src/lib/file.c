@@ -6,6 +6,9 @@
 #include<libgen.h>
 #include<unistd.h>
 #include<sys/stat.h>
+#ifdef ENABLE_BLKID
+#include<blkid/blkid.h>
+#endif
 #include"system.h"
 #include"defines.h"
 #include"pathnames.h"
@@ -139,4 +142,18 @@ int remove_folders(int dfd,int flags){
 			unlinkat(dfd,ent->d_name,flags);
 	free(dir);
 	return 0;
+}
+
+int has_block(char*block){
+	char*p=block;
+	#ifdef ENABLE_BLKID
+	if(block[0]!='/'&&!(p=blkid_evaluate_tag(block,NULL,NULL)))return false;
+	#endif
+	struct stat st;
+	if(stat(p,&st)<0)return errno==ENOENT?false:-1;
+	if(!S_ISBLK(st.st_mode)){
+		errno=ENOTBLK;
+		return -1;
+	}
+	return true;
 }

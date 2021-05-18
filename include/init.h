@@ -25,7 +25,7 @@ extern void log_environ(enum log_level level,char*tag);
 extern int run_loop_program(char*path,char**args);
 
 // src/initd/run.c: fork and run a function
-extern int fork_run(char*tag,bool wait,void*data,runnable_t*runnable);
+extern int fork_run(char*tag,bool wait,pid_t*p,void*data,runnable_t*runnable);
 
 // src/initd/run.c: run a program once
 extern pid_t run_program(char*path,char**args);

@@ -50,13 +50,15 @@ int run_loop_program(char*path,char**args){
 	return 0;
 }
 
-int fork_run(char*tag,bool wait,void*data,runnable_t*runnable){
+int fork_run(char*tag,bool wait,pid_t*pp,void*data,runnable_t*runnable){
 	if(!tag||!runnable)ERET(EINVAL);
 	pid_t pid;
 	switch((pid=fork())){
 		case -1:return erlog_warn(-errno,tag,"fork");
 		case 0:break;
-		default:return wait?wait_cmd(pid):0;
+		default:
+			if(pp)*pp=pid;
+			return wait?wait_cmd(pid):0;
 	}
 	setproctitle(tag);
 	int ret=runnable(data);

@@ -7,6 +7,7 @@
 #include<sys/un.h>
 #include<sys/socket.h>
 #include"defines.h"
+#include"system.h"
 #include"logger_internal.h"
 
 int logfd=-1;
@@ -197,7 +198,9 @@ int start_loggerd(pid_t*p){
 	pid_t pid=fork();
 	switch(pid){
 		case -1:return -errno;
-		case 0:close(fds[1]);return loggerd_thread(fds[0]);
+		case 0:
+			close_all_fd((int[]){fds[0]},1);
+			return loggerd_thread(fds[0]);
 	}
 	close(fds[0]);
 	struct log_msg msg;

@@ -70,14 +70,15 @@ int preinit(){
 	// create all device nodes
 	devd_call_init();
 
+	// read kmsg to logger
+	logger_klog();
+
 	// open /dev/logger.log
 	char*dev_logger=_PATH_DEV"/logger.log";
 	logger_open(dev_logger);
 	chmod(dev_logger,0600);
 	chown(dev_logger,0,0);
 
-	// read kmsg to logger
-	logger_klog();
 
 	#ifdef ENABLE_KMOD
 	// load all modules

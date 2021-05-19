@@ -81,5 +81,6 @@ int uevent_netlink_thread(){
 	if(hs>=0)close(hs);
 	if(ds>=0)close(ds);
 	if(efd>=0)close(efd);
+	if(evs)free(evs);
 	return e;
 }

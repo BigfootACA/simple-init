@@ -4,12 +4,14 @@
 #include<stdbool.h>
 #include<pthread.h>
 #include<sys/sysinfo.h>
+#include<sys/prctl.h>
 #include"defines.h"
 #include"pool.h"
 
 static void*_pool_main(void*arg){
 	struct pool*pool=(struct pool*)arg;
 	struct job*pjob=NULL;
+	prctl(PR_SET_NAME,"Pool worker",0,0,0);
 	for(;;){
 		pthread_mutex_lock(&(pool->mutex));
 		while((pool->q_cur==0)&&!pool->p_closed)

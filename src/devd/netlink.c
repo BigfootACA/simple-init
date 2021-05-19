@@ -38,7 +38,7 @@ int uevent_netlink_thread(){
 	ssize_t s;
 	bool run=true;
 	struct devd_msg msg;
-	struct epoll_event ev,*evs;
+	struct epoll_event ev,*evs=NULL;
 	int hs,ds=-1,efd=-1,e=-1,r;
 	if((hs=init_hotplug_sock())<0)goto fail;
 	if((ds=open_default_devd_socket(TAG))<0)goto fail;

@@ -64,9 +64,9 @@ static int log_msg_send(enum log_oper oper,void*data,size_t size){
 			free(d);
 			return -1;
 		}
-		if(sizeof(int)==msg.size&&data)errno=*(int*)data;
+		errno=parse_int((char*)d,0);
 		free(d);
-	}
+	}else errno=0;
 	return x;
 }
 

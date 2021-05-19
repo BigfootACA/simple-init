@@ -110,8 +110,9 @@ keyval*kv_new_set(char*key,char*value){
 }
 
 keyval*kv_new_set_dup(char*key,char*value){
+	if(!key)return NULL;
 	keyval*kv=kv_new();
-	if(!kv||!key)return NULL;
+	if(!kv)return NULL;
 	if(!kv_set_dup(kv,key,value)){
 		kv_free(kv);
 		return NULL;
@@ -191,7 +192,13 @@ keyval**kvarr_parse(keyval**kvs,size_t s,char*lines,char ldel,char del){
 keyval**kvarr_new_parse_arr(char**lines,char del){
 	if(!lines)return NULL;
 	size_t s=(char_array_len(lines)+1);
-	return kvarr_parse_arr(kvarr_new(s),s,lines,del);
+	keyval**k=kvarr_new(s);
+	if(!k)return NULL;
+	if(!kvarr_parse_arr(k,s,lines,del)){
+		free(k);
+		return NULL;
+	}
+	return k;
 }
 
 keyval**kvarr_new_parse(char*lines,char ldel,char del){
@@ -199,7 +206,13 @@ keyval**kvarr_new_parse(char*lines,char ldel,char del){
 	size_t s=0,x=strlen(lines);
 	for(size_t i=0;i<x-1;i++)if(lines[i]==ldel)s++;
 	if(lines[x]!=ldel)s++;
-	return kvarr_parse(kvarr_new(s+1),s,lines,ldel,del);
+	keyval**k=kvarr_new(s+1);
+	if(!k)return NULL;
+	if(!kvarr_parse(k,s,lines,ldel,del)){
+		free(k);
+		return NULL;
+	}
+	return k;
 }
 
 void kvarr_dump(keyval**kvs,char*del,char*ldel){

@@ -33,8 +33,8 @@ static int listen_devd_socket(){
 		goto fail;
 	}
 	if(listen(fd,1)<0){
-		goto fail;
 		telog_error("cannot listen socket");
+		goto fail;
 	}
 	return fd;
 	fail:

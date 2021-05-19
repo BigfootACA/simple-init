@@ -57,10 +57,11 @@ int uevent_netlink_thread(){
 		}else for(int i=0;i<r;i++){
 			int f=evs[i].data.fd;
 			if(f==hs){
-				if((s=recv(hs,&buf,8192,0))<0)break;
+				memset(buf,0,8192);
+				if((s=recv(hs,&buf,8191,0))<0)break;
 				for(ssize_t x=0;x<s;x++)if(buf[x]==0)buf[x]='\n';
 				if(!(v=strchr(buf,'\n')))continue;
-				v++,vs=s-1-(v-(char*)buf);
+				v++,vs=s-(v-(char*)buf)+1;
 				memset(&msg,0,ms);
 				devd_internal_send_msg(ds,DEV_ADD,v,vs);
 				do{if(devd_internal_read_msg(ds,&msg)<0)goto fail;}

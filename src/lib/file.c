@@ -161,7 +161,7 @@ int has_block(char*block){
 
 int wait_block(char*block,long time,char*tag){
 	#ifndef ENABLE_BLKID
-	if(block[0]!='/')return telog_alert("evaluate tag support is disabled");
+	if(block[0]!='/')return elog_alert(tag,"evaluate tag support is disabled");
 	#endif
 	bool msg=false;
 	long t=0;

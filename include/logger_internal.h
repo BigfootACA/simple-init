@@ -16,9 +16,9 @@ enum log_oper{
 	LOG_ADD      =0xAF03,
 	LOG_OPEN     =0xAF04,
 	LOG_CLOSE    =0xAF05,
-	LOG_CLEAR    =0xAF07,
-	LOG_LISTEN   =0xAF09,
-	LOG_KLOG     =0xAF06,
+	LOG_CLEAR    =0xAF06,
+	LOG_LISTEN   =0xAF07,
+	LOG_KLOG     =0xAF08,
 };
 
 // logger message packet

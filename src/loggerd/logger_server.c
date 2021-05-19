@@ -6,98 +6,130 @@
 #include<signal.h>
 #include<string.h>
 #include<sys/un.h>
+#include<sys/epoll.h>
+#include<sys/prctl.h>
 #include<sys/socket.h>
-#include<sys/select.h>
-#include"list.h"
 #include"defines.h"
+#include"proctitle.h"
 #include"logger_internal.h"
 #define TAG "loggerd"
 
-static bool clean=false;
-struct fd_item{
-	bool socket,delete;
-	char path[PATH_MAX];
+struct socket_data{
 	int fd;
+	bool server;
+	struct sockaddr_un un;
 };
-static list*fds;
 
-static int fd_item_add(int fd,char*path,bool socket){
-	if(fd<0)ERET(EINVAL);
-	size_t s=sizeof(struct fd_item);
-	struct fd_item*p=malloc(s);
-	if(!p)goto fail;
-	memset(p,0,s);
-	p->fd=fd;
-	p->socket=socket;
-	if(path){
-		strncpy(p->path,path,sizeof(p->path)-1);
-		p->delete=true;
-	}
-	list*new=list_new(p);
-	if(!new)goto fail;
-	if(!fds)fds=new;
-	else list_push(fds,new);
-	return (errno=0);
-	fail:
-	logger_internal_printf(LEVEL_ALERT,TAG,"cannot allocate new fd");
-	close(fd);
-	if(path)unlink(path);
-	ERET(ENOMEM);
+static bool clean=false;
+static int efd=-1;
+static list*slist=NULL;
+
+static struct socket_data*new_socket_data(int fd,bool server,char*path){
+	struct socket_data*sd=malloc(sizeof(struct socket_data));
+	if(!sd)return NULL;
+	memset(sd,0,sizeof(struct socket_data));
+	sd->fd=fd;
+	sd->server=server;
+	sd->un.sun_family=AF_UNIX;
+	if(path)strncpy(sd->un.sun_path,path,sizeof(sd->un.sun_path)-1);
+	return sd;
 }
 
-static int fd_item_remove(void*d){
-	if(!d)ERET(EINVAL);
-	struct fd_item*f=(struct fd_item*)d;
-	close(f->fd);
-	if(f->delete)unlink(f->path);
-	free(f);
+static struct socket_data*add_fd(int fd,bool server,char*path){
+	list*item=NULL;
+	struct epoll_event*ev=NULL;
+	struct socket_data*data=NULL;
+	if(!(ev=malloc(sizeof(struct epoll_event))))goto fail;
+	if(!(data=new_socket_data(fd,server,path)))goto fail;
+	if(!(item=list_new(data)))goto fail;
+	memset(ev,0,sizeof(struct epoll_event));
+	ev->events=EPOLLIN,ev->data.ptr=data;
+	epoll_ctl(efd,EPOLL_CTL_ADD,fd,ev);
+	free(ev);
+	if(!slist)slist=item;
+	else list_push(slist,item);
+	return data;
+	fail:
+	if(ev)free(ev);
+	if(data)free(data);
+	return NULL;
+}
+
+static int _hand_remove_data(void*d){
+	struct socket_data*data=(struct socket_data*)d;
+	if(!d)return -1;
+	epoll_ctl(efd,EPOLL_CTL_DEL,data->fd,NULL);
+	if(data->server)unlink(data->un.sun_path);
+	close(data->fd);
+	free(d);
 	return 0;
+}
+
+static void del_fd(struct socket_data*data){
+	if(!data)return;
+	if(!slist){
+		_hand_remove_data(data);
+		return;
+	}
+	list*d=list_first(slist),*next;
+	if(d)do{
+		next=d->next;
+		if(data!=d->data)continue;
+		if(list_is_alone(d)){
+			list_free_all(d,_hand_remove_data);
+			slist=NULL;
+			break;
+		}else{
+			if(d==slist){
+				if(d->prev)slist=d->prev;
+				if(d->next)slist=d->next;
+			}
+			list_remove_free(d,_hand_remove_data);
+		}
+	}while((d=next));
 }
 
 static int loggerd_add_listen(char*path){
 	if(!path)ERET(EINVAL);
+	struct socket_data*sd;
 	int fd;
-	struct sockaddr_un un;
-	memset(&un,0,sizeof(un));
-	un.sun_family=AF_UNIX;
-	strncpy(un.sun_path,path,sizeof(un.sun_path)-1);
+	if((fd=socket(AF_UNIX,SOCK_STREAM,0))<0){
+		logger_internal_printf(LEVEL_ERROR,"loggerd","cannot create socket: %m");
+		return -errno;
+	}
 	if(access(path,F_OK)==0){
 		logger_internal_printf(LEVEL_ERROR,"loggerd","socket %s exists",path);
 		ERET(EEXIST);
 	}else if(errno!=ENOENT){
 		logger_internal_printf(LEVEL_ERROR,"loggerd","failed to access %s: %m",path);
 		return -errno;
-	}
-	if((fd=socket(AF_UNIX,SOCK_STREAM,0))<0){
-		logger_internal_printf(LEVEL_ERROR,"loggerd","cannot create socket: %m");
-		return -errno;
-	}
-	if(bind(fd,(struct sockaddr*)&un,sizeof(un))<0){
+	}else errno=0;
+	if(!(sd=add_fd(fd,true,path)))return -1;
+	if(bind(sd->fd,(struct sockaddr*)&sd->un,sizeof(sd->un))<0){
 		int er=errno;
 		logger_internal_printf(LEVEL_ERROR,"loggerd","cannot bind socket: %m");
-		close(fd);
-		unlink(path);
+		del_fd(sd);
 		ERET(er);
 	}
-	if(listen(fd,1)<0){
+	if(listen(sd->fd,1)<0){
 		int er=errno;
 		logger_internal_printf(LEVEL_ERROR,"loggerd","cannot listen socket: %m");
-		close(fd);
-		unlink(path);
+		del_fd(sd);
 		ERET(er);
 	}
 	logger_internal_printf(LEVEL_ALERT,"loggerd","add new listen %s",path);
-	return fd_item_add(fd,path,true);
+	return 0;
 }
 
 static int loggerd_read(int fd){
 	if(fd<0)ERET(EINVAL);
 	errno=0;
-	int e;
 	size_t s;
 	void*data=NULL;
 	struct log_msg msg;
-	if((e=logger_internal_read_msg(fd,&msg))<0)goto ex;
+	int e=logger_internal_read_msg(fd,&msg);
+	if(e<0)goto ex;
+	else if(e==0)return 0;
 	if(msg.size!=0){
 		if(!(data=malloc(msg.size+2)))return -2;
 		memset(data,0,msg.size+2);
@@ -125,7 +157,7 @@ static int loggerd_read(int fd){
 
 		// open log file
 		case LOG_OPEN:
-			if(!open_log_file(ss)){
+			if(open_log_file(ss)<0){
 				ret=LOG_FAIL,retdata=errno;
 				break;
 			}
@@ -170,7 +202,9 @@ static int loggerd_read(int fd){
 				oper2string(msg.oper)
 			);
 	}
-	logger_internal_send_msg(fd,ret,&retdata,sizeof(int));
+	char rdata[16]={0};
+	snprintf(rdata,15,"%d",retdata);
+	logger_internal_send_msg(fd,ret,rdata,16);
 	ex:if(data)free(data);
 	return e;
 }
@@ -178,67 +212,63 @@ static int loggerd_read(int fd){
 static void logger_cleanup(int s __attribute__((unused))){
 	if(clean)return;
 	clean=true;
+	if(slist)list_free_all(slist,_hand_remove_data);
 	close_all_file();
-	if(fds)list_free_all(fds,fd_item_remove);
-	fds=NULL;
 	logger_internal_clean();
 }
 
 int loggerd_thread(int fd){
+	static size_t es=sizeof(struct epoll_event);
 	if(fd<0)ERET(EINVAL);
-	int r,max,e=0;
-	fd_item_add(fd,NULL,false);
-	struct timeval timeout={1,0};
-	fd_set fs;
+	int r,e=0;
+	struct epoll_event*evs;
+	struct socket_data*sd;
 	logger_internal_add("stderr",LEVEL_DEBUG,&file_logger);
 	logger_internal_set("stderr",true);
 	logger_internal_send_msg(fd,LOG_OK,NULL,0);
 	logger_internal_printf(LEVEL_INFO,TAG,"loggerd start with pid %d",getpid());
+	setproctitle("initloggerd");
+	prctl(PR_SET_NAME,"Logger Daemon",0,0,0);
 	signal(SIGINT,logger_cleanup);
 	signal(SIGHUP,logger_cleanup);
 	signal(SIGTERM,logger_cleanup);
 	signal(SIGQUIT,logger_cleanup);
+	if((efd=epoll_create(64))<0)return terlog_error(-errno,"epoll_create failed");
+	if(!(evs=malloc(es*64))){
+		telog_error("malloc failed");
+		e=-errno;
+		goto ex;
+	}
+	memset(evs,0,es*64);
+	add_fd(fd,false,NULL);
 	while(1){
-		list*l;
-		FD_ZERO(&fs);
-		max=-1;
-		if((l=list_first(fds)))do{
-			struct fd_item*a=LIST_DATA(l,struct fd_item*);
-			FD_SET(a->fd,&fs);
-			max=a->fd>max?a->fd:max;
-		}while((l=l->next));
-		if(max<0){
-			logger_internal_printf(LEVEL_ERROR,TAG,"no any stream to read, exiting");
-			e=-1;
-			goto ex;
-		}
-		r=select(max+1,&fs,NULL,NULL,&timeout);
+		r=epoll_wait(efd,evs,64,-1);
 		if(r==-1){
-			logger_internal_printf(LEVEL_ERROR,TAG,"select failed: %m");
+			if(errno==EINTR)continue;
+			logger_internal_printf(LEVEL_ERROR,TAG,"epoll failed: %m");
 			e=-1;
 			goto ex;
 		}else if(r==0)continue;
-		else if((l=list_first(fds)))do{
-			struct fd_item*a=LIST_DATA(l,struct fd_item*);
-			if(!FD_ISSET(a->fd,&fs))continue;
-			if(a->socket)fd_item_add(accept(a->fd,NULL,NULL),NULL,false);
-			else{
-				int z=loggerd_read(a->fd);
-				if(z==EOF){
-					if(list_is_alone(l)){
-						list_free_item(fds,fd_item_remove);
-						fds=NULL;
-					}else {
-						if(fds==l){
-							if(fds->next)fds=fds->next;
-							else if(fds->prev)fds=fds->prev;
-						}
-						list_remove_free(l,fd_item_remove);
-					}
-					break;
-				}else if(z==-4)goto ex;
+		else for(int i=0;i<r;i++){
+			if(!(sd=(struct socket_data*)evs[i].data.ptr))continue;
+			int f=sd->fd;
+			if(sd->server){
+				int n=accept(f,NULL,NULL);
+				if(n<0){
+					del_fd(sd);
+					evs[i].data.ptr=sd=NULL;
+					continue;
+				}
+				fcntl(n,F_SETFL,O_RDWR|O_NONBLOCK);
+				add_fd(n,false,NULL);
+			}else{
+				int x=loggerd_read(f);
+				if(x==EOF){
+					del_fd(sd);
+					evs[i].data.ptr=sd=NULL;
+				}else if(x==-4)goto ex;
 			}
-		}while((l=l->next));
+		}
 	}
 	ex:
 	logger_cleanup(0);

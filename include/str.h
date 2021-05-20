@@ -19,6 +19,15 @@
 #define MONTH       "JanFebMarAprMayJunJulAugSepOctNovDec"
 #define WEEK        "MonTueWedThuFriSatSun"
 
+struct possibility{
+	char*data;
+	size_t data_len;
+	size_t item_len;
+	size_t possible;
+
+};
+typedef struct possibility poss;
+
 // src/lib/strings.c: format time with specified format (buffer size)
 extern char*time2nstr(time_t*time,char*format,char*buff,size_t len);
 

@@ -57,12 +57,7 @@ bool check_valid(char*source,const char*valid){
 }
 
 bool check_nvalid_default(char*source,size_t size){
-	return check_nvalid(
-		source,
-		size,
-		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890_",
-		63
-	);
+	return check_nvalid(source,size,VALID,sizeof(VALID));
 }
 
 bool check_valid_default(char*source){

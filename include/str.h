@@ -93,4 +93,7 @@ extern bool fuzzy_cmp(const char*s1,const char*s2);
 
 // src/lib/strings.c: fuzzy compare string array
 extern bool fuzzy_cmps(const char*v,const char**s);
+
+// src/lib/strings.c: match specified format and return matched length
+extern size_t possible_match(char*src,poss**p);
 #endif

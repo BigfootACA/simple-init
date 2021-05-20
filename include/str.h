@@ -7,6 +7,16 @@
 // default time format
 #define _DEFAULT_TIME_FORMAT "%Y/%m/%d %H:%M:%S"
 
+#define UP_LETTER   "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+#define UP_LETTERS  UP_LETTER " "
+#define LOW_LETTER  "abcdefghijklmnopqrstuvwxyz"
+#define LOW_LETTERS LOW_LETTER " "
+#define LETTER      UP_LETTER LOW_LETTER
+#define LETTERS     LETTER " "
+#define NUMBER      "1234567890"
+#define NUMBERS     NUMBER " "
+#define VALID       LETTER NUMBER "_"
+
 // src/lib/strings.c: format time with specified format (buffer size)
 extern char*time2nstr(time_t*time,char*format,char*buff,size_t len);
 

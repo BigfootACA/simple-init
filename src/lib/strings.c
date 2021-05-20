@@ -128,9 +128,9 @@ bool fuzzy_cmps(const char*v,const char**s){
 }
 
 size_t possible_match(char*src,poss**p){
-	if(!p||!src)return -1;
+	if(!p||!src)return 0;
 	ssize_t pending,matched=0;
-	if((pending=strlen(src))<=0)return -1;
+	if((pending=strlen(src))<=0)return 0;
 	for(size_t i=0,match=0;p[i];i++,match=0){
 		if(
 			!p[i]->data||

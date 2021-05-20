@@ -2,7 +2,7 @@
 #include<stdio.h>
 
 const char*make_readable_str(unsigned long long val,unsigned long block_size,unsigned long display){
-	static const char units[]={'\0','K','M','G','T','P','E','Z','Y'};
+	static const char units[]="\0KMGTPEZY";
 	unsigned frac=0;
 	const char*u=units,*fmt="%llu";
 	if(val==0)return"0";

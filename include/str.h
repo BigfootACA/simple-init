@@ -28,6 +28,27 @@ struct possibility{
 };
 typedef struct possibility poss;
 
+#define POS_ITEM(data,item) &(poss){data,sizeof(data)-1,(item),(sizeof(data)-1)/(item)}
+#define POS_LOW_LETTERS POS_ITEM(LOW_LETTERS,1)
+#define POS_LOW_LETTER  POS_ITEM(LOW_LETTER,1)
+#define POS_UP_LETTERS  POS_ITEM(UP_LETTERS,1)
+#define POS_UP_LETTER   POS_ITEM(UP_LETTER,1)
+#define POS_LETTERS     POS_ITEM(LETTERS,1)
+#define POS_NUMBERS     POS_ITEM(NUMBERS,1)
+#define POS_LETTER      POS_ITEM(LETTER,1)
+#define POS_NUMBER      POS_ITEM(NUMBER,1)
+#define POS_VALID       POS_ITEM(VALID,1)
+#define POS_MONTH       POS_ITEM(MONTH,3)
+#define POS_COLON       POS_ITEM(":",1)
+#define POS_SPACE       POS_ITEM(" ",1)
+#define POS_WEEK        POS_ITEM(WEEK,3)
+#define POSS_TIME       POS_NUMBER,POS_NUMBER,POS_COLON,POS_NUMBER,POS_NUMBER,POS_COLON,POS_NUMBER,POS_NUMBER
+#define POSS_RFC3164    POS_MONTH,POS_SPACE,POS_NUMBERS,POS_NUMBER,POS_SPACE,POSS_TIME
+#define XPOS_TIME      (poss*[]){POSS_TIME,NULL}
+#define XPOS_TIMES     (poss*[]){POSS_TIME,POS_SPACE,NULL}
+#define XPOS_RFC3164   (poss*[]){POSS_RFC3164,NULL}
+#define XPOS_RFC3164S  (poss*[]){POSS_RFC3164,POS_SPACE,NULL}
+
 // src/lib/strings.c: format time with specified format (buffer size)
 extern char*time2nstr(time_t*time,char*format,char*buff,size_t len);
 

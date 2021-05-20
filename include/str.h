@@ -80,5 +80,6 @@ extern char*replace(keyval**table,char del,char*dest,char*src,size_t size);
 // src/lib/strings.c: fuzzy compare string
 extern bool fuzzy_cmp(const char*s1,const char*s2);
 
+// src/lib/strings.c: fuzzy compare string array
 extern bool fuzzy_cmps(const char*v,const char**s);
 #endif

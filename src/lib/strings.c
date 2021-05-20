@@ -126,3 +126,30 @@ bool fuzzy_cmps(const char*v,const char**s){
 		if(fuzzy_cmp(v,s[i]))return true;
 	return false;
 }
+
+size_t possible_match(char*src,poss**p){
+	if(!p||!src)return -1;
+	ssize_t pending,matched=0;
+	if((pending=strlen(src))<=0)return -1;
+	for(size_t i=0,match=0;p[i];i++,match=0){
+		if(
+			!p[i]->data||
+			p[i]->item_len<=0||p[i]->data_len<=0||p[i]->possible<=0||
+			p[i]->possible*p[i]->item_len!=p[i]->data_len||
+			p[i]->data_len%p[i]->item_len!=0
+		)continue;
+		pending-=p[i]->item_len;
+		if(pending<0)return matched;
+		for(
+			size_t e=0,ce=0;
+			e<p[i]->possible&&ce+p[i]->item_len<=p[i]->data_len;
+			e++,ce=e*p[i]->item_len
+		)if(strncmp(src+matched,p[i]->data+ce,p[i]->item_len)==0){
+			match=p[i]->item_len;
+			break;
+		}
+		if(match==0)return matched;
+		matched+=match;
+	}
+	return matched;
+}

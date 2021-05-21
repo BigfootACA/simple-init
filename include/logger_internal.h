@@ -134,4 +134,7 @@ extern void flush_buffer(struct logger*log);
 
 // src/loggerd/klog.c: read all kmesg to buffer and read new kmsg to logger
 extern int init_kmesg();
+
+// src/loggerd/syslog.c: read all kmesg to buffer and read new kmsg to logger
+extern int init_syslog();
 #endif

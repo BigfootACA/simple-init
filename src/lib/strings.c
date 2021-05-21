@@ -153,3 +153,10 @@ size_t possible_match(char*src,poss**p){
 	}
 	return matched;
 }
+
+size_t possible_length(poss**p){
+	if(!p)return 0;
+	size_t s,i;
+	for(i=0,s=0;p[i];i++)s+=p[i]->item_len;
+	return s;
+}

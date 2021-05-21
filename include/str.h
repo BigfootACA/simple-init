@@ -117,4 +117,7 @@ extern bool fuzzy_cmps(const char*v,const char**s);
 
 // src/lib/strings.c: match specified format and return matched length
 extern size_t possible_match(char*src,poss**p);
+
+// src/lib/strings.c: return max match length
+extern size_t possible_length(poss**p);
 #endif

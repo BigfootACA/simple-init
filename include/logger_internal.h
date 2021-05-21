@@ -19,6 +19,7 @@ enum log_oper{
 	LOG_CLEAR    =0xAF06,
 	LOG_LISTEN   =0xAF07,
 	LOG_KLOG     =0xAF08,
+	LOG_SYSLOG   =0xAF09,
 };
 
 // logger message packet

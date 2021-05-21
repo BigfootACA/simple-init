@@ -182,6 +182,11 @@ static int loggerd_read(int fd){
 			if(init_kmesg()!=0)ret=LOG_FAIL,retdata=errno;
 		break;
 
+		// start syslog forwarder
+		case LOG_SYSLOG:
+			if(init_syslog()!=0)ret=LOG_FAIL,retdata=errno;
+		break;
+
 		// clean log buffer
 		case LOG_CLEAR:
 			clean_log_buffers();

@@ -52,6 +52,9 @@ extern int logger_exit();
 // src/loggerd/logger_client.c: notify loggerd kernel log now available
 extern int logger_klog();
 
+// src/loggerd/logger_client.c: start syslog forwarder
+extern int logger_syslog();
+
 // src/loggerd/logger_client.c: launch loggerd
 extern int start_loggerd(pid_t*p);
 

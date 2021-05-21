@@ -93,6 +93,10 @@ int logger_klog(){
 	return log_msg_send(LOG_KLOG,NULL,0);
 }
 
+int logger_syslog(){
+	return log_msg_send(LOG_SYSLOG,NULL,0);
+}
+
 int logger_write(struct log_item*log){
 	if(!log)ERET(EINVAL);
 	ssize_t s=strlen(log->content)-1;

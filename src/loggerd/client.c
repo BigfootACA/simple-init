@@ -223,7 +223,7 @@ char*level2string(enum log_level level){
 		case LEVEL_ERROR:return   "ERROR";
 		case LEVEL_CRIT:return    "CRIT";
 		case LEVEL_ALERT:return   "ALERT";
-		case LEVEL_EMERG:return   "EMGCY";
+		case LEVEL_EMERG:return   "EMERG";
 		default:return            "?????";
 	}
 }

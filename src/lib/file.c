@@ -181,3 +181,22 @@ int wait_block(char*block,long time,char*tag){
 	if(tag)log_error(tag,"wait for block %s timed out",tag);
 	ERET(ETIMEDOUT);
 }
+
+ssize_t read_file(char*buff,size_t len,bool lf,char*path,...){
+	int fd;
+	va_list va;
+	char rpath[PATH_MAX]={0};
+	if(!path||!buff||len<=0)ERET(EINVAL);
+	va_start(va,path);
+	vsnprintf(rpath,PATH_MAX-1,path,va);
+	va_end(va);
+	memset(buff,0,len);
+	if((fd=open(rpath,O_RDONLY))<0)return -1;
+	ssize_t s=read(fd,buff,len-1);
+	if(s>0&&!lf){
+		if(buff[s-1]=='\n')buff[--s]=0;
+		if(buff[s-1]=='\r')buff[--s]=0;
+	}
+	close(fd);
+	return s;
+}

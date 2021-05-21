@@ -73,6 +73,9 @@ int preinit(){
 	// read kmsg to logger
 	logger_klog();
 
+	// start syslog forwarder
+	logger_syslog();
+
 	// open /dev/logger.log
 	char*dev_logger=_PATH_DEV"/logger.log";
 	logger_open(dev_logger);

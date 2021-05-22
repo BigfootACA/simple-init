@@ -4,11 +4,13 @@
 #include<string.h>
 #include<unistd.h>
 #include<sys/epoll.h>
+#include<sys/prctl.h>
 #include<sys/socket.h>
 #include<linux/netlink.h>
 #include"system.h"
 #include"logger.h"
 #include"pathnames.h"
+#include"proctitle.h"
 #include"devd_internal.h"
 #define TAG "kobject"
 
@@ -33,6 +35,9 @@ int uevent_netlink_thread(){
 	static size_t es=sizeof(struct epoll_event),ms=sizeof(struct devd_msg);
 	close_all_fd(NULL,0);
 	open_socket_logfd_default();
+	tlog_info("kobject uevent forwarder start with pid %d",getpid());
+	setproctitle("uevent");
+	prctl(PR_SET_NAME,"UEvent Forward",0,0,0);
 	char buf[8192],*v;
 	size_t vs;
 	ssize_t s;

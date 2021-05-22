@@ -1,16 +1,18 @@
 #include<stdlib.h>
 #include<string.h>
+#include<signal.h>
 #include<linux/fs.h>
 #include<sys/klog.h>
+#include<sys/prctl.h>
 #include<sys/select.h>
 #include<sys/sysinfo.h>
-#include<signal.h>
 #define TAG "klog"
 #include"str.h"
 #include"list.h"
 #include"init.h"
 #include"logger.h"
 #include"system.h"
+#include"proctitle.h"
 #include"kloglevel.h"
 #include"pathnames.h"
 #include"logger_internal.h"
@@ -79,6 +81,9 @@ static int read_kmsg_thread(void*data __attribute__((unused))){
 	if(lseek(klogfd,0,SEEK_END)<0)return terlog_error(-errno,"lseek klog fd");
 
 	klogctl(SYSLOG_ACTION_CONSOLE_OFF,NULL,0);
+	tlog_info("kernel log forwarder start with pid %d",getpid());
+	setproctitle("klog");
+	prctl(PR_SET_NAME,"Kernel Logger",0,0,0);
 	handle_signals((int[]){SIGINT,SIGHUP,SIGQUIT,SIGTERM,SIGUSR1,SIGUSR2},6,kmsg_thread_exit);
 
 	fd_set fs;

@@ -1,6 +1,7 @@
 #ifndef _LOGGER_INTERNAL_H
 #define _LOGGER_INTERNAL_H
 #include<stdio.h>
+#include<sys/socket.h>
 #include"logger.h"
 #include"list.h"
 
@@ -26,7 +27,11 @@ enum log_oper{
 struct log_msg{
 	unsigned char magic0,magic1;
 	enum log_oper oper;
-	size_t size;
+	union{
+		int code;
+		struct log_item log;
+		char string[sizeof(struct log_item)];
+	}data;
 };
 
 // logger output handle
@@ -98,7 +103,7 @@ extern int logger_internal_set(char*name,bool enabled);
 extern int logger_internal_set_level(char*name,enum log_level level);
 
 // src/loggerd/logger_internal.c: init a log packaet
-extern void logger_internal_init_msg(struct log_msg*msg,enum log_oper oper,size_t size);
+extern void logger_internal_init_msg(struct log_msg*msg,enum log_oper oper);
 
 // src/devd/internal.c: check log packaet magic
 extern bool logger_internal_check_magic(struct log_msg*msg);
@@ -106,11 +111,11 @@ extern bool logger_internal_check_magic(struct log_msg*msg);
 // src/loggerd/logger_internal.c: read a log packet
 extern int logger_internal_read_msg(int fd,struct log_msg*buff);
 
-// src/loggerd/logger_internal.c: send a log packet
-extern int logger_internal_send_msg(int fd,enum log_oper oper,void*data,size_t size);
+// src/loggerd/logger_internal.c: send a return code packet
+extern int logger_internal_send_code(int fd,enum log_oper oper,int code);
 
 // src/loggerd/logger_internal.c: send a string log packet
-extern int logger_internal_send_msg_string(int fd,enum log_oper oper,char*data);
+extern int logger_internal_send_string(int fd,enum log_oper oper,char*string);
 
 // src/loggerd/logger_internal.c: convert operation to a readable string
 extern char*oper2string(enum log_oper oper);

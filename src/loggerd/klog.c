@@ -20,36 +20,33 @@
 static bool run=true;
 static int klogfd=-1;
 static time_t boot_time=0;
-struct log_item*read_kmsg_item(int fd,bool toff){
+struct log_item*read_kmsg_item(struct log_item*b,int fd,bool toff){
 	char item[8192]={0},*level,*ktime,*content,*p0,*p1,*p2;
-	struct log_item*b=malloc(sizeof(struct log_item));
-	if(!b)return NULL;
 	ssize_t s=read(fd,&item,8191);
 	if(s<0){
 		if(errno==EAGAIN)errno=0;
-		free(b);
 		return NULL;
 	}
 
 	// log level
 	level=item;
-	if(!(p0=strchr(level,',')))goto fail;
+	if(!(p0=strchr(level,',')))EPRET(EINVAL);
 	p0[0]=0,p0++;
 	b->level=klevel2level(parse_int(level,DEFAULT_KERN_LEVEL));
 
-	if(!(ktime=strchr(p0,',')))goto fail;
+	if(!(ktime=strchr(p0,',')))EPRET(EINVAL);
 	ktime++;
 
 	// time
-	if(!(p1=strchr(ktime,',')))goto fail;
+	if(!(p1=strchr(ktime,',')))EPRET(EINVAL);
 	p1[0]=0,p1++;
 	b->time=toff?(time_t)parse_long(ktime,0)/1000000+boot_time:time(NULL);
 
-	if(!(content=strchr(p1,';')))goto fail;
+	if(!(content=strchr(p1,';')))EPRET(EINVAL);
 	content++;
 
 	// content
-	if(!(p2=strchr(content,'\n')))goto fail;
+	if(!(p2=strchr(content,'\n')))EPRET(EINVAL);
 	p2[0]=0,p2++;
 	strncpy(b->content,content,sizeof(b->content)-1);
 
@@ -57,10 +54,6 @@ struct log_item*read_kmsg_item(int fd,bool toff){
 	b->pid=0;
 
 	return b;
-
-	fail:
-	free(b);
-	EPRET(EINVAL);
 }
 
 static void kmsg_thread_exit(int p __attribute__((unused))){
@@ -87,7 +80,7 @@ static int read_kmsg_thread(void*data __attribute__((unused))){
 	handle_signals((int[]){SIGINT,SIGHUP,SIGQUIT,SIGTERM,SIGUSR1,SIGUSR2},6,kmsg_thread_exit);
 
 	fd_set fs;
-	struct log_item*item;
+	struct log_item item;
 	struct timeval timeout={1,0};
 	while(run){
 		FD_ZERO(&fs);
@@ -99,11 +92,8 @@ static int read_kmsg_thread(void*data __attribute__((unused))){
 			break;
 		}else if(r==0)continue;
 		else if(FD_ISSET(klogfd,&fs)){
-			if((item=read_kmsg_item(klogfd,false))){
-				logger_write(item);
-				free(item);
-				item=NULL;
-			}
+			if(read_kmsg_item(&item,klogfd,false))
+				logger_write(&item);
 		}else if(FD_ISSET(logfd,&fs)){
 			struct log_msg l;
 			int x=logger_internal_read_msg(logfd,&l);
@@ -111,7 +101,6 @@ static int read_kmsg_thread(void*data __attribute__((unused))){
 				close_logfd();
 				break;
 			}else if(x==0)continue;
-			if(l.size>0)lseek(logfd,l.size,SEEK_CUR);
 		}
 	}
 	kmsg_thread_exit(0);
@@ -120,7 +109,7 @@ static int read_kmsg_thread(void*data __attribute__((unused))){
 }
 
 int init_kmesg(){
-	struct log_item*log=NULL;
+	struct log_item log;
 	struct log_buff*buff=NULL;
 	list*head=NULL,*conts=NULL,*item=NULL;
 
@@ -132,12 +121,12 @@ int init_kmesg(){
 	if((klogfd=open(_PATH_DEV_KMSG,O_RDONLY|O_NONBLOCK))<0)goto fail;
 	if(lseek(klogfd,0,SEEK_DATA)<0)goto fail;
 
-	while((log=read_kmsg_item(klogfd,true))){
-		if(!(buff=logger_internal_item2buff(log)))goto fail;
+	while(read_kmsg_item(&log,klogfd,true)){
+		if(!(buff=logger_internal_item2buff(&log)))goto fail;
 		if(!(item=list_new(buff)))goto fail;
 		if(conts)list_add(conts,item);
 		conts=item;
-		item=NULL,log=NULL,buff=NULL;
+		item=NULL,buff=NULL;
 	}
 
 	if(logbuffer)list_insert(head,conts);
@@ -150,7 +139,6 @@ int init_kmesg(){
 	fail:
 	if(conts)list_free_all(conts,logger_internal_free_buff);
 	if(buff)free(buff);
-	if(log)free(log);
 	if(klogfd>=0)close(klogfd);
 	return -errno;
 }

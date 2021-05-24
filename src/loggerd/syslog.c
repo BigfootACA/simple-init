@@ -211,7 +211,7 @@ static int read_kmsg_thread(void*data __attribute__((unused))){
 			if(x<0){
 				close_logfd();
 				break;
-			}else if(x!=0&&l.size>0)lseek(logfd,l.size,SEEK_CUR);
+			}
 		}else if(FD_ISSET(sfd,&fs)&&!process_data(sfd))break;
 	}
 	ex:

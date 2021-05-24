@@ -3,7 +3,7 @@
 #include<stdlib.h>
 #include<stdbool.h>
 #include<string.h>
-#include<sys/uio.h>
+#include<sys/socket.h>
 #include"defines.h"
 #include"list.h"
 #include"logger_internal.h"
@@ -139,26 +139,30 @@ bool logger_internal_check_magic(struct log_msg*msg){
 	return msg&&msg->magic0==LOGD_MAGIC0&&msg->magic1==LOGD_MAGIC1;
 }
 
-void logger_internal_init_msg(struct log_msg*msg,enum log_oper oper,size_t size){
+void logger_internal_init_msg(struct log_msg*msg,enum log_oper oper){
 	if(!msg)return;
 	memset(msg,0,sizeof(struct log_msg));
 	msg->magic0=LOGD_MAGIC0;
 	msg->magic1=LOGD_MAGIC1;
 	msg->oper=oper;
-	msg->size=size;
 }
 
-int logger_internal_send_msg(int fd,enum log_oper oper,void*data,size_t size){
+int logger_internal_send_code(int fd,enum log_oper oper,int code){
 	struct log_msg msg;
 	size_t xs=sizeof(struct log_msg);
 	if(fd<0)ERET(EINVAL);
-	logger_internal_init_msg(&msg,oper,size);
-	struct iovec i[2]={
-		{&msg,xs},
-		{data,size}
-	};
-	size_t s=xs+size;
-	return ((size_t)writev(fd,i,size==0?1:2))==s?(int)s:-1;
+	logger_internal_init_msg(&msg,oper);
+	msg.data.code=code;
+	return ((size_t)write(fd,&msg,xs))==xs?(int)xs:-1;
+}
+
+int logger_internal_send_string(int fd,enum log_oper oper,char*string){
+	struct log_msg msg;
+	size_t xs=sizeof(struct log_msg);
+	if(fd<0)ERET(EINVAL);
+	logger_internal_init_msg(&msg,oper);
+	if(string)strncpy(msg.data.string,string,sizeof(msg.data.string));
+	return ((size_t)write(fd,&msg,xs))==xs?(int)xs:-1;
 }
 
 int logger_internal_read_msg(int fd,struct log_msg*buff){
@@ -179,6 +183,3 @@ int logger_internal_read_msg(int fd,struct log_msg*buff){
 	return (s!=size||!(logger_internal_check_magic(buff)))?-2:1;
 }
 
-int logger_internal_send_msg_string(int fd,enum log_oper oper,char*data){
-	return logger_internal_send_msg(fd,oper,data,data?strlen(data)*sizeof(char):0);
-}

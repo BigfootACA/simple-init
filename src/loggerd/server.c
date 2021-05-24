@@ -124,27 +124,12 @@ static int loggerd_add_listen(char*path){
 static int loggerd_read(int fd){
 	if(fd<0)ERET(EINVAL);
 	errno=0;
-	size_t s;
-	void*data=NULL;
 	struct log_msg msg;
 	int e=logger_internal_read_msg(fd,&msg);
-	if(e<0)goto ex;
+	if(e<0)return e;
 	else if(e==0)return 0;
-	if(msg.size!=0){
-		if(!(data=malloc(msg.size+2)))return -2;
-		memset(data,0,msg.size+2);
-		if((s=read(fd,data,msg.size))<=0&&errno!=EAGAIN){
-			e=EOF;
-			goto ex;
-		}
-		if(s!=msg.size){
-			e=-2;
-			goto ex;
-		}
-	}
 	enum log_oper ret=LOG_OK;
 	int retdata=0;
-	char*ss=(char*)data;
 	switch(msg.oper){
 
 		// command response
@@ -152,28 +137,28 @@ static int loggerd_read(int fd){
 
 		// request add log item
 		case LOG_ADD:
-			logger_internal_write((struct log_item*)data);
+			logger_internal_write(&msg.data.log);
 		break;
 
 		// open log file
 		case LOG_OPEN:
-			if(open_log_file(ss)<0){
+			if(open_log_file(msg.data.string)<0){
 				ret=LOG_FAIL,retdata=errno;
 				break;
 			}
-			logger_internal_add(ss,LEVEL_DEBUG,&file_logger);
-			logger_internal_set(ss,true);
+			logger_internal_add(msg.data.string,LEVEL_DEBUG,&file_logger);
+			logger_internal_set(msg.data.string,true);
 		break;
 
 		// close log file
 		case LOG_CLOSE:
-			close_log_file(ss);
-			logger_internal_set(ss,false);
+			close_log_file(msg.data.string);
+			logger_internal_set(msg.data.string,false);
 		break;
 
 		// add new listen
 		case LOG_LISTEN:
-			loggerd_add_listen((char*)data);
+			loggerd_add_listen(msg.data.string);
 			if(errno!=0)ret=LOG_FAIL,retdata=errno;
 		break;
 
@@ -207,10 +192,7 @@ static int loggerd_read(int fd){
 				oper2string(msg.oper)
 			);
 	}
-	char rdata[16]={0};
-	snprintf(rdata,15,"%d",retdata);
-	logger_internal_send_msg(fd,ret,rdata,16);
-	ex:if(data)free(data);
+	logger_internal_send_code(fd,ret,retdata);
 	return e;
 }
 
@@ -230,7 +212,7 @@ int loggerd_thread(int fd){
 	struct socket_data*sd;
 	logger_internal_add("stderr",LEVEL_DEBUG,&file_logger);
 	logger_internal_set("stderr",true);
-	logger_internal_send_msg(fd,LOG_OK,NULL,0);
+	logger_internal_send_string(fd,LOG_OK,NULL);
 	logger_internal_printf(LEVEL_INFO,TAG,"loggerd start with pid %d",getpid());
 	setproctitle("initloggerd");
 	prctl(PR_SET_NAME,"Logger Daemon",0,0,0);

@@ -49,62 +49,55 @@ int open_socket_logfd(char*path){
 	return set_logfd(sock);
 }
 
-static int log_msg_send(enum log_oper oper,void*data,size_t size){
+int logger_send_string(enum log_oper oper,char*string){
+	int r;
 	struct log_msg msg;
-	int x=logger_internal_send_msg(logfd,oper,data,size);
-	if(x<0)return -1;
+	if((r=logger_internal_send_string(logfd,oper,string))<0)return r;
 	do{if(logger_internal_read_msg(logfd,&msg)<0)return -1;}
 	while(msg.oper!=LOG_OK&&msg.oper!=LOG_FAIL);
-	if(msg.size>0){
-		void*d=malloc(msg.size);
-		if(!d)return -1;
-		memset(d,0,msg.size);
-		ssize_t r=read(logfd,d,msg.size);
-		if(r<0||(size_t)r!=msg.size){
-			free(d);
-			return -1;
-		}
-		errno=parse_int((char*)d,0);
-		free(d);
-	}else errno=0;
-	return x;
-}
-
-static inline int log_msg_send_string(enum log_oper oper,char*data){
-	return data?log_msg_send(oper,data,strlen(data)):-EINVAL;
+	return msg.data.code;
 }
 
 int logger_listen(char*file){
-	return file?log_msg_send_string(LOG_LISTEN,file):-EINVAL;
+	return file?logger_send_string(LOG_LISTEN,file):-EINVAL;
 }
 
 int logger_open(char*file){
-	return file?log_msg_send_string(LOG_OPEN,file):-EINVAL;
+	return file?logger_send_string(LOG_OPEN,file):-EINVAL;
 }
 
 int logger_exit(){
 	int r;
-	if((r=log_msg_send(LOG_QUIT,NULL,0))<0)return r;
+	if((r=logger_send_string(LOG_QUIT,NULL))<0)return r;
 	close_logfd();
 	return 0;
 }
 
 int logger_klog(){
-	return log_msg_send(LOG_KLOG,NULL,0);
+	return logger_send_string(LOG_KLOG,NULL);
 }
 
 int logger_syslog(){
-	return log_msg_send(LOG_SYSLOG,NULL,0);
+	return logger_send_string(LOG_SYSLOG,NULL);
 }
 
 int logger_write(struct log_item*log){
+	static size_t xs=sizeof(struct log_msg);
 	if(!log)ERET(EINVAL);
 	ssize_t s=strlen(log->content)-1;
 	while(s>=0)
 		if(!isspace(log->content[s]))break;
 		else log->content[s]=0,s--;
 	if(logfd<0)return fprintf(stderr,"%s: %s\n",log->tag,log->content);
-	return log_msg_send(LOG_ADD,(void*)log,sizeof(struct log_item));
+	struct log_msg msg;
+	logger_internal_init_msg(&msg,LOG_ADD);
+	memcpy(&msg.data.log,log,sizeof(struct log_item));
+	if(((size_t)write(logfd,&msg,xs))!=xs)return -1;
+	memset(&msg,0,sizeof(msg));
+	do{if(logger_internal_read_msg(logfd,&msg)<0)return -1;}
+	while(msg.oper!=LOG_OK&&msg.oper!=LOG_FAIL);
+	errno=msg.data.code;
+	return xs;
 }
 
 int logger_print(enum log_level level,char*tag,char*content){

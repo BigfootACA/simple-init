@@ -22,7 +22,10 @@ int printk_logger(char*name __attribute__((unused)),struct log_item *log){
 	if(!log->time)ERET(EFAULT);
 	if(!device)ERET(ENOENT);
 	FILE*klog=NULL;
-	size_t size=sizeof(char)*(16+strlen(log->tag)+strlen(log->content));
+	size_t size=sizeof(char)*(16+
+		strlen(log->tag)+
+		strlen(log->content)
+	);
 	char*buff=malloc(size);
 	if(!buff)ERET(ENOMEM);
 	memset(buff,0,size);
@@ -40,7 +43,8 @@ int printk_logger(char*name __attribute__((unused)),struct log_item *log){
 		free(buff);
 		return -errno;
 	}
-	if((size_t)fputs(buff,klog)!=size)r=errno==0?-1:-errno;
+	if((size_t)fputs(buff,klog)!=size)
+		r=(errno==0?-1:-errno);
 	fflush(klog);
 	fclose(klog);
 	free(buff);

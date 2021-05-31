@@ -77,16 +77,20 @@ static int read_kmsg_thread(void*data __attribute__((unused))){
 	tlog_info("kernel log forwarder start with pid %d",getpid());
 	setproctitle("klog");
 	prctl(PR_SET_NAME,"Kernel Logger",0,0,0);
-	handle_signals((int[]){SIGINT,SIGHUP,SIGQUIT,SIGTERM,SIGUSR1,SIGUSR2},6,kmsg_thread_exit);
+	handle_signals(
+		(int[]){SIGINT,SIGHUP,SIGQUIT,SIGTERM,SIGUSR1,SIGUSR2},
+		6,kmsg_thread_exit
+	);
 
 	fd_set fs;
 	struct log_item item;
 	struct timeval timeout={1,0};
+	int m=MAX(klogfd,logfd)+1;
 	while(run){
 		FD_ZERO(&fs);
 		FD_SET(klogfd,&fs);
 		FD_SET(logfd,&fs);
-		int r=select(MAX(klogfd,logfd)+1,&fs,NULL,NULL,&timeout);
+		int r=select(m,&fs,NULL,NULL,&timeout);
 		if(r==-1){
 			telog_error("select failed: %m");
 			break;

@@ -31,7 +31,11 @@ static struct socket_data*new_socket_data(int fd,bool server,char*path){
 	sd->fd=fd;
 	sd->server=server;
 	sd->un.sun_family=AF_UNIX;
-	if(path)strncpy(sd->un.sun_path,path,sizeof(sd->un.sun_path)-1);
+	if(path)strncpy(
+		sd->un.sun_path,
+		path,
+		sizeof(sd->un.sun_path)-1
+	);
 	return sd;
 }
 
@@ -93,31 +97,67 @@ static int loggerd_add_listen(char*path){
 	if(!path)ERET(EINVAL);
 	struct socket_data*sd;
 	int fd;
+
 	if((fd=socket(AF_UNIX,SOCK_STREAM,0))<0){
-		logger_internal_printf(LEVEL_ERROR,"loggerd","cannot create socket: %m");
+		logger_internal_printf(
+			LEVEL_ERROR,
+			TAG,
+			"cannot create socket: %m"
+		);
 		return -errno;
 	}
+
 	if(access(path,F_OK)==0){
-		logger_internal_printf(LEVEL_ERROR,"loggerd","socket %s exists",path);
+		logger_internal_printf(
+			LEVEL_ERROR,
+			TAG,
+			"socket %s exists",
+			path
+		);
 		ERET(EEXIST);
 	}else if(errno!=ENOENT){
-		logger_internal_printf(LEVEL_ERROR,"loggerd","failed to access %s: %m",path);
+		logger_internal_printf(
+			LEVEL_ERROR,
+			TAG,
+			"failed to access %s: %m",
+			path
+		);
 		return -errno;
 	}else errno=0;
 	if(!(sd=add_fd(fd,true,path)))return -1;
-	if(bind(sd->fd,(struct sockaddr*)&sd->un,sizeof(sd->un))<0){
+
+	if(bind(
+		sd->fd,
+		(struct sockaddr*)&sd->un,
+		sizeof(sd->un)
+	)<0){
 		int er=errno;
-		logger_internal_printf(LEVEL_ERROR,"loggerd","cannot bind socket: %m");
+		logger_internal_printf(
+			LEVEL_ERROR,
+			TAG,
+			"cannot bind socket: %m"
+		);
 		del_fd(sd);
 		ERET(er);
 	}
+
 	if(listen(sd->fd,1)<0){
 		int er=errno;
-		logger_internal_printf(LEVEL_ERROR,"loggerd","cannot listen socket: %m");
+		logger_internal_printf(
+			LEVEL_ERROR,
+			TAG,
+			"cannot listen socket: %m"
+		);
 		del_fd(sd);
 		ERET(er);
 	}
-	logger_internal_printf(LEVEL_ALERT,"loggerd","add new listen %s",path);
+
+	logger_internal_printf(
+		LEVEL_ALERT,
+		TAG,
+		"add new listen %s",
+		path
+	);
 	return 0;
 }
 
@@ -146,8 +186,15 @@ static int loggerd_read(int fd){
 				ret=LOG_FAIL,retdata=errno;
 				break;
 			}
-			logger_internal_add(msg.data.string,LEVEL_DEBUG,&file_logger);
-			logger_internal_set(msg.data.string,true);
+			logger_internal_add(
+				msg.data.string,
+				LEVEL_DEBUG,
+				&file_logger
+			);
+			logger_internal_set(
+				msg.data.string,
+				true
+			);
 		break;
 
 		// close log file
@@ -164,12 +211,14 @@ static int loggerd_read(int fd){
 
 		// klog available now
 		case LOG_KLOG:
-			if(init_kmesg()!=0)ret=LOG_FAIL,retdata=errno;
+			if(init_kmesg()!=0)
+				ret=LOG_FAIL,retdata=errno;
 		break;
 
 		// start syslog forwarder
 		case LOG_SYSLOG:
-			if(init_syslog()!=0)ret=LOG_FAIL,retdata=errno;
+			if(init_syslog()!=0)
+				ret=LOG_FAIL,retdata=errno;
 		break;
 
 		// clean log buffer
@@ -179,7 +228,11 @@ static int loggerd_read(int fd){
 
 		// terminate loggerd
 		case LOG_QUIT:
-			logger_internal_printf(LEVEL_EMERG,"loggerd","receive exit signal");
+			logger_internal_printf(
+				LEVEL_EMERG,
+				TAG,
+				"receive exit signal"
+			);
 			e=-4;
 		break;
 
@@ -187,7 +240,7 @@ static int loggerd_read(int fd){
 		default:
 			logger_internal_printf(
 				LEVEL_WARNING,
-				"loggerd",
+				TAG,
 				"operation %s not implemented",
 				oper2string(msg.oper)
 			);
@@ -213,14 +266,20 @@ int loggerd_thread(int fd){
 	logger_internal_add("stderr",LEVEL_DEBUG,&file_logger);
 	logger_internal_set("stderr",true);
 	logger_internal_send_string(fd,LOG_OK,NULL);
-	logger_internal_printf(LEVEL_INFO,TAG,"loggerd start with pid %d",getpid());
+	logger_internal_printf(
+		LEVEL_INFO,
+		TAG,
+		"loggerd start with pid %d",
+		getpid()
+	);
 	setproctitle("initloggerd");
 	prctl(PR_SET_NAME,"Logger Daemon",0,0,0);
 	signal(SIGINT,logger_cleanup);
 	signal(SIGHUP,logger_cleanup);
 	signal(SIGTERM,logger_cleanup);
 	signal(SIGQUIT,logger_cleanup);
-	if((efd=epoll_create(64))<0)return terlog_error(-errno,"epoll_create failed");
+	if((efd=epoll_create(64))<0)
+		return terlog_error(-errno,"epoll_create failed");
 	if(!(evs=malloc(es*64))){
 		telog_error("malloc failed");
 		e=-errno;
@@ -232,12 +291,17 @@ int loggerd_thread(int fd){
 		r=epoll_wait(efd,evs,64,-1);
 		if(r==-1){
 			if(errno==EINTR)continue;
-			logger_internal_printf(LEVEL_ERROR,TAG,"epoll failed: %m");
+			logger_internal_printf(
+				LEVEL_ERROR,
+				TAG,
+				"epoll failed: %m"
+			);
 			e=-1;
 			goto ex;
 		}else if(r==0)continue;
 		else for(int i=0;i<r;i++){
-			if(!(sd=(struct socket_data*)evs[i].data.ptr))continue;
+			if(!(sd=(struct socket_data*)evs[i].data.ptr))
+				continue;
 			int f=sd->fd;
 			if(sd->server){
 				int n=accept(f,NULL,NULL);

@@ -32,11 +32,15 @@ static int listen_syslog_socket(){
 	int er,o=1;
 
 	// create socket
-	if((sfd=socket(AF_UNIX,SOCK_DGRAM|SOCK_NONBLOCK,0))<0)return terlog_error(-errno,"cannot create socket");
+	if((sfd=socket(AF_UNIX,SOCK_DGRAM|SOCK_NONBLOCK,0))<0)
+		return terlog_error(-errno,"cannot create socket");
 
 	// check socket exists
 	if(access(un.sun_path,F_OK)==0){
-		if(connect(sfd,(struct sockaddr*)&un,sizeof(un))!=0||errno!=ECONNREFUSED){
+		if(
+			connect(sfd,(struct sockaddr*)&un,sizeof(un))!=0||
+			errno!=ECONNREFUSED
+		){
 			close(sfd);
 			return trlog_error(-EEXIST,"socket %s exists",un.sun_path);
 		}else unlink(un.sun_path);
@@ -121,7 +125,11 @@ int parse_syslog_item(struct ucred*cred,char*line){
 		for(char*z=p;z<t;z++)if(isspace(*z))v=false;
 		if(v){
 			*t=0;
-			if((x1=strchr(p,'['))&&(x2=strchr(p,']'))&&x2>x1&&x2==t-1)*x1=0;
+			if(
+				(x1=strchr(p,'['))&&
+				(x2=strchr(p,']'))&&
+				x2>x1&&x2==t-1
+			)*x1=0;
 			memset(b->tag,0,sizeof(b->tag));
 			strncpy(b->tag,p,sizeof(b->tag)-1);
 			p=t+2;
@@ -188,9 +196,13 @@ static int read_kmsg_thread(void*data __attribute__((unused))){
 	tlog_info("syslog forwarder start with pid %d",getpid());
 	setproctitle("syslog");
 	prctl(PR_SET_NAME,"Syslog Forward",0,0,0);
-	handle_signals((int[]){SIGINT,SIGHUP,SIGQUIT,SIGTERM,SIGUSR1,SIGUSR2},6,syslog_thread_exit);
+	handle_signals(
+		(int[]){SIGINT,SIGHUP,SIGQUIT,SIGTERM,SIGUSR1,SIGUSR2},
+		6,syslog_thread_exit
+	);
 
-	if(listen_syslog_socket()<0)return terlog_error(-errno,"listen %s failed",SOCKET_SYSLOG);
+	if(listen_syslog_socket()<0)
+		return terlog_error(-errno,"listen %s failed",SOCKET_SYSLOG);
 
 	fd_set fs;
 	struct timeval timeout={1,0};

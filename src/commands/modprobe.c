@@ -127,7 +127,7 @@ static int show_modversions(struct kmod_ctx*ctx,const char*filename){
 		return err;
 	}
 	if((err=kmod_module_get_versions(mod,&list))<0){
-		fprintf(stderr,"could not get modversions of %s: %m\n",filename);
+		stderr_perror("could not get modversions of %s",filename);
 		kmod_module_unref(mod);
 		return err;
 	}
@@ -150,7 +150,7 @@ static int show_exports(struct kmod_ctx*ctx,const char*filename){
 		return err;
 	}
 	if((err=kmod_module_get_symbols(mod,&list))<0){
-		fprintf(stderr,"could not get symbols of %s: %m\n",filename);
+		stderr_perror("could not get symbols of %s",filename);
 		kmod_module_unref(mod);
 		return err;
 	}
@@ -502,7 +502,7 @@ int modprobe_main(int argc,char**orig_argv){
 		if(!root)root="";
 		if(!kversion){
 			if(uname(&u)<0){
-				fprintf(stderr,"uname failed: %m\n");
+				perror("uname failed");
 				err=-1;
 				goto done;
 			}

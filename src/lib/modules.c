@@ -53,7 +53,7 @@ static void _mod_load_err(bool log,int err,const char*name){
 	if(log)switch(err){
 		case -EEXIST:break;
 		case -ENOENT:tlog_warn("could not insert '%s': Unknown symbol or parameter",name);break;
-		default:tlog_warn("could not insert '%s': %m",name);break;
+		default:telog_warn("could not insert '%s'",name);break;
 	}
 }
 

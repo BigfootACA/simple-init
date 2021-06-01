@@ -92,7 +92,7 @@ static int read_kmsg_thread(void*data __attribute__((unused))){
 		FD_SET(logfd,&fs);
 		int r=select(m,&fs,NULL,NULL,&timeout);
 		if(r==-1){
-			telog_error("select failed: %m");
+			telog_error("select failed");
 			break;
 		}else if(r==0)continue;
 		else if(FD_ISSET(klogfd,&fs)){

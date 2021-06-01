@@ -161,7 +161,7 @@ int logger_internal_send_string(int fd,enum log_oper oper,char*string){
 	size_t xs=sizeof(struct log_msg);
 	if(fd<0)ERET(EINVAL);
 	logger_internal_init_msg(&msg,oper);
-	if(string)strncpy(msg.data.string,string,sizeof(msg.data.string));
+	if(string)strncpy(msg.data.string,string,sizeof(msg.data.string)-1);
 	return ((size_t)write(fd,&msg,xs))==xs?(int)xs:-1;
 }
 

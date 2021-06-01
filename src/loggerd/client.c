@@ -8,6 +8,7 @@
 #include<sys/socket.h>
 #include"str.h"
 #include"defines.h"
+#include"output.h"
 #include"system.h"
 #include"logger_internal.h"
 
@@ -26,7 +27,7 @@ void close_logfd(){
 int open_file_logfd(char*path){
 	if(!path)ERET(EINVAL);
 	int fd=open(path,O_WRONLY|O_SYNC);
-	if(fd<0)fprintf(stderr,"cannot open log pipe %s: %m\n",path);
+	if(fd<0)stderr_perror("cannot open log pipe %s",path);
 	return fd<0?fd:set_logfd(fd);
 }
 
@@ -35,14 +36,14 @@ int open_socket_logfd(char*path){
 	struct sockaddr_un addr;
 	int sock;
 	if((sock=socket(AF_UNIX,SOCK_STREAM,0))<0){
-		fprintf(stderr,"cannot create socket: %m\n");
+		stderr_perror("cannot create socket");
 		return -1;
 	}
 	memset(&addr,0,sizeof(addr));
 	addr.sun_family=AF_UNIX;
 	strncpy(addr.sun_path,path,sizeof(addr.sun_path)-1);
 	if(connect(sock,(struct sockaddr*)&addr,sizeof(addr))<0){
-		fprintf(stderr,"cannot connect socket %s: %m\n",path);
+		stderr_perror("cannot connect socket %s",path);
 		close(sock);
 		return -1;
 	}

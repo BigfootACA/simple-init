@@ -70,7 +70,7 @@ char*gadget_find_udc(){
 	#endif
 	DIR*d=opendir(_PATH_SYS_CLASS"/udc");
 	if(!d){
-		telog_error("cannot open UDC class: %m");
+		telog_error("cannot open UDC class");
 		return NULL;
 	}
 	char*udc=NULL;

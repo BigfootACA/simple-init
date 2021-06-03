@@ -274,10 +274,10 @@ int loggerd_thread(int fd){
 	);
 	setproctitle("initloggerd");
 	prctl(PR_SET_NAME,"Logger Daemon",0,0,0);
-	signal(SIGINT,logger_cleanup);
-	signal(SIGHUP,logger_cleanup);
-	signal(SIGTERM,logger_cleanup);
-	signal(SIGQUIT,logger_cleanup);
+	handle_signals(
+		(int[]){SIGINT,SIGHUP,SIGQUIT,SIGTERM},
+		4,logger_cleanup
+	);
 	if((efd=epoll_create(64))<0)
 		return terlog_error(-errno,"epoll_create failed");
 	if(!(evs=malloc(es*64))){

@@ -3,7 +3,6 @@
 #include<stdlib.h>
 #include<stdbool.h>
 #include<string.h>
-#include<sys/socket.h>
 #include"defines.h"
 #include"list.h"
 #include"logger_internal.h"

@@ -25,14 +25,14 @@ char*shell_replace(char*dest,char*src,size_t size){
 
 	// username/uid
 	uid_t u=geteuid();
-	char user[128]={0},uid[32]={0};
-	get_username(u,user,127);
+	char user[128],uid[32]={0};
+	get_username(u,user,128);
 	snprintf(uid,31,"%d",u);
 
 	// groupname/gid
 	gid_t g=getegid();
-	char group[128]={0},gid[32]={0};
-	get_groupname(g,group,127);
+	char group[128],gid[32]={0};
+	get_groupname(g,group,128);
 	snprintf(gid,31,"%d",g);
 
 	// exit code

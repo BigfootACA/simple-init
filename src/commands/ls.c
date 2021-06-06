@@ -71,10 +71,10 @@ static void display_single(int fd,int dfd,char*op,char*name){
 					(int)st.st_gid
 				);
 			}else{
-				dprintf(fd,"%-8.8s ",get_username(st.st_uid,nb,127));
+				dprintf(fd,"%-8.8s ",get_username(st.st_uid,nb,128));
 				if(!opts.nogroup)dprintf(
 					fd,"%-8.8s ",
-					get_groupname(st.st_gid,nb,127)
+					get_groupname(st.st_gid,nb,128)
 				);
 			}
 			if(

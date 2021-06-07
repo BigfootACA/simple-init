@@ -40,10 +40,10 @@ extern int add_link(char*path,char*name,char*dest);
 // src/lib/stdio.c: get terminal width
 extern int get_term_width(int fd,int def);
 
-// src/lib/passwd.c: get username by uid, return uid if fail
+// src/lib/credential.c: get username by uid, return uid if fail
 extern char*get_username(uid_t uid,char*buff,size_t size);
 
-// src/lib/passwd.c: get groupname by gid, return gid if fail
+// src/lib/credential.c: get groupname by gid, return gid if fail
 extern char*get_groupname(gid_t gid,char*buff,size_t size);
 
 #ifdef ENABLE_KMOD

@@ -3,6 +3,7 @@
 #include<stdbool.h>
 #include<dirent.h>
 #include<sys/types.h>
+#include<sys/socket.h>
 
 // mount item
 struct mount_item{
@@ -48,6 +49,11 @@ extern char*get_groupname(gid_t gid,char*buff,size_t size);
 
 // src/lib/credential.c: get process comm name by pid, return pid if fail
 extern char*get_commname(pid_t pid,char*buff,size_t size,bool with_pid);
+
+#ifdef _GNU_SOURCE
+// src/lib/credential.c: convert ucred to string
+extern char*ucred2string(struct ucred*c,char*buff,size_t size,bool with_pid);
+#endif
 
 #ifdef ENABLE_KMOD
 // src/lib/modules.c: lookup and load module by alias

@@ -1,7 +1,9 @@
+#define _GNU_SOURCE
 #include<pwd.h>
 #include<grp.h>
 #include<stdio.h>
 #include<string.h>
+#include<sys/socket.h>
 #include"defines.h"
 #include"pathnames.h"
 #include"system.h"
@@ -35,5 +37,19 @@ char*get_commname(pid_t pid,char*buff,size_t size,bool with_pid){
 		snprintf(p,BUFSIZ,"[%d]",pid);
 		strncat(buff,p,size-1);
 	}
+	return buff;
+}
+
+char*ucred2string(struct ucred*c,char*buff,size_t size,bool with_pid){
+	if(!c)return NULL;
+	char user[256],group[256],process[256];
+	memset(buff,0,size);
+	snprintf(
+		buff,size-1,
+		"%s(%s:%s)",
+		get_username(c->uid,user,256),
+		get_groupname(c->gid,group,256),
+		get_commname(c->pid,process,256,with_pid)
+	);
 	return buff;
 }

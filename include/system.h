@@ -47,7 +47,7 @@ extern char*get_username(uid_t uid,char*buff,size_t size);
 extern char*get_groupname(gid_t gid,char*buff,size_t size);
 
 // src/lib/credential.c: get process comm name by pid, return pid if fail
-extern char*get_commname(pid_t pid,char*buff,size_t size);
+extern char*get_commname(pid_t pid,char*buff,size_t size,bool with_pid);
 
 #ifdef ENABLE_KMOD
 // src/lib/modules.c: lookup and load module by alias

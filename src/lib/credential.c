@@ -33,8 +33,8 @@ char*get_commname(pid_t pid,char*buff,size_t size,bool with_pid){
 		_PATH_PROC"/%d/comm",pid
 	)<=0)snprintf(buff,size-1,"%d",pid);
 	else if(with_pid){
-		char p[BUFSIZ]={0};
-		snprintf(p,BUFSIZ,"[%d]",pid);
+		char p[16]={0};
+		snprintf(p,15,"[%d]",pid);
 		strncat(buff,p,size-1);
 	}
 	return buff;

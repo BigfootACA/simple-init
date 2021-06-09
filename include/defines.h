@@ -3,9 +3,6 @@
 #ifndef __linux__
 #error "This program only run on Linux"
 #endif
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
 #include<time.h>
 #include<errno.h>
 #include<fcntl.h>

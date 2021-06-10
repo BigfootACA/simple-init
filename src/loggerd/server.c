@@ -10,6 +10,7 @@
 #include<sys/prctl.h>
 #include<sys/socket.h>
 #include"defines.h"
+#include"system.h"
 #include"proctitle.h"
 #include"logger_internal.h"
 #define TAG "loggerd"

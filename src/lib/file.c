@@ -200,3 +200,15 @@ ssize_t read_file(char*buff,size_t len,bool lf,char*path,...){
 	close(fd);
 	return s;
 }
+
+bool is_folder(const char*path){
+	errno=EINVAL;
+	if(!path)return false;
+	struct stat st;
+	errno=EIO;
+	if(stat(path,&st)<0)return false;
+	errno=0;
+	if(S_ISDIR(st.st_mode))return true;
+	errno=ENOTDIR;
+	return false;
+}

@@ -2,6 +2,7 @@
 #include<stdlib.h>
 #include<signal.h>
 #include<unistd.h>
+#include<string.h>
 #include<sys/un.h>
 #include<sys/prctl.h>
 #include<sys/epoll.h>

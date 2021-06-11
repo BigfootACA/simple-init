@@ -157,10 +157,7 @@ static bool process_data(int fd){
 	char data[4096];
 	struct cmsghdr*c;
 	struct msghdr m={
-		.msg_iov=&(struct iovec){
-			.iov_base=&data,
-			.iov_len=sizeof(data)-1
-		},
+		.msg_iov=&IOVEC(&data,sizeof(data)-1),
 		.msg_iovlen=1,
 		.msg_control=&ctl,
 		.msg_controllen=sizeof(ctl)

@@ -114,6 +114,9 @@ extern ssize_t read_file(char*buff,size_t len,bool lf,char*path,...);
 // src/lib/signal.c: handle int,hup,chld,term,alrm,chld,usr1,usr2 signal
 extern void handle_signals(int*sigs,int len,void(*handler)(int));
 
+// src/lib/signal.c: convert sig to string (eg. signame(2) = "SIGINT")
+extern const char*signame(int sig);
+
 // src/lib/stdio.c: get the highest possible fd
 extern int get_max_fd();
 

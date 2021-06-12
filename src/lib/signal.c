@@ -50,3 +50,7 @@ void handle_signals(int*sigs,int len,void(*handler)(int)){
 	sa.sa_handler=handler;
 	for(int i=0;i<len;i++)sigaction(sigs[i],&sa,NULL);
 }
+
+const char*signame(int sig){
+	return sig<0||sig>=sizeof(sigmap)?NULL:sigmap[sig];
+}

@@ -10,6 +10,8 @@ struct mount_item{
 	char*source,*target,*type,**options;
 	int freq,passno;
 };
+// src/lib/signal.c: signal name map (eg. 2 = "SIGINT")
+extern const char*sigmap[];
 
 // src/lib/mount.c: read all mountpoint from /proc/mounts
 extern struct mount_item**read_proc_mounts();

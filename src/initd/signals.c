@@ -11,13 +11,20 @@
 void signal_handlers(int s){
 	if(getpid()!=1)return;
 	pid_t pid;
-	int st,stat=-1;
+	int st;
 	switch(s){
 		case SIGCHLD:
 			while((pid=waitpid(-1,&st,WNOHANG))!=0){
 				if(errno==ECHILD)break;
-				if(WIFEXITED(st))stat=WEXITSTATUS(st);
-				tlog_debug("clean process pid %d, exit code %d",pid,stat);
+				if(WIFEXITED(st))tlog_debug(
+					"clean process pid %d, exit code %d",
+					pid,WEXITSTATUS(st)
+				);
+				else if(WIFSIGNALED(st))tlog_debug(
+					"clean process pid %d, killed by signal %s",
+					pid,signame(WTERMSIG(st))
+				);
+				else tlog_debug("clean process pid %d",pid);
 			}
 		break;
 		default:break;

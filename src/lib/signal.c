@@ -52,5 +52,5 @@ void handle_signals(int*sigs,int len,void(*handler)(int)){
 }
 
 const char*signame(int sig){
-	return sig<0||sig>=sizeof(sigmap)?NULL:sigmap[sig];
+	return sig<0||sig>=(int)sizeof(sigmap)?NULL:sigmap[sig];
 }

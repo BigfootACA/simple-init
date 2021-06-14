@@ -1,6 +1,36 @@
-file(GLOB SRCS */*.c)
 include_directories(../include)
-add_executable(init main.c ${SRCS})
+add_executable(init main.c)
+set(SUBDIRS
+	assets
+	boot
+	cmdline
+	commands
+	devd
+	gadget
+	getopt
+	hardware
+	initd
+	lib
+	loggerd
+	shell
+)
+foreach(SUBDIR ${SUBDIRS})
+    add_subdirectory("${SUBDIR}")
+endforeach()
+
+target_link_libraries(init init_hardware)
+target_link_libraries(init init_shell)
+target_link_libraries(init init_commands)
+target_link_libraries(init init_devd)
+target_link_libraries(init init_initd)
+target_link_libraries(init init_cmdline)
+target_link_libraries(init init_boot)
+target_link_libraries(init init_gadget)
+target_link_libraries(init init_loggerd)
+target_link_libraries(init init_assets)
+target_link_libraries(init init_lib)
+target_link_libraries(init init_getopt)
+
 set(DEPENDS mount)
 
 if("${ENABLE_INITSHELL}" STREQUAL "ON")

@@ -2,10 +2,6 @@ cmake_minimum_required(VERSION 3.6)
 project(simple-init LANGUAGES C)
 
 add_definitions("-Wall -Wextra -Wno-frame-address -rdynamic")
-file(GLOB SRCS src/*/*.c)
-include_directories(include)
-add_executable(init src/main.c ${SRCS})
-set(DEPENDS mount)
 
 option(DISABLE_WERROR     "Avoid treating compiler warnings as fatal errors"  OFF)
 option(DISABLE_DEBUG      "Disable debug infomation generate"                 OFF)
@@ -21,19 +17,16 @@ option(ENABLE_TERMINFO    "Enable builtin assets terminfo"                    ON
 
 if("${ENABLE_INITSHELL}" STREQUAL "ON")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_INITSHELL=1")
-    set(DEPENDS ${DEPENDS} readline)
 endif()
 
 if("${ENABLE_KMOD}" STREQUAL "ON")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_KMOD=1")
-    set(DEPENDS ${DEPENDS} libkmod)
 else()
     message(WARNING "libkmod disabled, kernel modules will not be loaded")
 endif()
 
 if("${ENABLE_BLKID}" STREQUAL "ON")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_BLKID=1")
-    set(DEPENDS ${DEPENDS} blkid)
 else()
     message(WARNING "blkid disabled, may not find block devices by tag")
 endif()
@@ -60,20 +53,14 @@ endif()
 
 if("${ENABLE_ASAN}" STREQUAL "ON")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_ASAN=1 -fsanitize=address -fsanitize=undefined -fsanitize=leak -fsanitize-recover=all -fno-omit-frame-pointer -fno-stack-protector -fsanitize=leak")
-    target_link_libraries(init asan)
 endif()
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(DEPS REQUIRED IMPORTED_TARGET ${DEPENDS})
 if("${ENABLE_STATIC}" STREQUAL "ON")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -static")
-    target_link_libraries(init ${DEPS_STATIC_LIBRARIES})
-else()
-    target_link_libraries(init ${DEPS_LIBRARIES})
 endif()
-
-target_link_libraries(init pthread)
 
 if("${ENABLE_STRIP}" STREQUAL "ON")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -s")
 endif()
+
+add_subdirectory(src)

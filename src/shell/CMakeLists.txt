@@ -1,2 +1,7 @@
-file(GLOB SRCS *.c)
-add_library(init_shell STATIC ${SRCS})
+add_library(init_shell STATIC
+	cmd.c
+	commands.c
+	external.c
+	replace.c
+	shell.c
+)

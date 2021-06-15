@@ -1,2 +1,25 @@
-file(GLOB SRCS *.c)
-add_library(init_commands STATIC ${SRCS})
+add_library(init_commands STATIC
+	arch.c
+	cat.c
+	cd.c
+	chdir.c
+	clear.c
+	dmesg.c
+	dumps.c
+	exit.c
+	findfs.c
+	help.c
+	initloggerd.c
+	insmod.c
+	loggerctl.c
+	ls.c
+	lsmod.c
+	modprobe.c
+	mountpoint.c
+	rmmod.c
+	setsid.c
+	truefalse.c
+	uname.c
+	unlink.c
+	version.c
+)

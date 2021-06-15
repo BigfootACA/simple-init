@@ -1,2 +1,21 @@
-file(GLOB SRCS *.c)
-add_library(init_lib STATIC ${SRCS})
+add_library(init_lib STATIC
+	array.c
+	credential.c
+	exit.c
+	file.c
+	keyval.c
+	list.c
+	mode.c
+	modules.c
+	mount.c
+	param.c
+	pool.c
+	proctitle.c
+	readable.c
+	reboot.c
+	replace.c
+	signal.c
+	stdio.c
+	strings.c
+	switchroot.c
+)

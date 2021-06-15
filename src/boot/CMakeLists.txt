@@ -1,2 +1,6 @@
-file(GLOB SRCS *.c)
-add_library(init_boot STATIC ${SRCS})
+add_library(init_boot STATIC
+	boot.c
+	bootdef.c
+	reboot.c
+	root.c
+)

@@ -1,2 +1,8 @@
-file(GLOB SRCS *.c)
-add_library(init_gadget STATIC ${SRCS})
+add_library(init_gadget STATIC
+	add.c
+	add_function.c
+	general.c
+	register.c
+	startstop.c
+	unregister.c
+)

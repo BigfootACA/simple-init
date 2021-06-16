@@ -14,22 +14,13 @@ set(SUBDIRS
 	loggerd
 	shell
 )
+
+target_link_libraries(init -Wl,--start-group)
 foreach(SUBDIR ${SUBDIRS})
     add_subdirectory("${SUBDIR}")
+    target_link_libraries(init "init_${SUBDIR}")
 endforeach()
-
-target_link_libraries(init init_hardware)
-target_link_libraries(init init_shell)
-target_link_libraries(init init_commands)
-target_link_libraries(init init_devd)
-target_link_libraries(init init_initd)
-target_link_libraries(init init_cmdline)
-target_link_libraries(init init_boot)
-target_link_libraries(init init_gadget)
-target_link_libraries(init init_loggerd)
-target_link_libraries(init init_assets)
-target_link_libraries(init init_lib)
-target_link_libraries(init init_getopt)
+target_link_libraries(init -Wl,--end-group)
 
 set(DEPENDS mount)
 

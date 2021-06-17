@@ -46,10 +46,10 @@ char*ucred2string(struct ucred*c,char*buff,size_t size,bool with_pid){
 	memset(buff,0,size);
 	snprintf(
 		buff,size-1,
-		"%s(%s:%s)",
+		"%s (%s:%s)",
+		get_commname(c->pid,process,256,with_pid),
 		get_username(c->uid,user,256),
-		get_groupname(c->gid,group,256),
-		get_commname(c->pid,process,256,with_pid)
+		get_groupname(c->gid,group,256)
 	);
 	return buff;
 }

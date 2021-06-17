@@ -233,7 +233,7 @@ static int loggerd_read(int fd){
 			logger_internal_printf(
 				LEVEL_EMERG,
 				TAG,
-				"receive exit signal"
+				"receive exit request"
 			);
 			e=-4;
 		break;

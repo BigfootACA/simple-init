@@ -9,4 +9,5 @@ add_library(init_initd STATIC
 	umount.c
 	protocol.c
 	socket.c
+	client.c
 )

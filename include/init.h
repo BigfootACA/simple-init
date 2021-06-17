@@ -66,4 +66,26 @@ extern int call_reboot(long rb,char*cmd);
 // src/initd/reboot.c: init kill all processes
 extern int kill_all();
 
+// src/initd/client.c: init control socket fd
+extern int initfd;
+
+// src/initd/client.c: set initfd
+extern int set_initfd(int fd);
+
+// src/initd/client.c: close initfd
+extern void close_initfd();
+
+// src/initd/client.c: connect to a init control socket
+extern int open_socket_initfd(char*path);
+
+#ifdef INIT_INTERNAL_H
+// src/initd/client.c: send init_msg
+extern int init_send_raw(struct init_msg*send);
+
+// src/initd/client.c: receive init_msg
+extern int init_recv_raw(struct init_msg*response);
+
+// src/initd/client.c: send init_msg and wait response
+extern int init_send(struct init_msg*send,struct init_msg*response);
+#endif
 #endif

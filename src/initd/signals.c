@@ -2,12 +2,13 @@
 #include<errno.h>
 #include<stdlib.h>
 #include<signal.h>
+#include<string.h>
 #include<unistd.h>
 #include<sys/wait.h>
 #include<sys/reboot.h>
 #include"system.h"
 #include"logger.h"
-#include"init.h"
+#include"init_internal.h"
 #define TAG "signals"
 
 static bool handle=true;
@@ -31,6 +32,24 @@ static void dump(){
 #else
 static inline void dump(void){};
 #endif
+
+static void show_shutdown(int sig,pid_t pid){
+	if(status==INIT_SHUTDOWN||pid<=0)return;
+	char buff[BUFSIZ]={0},*type;
+	switch(sig){
+		case SIGUSR1:type="halt",action=ACTION_HALT;break;
+		case SIGTERM:type="reboot",action=ACTION_REBOOT;break;
+		case SIGUSR2:type="poweroff",action=ACTION_POWEROFF;break;
+		default:return;
+	}
+	memset(&actiondata,0,sizeof(union action_data));
+	status=INIT_SHUTDOWN;
+	tlog_notice(
+		"receive %s signal (%s) from %s",
+		type,signame(sig),
+		get_commname(pid,buff,BUFSIZ,true)
+	);
+}
 
 static void signal_handlers(int s,siginfo_t*i,void*d __attribute__((unused))){
 	if(getpid()!=1||!handle)return;
@@ -60,6 +79,21 @@ static void signal_handlers(int s,siginfo_t*i,void*d __attribute__((unused))){
 			xsleep(3);
 			sync();
 			exit(s);
+		break;
+		case SIGINT:
+			if(status==INIT_SHUTDOWN||i->si_pid!=0)break;
+			memset(&actiondata,0,sizeof(union action_data));
+			tlog_alert("receive ctrl-alt-del key, reboot...");
+			status=INIT_SHUTDOWN,action=ACTION_REBOOT;
+		break;
+		case SIGPWR:
+			if(status==INIT_SHUTDOWN||i->si_pid!=0)break;
+			memset(&actiondata,0,sizeof(union action_data));
+			tlog_alert("receive SIGPWR, halt...");
+			status=INIT_SHUTDOWN,action=ACTION_HALT;
+		break;
+		case SIGUSR1:case SIGTERM:case SIGUSR2:
+			show_shutdown(s,i->si_pid);
 		break;
 		default:break;
 	}

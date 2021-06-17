@@ -12,6 +12,7 @@ int call_reboot(long rb,char*cmd){
 	devd_call_quit();
 	logger_exit();
 	close_all_fd(NULL,0);
+	kill_all();
 	adv_reboot(rb,cmd);
 	return 0;
 }

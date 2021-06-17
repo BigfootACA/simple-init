@@ -190,7 +190,6 @@ char*search_init(char*init,char*root){
 	// search init in list
 	for(int i=0;(init=init_list[i]);i++){
 		if(!check_init(false,root,init))continue;
-		tlog_info("found init %s in %s",init,root);
 		return init;
 	}
 

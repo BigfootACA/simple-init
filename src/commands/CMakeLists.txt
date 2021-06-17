@@ -22,4 +22,5 @@ add_library(init_commands STATIC
 	uname.c
 	unlink.c
 	version.c
+	initctl.c
 )

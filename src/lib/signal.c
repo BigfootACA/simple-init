@@ -51,6 +51,17 @@ void handle_signals(int*sigs,int len,void(*handler)(int)){
 	for(int i=0;i<len;i++)sigaction(sigs[i],&sa,NULL);
 }
 
+void action_signals(int*sigs,int len,void(*action)(int,siginfo_t*,void*)){
+	sigset_t signals;
+	struct sigaction sa;
+	sigfillset(&signals);
+	for(int i=0;i<len;i++)sigdelset(&signals,sigs[i]);
+	sigprocmask(SIG_SETMASK,&signals,NULL);
+	memset(&sa,0,sizeof(sa));
+	sa.sa_sigaction=action;
+	for(int i=0;i<len;i++)sigaction(sigs[i],&sa,NULL);
+}
+
 const char*signame(int sig){
 	return sig<0||sig>=(int)sizeof(sigmap)?NULL:sigmap[sig];
 }

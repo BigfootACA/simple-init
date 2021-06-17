@@ -2,6 +2,7 @@
 #define SYSTEM_H
 #include<stdbool.h>
 #include<dirent.h>
+#include<signal.h>
 #include<sys/types.h>
 #include<sys/socket.h>
 
@@ -111,8 +112,13 @@ extern int wait_block(char*block,long time,char*tag);
 // src/lib/file.c: one line read file
 extern ssize_t read_file(char*buff,size_t len,bool lf,char*path,...);
 
-// src/lib/signal.c: handle a signal list
+// src/lib/signal.c: handle a signal list (sa_handler)
 extern void handle_signals(int*sigs,int len,void(*handler)(int));
+
+#ifdef _GNU_SOURCE
+// src/lib/signal.c: handle a signal list (sa_sigaction)
+extern void action_signals(int*sigs,int len,void(*action)(int, siginfo_t*,void*));
+#endif
 
 // src/lib/signal.c: convert sig to string (eg. signame(2) = "SIGINT")
 extern const char*signame(int sig);

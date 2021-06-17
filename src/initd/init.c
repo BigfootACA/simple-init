@@ -25,7 +25,7 @@ static int system_boot(){
 	setproctitle("init");
 	chdir(_PATH_ROOT)==0?
 		tlog_debug("change directory to root."):
-		telog_warn("failed to change directory: %m.");
+		telog_warn("failed to change directory");
 
 	setup_signals();
 	init_environ();

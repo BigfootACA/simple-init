@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include<errno.h>
 #include<stdio.h>
 #include<stdlib.h>
@@ -258,6 +259,11 @@ static void logger_cleanup(int s __attribute__((unused))){
 	logger_internal_clean();
 }
 
+static void signal_handler(int s,siginfo_t *info,void*c __attribute__((unused))){
+	if(info->si_pid<=1)return;
+	logger_cleanup(s);
+}
+
 int loggerd_thread(int fd){
 	static size_t es=sizeof(struct epoll_event);
 	if(fd<0)ERET(EINVAL);
@@ -275,9 +281,9 @@ int loggerd_thread(int fd){
 	);
 	setproctitle("initloggerd");
 	prctl(PR_SET_NAME,"Logger Daemon",0,0,0);
-	handle_signals(
+	action_signals(
 		(int[]){SIGINT,SIGHUP,SIGQUIT,SIGTERM},
-		4,logger_cleanup
+		4,signal_handler
 	);
 	if((efd=epoll_create(64))<0)
 		return terlog_error(-errno,"epoll_create failed");

@@ -60,6 +60,7 @@ void action_signals(int*sigs,int len,void(*action)(int,siginfo_t*,void*)){
 	sigprocmask(SIG_SETMASK,&signals,NULL);
 	memset(&sa,0,sizeof(sa));
 	sa.sa_sigaction=action;
+	sa.sa_flags=SA_SIGINFO;
 	for(int i=0;i<len;i++)sigaction(sigs[i],&sa,NULL);
 }
 

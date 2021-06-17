@@ -1,13 +1,17 @@
 #include<signal.h>
 #include<unistd.h>
 #include<sys/reboot.h>
+#include"init_internal.h"
+#include"system.h"
 #include"logger.h"
 #define TAG "reboot"
 
-int call_reboot(int rb){
+int call_reboot(long rb,char*cmd){
 	tlog_emerg("call kernel reboot.");
-	sync();
-	reboot(rb);
+	devd_call_quit();
+	logger_exit();
+	close_all_fd(NULL,0);
+	adv_reboot(rb,cmd);
 	return 0;
 }
 

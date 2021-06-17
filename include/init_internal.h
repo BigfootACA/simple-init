@@ -26,17 +26,20 @@ enum init_action{
 	ACTION_SWITCHROOT =0xBE06,
 };
 extern enum init_action action;
-extern char action_data[256];
+
+union action_data{
+	int ret;
+	char data[1016];
+	struct{
+		char root[508];
+		char init[508];
+	}newroot;
+};
+extern union action_data actiondata;
 
 struct init_msg{
 	unsigned char magic0,magic1;
 	enum init_action action;
-	union{
-		int ret;
-		char data1[63];
-		char data2[63];
-		char data3[63];
-		char data4[63];
-	};
+	union action_data data;
 };
 #endif

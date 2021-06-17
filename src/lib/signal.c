@@ -1,4 +1,5 @@
 #include<signal.h>
+#include<unistd.h>
 #include<string.h>
 #include"system.h"
 
@@ -64,4 +65,9 @@ void action_signals(int*sigs,int len,void(*action)(int,siginfo_t*,void*)){
 
 const char*signame(int sig){
 	return sig<0||sig>=(int)sizeof(sigmap)?NULL:sigmap[sig];
+}
+
+unsigned int xsleep(unsigned int n){
+	while(n>0)n=sleep(n);
+	return 0;
 }

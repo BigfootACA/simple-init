@@ -123,6 +123,9 @@ extern void action_signals(int*sigs,int len,void(*action)(int, siginfo_t*,void*)
 // src/lib/signal.c: convert sig to string (eg. signame(2) = "SIGINT")
 extern const char*signame(int sig);
 
+// src/lib/signal.c: make sure real sleep n seconds
+unsigned int xsleep(unsigned int n);
+
 // src/lib/stdio.c: get the highest possible fd
 extern int get_max_fd();
 

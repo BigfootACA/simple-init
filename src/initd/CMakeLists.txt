@@ -7,4 +7,5 @@ add_library(init_initd STATIC
 	run.c
 	signals.c
 	umount.c
+	protocol.c
 )

@@ -6,9 +6,6 @@
 // src/initd/init.c: simple-init daemon main
 extern int init_main(int argc,char**argv);
 
-// src/initd/signals.c: init signals handler
-extern void signal_handlers(int s);
-
 // src/initd/environ.c: dump environment variables to fd
 extern void dump_environ(int fd);
 

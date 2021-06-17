@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include<errno.h>
 #include<stdlib.h>
 #include<signal.h>
@@ -31,7 +32,7 @@ static void dump(){
 static inline void dump(void){};
 #endif
 
-void signal_handlers(int s){
+static void signal_handlers(int s,siginfo_t*i,void*d __attribute__((unused))){
 	if(getpid()!=1||!handle)return;
 	pid_t pid;
 	int st;
@@ -65,7 +66,7 @@ void signal_handlers(int s){
 
 void setup_signals(){
 	tlog_debug("setting signals");
-	handle_signals((int[]){
+	action_signals((int[]){
 		SIGINT,
 		SIGHUP,
 		SIGQUIT,

@@ -8,4 +8,5 @@ add_library(init_initd STATIC
 	signals.c
 	umount.c
 	protocol.c
+	socket.c
 )

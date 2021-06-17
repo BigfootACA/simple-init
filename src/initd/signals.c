@@ -52,6 +52,7 @@ static void signal_handlers(int s,siginfo_t*i,void*d __attribute__((unused))){
 			}
 		break;
 		case SIGSEGV:case SIGABRT:case SIGILL:case SIGBUS:
+			if(i->si_pid!=0)break;
 			handle=false;
 			tlog_emerg("init crashed by %s!",signame(s));
 			dump();

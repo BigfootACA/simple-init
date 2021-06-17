@@ -108,6 +108,7 @@ int run_boot_root(boot_config*boot){
 
 	// try to search init
 	if(!(init=search_init(definit,point)))return -errno;
+	tlog_info("found init %s in %s",init,point);
 
 	// execute switchroot
 	e=run_switch_root(point,init);

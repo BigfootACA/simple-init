@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include<stdlib.h>
 #include<string.h>
 #include<signal.h>
@@ -66,6 +67,11 @@ static void kmsg_thread_exit(int p __attribute__((unused))){
 	run=false;
 }
 
+static void signal_handler(int s,siginfo_t *info,void*c __attribute__((unused))){
+	if(info->si_pid<=1)return;
+	kmsg_thread_exit(s);
+}
+
 static int read_kmsg_thread(void*data __attribute__((unused))){
 	close_all_fd((int[]){klogfd},1);
 	open_socket_logfd_default();
@@ -77,9 +83,9 @@ static int read_kmsg_thread(void*data __attribute__((unused))){
 	tlog_info("kernel log forwarder start with pid %d",getpid());
 	setproctitle("klog");
 	prctl(PR_SET_NAME,"Kernel Logger",0,0,0);
-	handle_signals(
+	action_signals(
 		(int[]){SIGINT,SIGHUP,SIGQUIT,SIGTERM,SIGUSR1,SIGUSR2},
-		6,kmsg_thread_exit
+		6,signal_handler
 	);
 
 	fd_set fs;

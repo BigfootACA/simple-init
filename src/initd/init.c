@@ -38,7 +38,32 @@ static int system_boot(){
 }
 
 int system_down(){
+	tlog_notice("prepare system clean");
+	if(action==ACTION_SWITCHROOT){
+		#define root actiondata.newroot.root
+		#define init actiondata.newroot.init
+		char*realinit=init,*newinit=NULL;
+		if(realinit[0]==0)realinit=NULL;
+		if(!(newinit=search_init(realinit,root)))return -errno;
+		tlog_info("found init %s in %s",newinit,root);
+		return run_switch_root(root,newinit);
+	}
 	tlog_alert("system is going down...");
+	long cmd=RB_AUTOBOOT;
+	char*data=NULL;
+	switch(action){
+		case ACTION_REBOOT:
+			if(actiondata.data[0]!=0){
+				cmd=LINUX_REBOOT_CMD_RESTART2,data=actiondata.data;
+				tlog_notice("reboot with '%s'...",data);
+			}
+		break;
+		case ACTION_HALT:cmd=RB_HALT_SYSTEM;break;
+		case ACTION_POWEROFF:cmd=RB_POWER_OFF;break;
+		default:
+	}
+	call_reboot(cmd,data);
+	sleep(3);
 	return 0;
 }
 

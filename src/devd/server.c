@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include<fcntl.h>
 #include<stdlib.h>
 #include<signal.h>
@@ -50,6 +51,11 @@ static void devd_cleanup(int s __attribute__((unused))){
 	else clean=true,run=false;
 	unlink(DEFAULT_DEVD);
 	close(devdfd);
+}
+
+static void signal_handler(int s,siginfo_t *info,void*c __attribute__((unused))){
+	if(info->si_pid<=1)return;
+	devd_cleanup(s);
 }
 
 static void process_add(char*data){
@@ -120,7 +126,7 @@ static int devd_thread(int cfd){
 	fork_run("netlink",false,NULL,NULL,_start_uevent_thread);
 	signal(SIGCHLD,SIG_IGN);
 	handle_signals((int[]){SIGUSR1,SIGUSR2,SIGCHLD},3,SIG_IGN);
-	handle_signals((int[]){SIGINT,SIGHUP,SIGTERM,SIGQUIT},4,devd_cleanup);
+	action_signals((int[]){SIGINT,SIGHUP,SIGTERM,SIGQUIT},4,signal_handler);
 	if((devdfd=open(_PATH_DEV,O_RDONLY|O_DIRECTORY))<0)return terlog_warn(-errno,"open %s",_PATH_DEV);
 	if((efd=epoll_create(64))<0)return terlog_error(-errno,"epoll_create failed");
 	if(!(evs=malloc(es*64))){

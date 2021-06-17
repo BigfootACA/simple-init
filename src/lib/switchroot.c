@@ -10,6 +10,7 @@
 #include<sys/mount.h>
 #include<sys/statfs.h>
 #include"devd.h"
+#include"init.h"
 #include"logger.h"
 #include"system.h"
 #include"cmdline.h"
@@ -129,6 +130,7 @@ int run_switch_root(char*root,char*init){
 	devd_call_quit();
 	logger_exit();
 	close_all_fd(NULL,0);
+	kill_all();
 	if(switchroot(root)!=0)return -1;
 	if(run_init(init)!=0){
 		tlog_emerg("failed to found working init");

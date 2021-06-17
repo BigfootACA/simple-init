@@ -1,4 +1,5 @@
 #include<errno.h>
+#include<stdlib.h>
 #include<signal.h>
 #include<unistd.h>
 #include<sys/wait.h>
@@ -8,8 +9,30 @@
 #include"init.h"
 #define TAG "signals"
 
+static bool handle=true;
+
+#ifdef __GLIBC__
+#include<execinfo.h>
+#define BACKTRACE_SIZE 16
+
+static void dump(){
+	void*b[BACKTRACE_SIZE];
+	char**s;
+	int n=backtrace(b,BACKTRACE_SIZE);
+	if(!(s=backtrace_symbols(b,n))){
+		telog_emerg("backtrace_symbols");
+		return;
+	}
+	tlog_emerg("Stack trace: ");
+	for(int j=0;j<n;j++)tlog_emerg("  #%-2d %s\n",j,s[j]);
+	free(s);
+}
+#else
+static inline void dump(void){};
+#endif
+
 void signal_handlers(int s){
-	if(getpid()!=1)return;
+	if(getpid()!=1||!handle)return;
 	pid_t pid;
 	int st;
 	switch(s){
@@ -27,13 +50,35 @@ void signal_handlers(int s){
 				else tlog_debug("clean process pid %d",pid);
 			}
 		break;
+		case SIGSEGV:case SIGABRT:case SIGILL:case SIGBUS:
+			handle=false;
+			tlog_emerg("init crashed by %s!",signame(s));
+			dump();
+			sleep(3);
+			logger_exit();
+			sync();
+			exit(s);
+		break;
 		default:break;
 	}
 }
 
 void setup_signals(){
 	tlog_debug("setting signals");
-	handle_signals((int[]){SIGINT,SIGHUP,SIGQUIT,SIGTERM,SIGCHLD,SIGALRM,SIGUSR1,SIGUSR2},8,signal_handlers);
+	handle_signals((int[]){
+		SIGINT,
+		SIGHUP,
+		SIGQUIT,
+		SIGTERM,
+		SIGCHLD,
+		SIGALRM,
+		SIGUSR1,
+		SIGUSR2,
+		SIGSEGV,
+		SIGABRT,
+		SIGILL,
+		SIGBUS
+	},12,signal_handlers);
 	tlog_debug("disable ctrl-alt-delete.");
 	reboot(RB_DISABLE_CAD);
 }

@@ -56,7 +56,7 @@ static void signal_handlers(int s,siginfo_t*i,void*d __attribute__((unused))){
 			handle=false;
 			tlog_emerg("init crashed by %s!",signame(s));
 			dump();
-			sleep(3);
+			xsleep(3);
 			logger_exit();
 			sync();
 			exit(s);

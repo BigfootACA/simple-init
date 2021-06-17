@@ -77,6 +77,11 @@ static void syslog_thread_exit(int p __attribute__((unused))){
 	run=false;
 }
 
+static void signal_handler(int s,siginfo_t *info,void*c __attribute__((unused))){
+	if(info->si_pid<=1)return;
+	syslog_thread_exit(s);
+}
+
 int parse_syslog_item(struct ucred*cred,char*line){
 	int e=-1;
 	char*p,*c,*l=NULL;
@@ -193,9 +198,9 @@ static int read_kmsg_thread(void*data __attribute__((unused))){
 	tlog_info("syslog forwarder start with pid %d",getpid());
 	setproctitle("syslog");
 	prctl(PR_SET_NAME,"Syslog Forward",0,0,0);
-	handle_signals(
+	action_signals(
 		(int[]){SIGINT,SIGHUP,SIGQUIT,SIGTERM,SIGUSR1,SIGUSR2},
-		6,syslog_thread_exit
+		6,signal_handler
 	);
 
 	if(listen_syslog_socket()<0)

@@ -1,14 +1,22 @@
 #include<unistd.h>
-#include<stdbool.h>
 #include<stdlib.h>
+#include<stdbool.h>
 #include<sys/prctl.h>
+#include<sys/reboot.h>
+#include<linux/reboot.h>
+
 #define TAG "init"
-#include"init.h"
+#include"init_internal.h"
 #include"shell.h"
 #include"system.h"
 #include"defines.h"
 #include"cmdline.h"
 #include"proctitle.h"
+
+enum init_status status;
+enum init_action action;
+union action_data actiondata;
+static int sfd=-1;
 
 static int system_boot(){
 	int r;
@@ -41,6 +49,7 @@ static void wait_loggerd(){
 
 int init_main(int argc __attribute__((unused)),char**argv __attribute__((unused))){
 	int r;
+	status=INIT_BOOT;
 
 	// precheck
 	if(getpid()!=1)return trlog_emerg(1,"must be run as PID 1.");
@@ -63,9 +72,16 @@ int init_main(int argc __attribute__((unused)),char**argv __attribute__((unused)
 	if((r=system_boot())!=0)return r;
 
 	// while
-	#ifdef ENABLE_INITSHELL
-	if(fork()==0)while(1)run_shell();
-	#endif
-	while(true)usleep(100000000);
-	return 0;
+	sfd=listen_init_socket();
+
+	running:
+	status=INIT_RUNNING;
+	while(status==INIT_RUNNING){
+		if(sfd<=0)sleep(1);
+		else if(init_process_socket(sfd)<0)sfd=-1;
+	}
+	if(status!=INIT_SHUTDOWN)goto running;
+	init_process_socket(-1);
+
+	return system_down();
 }

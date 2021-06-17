@@ -68,8 +68,7 @@ int logger_open(char*file){
 }
 
 int logger_exit(){
-	int r;
-	if((r=logger_send_string(LOG_QUIT,NULL))<0)return r;
+	logger_send_string(LOG_QUIT,NULL);
 	close_logfd();
 	return 0;
 }

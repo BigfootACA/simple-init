@@ -4,6 +4,7 @@
 #include"init_internal.h"
 #include"system.h"
 #include"logger.h"
+#include"devd.h"
 #define TAG "reboot"
 
 int call_reboot(long rb,char*cmd){

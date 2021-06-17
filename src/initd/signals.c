@@ -24,7 +24,7 @@ static void dump(){
 		return;
 	}
 	tlog_emerg("Stack trace: ");
-	for(int j=0;j<n;j++)tlog_emerg("  #%-2d %s\n",j,s[j]);
+	for(int j=2;j<n;j++)tlog_emerg("  #%-2d %s\n",j-2,s[j]);
 	free(s);
 }
 #else

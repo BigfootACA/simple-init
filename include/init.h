@@ -33,6 +33,12 @@ extern pid_t run_program(char*path,char**args);
 // src/initd/switchroot.c: switch to new root
 extern int run_switch_root(char*root,char*init);
 
+// src/initd/switchroot.c: check init is valid
+extern bool check_init(bool force,char*root,char*init);
+
+// src/initd/switchroot.c: search init in root when init is not null
+extern char*search_init(char*init,char*root);
+
 // src/initd/run.c: wait for a PID exit with exit code
 extern int wait_cmd(pid_t p);
 

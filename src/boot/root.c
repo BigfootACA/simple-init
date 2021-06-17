@@ -15,64 +15,6 @@
 #include"defines.h"
 #define TAG "switchroot"
 
-bool check_init(bool force,char*root,char*init){
-	static char path[PATH_MAX];
-	struct stat st;
-	if(!root||!init)return false;
-
-	// init must start with /
-	if(init[0]!='/'){
-		tlog_error("invalid init %s",init);
-		errno=EINVAL;
-		return false;
-	}
-
-	// generate init realpath
-	memset(path,0,PATH_MAX);
-	snprintf(path,PATH_MAX-1,"%s%s",root,init);
-
-	// stat init
-	if(stat(path,&st)<0){
-		if(errno!=ENOENT||force)telog_warn("stat init %s",path);
-		return false;
-	}
-
-	// init is a normal file
-	if(!S_ISREG(st.st_mode)){
-		tlog_error("init %s is not a file",path);
-		errno=ENOEXEC;
-		return false;
-	}
-
-	// init has execute permission
-	if(!(st.st_mode&S_IXUSR)){
-		tlog_error("init %s is not an executable file",path);
-		errno=EACCES;
-		return false;
-	}
-
-	errno=0;
-	return true;
-}
-
-char*search_init(char*init,char*root){
-	if(!root)EPRET(EINVAL);
-
-	// init specified in kernel cmdline
-	if(init)return check_init(true,root,init)?init:NULL;
-
-	// search init in list
-	for(int i=0;(init=init_list[i]);i++){
-		if(!check_init(false,root,init))continue;
-		tlog_info("found init %s in %s",init,root);
-		return init;
-	}
-
-	// no any init found
-	tlog_error("no init found in %s",root);
-	EPRET(ENOENT);
-}
-
 static char*get_block(char*path,int wait){
 	struct stat st;
 	char*block=path;

@@ -21,10 +21,10 @@ int kill_all(){
 	kill(-1,SIGTERM);
 	tlog_alert("sending SIGTERM to all proceesses...");
 	sync();
-	usleep(1000000);
+	xsleep(3);
 	kill(-1,SIGKILL);
 	tlog_alert("sending SIGKILL to all proceesses...");
 	sync();
-	usleep(500000);
+	xsleep(1);
 	return 0;
 }

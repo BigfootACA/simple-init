@@ -60,4 +60,10 @@ extern int setup_logfs();
 // src/initd/logfs.c: wait logfs setup done
 extern int wait_logfs();
 
+// src/initd/reboot.c: init call reboot
+extern int call_reboot(long rb,char*cmd);
+
+// src/initd/reboot.c: init kill all processes
+extern int kill_all();
+
 #endif

@@ -42,6 +42,9 @@ extern int wait_cmd(pid_t p);
 // src/initd/signal.c: init setup signals to signal_handlers
 extern void setup_signals();
 
+// src/initd/signal.c: disable init signal handlers
+extern void disable_signals();
+
 // src/initd/environ.c: 
 extern void init_environ();
 

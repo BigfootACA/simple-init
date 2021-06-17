@@ -65,6 +65,10 @@ static void signal_handlers(int s,siginfo_t*i,void*d __attribute__((unused))){
 	}
 }
 
+void disable_signals(){
+	handle=false;
+}
+
 void setup_signals(){
 	tlog_debug("setting signals");
 	action_signals((int[]){

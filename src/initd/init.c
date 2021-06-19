@@ -81,6 +81,9 @@ void init_do_exit(){
 
 	// clean fd
 	close_all_fd(NULL,0);
+
+	// disable signal handlers
+	disable_signals();
 }
 
 int init_main(int argc __attribute__((unused)),char**argv __attribute__((unused))){

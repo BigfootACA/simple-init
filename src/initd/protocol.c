@@ -1,7 +1,9 @@
 #define _GNU_SOURCE
+#include<stdlib.h>
 #include<string.h>
 #include<stdbool.h>
 #include<sys/socket.h>
+#include"str.h"
 #include"system.h"
 #include"logger.h"
 #include"defines.h"
@@ -75,6 +77,31 @@ int init_process_data(int cfd,struct ucred*u,struct init_msg*msg){
 			if(realinit[0]==0)realinit=NULL;
 			if(!search_init(realinit,root))telog_error("check newroot init");
 		}break;
+		case ACTION_ADDENV:
+			#define key (msg->data.env.key)
+			#define value (msg->data.env.value)
+			if(key[0]==0||value[0]==0){
+				res.data.ret=errno=EINVAL;
+				break;
+			}
+			if(root[sizeof(key)-1]!=0||root[sizeof(value)-1]!=0){
+				tlog_warn("stack overflow detected on request");
+				res.data.ret=errno=EFAULT;
+				break;
+			}
+			if(!check_identifier(key)){
+				res.action=ACTION_FAIL;
+				res.data.ret=EINVAL;
+				break;
+			}
+			if(setenv(key,value,1)==-1){
+				res.action=ACTION_FAIL;
+				res.data.ret=errno;
+			}else tlog_info(
+				"add new environment variable \"%s\" = \"%s\"",
+				key,value
+			);
+		break;
 		case ACTION_NONE:case ACTION_OK:case ACTION_FAIL:break;
 		default:res.action=ACTION_FAIL,res.data.ret=ENOSYS;
 	}
@@ -88,6 +115,7 @@ const char*action2string(enum init_action act){
 		case ACTION_HALT:return "Halt";
 		case ACTION_REBOOT:return "Reboot";
 		case ACTION_SWITCHROOT:return "Switch Root";
+		case ACTION_ADDENV:return "Add Environ";
 		default:return "Unknown";
 	}
 }

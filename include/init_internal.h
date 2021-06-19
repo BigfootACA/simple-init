@@ -22,6 +22,7 @@ enum init_action{
 	ACTION_HALT       =0xBE04,
 	ACTION_REBOOT     =0xBE05,
 	ACTION_SWITCHROOT =0xBE06,
+	ACTION_ADDENV     =0xBE07,
 };
 extern enum init_action action;
 
@@ -32,6 +33,10 @@ union action_data{
 		char root[508];
 		char init[508];
 	}newroot;
+	struct{
+		char key[64];
+		char value[952];
+	}env;
 };
 extern union action_data actiondata;
 

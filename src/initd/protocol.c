@@ -60,12 +60,18 @@ int init_process_data(int cfd,struct ucred*u,struct init_msg*msg){
 				break;
 			}
 			char*realinit=init;
-			if(root[sizeof(root)-1]!=0)
-				tlog_warn("stack overflow detected on 'root'");
-			if(root[sizeof(init)-1]!=0)
-				tlog_warn("stack overflow detected on 'init'");
-			if(!is_folder(root))res.data.ret=errno;
-			else action=msg->action,status=INIT_SHUTDOWN;
+			if(root[sizeof(root)-1]!=0||root[sizeof(init)-1]!=0){
+				tlog_warn("stack overflow detected on request");
+				res.data.ret=errno=EFAULT;
+				break;
+			}
+			if(!is_folder(root)){
+				action=msg->action;
+				status=INIT_SHUTDOWN;
+			}else{
+				res.data.ret=errno;
+				break;
+			}
 			if(realinit[0]==0)realinit=NULL;
 			if(!search_init(realinit,root))telog_error("check newroot init");
 		}break;

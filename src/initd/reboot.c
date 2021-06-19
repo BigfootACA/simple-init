@@ -19,10 +19,7 @@ int kill_all(){
 	tlog_alert("sending SIGTERM to all proceesses...");
 	sync();
 	xsleep(3);
-	devd_call_quit();
-	logger_exit();
-	close_all_fd(NULL,0);
-	disable_signals();
+	init_do_exit();
 	xsleep(1);
 	kill(-1,SIGKILL);
 	tlog_alert("sending SIGKILL to all proceesses...");

@@ -160,3 +160,10 @@ size_t possible_length(poss**p){
 	for(i=0,s=0;p[i];i++)s+=p[i]->item_len;
 	return s;
 }
+
+bool check_identifier(char*str){
+	if(!str)return false;
+	if(!check_valid(str,VALID))return false;
+	if(!contains_of(VALIDL,strlen(VALIDL),str[0]))return false;
+	return true;
+}

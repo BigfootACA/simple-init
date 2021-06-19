@@ -121,4 +121,7 @@ extern size_t possible_match(char*src,poss**p);
 
 // src/lib/strings.c: return max match length
 extern size_t possible_length(poss**p);
+
+// src/lib/strings.c: check string is a valid identifier
+extern bool check_identifier(char*str);
 #endif

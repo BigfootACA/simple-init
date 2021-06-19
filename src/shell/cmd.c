@@ -3,6 +3,7 @@
 #include<stdio.h>
 #include<string.h>
 #include<unistd.h>
+#include<sys/prctl.h>
 #include"shell_internal.h"
 #include"output.h"
 #include"init.h"
@@ -40,6 +41,7 @@ int invoke_internal_cmd_nofork(struct shell_command*cmd,char**args){
 	char*s1=program_invocation_name,*s2=program_invocation_short_name;
 	program_invocation_name=cmd->name;
 	program_invocation_short_name=basename(cmd->name);
+	prctl(PR_SET_NAME,program_invocation_short_name,0,0,0);
 	char**a=args?args:(char*[]){cmd->name,NULL};
 	int argc=0;
 	while(a[++argc]);

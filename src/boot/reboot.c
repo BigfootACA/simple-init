@@ -4,6 +4,7 @@
 #include"logger.h"
 #include"system.h"
 #include"boot.h"
+#include"init.h"
 #include"defines.h"
 #define TAG "reboot"
 
@@ -28,7 +29,6 @@ int run_boot_reboot(boot_config*boot){
 		case BOOT_KEXEC:return trlog_error(ENUM(ENOSYS),"kexec does not implemented");
 		default:ERET(EINVAL);
 	}
-	logger_exit();
-	adv_reboot(cmd,data);
+	call_reboot(cmd,data);
 	_exit(-1);
 }

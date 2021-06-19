@@ -16,6 +16,7 @@
 #define NUMBER      "1234567890"
 #define NUMBERS     " " NUMBER
 #define VALID       LETTER NUMBER "_"
+#define VALIDL      LETTER "_"
 #define MONTH       "JanFebMarAprMayJunJulAugSepOctNovDec"
 #define WEEK        "MonTueWedThuFriSatSun"
 

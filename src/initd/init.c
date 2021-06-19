@@ -67,9 +67,20 @@ int system_down(){
 	return 0;
 }
 
-static void wait_loggerd(){
+void init_do_exit(){
+	if(getpid()!=1)return;
+	static bool clean=false;
+	if(clean)return;
+	clean=true;
+
 	// shutdown loggered
 	logger_exit();
+
+	// shutdown devd
+	devd_call_quit();
+
+	// clean fd
+	close_all_fd(NULL,0);
 }
 
 int init_main(int argc __attribute__((unused)),char**argv __attribute__((unused))){
@@ -86,7 +97,7 @@ int init_main(int argc __attribute__((unused)),char**argv __attribute__((unused)
 	insmod("unix",true);// load unix socket for loggerd
 	#endif
 	start_loggerd(NULL);
-	atexit(wait_loggerd);
+	atexit(init_do_exit);
 	tlog_info("init started");
 
 	// set title

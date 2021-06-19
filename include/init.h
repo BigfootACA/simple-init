@@ -6,6 +6,9 @@
 // src/initd/init.c: simple-init daemon main
 extern int init_main(int argc,char**argv);
 
+// src/initd/init.c: do init exit cleanup
+extern void init_do_exit();
+
 // src/initd/environ.c: dump environment variables to fd
 extern void dump_environ(int fd);
 

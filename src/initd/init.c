@@ -7,6 +7,7 @@
 
 #define TAG "init"
 #include"init_internal.h"
+#include"devd.h"
 #include"shell.h"
 #include"system.h"
 #include"defines.h"

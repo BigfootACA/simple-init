@@ -19,7 +19,7 @@ static int usage(int e){
 		"\treboot [STRING]           Reboot system\n"
 		"\tswitchroot <ROOT> [INIT]  Switch to new root\n"
 		"\tsetenv <KEY> <VALUE>      Add environment variable\n"
-		"\naddenv <KEY>=<VALUE>      Add environment variable\n"
+		"\taddenv <KEY>=<VALUE>      Add environment variable\n"
 		"Options:\n"
 		"\t-h, --help  display this help and exit\n"
 	);

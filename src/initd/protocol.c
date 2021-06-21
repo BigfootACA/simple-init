@@ -43,7 +43,7 @@ static void process_switchroot(struct init_msg*msg,struct init_msg*res){
 	size_t si=sizeof(msg->data.newroot.init);
 	char*realinit=msg->data.newroot.init;
 	if(msg->data.newroot.root[0]==0){
-		res->data.ret=errno=EINVAL;
+		res->data.status.ret=errno=EINVAL;
 		return;
 	}
 	if(
@@ -51,14 +51,14 @@ static void process_switchroot(struct init_msg*msg,struct init_msg*res){
 		msg->data.newroot.init[si-1]!=0
 	){
 		tlog_warn("stack overflow detected on request");
-		res->data.ret=errno=EFAULT;
+		res->data.status.ret=errno=EFAULT;
 		return;
 	}
 	if(!is_folder(msg->data.newroot.root)){
 		action=msg->action;
 		status=INIT_SHUTDOWN;
 	}else{
-		res->data.ret=errno;
+		res->data.status.ret=errno;
 		return;
 	}
 	if(realinit[0]==0)realinit=NULL;
@@ -71,7 +71,7 @@ static void process_setenv(struct init_msg*msg,struct init_msg*res){
 	size_t sk=sizeof(msg->data.env.key);
 	size_t sv=sizeof(msg->data.env.value);
 	if(msg->data.env.key[0]==0){
-		res->data.ret=errno=EINVAL;
+		res->data.status.ret=errno=EINVAL;
 		return;
 	}
 	if(
@@ -79,12 +79,12 @@ static void process_setenv(struct init_msg*msg,struct init_msg*res){
 		msg->data.env.value[sv-1]!=0
 	){
 		tlog_warn("stack overflow detected on request");
-		res->data.ret=errno=EFAULT;
+		res->data.status.ret=errno=EFAULT;
 		return;
 	}
 	if(!check_identifier(msg->data.env.key)){
 		res->action=ACTION_FAIL;
-		res->data.ret=EINVAL;
+		res->data.status.ret=EINVAL;
 		return;
 	}
 	if(setenv(
@@ -93,7 +93,7 @@ static void process_setenv(struct init_msg*msg,struct init_msg*res){
 		1
 	)==-1){
 		res->action=ACTION_FAIL;
-		res->data.ret=errno;
+		res->data.status.ret=errno;
 	}else tlog_info(
 		"add new environment variable \"%s\" = \"%s\"",
 		msg->data.env.key,msg->data.env.value
@@ -119,7 +119,7 @@ int init_process_data(int cfd,struct ucred*u,struct init_msg*msg){
 		case ACTION_SWITCHROOT:process_switchroot(msg,&res);break;
 		case ACTION_ADDENV:process_setenv(msg,&res);break;
 		case ACTION_NONE:case ACTION_OK:case ACTION_FAIL:break;
-		default:res.action=ACTION_FAIL,res.data.ret=ENOSYS;
+		default:res.action=ACTION_FAIL,res.data.status.ret=ENOSYS;
 	}
 	init_send_data(cfd,&res);
 	return 0;

@@ -27,8 +27,11 @@ enum init_action{
 extern enum init_action action;
 
 union action_data{
-	int ret;
 	char data[1016];
+	struct{
+		int ret;
+		char msg[1016-sizeof(int)];
+	}status;
 	struct{
 		char root[508];
 		char init[508];

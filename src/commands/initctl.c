@@ -29,13 +29,13 @@ static int cmd_wrapper(struct init_msg*msg,char*name){
 	struct init_msg response;
 	init_send(msg,&response);
 	if(errno!=0)perror("send command");
-	if(response.data.ret!=0)fprintf(
+	if(response.data.status.ret!=0)fprintf(
 		stderr,
 		"execute %s: %s\n",
 		name,
-		strerror(response.data.ret)
+		strerror(response.data.status.ret)
 	);
-	return response.data.ret;
+	return response.data.status.ret;
 }
 
 static int cmd_poweroff(int argc,char**argv){

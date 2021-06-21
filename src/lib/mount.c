@@ -39,9 +39,9 @@ int xmount(bool ex,const char*dev,const char*dir,const char*type,const char*data
 		mnt_free_context(cxt);
 		return -1;
 	}
-	mnt_context_mount(cxt);
+	int ec=mnt_context_mount(cxt);
 	er=errno;
-	r=mnt_context_get_excode(cxt,r,buf,sizeof(buf));
+	r=mnt_context_get_excode(cxt,ec,buf,sizeof(buf));
 	mnt_free_context(cxt);
 	snprintf(
 		xbuf,BUFSIZ-1,

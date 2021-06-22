@@ -68,5 +68,6 @@ extern bool list_is_alone(list*point);
 
 // get item data with type
 #define LIST_DATA(_list,_type)((_type)((_list)->data))
+#define LIST_DATA_DECLARE(_name,_list,_type) _type _name=((_type)((_list)->data))
 
 #endif

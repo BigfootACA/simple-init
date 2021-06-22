@@ -109,6 +109,19 @@ static int cmd_setenv(int argc,char**argv){
 	return cmd_wrapper(&msg,argv[0]);
 }
 
+struct{
+	char*name;
+	int(*cmd_handle)(int,char**);
+}cmds[]={
+	{"poweroff",      cmd_poweroff},
+	{"halt",          cmd_halt},
+	{"reboot",        cmd_reboot},
+	{"switchroot",    cmd_switchroot},
+	{"setenv",        cmd_setenv},
+	{"addenv",        cmd_setenv},
+	{NULL,NULL}
+};
+
 int initctl_main(int argc,char**argv){
 	static const struct option lo[]={
 		{"help",    no_argument,       NULL,'h'},
@@ -129,12 +142,10 @@ int initctl_main(int argc,char**argv){
 	if(b_optind>=argc)return re_printf(1,"no command specified\n");
 	int ac=argc-b_optind;
 	char**av=argv+b_optind,*vn=argv[b_optind];
-	if(strcmp(vn,"poweroff")==0)return cmd_poweroff(ac,av);
-	else if(strcmp(vn,"halt")==0)return cmd_halt(ac,av);
-	else if(strcmp(vn,"reboot")==0)return cmd_reboot(ac,av);
-	else if(strcmp(vn,"switchroot")==0)return cmd_switchroot(ac,av);
-	else if(strcmp(vn,"setenv")==0)return cmd_setenv(ac,av);
-	else if(strcmp(vn,"addenv")==0)return cmd_setenv(ac,av);
-	else return re_printf(1,"unknown command: %s\n",vn);
+	for(int i=0;cmds[i].name;i++){
+		if(strcmp(vn,cmds[i].name)!=0)continue;
+		return cmds[i].cmd_handle(ac,av);
+	}
+	return re_printf(1,"unknown command: %s\n",vn);
 	conflict:return re_printf(2,"too many arguments\n");
 }

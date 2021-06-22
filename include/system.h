@@ -69,6 +69,9 @@ extern int remove_folders(int dfd,int flags);
 // src/lib/file.c: check path is a folder
 extern bool is_folder(const char*path,...);
 
+// src/lib/file.c: check path is a file
+extern bool is_file(const char*path,...);
+
 // src/lib/reboot.c: advance reboot (with arg)
 extern int adv_reboot(long cmd,char*data);
 

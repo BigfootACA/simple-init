@@ -223,3 +223,12 @@ bool is_folder(const char*path,...){
 	if(errno==0&&!ret)errno=ENOTDIR;
 	return ret;
 }
+
+bool is_file(const char*path,...){
+	if(!path)ERET(EINVAL);
+	va_list va;
+	va_start(va,path);
+	bool ret=is_type(S_IFREG,path,va);
+	va_end(va);
+	return ret;
+}

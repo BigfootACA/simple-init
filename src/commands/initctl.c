@@ -38,6 +38,10 @@ static int cmd_wrapper(struct init_msg*msg,char*name){
 	return response.data.status.ret;
 }
 
+static int cmd_help(int argc,char**argv __attribute__((unused))){
+	return argc>1?re_printf(2,"too many arguments\n"):usage(0);
+}
+
 static int cmd_poweroff(int argc,char**argv){
 	if(argc>1)return re_printf(2,"too many arguments\n");
 	struct init_msg msg;
@@ -113,6 +117,9 @@ struct{
 	char*name;
 	int(*cmd_handle)(int,char**);
 }cmds[]={
+	{"help",          cmd_help},
+	{"usage",         cmd_help},
+	{"?",             cmd_help},
 	{"poweroff",      cmd_poweroff},
 	{"halt",          cmd_halt},
 	{"reboot",        cmd_reboot},

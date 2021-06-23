@@ -1,6 +1,8 @@
+#define _GNU_SOURCE
 #include<unistd.h>
 #include<stdlib.h>
 #include<stdbool.h>
+#include<pthread.h>
 #include<sys/prctl.h>
 #include<sys/reboot.h>
 #include<linux/reboot.h>
@@ -12,6 +14,7 @@
 #include"system.h"
 #include"defines.h"
 #include"cmdline.h"
+#include"service.h"
 #include"proctitle.h"
 
 enum init_status status;
@@ -40,6 +43,7 @@ static int system_boot(){
 
 int system_down(){
 	tlog_notice("prepare system clean");
+	service_wait_all_stop();
 	if(action==ACTION_SWITCHROOT){
 		#define root actiondata.newroot.root
 		#define init actiondata.newroot.init
@@ -73,6 +77,9 @@ void init_do_exit(){
 	static bool clean=false;
 	if(clean)return;
 	clean=true;
+
+	// terminate service scheduler
+	stop_scheduler();
 
 	// shutdown loggered
 	logger_exit();
@@ -111,8 +118,14 @@ int init_main(int argc __attribute__((unused)),char**argv __attribute__((unused)
 	// boot
 	if((r=system_boot())!=0)return r;
 
+	// init service framework
+	service_init();
+
 	// while
 	sfd=listen_init_socket();
+
+	// start default service
+	service_start(svc_default);
 
 	running:
 	status=INIT_RUNNING;

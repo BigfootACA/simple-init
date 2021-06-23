@@ -5,6 +5,7 @@
 #include<sys/socket.h>
 #include"str.h"
 #include"system.h"
+#include"service.h"
 #include"logger.h"
 #include"defines.h"
 #include"init_internal.h"
@@ -118,6 +119,31 @@ int init_process_data(int cfd,struct ucred*u,struct init_msg*msg){
 		break;
 		case ACTION_SWITCHROOT:process_switchroot(msg,&res);break;
 		case ACTION_ADDENV:process_setenv(msg,&res);break;
+		case ACTION_SVC_START:
+			if(service_start_by_name(msg->data.data)<0){
+				res.action=ACTION_FAIL;
+				res.data.status.ret=errno;
+			}
+		break;
+		case ACTION_SVC_STOP:
+			if(service_stop_by_name(msg->data.data)<0){
+				res.action=ACTION_FAIL;
+				res.data.status.ret=errno;
+			}
+		break;
+		case ACTION_SVC_RESTART:
+			if(service_restart_by_name(msg->data.data)<0){
+				res.action=ACTION_FAIL;
+				res.data.status.ret=errno;
+			}
+		break;
+		case ACTION_SVC_RELOAD:
+			if(service_reload_by_name(msg->data.data)<0){
+				res.action=ACTION_FAIL;
+				res.data.status.ret=errno;
+			}
+		break;
+		case ACTION_SVC_DUMP:svc_dump_services();break;
 		case ACTION_NONE:case ACTION_OK:case ACTION_FAIL:break;
 		default:res.action=ACTION_FAIL,res.data.status.ret=ENOSYS;
 	}
@@ -132,6 +158,11 @@ const char*action2string(enum init_action act){
 		case ACTION_REBOOT:return "Reboot";
 		case ACTION_SWITCHROOT:return "Switch Root";
 		case ACTION_ADDENV:return "Add Environ";
+		case ACTION_SVC_START:return "Start Service";
+		case ACTION_SVC_STOP:return "Stop Service";
+		case ACTION_SVC_RESTART:return "ReStart Service";
+		case ACTION_SVC_RELOAD:return "ReLoad Service";
+		case ACTION_SVC_DUMP:return "Dump All Service";
 		default:return "Unknown";
 	}
 }

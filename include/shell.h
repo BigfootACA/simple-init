@@ -24,6 +24,9 @@ extern void run_shell();
 // src/shelld/shell.c: run_shell wrapper
 extern int initshell_main(int argc,char**argv);
 
+// src/shelld/shell.c: register console shell service
+extern int register_console_shell();
+
 #endif
 
 // src/shelld/cmd.c: find internal command by name

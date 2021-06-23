@@ -9,6 +9,7 @@
 #include<readline/history.h>
 #include"shell_internal.h"
 #include"proctitle.h"
+#include"service.h"
 #include"system.h"
 #include"output.h"
 #include"array.h"
@@ -115,4 +116,21 @@ int initshell_main(int argc __attribute__((unused)),char**argv __attribute__((un
 	run_shell();
 	return 0;
 }
+
+static int console_shell_service(struct service*svc __attribute__((unused))){
+	run_shell();
+	return 0;
+}
+
+int register_console_shell(){
+	struct service*shell=svc_create_service("console-shell",WORK_FOREGROUND);
+	if(shell){
+		svc_set_desc(shell,"Init Shell on Console");
+		svc_set_start_function(shell,console_shell_service);
+		shell->auto_restart=true;
+		svc_add_depend(svc_default,shell);
+	}
+	return 0;
+}
+
 #endif

@@ -8,6 +8,7 @@
 #include<sys/reboot.h>
 #include"system.h"
 #include"logger.h"
+#include"service.h"
 #include"init_internal.h"
 #define TAG "signals"
 
@@ -68,6 +69,7 @@ static void signal_handlers(int s,siginfo_t*i,void*d __attribute__((unused))){
 					pid,signame(WTERMSIG(st))
 				);
 				else tlog_debug("clean process pid %d",pid);
+				service_sigchld(pid,st);
 			}
 		break;
 		case SIGSEGV:case SIGABRT:case SIGILL:case SIGBUS:

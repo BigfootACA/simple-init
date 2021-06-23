@@ -63,7 +63,7 @@ int system_down(){
 		break;
 		case ACTION_HALT:cmd=RB_HALT_SYSTEM;break;
 		case ACTION_POWEROFF:cmd=RB_POWER_OFF;break;
-		default:
+		default:;
 	}
 	call_reboot(cmd,data);
 	sleep(3);

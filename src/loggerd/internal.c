@@ -170,6 +170,7 @@ int logger_internal_read_msg(int fd,struct log_msg*buff){
 	memset(buff,0,size);
 	errno=0;
 	while(1){
+		errno=0;
 		s=read(fd,buff,size);
 		if(errno==0)break;
 		switch(errno){

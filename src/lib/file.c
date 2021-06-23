@@ -201,12 +201,9 @@ ssize_t read_file(char*buff,size_t len,bool lf,char*path,...){
 	return s;
 }
 
-static bool is_type(int type,const char*path,va_list va){
+static bool is_type(mode_t type,const char*path,va_list va){
 	char rpath[PATH_MAX]={0};
-	if(!path)ERET(EINVAL);
 	vsnprintf(rpath,PATH_MAX-1,path,va);
-	errno=EINVAL;
-	if(!path)return false;
 	struct stat st;
 	errno=EIO;
 	if(stat(rpath,&st)<0)return false;

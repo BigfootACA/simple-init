@@ -32,4 +32,31 @@ struct scheduler_work{
 	struct service*service;
 };
 
+// src/service/scheduler.c: service workers thread pool
+extern struct pool*service_workers;
+
+// src/service/scheduler.c: lock for variable queue
+extern pthread_mutex_t queue_lock;
+
+// src/service/scheduler.c: service worker queue
+extern list*queue;
+
+// src/service/scheduler.c: send scheduler command
+extern int oper_scheduler(struct scheduler_msg*data);
+
+// src/service/scheduler.c: scheduler service worker
+extern void*scheduler_worker(void*data);
+
+// src/service/scheduler.c: free scheduler_work
+extern int free_scheduler_work(void*d);
+
+// src/service/scheduler.c: add service to queue
+extern int add_queue(struct service*svc,enum scheduler_action act);
+
+// src/service/scheduler.c: execute queue
+extern int run_queue();
+
+// src/service/scheduler.c: add all stop action to queue
+extern int add_all_stop_queue();
+
 #endif

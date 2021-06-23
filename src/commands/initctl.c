@@ -20,6 +20,11 @@ static int usage(int e){
 		"\tswitchroot <ROOT> [INIT]  Switch to new root\n"
 		"\tsetenv <KEY> <VALUE>      Add environment variable\n"
 		"\taddenv <KEY>=<VALUE>      Add environment variable\n"
+		"\tstart <SERVICE>           Start service\n"
+		"\tstop <SERVICE>            Stop service\n"
+		"\trestart <SERVICE>         Re-Start service\n"
+		"\treload <SERVICE>          Re-Load service\n"
+		"\tdump                      Dump all service to loggerd\n"
 		"Options:\n"
 		"\t-h, --help  display this help and exit\n"
 	);
@@ -113,6 +118,29 @@ static int cmd_setenv(int argc,char**argv){
 	return cmd_wrapper(&msg,argv[0]);
 }
 
+static int cmd_service(int argc,char**argv){
+	if(argc>2)return re_printf(2,"too many arguments\n");
+	if(argc<2)return re_printf(2,"missing arguments\n");
+	struct init_msg msg;
+	init_initialize_msg(&msg,ACTION_NONE);
+	if(!argv[1]||strlen(argv[1])<=0)return re_printf(2,"invalid environ name\n");
+	if(strlen(argv[1])>=sizeof(msg.data.data))return re_printf(2,"arguments too long\n");
+	if(strcmp(argv[0],"start")==0)msg.action=ACTION_SVC_START;
+	else if(strcmp(argv[0],"stop")==0)msg.action=ACTION_SVC_STOP;
+	else if(strcmp(argv[0],"reload")==0)msg.action=ACTION_SVC_RELOAD;
+	else if(strcmp(argv[0],"restart")==0)msg.action=ACTION_SVC_RESTART;
+	else return re_printf(2,"invalid action %s\n",argv[1]);
+	strncpy(msg.data.data,argv[1],sizeof(msg.data.data)-1);
+	return cmd_wrapper(&msg,argv[0]);
+}
+
+static int cmd_service_dump(int argc,char**argv){
+	if(argc>1)return re_printf(2,"too many arguments\n");
+	struct init_msg msg;
+	init_initialize_msg(&msg,ACTION_SVC_DUMP);
+	return cmd_wrapper(&msg,argv[0]);
+}
+
 struct{
 	char*name;
 	int(*cmd_handle)(int,char**);
@@ -126,6 +154,11 @@ struct{
 	{"switchroot",    cmd_switchroot},
 	{"setenv",        cmd_setenv},
 	{"addenv",        cmd_setenv},
+	{"start",         cmd_service},
+	{"stop",          cmd_service},
+	{"restart",       cmd_service},
+	{"reload",        cmd_service},
+	{"dump",          cmd_service_dump},
 	{NULL,NULL}
 };
 

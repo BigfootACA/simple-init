@@ -68,6 +68,7 @@ static void process_switchroot(struct init_msg*msg,struct init_msg*res){
 		msg->data.newroot.root
 	))telog_error("check newroot init");
 }
+
 static void process_setenv(struct init_msg*msg,struct init_msg*res){
 	size_t sk=sizeof(msg->data.env.key);
 	size_t sv=sizeof(msg->data.env.value);
@@ -108,11 +109,11 @@ int init_process_data(int cfd,struct ucred*u,struct init_msg*msg){
 	if(!init_check_msg(msg))ERET(EINVAL);
 	memset(&actiondata,0,sizeof(actiondata));
 	memcpy(&actiondata,&msg->data,sizeof(union action_data));
-		tlog_debug(
-			"receive %s request from %s",
-			action2string(msg->action),
-			ucred2string(u,s,BUFSIZ,true)
-		);
+	tlog_debug(
+		"receive %s request from %s",
+		action2string(msg->action),
+		ucred2string(u,s,BUFSIZ,true)
+	);
 	if(init_check_privilege(msg->action,u))switch(msg->action){
 		case ACTION_POWEROFF:case ACTION_HALT:case ACTION_REBOOT:
 			action=msg->action,status=INIT_SHUTDOWN;

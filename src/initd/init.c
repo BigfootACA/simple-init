@@ -121,6 +121,11 @@ int init_main(int argc __attribute__((unused)),char**argv __attribute__((unused)
 	// init service framework
 	service_init();
 
+	#ifdef ENABLE_INITSHELL
+	// register console shell service
+	register_console_shell();
+	#endif
+
 	// while
 	sfd=listen_init_socket();
 

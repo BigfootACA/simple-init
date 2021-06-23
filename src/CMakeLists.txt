@@ -13,6 +13,7 @@ set(SUBDIRS
 	lib
 	loggerd
 	shell
+	service
 )
 
 target_link_libraries(init -Wl,--start-group)

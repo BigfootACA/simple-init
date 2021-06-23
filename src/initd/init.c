@@ -36,8 +36,6 @@ static int system_boot(){
 
 	wait_logfs();
 
-	boot(boot_options.config);
-
 	return r;
 }
 
@@ -125,6 +123,9 @@ int init_main(int argc __attribute__((unused)),char**argv __attribute__((unused)
 	// register console shell service
 	register_console_shell();
 	#endif
+
+	// register default boot service
+	register_default_boot();
 
 	// while
 	sfd=listen_init_socket();

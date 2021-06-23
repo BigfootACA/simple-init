@@ -4,6 +4,9 @@
 #include"boot.h"
 #include"logger.h"
 #include"defines.h"
+#include"cmdline.h"
+#include"service.h"
+#include"init_internal.h"
 #define TAG "boot"
 
 char*bootmode2string(enum boot_mode mode){
@@ -46,4 +49,21 @@ int boot(boot_config*boot){
 		dump_boot_config("bootconfig",LEVEL_NOTICE,boot);
 	}
 	return r;
+}
+
+static int default_boot(struct service*svc __attribute__((unused))){
+	open_socket_initfd(DEFAULT_INITD);
+	boot(boot_options.config);
+	return 0;
+}
+
+int register_default_boot(){
+	struct service*svc_boot=svc_create_service("default-boot",WORK_ONCE);
+	if(svc_boot){
+		svc_set_desc(svc_boot,"Boot into System");
+		svc_set_start_function(svc_boot,default_boot);
+		svc_boot->stop_on_shutdown=false;
+		svc_add_depend(svc_default,svc_boot);
+	}
+	return 0;
 }

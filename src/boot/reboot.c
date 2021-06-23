@@ -1,34 +1,43 @@
 #include<errno.h>
-#include<linux/reboot.h>
-#include<unistd.h>
-#include"logger.h"
-#include"system.h"
+#include<string.h>
 #include"boot.h"
-#include"init.h"
+#include"logger.h"
 #include"defines.h"
+#include"init_internal.h"
 #define TAG "reboot"
 
 int run_boot_reboot(boot_config*boot){
 	if(!boot)ERET(EINVAL);
-	long cmd;
 	char*data=NULL;
+	struct init_msg msg,response;
+	size_t ss=sizeof(msg.data.data);
+	init_initialize_msg(&msg,ACTION_REBOOT);
 	switch(boot->mode){
 		case BOOT_REBOOT:
 			data=kvarr_get(boot->data,"arg",NULL);
-			cmd=data?LINUX_REBOOT_CMD_RESTART2:LINUX_REBOOT_CMD_RESTART;
+			msg.action=ACTION_REBOOT;
+			if(data){
+				if(strlen(data)>=ss)return terlog_error(2,"reboot argument too long");
+				strncpy(msg.data.data,data,ss-1);
+			}
 			tlog_alert(data?"rebooting":"rebooting with argument '%s'",data);
 		break;
 		case BOOT_HALT:
-			cmd=LINUX_REBOOT_CMD_HALT;
+			msg.action=ACTION_HALT;
 			tlog_alert("halt system");
 		break;
 		case BOOT_POWEROFF:
-			cmd=LINUX_REBOOT_CMD_POWER_OFF;
+			msg.action=ACTION_POWEROFF;
 			tlog_alert("poweroff system");
 		break;
 		case BOOT_KEXEC:return trlog_error(ENUM(ENOSYS),"kexec does not implemented");
 		default:ERET(EINVAL);
 	}
-	call_reboot(cmd,data);
-	_exit(-1);
+	init_send(&msg,&response);
+	if(errno!=0)telog_warn("send command");
+	if(response.data.status.ret!=0)tlog_warn(
+		"reboot failed: %s",
+		strerror(response.data.status.ret)
+	);
+	return response.data.status.ret;
 }

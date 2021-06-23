@@ -8,11 +8,10 @@
 #endif
 #include"str.h"
 #include"boot.h"
-#include"init.h"
 #include"logger.h"
 #include"system.h"
-#include"cmdline.h"
 #include"defines.h"
+#include"init_internal.h"
 #define TAG "switchroot"
 
 static char*get_block(char*path,int wait){
@@ -111,7 +110,23 @@ int run_boot_root(boot_config*boot){
 	tlog_info("found init %s in %s",init,point);
 
 	// execute switchroot
-	e=run_switch_root(point,init);
+	struct init_msg msg,response;
+	size_t s1=sizeof(msg.data.newroot.root);
+	size_t s2=sizeof(msg.data.newroot.init);
+	if(strlen(point)>=s1||strlen(init)>=s2){
+		e=terlog_error(ENAMETOOLONG,"argument too long");
+		goto ex;
+	}
+	init_initialize_msg(&msg,ACTION_SWITCHROOT);
+	strncpy(msg.data.newroot.root,point,s1-1);
+	strncpy(msg.data.newroot.init,init,s2-1);
+	init_send(&msg,&response);
+	if(errno!=0)telog_warn("send command");
+	if(response.data.status.ret!=0)tlog_warn(
+		"switchroot failed: %s",
+		strerror(response.data.status.ret)
+	);
+	e=response.data.status.ret;
 
 	ex:
 	#ifdef ENABLE_BLKID

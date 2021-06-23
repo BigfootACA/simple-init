@@ -60,7 +60,7 @@ int fork_run(char*tag,bool wait,pid_t*pp,void*data,runnable_t*runnable){
 			if(pp)*pp=pid;
 			return wait?wait_cmd(pid):0;
 	}
-	setproctitle(tag);
+	setproctitle("%s",tag);
 	int ret=runnable(data);
 	_exit(ret);
 	return ret;

@@ -64,7 +64,7 @@ int run_external_cmd(char**argv,bool background){
 	if(S_ISDIR(st.st_mode))return re_printf(127,"%s: is a directory\n",argv[0]);
 	if(!S_ISREG(st.st_mode)||access(cp,X_OK)!=0){
 		if(errno==0)errno=EACCES;
-		return re_err(ext_errno(),argv[0]);
+		return re_err(ext_errno(),"%s",argv[0]);
 	}
 	pid_t p=fork();
 	switch(p){

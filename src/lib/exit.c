@@ -16,7 +16,7 @@ int ret_perror(int err,bool quit,const char*format,...){
 }
 
 int ret_stdout_perror(int err,bool quit,const char*format,...){
-	stdout_perror(format);
+	stdout_perror("%s",format);
 	if(quit)exit(err);
 	return err;
 }

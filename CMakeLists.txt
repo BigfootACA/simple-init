@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.6)
 project(simple-init LANGUAGES C)
 
+include_directories(include lvgl)
 add_definitions("-Wall -Wextra -Wno-frame-address -rdynamic")
 
 option(DISABLE_WERROR     "Avoid treating compiler warnings as fatal errors"  OFF)
@@ -11,12 +12,24 @@ option(ENABLE_PIE         "Enable Position-Independent-Executable"            OF
 option(ENABLE_ASAN        "Enable Address Sanitizer"                          OFF)
 
 option(ENABLE_INITSHELL   "Enable builtin shell"                              ON)
+option(ENABLE_DRM         "Enable DRM"                                        ON)
+option(ENABLE_GUI         "Enable LVGL based GUI"                             ON)
 option(ENABLE_KMOD        "Enable kmod modules load or remove"                ON)
 option(ENABLE_BLKID       "Enable blkid block detect and evalaute tag"        ON)
 option(ENABLE_TERMINFO    "Enable builtin assets terminfo"                    ON)
 
 if("${ENABLE_INITSHELL}" STREQUAL "ON")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_INITSHELL=1")
+endif()
+
+if("${ENABLE_DRM}" STREQUAL "ON")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_DRM=1")
+endif()
+
+if("${ENABLE_GUI}" STREQUAL "ON")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_GUI=1 -DLV_CONF_PATH=\"lv_conf.h\"")
+    file(GLOB_RECURSE SOURCES lvgl/src/*.c)
+    add_library(lvgl STATIC ${SOURCES})
 endif()
 
 if("${ENABLE_KMOD}" STREQUAL "ON")
@@ -63,4 +76,4 @@ if("${ENABLE_STRIP}" STREQUAL "ON")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -s")
 endif()
 
-add_subdirectory(src)
+include(src/CMakeLists.txt)

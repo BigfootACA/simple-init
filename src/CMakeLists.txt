@@ -45,6 +45,7 @@ set(SUBDIRS
 	src/loggerd
 	src/shell
 	src/service
+	src/gui
 )
 
 target_link_libraries(init -Wl,--start-group)

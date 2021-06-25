@@ -58,9 +58,9 @@ int gui_init(draw_func draw){
 	if(!(screen=lv_scr_act()))return trlog_error(-1,"failed to get screen");
 	draw(screen);
 	while(run){
-		lv_tick_inc(3);
+		lv_tick_inc(15);
 		lv_task_handler();
-		usleep(3000);
+		usleep(15000);
 	}
 	gui_do_quit();
 	return 0;

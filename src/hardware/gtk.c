@@ -24,7 +24,7 @@ _Noreturn static void*gtkdrv_handler(void*p __attribute__((unused))){
 	while(1){
 		gtk_image_set_from_pixbuf(GTK_IMAGE(output_image),pixbuf);
 		gtk_main_iteration_do(FALSE);
-		usleep(1000);
+		usleep(20000);
 	}
 }
 

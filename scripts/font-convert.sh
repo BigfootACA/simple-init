@@ -15,9 +15,9 @@ do	echo "convert ${i}"
 		--size "${i}" \
 		--font "${FONTPATH}" \
 		-r 0x20-0x7f \
-		--symbols "$(<src/fonts/chars.txt)" \
+		--symbols "$(<fonts/chars.txt)" \
 		--format lvgl \
-		-o "src/fonts/lv_font_cjk_${i}.c" \
+		-o "fonts/lv_font_cjk_${i}.c" \
 		--force-fast-kern-format
 done
 popd >/dev/null

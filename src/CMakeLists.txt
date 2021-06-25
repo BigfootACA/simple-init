@@ -46,7 +46,6 @@ set(SUBDIRS
 	src/shell
 	src/service
 	src/gui
-	src/fonts
 )
 
 target_link_libraries(init -Wl,--start-group)
@@ -59,6 +58,7 @@ endforeach()
 
 if("${ENABLE_GUI}" STREQUAL "ON")
     target_link_libraries(init lvgl)
+    target_link_libraries(init fonts)
 endif()
 
 target_link_libraries(init -Wl,--end-group)

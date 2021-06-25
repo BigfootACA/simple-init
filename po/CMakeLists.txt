@@ -1,0 +1,5 @@
+find_package(Gettext REQUIRED)
+set(GETTEXT_PACKAGE "simple-init")
+foreach(lang zh_CN)
+	gettext_process_po_files(${lang} ALL PO_FILES ${lang}.po)
+endforeach()

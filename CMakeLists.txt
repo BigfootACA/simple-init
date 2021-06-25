@@ -82,3 +82,4 @@ if("${ENABLE_STRIP}" STREQUAL "ON")
 endif()
 
 include(src/CMakeLists.txt)
+add_subdirectory(po)

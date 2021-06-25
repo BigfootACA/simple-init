@@ -2,8 +2,10 @@
 #include<errno.h>
 #include<stdio.h>
 #include<libkmod.h>
+#include<libintl.h>
 #include<string.h>
 #include<stdlib.h>
+#include"defines.h"
 #include"output.h"
 #include"getopt.h"
 
@@ -20,10 +22,10 @@ static int usage(int e){
 
 static const char*mod_strerror(int err){
 	switch(err){
-		case ENOEXEC:return "Invalid module format";
-		case ENOENT:return "Unknown symbol in module";
-		case ESRCH:return "Module has wrong symbol version";
-		case EINVAL:return "Invalid parameters";
+		case ENOEXEC:return _("Invalid module format");
+		case ENOENT:return _("Unknown symbol in module");
+		case ESRCH:return _("Module has wrong symbol version");
+		case EINVAL:return _("Invalid parameters");
 		default:return strerror(err);
 	}
 }
@@ -77,7 +79,7 @@ int insmod_main(int argc,char**argv){
 	}
 	if((err=kmod_module_insert_module(mod,flags,opts))<0)fprintf(
 		stderr,
-		"insmod: could not insert module %s: %s\n",
+		_("insmod: could not insert module %s: %s\n"),
 		filename,mod_strerror(-err)
 	);
 	kmod_module_unref(mod);

@@ -1,18 +1,17 @@
 #include<errno.h>
 #include<stdio.h>
 #include<string.h>
-#include<stdlib.h>
+#include<libintl.h>
 #include"output.h"
 #include"logger.h"
 #include"getopt.h"
-#include"str.h"
 #include"init_internal.h"
 
 static int usage(int e){
 	return return_printf(
 		e,e==0?STDOUT_FILENO:STDERR_FILENO,
-		"Usage: loggerctl [OPTION]...\n"
-		"Control init logger daemon.\n\n"
+		"Usage: initctl [OPTION]...\n"
+		"Control init daemon.\n\n"
 		"Commands:\n"
 		"\tpoweroff                  Power-off system\n"
 		"\thalt                      Halt system\n"
@@ -33,10 +32,10 @@ static int usage(int e){
 static int cmd_wrapper(struct init_msg*msg,char*name){
 	struct init_msg response;
 	init_send(msg,&response);
-	if(errno!=0)perror("send command");
+	if(errno!=0)perror(_("send command"));
 	if(response.data.status.ret!=0)fprintf(
 		stderr,
-		"execute %s: %s\n",
+		_("execute %s: %s\n"),
 		name,
 		strerror(response.data.status.ret)
 	);
@@ -67,7 +66,7 @@ static int cmd_reboot(int argc,char**argv){
 	size_t ss=sizeof(msg.data.data);
 	init_initialize_msg(&msg,ACTION_REBOOT);
 	if(argc==2){
-		if(strlen(argv[1])>=ss)return re_printf(2,"argument too long\n");
+		if(strlen(argv[1])>=ss)return re_printf(2,"arguments too long\n");
 		strncpy(msg.data.data,argv[1],ss-1);
 	}
 	return cmd_wrapper(&msg,argv[0]);
@@ -83,7 +82,7 @@ static int cmd_switchroot(int argc,char**argv){
 	if(
 		strlen(argv[1])>=s1||
 		(argc==3&&strlen(argv[2])>=s2)
-	)return re_printf(2,"argument too long\n");
+	)return re_printf(2,"arguments too long\n");
 	init_initialize_msg(&msg,ACTION_SWITCHROOT);
 	strncpy(root,argv[1],s1-1);
 	if(argc==3)strncpy(init,argv[2],s2-1);

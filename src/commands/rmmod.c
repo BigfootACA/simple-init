@@ -2,6 +2,7 @@
 #include<errno.h>
 #include<stdio.h>
 #include<libkmod.h>
+#include<libintl.h>
 #include<sys/stat.h>
 #include"defines.h"
 #include"getopt.h"
@@ -33,7 +34,7 @@ static int check_module_inuse(struct kmod_module*mod){
 	);
 	if((holders=kmod_module_get_holders(mod))){
 		struct kmod_list *itr;
-		fprintf(stderr,"rmmod: Module %s is in use by:",kmod_module_get_name(mod));
+		fprintf(stderr,_("rmmod: Module %s is in use by:"),kmod_module_get_name(mod));
 		kmod_list_foreach(itr,holders){
 			struct kmod_module *hm=kmod_module_get_module(itr);
 			fprintf(stderr," %s",kmod_module_get_name(hm));
@@ -50,7 +51,7 @@ static int check_module_inuse(struct kmod_module*mod){
 	);
 	else if(ret==-ENOENT)fprintf(
 		stderr,
-		"rmmod: Module unloading is not supported\n"
+		_("rmmod: Module unloading is not supported\n")
 	);
 	return ret;
 }
@@ -71,12 +72,12 @@ int rmmod_main(int argc,char**argv){
 		default:return 1;
 	}
 	if(b_optind>=argc){
-		fprintf(stderr,"rmmod: missing module name.\n");
+		fprintf(stderr,_("rmmod: missing module name.\n"));
 		r=1;
 		goto done;
 	}
 	if(!(ctx=kmod_new(NULL,&null_config))){
-		fprintf(stderr,"rmmod: kmod_new failed!\n");
+		fprintf(stderr,_("error: kmod_new failed!\n"));
 		r=1;
 		goto done;
 	}

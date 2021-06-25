@@ -3,6 +3,7 @@
 #include<stdio.h>
 #include<string.h>
 #include<unistd.h>
+#include<libintl.h>
 #include<sys/prctl.h>
 #include"shell_internal.h"
 #include"output.h"
@@ -82,6 +83,18 @@ int invoke_internal_cmd_nofork_by_name(char*name,char**args){
 	int r=invoke_internal_cmd_nofork(cmd,args);
 	errno=0;
 	return r;
+}
+
+int init_commands_locale(){
+	struct shell_command*cmd;
+	for(int i=0;(cmd=(struct shell_command*)shell_cmds[i]);i++){
+		if(!cmd->help[0])continue;
+		char*text=gettext(cmd->help);
+		if(!text)continue;
+		memset(cmd->help,0,sizeof(cmd->help));
+		strncpy(cmd->help,text,sizeof(cmd->help)-1);
+	}
+	return 0;
 }
 
 int run_cmd(char**args,bool background){

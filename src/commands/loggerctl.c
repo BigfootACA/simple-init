@@ -2,6 +2,8 @@
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
+#include<libintl.h>
+#include"defines.h"
 #include"output.h"
 #include"logger.h"
 #include"getopt.h"
@@ -24,12 +26,13 @@ static int usage(int e){
 		"\t-t, --tag <TAG>          set log tag\n"
 		"\t-p, --pid <PID>          set log pid\n"
 		"\t-n, --level <LEVEL>      set log level\n"
-  		"\t-s, --socket <SOCKET>    control socket (default is "DEFAULT_LOGGER")\n"
+  		"\t-s, --socket <SOCKET>    control socket (default is %s)\n"
 		"\t-l, --listen <SOCKET>    listen to new socket\n"
 		"\t-o, --output <OUTPUT>    write log to new file\n"
 		"\t-a, --add                send log to loggerd\n"
 		"\t-q, --quit               terminate loggerd\n"
-		"\t-h, --help               display this help and exit\n"
+		"\t-h, --help               display this help and exit\n",
+		DEFAULT_LOGGER
 	);
 }
 
@@ -149,7 +152,7 @@ int loggerctl_main(int argc,char**argv){
 		break;
 		case OPER_QUIT:
 			r=logger_exit();
-			if(errno>0)perror("terminate loggerd");
+			if(errno>0)perror(_("terminate loggerd"));
 			break;
 		case OPER_OPEN:
 			r=logger_open(data);

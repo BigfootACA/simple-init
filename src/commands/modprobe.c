@@ -18,7 +18,6 @@
  */
 #ifdef ENABLE_KMOD
 #define _GNU_SOURCE
-#include<assert.h>
 #include<errno.h>
 #include<limits.h>
 #include<stdbool.h>
@@ -26,14 +25,13 @@
 #include<stdlib.h>
 #include<string.h>
 #include<unistd.h>
-#include<sys/stat.h>
-#include<sys/types.h>
 #include<sys/utsname.h>
-#include<sys/wait.h>
 #include<libkmod.h>
+#include<libintl.h>
 #include"getopt.h"
 #include"kloglevel.h"
 #include"output.h"
+#include"defines.h"
 #define DEFAULT_VERBOSE KERN_WARNING
 static int first_time=0,ignore_commands=0,use_blacklist=0,force=0;
 static int verbose=DEFAULT_VERBOSE,do_show=0,dry_run=0,ignore_loaded=0,lookup_only=0;
@@ -76,7 +74,7 @@ static inline void _show(const char*fmt, ...){
 }
 #define SHOW(...) _show(__VA_ARGS__)
 static void help(void){
-	puts(
+	puts(_(
 		"Usage:\n"
 		"\tmodprobe [options] [-i] [-b] modulename\n"
 		"\tmodprobe [options] -a [-i] [-b] modulename [modulename...]\n"
@@ -115,17 +113,14 @@ static void help(void){
 		"\t-q, --quiet                 disable messages\n"
 		"\t-v, --verbose               enables more messages\n"
 		"\t-h, --help                  show this help"
-	);
+	));
 }
 
 static int show_modversions(struct kmod_ctx*ctx,const char*filename){
 	struct kmod_list*l,*list=NULL;
 	struct kmod_module*mod;
 	int err=kmod_module_new_from_path(ctx,filename,&mod);
-	if(err<0){
-		fprintf(stderr,"Module %s not found.\n",filename);
-		return err;
-	}
+	if(err<0)return re_printf(err,"modprobe: Module %s not found.\n",filename);
 	if((err=kmod_module_get_versions(mod,&list))<0){
 		stderr_perror("could not get modversions of %s",filename);
 		kmod_module_unref(mod);
@@ -145,10 +140,7 @@ static int show_exports(struct kmod_ctx*ctx,const char*filename){
 	struct kmod_list*l,*list=NULL;
 	struct kmod_module*mod;
 	int err=kmod_module_new_from_path(ctx,filename,&mod);
-	if(err<0){
-		fprintf(stderr,"Module %s not found.\n",filename);
-		return err;
-	}
+	if(err<0)return re_printf(err,"modprobe: Module %s not found.\n",filename);
 	if((err=kmod_module_get_symbols(mod,&list))<0){
 		stderr_perror("could not get symbols of %s",filename);
 		kmod_module_unref(mod);
@@ -195,7 +187,7 @@ static int command_do(struct kmod_module*module,const char*type,const char*comma
 	ret=system(cmd);
 	unsetenv("MODPROBE_MODULE");
 	if(ret==-1||WEXITSTATUS(ret)){
-		fprintf(stderr,"Error running %s command for %s\n",type,modname);
+		fprintf(stderr,_("Error running %s command for %s\n"),type,modname);
 		if(ret!=-1)ret=-WEXITSTATUS(ret);
 	}
 	end:
@@ -212,7 +204,7 @@ static int rmmod_do_remove_module(struct kmod_module*mod){
 	if(force)flags|=KMOD_REMOVE_FORCE;
 	if((err=kmod_module_remove_module(mod,flags))==-EEXIST){
 		if(!first_time)err=0;
-		else fprintf(stderr,"Module %s is not in kernel.\n",modname);
+		else fprintf(stderr,_("modprobe: Module %s is not in kernel.\n"),modname);
 	}
 	if((deps=kmod_module_get_dependencies(mod))){
 		kmod_list_foreach(itr,deps){
@@ -253,14 +245,14 @@ static int rmmod_do_module(struct kmod_module*mod,int flags){
 		int state=kmod_module_get_initstate(mod);
 		if(state<0){
 			if(first_time){
-				fprintf(stderr,"Module %s is not in kernel.\n",modname);
+				fprintf(stderr,_("modprobe: Module %s is not in kernel.\n"),modname);
 				err=-ENOENT;
 			}else err=0;
 			goto error;
 		}else if(state==KMOD_MODULE_BUILTIN){
 			if(flags&RMMOD_FLAG_IGNORE_BUILTIN)err=0;
 			else{
-				fprintf(stderr,"Module %s is builtin.\n",modname);
+				fprintf(stderr,_("modprobe: Module %s is builtin.\n"),modname);
 				err=-ENOENT;
 			}
 			goto error;
@@ -275,12 +267,19 @@ static int rmmod_do_module(struct kmod_module*mod,int flags){
 	if(!ignore_loaded&&!cmd){
 		int usage=kmod_module_get_refcnt(mod);
 		if(usage>0){
-			if(!quiet_inuse)fprintf(stderr,"Module %s is in use.\n",modname);
+			if(!quiet_inuse)fprintf(
+				stderr,
+				_("modprobe: Module %s is in use.\n"),
+				modname
+			);
 			err=-EBUSY;
 			goto error;
 		}
 	}
-	if((err=cmd?command_do(mod,"remove",cmd,NULL):rmmod_do_remove_module(mod))<0)goto error;
+	if((err=cmd?
+		command_do(mod,"remove",cmd,NULL):
+		rmmod_do_remove_module(mod)
+	)<0)goto error;
 	rmmod_do_deps_list(pre,false);
 	error:
 	kmod_module_unref_list(pre);
@@ -293,7 +292,7 @@ static int rmmod(struct kmod_ctx*ctx,const char*alias){
 	int err;
 	if((err=kmod_module_new_from_lookup(ctx,alias,&list))<0)return err;
 	if(!list){
-		fprintf(stderr,"Module %s not found.\n",alias);
+		fprintf(stderr,_("modprobe: Module %s not found.\n"),alias);
 		err=-ENOENT;
 	}
 	kmod_list_foreach(l,list){
@@ -319,8 +318,10 @@ static void print_action(struct kmod_module*m,bool install,const char*options){
 		printf("install %s %s\n",kmod_module_get_install_commands(m),options);
 		return;
 	}
-	if((path=kmod_module_get_path(m)))printf("insmod %s %s\n",kmod_module_get_path(m),options);
-	else if(kmod_module_get_initstate(m)==KMOD_MODULE_BUILTIN)printf("builtin %s\n",kmod_module_get_name(m));
+	if((path=kmod_module_get_path(m)))
+		printf("insmod %s %s\n",kmod_module_get_path(m),options);
+	else if(kmod_module_get_initstate(m)==KMOD_MODULE_BUILTIN)
+		printf("builtin %s\n",kmod_module_get_name(m));
 }
 static int insmod(struct kmod_ctx*ctx,const char*alias,const char*extra_options){
 	struct kmod_list*l,*list=NULL;
@@ -328,9 +329,9 @@ static int insmod(struct kmod_ctx*ctx,const char*alias,const char*extra_options)
 	void(*show)(struct kmod_module*m,bool install,const char*options)=NULL;
 	if((err=kmod_module_new_from_lookup(ctx,alias,&list))<0||!list)return re_printf(
 		-ENOENT,
-		"Module %s not found in directory %s\n",
+		"modprobe: Module %s not found in directory %s\n",
 		alias,
-		ctx?kmod_get_dirname(ctx):"(missing)"
+		ctx?kmod_get_dirname(ctx):_("(missing)")
 	);
 
 	if(strip_modversion||force)flags|=KMOD_PROBE_FORCE_MODVERSION;
@@ -348,10 +349,10 @@ static int insmod(struct kmod_ctx*ctx,const char*alias,const char*extra_options)
 		else err=kmod_module_probe_insert_module(mod,flags,extra_options,NULL,NULL,show);
 		if(err>=0)err=0;
 		else{
-			fprintf(stderr,"could not insert '%s': ",kmod_module_get_name(mod));
+			fprintf(stderr,_("could not insert '%s': "),kmod_module_get_name(mod));
 			switch(err){
-				case -EEXIST:fputs("Module already in kernel\n",stderr);break;
-				case -ENOENT:fputs("Unknown symbol or unknown param\n",stderr);break;
+				case -EEXIST:fputs(_("Module already in kernel\n"),stderr);break;
+				case -ENOENT:fputs(_("Unknown symbol or unknown param\n"),stderr);break;
 				default:fputs(strerror(-err),stderr);break;
 			}
 		}
@@ -375,10 +376,11 @@ static void env_modprobe_options_append(const char*value){
 		return;
 	}
 	if(asprintf(&env,"%s %s",old,value)<0){
-		fprintf(stderr,"could not append value to $MODPROBE_OPTIONS\n");
+		fprintf(stderr,_("could not append value to $MODPROBE_OPTIONS\n"));
 		return;
 	}
-	if(setenv("MODPROBE_OPTIONS",env,1)<0)fprintf(stderr,"could not setenv(MODPROBE_OPTIONS,\"%s\")\n",env);
+	if(setenv("MODPROBE_OPTIONS",env,1)<0)
+		fprintf(stderr,_("could not setenv (MODPROBE_OPTIONS,\"%s\")\n"),env);
 	free(env);
 }
 
@@ -401,7 +403,7 @@ static int options_from_array(char**args,int nargs,char**output){
 			err=-errno;
 			free(opts);
 			opts=NULL;
-			fprintf(stderr,"could not gather module options: out-of-memory\n");
+			fprintf(stderr,_("could not gather module options: out-of-memory\n"));
 			break;
 		}
 		opts=tmp;
@@ -465,7 +467,8 @@ int modprobe_main(int argc,char**orig_argv){
 	char**args=NULL,**argv,dirname_buf[PATH_MAX];
 	const char*dirname=NULL,*root=NULL,*kversion=NULL;
 	int nargs,use_all=0,do_remove=0,do_show_modversions=0,do_show_exports=0,err;
-	if(!(argv=prepend_options_from_env(&argc,orig_argv)))return re_printf(1,"Could not prepend options from command line\n");
+	if(!(argv=prepend_options_from_env(&argc,orig_argv)))
+		return re_printf(1,"Could not prepend options from command line\n");
 	for(;;){
 		int c,idx=0;
 		if((c=b_getlopt(argc,argv,cmdopts_s,cmdopts,&idx))==-1)break;
@@ -485,15 +488,21 @@ int modprobe_main(int argc,char**orig_argv){
 			case 'n':dry_run=1;break;
 			case 'd':root=b_optarg;break;
 			case 'S':kversion=b_optarg;break;
-			case 'q':env_modprobe_options_append("-q");verbose=KERN_EMERG;break;
-			case 'v':env_modprobe_options_append("-v");verbose++;break;
+			case 'q':
+				env_modprobe_options_append("-q");
+				verbose=KERN_EMERG;
+			break;
+			case 'v':
+				env_modprobe_options_append("-v");
+				verbose++;
+			break;
 			case 'h':help();err=0;goto done;
 			default:err=-1;goto done;
 		}
 	}
 	args=argv+b_optind,nargs=argc-b_optind;
 	if(nargs==0){
-		fprintf(stderr,"missing parameters. See -h.\n");
+		fprintf(stderr,_("missing parameters. See -h.\n"));
 		err=-1;
 		goto done;
 	};
@@ -502,17 +511,22 @@ int modprobe_main(int argc,char**orig_argv){
 		if(!root)root="";
 		if(!kversion){
 			if(uname(&u)<0){
-				perror("uname failed");
+				perror(_("uname failed"));
 				err=-1;
 				goto done;
 			}
 			kversion=u.release;
 		}
-		snprintf(dirname_buf,sizeof(dirname_buf),"%s/lib/modules/%s",root,kversion);
+		snprintf(
+			dirname_buf,
+			sizeof(dirname_buf),
+			"%s/lib/modules/%s",
+			root,kversion
+		);
 		dirname=dirname_buf;
 	}
 	if(!(ctx=kmod_new(dirname,NULL))){
-		fprintf(stderr,"kmod_new failed!\n");
+		fprintf(stderr,_("error: kmod_new failed!\n"));
 		err=-1;
 		goto done;
 	}

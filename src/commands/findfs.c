@@ -6,7 +6,7 @@
 
 static int usage(int e){
 	return return_printf(
-	e,e==0?STDOUT_FILENO:STDERR_FILENO,
+		e,e==0?STDOUT_FILENO:STDERR_FILENO,
 		"Usage: findfs [OPTIONS] {LABEL,UUID,PARTUUID,PARTLABEL}=<VALUE>\n"
 		"Find a filesystem by label or UUID.\n"
 	);

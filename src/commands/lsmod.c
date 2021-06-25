@@ -2,6 +2,8 @@
 #include<stdio.h>
 #include<errno.h>
 #include<libkmod.h>
+#include<libintl.h>
+#include"defines.h"
 #include"output.h"
 
 // from kmod tools/lsmod.c
@@ -13,11 +15,11 @@ int lsmod_main(int argc,char**argv __attribute__((unused))){
 	if(!(ctx=kmod_new(NULL,NULL)))return re_printf(1,"error: kmod_new failed!\n");
 	if((err=kmod_module_new_from_loaded(ctx,&list))<0){
 		errno=-err;
-		perror("error: could not get list of modules");
+		perror(_("error: could not get list of modules"));
 		kmod_unref(ctx);
 		return 1;
 	}
-	puts("Module                  Size  Used by");
+	puts(_("Module                  Size  Used by"));
 	kmod_list_foreach(itr,list) {
 		struct kmod_module*mod=kmod_module_get_module(itr);
 		const char*name=kmod_module_get_name(mod);

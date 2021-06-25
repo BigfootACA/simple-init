@@ -1,5 +1,6 @@
 #include<string.h>
 #include<stdlib.h>
+#include<libintl.h>
 #include<sys/stat.h>
 #include<sys/sysmacros.h>
 #include<libmount/libmount.h>
@@ -50,7 +51,7 @@ static int dir_to_device(struct mountpoint_control *ctl){
 
 static int print_devno(const struct mountpoint_control*ctl){
 	if(!S_ISBLK(ctl->st.st_mode)) {
-		if(!ctl->quiet)printf("%s: not a block device",ctl->path);
+		if(!ctl->quiet)printf(_("%s: not a block device"),ctl->path);
 		return -1;
 	}
 	printf("%u:%u\n",major(ctl->st.st_rdev),minor(ctl->st.st_rdev));
@@ -60,7 +61,7 @@ static int print_devno(const struct mountpoint_control*ctl){
 static int usage(int e){
 	return return_printf(
 		e,e==0?STDOUT_FILENO:STDERR_FILENO,
-		"Usage:"
+		"Usage:\n"
 		"\tmountpoint [-qd] /path/to/directory\n"
 		"\tmountpoint -x /dev/device\n"
 		"Check whether a directory or file is a mountpoint.\n\n"
@@ -101,10 +102,10 @@ int mountpoint_main(int argc,char**argv){
 	}
 	if(ctl.dev_devno)return print_devno(&ctl)?1:0;
 	if((ctl.nofollow&&S_ISLNK(ctl.st.st_mode))||dir_to_device(&ctl)){
-		if(!ctl.quiet)printf("%s is not a mountpoint\n",ctl.path);
+		if(!ctl.quiet)printf(_("%s is not a mountpoint\n"),ctl.path);
 		return 1;
 	}
 	if(ctl.fs_devno)printf("%u:%u\n",major(ctl.dev),minor(ctl.dev));
-	else if(!ctl.quiet)printf("%s is a mountpoint\n",ctl.path);
+	else if(!ctl.quiet)printf(_("%s is a mountpoint\n"),ctl.path);
 	return 0;
 }

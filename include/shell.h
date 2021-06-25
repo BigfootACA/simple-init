@@ -44,6 +44,9 @@ extern int invoke_internal_cmd_by_name(char*name,bool background,char**args);
 // src/shelld/cmd.c: invoke internal command by name
 extern int invoke_internal_cmd_nofork_by_name(char*name,char**args);
 
+// src/shelld/cmd.c: init commands help i18n
+extern int init_commands_locale();
+
 // src/shelld/cmd.c: install commands
 extern int install_cmds(int dfd);
 #endif

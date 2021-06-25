@@ -35,6 +35,7 @@
 #error "Do not use assert.h"
 #endif
 #define assert(expr){if(!(expr))exit_stderr_printf(-1,"assert failed.\n");}
+#define _ gettext
 #define MIN(a,b)((b)>(a)?(a):(b))
 #define MAX(a,b)((b)<(a)?(a):(b))
 #define ENUM(err) -(errno=(err))

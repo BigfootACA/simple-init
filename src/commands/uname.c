@@ -77,7 +77,7 @@ int uname_main(int argc,char**argv){
 	}
 	if(b_optind<=1)opts.name=true;
 	if(argc>b_optind)return re_printf(
-		1,"ls: extra operand: %s\n",
+		1,"uname: extra operand: %s\n",
 		argv[b_optind]
 	);
 	uname(&uts);

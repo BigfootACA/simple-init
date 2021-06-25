@@ -16,6 +16,10 @@ if("${ENABLE_BLKID}" STREQUAL "ON")
 	set(DEPENDS ${DEPENDS} blkid)
 endif()
 
+if("${ENABLE_GTK}" STREQUAL "ON")
+	set(DEPENDS ${DEPENDS} gtk+-3.0)
+endif()
+
 if("${ENABLE_ASAN}" STREQUAL "ON")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_ASAN=1 -fsanitize=address")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=undefined -fsanitize=leak")

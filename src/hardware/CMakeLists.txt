@@ -4,4 +4,5 @@ add_library(init_hardware STATIC
 	drm.c
 	fbdev.c
 	ts.c
+	gtk.c
 )

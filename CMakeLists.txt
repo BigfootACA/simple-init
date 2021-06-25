@@ -13,6 +13,7 @@ option(ENABLE_ASAN        "Enable Address Sanitizer"                          OF
 
 option(ENABLE_INITSHELL   "Enable builtin shell"                              ON)
 option(ENABLE_DRM         "Enable DRM"                                        ON)
+option(ENABLE_GTK         "Enable GTK"                                        OFF)
 option(ENABLE_GUI         "Enable LVGL based GUI"                             ON)
 option(ENABLE_KMOD        "Enable kmod modules load or remove"                ON)
 option(ENABLE_BLKID       "Enable blkid block detect and evalaute tag"        ON)
@@ -24,6 +25,10 @@ endif()
 
 if("${ENABLE_DRM}" STREQUAL "ON")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_DRM=1")
+endif()
+
+if("${ENABLE_GTK}" STREQUAL "ON")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_GTK=1")
 endif()
 
 if("${ENABLE_GUI}" STREQUAL "ON")

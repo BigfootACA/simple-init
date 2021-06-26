@@ -1,0 +1,36 @@
+name: CI
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+      - name: Install requires packages
+        run: |
+          sudo apt update
+          sudo apt install --yes --no-install-recommends \
+              git cmake gcc binutils make ninja-build gettext busybox zstd pciutils \
+              iproute2 strace gdbserver htop lsof lz4 parted dosfstools ed eject \
+              net-tools iputils-ping lrzsz cpio nano gpm gdb vim rfkill kbd gzip \
+              uuid-runtime kmod bridge-utils tree usbutils dhcpcd5 efibootmgr acl \
+              coreutils btrfs-progs pciutils bsdmainutils device-tree-compiler \
+              libdrm-dev libblkid-dev libmount-dev libkmod-dev libreadline-dev
+      - name: Build Main
+        run: bash scripts/build.sh
+      - name: Strip Main
+        run: strip build/init
+      - name: Build Initramfs
+        run: bash scripts/gen-initramfs.sh
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: init
+          path: |
+            build/init
+            /tmp/initramfs.img

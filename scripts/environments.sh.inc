@@ -18,8 +18,8 @@ export QEMU_BIN="qemu-system-${ARCH}"
 export FONTSIZE=(24 48)
 export FONTPATH=fonts/wqy-mono-microhei.ttf
 export LIBRARIES=(
-	libnss_files.so
-	libnss_dns.so
+	libnss_files.so.2
+	libnss_dns.so.2
 )
 export DATAS=(
 	usr/share/file

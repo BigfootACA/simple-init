@@ -68,10 +68,15 @@ function add_cmd(){
 	unset FILE
 }
 function add_lib(){
-	local FILE
+	local FILE TARGET
 	[ -n "${1}" ]||return 1
 	[ -n "${2}" ]||return 1
-	for i in /lib /lib64 /usr/lib /usr/lib64 /usr/local/lib /usr/local/lib64
+	TARGET="$(gcc -dumpmachine)"
+	for i in \
+		/lib /lib64 /usr/lib /usr/lib64 \
+		/usr/local/lib /usr/local/lib64 \
+		/lib/"${TARGET}" /lib64/"${TARGET}" \
+		/usr/lib/"${TARGET}" /usr/lib64/"${TARGET}"
 	do	x="${i}/${1}"
 		[ -f "${x}" ]||continue
 		FILE="${x}"

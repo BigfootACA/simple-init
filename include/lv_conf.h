@@ -2,6 +2,7 @@
 #define LV_CONF_H
 #include<stdint.h>
 typedef int16_t lv_coord_t;
+typedef void*lv_obj_user_data_t;
 typedef void*lv_font_user_data_t;
 typedef void*lv_anim_user_data_t;
 typedef void*lv_group_user_data_t;
@@ -43,7 +44,7 @@ extern uint32_t custom_tick_get();
 #define LV_USE_GPU                          0
 #define LV_USE_GPU_STM32_DMA2D              0
 #define LV_USE_FILESYSTEM                   1
-#define LV_USE_USER_DATA                    0
+#define LV_USE_USER_DATA                    1
 #define LV_USE_PERF_MONITOR                 0
 #define LV_IMG_CF_INDEXED                   1
 #define LV_IMG_CF_ALPHA                     1

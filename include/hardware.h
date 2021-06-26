@@ -26,6 +26,7 @@ extern int ts_scan_init(void);
 extern bool ts_read(struct _lv_indev_drv_t*indev_drv,lv_indev_data_t*data);
 extern void ts_register(char*dev);
 extern void ts_scan_register(void);
+extern int init_lvgl_fs(char letter,char*root,bool debug);
 extern int set_brightness_percent(char*name,int percent);
 extern void vibrate(char*dev,int time);
 #endif

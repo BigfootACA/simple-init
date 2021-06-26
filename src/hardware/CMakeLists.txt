@@ -5,4 +5,5 @@ add_library(init_hardware STATIC
 	fbdev.c
 	ts.c
 	gtk.c
+	filesystem.c
 )

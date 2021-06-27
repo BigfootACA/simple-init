@@ -1,5 +1,6 @@
 #ifndef kv_H
 #define kv_H
+#include"list.h"
 #include<sys/types.h>
 
 // keyval struct
@@ -100,7 +101,6 @@ extern char*kvarr_get_value_by_key(keyval**kvs,char*key,char*def);
 // src/lib/keyval.c: get a key in keyval array by value, return def if not found
 extern char*kvarr_get_key_by_value(keyval**kvs,char*value,char*def);
 
-#ifdef _list_H
 // keyval list usage
 
 // src/lib/keyval.c: free a keyval list and free all elements in list
@@ -141,7 +141,6 @@ extern char*kvlst_get_value_by_key(list*kvs,char*key,char*def);
 
 // src/lib/keyval.c: get a key in keyval list by value, return def if not found
 extern char*kvlst_get_key_by_value(list*kvs,char*value,char*def);
-#endif
 
 // declare a keyval
 #define KV(_key,_value)(keyval){.key=(_key),.value=(_value)}

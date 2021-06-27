@@ -18,4 +18,5 @@ add_library(init_lib STATIC
 	stdio.c
 	strings.c
 	switchroot.c
+	base64.c
 )

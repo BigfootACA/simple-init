@@ -124,4 +124,12 @@ extern size_t possible_length(poss**p);
 
 // src/lib/strings.c: check string is a valid identifier
 extern bool check_identifier(char*str);
+
+#ifdef b64_pton
+#undef b64_pton
+#endif
+
+// src/lib/base64.c: base64 encode
+extern int b64_pton(char const*src,u_char*target,size_t targsize);
+
 #endif

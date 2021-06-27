@@ -1,6 +1,8 @@
 #include<stdlib.h>
 #include<string.h>
 #include<stdio.h>
+#include<signal.h>
+#include"list.h"
 #include"keyval.h"
 #include"output.h"
 #include"array.h"
@@ -274,4 +276,173 @@ char*kvarr_get_key_by_value(keyval**kvs,char*value,char*def){
 		if(kv)return kv->key;
 	}
 	return def;
+}
+
+int _kv_free(void*d){
+	kv_free(d);
+	return 0;
+}
+
+void kvlst_free(list*kvs){
+	if(!kvs)return;
+	list_free_all(kvs,_kv_free);
+}
+
+list*kvlst_add_obj(list*kvs,keyval*obj){
+	if(!obj||!obj->key)EPRET(EINVAL);
+	list*h=list_new(obj);
+	if(!h)EPRET(ENOMEM);
+	if(kvs){
+		list*cur,*next;
+		if((next=list_first(kvs)))do{
+			cur=next;
+			if(!cur->data)continue;
+			LIST_DATA_DECLARE(s,cur,keyval*);
+			if(!s->key)continue;
+			if(strcmp(s->key,obj->key)==0){
+				free(h);
+				EPRET(EEXIST);
+			}
+		}while((next=cur->next));
+		if(list_push(kvs,h)<0){
+			free(h);
+			return NULL;
+		}
+	}else kvs=h;
+	return kvs;
+}
+
+list*kvlst_add(list*kvs,char*key,char*value){
+	return kvlst_add_obj(kvs,kv_new_set(key,value));
+}
+
+list*kvlst_set_obj(list*kvs,keyval*obj,bool free){
+	if(!obj)EPRET(EINVAL);
+	list*cur,*next;
+	if(kvs&&(next=list_first(kvs)))do{
+		cur=next;
+		if(!cur->data)continue;
+		LIST_DATA_DECLARE(s,cur,keyval*);
+		if(!s->key)continue;
+		if(strcmp(s->key,obj->key)==0){
+			s->value=strdup(obj->value);
+			if(free)kv_free(obj);
+			if(!s->value)EPRET(ENOMEM);
+			return kvs;
+		}
+	}while((next=cur->next));
+	return kvlst_add_obj(kvs,obj);
+}
+
+list*kvlst_set(list*kvs,char*key,char*value){
+	return kvlst_set_obj(kvs,kv_new_set(key,value),true);
+}
+
+list*kvlst_del(list*kvs,char*key){
+	if(!key||!kvs)EPRET(EINVAL);
+	list*cur,*next;
+	if((next=list_first(kvs)))do{
+		cur=next;
+		if(!cur->data)continue;
+		LIST_DATA_DECLARE(s,cur,keyval*);
+		if(strcmp(s->key,key)!=0)continue;
+		if(list_is_alone(cur)){
+			if(cur!=kvs)raise(SIGABRT);
+			kvlst_free(kvs);
+			kvs=NULL;
+		}else{
+			if(cur==kvs){
+				if(cur->prev)kvs=cur->prev;
+				else if(cur->next)kvs=cur->next;
+				else raise(SIGABRT);
+			}
+			list_remove_free(cur,_kv_free);
+		}
+		break;
+	}while((next=cur->next));
+	return kvs;
+}
+
+list*kvlst_parse_arr(list*kvs,char**lines,char del){
+	if(!lines)return NULL;
+	char*line;
+	for(size_t i=0;(line=lines[i]);i++)
+		if(!(kvs=kvlst_set_obj(
+			kvs,kv_new_parse(line,del),true
+		)))return NULL;
+	return kvs;
+}
+
+list*kvlst_parse(list*kvs,size_t s,char*lines,char ldel,char del){
+	size_t i=0;
+	char*d,*cur,*next;
+	if(!lines||!(cur=d=strdup(lines)))return NULL;
+	do{
+		if((next=strchr(cur,ldel)))next[0]=0,next++;
+		if(!(kvs=kvlst_set_obj(
+			kvs,kv_new_parse(cur,del),true
+		)))return NULL;
+	}while((cur=next)&&(s==0||i<s));
+	free(d);
+	return kvs;
+}
+
+void kvlst_dump(list*kvs,char*del,char*ldel){
+	if(!kvs)return;
+	list*cur,*next;
+	if((next=list_first(kvs)))do{
+		cur=next;
+		if(!cur->data)continue;
+		LIST_DATA_DECLARE(kv,cur,keyval*);
+		size_t s=1;
+		s+=del?strlen(del):3;
+		s+=kv->key?strlen(kv->key):6;
+		s+=kv->value?strlen(kv->value):6;
+		char*buff=malloc(s);
+		if(!buff)return;
+		memset(buff,0,s);
+		kv_print(kv,buff,s,del);
+		printf("%s%s",buff,ldel?ldel:"\n");
+		free(buff);
+	}while((next=cur->next));
+}
+
+keyval*kvlst_get_by_key(list*kvs,char*key,keyval*def){
+	if(!key||!kvs)return def;
+	list*next,*cur;
+	if((next=list_first(kvs)))do{
+		cur=next;
+		if(!cur->data)continue;
+		LIST_DATA_DECLARE(s,cur,keyval*);
+		if(!s->key)continue;
+		if(strcmp(s->key,key)==0)return s;
+	}while((next=cur->next));
+	return def;
+}
+
+keyval*kvlst_get_by_value(list*kvs,char*value,keyval*def){
+	if(!value||!kvs)return def;
+	list*next,*cur;
+	if((next=list_first(kvs)))do{
+		cur=next;
+		if(!cur->data)continue;
+		LIST_DATA_DECLARE(s,cur,keyval*);
+		if(!s->value)continue;
+		if(strcmp(s->value,value)==0)return s;
+	}while((next=cur->next));
+	return def;
+}
+
+char*kvlst_get_value_by_key(list*kvs,char*key,char*def){
+	if(!kvs||!key)return def;
+	keyval*kv=kvlst_get_by_key(kvs,key,NULL);
+	if(!kv)errno=ENOENT;
+	return kv?kv->value:def;
+}
+
+char*kvlst_get_key_by_value(list*kvs,char*value,char*def){
+	if(!kvs||!value)return def;
+	keyval*kv=kvlst_get_by_value(kvs,value,NULL);
+	if(!kv)errno=ENOENT;
+	return kv?kv->key:def;
 }

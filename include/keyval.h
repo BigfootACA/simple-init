@@ -100,6 +100,49 @@ extern char*kvarr_get_value_by_key(keyval**kvs,char*key,char*def);
 // src/lib/keyval.c: get a key in keyval array by value, return def if not found
 extern char*kvarr_get_key_by_value(keyval**kvs,char*value,char*def);
 
+#ifdef _list_H
+// keyval list usage
+
+// src/lib/keyval.c: free a keyval list and free all elements in list
+extern void kvlst_free(list*kvs);
+
+// src/lib/keyval.c: add a keyval object to keyval list (keyval's key cannot be repeated)
+extern list*kvlst_add_obj(list*kvs,keyval*obj);
+
+// src/lib/keyval.c: add a key and value to keyval list (key cannot be repeated)
+extern list*kvlst_add(list*kvs,char*key,char*value);
+
+// src/lib/keyval.c: set keyval value in keyval list
+extern list*kvlst_set_obj(list*kvs,keyval*obj,bool free);
+
+// src/lib/keyval.c: set keyval value in keyval list
+extern list*kvlst_set(list*kvs,char*key,char*value);
+
+// src/lib/keyval.c: remove a keyval in keyval list
+extern list*kvlst_del(list*kvs,char*key);
+
+// src/lib/keyval.c: convert string array to keyval list (eg: kvlst_parse_arr({},{"K=V","A=B"},'=') = {{"K","V"},{"A","B"}})
+extern list*kvlst_parse_arr(list*kvs,char**lines,char del);
+
+// src/lib/keyval.c: convert string to keyval list (eg: kvlst_parse({},["K=V\nA=B"],'\n','=') = {{"K","V"},{"A","B"}})
+extern list*kvlst_parse(list*kvs,size_t s,char*lines,char ldel,char del);
+
+// src/lib/keyval.c: dump keyval list to stdout (call kv_print) (eg: kvlst_dump({{"K","V"},{"A","B"}},"=","\n") = "K=V\nA=B")
+extern void kvlst_dump(list*kvs,char*del,char*ldel);
+
+// src/lib/keyval.c: find a keyval in keyval list by key, return def if not found
+extern keyval*kvlst_get_by_key(list*kvs,char*key,keyval*def);
+
+// src/lib/keyval.c: find a keyval in keyval list by value, return def if not found
+extern keyval*kvlst_get_by_value(list*kvs,char*value,keyval*def);
+
+// src/lib/keyval.c: get a value in keyval list by key, return def if not found
+extern char*kvlst_get_value_by_key(list*kvs,char*key,char*def);
+
+// src/lib/keyval.c: get a key in keyval list by value, return def if not found
+extern char*kvlst_get_key_by_value(list*kvs,char*value,char*def);
+#endif
+
 // declare a keyval
 #define KV(_key,_value)(keyval){.key=(_key),.value=(_value)}
 
@@ -110,4 +153,11 @@ extern char*kvarr_get_key_by_value(keyval**kvs,char*value,char*def);
 
 // alias of kvarr_get_value_by_key
 #define kvarr_get kvarr_get_value_by_key
+
+// alias of kvlst_get_value_by_key
+#define kvlst_get kvlst_get_value_by_key
+
+// alias of keyval list count
+#define kvlst_count list_count
+
 #endif

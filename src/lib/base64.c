@@ -1,5 +1,4 @@
 #include<ctype.h>
-#include<resolv.h>
 #include<string.h>
 #include<sys/types.h>
 #include"str.h"

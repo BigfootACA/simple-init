@@ -1,4 +1,5 @@
 #include"shell_internal.h"
+DECLARE_MAIN(adbd);
 DECLARE_MAIN(arch);
 DECLARE_MAIN(cd);
 DECLARE_MAIN(cat);
@@ -46,6 +47,7 @@ const struct shell_command*shell_cmds[]={
 	#ifdef ENABLE_BLKID
 	DECLARE_CMD(true,  findfs,      "Find a filesystem by label or UUID")
 	#endif
+	DECLARE_CMD(true,  adbd,        "Android Debug Bridge Daemon")
 	DECLARE_CMD(true,  arch,        "Print system architecture")
 	DECLARE_CMD(true,  cat,         "Concatenate FILE(s) to standard output.")
 	DECLARE_CMD(false, cd,          "Change directory")

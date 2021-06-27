@@ -114,7 +114,7 @@ static void display_single(int fd,int dfd,char*op,char*name){
 	fsync(fd);
 }
 
-static int list(int fd,char*path){
+static int do_list(int fd,char*path){
 	static char*op;
 	op=path;
 	if(!path)op=".";
@@ -235,13 +235,13 @@ int ls_main(int argc,char**argv){
 		      strncmp(term,"xterm",5)==0
 		)&&isatty(STDOUT_FILENO)
 	)opts.color=true;
-	if(b_optind==argc)list(STDOUT_FILENO,NULL);
+	if(b_optind==argc)do_list(STDOUT_FILENO,NULL);
 	else for(int i=b_optind;i<argc;i++)if(argv[i]){
 		struct stat st;
 		if(stat(argv[i],&st)<0)return re_err(2,"ls: stat %s",argv[i]);
 		if(S_ISDIR(st.st_mode)){
 			if(argc-b_optind>1)printf("%s:\n",argv[i]);
-			list(STDOUT_FILENO,argv[i]);
+			do_list(STDOUT_FILENO,argv[i]);
 			if(i<argc-1)putchar('\n');
 		}else{
 			display_single(STDOUT_FILENO,AT_FDCWD,NULL,argv[i]);

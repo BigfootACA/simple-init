@@ -92,9 +92,6 @@ struct mount_item**read_proc_mounts(){
 		buff->options=args2array(c[3],',');
 		buff->freq=parse_int(c[4],0);
 		buff->passno=parse_int(c[5],0);
-		if(c[3])free(c[3]);
-		if(c[4])free(c[4]);
-		if(c[5])free(c[5]);
 		free(c);
 		if(!(arr=_array_add_entry(array,buff))){
 			free_mounts(array);
@@ -111,10 +108,9 @@ void free_mounts(struct mount_item**c){
 	struct mount_item*s;
 	size_t l=0;
 	while((s=c[l++])){
+		if(s->options[0])free(s->options[0]);
+		if(s->options)free(s->options);
 		if(s->source)free(s->source);
-		if(s->target)free(s->target);
-		if(s->type)free(s->type);
-		array_free(s->options);
 		s->source=NULL;
 		s->target=NULL;
 		s->options=NULL;

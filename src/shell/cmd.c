@@ -98,13 +98,12 @@ int init_commands_locale(){
 
 int run_cmd(char**args,bool background){
 	if(!args)ERET(EINVAL);
+	int r;
+	struct shell_command*cmd=NULL;
 	char**argv=array_dup(args);
 	if(!argv)ERET(ENOMEM);
-	if(!contains_of(argv[0],strlen(argv[0]),'/')){
-		struct shell_command*cmd=find_internal_cmd(argv[0]);
-		if(cmd)return invoke_internal_cmd(cmd,background,argv);
-	}
-	int r=run_external_cmd(argv,background);
+	if(contains_of(argv[0],strlen(argv[0]),'/'))cmd=find_internal_cmd(argv[0]);
+	r=cmd?invoke_internal_cmd(cmd,background,argv):run_external_cmd(argv,background);
 	array_free(argv);
 	return r;
 }

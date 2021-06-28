@@ -32,7 +32,7 @@ int gadget_add_function_cfg(gadget*gadget,gadget_cfg*config,gadget_func*func){
 	char cfg[512]={0};
 	snprintf(cfg,511,"configs/%s/%s",cfg_name,func_name);
 
-	if((d=openat(gadget->dir_fd,function,O_RDONLY|O_DIRECTORY))<0)goto er;
+	if((d=openat(gadget->dir_fd,function,O_RDONLY|O_DIRECTORY|O_CLOEXEC))<0)goto er;
 
 	char path[64]={0};
 	get_fd_path(gadget->dir_fd,path,63);

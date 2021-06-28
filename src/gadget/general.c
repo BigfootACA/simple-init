@@ -41,10 +41,13 @@ static ssize_t find_configfs(char*buff){
 	struct mount_item**c=read_proc_mounts(),*s;
 	if(!c)return -1;
 	size_t l=0;
-	while((s=c[l++]))if(strcmp(s->type,"configfs")==0)
-		return strlen(strcpy(buff,s->target));
+	ssize_t r=-1;
+	while((s=c[l++]))if(strcmp(s->type,"configfs")==0){
+		r=strlen(strcpy(buff,s->target));
+		break;
+	}
 	free_mounts(c);
-	return -1;
+	return r;
 }
 
 int open_usb_gadget(){

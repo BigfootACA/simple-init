@@ -9,7 +9,8 @@ typedef int cmd_main(int,char**);
 // builtin command info
 struct shell_command{
 	bool enabled,fork;
-	char name[32],help[256];
+	char name[32];
+	char*help;
 	cmd_main*main;
 };
 

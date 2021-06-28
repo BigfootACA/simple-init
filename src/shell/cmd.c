@@ -91,8 +91,7 @@ int init_commands_locale(){
 		if(!cmd->help[0])continue;
 		char*text=gettext(cmd->help);
 		if(!text)continue;
-		memset(cmd->help,0,sizeof(cmd->help));
-		strncpy(cmd->help,text,sizeof(cmd->help)-1);
+		cmd->help=text;
 	}
 	return 0;
 }

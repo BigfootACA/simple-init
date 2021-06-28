@@ -14,7 +14,7 @@ int gadget_add_config(gadget*gadget,gadget_cfg*cfg){
 	char cfgs[32]={0};
 	snprintf(cfgs,31,"configs/%s.%d",cfg->type,cfg->id);
 	mkdirat(gadget->dir_fd,cfgs,0755);
-	if((d=openat(gadget->dir_fd,cfgs,O_RDONLY|O_DIRECTORY))<0)goto er;
+	if((d=openat(gadget->dir_fd,cfgs,O_RDONLY|O_DIRECTORY|O_CLOEXEC))<0)goto er;
 	if(cfg->attributes){
 		char val[8]={0};
 		snprintf(val,7,"0x%02X\n",cfg->attributes);
@@ -32,7 +32,7 @@ int gadget_add_config(gadget*gadget,gadget_cfg*cfg){
 		char locale[16]={0};
 		snprintf(locale,15,"strings/0x%03X",str->id);
 		mkdirat(d,locale,0755);
-		if((dx=openat(d,locale,O_RDONLY|O_DIRECTORY))<0)goto er;
+		if((dx=openat(d,locale,O_RDONLY|O_DIRECTORY|O_CLOEXEC))<0)goto er;
 		if(str->configuration&&wr_file(dx,"configuration",str->configuration)<0)goto er;
 		close(dx);
 	}
@@ -51,7 +51,7 @@ int gadget_add_string(gadget*gadget,gadget_str*str){
 	char locale[16]={0};
 	snprintf(locale,15,"strings/0x%03X",str->id);
 	mkdirat(gadget->dir_fd,locale,0755);
-	if((d=openat(gadget->dir_fd,locale,O_RDONLY|O_DIRECTORY))<0)goto er;
+	if((d=openat(gadget->dir_fd,locale,O_RDONLY|O_DIRECTORY|O_CLOEXEC))<0)goto er;
 	if(str->product&&wr_file(d,"product",str->product)<0)goto er;
 	if(str->manufacturer&&wr_file(d,"manufacturer",str->manufacturer)<0)goto er;
 	if(str->serialnumber&&wr_file(d,"serialnumber",str->serialnumber)<0)goto er;

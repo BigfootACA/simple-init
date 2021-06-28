@@ -209,7 +209,7 @@ void usb_init(char*path){
 		telog_error("cannot allocate usb handle");
 		exit(-1);
 	}
-	strncpy(h->path,path,sizeof(h->path)-1);
+	h->path=path;
 	h->write=usb_ffs_write;
 	h->read=usb_ffs_read;
 	h->kick=usb_ffs_kick;
@@ -219,6 +219,7 @@ void usb_init(char*path){
 	pthread_cond_init(&h->notify,0);
 	pthread_mutex_init(&h->lock,0);
 	if(adb_thread_create(&tid,usb_ffs_open_thread,h)!=0){
+		free(h);
 		telog_error("cannot create usb thread");
 		exit(-1);
 	}

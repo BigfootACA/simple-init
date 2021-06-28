@@ -492,7 +492,7 @@ int adbd_init(struct adb_data*d){
 				data->ffs
 			);
 			tlog_info("using USB");
-			usb_init();
+			usb_init(data->ffs);
 		break;
 		default:return trlog_error(-1,"unknown adb protocol");
 	}

@@ -207,7 +207,7 @@ extern int check_data(apacket*p);
 extern void local_init(int port);
 extern int local_connect(int port);
 extern int local_connect_arbitrary_ports(int console_port,int adb_port);
-extern void usb_init();
+extern void usb_init(char*);
 extern int usb_write(usb_handle*h,const void*data,int len);
 extern int usb_read(usb_handle*h,void*data,int len);
 extern int usb_close(usb_handle*h);

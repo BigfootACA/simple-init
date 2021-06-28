@@ -114,6 +114,9 @@ extern void svc_free_exec(struct svc_exec*exec);
 // src/service/struct.c: free service
 extern void svc_free_service(struct service*svc);
 
+// src/service/struct.c: free all services in a list
+extern int svc_free_all_services(list*l);
+
 // src/service/struct.c: set service execute command
 extern int svc_exec_set_command(struct svc_exec*exec,char*path,char**args,char**envs);
 

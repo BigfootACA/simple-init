@@ -158,3 +158,12 @@ struct service*svc_create_service(char*name,enum svc_work mode){
 	}
 	return svc;
 }
+
+static int _free_service(void*d){
+	if(d)svc_free_service((struct service*)d);
+	return 0;
+}
+
+int svc_free_all_services(list*l){
+	return list_free_all(l,_free_service);
+}

@@ -9,7 +9,6 @@ int gadget_register(gadget*g){
 	int o=open_usb_gadget();
 	if(o<0)return o;
 	int r=gadget_register_fd(o,g);
-	close(o);
 	return r;
 }
 
@@ -24,7 +23,6 @@ int gadget_register_fd(int dir_fd,gadget*g){
 	return 0;
 	er:
 	telog_error("register gadget device '%s' failed",g->name);
-	if(main>=0)close(main);
 	return -1;
 }
 

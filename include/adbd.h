@@ -18,5 +18,6 @@ struct adb_data{
 	list*prop;
 };
 extern int init_adb_data(struct adb_data*d);
+extern int free_adb_data(struct adb_data*d);
 extern int adbd_init(struct adb_data*data);
 #endif

@@ -470,6 +470,12 @@ int init_adb_data(struct adb_data*d){
 	d->port=5555;
 	return 0;
 }
+int free_adb_data(struct adb_data*d){
+	if(!d)ERET(EINVAL);
+	kvlst_free(d->prop);
+	free(d);
+	return 0;
+}
 int adbd_init(struct adb_data*d){
 	if(!d)ERET(EINVAL);
 	data=d;

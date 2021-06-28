@@ -62,7 +62,7 @@ int open_usb_gadget(){
 	insmod("libcomposite",false);
 	#endif
 	snprintf(p,PATH_MAX,"%s/usb_gadget",c);
-	if((o=open(p,O_DIRECTORY|O_RDONLY))<0)
+	if((o=open(p,O_DIRECTORY|O_RDONLY|O_CLOEXEC))<0)
 		return terlog_error(-1,"failed to open gadget configfs");
 	return o;
 }

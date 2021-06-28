@@ -114,17 +114,10 @@ int logger_print(enum log_level level,char*tag,char*content){
 
 static int logger_printf_x(enum log_level level,char*tag,const char*fmt,va_list ap){
 	if(!tag||!fmt)ERET(EINVAL);
-	size_t size=sizeof(char)*BUFFER_SIZE;
-	char*content=malloc(size+1);
-	if(!content)return -errno;
-	memset(content,0,size+1);
-	if(!vsnprintf(content,size,fmt,ap)){
-		free(content);
-		return -errno;
-	}
-	int r=logger_print(level,tag,content);
-	free(content);
-	return r;
+	char content[BUFFER_SIZE];
+	memset(content,0,BUFFER_SIZE);
+	if(!vsnprintf(content,BUFFER_SIZE-1,fmt,ap))return -errno;
+	return logger_print(level,tag,content);
 }
 
 static int logger_perror_x(enum log_level level,char*tag,const char*fmt,va_list ap){

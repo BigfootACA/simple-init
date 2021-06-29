@@ -26,11 +26,11 @@ jobs:
       - name: Strip Main
         run: strip build/init
       - name: Build Initramfs
-        run: bash scripts/gen-initramfs.sh
+        run: bash scripts/gen-initramfs.sh build/initramfs.img
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
         with:
           name: init
           path: |
             build/init
-            /tmp/initramfs.img
+            build/initramfs.img

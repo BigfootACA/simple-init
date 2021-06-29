@@ -335,7 +335,7 @@ list*kvlst_set_obj(list*kvs,keyval*obj,bool free){
 }
 
 list*kvlst_set(list*kvs,char*key,char*value){
-	return kvlst_set_obj(kvs,kv_new_set(key,value),true);
+	return kvlst_set_obj(kvs,kv_new_set_dup(key,value),true);
 }
 
 list*kvlst_del(list*kvs,char*key){

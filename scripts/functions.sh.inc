@@ -142,7 +142,9 @@ function init_rootfs(){
 	fi
 }
 function gen_initcpio(){
+	local _INITCPIO
 	[ -d "${1}" ]||return 1
+	_INITCPIO="$(realpath "${2}")"
 	pushd "${1}" >/dev/null||return 1
 	if ! [ -x init ]
 	then	echo "No init found"
@@ -154,6 +156,6 @@ function gen_initcpio(){
 		--create \
 		--owner=root:root \
 		--format=newc\
-		|${COMPRESS} >"${2}"
+		|${COMPRESS} >"${_INITCPIO}"
 	popd >/dev/null||return 1
 }

@@ -3,6 +3,7 @@ set -e
 pushd "$(dirname "$0")/.." >/dev/null
 source scripts/functions.sh.inc
 source scripts/environments.sh.inc
+[ -n "${1}" ]&&export INITRAMFS="${1}"
 if ! [ -x build/init ]
 then	echo "init binary not found, please compile first"
 	exit 1

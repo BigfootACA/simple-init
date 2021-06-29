@@ -22,9 +22,11 @@ int preinit(){
 	mkdir(_PATH_TMP,1777);
 
 	tlog_debug("preinit mountpoints");
-	exmount("sys",_PATH_SYS,"sysfs","rw,nosuid,noexec,nodev");
-	exmount("proc",_PATH_PROC,"proc","rw,nosuid,noexec,nodev");
-	exmount("run",_PATH_RUN,"tmpfs","rw,nosuid,nodev,mode=755");
+	if(is_folder(_PATH_SYS_DEV))tlog_warn("%s already mounted",_PATH_SYS);
+	else exmount("sys",_PATH_SYS,"sysfs","rw,nosuid,noexec,nodev");
+	if(is_folder(_PATH_PROC"/1"))tlog_warn("%s already mounted",_PATH_PROC);
+	else exmount("proc",_PATH_PROC,"proc","rw,nosuid,noexec,nodev");
+	xmount(false,"run",_PATH_RUN,"tmpfs","rw,nosuid,nodev,mode=755",true);
 
 	// init empty rootfs
 	if(access(_PATH_ETC,F_OK)!=0){

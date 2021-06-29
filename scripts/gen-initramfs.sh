@@ -26,7 +26,14 @@ for i in "${DATAS[@]}"
 do add_data "${i}" "${TESTROOT}"||true
 done
 add_binary build/init "${TESTROOT}"/usr
-ln -s usr/bin/init "${TESTROOT}"/init
+cat<<EOF>>"${TESTROOT}"/init
+#!/usr/bin/bash
+mkdir -p /proc /sys
+mount -t proc proc /proc
+mount -t sysfs sysfs /sys
+exec /usr/bin/init
+EOF
+chmod +x "${TESTROOT}"/init
 init_busybox "${TESTROOT}"
 gen_initcpio "${TESTROOT}" "${INITRAMFS}"
 popd >/dev/null

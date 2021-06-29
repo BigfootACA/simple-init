@@ -40,6 +40,7 @@ static void _run_exec_child(struct svc_exec*exec,int fd){
 			if(!exec->exec.func)EGOTO(EINVAL);
 			write_close(fd,0);
 			close_all_fd(NULL,0);
+			reset_signals();
 			open_socket_logfd_default();
 			r=exec->exec.func(exec->prop.svc);
 			pthread_mutex_destroy(&services_lock);

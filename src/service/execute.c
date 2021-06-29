@@ -5,6 +5,7 @@
 #include<signal.h>
 #include<string.h>
 #include<stdlib.h>
+#include<pthread.h>
 #include<sys/prctl.h>
 #include"logger.h"
 #include"system.h"
@@ -41,6 +42,8 @@ static void _run_exec_child(struct svc_exec*exec,int fd){
 			close_all_fd(NULL,0);
 			open_socket_logfd_default();
 			r=exec->exec.func(exec->prop.svc);
+			pthread_mutex_destroy(&services_lock);
+			svc_free_all_services(services);
 			exit(r);
 		return;
 		case TYPE_COMMAND:

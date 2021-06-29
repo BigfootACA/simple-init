@@ -1,3 +1,4 @@
+#include<errno.h>
 #include<signal.h>
 #include<unistd.h>
 #include<string.h>
@@ -62,6 +63,22 @@ void action_signals(int*sigs,int len,void(*action)(int,siginfo_t*,void*)){
 	sa.sa_sigaction=action;
 	sa.sa_flags=SA_SIGINFO;
 	for(int i=0;i<len;i++)sigaction(sigs[i],&sa,NULL);
+}
+
+int reset_signals(){
+	static const struct sigaction sa={
+		.sa_handler=SIG_DFL,
+		.sa_flags=SA_RESTART,
+	};
+	int r=0;
+	sigset_t ss;
+	for(int s=1;s<_NSIG;s++){
+		if(s==SIGKILL||s==SIGSTOP)continue;
+		if(sigaction(s,&sa,NULL)<0)r=-errno;
+	}
+	if(sigemptyset(&ss)<0)return -errno;
+	if(sigprocmask(SIG_SETMASK,&ss,NULL)<0)return -errno;
+	return r;
 }
 
 const char*signame(int sig){

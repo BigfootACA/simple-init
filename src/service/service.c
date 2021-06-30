@@ -18,13 +18,13 @@ int svc_add_depend(struct service*svc,struct service*dep){
 	)ERET(EINVAL);
 	pthread_mutex_lock(&svc->lock);
 	pthread_mutex_lock(&dep->lock);
-	list*l=list_new(dep),*v=list_new(dep);
+	list*l=list_new(dep),*v=list_new(svc);
 	int er;
 	if(!l||!v)goto fail;
 	if(!svc->depends_on)svc->depends_on=l;
 	else if(list_push(svc->depends_on,l)!=0)goto fail;
-	if(!dep->depends_of)svc->depends_of=v;
-	else if(list_push(svc->depends_of,v)!=0)goto fail;
+	if(!dep->depends_of)dep->depends_of=v;
+	else if(list_push(dep->depends_of,v)!=0)goto fail;
 	pthread_mutex_unlock(&svc->lock);
 	pthread_mutex_unlock(&dep->lock);
 	return 0;

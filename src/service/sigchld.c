@@ -28,7 +28,7 @@ static int svc_on_exit_main(struct service*svc){
 				tlog_warn("service %s does not running %s",name,svc_status_string(svc->status));
 				memset(&svc->process,0,sizeof(struct proc_status));
 			}else{
-				tlog_info("Stopped service %s",name);
+				tlog_notice("Stopped service %s",name);
 				if(svc->auto_restart&&auto_restart){
 					tlog_info("Trigger service %s auto restart",name);
 					service_start(svc);
@@ -40,7 +40,7 @@ static int svc_on_exit_main(struct service*svc){
 			if(svc->status!=STATUS_STARTING){
 				tlog_warn("service %s does not starting",name);
 				memset(&svc->process,0,sizeof(struct proc_status));
-			}else tlog_info("Started service %s",name);
+			}else tlog_notice("Started service %s",name);
 			svc->status=STATUS_STARTED;
 		break;
 	}
@@ -72,7 +72,7 @@ static int svc_on_exit_start(struct svc_exec*exec,struct service*svc){
 			svc->status=STATUS_STOPPED;
 			return 0;
 	}
-	tlog_info("Started service %s",name);
+	tlog_notice("Started service %s",name);
 	return 0;
 }
 
@@ -91,7 +91,7 @@ static int svc_on_exit_stop(struct svc_exec*exec,struct service*svc){
 		!svc->process.finish||
 		(svc->start&&!svc->start->status.running)
 	)svc->status=STATUS_STOPPED;
-	tlog_info("Stopped service %s",name);
+	tlog_notice("Stopped service %s",name);
 	return 0;
 }
 

@@ -20,4 +20,7 @@ struct adb_data{
 extern int init_adb_data(struct adb_data*d);
 extern int free_adb_data(struct adb_data*d);
 extern int adbd_init(struct adb_data*data);
+#ifdef _GADGET_H
+extern int gadget_add_func_adbd(gadget*gadget,char*name,char*path);
+#endif
 #endif

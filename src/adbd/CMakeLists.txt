@@ -8,4 +8,5 @@ add_library(init_adbd STATIC
 	sockets.c
 	transport.c
 	usb.c
+	gadget.c
 )

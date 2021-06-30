@@ -1,5 +1,3 @@
-#include<string.h>
-#include<stdlib.h>
 #include<pthread.h>
 #include"system.h"
 #include"logger.h"
@@ -92,14 +90,26 @@ static int _svc_dump(int ident,struct service*svc){
 		LIST_DATA_DECLARE(s,cur,struct service*);
 		if(s)tlog_debug("%s        %p (%s)",prefix,s,s->name);
 	}while(next);
+
 	tlog_debug("%s    start exec:",prefix);
-	_svc_exec_dump(i+4,svc->start);
+	if(!svc->start)tlog_debug("%s        (null)",prefix);
+	else _svc_exec_dump(i+8,svc->start);
+
 	tlog_debug("%s    stop exec:",prefix);
-	_svc_exec_dump(i+4,svc->stop);
+	if(!svc->stop)tlog_debug("%s        (null)",prefix);
+	else if(svc->stop->exec.func==svc_default_stop)tlog_debug("%s        (default)",prefix);
+	else _svc_exec_dump(i+8,svc->stop);
+
 	tlog_debug("%s    reload exec:",prefix);
-	_svc_exec_dump(i+4,svc->reload);
+	if(!svc->reload)tlog_debug("%s        (null)",prefix);
+	else if(svc->reload->exec.func==svc_default_reload)tlog_debug("%s        (default)",prefix);
+	else _svc_exec_dump(i+8,svc->reload);
+
 	tlog_debug("%s    restart exec:",prefix);
-	_svc_exec_dump(i+4,svc->restart);
+	if(!svc->restart)tlog_debug("%s        (null)",prefix);
+	else if(svc->restart->exec.func==svc_default_restart)tlog_debug("%s        (default)",prefix);
+	else _svc_exec_dump(i+8,svc->restart);
+
 	pthread_mutex_unlock(&svc->lock);
 	return 0;
 }

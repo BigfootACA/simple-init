@@ -102,7 +102,7 @@ int run_cmd(char**args,bool background){
 	struct shell_command*cmd=NULL;
 	char**argv=array_dup(args);
 	if(!argv)ERET(ENOMEM);
-	if(contains_of(argv[0],strlen(argv[0]),'/'))cmd=find_internal_cmd(argv[0]);
+	if(!contains_of(argv[0],strlen(argv[0]),'/'))cmd=find_internal_cmd(argv[0]);
 	r=cmd?invoke_internal_cmd(cmd,background,argv):run_external_cmd(argv,background);
 	array_free(argv);
 	return r;

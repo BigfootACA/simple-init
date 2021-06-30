@@ -17,12 +17,14 @@ static int _svc_proc_status_dump(int ident,struct proc_status*status){
 	tlog_debug("%sproc status %p:",prefix,status);
 	tlog_debug("%s    running:      %s",  prefix,bool2string(status->running));
 	tlog_debug("%s    timeout:      %s",      prefix,bool2string(status->timeout));
-	tlog_debug("%s    start time:   %ld",     prefix,status->start);
-	tlog_debug("%s    active time:  %ld",     prefix,status->active);
-	tlog_debug("%s    finish time:  %ld",     prefix,status->finish);
-	tlog_debug("%s    pid:          %d",      prefix,status->pid);
-	tlog_debug("%s    exit code:    %d",      prefix,status->exit_code);
-	tlog_debug("%s    exit signal:  %d(%s)",  prefix,status->exit_signal,signame(status->exit_signal));
+	if(status->start!=0)tlog_debug("%s    start time:   %ld",     prefix,status->start);
+	if(status->active!=0)tlog_debug("%s    active time:  %ld",     prefix,status->active);
+	if(status->finish!=0)tlog_debug("%s    finish time:  %ld",     prefix,status->finish);
+	if(status->pid!=0)tlog_debug("%s    pid:          %d",      prefix,status->pid);
+	if(!status->running){
+		tlog_debug("%s    exit code:    %d",      prefix,status->exit_code);
+		tlog_debug("%s    exit signal:  %d(%s)",  prefix,status->exit_signal,signame(status->exit_signal));
+	}
 	return 0;
 }
 
@@ -72,20 +74,22 @@ static int _svc_dump(int ident,struct service*svc){
 	pthread_mutex_lock(&svc->lock);
 	tlog_debug("%sservice execute %p:",prefix,svc);
 	tlog_debug("%s    name:             %s",     prefix,svc->name);
-	tlog_debug("%s    description:      %s",     prefix,svc->description);
+	if(svc->description)tlog_debug("%s    description:      %s",     prefix,svc->description);
 	tlog_debug("%s    mode:             %s",     prefix,svc_work_string(svc->mode));
 	tlog_debug("%s    status:           %s",     prefix,svc_status_string(svc->status));
 	tlog_debug("%s    stop on shutdown: %s",     prefix,bool2string(svc->stop_on_shutdown));
 	tlog_debug("%s    auto restart:     %s",     prefix,bool2string(svc->auto_restart));
-	tlog_debug("%s    pid file:         %s",     prefix,svc->pid_file);
+	if(svc->pid_file)tlog_debug("%s    pid file:         %s",     prefix,svc->pid_file);
 	tlog_debug("%s    depend on:",prefix);
-	if(svc->depends_on&&(next=list_first(svc->depends_on)))do{
+	if(svc->depends_on)tlog_debug("%s        (null)",prefix);
+	else if((next=list_first(svc->depends_on)))do{
 		cur=next,next=cur->next;
 		LIST_DATA_DECLARE(s,cur,struct service*);
 		if(s)tlog_debug("%s        %p (%s)",prefix,s,s->name);
 	}while(next);
 	tlog_debug("%s    depend of:",prefix);
-	if(svc->depends_of&&(next=list_first(svc->depends_of)))do{
+	if(!svc->depends_of)tlog_debug("%s        (null)",prefix);
+	else if((next=list_first(svc->depends_of)))do{
 		cur=next,next=cur->next;
 		LIST_DATA_DECLARE(s,cur,struct service*);
 		if(s)tlog_debug("%s        %p (%s)",prefix,s,s->name);

@@ -150,4 +150,8 @@ extern int gadget_add_function_var_cfg(
 
 // src/gadget/general.c: init usb_gadget and open
 extern int open_usb_gadget();
+
+// src/gadget/general.c: register gadget service
+extern int register_gadget_service();
+
 #endif

@@ -5,4 +5,5 @@ add_library(init_gadget STATIC
 	register.c
 	startstop.c
 	unregister.c
+	service.c
 )

@@ -12,6 +12,7 @@ DECLARE_MAIN(dumpenv);
 DECLARE_MAIN(logdumpenv);
 DECLARE_MAIN(exit);
 DECLARE_MAIN(findfs);
+DECLARE_MAIN(guiapp);
 DECLARE_MAIN(help);
 DECLARE_MAIN(hotplug);
 DECLARE_MAIN(init);
@@ -46,6 +47,9 @@ const struct shell_command*shell_cmds[]={
 	#endif
 	#ifdef ENABLE_BLKID
 	DECLARE_CMD(true,  findfs,      "Find a filesystem by label or UUID")
+	#endif
+	#ifdef ENABLE_GUI
+	DECLARE_CMD(true,  guiapp,      "GUI Application")
 	#endif
 	DECLARE_CMD(true,  adbd,        "Android Debug Bridge Daemon")
 	DECLARE_CMD(true,  arch,        "Print system architecture")

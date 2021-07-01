@@ -662,3 +662,33 @@ msgstr "unlink: 参数过多\n"
 
 msgid "Usage: version"
 msgstr "使用方法: version"
+
+msgid "File Manager"
+msgstr "文件管理器"
+
+msgid "Partition Manager"
+msgstr "分区管理器"
+
+msgid "USB Control"
+msgstr "USB控制"
+
+msgid "Registry Editor"
+msgstr "注册表编辑器"
+
+msgid "Image Backgup Recovery"
+msgstr "镜像备份还原"
+
+msgid "Enter TWRP"
+msgstr "进入TWRP"
+
+msgid "System Info"
+msgstr "系统信息"
+
+msgid "Multi-Boot Manage"
+msgstr "多启动管理"
+
+msgid "Reboot Menu"
+msgstr "重启菜单"
+
+msgid "Loggerd Viewer"
+msgstr "查看日志"

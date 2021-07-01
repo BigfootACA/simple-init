@@ -54,6 +54,11 @@ struct init_msg{
 	union action_data data;
 };
 
+extern int(*register_services[])();
+
+// src/initd/bootsvc.c: run all register in register_services
+int init_register_all_service();
+
 #include"init.h"
 
 #ifdef _GNU_SOURCE

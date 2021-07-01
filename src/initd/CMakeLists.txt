@@ -10,4 +10,5 @@ add_library(init_initd STATIC
 	protocol.c
 	socket.c
 	client.c
+	bootsvc.c
 )

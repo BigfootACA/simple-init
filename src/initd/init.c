@@ -2,7 +2,6 @@
 #include<unistd.h>
 #include<stdlib.h>
 #include<stdbool.h>
-#include<pthread.h>
 #include<sys/prctl.h>
 #include<sys/reboot.h>
 #include<linux/reboot.h>
@@ -10,7 +9,6 @@
 #define TAG "init"
 #include"init_internal.h"
 #include"devd.h"
-#include"shell.h"
 #include"system.h"
 #include"defines.h"
 #include"cmdline.h"
@@ -119,13 +117,8 @@ int init_main(int argc __attribute__((unused)),char**argv __attribute__((unused)
 	// init service framework
 	service_init();
 
-	#ifdef ENABLE_INITSHELL
-	// register console shell service
-	register_console_shell();
-	#endif
-
-	// register default boot service
-	register_default_boot();
+	// register all services
+	init_register_all_service();
 
 	// while
 	sfd=listen_init_socket();

@@ -28,6 +28,11 @@ int preinit(){
 	else exmount("proc",_PATH_PROC,"proc","rw,nosuid,noexec,nodev");
 	xmount(false,"run",_PATH_RUN,"tmpfs","rw,nosuid,nodev,mode=755",true);
 
+	// load cmdline
+	if(access(_PATH_PROC_CMDLINE,R_OK)!=0)
+		return terlog_error(2,"failed to find proc mountpoint");
+	load_cmdline();
+
 	// init empty rootfs
 	if(access(_PATH_ETC,F_OK)!=0){
 		int dfd;
@@ -89,10 +94,6 @@ int preinit(){
 	// load all modules
 	devd_call_modalias();
 	#endif
-
-	// load cmdline
-	if(access(_PATH_PROC_CMDLINE,R_OK)!=0)return terlog_error(2,"failed to find proc mountpoint");
-	load_cmdline();
 
 	// setup logfs and save log
 	setup_logfs();

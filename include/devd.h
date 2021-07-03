@@ -43,6 +43,16 @@ extern int devd_call_quit();
 #define open_default_devd_socket(tag) open_devd_socket(tag,DEFAULT_DEVD)
 
 #ifdef ENABLE_KMOD
+
+// src/loggerd/modules_load.c: load modules from list config
+extern int mods_conf_parse_file(const char*name,const char*file);
+
+// src/loggerd/modules_load.c: scan folder and call mods_conf_parse_file
+extern int mods_conf_parse_folder(const char*dir);
+
+// src/loggerd/modules_load.c: search modules-load.d and call mods_conf_parse_folder
+extern int mods_conf_parse();
+
 // src/devd/modalias.c: search modalias in /sys/devices to load all modules
 extern int load_modalias();
 #else

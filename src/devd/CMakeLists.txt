@@ -9,4 +9,5 @@ add_library(init_devd STATIC
 	netlink.c
 	server.c
 	uevent.c
+	modules_load.c
 )

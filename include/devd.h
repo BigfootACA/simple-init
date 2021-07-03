@@ -36,6 +36,9 @@ extern int devd_call_init();
 // src/loggerd/devd.c: call DEV_MODALIAS to load modalias
 extern int devd_call_modalias();
 
+// src/loggerd/devd.c: call DEV_MODLOAD to load modules from list config
+extern int devd_call_modload();
+
 // src/loggerd/devd.c: call DEV_QUIT to terminate devd
 extern int devd_call_quit();
 

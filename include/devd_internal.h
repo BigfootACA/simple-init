@@ -15,6 +15,7 @@ enum devd_oper{
 	DEV_ADD      =0xAD03,
 	DEV_INIT     =0xAD04,
 	DEV_MODALIAS =0xAD05,
+	DEV_MODLOAD  =0xAD06,
 };
 
 // devd message packet

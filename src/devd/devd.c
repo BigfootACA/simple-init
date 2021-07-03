@@ -40,6 +40,10 @@ int devd_call_modalias(){
 	return devd_command(DEV_MODALIAS);
 }
 
+int devd_call_modload(){
+	return devd_command(DEV_MODLOAD);
+}
+
 int devd_call_quit(){
 	return devd_command(DEV_QUIT);
 }

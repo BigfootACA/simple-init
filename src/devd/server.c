@@ -95,6 +95,13 @@ static void*process_thread(void*d){
 			#endif
 		break;
 
+		case DEV_MODLOAD:
+			#ifdef ENABLE_KMOD
+			tlog_debug("receive modules load request");
+			mods_conf_parse();
+			#endif
+		break;
+
 		// terminate devd
 		case DEV_QUIT:run=false;break;
 	}

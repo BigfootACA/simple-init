@@ -91,6 +91,9 @@ int preinit(){
 
 
 	#ifdef ENABLE_KMOD
+	// load modules from list config
+	devd_call_modload();
+
 	// load all modules
 	devd_call_modalias();
 	#endif

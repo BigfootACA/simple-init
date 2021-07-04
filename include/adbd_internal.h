@@ -163,7 +163,6 @@ struct usb_endpoint_descriptor_no_audio{
 }__attribute__((packed));
 struct usb_functionfs_descs_head{__le32 magic,length,fs_count,hs_count;}__attribute__((packed));
 struct usb_functionfs_strings_head{__le32 magic,length,str_count,lang_count;}__attribute__((packed));
-extern int HOST;
 extern int shell_exit_notify_fd;
 extern pthread_mutex_t socket_list_lock;
 extern pthread_mutex_t transport_lock;

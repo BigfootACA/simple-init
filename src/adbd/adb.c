@@ -17,7 +17,6 @@
 #include"adbd_internal.h"
 #define TAG "adbd"
 pthread_mutex_t D_lock=PTHREAD_MUTEX_INITIALIZER;
-int HOST=0,gListenAll=0;
 static struct adb_data*data;
 char*adbd_get_shell(){
 	return data?data->shell:NULL;
@@ -185,7 +184,6 @@ void handle_packet(apacket*p,atransport*t){
 		case A_SYNC:
 			if(p->msg.arg0){
 				send_packet(p,t);
-				if(HOST)send_connect(t);
 			}else{
 				t->connection_state=CS_OFFLINE;
 				handle_offline(t);
@@ -198,9 +196,9 @@ void handle_packet(apacket*p,atransport*t){
 				handle_offline(t);
 			}
 			parse_banner((char*)p->data,t);
-			if(HOST||!data->auth_enabled){
+			if(!data->auth_enabled){
 				handle_online(t);
-				if(!HOST)send_connect(t);
+				send_connect(t);
 			}else send_auth_request(t);
 		break;
 		case A_AUTH:
@@ -316,9 +314,7 @@ int local_name_to_fd(const char*name){
 	if(!strncmp("tcp:",name,4)){
 		port=parse_int((char*)name+4,0);
 		if(port<0)port=0;
-		return (gListenAll>0)?
-			socket_inaddr_any_server(port,SOCK_STREAM):
-			socket_loopback_server(port,SOCK_STREAM);
+		return socket_loopback_server(port,SOCK_STREAM);
 	}
 	if(strncmp(name,"local:",6)==0)return socket_local_server(
 		name+6,

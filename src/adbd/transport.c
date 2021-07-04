@@ -469,7 +469,6 @@ int local_connect_arbitrary_ports(int console_port,int adb_port){
 	}
 	return -1;
 }
-static void*client_socket_thread(void*x __attribute__((unused))){return 0;}
 static _Noreturn void*server_socket_thread(void*arg){
 	int serverfd,fd;
 	struct sockaddr addr;
@@ -495,10 +494,8 @@ static _Noreturn void*server_socket_thread(void*arg){
 }
 void local_init(int port){
 	pthread_t thr;
-	void*(*func)(void*);
-	func=HOST?client_socket_thread:server_socket_thread;
-	if(adb_thread_create(&thr,func,&port)!=0){
-		telog_error("cannot create local socket %s thread",HOST?"client":"server");
+	if(adb_thread_create(&thr,server_socket_thread,&port)!=0){
+		telog_error("cannot create local socket server thread");
 		exit(-1);
 	}
 }
@@ -552,5 +549,4 @@ void init_usb_transport(atransport*t,usb_handle*h,int state){
 	t->connection_state=state;
 	t->type=kTransportUsb;
 	t->usb=h;
-	HOST=0;
 }

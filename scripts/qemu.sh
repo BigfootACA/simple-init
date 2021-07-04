@@ -15,4 +15,5 @@ exec "${QEMU_BIN}" \
 	-drive file="${LOGFS}",format=raw,if=none,id=sda \
 	-drive file="${MINIDISK}",format=raw,if=none,id=sdb \
 	-device virtio-blk-pci,drive=sda \
-	-device virtio-blk-pci,drive=sdb
+	-device virtio-blk-pci,drive=sdb \
+	"$@"

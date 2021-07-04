@@ -128,6 +128,7 @@ static int devd_thread(int cfd){
 		es=sizeof(struct epoll_event);
 	int e=0,r,fd,efd;
 	struct epoll_event*evs;
+	open_socket_logfd_default();
 	if((fd=listen_devd_socket())<0)return fd;
 	tlog_info("devd start with pid %d",getpid());
 	fork_run("netlink",false,NULL,NULL,_start_uevent_thread);

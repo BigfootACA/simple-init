@@ -22,6 +22,12 @@ static const char*path[]={
 	NULL
 };
 
+static void load_mod(const char*name,const char*mod){
+	tlog_debug("load %s from %s",mod,name);
+	if(insmod(mod,true)<0)
+		telog_warn("load %s failed",mod);
+}
+
 int mods_conf_parse_file(const char*name,const char*file){
 	if(!is_file(file)||!name)return -errno;
 	int fd=open(file,O_RDONLY);
@@ -31,11 +37,13 @@ int mods_conf_parse_file(const char*name,const char*file){
 	while(read(fd,&r,1)==1)if(isspace(r[0])){
 		if(idx<=0)continue;
 		buf[idx]=0,idx=0;
-		tlog_debug("load %s from %s",buf,name);
-		if(insmod(buf,true)<0)
-			telog_warn("load %s failed",buf);
+		load_mod(name,buf);
 	}else if(r[0]=='#')skips(fd,"\r\n");
 	else buf[idx++]=r[0];
+	if(idx>0){
+		buf[idx]=0;
+		load_mod(name,buf);
+	}
 	close(fd);
 	return 0;
 }

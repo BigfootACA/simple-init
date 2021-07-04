@@ -25,6 +25,7 @@ export DATAS=(
 	usr/share/file
 	usr/share/misc
 	usr/share/magic
+	usr/share/hwdata
 	usr/share/terminfo
 	usr/lib/locale
 	etc/locale.conf

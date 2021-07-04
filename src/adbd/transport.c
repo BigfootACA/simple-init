@@ -483,6 +483,7 @@ static _Noreturn void*server_socket_thread(void*arg){
 				continue;
 			}
 			fcntl(serverfd,F_SETFD,FD_CLOEXEC);
+			adbd_send_ok();
 		}
 		alen=sizeof(addr);
 		if((fd=adb_socket_accept(serverfd,&addr,&alen))>=0){

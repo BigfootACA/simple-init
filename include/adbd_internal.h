@@ -231,6 +231,7 @@ extern int socket_inaddr_any_server(int port,int type);
 extern int socket_make_sockaddr_un(const char*name,int namespaceId,struct sockaddr_un*p_addr,socklen_t*alen);
 extern int android_get_control_socket(const char*name);
 extern char*adbd_get_shell();
+extern void adbd_send_ok();
 static __inline__ int adb_open_mode(const char*pathname,int options,int mode){return TEMP_FAILURE_RETRY(open(pathname,options,mode));}
 static __inline__ int adb_open(const char*pathname,int options){
 	int fd=TEMP_FAILURE_RETRY(open(pathname,options));

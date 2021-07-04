@@ -25,14 +25,23 @@ int gadget_add_func_adbd(gadget*gadget,char*name,char*path){
 		return terlog_warn(-1,"adbd gadget ffs mount %s failed",path);
 	data.proto=PROTO_USB;
 	strcpy(data.ffs,path);
+	int fds[2];
+	if(pipe(fds)<0)return terlog_warn(-1,"adbd pipe failed");
 	pid_t p=fork();
 	if(p<0)return terlog_warn(-1,"adbd fork failed");
 	else if(p==0){
-		close_all_fd(NULL,0);
+		data.notifyfd=fds[1];
+		close_all_fd((int[]){data.notifyfd},1);
 		open_socket_logfd_default();
 		prctl(PR_SET_NAME,"ADB Daemon");
 		setproctitle("initadbd");
 		_exit(adbd_init(&data));
+	}else{
+		close(fds[1]);
+		char d[4];
+		do{errno=0;read(fds[0],d,2);}
+		while(errno==EINTR);
+		close(fds[0]);
 	}
 	kvlst_free(data.prop);
 	tlog_info("adbd gadget initialized");

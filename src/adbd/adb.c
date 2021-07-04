@@ -22,6 +22,13 @@ static struct adb_data*data;
 char*adbd_get_shell(){
 	return data?data->shell:NULL;
 }
+void adbd_send_ok(){
+	if(data&&data->notifyfd>=0){
+		write(data->notifyfd,"OK",2);
+		close(data->notifyfd);
+		data->notifyfd=-1;
+	}
+}
 apacket*get_apacket(void){
 	apacket*p=malloc(sizeof(apacket));
 	if(!p){
@@ -467,12 +474,14 @@ int init_adb_data(struct adb_data*d){
 	d->prop=kvlst_set(d->prop,"ro.product.name",u.sysname);
 	d->prop=kvlst_set(d->prop,"ro.product.model",u.version);
 	d->local_port=5038;
+	d->notifyfd=-1;
 	d->port=5555;
 	return 0;
 }
 int free_adb_data(struct adb_data*d){
 	if(!d)ERET(EINVAL);
 	kvlst_free(d->prop);
+	if(d->notifyfd>=0)close(d->notifyfd);
 	free(d);
 	return 0;
 }

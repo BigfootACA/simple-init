@@ -13,6 +13,7 @@ struct adb_data{
 	char ffs[1024];
 	bool auth_enabled;
 	int port;
+	int notifyfd;
 	int local_port;
 	enum adb_proto proto;
 	list*prop;

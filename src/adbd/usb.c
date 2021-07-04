@@ -147,6 +147,7 @@ static _Noreturn void*usb_ffs_open_thread(void*x){
 		pthread_mutex_unlock(&usb->lock);
 		for(;;){
 			init_functionfs(usb);
+			adbd_send_ok();
 			if(usb->control>=0)break;
 			usleep(1000000);
 		}

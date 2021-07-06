@@ -1,4 +1,6 @@
 // file from musl 1.2.0, override libc
+#define _GNU_SOURCE
+#include<errno.h>
 #include<wchar.h>
 #include<limits.h>
 #include<stdlib.h>
@@ -40,7 +42,7 @@ int b_getopt(int argc,char*const*argv,const char*optstring){
 		if(optstring[0]!=':'&&b_opterr)fprintf(
 			stderr,
 			"%s: unrecognized option: %s\n",
-			argv[0],
+			program_invocation_short_name,
 			optchar
 		);
 		return '?';
@@ -59,7 +61,7 @@ int b_getopt(int argc,char*const*argv,const char*optstring){
 			if(b_opterr)fprintf(
 				stderr,
 				"%s: option requires an argument: %s\n",
-				argv[0],
+				program_invocation_short_name,
 				optchar
 			);
 			return '?';

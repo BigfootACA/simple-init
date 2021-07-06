@@ -1,4 +1,6 @@
 // file from musl 1.2.0, override libc
+#define _GNU_SOURCE
+#include<errno.h>
 #include<stdlib.h>
 #include<limits.h>
 #include<stdio.h>
@@ -65,7 +67,7 @@ static int __b_getlopt_core(
 					fprintf(
 						stderr,
 						"%s: option does not take an argument: %s\n",
-						argv[0],
+						program_invocation_short_name,
 						longopts[i].name
 					);
 					return '?';
@@ -79,7 +81,7 @@ static int __b_getlopt_core(
 					fprintf(
 						stderr,
 						"%s: option requires an argument: %s\n",
-						argv[0],
+						program_invocation_short_name,
 						longopts[i].name
 					);
 					return '?';
@@ -100,7 +102,7 @@ static int __b_getlopt_core(
 				cnt?
 					"%s: option is ambiguous: %s\n":
 					"%s: unrecognized option: %s\n",
-				argv[0],
+				program_invocation_short_name,
 				argv[b_optind]+2
 			);
 			b_optind++;

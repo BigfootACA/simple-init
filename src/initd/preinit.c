@@ -71,6 +71,11 @@ int preinit(){
 		default:return terlog_warn(errno,"failed to mount devtmpfs on "_PATH_DEV);
 	}
 
+	mkdir(_PATH_DEV_PTS,0755);
+	xmount(false,"devpts",_PATH_DEV_PTS,"devpts","rw,nosuid,noexec,mode=620,ptmxmode=000",true);
+	mkdir(_PATH_DEV_SHM,1777);
+	xmount(false,"shm",_PATH_DEV_SHM,"tmpfs","rw,nosuid,nodev",true);
+
 	// start devd daemon
 	start_devd(TAG,NULL);
 

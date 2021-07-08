@@ -8,6 +8,7 @@
 #include"system.h"
 #include"gadget.h"
 #include"logger.h"
+#include"init_internal.h"
 #define TAG "adbd"
 
 int gadget_add_func_adbd(gadget*gadget,char*name,char*path){
@@ -33,6 +34,7 @@ int gadget_add_func_adbd(gadget*gadget,char*name,char*path){
 		data.notifyfd=fds[1];
 		close_all_fd((int[]){data.notifyfd},1);
 		open_socket_logfd_default();
+		open_socket_initfd(DEFAULT_INITD);
 		prctl(PR_SET_NAME,"ADB Daemon");
 		setproctitle("initadbd");
 		_exit(adbd_init(&data));

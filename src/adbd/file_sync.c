@@ -18,7 +18,7 @@ static int mkdirs(char*name){
 		*x=0;
 		ret=mkdir(name,0755);
 		if((ret<0)&&(errno!=EEXIST)){
-			telog_warn("mkdir '%s'",name);
+			telog_warn("mkdir %s",name);
 			*x='/';
 			return ret;
 		}
@@ -243,7 +243,7 @@ void file_sync_service(int fd,void*cookie __attribute__((unused))){
 		}
 		name[namelen]=0;
 		msg.req.namelen=0;
-		telog_debug("sync '%s' '%s'",(char*)&msg.req,name);
+		telog_debug("file request %s %s",(char*)&msg.req,name);
 		switch(msg.req.id){
 			case ID_STAT:if(do_stat(fd,name))goto fail;break;
 			case ID_LIST:if(do_list(fd,name))goto fail;break;

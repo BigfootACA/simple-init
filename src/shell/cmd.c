@@ -1,6 +1,7 @@
 #define _GNU_SOURCE
 #include<errno.h>
 #include<stdio.h>
+#include<stdlib.h>
 #include<string.h>
 #include<unistd.h>
 #include<libintl.h>
@@ -61,10 +62,10 @@ int invoke_internal_cmd(struct shell_command*cmd,bool background,char**args){
 			case -1:return ret_perror(errno,false,"%s: fork",TAG);
 			default:return background?0:wait_cmd(p);
 		}
-	}
-	int r=invoke_internal_cmd_nofork(cmd,args);
-	if(cmd->fork)_exit(r);
-	return r;
+		unsetenv("INIT_MAIN");
+		execv(_PATH_PROC_SELF"/exe",args);
+		return -1;
+	}else return invoke_internal_cmd_nofork(cmd,args);
 }
 
 int invoke_internal_cmd_by_name(char*name,bool background,char**args){

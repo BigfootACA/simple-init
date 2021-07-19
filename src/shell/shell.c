@@ -12,6 +12,7 @@
 #include"service.h"
 #include"system.h"
 #include"output.h"
+#include"getopt.h"
 #include"array.h"
 
 #define DEF_PS1 "\\$ "
@@ -31,8 +32,10 @@ static void update_prompt(){
 static void shell_exit(int x){
 	if(last)free(last);
 	last=NULL;
-	printf("\nexit\n");
-	rl_callback_handler_remove();
+	if(shell_running){
+		printf("\nexit\n");
+		rl_callback_handler_remove();
+	}
 	shell_running=false;
 	exit(x);
 }
@@ -40,7 +43,7 @@ static void shell_exit(int x){
 static void sighand(int s __attribute__((unused))){
 	switch(s){
 		case SIGINT:
-			if(shell_executing)return;
+			if(shell_executing||!shell_running)return;
 			printf("^C\r\n");
 			exit_code=128|s;
 			update_prompt();
@@ -61,15 +64,17 @@ static void linehandler(char*line){
 		char**args;
 		if((args=args2array(line,0))){
 			if(args[0]){
-				switch(line[0]){
-					case ' ':case '\t':case '\n':break;
-					default:if(
-						!last||
-						strlen(last)!=strlen(line)||
-						strcmp(line,last)!=0
-					)add_history(line);
+				if(shell_running){
+					switch(line[0]){
+						case ' ':case '\t':case '\n':break;
+						default:if(
+							!last||
+							strlen(last)!=strlen(line)||
+							strcmp(line,last)!=0
+						)add_history(line);
+					}
+					rl_callback_handler_remove();
 				}
-				rl_callback_handler_remove();
 				exit_code=run_cmd(args,false);
 				removed=true;
 			}
@@ -77,8 +82,10 @@ static void linehandler(char*line){
 		}
 		if(last)free(last);
 		last=line;
-		update_prompt();
-		if(removed)rl_callback_handler_install(prompt,linehandler);
+		if(shell_running){
+			update_prompt();
+			if(removed)rl_callback_handler_install(prompt,linehandler);
+		}
 	}
 	shell_executing=false;
 }
@@ -112,9 +119,25 @@ void run_shell(){
 	shell_exit(exit_code);
 }
 
-int initshell_main(int argc __attribute__((unused)),char**argv __attribute__((unused))){
+int initshell_main(int argc,char**argv){
+	static const char*so="c:";
+	static const struct option lo[]={
+		{"command", required_argument, NULL,'c'},
+		{NULL,0,NULL,0}
+	};
+	int o;
+	if(argc>1){
+		while((o=b_getlopt(argc,argv,so,lo,NULL))!=-1)switch(o){
+			case 'c':
+				linehandler(b_optarg);
+			return exit_code;
+			default:return 2;
+		}
+		if(argc>b_optind&&strcmp(argv[b_optind],"-")==0)b_optind++;
+		if(argc!=b_optind)return re_printf(3,"unsupport script file\n");
+	}
 	run_shell();
-	return 0;
+	return exit_code;
 }
 
 static int console_shell_service(struct service*svc __attribute__((unused))){

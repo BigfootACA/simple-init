@@ -76,7 +76,6 @@ void reboot_service(int fd,void*arg){
 	fail:
 	writex(fd,buf,strlen(buf));
 	done:
-	free(arg);
 	close(fd);
 }
 static int create_service_thread(void(*func)(int,void*),void*cookie){

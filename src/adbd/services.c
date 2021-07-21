@@ -47,15 +47,17 @@ void restart_usb_service(int fd,void*cookie __attribute__((unused))){
 void reboot_service(int fd,void*arg){
 	char buf[256];
 	struct init_msg msg;
-	telog_notice("remote execute reboot with '%s'",(char*)arg);
 	size_t ss=sizeof(msg.data.data);
 	init_initialize_msg(&msg,ACTION_REBOOT);
-	if(strlen(arg)>=ss){
-		snprintf(buf,sizeof(buf),"arguments too long\n");
-		goto fail;
-	}
-	sync();
-	strncpy(msg.data.data,arg,ss-1);
+	if(arg&&strlen(arg)!=0){
+		telog_notice("remote execute reboot with '%s'",(char*)arg);
+		if(strlen(arg)>=ss){
+			snprintf(buf,sizeof(buf),"arguments too long\n");
+			goto fail;
+		}
+		strncpy(msg.data.data,arg,ss-1);
+	}else telog_notice("remote execute reboot");
+	errno=0;
 	struct init_msg response;
 	init_send(&msg,&response);
 	if(errno!=0){

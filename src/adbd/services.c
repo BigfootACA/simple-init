@@ -142,10 +142,14 @@ static int create_subprocess(const char *cmd,const char *arg0,const char *arg1,p
 		char*g;
 		if(!getenv("TERM"))setenv("TERM","xterm-256color",0);
 		if((g=getenv("HOME"))&&chdir(g)<0)telog_warn("chdir to %s failed",g);
-		if(cmd){
-			execl(cmd,cmd,arg0,arg1,NULL);
-			if(errno>0)telog_error("exec '%s' failed",cmd);
-		}else run_shell();
+		char*exe=(char*)cmd,*name=(char*)cmd;
+		#ifdef ENABLE_INITSHELL
+		if(!cmd||strlen(cmd)==0)exe=_PATH_PROC_SELF"/exe",name="initshell";
+		#else
+		exe="/bin/sh",name="sh";
+		#endif
+		execl(exe,name,arg0,arg1,NULL);
+		if(errno>0)telog_error("exec '%s' failed",name);
 		exit(-1);
 	}else return ptm;
 }

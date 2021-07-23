@@ -155,6 +155,10 @@ static int create_subprocess(const char *cmd,const char *arg0,const char *arg1,p
 }
 static void subproc_waiter_service(int fd,void *cookie){
 	pid_t pid=*(pid_t*)cookie;
+	if(pid<=0){
+		tlog_warn("subproc_waiter_service call with zero pid");
+		return;
+	}
 	for(;;){
 		int st;
 		if((waitpid(pid,&st,0))==pid){

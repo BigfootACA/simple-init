@@ -224,7 +224,7 @@ static int local_filesystem_svc(char*arg){return socket_local_client(arg,ANDROID
 static int sync_svc(char*arg __attribute__((unused))){return create_service_thread(file_sync_service,NULL);}
 static int usb_svc(char*arg __attribute__((unused))){return create_service_thread(restart_usb_service,NULL);}
 static int reboot_svc(char*arg){return create_service_thread(reboot_service,arg);}
-static int shell_svc(char*arg){return create_subproc_thread(*arg?arg:NULL);}
+static int shell_svc(char*arg){return create_subproc_thread((arg&&*arg)?arg:NULL);}
 static int dev_svc(char*arg){return adb_open(arg,O_RDWR);}
 static struct adb_service{
 	char name[128];

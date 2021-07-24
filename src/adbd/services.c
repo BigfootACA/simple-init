@@ -182,15 +182,22 @@ static int create_subproc_thread(const char*name){
 	pid_t pid=0;
 	char*shell=adbd_get_shell();
 	ret_fd=name?create_subprocess(shell,"-c",name,&pid):create_subprocess(shell,"-",0,&pid);
-	telog_debug("create_subprocess fd %d pid %d",ret_fd,pid);
+	if(ret_fd<0||pid<=0)return ret_fd;
 	if(!(sti=malloc(sizeof(stinfo)))){
 		telog_error("cannot allocate stinfo");
 		exit(-1);
 	}
 	sti->func=subproc_waiter_service;
-	sti->cookie=&pid;
+	if(!(sti->cookie=malloc(sizeof(pid_t)))){
+		free(sti);
+		close(ret_fd);
+		tlog_warn("cannot allocate pid");
+		return -1;
+	}
+	*(pid_t*)sti->cookie=pid;
 	sti->fd=ret_fd;
 	if(adb_thread_create(&t,service_bootstrap_func,sti)){
+		free(sti->cookie);
 		free(sti);
 		close(ret_fd);
 		tlog_warn("cannot create service thread");

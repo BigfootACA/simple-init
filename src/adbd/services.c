@@ -245,11 +245,11 @@ static struct adb_service{
 };
 int service_to_fd(const char *value){
 	char*val,*arg,*name;
+	tlog_debug("request service %s",value);
 	if(!(val=strdup(value)))
 		return terlog_warn(-1,"cannot allocate name");
-	if(!(arg=strchr(val,':')))
-		return terlog_warn(-1,"missing ':' in service name");
-	*arg++=0,name=val;
+	if((arg=strchr(val,':')))*arg++=0;
+	name=val;
 	for(int i=0;services[i].handle;i++){
 		if(strcmp(services[i].name,name)!=0)continue;
 		int ret=services[i].handle(arg);

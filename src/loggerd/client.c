@@ -114,9 +114,9 @@ int logger_print(enum log_level level,char*tag,char*content){
 
 static int logger_printf_x(enum log_level level,char*tag,const char*fmt,va_list ap){
 	if(!tag||!fmt)ERET(EINVAL);
-	char content[BUFFER_SIZE];
-	memset(content,0,BUFFER_SIZE);
-	if(!vsnprintf(content,BUFFER_SIZE-1,fmt,ap))return -errno;
+	char content[4095];
+	memset(content,0,4095);
+	if(!vsnprintf(content,4094,fmt,ap))return -errno;
 	return logger_print(level,tag,content);
 }
 

@@ -1,0 +1,7 @@
+/dev/*
+/sys/*
+/proc/*
+/run/*
+/tmp/*
+!.gitkeep
+!.gitignore

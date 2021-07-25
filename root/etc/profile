@@ -1,0 +1,20 @@
+if [ -z "${IN_BASHRC}" ]&&[ -n "${BASH}" ]
+then source /etc/bashrc
+else [ "$(id -u)" == 0 ]&&PS1='# '||PS1='$ '
+fi
+unset IN_BASHRC
+export PATH="/usr/bin"
+if [ -r "/etc/environment" ]
+then	while read -r i
+	do export "${i}"
+	done<"/etc/environment"
+fi
+if [ -r "/etc/locale.conf" ]
+then	while read -r i
+	do export "${i}"
+	done<"/etc/locale.conf"
+fi
+for i in /etc/profile.d/*.sh
+do [ -r "$i" ]&&source "${i}"
+done
+unset i

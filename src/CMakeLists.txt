@@ -27,6 +27,12 @@ if("${ENABLE_ASAN}" STREQUAL "ON")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-stack-protector -fsanitize=leak")
 endif()
 
+add_custom_command(
+	OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/rootfs.c"
+	COMMAND bash "${CMAKE_SOURCE_DIR}/scripts/gen-rootfs-source.sh" "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}" "${CMAKE_SOURCE_DIR}/root"
+	DEPENDS "${CMAKE_SOURCE_DIR}/root"
+)
+
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(DEPS REQUIRED IMPORTED_TARGET ${DEPENDS})
 include_directories(${DEPS_INCLUDE_DIRS} include)
@@ -61,6 +67,9 @@ if("${ENABLE_GUI}" STREQUAL "ON")
     target_link_libraries(init lvgl)
     target_link_libraries(init fonts)
 endif()
+
+add_library(init_rootfs STATIC ${CMAKE_CURRENT_BINARY_DIR}/rootfs.c)
+target_link_libraries(init init_rootfs)
 
 target_link_libraries(init -Wl,--end-group)
 

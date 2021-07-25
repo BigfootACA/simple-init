@@ -57,9 +57,6 @@ int preinit(){
 	chmod(DEFAULT_LOGGER,0600);
 	chown(DEFAULT_LOGGER,0,0);
 
-	// setup hotplug helper
-	simple_file_write(_PATH_PROC_SYS"/kernel/hotplug",_PATH_USR_BIN"/initdevd");
-
 	// init /dev
 	if(xmount(false,"dev",_PATH_DEV,"devtmpfs","rw,nosuid,noexec,mode=755",false)!=0)switch(errno){
 		case EBUSY:tlog_info("devtmpfs already mounted.");break;

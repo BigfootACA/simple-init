@@ -31,6 +31,9 @@
 #ifndef O_CLOEXEC
 #define O_CLOEXEC 0
 #endif
+#ifndef O_DIR
+#define O_DIR O_RDONLY|O_DIRECTORY
+#endif
 #ifdef assert
 #error "Do not use assert.h"
 #endif

@@ -14,6 +14,7 @@ This project has not been completed and may not work properly.
 | -------- | ---------- | -------------------------- |
 | blkid    | util-linux | used to find block devices |
 | mount    | util-linux | mount anything             |
+| fdisk    | util-linux | for partition manager      |
 | kmod     | kmod       | load kernel modules        |
 | readline | readline   | builtin initshell support  |
 | gtk3     | gtk3       | GUI on GTK-3 for debugging |

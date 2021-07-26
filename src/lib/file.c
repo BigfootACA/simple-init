@@ -239,3 +239,13 @@ bool is_block(const char*path,...){
 	if(errno==0&&!ret)errno=ENOTBLK;
 	return ret;
 }
+
+bool is_char(const char*path,...){
+	if(!path)ERET(EINVAL);
+	va_list va;
+	va_start(va,path);
+	bool ret=is_type(S_IFCHR,path,va);
+	va_end(va);
+	if(errno==0&&!ret)errno=ENOTTY;
+	return ret;
+}

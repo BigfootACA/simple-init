@@ -37,6 +37,7 @@ static gboolean mouse_pressed(
 	gpointer user_data __attribute__((unused))
 ){
 	mouse_btn=LV_INDEV_STATE_PR;
+	gui_quit_sleep();
 	return FALSE;
 }
 
@@ -46,6 +47,7 @@ static gboolean mouse_released(
 	gpointer user_data __attribute__((unused))
 ){
 	mouse_btn=LV_INDEV_STATE_REL;
+	gui_quit_sleep();
 	return FALSE;
 }
 
@@ -55,6 +57,7 @@ static gboolean mouse_motion(
 	gpointer user_data __attribute__((unused))
 ){
 	mouse_x=event->x,mouse_y=event->y;
+	gui_quit_sleep();
 	return FALSE;
 }
 
@@ -83,6 +86,7 @@ static gboolean keyboard_press(
 		default:break;
 	}
 	last_key=ascii_key,last_key_state=LV_INDEV_STATE_PR;
+	gui_quit_sleep();
 	return TRUE;
 }
 
@@ -92,6 +96,7 @@ static gboolean keyboard_release(
 	gpointer user_data __attribute__((unused))
 ){
 	last_key=0,last_key_state=LV_INDEV_STATE_REL;
+	gui_quit_sleep();
 	return TRUE;
 }
 

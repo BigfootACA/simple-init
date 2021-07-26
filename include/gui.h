@@ -5,6 +5,7 @@
 typedef void (*draw_func)(lv_obj_t*);
 extern uint32_t w,h;
 extern int gui_init(draw_func draw);
+extern void gui_quit_sleep();
 extern void gui_do_quit();
 extern uint32_t custom_tick_get(void);
 #endif

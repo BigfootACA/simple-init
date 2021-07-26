@@ -11,6 +11,7 @@
 #define TAG "ts"
 #include"logger.h"
 #include"lvgl.h"
+#include"gui.h"
 #include"hardware.h"
 pthread_t tsp=0;
 static bool left_button_down=false;
@@ -57,6 +58,7 @@ static void*ts_handler(void*args){
 					case ABS_Y:case ABS_MT_POSITION_Y:last_y_tmp=event.value;flags|=0x02;break;
 				}break;
 			}
+			gui_quit_sleep();
 		}
 	}
 	close(fd);

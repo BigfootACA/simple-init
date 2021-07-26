@@ -1,6 +1,7 @@
 #ifdef ENABLE_GUI
 #include<unistd.h>
 #include<sys/time.h>
+#include<semaphore.h>
 #include<drm_fourcc.h>
 #include"lvgl.h"
 #include"logger.h"
@@ -10,6 +11,8 @@
 uint32_t w=-1,h=-1;
 bool run=true;
 static struct gui_driver*drv=NULL;
+static bool gui_sleep=false;
+static sem_t gui_wait;
 
 void gui_do_quit(){
 	if(!drv)return;
@@ -30,6 +33,16 @@ int driver_init(){
 	return drv?0:-1;
 }
 
+void gui_quit_sleep(){
+	if(gui_sleep){
+		gui_sleep=false;
+		lv_tick_inc(LV_DISP_DEF_REFR_PERIOD);
+		lv_task_handler();
+		lv_disp_trig_activity(NULL);
+		sem_post(&gui_wait);
+	}
+}
+
 int gui_init(draw_func draw){
 	lv_obj_t*screen;
 	lv_init();
@@ -37,10 +50,18 @@ int gui_init(draw_func draw){
 	tlog_debug("driver init done");
 	if(!(screen=lv_scr_act()))return trlog_error(-1,"failed to get screen");
 	draw(screen);
+	sem_init(&gui_wait,0,0);
 	while(run){
-		lv_tick_inc(15);
-		lv_task_handler();
-		usleep(15000);
+		if(lv_disp_get_inactive_time(NULL)<10000){
+			lv_task_handler();
+		}else{
+			tlog_debug("enter sleep");
+			gui_sleep=true;
+			sem_wait(&gui_wait);
+			gui_sleep=false;
+			tlog_debug("quit sleep");
+		}
+		usleep(30000);
 	}
 	gui_do_quit();
 	return 0;

@@ -23,7 +23,7 @@ struct drm_buffer{
 	void*map;
 	uint32_t fb_handle;
 };
-struct drm_dev{
+static struct drm_dev{
 	int fd;
 	uint32_t
 		conn_id,
@@ -52,21 +52,30 @@ struct drm_dev{
 	struct drm_buffer drm_bufs[2];
 	struct drm_buffer*cur_bufs[2];
 }drm_dev;
-uint32_t get_plane_property_id(const char*name){
+static void drm_exit(void){
+	if(drm_dev.fd<0)return;
+	if(buf1)free(buf1);
+	if(buf2)free(buf2);
+	buf1=NULL;
+	buf2=NULL;
+	close(drm_dev.fd);
+	drm_dev.fd=-1;
+}
+static uint32_t get_plane_property_id(const char*name){
 	uint32_t i;
 	for(i=0;i<drm_dev.count_plane_props;++i)
 		if(!strcmp(drm_dev.plane_props[i]->name,name))
 			return drm_dev.plane_props[i]->prop_id;
 	return 0;
 }
-uint32_t get_crtc_property_id(const char*name){
+static uint32_t get_crtc_property_id(const char*name){
 	uint32_t i;
 	for(i=0;i<drm_dev.count_crtc_props;++i)
 		if(!strcmp(drm_dev.crtc_props[i]->name,name))
 			return drm_dev.crtc_props[i]->prop_id;
 	return 0;
 }
-uint32_t get_conn_property_id(const char*name){
+static uint32_t get_conn_property_id(const char*name){
 	uint32_t i;
 	for(i=0;i<drm_dev.count_conn_props;++i)
 		if(!strcmp(drm_dev.conn_props[i]->name,name))
@@ -434,7 +443,7 @@ static int drm_setup_buffers(void){
 	drm_dev.cur_bufs[1]=&drm_dev.drm_bufs[0];
 	return 0;
 }
-void drm_flush(lv_disp_drv_t*disp_drv,const lv_area_t*area,lv_color_t*color_p){
+static void drm_flush(lv_disp_drv_t*disp_drv,const lv_area_t*area,lv_color_t*color_p){
 	struct drm_buffer*fbuf=drm_dev.cur_bufs[1];
 	lv_coord_t w=(area->x2-area->x1+1);
 	lv_coord_t h=(area->y2-area->y1+1);
@@ -459,13 +468,9 @@ void drm_flush(lv_disp_drv_t*disp_drv,const lv_area_t*area,lv_color_t*color_p){
 	drm_dev.cur_bufs[0]=fbuf;
 	lv_disp_flush_ready(disp_drv);
 }
-void drm_get_sizes(uint32_t*width,uint32_t*height,uint32_t*dpi){
+static void drm_get_sizes(uint32_t*width,uint32_t*height){
 	if(width)*width=drm_dev.width;
 	if(height)*height=drm_dev.height;
-	if(dpi&&drm_dev.mmWidth)*dpi=DIV_ROUND_UP(
-		drm_dev.width*25400,
-		drm_dev.mmWidth*1000
-	);
 }
 static int _drm_register(){
 	if(drm_dev.width<=0||drm_dev.height<=0){
@@ -515,13 +520,7 @@ static int _drm_init_fd(int fd,unsigned int fourcc){
 	tlog_debug("initialized");
 	return 0;
 }
-int drm_init(const char*card,unsigned int fourcc){
-	int fd,ret;
-	if((fd=open(card,O_RDWR))<0)
-		return terlog_error(-1,"failed to open card %s",card);
-	if((ret=_drm_init_fd(fd,fourcc))<0)close(fd);
-	return ret;
-}
+
 static char*_drm_get_driver_name(int fd,char*buff,size_t len){
 	struct stat s;
 	char buf[128]={0},*ret=NULL;
@@ -534,6 +533,7 @@ static char*_drm_get_driver_name(int fd,char*buff,size_t len){
 	if(ret)strncpy(buff,ret,len-1);
 	return ret;
 }
+
 static int _drm_scan(){
 	int sfd,dfd;
 	char*dfmt,*sfmt,*driver;
@@ -574,28 +574,26 @@ static int _drm_scan(){
 	tlog_error("no drm found");
 	return -1;
 }
-int drm_scan_init(unsigned int fourcc){
+
+static int drm_scan_init(unsigned int fourcc){
 	int fd;
 	if((fd=_drm_scan())<0)return trlog_error(-1,"init scan failed");
 	if(_drm_init_fd(fd,fourcc)<0)return trlog_error(-1,"init failed");
 	return 0;
 }
-int drm_scan_init_register(unsigned int fourcc){
-	if(drm_scan_init(fourcc)<0)return -1;
-	return _drm_register();
+
+static int drm_scan_init_register(){
+	if(drm_scan_init(DRM_FORMAT_ARGB8888)<0)return -1;
+	if(_drm_register()<0)return -1;
+	ts_scan_register();
+	return 0;
 }
-int drm_init_register(const char*card,unsigned int fourcc){
-	if(drm_init(card,fourcc)<0)return -1;
-	return _drm_register();
-}
-void drm_exit(void){
-	if(drm_dev.fd<0)return;
-	if(buf1)free(buf1);
-	if(buf2)free(buf2);
-	buf1=NULL;
-	buf2=NULL;
-	close(drm_dev.fd);
-	drm_dev.fd=-1;
-}
+
+struct gui_driver guidrv_drm={
+	.name="drm",
+	.drv_register=drm_scan_init_register,
+	.drv_getsize=drm_get_sizes,
+	.drv_exit=drm_exit
+};
 #endif
 #endif

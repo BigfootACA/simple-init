@@ -6,4 +6,5 @@ add_library(init_hardware STATIC
 	ts.c
 	gtk.c
 	filesystem.c
+	drivers.c
 )

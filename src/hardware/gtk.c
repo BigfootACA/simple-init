@@ -5,10 +5,13 @@
 #include<pthread.h>
 #include<sys/time.h>
 #include"lvgl.h"
+#include"gui.h"
 #include"logger.h"
 #include"hardware.h"
 #define TAG "gtk"
 
+#define GTK_W 540
+#define GTK_H 960
 static GtkWidget*window,*event_box,*output_image;
 static GdkPixbuf*pixbuf;
 static lv_coord_t mouse_x,mouse_y;
@@ -92,7 +95,7 @@ static gboolean keyboard_release(
 	return TRUE;
 }
 
-void gtkdrv_init(void){
+static void gtkdrv_init(void){
 	gtk_init(NULL,NULL);
 	window=gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_default_size(GTK_WINDOW(window),GTK_W,GTK_H);
@@ -131,7 +134,7 @@ void gtkdrv_init(void){
 	pthread_create(&thread,NULL,gtkdrv_handler,NULL);
 }
 
-uint32_t gtkdrv_tick_get(void){
+static uint32_t gtkdrv_tick_get(void){
 	static uint64_t start_ms=0;
 	if(start_ms==0){
 		struct timeval tv_start;
@@ -146,7 +149,7 @@ uint32_t gtkdrv_tick_get(void){
 	return time_ms;
 }
 
-void gtkdrv_flush_cb(lv_disp_drv_t*disp_drv,const lv_area_t*area,lv_color_t*color_p){
+static void gtkdrv_flush_cb(lv_disp_drv_t*disp_drv,const lv_area_t*area,lv_color_t*color_p){
 	lv_coord_t hres=disp_drv->rotated==0?disp_drv->hor_res:disp_drv->ver_res;
 	lv_coord_t vres=disp_drv->rotated==0?disp_drv->ver_res:disp_drv->hor_res;
 	if(
@@ -172,7 +175,7 @@ void gtkdrv_flush_cb(lv_disp_drv_t*disp_drv,const lv_area_t*area,lv_color_t*colo
 	lv_disp_flush_ready(disp_drv);
 }
 
-bool gtkdrv_mouse_read_cb(
+static bool gtkdrv_mouse_read_cb(
 	lv_indev_drv_t*drv __attribute__((unused)),
 	lv_indev_data_t*data
 ){
@@ -182,7 +185,7 @@ bool gtkdrv_mouse_read_cb(
 	return false;
 }
 
-bool gtkdrv_keyboard_read_cb(
+static bool gtkdrv_keyboard_read_cb(
 	lv_indev_drv_t*drv __attribute__((unused)),
 	lv_indev_data_t*data
 ){
@@ -191,7 +194,7 @@ bool gtkdrv_keyboard_read_cb(
 	return false;
 }
 
-int gtkdrv_scan_init_register(){
+static int gtkdrv_scan_init_register(){
 	static size_t s=GTK_W*GTK_H;
 	static lv_color_t*buf1=NULL,*buf2=NULL;
 	static lv_disp_buf_t disp_buf;
@@ -229,5 +232,14 @@ int gtkdrv_scan_init_register(){
 	lv_indev_drv_register(&kbd);
 	return 0;
 }
-
+static void gtkdrv_get_sizes(uint32_t*w,uint32_t*h){
+	if(w)*w=GTK_W;
+	if(h)*h=GTK_H;
+}
+struct gui_driver guidrv_gtk={
+	.name="gtk",
+	.drv_register=gtkdrv_scan_init_register,
+	.drv_getsize=gtkdrv_get_sizes,
+	.drv_tickget=gtkdrv_tick_get
+};
 #endif

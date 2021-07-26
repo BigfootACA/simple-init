@@ -6,6 +6,7 @@ struct gui_driver{
 	char name[32];
 	int(*drv_register)(void);
 	void(*drv_getsize)(uint32_t*w,uint32_t*h);
+	void(*drv_taskhandler)(void);
 	void(*drv_exit)(void);
 	uint32_t(*drv_tickget)(void);
 };

@@ -54,6 +54,7 @@ int gui_init(draw_func draw){
 	while(run){
 		if(lv_disp_get_inactive_time(NULL)<10000){
 			lv_task_handler();
+			if(drv->drv_taskhandler)drv->drv_taskhandler();
 		}else{
 			tlog_debug("enter sleep");
 			gui_sleep=true;

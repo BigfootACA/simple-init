@@ -72,6 +72,9 @@ extern bool is_folder(const char*path,...);
 // src/lib/file.c: check path is a file
 extern bool is_file(const char*path,...);
 
+// src/lib/file.c: check path is a block dev
+extern bool is_block(const char*path,...);
+
 // src/lib/reboot.c: advance reboot (with arg)
 extern int adv_reboot(long cmd,char*data);
 

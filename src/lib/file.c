@@ -229,3 +229,13 @@ bool is_file(const char*path,...){
 	va_end(va);
 	return ret;
 }
+
+bool is_block(const char*path,...){
+	if(!path)ERET(EINVAL);
+	va_list va;
+	va_start(va,path);
+	bool ret=is_type(S_IFBLK,path,va);
+	va_end(va);
+	if(errno==0&&!ret)errno=ENOTBLK;
+	return ret;
+}

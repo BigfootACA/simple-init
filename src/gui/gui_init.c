@@ -9,45 +9,25 @@
 #define TAG "gui"
 uint32_t w=-1,h=-1;
 bool run=true;
-#ifdef ENABLE_GTK
-static bool use_gtk=false;
-#endif
+static struct gui_driver*drv=NULL;
 
 void gui_do_quit(){
-	fbdev_exit();
-	#ifdef ENABLE_DRM
-	drm_exit();
-	#endif
+	if(!drv)return;
+	drv->drv_exit();
 }
 
 int driver_init(){
-
-	#ifdef ENABLE_GTK
-	tlog_debug("try to scan gtk");
-	if(gtkdrv_scan_init_register()>=0){
-		w=GTK_W,h=GTK_H;
-		use_gtk=true;
-		return 0;
-	}else tlog_error("failed to scan gtk");
-	#endif
-
-	#ifdef ENABLE_DRM
-	tlog_debug("try to scan drm");
-	if(drm_scan_init_register(DRM_FORMAT_ARGB8888)>=0){
-		drm_get_sizes(&w,&h,NULL);
-		ts_scan_register();
-		return 0;
-	}else tlog_error("failed to scan drm");
-	#endif
-
-	tlog_debug("try to scan fbdev");
-	if(fbdev_scan_init_register()>=0){
-		fbdev_get_sizes(&w,&h);
-		ts_scan_register();
-		return 0;
-	}else tlog_error("failed to scan fbdev");
-
-	return -1;
+	for(int i=0;gui_drvs[i];i++){
+		tlog_debug("try to init gui driver %s",gui_drvs[i]->name);
+		if(gui_drvs[i]->drv_register()<0){
+			tlog_error("failed to start gui driver %s",gui_drvs[i]->name);
+			continue;
+		}
+		gui_drvs[i]->drv_getsize(&w,&h);
+		drv=gui_drvs[i];
+		break;
+	}
+	return drv?0:-1;
 }
 
 int gui_init(draw_func draw){
@@ -67,9 +47,8 @@ int gui_init(draw_func draw){
 }
 
 uint32_t custom_tick_get(void){
-	#ifdef ENABLE_GTK
-	if(use_gtk)return gtkdrv_tick_get();
-	#endif
+	if(!drv)return 0;
+	if(drv->drv_tickget)return drv->drv_tickget();
 	static uint64_t start_ms=0;
 	if(start_ms==0){
 		struct timeval tv_start;

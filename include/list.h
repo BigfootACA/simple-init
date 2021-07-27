@@ -2,8 +2,8 @@
  * Simple implementation of bidirectional linked list
  */
 
-#ifndef _list_H
-#define _list_H
+#ifndef _LIST_H
+#define _LIST_H
 #include"defines.h"
 #include<stdbool.h>
 

@@ -1,6 +1,7 @@
 #include<string.h>
 #include<stdlib.h>
 #include<ctype.h>
+#include"list.h"
 #include"defines.h"
 #include"array.h"
 
@@ -116,4 +117,18 @@ void array_free(char**arr){
 	if(!arr)return;
 	for(size_t c=0;arr[c];c++)free(arr[c]);
 	free(arr);
+}
+
+void**list2array(list*lst){
+	if(!lst)EPRET(EINVAL);
+	list*p=list_first(lst);
+	if(!p)return NULL;
+	int c=list_count(p);
+	if(c<0)return NULL;
+	void**arr=malloc(sizeof(void*)*(c+1));
+	if(!arr)EPRET(ENOMEM);
+	int i=0;
+	while(p)arr[i++]=p->data,p=p->next;
+	arr[i]=NULL;
+	return arr;
 }

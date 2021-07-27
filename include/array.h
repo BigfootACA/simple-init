@@ -22,6 +22,11 @@ extern char**array_dup(char**orig);
 // src/lib/array.c: free a string array and all elements in array
 extern void array_free(char**arr);
 
+#ifdef _LIST_H
+// src/lib/array.c: convert list to array
+extern void**list2array(list*lst);
+#endif
+
 // simple array length
 #define ARRLEN(x)(sizeof(x)/sizeof((x)[0]))
 

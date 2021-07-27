@@ -125,6 +125,9 @@ extern size_t possible_length(poss**p);
 // src/lib/strings.c: check string is a valid identifier
 extern bool check_identifier(char*str);
 
+// src/lib/strings.c: trim blank char in string start and end
+extern void trim(char*str);
+
 #ifdef b64_pton
 #undef b64_pton
 #endif

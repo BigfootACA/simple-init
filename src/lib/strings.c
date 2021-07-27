@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 #include<time.h>
+#include<ctype.h>
 #include<errno.h>
 #include<stdio.h>
 #include<stddef.h>
@@ -166,4 +167,19 @@ bool check_identifier(char*str){
 	if(!check_valid(str,VALID))return false;
 	if(!contains_of(VALIDL,strlen(VALIDL),str[0]))return false;
 	return true;
+}
+
+void trim(char*str){
+	if(!str)return;
+	size_t s=strlen(str);
+	if(s<=0)return;
+	char*start=str,*end=str+s-1;
+	while(*start!=0&&start<end&&isspace(*start))start++;
+	while(end>=start&&isspace(*end))end--;
+	*(end+1)=0;
+	if(start!=str){
+		size_t x;
+		for(x=0;start[x];x++)str[x]=start[x];
+		str[x]=0;
+	}
 }

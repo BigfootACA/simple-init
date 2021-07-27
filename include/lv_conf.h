@@ -35,13 +35,13 @@ extern uint32_t custom_tick_get();
 #define LV_INDEV_DEF_LONG_PRESS_REP_TIME    100
 #define LV_INDEV_DEF_GESTURE_LIMIT          50
 #define LV_INDEV_DEF_GESTURE_MIN_VELOCITY   3
-#define LV_USE_ANIMATION                    0
-#define LV_USE_SHADOW                       0
+#define LV_USE_ANIMATION                    1
+#define LV_USE_SHADOW                       1
 #define LV_SHADOW_CACHE_SIZE                0
 #define LV_USE_BLEND_MODES                  1
 #define LV_USE_OPA_SCALE                    1
 #define LV_USE_GROUP                        1
-#define LV_USE_GPU                          0
+#define LV_USE_GPU                          1
 #define LV_USE_GPU_STM32_DMA2D              0
 #define LV_USE_FILESYSTEM                   1
 #define LV_USE_USER_DATA                    1
@@ -123,7 +123,7 @@ extern uint32_t custom_tick_get();
 #define LV_USE_BTNMATRIX                    1
 #define LV_USE_CALENDAR                     0
 #define LV_USE_CANVAS                       0
-#define LV_USE_CHECKBOX                     0
+#define LV_USE_CHECKBOX                     1
 #define LV_USE_CHART                        0
 #define LV_USE_CONT                         1
 #define LV_USE_CPICKER                      0
@@ -134,7 +134,7 @@ extern uint32_t custom_tick_get();
 #define LV_USE_KEYBOARD                     1
 #define LV_USE_LABEL                        1
 #define LV_USE_LED                          0
-#define LV_USE_LINE                         0
+#define LV_USE_LINE                         1
 #define LV_USE_LIST                         1
 #define LV_USE_LINEMETER                    0
 #define LV_USE_OBJMASK                      0

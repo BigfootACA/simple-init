@@ -9,6 +9,7 @@
 #include<string.h>
 #include<unistd.h>
 #include"defines.h"
+#include"array.h"
 #include"str.h"
 
 char*time2nstr(time_t*time,char*format,char*buff,size_t len){
@@ -192,4 +193,37 @@ void strtoupper(char*str){
 void strtolower(char*str){
 	if(!str)return;
 	for(;*str;str++)*str=tolower(*str);
+}
+
+char**path2array(char*path){
+	if(!path)EPRET(EINVAL);
+	size_t x=0,c=0;
+	char*po=path,**p=NULL;
+	while(*path){
+		if(*path=='/'){
+			if(c==0)po=path+1;
+			else{
+				if(strncmp(".",po,c)==0);
+				else if(strncmp("..",po,c)==0){
+					if(x>0){
+						x--;
+						free(p[x]);
+						TRY_APPEND(p,NULL,x,EPRET(ENOMEM));
+					}
+				}else{
+					TRY_APPEND(p,strndup(po,c),x,EPRET(ENOMEM));
+					x++;
+				}
+				po=path+1,c=0;
+			}
+		}else c++;
+		path++;
+	}
+	if(c>0){
+		TRY_APPEND(p,strndup(po,c),x,EPRET(ENOMEM));
+		x++;
+	}
+	TRY_APPEND(p,NULL,x,EPRET(ENOMEM));
+	errno=0;
+	return p;
 }

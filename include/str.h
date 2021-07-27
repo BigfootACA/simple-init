@@ -134,6 +134,9 @@ extern void strtoupper(char*str);
 // src/lib/strings.c: convert string to lower case
 extern void strtolower(char*str);
 
+// src/lib/strings.c: convert path string to an array
+extern char**path2array(char*path);
+
 #ifdef b64_pton
 #undef b64_pton
 #endif

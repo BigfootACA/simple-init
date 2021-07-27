@@ -128,6 +128,9 @@ extern bool check_identifier(char*str);
 // src/lib/strings.c: trim blank char in string start and end
 extern void trim(char*str);
 
+// src/lib/strings.c: convert string to upper case
+extern void strtoupper(char*str);
+
 #ifdef b64_pton
 #undef b64_pton
 #endif

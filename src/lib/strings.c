@@ -183,3 +183,8 @@ void trim(char*str){
 		str[x]=0;
 	}
 }
+
+void strtoupper(char*str){
+	if(!str)return;
+	for(;*str;str++)*str=toupper(*str);
+}

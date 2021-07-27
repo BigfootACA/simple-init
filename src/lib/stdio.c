@@ -15,7 +15,7 @@
 void fd_vperror(int fd,const char*format,va_list a){
 	char buff[BUFFER_SIZE];
 	memset(&buff,0,BUFFER_SIZE);
-	if(format&&a)vsnprintf(buff,BUFFER_SIZE-1,format,a);
+	if(format)vsnprintf(buff,BUFFER_SIZE-1,format,a);
 	dprintf(fd,errno!=0?"%s: %m\n":"%s.\n",buff);
 }
 

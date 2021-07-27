@@ -135,7 +135,7 @@ extern void strtoupper(char*str);
 extern void strtolower(char*str);
 
 // src/lib/strings.c: convert path string to an array
-extern char**path2array(char*path);
+extern char**path2array(char*path,bool parent);
 
 #ifdef b64_pton
 #undef b64_pton

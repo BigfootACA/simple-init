@@ -195,7 +195,7 @@ void strtolower(char*str){
 	for(;*str;str++)*str=tolower(*str);
 }
 
-char**path2array(char*path){
+char**path2array(char*path,bool parent){
 	if(!path)EPRET(EINVAL);
 	size_t x=0,c=0;
 	char*po=path,**p=NULL;
@@ -204,7 +204,7 @@ char**path2array(char*path){
 			if(c==0)po=path+1;
 			else{
 				if(strncmp(".",po,c)==0);
-				else if(strncmp("..",po,c)==0){
+				else if(strncmp("..",po,c)==0&&parent){
 					if(x>0){
 						x--;
 						free(p[x]);

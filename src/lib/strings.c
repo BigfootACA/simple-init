@@ -188,3 +188,8 @@ void strtoupper(char*str){
 	if(!str)return;
 	for(;*str;str++)*str=toupper(*str);
 }
+
+void strtolower(char*str){
+	if(!str)return;
+	for(;*str;str++)*str=tolower(*str);
+}

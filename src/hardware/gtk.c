@@ -22,13 +22,13 @@ static uint8_t fb[GTK_W*GTK_H*3];
 static void quit_handler(void){
 	exit(0);
 }
+static void gtkdrv_taskhandler(){
+	gtk_image_set_from_pixbuf(GTK_IMAGE(output_image),pixbuf);
+}
 
-_Noreturn static void*gtkdrv_handler(void*p __attribute__((unused))){
-	while(1){
-		gtk_image_set_from_pixbuf(GTK_IMAGE(output_image),pixbuf);
-		gtk_main_iteration_do(FALSE);
-		usleep(20000);
-	}
+static void*gtkdrv_handler(void*p __attribute__((unused))){
+	gtk_main();
+	return NULL;
 }
 
 static gboolean mouse_pressed(
@@ -245,6 +245,7 @@ struct gui_driver guidrv_gtk={
 	.name="gtk",
 	.drv_register=gtkdrv_scan_init_register,
 	.drv_getsize=gtkdrv_get_sizes,
-	.drv_tickget=gtkdrv_tick_get
+	.drv_tickget=gtkdrv_tick_get,
+	.drv_taskhandler=gtkdrv_taskhandler
 };
 #endif

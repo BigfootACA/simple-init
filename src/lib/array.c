@@ -2,7 +2,7 @@
 #include<stdlib.h>
 #include<ctype.h>
 #include"defines.h"
-#include"output.h"
+#include"array.h"
 
 char*array2args(char**arr,char*d){
 	if(!arr||!d)return NULL;

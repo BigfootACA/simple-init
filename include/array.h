@@ -24,4 +24,16 @@ extern void array_free(char**arr);
 
 // simple array length
 #define ARRLEN(x)(sizeof(x)/sizeof((x)[0]))
+
+// try realloc
+#define TRY_ALLOC(_type,_name,_value,_return){\
+	_type x_re=_value;\
+	if(x_re)(_name)=x_re;\
+	else{free(_name);_return;}\
+}
+#define TRY_REALLOC(_type,_name,_size,_return)TRY_ALLOC(_type,_name,realloc(_name,_size),_return)
+#define TRY_ALLOC_CHARS(_name,_value,_return)TRY_ALLOC(char**,_name,_value,_return)
+#define TRY_REALLOC_CHARS(_name,_size,_return)TRY_REALLOC(char**,_name,_size,_return)
+#define TRY_APPEND(_name,_value,_idx,_return)TRY_ALLOC_CHARS(_name,char_array_append(_name,_value,_idx),_return)
+
 #endif

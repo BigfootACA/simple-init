@@ -77,22 +77,24 @@ static long get_block_size(struct disk_info*k){
 }
 
 static int get_block_path(struct disk_info*k){
+	char path[BUFSIZ]={0};
 	snprintf(
-		k->path,BUFSIZ-1,
+		path,sizeof(path)-1,
 		_PATH_DEV"/%s",
 		k->name
 	);
-	if(!is_block(k->path))snprintf(
-		k->path,BUFSIZ-1,
+	if(!is_block(path))snprintf(
+		path,sizeof(path)-1,
 		_PATH_DEV"/block/%s",
 		k->name
 	);
 	errno=0;
-	if(!is_block(k->path))return terlog_warn(
+	if(!is_block(path))return terlog_warn(
 		-1,
 		"cannot find block %s real path",
 		k->name
 	);
+	strcpy(k->path,path);
 	return 0;
 }
 

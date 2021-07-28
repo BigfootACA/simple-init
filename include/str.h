@@ -137,6 +137,9 @@ extern void strtolower(char*str);
 // src/lib/strings.c: convert path string to an array
 extern char**path2array(char*path,bool parent);
 
+// src/lib/strings.c: duplicate memory
+extern void*memdup(void*mem,size_t len);
+
 #ifdef b64_pton
 #undef b64_pton
 #endif

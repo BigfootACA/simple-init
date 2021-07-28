@@ -195,6 +195,13 @@ void strtolower(char*str){
 	for(;*str;str++)*str=tolower(*str);
 }
 
+void*memdup(void*mem,size_t len){
+	void*dup=malloc(len);
+	if(!dup)EPRET(ENOMEM);
+	memcpy(dup,mem,len);
+	return dup;
+}
+
 char**path2array(char*path,bool parent){
 	if(!path)EPRET(EINVAL);
 	size_t x=0,c=0;

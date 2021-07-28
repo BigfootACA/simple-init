@@ -115,6 +115,13 @@ list*list_first(list*point){
 	return cur;
 }
 
+list*list_merge(list*lst1,list*lst2){
+	if(!lst1||!lst2)EPRET(EINVAL);
+	list*l1=list_last(lst1),*l2=list_first(lst2);
+	if(!l1||!l2||list_add(l1,l2)!=0)return NULL;
+	return lst1;
+}
+
 int list_remove(list*point){
 	errno=0;
 	if(!point)ERET(EINVAL);

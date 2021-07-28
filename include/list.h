@@ -63,6 +63,9 @@ extern list*list_last(list*point);
 // src/lib/list.c: seek to list start (first item)
 extern list*list_first(list*point);
 
+// src/lib/list.c: merge two list
+extern list*list_merge(list*lst1,list*lst2);
+
 // src/lib/list.c: return true if there is only one item in the list
 extern bool list_is_alone(list*point);
 

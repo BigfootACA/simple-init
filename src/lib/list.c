@@ -129,6 +129,11 @@ int list_remove(list*point){
 	return 0;
 }
 
+int list_default_free(void*data){
+	if(data)free(data);
+	return 0;
+}
+
 int list_free_item(list*point,runnable_t*datafree){
 	errno=0;
 	if(!point)ERET(EINVAL);

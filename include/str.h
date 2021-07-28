@@ -138,6 +138,10 @@ extern void strtolower(char*str);
 extern char**path2array(char*path,bool parent);
 
 #ifdef _LIST_H
+
+// src/lib/strings.c: convert path string to a list
+extern list*path2list(char*path,bool parent);
+
 // src/lib/strings.c: simplify path components
 extern list*path_simplify(list*paths);
 #endif

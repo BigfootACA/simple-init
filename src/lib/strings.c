@@ -227,35 +227,34 @@ list*path_simplify(list*paths){
 	return list_first(cur);
 }
 
-char**path2array(char*path,bool parent){
+list*path2list(char*path,bool parent){
 	if(!path)EPRET(EINVAL);
-	size_t x=0,c=0;
-	char*po=path,**p=NULL;
+	size_t c=0;
+	char*po=path;
+	list*l=list_new_strdup(".");
 	while(*path){
-		if(*path=='/'){
-			if(c==0)po=path+1;
-			else{
-				if(strncmp(".",po,c)==0);
-				else if(strncmp("..",po,c)==0&&parent){
-					if(x>0){
-						x--;
-						free(p[x]);
-						TRY_APPEND(p,NULL,x,EPRET(ENOMEM));
-					}
-				}else{
-					TRY_APPEND(p,strndup(po,c),x,EPRET(ENOMEM));
-					x++;
-				}
-				po=path+1,c=0;
-			}
-		}else c++;
+		if(*path!='/')c++;
+		else if(c==0)po=path+1;
+		else{
+			if(list_push_new_strndup(l,po,c)<0)goto fail;
+			po=path+1,c=0;
+		}
 		path++;
 	}
-	if(c>0){
-		TRY_APPEND(p,strndup(po,c),x,EPRET(ENOMEM));
-		x++;
-	}
-	TRY_APPEND(p,NULL,x,EPRET(ENOMEM));
+	if((c>0&&list_push_new_strndup(l,po,c)<0)||!l->next)goto fail;
+	l=l->next;
+	list_remove_free_def(l->prev);
 	errno=0;
-	return p;
+	return parent?path_simplify(l):l;
+	fail:
+	list_free_all_def(l);
+	return NULL;
+}
+
+char**path2array(char*path,bool parent){
+	list*l=path2list(path,parent);
+	if(!l)return NULL;
+	char**a=list2array_chars(l);
+	list_free_all(l,NULL);
+	return a;
 }

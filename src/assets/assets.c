@@ -172,7 +172,7 @@ static entry_file*get_assets_file_component(entry_dir*dir,list*paths,int*cnt){
 		if((*cnt)++>=40)EPRET(ELOOP);
 		list*o=resolve_relative_path(paths,l->prev?l->prev:l,r->content);
 		if(!o)return NULL;
-		r=get_assets_file_component(d,o,cnt);
+		r=get_assets_file_component(dir,o,cnt);
 		int e=errno;
 		list_free_all_def(o);
 		if(!r)EPRET(e);

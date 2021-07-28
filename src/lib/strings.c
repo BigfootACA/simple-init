@@ -9,6 +9,7 @@
 #include<string.h>
 #include<unistd.h>
 #include"defines.h"
+#include"list.h"
 #include"array.h"
 #include"str.h"
 
@@ -200,6 +201,30 @@ void*memdup(void*mem,size_t len){
 	if(!dup)EPRET(ENOMEM);
 	memcpy(dup,mem,len);
 	return dup;
+}
+
+list*path_simplify(list*paths){
+	if(!paths)EPRET(EINVAL);
+	if(!paths->next&&!paths->prev)return paths;
+	list*cur=list_first(paths),*p;
+	if(!cur)return NULL;
+	for(;;){
+		LIST_DATA_DECLARE(x,cur,char*);
+		bool oo=strcmp(x,"..")==0;
+		bool m=oo||strcmp(x,".")==0;
+		if(m){
+			if(oo&&cur->prev)list_remove_free_def(cur->prev);
+			p=cur->next;
+			if(!p)p=cur->prev;
+			if(!p)return NULL;
+			list_remove_free_def(cur);
+			cur=p;
+			continue;
+		}
+		if(!(cur->next))break;
+		cur=cur->next;
+	}
+	return list_first(cur);
 }
 
 char**path2array(char*path,bool parent){

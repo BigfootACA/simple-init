@@ -137,6 +137,11 @@ extern void strtolower(char*str);
 // src/lib/strings.c: convert path string to an array
 extern char**path2array(char*path,bool parent);
 
+#ifdef _LIST_H
+// src/lib/strings.c: simplify path components
+extern list*path_simplify(list*paths);
+#endif
+
 // src/lib/strings.c: duplicate memory
 extern void*memdup(void*mem,size_t len);
 

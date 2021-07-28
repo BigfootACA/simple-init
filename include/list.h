@@ -66,6 +66,30 @@ extern list*list_first(list*point);
 // src/lib/list.c: return true if there is only one item in the list
 extern bool list_is_alone(list*point);
 
+// require not null
+static inline list*list_new_notnull(void*data){if(!data)EPRET(EINVAL);return list_new(data);}
+static inline int list_add_new_notnull(list*point,void*data){if(!data)ERET(EINVAL);return list_add_new(point,data);}
+static inline int list_push_new_notnull(list*point,void*data){if(!data)ERET(EINVAL);return list_push_new(point,data);}
+static inline int list_insert_new_notnull(list*point,void*data){if(!data)ERET(EINVAL);return list_insert_new(point,data);}
+static inline int list_unshift_new_notnull(list*point,void*data){if(!data)ERET(EINVAL);return list_unshift_new(point,data);}
+
+// duplicate and new
+#define list_new_dup(data,len)                   list_new_notnull(memdup(data,len))
+#define list_new_strdup(data)                    list_new_notnull(strdup(data))
+#define list_new_strndup(data,len)               list_new_notnull(strndup(data,len))
+#define list_add_new_dup(point,data,len)         list_add_new_notnull(point,memdup(data,len))
+#define list_add_new_strdup(point,data)          list_add_new_notnull(point,strdup(data))
+#define list_add_new_strndup(point,data,len)     list_add_new_notnull(point,strndup(data,len))
+#define list_push_new_dup(point,data,len)        list_push_new_notnull(point,memdup(data,len))
+#define list_push_new_strdup(point,data)         list_push_new_notnull(point,strdup(data))
+#define list_push_new_strndup(point,data,len)    list_push_new_notnull(point,strndup(data,len))
+#define list_insert_new_dup(point,data,len)      list_insert_new_notnull(point,memdup(data,len))
+#define list_insert_new_strdup(point,data)       list_insert_new_notnull(point,strdup(data))
+#define list_insert_new_strndup(point,data,len)  list_insert_new_notnull(point,strndup(data,len))
+#define list_unshift_new_dup(point,data,len)     list_unshift_new_notnull(point,memdup(data,len))
+#define list_unshift_new_strdup(point,data)      list_unshift_new_notnull(point,strdup(data))
+#define list_unshift_new_strndup(point,data,len) list_unshift_new_notnull(point,strndup(data,len))
+
 // get item data with type
 #define LIST_DATA(_list,_type)((_type)((_list)->data))
 #define LIST_DATA_DECLARE(_name,_list,_type) _type _name=((_type)((_list)->data))

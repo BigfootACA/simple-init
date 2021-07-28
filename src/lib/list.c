@@ -83,7 +83,8 @@ int list_count(list*point){
 	errno=0;
 	if(!point)ERET(EINVAL);
 	int t=1;
-	list*cur=point;
+	list*cur=list_first(point);
+	if(!cur)return -errno;
 	while((cur=cur->next)&&cur!=point)t++;
 	return t;
 }

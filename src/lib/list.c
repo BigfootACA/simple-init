@@ -82,7 +82,7 @@ int list_unshift_new(list*point,void*data){
 int list_count(list*point){
 	errno=0;
 	if(!point)ERET(EINVAL);
-	int t=0;
+	int t=1;
 	list*cur=point;
 	while((cur=cur->next)&&cur!=point)t++;
 	return t;

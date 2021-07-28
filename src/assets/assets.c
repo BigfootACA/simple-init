@@ -5,6 +5,7 @@
 #include<fcntl.h>
 #include<string.h>
 #define TAG "assets"
+#include"str.h"
 #include"assets.h"
 #include"defines.h"
 
@@ -84,4 +85,119 @@ int create_assets_dir(int dfd,entry_dir*dir,bool override){
 	if(dir->info.mode>0)fchmod(fd,dir->info.mode);
 	close(fd);
 	return 0;
+}
+
+static entry_file*_get_assets_subfile(entry_dir*dir,const char*name){
+	if(!dir->subfiles)EPRET(ENOENT);
+	entry_file*f;
+	for(size_t s=0;(f=dir->subfiles[s]);s++)
+		if(strcmp(f->info.name,name)==0)return f;
+	EPRET(ENOENT);
+}
+
+static entry_dir*_get_assets_subdir(entry_dir*dir,const char*name){
+	if(!dir->subdirs)EPRET(ENOENT);
+	entry_dir *d;
+	for(size_t s=0;(d=dir->subdirs[s]);s++)
+		if(strcmp(d->info.name,name)==0)return d;
+	EPRET(ENOENT);
+}
+
+static list*resolve_relative_path(list*root,list*dir,char*path){
+	if(!path||!dir)EPRET(EINVAL);
+	if(!path[0])EPRET(ENOENT);
+	list*o,*z;
+	if(!(z=o=path2list(path,false)))EPRET(ENOENT);
+	if(dir->prev&&path[0]!='/'){
+		if(!(z=list_duplicate_chars(root,dir))){
+			int e=errno;
+			list_free_all_def(o);
+			EPRET(e);
+		}
+		if(!list_merge(z,o)){
+			int e=errno;
+			list_free_all_def(o);
+			list_free_all_def(z);
+			EPRET(e);
+		}
+	}
+	if(!(o=path_simplify(z,true))){
+		int e=errno;
+		list_free_all_def(z);
+		EPRET(e);
+	}
+	return o;
+}
+
+static entry_dir*get_assets_dir_component(entry_dir*dir,list*paths,int*cnt){
+	if(!dir||!cnt)EPRET(EINVAL);
+	list*p=list_first(paths);
+	entry_dir*cd=dir;
+	do{
+		LIST_DATA_DECLARE(n,p,char*);
+		entry_dir*c=_get_assets_subdir(cd,n);
+		if(!c){
+			entry_file*l=_get_assets_subfile(cd,n);
+			if(!l)EPRET(ENOENT);
+			if(S_ISLNK(l->info.mode)){
+				if((*cnt)++>=40)EPRET(ELOOP);
+				list*o=resolve_relative_path(paths,p,l->content);
+				if(!o)return NULL;
+				c=get_assets_dir_component(dir,o,cnt);
+				int e=errno;
+				list_free_all_def(o);
+				if(!c)EPRET(e);
+			}else EPRET(ENOTDIR);
+		}
+		cd=c;
+	}while((p=p->next));
+	return cd;
+}
+
+static entry_file*get_assets_file_component(entry_dir*dir,list*paths,int*cnt){
+	list*f=list_first(paths),*l=list_last(paths),*x;
+	if(!cnt||!dir||!f||!l)EPRET(EINVAL);
+	entry_file*r;
+	entry_dir*d=dir;
+	if(f->next){
+		if(!(x=l->prev))EPRET(EFAULT);
+		x->next=NULL;
+		d=get_assets_dir_component(dir,f,cnt);
+		int e=errno;
+		x->next=l;
+		if(!d)EPRET(e);
+	}else if(f!=l||f->prev)EPRET(EFAULT);
+	if(!(r=_get_assets_subfile(d,(char*)l->data)))return NULL;
+	if(S_ISLNK(r->info.mode)){
+		if((*cnt)++>=40)EPRET(ELOOP);
+		list*o=resolve_relative_path(paths,l->prev?l->prev:l,r->content);
+		if(!o)return NULL;
+		r=get_assets_file_component(d,o,cnt);
+		int e=errno;
+		list_free_all_def(o);
+		if(!r)EPRET(e);
+	}
+	return r;
+}
+
+entry_dir*get_assets_dir(entry_dir*dir,char*path){
+	list*paths=path2list(path,true);
+	if(!paths)return NULL;
+	int c=0;
+	entry_dir*f=get_assets_dir_component(dir,paths,&c);
+	int e=errno;
+	list_free_all_def(paths);
+	errno=e;
+	return f;
+}
+
+entry_file*get_assets_file(entry_dir*dir,char*path){
+	list*paths=path2list(path,true);
+	if(!paths)return NULL;
+	int c=0;
+	entry_file*f=get_assets_file_component(dir,paths,&c);
+	int e=errno;
+	list_free_all_def(paths);
+	errno=e;
+	return f;
 }

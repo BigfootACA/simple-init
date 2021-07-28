@@ -46,6 +46,12 @@ extern int create_assets_file(int dfd,entry_file*file,bool pres,bool override);
 // src/assets/assets.c: create and write folder and children items
 extern int create_assets_dir(int dfd,entry_dir*dir,bool override);
 
+// src/assets/assets.c: get file by path in an assets
+extern entry_file*get_assets_file(entry_dir*dir,char*path);
+
+// src/assets/assets.c: get folder by path in an assets
+extern entry_dir*get_assets_dir(entry_dir*dir,char*path);
+
 // declare general folder type
 #define ASSET_DIR &(entry_dir)
 

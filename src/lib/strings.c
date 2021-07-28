@@ -203,7 +203,7 @@ void*memdup(void*mem,size_t len){
 	return dup;
 }
 
-list*path_simplify(list*paths){
+list*path_simplify(list*paths,bool free){
 	if(!paths)EPRET(EINVAL);
 	if(!paths->next&&!paths->prev)return paths;
 	list*cur=list_first(paths),*p;
@@ -213,7 +213,10 @@ list*path_simplify(list*paths){
 		bool oo=strcmp(x,"..")==0;
 		bool m=oo||strcmp(x,".")==0;
 		if(m){
-			if(oo&&cur->prev)list_remove_free_def(cur->prev);
+			if(oo&&cur->prev)list_remove_free(
+				cur->prev,
+				free?list_default_free:NULL
+			);
 			p=cur->next;
 			if(!p)p=cur->prev;
 			if(!p)return NULL;
@@ -245,7 +248,7 @@ list*path2list(char*path,bool parent){
 	l=l->next;
 	list_remove_free_def(l->prev);
 	errno=0;
-	return parent?path_simplify(l):l;
+	return parent?path_simplify(l,true):l;
 	fail:
 	list_free_all_def(l);
 	return NULL;

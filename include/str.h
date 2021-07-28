@@ -143,7 +143,7 @@ extern char**path2array(char*path,bool parent);
 extern list*path2list(char*path,bool parent);
 
 // src/lib/strings.c: simplify path components
-extern list*path_simplify(list*paths);
+extern list*path_simplify(list*paths,bool free);
 #endif
 
 // src/lib/strings.c: duplicate memory

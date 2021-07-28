@@ -25,6 +25,7 @@ extern void array_free(char**arr);
 #ifdef _LIST_H
 // src/lib/array.c: convert list to array
 extern void**list2array(list*lst);
+#define list2array_chars(lst) (char**)list2array(lst)
 #endif
 
 // simple array length

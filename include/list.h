@@ -66,6 +66,12 @@ extern list*list_first(list*point);
 // src/lib/list.c: merge two list
 extern list*list_merge(list*lst1,list*lst2);
 
+// src/lib/list.c: duplicate list
+extern list*list_duplicate(list*lst,list*end);
+
+// src/lib/list.c: duplicate chars list
+extern list*list_duplicate_chars(list*lst,list*end);
+
 // src/lib/list.c: return true if there is only one item in the list
 extern bool list_is_alone(list*point);
 

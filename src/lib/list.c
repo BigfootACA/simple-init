@@ -102,6 +102,38 @@ list*list_last(list*point){
 	return cur;
 }
 
+list*list_duplicate(list*lst,list*end){
+	if(!lst)EPRET(EINVAL);
+	list*x,*r;
+	if(
+		!(x=list_first(lst))||
+		!(r=list_new(x->data))
+	)return NULL;
+	while((x=x->next)&&x!=end){
+		if(list_push_new(r,x->data)<0){
+			list_free_all(r,NULL);
+			return NULL;
+		}
+	}
+	return r;
+}
+
+list*list_duplicate_chars(list*lst,list*end){
+	if(!lst)EPRET(EINVAL);
+	list*x,*r;
+	if(
+		!(x=list_first(lst))||
+		!(r=list_new_strdup(x->data))
+	)return NULL;
+	while((x=x->next)&&x!=end){
+		if(list_push_new_strdup(r,x->data)<0){
+			list_free_all(r,NULL);
+			return NULL;
+		}
+	}
+	return r;
+}
+
 list*list_first(list*point){
 	errno=0;
 	if(!point)EPRET(EINVAL);

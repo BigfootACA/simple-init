@@ -22,6 +22,10 @@ extern char**array_dup(char**orig);
 // src/lib/array.c: free a string array and all elements in array
 extern void array_free(char**arr);
 
+// src/lib/array.c: merge two array as one array
+extern void**array_merge(void**arr1,void**arr2);
+#define array_merge_chars(arr1,arr2)(char**)array_merge((void**)(arr1),(void**)(arr2));
+
 #ifdef _LIST_H
 // src/lib/array.c: convert list to array
 extern void**list2array(list*lst);

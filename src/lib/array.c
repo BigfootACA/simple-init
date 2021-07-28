@@ -132,3 +132,17 @@ void**list2array(list*lst){
 	arr[i]=NULL;
 	return arr;
 }
+
+void**array_merge(void**arr1,void**arr2){
+	if(!arr1||!arr2)return arr1?arr1:(arr2?arr2:NULL);
+	size_t s=0,i;
+	for(i=0;arr1[i];i++)s++;
+	for(i=0;arr2[i];i++)s++;
+	void**m=malloc(sizeof(void*)*(s+1));
+	if(!m)EPRET(ENOMEM);
+	s=0;
+	for(i=0;arr1[i];i++)m[s++]=arr1[i];
+	for(i=0;arr2[i];i++)m[s++]=arr2[i];
+	m[s]=NULL;
+	return m;
+}

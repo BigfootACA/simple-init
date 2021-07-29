@@ -15,6 +15,7 @@ option(ENABLE_INITSHELL   "Enable builtin shell"                              ON
 option(ENABLE_DRM         "Enable DRM"                                        ON)
 option(ENABLE_GTK         "Enable GTK"                                        OFF)
 option(ENABLE_GUI         "Enable LVGL based GUI"                             ON)
+option(ENABLE_FREETYPE2   "Enable FreeType 2 for GUI fonts"                   ON)
 option(ENABLE_FDISK       "Enable libfdisk for GUI partition tools"           ON)
 option(ENABLE_KMOD        "Enable kmod modules load or remove"                ON)
 option(ENABLE_BLKID       "Enable blkid block detect and evalaute tag"        ON)
@@ -38,6 +39,10 @@ if("${ENABLE_GUI}" STREQUAL "ON")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLV_LVGL_H_INCLUDE_SIMPLE=1")
     file(GLOB_RECURSE SOURCES lvgl/src/*.c)
     add_library(lvgl STATIC ${SOURCES})
+endif()
+
+if("${ENABLE_FREETYPE2}" STREQUAL "ON")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_FREETYPE2=1")
 endif()
 
 if("${ENABLE_FDISK}" STREQUAL "ON")

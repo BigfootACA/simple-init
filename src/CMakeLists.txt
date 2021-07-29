@@ -12,6 +12,10 @@ if("${ENABLE_DRM}" STREQUAL "ON")
 	set(DEPENDS ${DEPENDS} libdrm)
 endif()
 
+if("${ENABLE_FREETYPE2}" STREQUAL "ON")
+	set(DEPENDS ${DEPENDS} freetype2)
+endif()
+
 if("${ENABLE_FDISK}" STREQUAL "ON")
 	set(DEPENDS ${DEPENDS} fdisk)
 endif()

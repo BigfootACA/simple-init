@@ -3,4 +3,5 @@ add_library(init_gui STATIC
 	guiapp.c
 	guipm/guipm.c
 	guipm/disk_select.c
+	freetype.c
 )

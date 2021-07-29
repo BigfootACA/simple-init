@@ -1,4 +1,5 @@
 #include"guipm.h"
+static int xdpi;
 static lv_style_t f24_style,item_style,gray_style;
 static lv_obj_t*lst=NULL,*selscr=NULL;
 static lv_obj_t*btn_ok,*btn_refresh,*btn_cancel;
@@ -149,8 +150,8 @@ static void disks_add_item(int blk,struct disk_info*k){
 
 	// disk select button
 	k->btn=lv_btn_create(lst,NULL);
-	lv_obj_set_y(k->btn,132*blk);
-	lv_obj_set_size(k->btn,bw,100);
+	lv_obj_set_y(k->btn,(xdpi*5+32)*blk);
+	lv_obj_set_size(k->btn,bw,xdpi*5);
 	lv_obj_add_style(k->btn,LV_BTN_PART_MAIN,&item_style);
 	lv_obj_set_event_cb(k->btn,disk_click);
 
@@ -163,7 +164,7 @@ static void disks_add_item(int blk,struct disk_info*k){
 
 	// disk name
 	lv_obj_t*d_name=lv_label_create(line,NULL);
-	lv_obj_align(d_name,NULL,LV_ALIGN_IN_LEFT_MID,c1l,-20);
+	lv_obj_align(d_name,NULL,LV_ALIGN_IN_LEFT_MID,c1l,-xdpi);
 	lv_label_set_long_mode(d_name,LV_LABEL_LONG_SROLL_CIRC);
 	lv_obj_set_width(d_name,c1w);
 	lv_label_set_align(d_name,LV_LABEL_ALIGN_LEFT);
@@ -172,7 +173,7 @@ static void disks_add_item(int blk,struct disk_info*k){
 
 	// disk model name
 	lv_obj_t*d_model=lv_label_create(line,NULL);
-	lv_obj_align(d_model,NULL,LV_ALIGN_IN_LEFT_MID,c1l,20);
+	lv_obj_align(d_model,NULL,LV_ALIGN_IN_LEFT_MID,c1l,xdpi);
 	lv_label_set_long_mode(d_model,LV_LABEL_LONG_SROLL_CIRC);
 	lv_obj_set_width(d_model,c1w);
 	lv_label_set_align(d_model,LV_LABEL_ALIGN_LEFT);
@@ -182,7 +183,7 @@ static void disks_add_item(int blk,struct disk_info*k){
 
 	// disk size
 	lv_obj_t*d_size=lv_label_create(line,NULL);
-	lv_obj_align(d_size,NULL,LV_ALIGN_IN_LEFT_MID,c2l,-20);
+	lv_obj_align(d_size,NULL,LV_ALIGN_IN_LEFT_MID,c2l,-xdpi);
 	lv_label_set_long_mode(d_size,LV_LABEL_LONG_SROLL_CIRC);
 	lv_obj_set_width(d_size,c2w);
 	lv_label_set_align(d_size,LV_LABEL_ALIGN_RIGHT);
@@ -191,7 +192,7 @@ static void disks_add_item(int blk,struct disk_info*k){
 
 	// disk layout type
 	lv_obj_t*d_layout=lv_label_create(line,NULL);
-	lv_obj_align(d_layout,NULL,LV_ALIGN_IN_LEFT_MID,c2l,20);
+	lv_obj_align(d_layout,NULL,LV_ALIGN_IN_LEFT_MID,c2l,xdpi);
 	lv_label_set_long_mode(d_layout,LV_LABEL_LONG_SROLL_CIRC);
 	lv_obj_set_width(d_layout,c2w);
 	lv_label_set_align(d_layout,LV_LABEL_ALIGN_RIGHT);
@@ -257,6 +258,9 @@ static void refresh_click(lv_obj_t*obj,lv_event_t e){
 
 void guipm_draw_disk_sel(lv_obj_t*screen){
 
+	xdpi=gui_dpi/10;
+	int mar=(xdpi/2);
+
 	lv_style_t scr_style;
 	lv_style_init(&scr_style);
 	lv_style_set_outline_width(&scr_style,0,0);
@@ -299,8 +303,8 @@ void guipm_draw_disk_sel(lv_obj_t*screen){
 
 	// disk list
 	lst=lv_page_create(selscr,NULL);
-	lv_obj_set_size(lst,w-16,h/16*12);
-	lv_obj_set_pos(lst,8,h/16*2);
+	lv_obj_set_size(lst,w-xdpi,h/16*12);
+	lv_obj_set_pos(lst,mar,h/16*2);
 
 	// button style
 	static lv_style_t btn_style;
@@ -309,18 +313,20 @@ void guipm_draw_disk_sel(lv_obj_t*screen){
 	lv_style_set_outline_width(&btn_style,LV_STATE_PRESSED,0);
 	lv_style_set_outline_width(&btn_style,LV_STATE_FOCUSED,0);
 
+	int btw=w/3-(xdpi*2),bth=h/16,btt=h-bth-xdpi;
+
 	// ok button
 	btn_ok=lv_btn_create(selscr,NULL);
-	lv_obj_set_pos(btn_ok,16,h-(h/16)-16);
-	lv_obj_set_size(btn_ok,w/3-32,h/16);
+	lv_obj_set_pos(btn_ok,xdpi,btt);
+	lv_obj_set_size(btn_ok,btw,bth);
 	lv_obj_add_style(btn_ok,0,&btn_style);
 	lv_obj_add_state(btn_ok,LV_STATE_CHECKED|LV_STATE_DISABLED);
 	lv_label_set_text(lv_label_create(btn_ok,NULL),_("OK"));
 
 	// refresh button
 	btn_refresh=lv_btn_create(selscr,NULL);
-	lv_obj_set_pos(btn_refresh,w/3+16,h-(h/16)-16);
-	lv_obj_set_size(btn_refresh,w/3-32,h/16);
+	lv_obj_set_pos(btn_refresh,w/3+xdpi,btt);
+	lv_obj_set_size(btn_refresh,btw,bth);
 	lv_obj_add_style(btn_refresh,0,&btn_style);
 	lv_obj_add_state(btn_refresh,LV_STATE_CHECKED);
 	lv_obj_set_event_cb(btn_refresh,refresh_click);
@@ -328,8 +334,8 @@ void guipm_draw_disk_sel(lv_obj_t*screen){
 
 	// cancel button
 	btn_cancel=lv_btn_create(selscr,NULL);
-	lv_obj_set_pos(btn_cancel,w/3*2+16,h-(h/16)-16);
-	lv_obj_set_size(btn_cancel,w/3-32,h/16);
+	lv_obj_set_pos(btn_cancel,w/3*2+xdpi,btt);
+	lv_obj_set_size(btn_cancel,btw,bth);
 	lv_obj_add_style(btn_cancel,0,&btn_style);
 	lv_obj_add_state(btn_cancel,LV_STATE_CHECKED);
 	lv_label_set_text(lv_label_create(btn_cancel,NULL),_("Cancel"));

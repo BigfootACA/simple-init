@@ -52,6 +52,10 @@ extern entry_file*get_assets_file(entry_dir*dir,char*path);
 // src/assets/assets.c: get folder by path in an assets
 extern entry_dir*get_assets_dir(entry_dir*dir,char*path);
 
+// get from rootfs
+#define rootfs_get_assets_file(paths)get_assets_file(&assets_rootfs,paths)
+#define rootfs_get_assets_dir(paths)get_assets_dir(&assets_rootfs,paths)
+
 // declare general folder type
 #define ASSET_DIR &(entry_dir)
 

@@ -589,10 +589,15 @@ static int drm_scan_init_register(){
 	return 0;
 }
 
+static void drm_get_dpi(int*dpi){
+	if(dpi)*dpi=DIV_ROUND_UP(drm_dev.width*25400,drm_dev.mmWidth*1000);
+}
+
 struct gui_driver guidrv_drm={
 	.name="drm",
 	.drv_register=drm_scan_init_register,
 	.drv_getsize=drm_get_sizes,
+	.drv_getdpi=drm_get_dpi,
 	.drv_exit=drm_exit
 };
 #endif

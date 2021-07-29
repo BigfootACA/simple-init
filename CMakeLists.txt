@@ -89,5 +89,4 @@ if("${ENABLE_STRIP}" STREQUAL "ON")
 endif()
 
 add_subdirectory(po)
-add_subdirectory(fonts)
 include(src/CMakeLists.txt)

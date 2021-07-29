@@ -73,7 +73,6 @@ endforeach()
 
 if("${ENABLE_GUI}" STREQUAL "ON")
     target_link_libraries(init lvgl)
-    target_link_libraries(init fonts)
 endif()
 
 add_library(init_rootfs STATIC ${CMAKE_CURRENT_BINARY_DIR}/rootfs.c)

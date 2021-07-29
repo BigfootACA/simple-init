@@ -241,10 +241,15 @@ static void gtkdrv_get_sizes(uint32_t*w,uint32_t*h){
 	if(w)*w=GTK_W;
 	if(h)*h=GTK_H;
 }
+static void gtkdrv_get_dpi(int*dpi){
+	if(dpi)*dpi=200;
+}
+
 struct gui_driver guidrv_gtk={
 	.name="gtk",
 	.drv_register=gtkdrv_scan_init_register,
 	.drv_getsize=gtkdrv_get_sizes,
+	.drv_getdpi=gtkdrv_get_dpi,
 	.drv_tickget=gtkdrv_tick_get,
 	.drv_taskhandler=gtkdrv_taskhandler
 };

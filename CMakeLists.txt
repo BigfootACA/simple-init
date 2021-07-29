@@ -19,7 +19,6 @@ option(ENABLE_FREETYPE2   "Enable FreeType 2 for GUI fonts"                   ON
 option(ENABLE_FDISK       "Enable libfdisk for GUI partition tools"           ON)
 option(ENABLE_KMOD        "Enable kmod modules load or remove"                ON)
 option(ENABLE_BLKID       "Enable blkid block detect and evalaute tag"        ON)
-option(ENABLE_TERMINFO    "Enable builtin assets terminfo"                    ON)
 
 if("${ENABLE_INITSHELL}" STREQUAL "ON")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_INITSHELL=1")
@@ -59,10 +58,6 @@ if("${ENABLE_BLKID}" STREQUAL "ON")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_BLKID=1")
 else()
     message(WARNING "blkid disabled, may not find block devices by tag")
-endif()
-
-if("${ENABLE_TERMINFO}" STREQUAL "ON")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_TERMINFO=1")
 endif()
 
 if("${DISABLE_WERROR}" STREQUAL "OFF")

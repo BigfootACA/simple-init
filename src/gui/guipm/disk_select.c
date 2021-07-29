@@ -168,7 +168,6 @@ static void disks_add_item(int blk,struct disk_info*k){
 	lv_label_set_long_mode(d_name,LV_LABEL_LONG_SROLL_CIRC);
 	lv_obj_set_width(d_name,c1w);
 	lv_label_set_align(d_name,LV_LABEL_ALIGN_LEFT);
-	lv_obj_add_style(d_name,0,&f24_style);
 	lv_label_set_text(d_name,k->name);
 
 	// disk model name
@@ -177,7 +176,6 @@ static void disks_add_item(int blk,struct disk_info*k){
 	lv_label_set_long_mode(d_model,LV_LABEL_LONG_SROLL_CIRC);
 	lv_obj_set_width(d_model,c1w);
 	lv_label_set_align(d_model,LV_LABEL_ALIGN_LEFT);
-	lv_obj_add_style(d_model,0,&f24_style);
 	lv_label_set_text(d_model,get_model(k));
 	if(!k->model[0])lv_obj_add_style(d_model,0,&gray_style);
 
@@ -187,7 +185,6 @@ static void disks_add_item(int blk,struct disk_info*k){
 	lv_label_set_long_mode(d_size,LV_LABEL_LONG_SROLL_CIRC);
 	lv_obj_set_width(d_size,c2w);
 	lv_label_set_align(d_size,LV_LABEL_ALIGN_RIGHT);
-	lv_obj_add_style(d_size,0,&f24_style);
 	lv_label_set_text(d_size,make_readable_str(k->size,512,0));
 
 	// disk layout type
@@ -196,7 +193,6 @@ static void disks_add_item(int blk,struct disk_info*k){
 	lv_label_set_long_mode(d_layout,LV_LABEL_LONG_SROLL_CIRC);
 	lv_obj_set_width(d_layout,c2w);
 	lv_label_set_align(d_layout,LV_LABEL_ALIGN_RIGHT);
-	lv_obj_add_style(d_layout,0,&f24_style);
 	lv_label_set_text(d_layout,get_layout(k));
 	if(!k->lbl)lv_obj_add_style(d_layout,0,&gray_style);
 }
@@ -270,10 +266,6 @@ void guipm_draw_disk_sel(lv_obj_t*screen){
 
 	guipm_draw_title(selscr);
 
-	// 24px font style
-	lv_style_init(&f24_style);
-	lv_style_set_text_font(&f24_style,0,&lv_font_cjk_24);
-
 	// disk item button style
 	lv_style_init(&item_style);
 	lv_style_set_radius(&item_style,LV_STATE_DEFAULT,5);
@@ -297,7 +289,6 @@ void guipm_draw_disk_sel(lv_obj_t*screen){
 	lv_label_set_long_mode(title,LV_LABEL_LONG_BREAK);
 	lv_obj_set_y(title,h/16);
 	lv_obj_set_size(title,w,h/16);
-	lv_obj_add_style(title,0,&f24_style);
 	lv_label_set_align(title,LV_LABEL_ALIGN_CENTER);
 	lv_label_set_text(title,_("Select a disk to process"));
 

@@ -10,6 +10,7 @@ typedef void*lv_fs_drv_user_data_t;
 typedef void*lv_img_decoder_user_data_t;
 typedef void*lv_disp_drv_user_data_t;
 typedef void*lv_indev_drv_user_data_t;
+extern int gui_dpi;
 extern uint32_t custom_tick_get();
 #define LV_COLOR_DEPTH                      32
 #define LV_COLOR_16_SWAP                    0
@@ -18,7 +19,7 @@ extern uint32_t custom_tick_get();
 #define LV_INDEXED_CHROMA                   1
 #define LV_ANTIALIAS                        1
 #define LV_DISP_DEF_REFR_PERIOD             30
-#define LV_DPI                              400
+#define LV_DPI                              gui_dpi
 #define LV_DISP_SMALL_LIMIT                 30
 #define LV_DISP_MEDIUM_LIMIT                50
 #define LV_DISP_LARGE_LIMIT                 70

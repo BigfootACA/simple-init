@@ -1,13 +1,14 @@
 #ifdef ENABLE_GUI
+#include<stdlib.h>
 #include<unistd.h>
 #include<sys/time.h>
 #include<semaphore.h>
-#include<drm_fourcc.h>
 #include"lvgl.h"
 #include"logger.h"
 #include"hardware.h"
 #include"gui.h"
 #define TAG "gui"
+int gui_dpi=400;
 uint32_t w=-1,h=-1;
 bool run=true;
 static struct gui_driver*drv=NULL;
@@ -21,12 +22,15 @@ void gui_do_quit(){
 
 int driver_init(){
 	for(int i=0;gui_drvs[i];i++){
-		tlog_debug("try to init gui driver %s",gui_drvs[i]->name);
-		if(gui_drvs[i]->drv_register()<0){
-			tlog_error("failed to start gui driver %s",gui_drvs[i]->name);
+		struct gui_driver*d=gui_drvs[i];
+		if(!d->drv_getsize)continue;
+		tlog_debug("try to init gui driver %s",d->name);
+		if(d->drv_register()<0){
+			tlog_error("failed to start gui driver %s",d->name);
 			continue;
 		}
-		gui_drvs[i]->drv_getsize(&w,&h);
+		d->drv_getsize(&w,&h);
+		if(d->drv_getdpi)d->drv_getdpi(&gui_dpi);
 		drv=gui_drvs[i];
 		break;
 	}

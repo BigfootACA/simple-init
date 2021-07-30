@@ -22,7 +22,6 @@ static void _draw(lv_obj_t*scr){
 	screen=scr;
 	// button style
 	lv_style_init(&style);
-	lv_style_set_text_font(&style,0,&lv_font_cjk_24);
 	lv_style_set_radius(&style,LV_STATE_DEFAULT,10);
 
 	// buttons

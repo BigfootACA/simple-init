@@ -12,7 +12,7 @@
 #include<xf86drmMode.h>
 #include<drm_fourcc.h>
 #include"lvgl.h"
-#include"hardware.h"
+#include"gui.h"
 #include"logger.h"
 #define TAG "drm"
 #define DIV_ROUND_UP(n,d)(((n)+(d)-1)/(d))

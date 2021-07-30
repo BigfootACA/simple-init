@@ -16,7 +16,7 @@
 #include"pathnames.h"
 #include"logger.h"
 #include"lvgl.h"
-#include"hardware.h"
+#include"gui.h"
 #define TAG "fbdev"
 static pthread_t fbrt;
 static char*fbp=0;
@@ -53,7 +53,6 @@ static int _fbdev_init_fd(){
 	memset(fbp,0,screensize);
 	ioctl(fbfd,FBIOPAN_DISPLAY,&vinfo);
 	ioctl(fbfd,FBIOBLANK,0);
-	set_brightness_percent("lcd-backlight",100);
 	return 0;
 }
 static void fbdev_exit(void){

@@ -7,9 +7,21 @@ typedef enum{
 	FT_FONT_STYLE_ITALIC = 1<<0,
 	FT_FONT_STYLE_BOLD   = 1<<1
 }lv_ft_style;
+struct gui_driver{
+	char name[32];
+	int(*drv_register)(void);
+	void(*drv_getsize)(uint32_t*w,uint32_t*h);
+	void(*drv_getdpi)(int*dpi);
+	void(*drv_taskhandler)(void);
+	void(*drv_exit)(void);
+	uint32_t(*drv_tickget)(void);
+};
 typedef void (*draw_func)(lv_obj_t*);
 extern uint32_t w,h;
 extern lv_font_t*gui_font;
+extern struct gui_driver*gui_drvs[];
+extern void ts_scan_register(void);
+extern int init_lvgl_fs(char letter,char*root,bool debug);
 extern int gui_init(draw_func draw);
 extern void gui_quit_sleep();
 extern void gui_do_quit();

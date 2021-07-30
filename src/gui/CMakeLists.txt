@@ -3,5 +3,11 @@ add_library(init_gui STATIC
 	guiapp.c
 	guipm/guipm.c
 	guipm/disk_select.c
+	drivers/drm.c
+	drivers/fbdev.c
+	drivers/ts.c
+	drivers/gtk.c
+	filesystem.c
+	drivers.c
 	freetype.c
 )

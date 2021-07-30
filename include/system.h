@@ -66,17 +66,8 @@ extern int insmod(const char*alias,bool log);
 // src/lib/file.c: remove all sub folders (depth 1)
 extern int remove_folders(int dfd,int flags);
 
-// src/lib/file.c: check path is a folder
-extern bool is_folder(const char*path,...);
-
-// src/lib/file.c: check path is a file
-extern bool is_file(const char*path,...);
-
-// src/lib/file.c: check path is a block dev
-extern bool is_block(const char*path,...);
-
-// src/lib/file.c: check path is a char dev
-extern bool is_char(const char*path,...);
+// src/lib/file.c: check path is type
+extern bool is_type(int err,mode_t type,const char*path,...);
 
 // src/lib/file.c: read an integer value from a file
 extern int fd_read_int(int fd,char*name);
@@ -152,6 +143,13 @@ extern int get_max_fd();
 
 // src/lib/stdio.c: close all fds
 extern int close_all_fd(const int*exclude,int count);
+
+// file type macros
+#define is_file(path...) is_type(0,S_IFREG,path)
+#define is_link(path...) is_type(0,S_IFLNK,path)
+#define is_char(path...) is_type(ENOTTY,S_IFCHR,path)
+#define is_block(path...) is_type(ENOTBLK,S_IFBLK,path)
+#define is_folder(path...) is_type(ENOTDIR,S_IFDIR,path)
 
 // call libmount to mount and exit if failed
 #define exmount(src,tgt,fs,data) \

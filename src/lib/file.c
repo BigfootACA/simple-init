@@ -215,52 +215,18 @@ ssize_t read_file(char*buff,size_t len,bool lf,char*path,...){
 	return r;
 }
 
-static bool is_type(mode_t type,const char*path,va_list va){
+bool is_type(int err,mode_t type,const char*path,...){
 	char rpath[PATH_MAX]={0};
+	va_list va;
+	va_start(va,path);
 	vsnprintf(rpath,PATH_MAX-1,path,va);
+	va_end(va);
 	struct stat st;
 	errno=EIO;
 	if(stat(rpath,&st)<0)return false;
 	errno=0;
-	return (((st.st_mode)&S_IFMT)==type);
-}
-
-bool is_folder(const char*path,...){
-	if(!path)ERET(EINVAL);
-	va_list va;
-	va_start(va,path);
-	bool ret=is_type(S_IFDIR,path,va);
-	va_end(va);
-	if(errno==0&&!ret)errno=ENOTDIR;
-	return ret;
-}
-
-bool is_file(const char*path,...){
-	if(!path)ERET(EINVAL);
-	va_list va;
-	va_start(va,path);
-	bool ret=is_type(S_IFREG,path,va);
-	va_end(va);
-	return ret;
-}
-
-bool is_block(const char*path,...){
-	if(!path)ERET(EINVAL);
-	va_list va;
-	va_start(va,path);
-	bool ret=is_type(S_IFBLK,path,va);
-	va_end(va);
-	if(errno==0&&!ret)errno=ENOTBLK;
-	return ret;
-}
-
-bool is_char(const char*path,...){
-	if(!path)ERET(EINVAL);
-	va_list va;
-	va_start(va,path);
-	bool ret=is_type(S_IFCHR,path,va);
-	va_end(va);
-	if(errno==0&&!ret)errno=ENOTTY;
+	bool ret=(((st.st_mode)&S_IFMT)==type);
+	if(errno==0&&err!=0&&!ret)errno=err;
 	return ret;
 }
 

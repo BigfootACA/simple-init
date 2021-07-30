@@ -1,3 +1,4 @@
+#include<stdlib.h>
 #include"lvgl.h"
 #include"gui.h"
 #include"logger.h"
@@ -105,6 +106,10 @@ int guidrv_init(uint32_t*w,uint32_t*h,int*dpi){
 		}
 		guidrv_getsize(w,h);
 		guidrv_getdpi(dpi);
+		if(*w<=0||*h<=0){
+			tlog_error("failed to get screen size with gui driver %s",name);
+			abort();
+		}
 		drv=gui_drvs[i];
 		return 0;
 	}

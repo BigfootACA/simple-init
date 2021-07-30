@@ -358,7 +358,7 @@ static int drm_setup(int fd,unsigned int fourcc){
 		fourcc,
 		&drm_dev.plane_id,
 		drm_dev.crtc_idx
-	))return trlog_error(-1,"can not find plane\n");
+	))return trlog_error(-1,"can not find plane");
 	if(!(drm_dev.plane=drmModeGetPlane(fd,drm_dev.plane_id)))
 		return trlog_error(-1,"can not get plane");
 	if(!(drm_dev.crtc=drmModeGetCrtc(fd,drm_dev.crtc_id)))
@@ -370,7 +370,7 @@ static int drm_setup(int fd,unsigned int fourcc){
 	if(drm_get_conn_props())return trlog_error(-1,"can not get connector props");
 	drm_dev.fourcc=fourcc;
 	tlog_info(
-		"found plane_id %u, connector_id %d, crtc_id %d",
+		"found plane %u, connector %d, crtc %d",
 		drm_dev.plane_id,
 		drm_dev.conn_id,
 		drm_dev.crtc_id
@@ -460,7 +460,7 @@ static void drm_flush(lv_disp_drv_t*disp_drv,const lv_area_t*area,lv_color_t*col
 		w*(LV_COLOR_SIZE/8)
 	);
 	if(drm_dmabuf_set_plane(fbuf)){
-		tlog_warn("flush fail");
+		tlog_warn("plane flush fail");
 		return;
 	}
 	drm_dev.cur_bufs[1]=(!drm_dev.cur_bufs[0])?

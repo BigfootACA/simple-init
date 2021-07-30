@@ -3,6 +3,7 @@
 #include<errno.h>
 #include<stdio.h>
 #include<fcntl.h>
+#include<dirent.h>
 #include<stdlib.h>
 #include<unistd.h>
 #include<libgen.h>
@@ -11,6 +12,8 @@
 #include<xf86drm.h>
 #include<xf86drmMode.h>
 #include<drm_fourcc.h>
+#include"defines.h"
+#include"hardware.h"
 #include"lvgl.h"
 #include"gui.h"
 #include"logger.h"
@@ -24,7 +27,7 @@ struct drm_buffer{
 	uint32_t fb_handle;
 };
 static struct drm_dev{
-	int fd;
+	int fd,sfd,bnfd;
 	uint32_t
 		conn_id,
 		enc_id,
@@ -338,18 +341,99 @@ free_res:
 	drmModeFreeResources(res);
 	return -1;
 }
-static int drm_open(int fd){
+static int drm_find_connector_sysfs(int sfd){
+	char buff[64];
+	int conn,status;
+	struct dirent*e;
+	DIR*d=fdopendir(sfd);
+	if(d)while((e=readdir(d))){
+			if(
+				e->d_type!=DT_DIR||
+				strncmp("card",e->d_name,4)!=0
+				)continue;
+			if((conn=openat(sfd,e->d_name,O_DIR))<0){
+				telog_warn("open connector %s folder failed",e->d_name);
+				continue;
+			}
+			if((status=openat(conn,"status",O_RDONLY))<0){
+				telog_warn("read connector %s status failed",e->d_name);
+				close(conn);
+				continue;
+			}
+			memset(buff,0,64);
+			if(read(status,buff,63)<=0){
+				telog_warn("read connector %s status contents failed",e->d_name);
+				close(status);
+				close(conn);
+				continue;
+			}
+			close(status);
+			if(strncmp("connected",buff,9)!=0){
+				close(conn);
+				continue;
+			}
+			tlog_debug("found connected connector %s\n",e->d_name);
+			return conn;
+		}
+	free(d);
+	ERET(ENOENT);
+}
+static int drm_find_connector_backlight(int conn){
+	int bg;
+	struct stat st;
+	struct dirent*e;
+	DIR*d=fdopendir(conn);
+	if(d)while((e=readdir(d))){
+		if(e->d_type!=DT_DIR)continue;
+		if((bg=openat(conn,e->d_name,O_DIR))<0){
+			telog_warn("open connector backlight %s folder failed",e->d_name);
+			continue;
+		}
+		if(fstatat(bg,"brightness",&st,AT_SYMLINK_NOFOLLOW)<0){
+			close(bg);
+			continue;
+		}
+		tlog_debug("found connector backight %s\n",e->d_name);
+		return bg;
+	}
+	free(d);
+	ERET(ENOENT);
+}
+static int drm_find_backlight(int sfd){
+	int conn=drm_find_connector_sysfs(sfd);
+	if(conn<0)return conn;
+	int bn=drm_find_connector_backlight(conn);
+	close(conn);
+	return bn;
+}
+static int drm_get_brightness(){
+	if(drm_dev.bnfd<0)ERET(ENOTSUP);
+	return led_get_brightness_percent(drm_dev.bnfd);
+}
+static void drm_set_brightness(int value){
+	if(drm_dev.bnfd<0)errno=ENOTSUP;
+	else if(led_set_brightness_percent(drm_dev.bnfd,value)>=0)
+		tlog_debug("set backlight to %d%%",value);
+}
+static int drm_open(int fd,int sfd){
 	int flags;
 	uint64_t has_dumb;
 	if((flags=fcntl(fd,F_GETFD))<0||fcntl(fd,F_SETFD,flags|FD_CLOEXEC)<0)
 		return terlog_error(-1,"fcntl FD_CLOEXEC failed");
+	if((flags=fcntl(sfd,F_GETFD))<0||fcntl(sfd,F_SETFD,flags|FD_CLOEXEC)<0)
+		return terlog_error(-1,"fcntl FD_CLOEXEC failed");
 	if(drmGetCap(fd,DRM_CAP_DUMB_BUFFER,&has_dumb)<0||has_dumb==0)
 		return trlog_error(-1,"drmGetCap DRM_CAP_DUMB_BUFFER failed or no dumb buffer");
-	drm_dev.fd=fd;
+	drm_dev.fd=fd,drm_dev.sfd=sfd;
+	if((drm_dev.bnfd=drm_find_backlight(sfd))<0)tlog_warn("no backlight device found");
+	else{
+		int b=drm_get_brightness();
+		if(b>=0&&b<=100)tlog_info("current backlight: %d%%\n",b);
+	}
 	return fd;
 }
-static int drm_setup(int fd,unsigned int fourcc){
-	if(drm_open(fd)<0)return -1;
+static int drm_setup(int fd,int sfd,unsigned int fourcc){
+	if(drm_open(fd,sfd)<0)return -1;
 	if(drmSetClientCap(fd,DRM_CLIENT_CAP_ATOMIC,1))
 		return terlog_error(-1,"no atomic modesetting support");
 	if(drm_find_connector())
@@ -507,8 +591,8 @@ static int _drm_register(){
 	return 0;
 }
 
-static int _drm_init_fd(int fd,unsigned int fourcc){
-	if(drm_setup(fd,fourcc)){
+static int _drm_init_fd(int fd,int sfd,unsigned int fourcc){
+	if(drm_setup(fd,sfd,fourcc)){
 		drm_dev.fd=-1;
 		return -1;
 	}
@@ -534,7 +618,7 @@ static char*_drm_get_driver_name(int fd,char*buff,size_t len){
 	return ret;
 }
 
-static int _drm_scan(){
+static int drm_scan_init(unsigned int fourcc){
 	int sfd,dfd;
 	char*dfmt,*sfmt,*driver;
 	char drbuff[128]={0},sdev[256]={0},ddev[256]={0};
@@ -568,18 +652,12 @@ static int _drm_scan(){
 				continue;
 			}
 		}
-		close(sfd);
-		return dfd;
+		if(_drm_init_fd(dfd,sfd,fourcc)<0)
+			return trlog_error(-1,"init failed");
+		return 0;
 	}
 	tlog_error("no drm found");
 	return -1;
-}
-
-static int drm_scan_init(unsigned int fourcc){
-	int fd;
-	if((fd=_drm_scan())<0)return trlog_error(-1,"init scan failed");
-	if(_drm_init_fd(fd,fourcc)<0)return trlog_error(-1,"init failed");
-	return 0;
 }
 
 static int drm_scan_init_register(){
@@ -598,7 +676,9 @@ struct gui_driver guidrv_drm={
 	.drv_register=drm_scan_init_register,
 	.drv_getsize=drm_get_sizes,
 	.drv_getdpi=drm_get_dpi,
-	.drv_exit=drm_exit
+	.drv_exit=drm_exit,
+	.drv_getbrightness=drm_get_brightness,
+	.drv_setbrightness=drm_set_brightness
 };
 #endif
 #endif

@@ -89,7 +89,8 @@ extern uint32_t custom_tick_get();
 #define LV_FONT_SIMSUN_16_CJK               0
 #define LV_FONT_UNSCII_8                    0
 #define LV_FONT_CUSTOM_DECLARE \
-	LV_FONT_DECLARE(*gui_font)
+	LV_FONT_DECLARE(*gui_font) \
+	LV_FONT_DECLARE(*symbol_font)
 #define LV_FONT_DEFAULT gui_font
 #define LV_FONT_FMT_TXT_LARGE               1
 #define LV_FONT_SUBPX_BGR                   0

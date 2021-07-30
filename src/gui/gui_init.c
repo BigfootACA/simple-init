@@ -11,6 +11,7 @@
 int gui_dpi=400;
 uint32_t w=-1,h=-1;
 lv_font_t*gui_font=NULL;
+lv_font_t*symbol_font=NULL;
 bool run=true;
 static struct gui_driver*drv=NULL;
 static bool gui_sleep=false;
@@ -56,9 +57,15 @@ int gui_init(draw_func draw){
 	gui_font=x?
 		lv_ft_init(x,24,0):
 		lv_ft_init_rootfs(_PATH_ETC"/default.ttf",24,0);
+	x=getenv("FONT_SYMBOL");
+	symbol_font=x?
+		lv_ft_init(x,24,0):
+		lv_ft_init_rootfs(_PATH_ETC"/symbols.ttf",24,0);
+	if(!symbol_font)
+		telog_error("failed to load symbol font");
 	#endif
 	if(!gui_font)
-		return telog_error("failed to load font");
+		return terlog_error(-1,"failed to load font");
 	lv_init();
 	if(driver_init()<0)return -1;
 	tlog_debug("driver init done");

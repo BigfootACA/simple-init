@@ -1,11 +1,11 @@
 #ifdef ENABLE_GUI
+#include<errno.h>
 #include<stdlib.h>
 #include<unistd.h>
 #include<sys/time.h>
 #include<semaphore.h>
 #include"lvgl.h"
 #include"logger.h"
-#include"hardware.h"
 #include"gui.h"
 #define TAG "gui"
 int gui_dpi=400;
@@ -13,30 +13,11 @@ uint32_t gui_w=-1,gui_h=-1;
 lv_font_t*gui_font=NULL;
 lv_font_t*symbol_font=NULL;
 bool run=true;
-static struct gui_driver*drv=NULL;
 static bool gui_sleep=false;
 static sem_t gui_wait;
 
 void gui_do_quit(){
-	if(!drv)return;
-	drv->drv_exit();
-}
-
-int driver_init(){
-	for(int i=0;gui_drvs[i];i++){
-		struct gui_driver*d=gui_drvs[i];
-		if(!d->drv_getsize)continue;
-		tlog_debug("try to init gui driver %s",d->name);
-		if(d->drv_register()<0){
-			tlog_error("failed to start gui driver %s",d->name);
-			continue;
-		}
-		d->drv_getsize(&gui_w,&gui_h);
-		if(d->drv_getdpi)d->drv_getdpi(&gui_dpi);
-		drv=gui_drvs[i];
-		break;
-	}
-	return drv?0:-1;
+	guidrv_exit();
 }
 
 void gui_quit_sleep(){
@@ -67,7 +48,7 @@ int gui_init(draw_func draw){
 	if(!gui_font)
 		return terlog_error(-1,"failed to load font");
 	lv_init();
-	if(driver_init()<0)return -1;
+	if(guidrv_init(&gui_w,&gui_h,&gui_dpi)<0)return -1;
 	tlog_debug("driver init done");
 	if(!(screen=lv_scr_act()))return trlog_error(-1,"failed to get screen");
 	draw(screen);
@@ -75,7 +56,7 @@ int gui_init(draw_func draw){
 	while(run){
 		if(lv_disp_get_inactive_time(NULL)<10000){
 			lv_task_handler();
-			if(drv->drv_taskhandler)drv->drv_taskhandler();
+			guidrv_taskhandler();
 		}else{
 			tlog_debug("enter sleep");
 			gui_sleep=true;
@@ -90,8 +71,11 @@ int gui_init(draw_func draw){
 }
 
 uint32_t custom_tick_get(void){
-	if(!drv)return 0;
-	if(drv->drv_tickget)return drv->drv_tickget();
+	errno=0;
+	if(guidrv_get_driver()){
+		uint32_t u=guidrv_tickget();
+		if(errno==0)return u;
+	}
 	static uint64_t start_ms=0;
 	if(start_ms==0){
 		struct timeval tv_start;

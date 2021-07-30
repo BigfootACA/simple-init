@@ -10,4 +10,5 @@ add_library(init_gui STATIC
 	filesystem.c
 	drivers.c
 	freetype.c
+	guidrv.c
 )

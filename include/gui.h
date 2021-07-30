@@ -35,4 +35,17 @@ extern lv_font_t*lv_ft_init_assets(entry_dir*assets,char*path,int weight,lv_ft_s
 #endif
 extern lv_font_t*lv_ft_init_rootfs(char*path,int weight,lv_ft_style style);
 extern void lv_ft_destroy(lv_font_t*font);
+extern int guidrv_getsize(uint32_t*w,uint32_t*h);
+extern int guidrv_getdpi(int*dpi);
+extern uint32_t guidrv_get_width();
+extern uint32_t guidrv_get_height();
+extern int guidrv_get_dpi();
+extern const char*guidrv_getname();
+extern int guidrv_taskhandler();
+extern uint32_t guidrv_tickget();
+extern int guidrv_register();
+extern int guidrv_init(uint32_t*w,uint32_t*h,int*dpi);
+extern void guidrv_exit();
+extern void guidrv_set_driver(struct gui_driver*driver);
+extern struct gui_driver*guidrv_get_driver();
 #endif

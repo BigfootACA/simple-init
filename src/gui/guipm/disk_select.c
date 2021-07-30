@@ -1,9 +1,10 @@
 #include"guipm.h"
 static int xdpi;
+static bool is_show_all=false;
 static lv_style_t f24_style,item_style,gray_style;
 static lv_obj_t*lst=NULL,*selscr=NULL;
 static lv_obj_t*btn_ok,*btn_refresh,*btn_cancel;
-static lv_obj_t*disks_info=NULL;
+static lv_obj_t*disks_info=NULL,*show_all=NULL;
 static struct disk_info{
 	bool enable;
 	lv_obj_t*btn;
@@ -45,7 +46,7 @@ void guipm_disk_clear(){
 	for(int i=0;i<32;i++){
 		if(!disks[i].enable)continue;
 		lv_obj_del(disks[i].btn);
-		fdisk_unref_context(disks[i].ctx);
+		if(disks[i].ctx)fdisk_unref_context(disks[i].ctx);
 		close(disks[i].sysfs_fd);
 		memset(&disks[i],0,sizeof(struct disk_info));
 	}
@@ -223,18 +224,30 @@ void guipm_disk_reload(){
 			continue;
 		}
 		if(
-			get_block_size(k)<=0||
+			get_block_size(k)<0||
 			get_block_path(k)<0||
-			get_fdisk_ctx(k)<0
+			(!is_show_all&&(
+			     strncmp(k->name,"dm",2)==0||
+			     strncmp(k->name,"fd",2)==0||
+			     strncmp(k->name,"nbd",3)==0||
+			     strncmp(k->name,"mtd",3)==0||
+			     strncmp(k->name,"aoe",3)==0||
+			     strncmp(k->name,"ram",3)==0||
+			     strncmp(k->name,"zram",4)==0||
+			     strncmp(k->name,"loop",4)==0||
+			     k->size<=0
+		     ))
 		){
 			close(k->sysfs_fd);
 			continue;
 		}
-		tlog_debug("scan block device %s (%s)",k->path,get_layout(k));
 		k->enable=true;
 
+		get_fdisk_ctx(k);
 		get_block_model(k);
 		disks_add_item(blk,k);
+
+		tlog_debug("scan block device %s (%s)",k->path,get_layout(k));
 
 		if(++blk>=32){
 			tlog_warn("disk too many, only show 31 disks");
@@ -252,10 +265,17 @@ static void refresh_click(lv_obj_t*obj,lv_event_t e){
 	guipm_disk_reload();
 }
 
+static void show_all_click(lv_obj_t*obj,lv_event_t e){
+	if(e!=LV_EVENT_VALUE_CHANGED||obj!=show_all)return;
+	is_show_all=lv_checkbox_is_checked(obj);
+	tlog_debug("request show all %s",is_show_all?"true":"false");
+	guipm_disk_reload();
+}
+
 void guipm_draw_disk_sel(lv_obj_t*screen){
 
 	xdpi=gui_dpi/10;
-	int mar=(xdpi/2);
+	int mar=(xdpi/2),btw=w/3-(xdpi*2),bth=h/xdpi,btt=h-bth-xdpi;
 
 	static lv_style_t scr_style;
 	lv_style_init(&scr_style);
@@ -301,7 +321,7 @@ void guipm_draw_disk_sel(lv_obj_t*screen){
 	lv_style_set_border_width(&lst_style,LV_STATE_PRESSED,0);
 	lst=lv_page_create(selscr,NULL);
 	lv_obj_add_style(lst,LV_PAGE_PART_BG,&lst_style);
-	lv_obj_set_size(lst,w-xdpi,h/16*12);
+	lv_obj_set_size(lst,w-xdpi,h-(h/16*2)-(bth*2)-(xdpi*3));
 	lv_obj_set_pos(lst,mar,h/16*2);
 
 	// button style
@@ -311,7 +331,20 @@ void guipm_draw_disk_sel(lv_obj_t*screen){
 	lv_style_set_outline_width(&btn_style,LV_STATE_PRESSED,0);
 	lv_style_set_outline_width(&btn_style,LV_STATE_FOCUSED,0);
 
-	int btw=w/3-(xdpi*2),bth=h/16,btt=h-bth-xdpi;
+	// show all checkbox
+	static lv_style_t chk_style,bul_style;
+	lv_style_init(&chk_style);
+	lv_style_init(&bul_style);
+	if(symbol_font)lv_style_set_text_font(&bul_style,LV_STATE_CHECKED,symbol_font);
+	lv_style_set_outline_width(&chk_style,LV_STATE_DEFAULT,0);
+	lv_style_set_outline_width(&chk_style,LV_STATE_FOCUSED,0);
+	show_all=lv_checkbox_create(selscr,NULL);
+	lv_obj_set_pos(show_all,xdpi,h-(bth*2)-(xdpi*2));
+	lv_obj_set_size(show_all,w/3-(xdpi*2),bth);
+	lv_obj_add_style(show_all,LV_CHECKBOX_PART_BG,&chk_style);
+	lv_obj_add_style(show_all,LV_CHECKBOX_PART_BULLET,&bul_style);
+	lv_obj_set_event_cb(show_all,show_all_click);
+	lv_checkbox_set_text(show_all,_("Show all blocks"));
 
 	// ok button
 	btn_ok=lv_btn_create(selscr,NULL);

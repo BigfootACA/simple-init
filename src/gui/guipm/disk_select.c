@@ -257,7 +257,7 @@ void guipm_draw_disk_sel(lv_obj_t*screen){
 	xdpi=gui_dpi/10;
 	int mar=(xdpi/2);
 
-	lv_style_t scr_style;
+	static lv_style_t scr_style;
 	lv_style_init(&scr_style);
 	lv_style_set_outline_width(&scr_style,0,0);
 	selscr=lv_obj_create(screen,NULL);
@@ -276,6 +276,7 @@ void guipm_draw_disk_sel(lv_obj_t*screen){
 	lv_style_set_border_color(&item_style,LV_STATE_DEFAULT,click);
 	lv_style_set_outline_width(&item_style,LV_STATE_PRESSED,0);
 	lv_style_set_outline_width(&item_style,LV_STATE_FOCUSED,0);
+	lv_style_set_outline_width(&item_style,LV_STATE_DEFAULT,0);
 	lv_style_set_bg_color(&item_style,LV_STATE_PRESSED,click);
 	lv_style_set_bg_color(&item_style,LV_STATE_CHECKED,bg);
 	lv_style_set_bg_color(&item_style,LV_STATE_CHECKED|LV_STATE_PRESSED,bg);
@@ -293,7 +294,13 @@ void guipm_draw_disk_sel(lv_obj_t*screen){
 	lv_label_set_text(title,_("Select a disk to process"));
 
 	// disk list
+	static lv_style_t lst_style;
+	lv_style_init(&lst_style);
+	lv_style_set_border_width(&lst_style,LV_STATE_DEFAULT,0);
+	lv_style_set_border_width(&lst_style,LV_STATE_FOCUSED,0);
+	lv_style_set_border_width(&lst_style,LV_STATE_PRESSED,0);
 	lst=lv_page_create(selscr,NULL);
+	lv_obj_add_style(lst,LV_PAGE_PART_BG,&lst_style);
 	lv_obj_set_size(lst,w-xdpi,h/16*12);
 	lv_obj_set_pos(lst,mar,h/16*2);
 

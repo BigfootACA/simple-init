@@ -24,6 +24,7 @@ extern lv_font_t*gui_font;
 extern struct gui_driver*gui_drvs[];
 extern void ts_scan_register(void);
 extern int init_lvgl_fs(char letter,char*root,bool debug);
+extern void lv_obj_set_symbol(lv_obj_t*obj,lv_state_t state,uint8_t part);
 extern int gui_init(draw_func draw);
 extern void gui_quit_sleep();
 extern void gui_do_quit();

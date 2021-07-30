@@ -49,7 +49,7 @@ static FT_Error font_face_requester(
 		tlog_error("font content not found");
 		abort();
 	}
-	if(e!=FT_Err_Ok)tlog_error("FT_New_Face error: %s\n",FT_Error_String(e));
+	if(e!=FT_Err_Ok)tlog_error("load font error: %d\n",e);
 	return e;
 }
 

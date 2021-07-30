@@ -15,6 +15,8 @@ struct gui_driver{
 	void(*drv_taskhandler)(void);
 	void(*drv_exit)(void);
 	uint32_t(*drv_tickget)(void);
+	void(*drv_setbrightness)(int);
+	int(*drv_getbrightness)(void);
 };
 typedef void (*draw_func)(lv_obj_t*);
 extern uint32_t gui_w,gui_h;
@@ -44,6 +46,8 @@ extern const char*guidrv_getname();
 extern int guidrv_taskhandler();
 extern uint32_t guidrv_tickget();
 extern int guidrv_register();
+extern int guidrv_set_brightness(int percent);
+extern int guidrv_get_brightness();
 extern int guidrv_init(uint32_t*w,uint32_t*h,int*dpi);
 extern void guidrv_exit();
 extern void guidrv_set_driver(struct gui_driver*driver);

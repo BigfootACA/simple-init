@@ -66,6 +66,21 @@ uint32_t guidrv_tickget(){
 	return -1;
 }
 
+int guidrv_set_brightness(int percent){
+	errno=0;
+	if(!drv)ERET(ENOENT);
+	else if(!drv->drv_setbrightness)ERET(ENOSYS);
+	else drv->drv_setbrightness(percent);
+	return errno==0?0:-1;
+}
+
+int guidrv_get_brightness(){
+	errno=0;
+	if(!drv)ERET(ENOENT);
+	else if(!drv->drv_getbrightness)ERET(ENOSYS);
+	else return drv->drv_getbrightness();
+}
+
 int guidrv_register(){
 	errno=0;
 	if(!drv)ERET(ENOENT);

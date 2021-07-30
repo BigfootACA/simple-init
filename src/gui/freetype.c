@@ -148,7 +148,6 @@ static lv_font_t*_lv_ft_init(
 	s.face_id=(FTC_FaceID)dsc->face_id;
 	s.width=weight,s.height=weight,s.pixel=1;
 	if(FTC_Manager_LookupSize(cmgr,&s,&fs)){
-		if(fi->name)free(fi->name);
 		free(fi);
 		tlog_error("failed to LookupSize");
 		goto fail;

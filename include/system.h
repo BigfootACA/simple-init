@@ -127,6 +127,9 @@ extern int wait_block(char*block,long time,char*tag);
 // src/lib/file.c: one line read file
 extern ssize_t read_file(char*buff,size_t len,bool lf,char*path,...);
 
+// src/lib/file.c: one line read file at fd
+extern ssize_t fd_read_file(int fd,char*buff,size_t len,bool lf,char*path,...);
+
 // src/lib/signal.c: remove all signal handlers
 extern int reset_signals();
 

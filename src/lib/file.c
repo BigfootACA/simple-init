@@ -183,16 +183,13 @@ int wait_block(char*block,long time,char*tag){
 	ERET(ETIMEDOUT);
 }
 
-ssize_t read_file(char*buff,size_t len,bool lf,char*path,...){
+static ssize_t _fd_read_file(int at,char*buff,size_t len,bool lf,char*path,va_list va){
 	int fd;
-	va_list va;
 	char rpath[PATH_MAX]={0};
 	if(!path||!buff||len<=0)ERET(EINVAL);
-	va_start(va,path);
 	vsnprintf(rpath,PATH_MAX-1,path,va);
-	va_end(va);
 	memset(buff,0,len);
-	if((fd=open(rpath,O_RDONLY))<0)return -1;
+	if((fd=openat(at,rpath,O_RDONLY))<0)return -1;
 	ssize_t s=read(fd,buff,len-1);
 	if(s>0&&!lf){
 		if(buff[s-1]=='\n')buff[--s]=0;
@@ -200,6 +197,22 @@ ssize_t read_file(char*buff,size_t len,bool lf,char*path,...){
 	}
 	close(fd);
 	return s;
+}
+
+ssize_t fd_read_file(int at,char*buff,size_t len,bool lf,char*path,...){
+	va_list va;
+	va_start(va,path);
+	int r=_fd_read_file(at,buff,len,lf,path,va);
+	va_end(va);
+	return r;
+}
+
+ssize_t read_file(char*buff,size_t len,bool lf,char*path,...){
+	va_list va;
+	va_start(va,path);
+	int r=_fd_read_file(AT_FDCWD,buff,len,lf,path,va);
+	va_end(va);
+	return r;
 }
 
 static bool is_type(mode_t type,const char*path,va_list va){

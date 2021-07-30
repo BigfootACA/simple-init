@@ -78,6 +78,12 @@ extern bool is_block(const char*path,...);
 // src/lib/file.c: check path is a char dev
 extern bool is_char(const char*path,...);
 
+// src/lib/file.c: read an integer value from a file
+extern int fd_read_int(int fd,char*name);
+
+// src/lib/file.c: write an integer value to a file
+extern int fd_write_int(int fd,char*name,int value,bool lf);
+
 // src/lib/reboot.c: advance reboot (with arg)
 extern int adv_reboot(long cmd,char*data);
 

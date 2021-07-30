@@ -9,6 +9,7 @@
 #ifdef ENABLE_BLKID
 #include<blkid/blkid.h>
 #endif
+#include"str.h"
 #include"logger.h"
 #include"system.h"
 #include"defines.h"
@@ -248,4 +249,33 @@ bool is_char(const char*path,...){
 	va_end(va);
 	if(errno==0&&!ret)errno=ENOTTY;
 	return ret;
+}
+
+int fd_read_int(int fd,char*name){
+	errno=0;
+	if(!name)ERET(EINVAL);
+	if(fd<0)ERET(EBADF);
+	int o=openat(fd,name,O_RDONLY);
+	if(o<0)return -1;
+	char buff[64]={0};
+	if(read(o,buff,63)<0){
+		close(o);
+		return -1;
+	}
+	close(o);
+	return parse_int(buff,-1);
+}
+
+int fd_write_int(int fd,char*name,int value,bool lf){
+	errno=0;
+	if(!name)ERET(EINVAL);
+	if(fd<0)ERET(EBADF);
+	int o=openat(fd,name,O_WRONLY);
+	if(o<0)return -1;
+	if(dprintf(o,"%d%s",value,lf?"\n":"")<0){
+		close(o);
+		return -1;
+	}
+	close(o);
+	return 0;
 }

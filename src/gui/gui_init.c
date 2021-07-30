@@ -9,7 +9,7 @@
 #include"gui.h"
 #define TAG "gui"
 int gui_dpi=400;
-uint32_t w=-1,h=-1;
+uint32_t gui_w=-1,gui_h=-1;
 lv_font_t*gui_font=NULL;
 lv_font_t*symbol_font=NULL;
 bool run=true;
@@ -31,7 +31,7 @@ int driver_init(){
 			tlog_error("failed to start gui driver %s",d->name);
 			continue;
 		}
-		d->drv_getsize(&w,&h);
+		d->drv_getsize(&gui_w,&gui_h);
 		if(d->drv_getdpi)d->drv_getdpi(&gui_dpi);
 		drv=gui_drvs[i];
 		break;

@@ -8,13 +8,13 @@ static lv_obj_t*screen;
 
 static void add_button(int x,int y,char*name){
 	lv_obj_t*file=lv_btn_create(screen,NULL);
-	lv_obj_align(file,NULL,LV_ALIGN_IN_TOP_LEFT,w/2*x+DIS_X(5),h/5*y+DIS_X(5));
-	lv_obj_set_size(file,w/2-DIS_X(10),h/5-DIS_X(10));
+	lv_obj_align(file,NULL,LV_ALIGN_IN_TOP_LEFT,gui_w/2*x+DIS_X(5),gui_h/5*y+DIS_X(5));
+	lv_obj_set_size(file,gui_w/2-DIS_X(10),gui_h/5-DIS_X(10));
 	lv_obj_add_style(file,LV_OBJ_PART_MAIN,&style);
 	lv_obj_t*txt=lv_label_create(file,NULL);
 	lv_label_set_long_mode(txt,LV_LABEL_LONG_BREAK);
 	lv_label_set_align(txt,LV_LABEL_ALIGN_CENTER);
-	lv_obj_set_width(txt,w/2-DIS_X(15));
+	lv_obj_set_width(txt,gui_w/2-DIS_X(15));
 	lv_label_set_text(txt,name);
 }
 

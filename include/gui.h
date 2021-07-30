@@ -1,7 +1,7 @@
 #ifndef GUI_H
 #define GUI_H
-#define DIS_X(x) (int)((w)/100*(x))
-#define DIS_Y(y) (int)((h)/200*(y))
+#define DIS_X(x) (int)((gui_w)/100*(x))
+#define DIS_Y(y) (int)((gui_h)/200*(y))
 typedef enum{
 	FT_FONT_STYLE_NORMAL = 0,
 	FT_FONT_STYLE_ITALIC = 1<<0,
@@ -17,7 +17,7 @@ struct gui_driver{
 	uint32_t(*drv_tickget)(void);
 };
 typedef void (*draw_func)(lv_obj_t*);
-extern uint32_t w,h;
+extern uint32_t gui_w,gui_h;
 extern lv_font_t*gui_font;
 extern struct gui_driver*gui_drvs[];
 extern void ts_scan_register(void);

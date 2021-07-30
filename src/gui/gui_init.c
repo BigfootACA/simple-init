@@ -2,6 +2,7 @@
 #include<errno.h>
 #include<stdlib.h>
 #include<unistd.h>
+#include<signal.h>
 #include<sys/time.h>
 #include<semaphore.h>
 #include"lvgl.h"
@@ -28,6 +29,11 @@ void gui_quit_sleep(){
 		lv_disp_trig_activity(NULL);
 		sem_post(&gui_wait);
 	}
+}
+
+static void off_screen(int s __attribute__((unused))){
+	tlog_debug("screen sleep");
+	guidrv_set_brightness(0);
 }
 
 int gui_init(draw_func draw){
@@ -58,10 +64,17 @@ int gui_init(draw_func draw){
 			lv_task_handler();
 			guidrv_taskhandler();
 		}else{
+			int o=guidrv_get_brightness();
+			if(o<=0)o=100;
+			if(o>20)guidrv_set_brightness(20);
+			alarm(20);
+			signal(SIGALRM,off_screen);
 			tlog_debug("enter sleep");
 			gui_sleep=true;
 			sem_wait(&gui_wait);
 			gui_sleep=false;
+			alarm(0);
+			guidrv_set_brightness(o);
 			tlog_debug("quit sleep");
 		}
 		usleep(30000);

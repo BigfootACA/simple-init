@@ -1,5 +1,6 @@
 #ifdef ENABLE_GUI
 #ifdef ENABLE_DRM
+#define _GNU_SOURCE
 #include<errno.h>
 #include<stdio.h>
 #include<fcntl.h>
@@ -652,8 +653,12 @@ static int drm_scan_init(unsigned int fourcc){
 				continue;
 			}
 		}
-		if(_drm_init_fd(dfd,sfd,fourcc)<0)
-			return trlog_error(-1,"init failed");
+		if(_drm_init_fd(dfd,sfd,fourcc)<0){
+			tlog_error("card%d init failed, skip",i);
+			close(sfd);
+			close(dfd);
+			continue;
+		}
 		return 0;
 	}
 	tlog_error("no drm found");

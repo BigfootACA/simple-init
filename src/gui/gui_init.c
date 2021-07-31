@@ -11,6 +11,7 @@
 #define TAG "gui"
 int gui_dpi=400;
 uint32_t gui_w=-1,gui_h=-1;
+uint32_t gui_sw,gui_sh,gui_sx,gui_sy;
 lv_font_t*gui_font=NULL;
 lv_font_t*symbol_font=NULL;
 bool run=true;
@@ -64,6 +65,7 @@ int gui_init(draw_func draw){
 		return terlog_error(-1,"failed to load font");
 	lv_init();
 	if(guidrv_init(&gui_w,&gui_h,&gui_dpi)<0)return -1;
+	gui_sx=0,gui_sy=0,gui_sw=gui_w,gui_sh=gui_h;
 	tlog_debug("driver init done");
 	if(!(screen=lv_scr_act()))return trlog_error(-1,"failed to get screen");
 	draw(screen);

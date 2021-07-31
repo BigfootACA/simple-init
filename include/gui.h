@@ -20,6 +20,7 @@ struct gui_driver{
 };
 typedef void (*draw_func)(lv_obj_t*);
 extern uint32_t gui_w,gui_h;
+extern uint32_t gui_sw,gui_sh,gui_sx,gui_sy;
 extern lv_font_t*gui_font;
 extern struct gui_driver*gui_drvs[];
 extern void ts_scan_register(void);

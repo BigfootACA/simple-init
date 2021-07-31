@@ -30,6 +30,36 @@
 #define _FEATURE_INITSHELL
 #endif
 
+#ifdef ENABLE_FREETYPE2
+#define _FEATURE_FREETYPE2 "FREETYPE2 "
+#else
+#define _FEATURE_FREETYPE2
+#endif
+
+#ifdef ENABLE_FDISK
+#define _FEATURE_FDISK "FDISK "
+#else
+#define _FEATURE_FDISK
+#endif
+
+#ifdef ENABLE_GUI
+#define _FEATURE_GUI "GUI "
+#else
+#define _FEATURE_GUI
+#endif
+
+#ifdef ENABLE_DRM
+#define _FEATURE_DRM "DRM "
+#else
+#define _FEATURE_DRM
+#endif
+
+#ifdef ENABLE_GTK
+#define _FEATURE_GTK "GTK "
+#else
+#define _FEATURE_GTK
+#endif
+
 #define _FEATURE_MOUNT "MOUNT"
 
 #define FEATURES \
@@ -37,6 +67,11 @@
 	_FEATURE_BLKID \
 	_FEATURE_KMOD \
 	_FEATURE_INITSHELL \
+	_FEATURE_FREETYPE2 \
+	_FEATURE_FDISK \
+	_FEATURE_GUI \
+	_FEATURE_DRM \
+	_FEATURE_GTK \
 	_FEATURE_MOUNT
 
 #define VERSION_INFO \

@@ -3,6 +3,7 @@
 #include<stdbool.h>
 #include<dirent.h>
 #include<signal.h>
+#include<sys/stat.h>
 #include<sys/types.h>
 #include<sys/socket.h>
 
@@ -67,7 +68,7 @@ extern int insmod(const char*alias,bool log);
 extern int remove_folders(int dfd,int flags);
 
 // src/lib/file.c: check path is type
-extern bool is_type(int err,mode_t type,const char*path,...);
+extern bool fd_is_type(int fd,int err,mode_t type,const char*path,...);
 
 // src/lib/file.c: read an integer value from a file
 extern int fd_read_int(int fd,char*name);
@@ -145,11 +146,17 @@ extern int get_max_fd();
 extern int close_all_fd(const int*exclude,int count);
 
 // file type macros
-#define is_file(path...) is_type(0,S_IFREG,path)
-#define is_link(path...) is_type(0,S_IFLNK,path)
-#define is_char(path...) is_type(ENOTTY,S_IFCHR,path)
-#define is_block(path...) is_type(ENOTBLK,S_IFBLK,path)
-#define is_folder(path...) is_type(ENOTDIR,S_IFDIR,path)
+#define is_type(fd,err,type,path...) fd_is_type(AT_FDCWD,err,type,path);
+#define fd_is_file(fd,path...) fd_is_type(fd,0,S_IFREG,path)
+#define fd_is_link(fd,path...) fd_is_type(fd,0,S_IFLNK,path)
+#define fd_is_char(fd,path...) fd_is_type(fd,ENOTTY,S_IFCHR,path)
+#define fd_is_block(fd,path...) fd_is_type(fd,ENOTBLK,S_IFBLK,path)
+#define fd_is_folder(fd,path...) fd_is_type(fd,ENOTDIR,S_IFDIR,path)
+#define is_file(path...) fd_is_file(AT_FDCWD,path)
+#define is_link(path...) fd_is_link(AT_FDCWD,path)
+#define is_char(path...) fd_is_char(AT_FDCWD,path)
+#define is_block(path...) fd_is_block(AT_FDCWD,path)
+#define is_folder(path...) fd_is_folder(AT_FDCWD,path)
 
 // call libmount to mount and exit if failed
 #define exmount(src,tgt,fs,data) \

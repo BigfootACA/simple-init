@@ -215,7 +215,7 @@ ssize_t read_file(char*buff,size_t len,bool lf,char*path,...){
 	return r;
 }
 
-bool is_type(int err,mode_t type,const char*path,...){
+bool fd_is_type(int fd,int err,mode_t type,const char*path,...){
 	char rpath[PATH_MAX]={0};
 	va_list va;
 	va_start(va,path);
@@ -223,7 +223,7 @@ bool is_type(int err,mode_t type,const char*path,...){
 	va_end(va);
 	struct stat st;
 	errno=EIO;
-	if(stat(rpath,&st)<0)return false;
+	if(fstatat(fd,rpath,&st,AT_SYMLINK_NOFOLLOW)<0)return false;
 	errno=0;
 	bool ret=(((st.st_mode)&S_IFMT)==type);
 	if(errno==0&&err!=0&&!ret)errno=err;

@@ -147,7 +147,8 @@ extern list*path_simplify(list*paths,bool free);
 #endif
 
 // src/lib/strings.c: duplicate memory
-extern void*memdup(void*mem,size_t len);
+extern void*_memdup(void*mem,size_t len);
+#define memdup _memdup
 
 #ifdef b64_pton
 #undef b64_pton

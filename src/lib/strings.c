@@ -196,7 +196,7 @@ void strtolower(char*str){
 	for(;*str;str++)*str=tolower(*str);
 }
 
-void*memdup(void*mem,size_t len){
+void*_memdup(void*mem,size_t len){
 	void*dup=malloc(len);
 	if(!dup)EPRET(ENOMEM);
 	memcpy(dup,mem,len);

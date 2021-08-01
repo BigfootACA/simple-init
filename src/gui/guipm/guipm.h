@@ -12,7 +12,6 @@
 #include"lvgl.h"
 #include"gui.h"
 #include"str.h"
+#include"../gui_draw.h"
 #define TAG "guipm"
-extern void guipm_draw_title(lv_obj_t*screen);
-extern void guipm_draw_disk_sel(lv_obj_t*screen);
 #endif

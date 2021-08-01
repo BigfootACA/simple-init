@@ -8,6 +8,7 @@
 #include"lvgl.h"
 #include"logger.h"
 #include"gui.h"
+#include"font.h"
 #include"sysbar.h"
 #include"guidrv.h"
 #define TAG "gui"

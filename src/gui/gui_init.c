@@ -19,7 +19,7 @@ lv_font_t*gui_font=NULL;
 lv_font_t*symbol_font=NULL;
 lv_group_t*gui_grp=NULL;
 bool run=true;
-static bool gui_sleep=false;
+bool gui_sleep=false;
 static sem_t gui_wait;
 
 void gui_do_quit(){

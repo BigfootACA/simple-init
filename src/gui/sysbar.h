@@ -1,0 +1,24 @@
+#ifndef _SYSBAR_H
+#define _SYSBAR_H
+#include"gui.h"
+#include"gui_draw.h"
+struct sysbar{
+	lv_obj_t*screen;
+	struct{
+		lv_obj_t*bar;
+		struct{
+			lv_obj_t*time,*level,*battery;
+		}content;
+	}top;
+	lv_obj_t*keyboard;
+	struct{
+		lv_obj_t*bar;
+		lv_style_t btn_style;
+		bool style_inited;
+		struct{
+			lv_obj_t*back,*home,*keyboard,*power;
+		}content;
+	}bottom;
+};
+extern struct sysbar sysbar;
+#endif

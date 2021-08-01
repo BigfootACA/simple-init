@@ -353,7 +353,7 @@ static int drm_find_connector_backlight(int conn){
 		while((e=readdir(d))){
 			if(e->d_type!=DT_DIR&&e->d_type!=DT_LNK)continue;
 			if(e->d_name[0]=='.')continue;
-			if((bg=openat(conn,e->d_name,O_DIR))<0){
+			if((bg=openat(conn,e->d_name,O_DIR|O_CLOEXEC))<0){
 				telog_warn("open connector backlight %s folder failed",e->d_name);
 				continue;
 			}
@@ -404,13 +404,18 @@ static int drm_find_backlight(int sfd){
 				close(conn);
 				continue;
 			}
+			close(conn);
 			return ret;
 		}
 		free(d);
 	}
 	if((conn=open(_PATH_SYS_CLASS"/backlight",O_DIR))){
 		if((d=fdopendir(conn))){
-			if((ret=drm_find_connector_backlight(conn))>=0)return ret;
+			if((ret=drm_find_connector_backlight(conn))>=0){
+				close(conn);
+				free(d);
+				return ret;
+			}
 			free(d);
 		}
 		close(conn);
@@ -447,12 +452,7 @@ static void drm_set_brightness(int value){
 	}
 }
 static int drm_open(int fd,int sfd){
-	int flags;
 	uint64_t has_dumb;
-	if((flags=fcntl(fd,F_GETFD))<0||fcntl(fd,F_SETFD,flags|FD_CLOEXEC)<0)
-		return terlog_error(-1,"fcntl FD_CLOEXEC failed");
-	if((flags=fcntl(sfd,F_GETFD))<0||fcntl(sfd,F_SETFD,flags|FD_CLOEXEC)<0)
-		return terlog_error(-1,"fcntl FD_CLOEXEC failed");
 	if(drmGetCap(fd,DRM_CAP_DUMB_BUFFER,&has_dumb)<0||has_dumb==0)
 		return trlog_error(-1,"drmGetCap DRM_CAP_DUMB_BUFFER failed or no dumb buffer");
 	drm_dev.fd=fd,drm_dev.sfd=sfd;
@@ -663,11 +663,11 @@ static int drm_scan_init(unsigned int fourcc){
 		memset(ddev,0,256);
 		snprintf(sdev,255,sfmt,i);
 		snprintf(ddev,255,dfmt,i);
-		if((sfd=open(sdev,O_DIRECTORY|O_RDONLY))<0){
+		if((sfd=open(sdev,O_DIR|O_CLOEXEC))<0){
 			if(errno!=ENOENT)telog_warn("open sysfs %s",sdev);
 			continue;
 		}
-		if((dfd=open(ddev,O_RDWR))<0){
+		if((dfd=open(ddev,O_RDWR|O_CLOEXEC))<0){
 			if(errno!=ENOENT)telog_warn("open device %s",ddev);
 			close(sfd);
 			continue;

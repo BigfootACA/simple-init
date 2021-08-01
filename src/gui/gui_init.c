@@ -40,15 +40,6 @@ static void off_screen(int s __attribute__((unused))){
 	guidrv_set_brightness(0);
 }
 
-void lv_obj_set_symbol(lv_obj_t*obj,lv_state_t state,uint8_t part){
-	if(!symbol_font)return;
-	lv_style_t*style=malloc(sizeof(lv_style_t));
-	if(!style)return;
-	lv_style_init(style);
-	lv_style_set_text_font(style,state,symbol_font);
-	lv_obj_add_style(obj,part,style);
-}
-
 int gui_init(draw_func draw){
 	lv_obj_t*screen;
 	#ifdef ENABLE_FREETYPE2

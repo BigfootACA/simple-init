@@ -71,7 +71,6 @@ static lv_obj_t*draw_bottom_button(char*symbol,lv_coord_t x,lv_event_cb_t cb){
 	}
 	lv_obj_t*btn=lv_btn_create(sysbar.bottom.bar,NULL);
 	lv_obj_t*text=lv_label_create(btn,NULL);
-	lv_obj_set_symbol(text,LV_STATE_DEFAULT,LV_LABEL_PART_MAIN);
 	lv_label_set_text(text,symbol);
 	lv_obj_add_style(btn,LV_BTN_PART_MAIN,&sysbar.bottom.btn_style);
 	lv_obj_set_size(btn,sysbar.size*2,sysbar.size-bi);
@@ -115,7 +114,6 @@ static void sysbar_draw_top(){
 		-gui_dpi/5-lv_obj_get_width(sysbar.top.content.level),
 		y
 	);
-	lv_obj_set_symbol(sysbar.top.content.battery,LV_STATE_DEFAULT,LV_LABEL_PART_MAIN);
 }
 
 int sysbar_draw(lv_obj_t*scr){

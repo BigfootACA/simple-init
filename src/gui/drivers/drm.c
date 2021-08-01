@@ -342,16 +342,41 @@ free_res:
 	drmModeFreeResources(res);
 	return -1;
 }
-static int drm_find_connector_sysfs(int sfd){
+static int drm_find_connector_backlight(int conn){
+	int bg;
+	struct stat st;
+	struct dirent*e;
+	DIR*d=fdopendir(conn);
+	if(d){
+		while((e=readdir(d))){
+			if(e->d_type!=DT_DIR&&e->d_type!=DT_LNK)continue;
+			if(e->d_name[0]=='.')continue;
+			if((bg=openat(conn,e->d_name,O_DIR))<0){
+				telog_warn("open connector backlight %s folder failed",e->d_name);
+				continue;
+			}
+			if(fstatat(bg,"brightness",&st,AT_SYMLINK_NOFOLLOW)<0){
+				close(bg);
+				continue;
+			}
+			tlog_debug("found connector backight %s\n",e->d_name);
+			return bg;
+		}
+		free(d);
+	}
+	ERET(ENOENT);
+}
+static int drm_find_backlight(int sfd){
 	char buff[64];
-	int conn,status;
+	int conn,status,ret;
 	struct dirent*e;
 	DIR*d=fdopendir(sfd);
-	if(d)while((e=readdir(d))){
+	if(d){
+		while((e=readdir(d))){
 			if(
 				e->d_type!=DT_DIR||
 				strncmp("card",e->d_name,4)!=0
-				)continue;
+			)continue;
 			if((conn=openat(sfd,e->d_name,O_DIR))<0){
 				telog_warn("open connector %s folder failed",e->d_name);
 				continue;
@@ -373,39 +398,22 @@ static int drm_find_connector_sysfs(int sfd){
 				close(conn);
 				continue;
 			}
-			tlog_debug("found connected connector %s\n",e->d_name);
-			return conn;
+			if((ret=drm_find_connector_backlight(conn))<0){
+				close(conn);
+				continue;
+			}
+			return ret;
 		}
-	free(d);
-	ERET(ENOENT);
-}
-static int drm_find_connector_backlight(int conn){
-	int bg;
-	struct stat st;
-	struct dirent*e;
-	DIR*d=fdopendir(conn);
-	if(d)while((e=readdir(d))){
-		if(e->d_type!=DT_DIR)continue;
-		if((bg=openat(conn,e->d_name,O_DIR))<0){
-			telog_warn("open connector backlight %s folder failed",e->d_name);
-			continue;
-		}
-		if(fstatat(bg,"brightness",&st,AT_SYMLINK_NOFOLLOW)<0){
-			close(bg);
-			continue;
-		}
-		tlog_debug("found connector backight %s\n",e->d_name);
-		return bg;
+		free(d);
 	}
-	free(d);
+	if((conn=open(_PATH_SYS_CLASS"/backlight",O_DIR))){
+		if((d=fdopendir(conn))){
+			if((ret=drm_find_connector_backlight(conn))>=0)return ret;
+			free(d);
+		}
+		close(conn);
+	}
 	ERET(ENOENT);
-}
-static int drm_find_backlight(int sfd){
-	int conn=drm_find_connector_sysfs(sfd);
-	if(conn<0)return conn;
-	int bn=drm_find_connector_backlight(conn);
-	close(conn);
-	return bn;
 }
 static int drm_get_brightness(){
 	if(drm_dev.bnfd<0)ERET(ENOTSUP);
@@ -413,8 +421,8 @@ static int drm_get_brightness(){
 }
 static void drm_set_brightness(int value){
 	if(drm_dev.bnfd<0)errno=ENOTSUP;
-	else if(led_set_brightness_percent(drm_dev.bnfd,value)>=0)
-		tlog_debug("set backlight to %d%%",value);
+	else led_set_brightness_percent(drm_dev.bnfd,value);
+	telog_debug("set backlight to %d%%",value);
 }
 static int drm_open(int fd,int sfd){
 	int flags;

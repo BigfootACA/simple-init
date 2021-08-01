@@ -75,6 +75,7 @@ static lv_obj_t*draw_bottom_button(char*symbol,lv_coord_t x,lv_event_cb_t cb){
 	lv_obj_add_style(btn,LV_BTN_PART_MAIN,&sysbar.bottom.btn_style);
 	lv_obj_set_size(btn,sysbar.size*2,sysbar.size-bi);
 	lv_obj_align(btn,NULL,LV_ALIGN_IN_TOP_MID,x,bi);
+	lv_group_add_obj(gui_grp,btn);
 	if(cb)lv_obj_set_event_cb(btn,cb);
 	return btn;
 }

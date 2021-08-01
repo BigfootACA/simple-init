@@ -12,7 +12,6 @@
 #include"logger.h"
 #include"lvgl.h"
 #include"gui.h"
-#include"hardware.h"
 pthread_t tsp=0;
 static bool left_button_down=false;
 static int16_t last_x=0,last_y=0,last_x_tmp=0,last_y_tmp=0;
@@ -22,10 +21,7 @@ static void*ts_handler(void*args){
 	fd_set rds;
 	struct input_absinfo abs={};
 	if(!args)return NULL;
-	if((fd=open((char*)args,O_RDONLY))<0){
-		tlog_error("open device %s",(char*)args);
-		return NULL;
-	}
+	fd=*(int*)args;
  	ioctl(fd,EVIOCGABS(ABS_X),abs);
 	ioctl(fd,EVIOCGABS(ABS_Y),abs);
 	ioctl(fd,EVIOCGABS(ABS_PRESSURE),abs);
@@ -64,12 +60,13 @@ static void*ts_handler(void*args){
 	close(fd);
 	return NULL;
 }
-void ts_init(char*dev){
-	char*x=strdup(dev);
-	if(!x)return;
-	tlog_info("starting touchscreen thread with device '%s'\n",x);
-	if(tsp!=0)tlog_warn("touchscreen thread already running\n");
-	else if(pthread_create(&tsp,NULL,ts_handler,(void*)x)!=0)telog_error("create thread failed");
+void ts_init(char*dev,int fd){
+	if(fd<0||!dev)return;
+	static int xfd;
+	xfd=fd;
+	tlog_info("starting touchscreen thread with device '%s'",dev);
+	if(tsp!=0)tlog_warn("touchscreen thread already running");
+	else if(pthread_create(&tsp,NULL,ts_handler,&xfd)!=0)telog_error("create thread failed");
 	else pthread_setname_np(tsp,"TouchScreen Thread");
 }
 bool ts_read(struct _lv_indev_drv_t*indev_drv __attribute__((unused)),lv_indev_data_t*data){
@@ -81,13 +78,13 @@ bool ts_read(struct _lv_indev_drv_t*indev_drv __attribute__((unused)),lv_indev_d
 int ts_scan_init(void){
 	tlog_info("probing touchscreen devices");
 	char path[32]={0},name[256]={0};
-	int fd,i;
-	for(i=0;i<32;i++){
+	static int fd;
+	for(int i=0;i<32;i++){
 		unsigned char mask[EV_MAX/8+1];
 		memset(path,0,32);
 		memset(name,0,256);
 		snprintf(path,31,_PATH_DEV"/input/event%d",i);
-		if((fd=open(path,O_RDONLY))<0){
+		if((fd=open(path,O_RDONLY|O_CLOEXEC))<0){
 			if(errno!=ENOENT)telog_warn("failed to open %s",path);
 			continue;
 		}
@@ -98,14 +95,16 @@ int ts_scan_init(void){
 		if(ioctl(fd,EVIOCGBIT(0,sizeof(mask)),mask)<0)telog_warn("failed to event%d ioctl EVIOCGBIT",i);
 		else for(int j=0;j<EV_MAX;j++)if((mask[j/8]&(1<<(j%8)))&&j==EV_ABS){
 			tlog_debug("event%d name: '%s'\n",i,name);
-			tlog_info("set event%d as default touchscreen\n",i);
+			tlog_info("set event%d as default touchscreen",i);
 			goto found;
 		}
 		close(fd);
 	}
 	tlog_error("no touchscreen found");
 	return -1;
-	found:ts_init(path);return 0;
+	found:
+	ts_init(path,fd);
+	return 0;
 }
 static void _register(void){
 	lv_indev_drv_t indev_drv;
@@ -114,5 +113,5 @@ static void _register(void){
 	indev_drv.read_cb=ts_read;
 	lv_indev_drv_register(&indev_drv);
 }
-void ts_register(char*dev){ts_init(dev);_register();}
+void ts_register(char*dev){ts_init(dev,open(dev,O_RDONLY|O_CLOEXEC));_register();}
 void ts_scan_register(void){ts_scan_init();_register();}

@@ -7,6 +7,7 @@ add_library(init_gui STATIC
 	drivers/fbdev.c
 	drivers/ts.c
 	drivers/gtk.c
+	drivers/sdl2.c
 	filesystem.c
 	drivers.c
 	freetype.c

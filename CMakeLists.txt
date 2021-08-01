@@ -14,6 +14,7 @@ option(ENABLE_ASAN        "Enable Address Sanitizer"                          OF
 option(ENABLE_INITSHELL   "Enable builtin shell"                              ON)
 option(ENABLE_DRM         "Enable DRM"                                        ON)
 option(ENABLE_GTK         "Enable GTK"                                        OFF)
+option(ENABLE_SDL2        "Enable SDL2"                                       OFF)
 option(ENABLE_GUI         "Enable LVGL based GUI"                             ON)
 option(ENABLE_FREETYPE2   "Enable FreeType 2 for GUI fonts"                   ON)
 option(ENABLE_FDISK       "Enable libfdisk for GUI partition tools"           ON)
@@ -30,6 +31,10 @@ endif()
 
 if("${ENABLE_GTK}" STREQUAL "ON")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_GTK=1")
+endif()
+
+if("${ENABLE_SDL2}" STREQUAL "ON")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_SDL2=1")
 endif()
 
 if("${ENABLE_GUI}" STREQUAL "ON")

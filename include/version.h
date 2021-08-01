@@ -60,6 +60,12 @@
 #define _FEATURE_GTK
 #endif
 
+#ifdef ENABLE_SDL2
+#define _FEATURE_SDL2 "SDL2 "
+#else
+#define _FEATURE_SDL2
+#endif
+
 #define _FEATURE_MOUNT "MOUNT"
 
 #define FEATURES \
@@ -72,6 +78,7 @@
 	_FEATURE_GUI \
 	_FEATURE_DRM \
 	_FEATURE_GTK \
+	_FEATURE_SDL2 \
 	_FEATURE_MOUNT
 
 #define VERSION_INFO \

@@ -3,7 +3,9 @@
 #include"gui.h"
 #include"gui_draw.h"
 struct sysbar{
+	int size;
 	lv_obj_t*screen;
+	lv_obj_t*content;
 	struct{
 		lv_obj_t*bar;
 		struct{

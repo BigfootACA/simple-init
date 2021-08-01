@@ -8,6 +8,7 @@
 #include"lvgl.h"
 #include"logger.h"
 #include"gui.h"
+#include"sysbar.h"
 #include"guidrv.h"
 #define TAG "gui"
 int gui_dpi=400;
@@ -69,7 +70,8 @@ int gui_init(draw_func draw){
 	gui_sx=0,gui_sy=0,gui_sw=gui_w,gui_sh=gui_h;
 	tlog_debug("driver init done");
 	if(!(screen=lv_scr_act()))return trlog_error(-1,"failed to get screen");
-	draw(screen);
+	sysbar_draw(screen);
+	draw(sysbar.content);
 	sem_init(&gui_wait,0,0);
 	while(run){
 		if(lv_disp_get_inactive_time(NULL)<10000){

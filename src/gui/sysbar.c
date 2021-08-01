@@ -53,7 +53,7 @@ static void keyboard_toggle(lv_obj_t*obj,lv_event_t e){
 	int w=gui_w,h=gui_h/3;
 	sysbar.keyboard=lv_keyboard_create(sysbar.screen,NULL);
 	lv_obj_set_size(sysbar.keyboard,w,h);
-	lv_obj_set_y(sysbar.keyboard,gui_h-gui_sy-h);
+	lv_obj_set_y(sysbar.keyboard,gui_h-sysbar.size-h);
 	lv_obj_set_event_cb(sysbar.keyboard,keyboard_toggle);
 }
 
@@ -74,7 +74,7 @@ static lv_obj_t*draw_bottom_button(char*symbol,lv_coord_t x,lv_event_cb_t cb){
 	lv_obj_set_symbol(text,LV_STATE_DEFAULT,LV_LABEL_PART_MAIN);
 	lv_label_set_text(text,symbol);
 	lv_obj_add_style(btn,LV_BTN_PART_MAIN,&sysbar.bottom.btn_style);
-	lv_obj_set_size(btn,gui_sy*2,gui_sy-bi);
+	lv_obj_set_size(btn,sysbar.size*2,sysbar.size-bi);
 	lv_obj_align(btn,NULL,LV_ALIGN_IN_TOP_MID,x,bi);
 	if(cb)lv_obj_set_event_cb(btn,cb);
 	return btn;
@@ -82,21 +82,21 @@ static lv_obj_t*draw_bottom_button(char*symbol,lv_coord_t x,lv_event_cb_t cb){
 
 static void sysbar_draw_bottom(){
 	sysbar.bottom.bar=lv_obj_create(sysbar.screen,NULL);
-	lv_obj_set_size(sysbar.bottom.bar,gui_w,gui_sy);
+	lv_obj_set_size(sysbar.bottom.bar,gui_w,sysbar.size);
 	lv_obj_align(sysbar.bottom.bar,NULL,LV_ALIGN_IN_BOTTOM_LEFT,0,0);
 	set_bar_style(sysbar.bottom.bar,LV_OBJ_PART_MAIN);
 
 	int bm=gui_dpi/20;
-	sysbar.bottom.content.back=draw_bottom_button(LV_SYMBOL_LEFT,-(gui_sy*3+(bm*2)),NULL);
-	sysbar.bottom.content.home=draw_bottom_button(LV_SYMBOL_HOME,-(gui_sy+bm),NULL);
-	sysbar.bottom.content.keyboard=draw_bottom_button(LV_SYMBOL_KEYBOARD,gui_sy+bm,keyboard_toggle);
-	sysbar.bottom.content.power=draw_bottom_button(LV_SYMBOL_POWER,gui_sy*3+(bm*2),NULL);
+	sysbar.bottom.content.back=draw_bottom_button(LV_SYMBOL_LEFT,-(sysbar.size*3+(bm*2)),NULL);
+	sysbar.bottom.content.home=draw_bottom_button(LV_SYMBOL_HOME,-(sysbar.size+bm),NULL);
+	sysbar.bottom.content.keyboard=draw_bottom_button(LV_SYMBOL_KEYBOARD,sysbar.size+bm,keyboard_toggle);
+	sysbar.bottom.content.power=draw_bottom_button(LV_SYMBOL_POWER,sysbar.size*3+(bm*2),NULL);
 }
 
 static void sysbar_draw_top(){
 	int x=gui_dpi/10,y=gui_dpi/20;
 	sysbar.top.bar=lv_obj_create(sysbar.screen,NULL);
-	lv_obj_set_size(sysbar.top.bar,gui_w,gui_sy);
+	lv_obj_set_size(sysbar.top.bar,gui_w,sysbar.size);
 	lv_obj_align(sysbar.top.bar,NULL,LV_ALIGN_IN_TOP_LEFT,0,0);
 	set_bar_style(sysbar.top.bar,LV_OBJ_PART_MAIN);
 
@@ -120,11 +120,17 @@ static void sysbar_draw_top(){
 
 int sysbar_draw(lv_obj_t*scr){
 	sysbar.screen=scr;
-	gui_sy=24+(gui_dpi/10);
-	gui_sh=gui_h-(gui_sy*2);
+	sysbar.size=24+(gui_dpi/10);
+	gui_sh=gui_h-(sysbar.size*2);
 	sysbar_draw_top();
 	sysbar_draw_bottom();
 	sysbar_thread(&sysbar);
+
+	sysbar.content=lv_obj_create(scr,NULL);
+	lv_obj_set_size(sysbar.content,gui_sw,gui_sh);
+	lv_obj_set_pos(sysbar.content,0,sysbar.size);
+	lv_theme_apply(sysbar.content,LV_THEME_SCR);
+
 	lv_task_create(sysbar_thread_cb,5000,LV_TASK_PRIO_LOW,&sysbar);
 	return 0;
 }

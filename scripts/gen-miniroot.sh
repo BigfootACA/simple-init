@@ -28,11 +28,11 @@ init_busybox "${MINIROOT}"
 if [ -f "${MINIDISK}" ]
 then rm -f "${MINIDISK}"
 fi
+fallocate -l "${MINISIZE}" "${MINIDISK}"
 mke2fs \
 	-F \
 	-t ext2 \
 	-d "${MINIROOT}" \
 	-L root \
-	"${MINIDISK}" \
-	"${MINISIZE}"
+	"${MINIDISK}"
 popd >/dev/null

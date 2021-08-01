@@ -29,6 +29,7 @@ struct drm_buffer{
 };
 static struct drm_dev{
 	int fd,sfd,bnfd;
+	bool blank;
 	uint32_t
 		conn_id,
 		enc_id,
@@ -420,9 +421,29 @@ static int drm_get_brightness(){
 	return led_get_brightness_percent(drm_dev.bnfd);
 }
 static void drm_set_brightness(int value){
-	if(drm_dev.bnfd<0)errno=ENOTSUP;
-	else led_set_brightness_percent(drm_dev.bnfd,value);
+	if(drm_dev.bnfd<0){
+		errno=ENOTSUP;
+		return;
+	}
+	led_set_brightness_percent(drm_dev.bnfd,value);
 	telog_debug("set backlight to %d%%",value);
+	if(value>0)return;
+	if(drm_dev.blank){
+		errno=0;
+		drm_dev.blank=false;
+		drmModeSetCrtc(
+			drm_dev.fd,drm_dev.crtc_id,
+			drm_dev.cur_bufs[1]->fb_handle,
+			0,0,&drm_dev.conn_id,1,
+			&drm_dev.mode
+		);
+		telog_debug("screen resume");
+	}else{
+		errno=0;
+		drm_dev.blank=true;
+		drmModeSetCrtc(drm_dev.fd, drm_dev.crtc_id,0,0,0,NULL,0,NULL);
+		telog_debug("screen suspend");
+	}
 }
 static int drm_open(int fd,int sfd){
 	int flags;

@@ -8,6 +8,7 @@
 #include"lvgl.h"
 #include"logger.h"
 #include"gui.h"
+#include"guidrv.h"
 #define TAG "gui"
 int gui_dpi=400;
 uint32_t gui_w=-1,gui_h=-1;

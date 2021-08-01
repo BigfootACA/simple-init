@@ -1,6 +1,6 @@
 #include<stdlib.h>
 #include"lvgl.h"
-#include"gui.h"
+#include"guidrv.h"
 #include"logger.h"
 #include"defines.h"
 #define TAG "guidrv"

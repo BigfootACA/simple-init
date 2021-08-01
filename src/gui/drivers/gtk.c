@@ -6,6 +6,7 @@
 #include<sys/time.h>
 #include"lvgl.h"
 #include"gui.h"
+#include"../guidrv.h"
 #include"logger.h"
 #include"hardware.h"
 #define TAG "gtk"

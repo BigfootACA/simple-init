@@ -17,6 +17,7 @@
 #include"logger.h"
 #include"lvgl.h"
 #include"gui.h"
+#include"../guidrv.h"
 #define TAG "fbdev"
 static pthread_t fbrt;
 static char*fbp=0;

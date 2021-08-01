@@ -17,6 +17,7 @@ uint32_t gui_w=-1,gui_h=-1;
 uint32_t gui_sw,gui_sh,gui_sx,gui_sy;
 lv_font_t*gui_font=NULL;
 lv_font_t*symbol_font=NULL;
+lv_group_t*gui_grp=NULL;
 bool run=true;
 static bool gui_sleep=false;
 static sem_t gui_wait;
@@ -58,6 +59,7 @@ int gui_init(draw_func draw){
 	if(!gui_font)
 		return terlog_error(-1,"failed to load font");
 	lv_init();
+	gui_grp=lv_group_create();
 	if(guidrv_init(&gui_w,&gui_h,&gui_dpi)<0)return -1;
 	gui_sx=0,gui_sy=0,gui_sw=gui_w,gui_sh=gui_h;
 	tlog_debug("driver init done");

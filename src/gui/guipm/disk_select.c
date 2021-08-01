@@ -155,6 +155,7 @@ static void disks_add_item(int blk,struct disk_info*k){
 	lv_obj_set_size(k->btn,bw,xdpi*5);
 	lv_obj_add_style(k->btn,LV_BTN_PART_MAIN,&item_style);
 	lv_obj_set_event_cb(k->btn,disk_click);
+	lv_group_add_obj(gui_grp,k->btn);
 
 	// line for button text
 	lv_obj_t*line=lv_line_create(k->btn,NULL);
@@ -333,8 +334,8 @@ void guipm_draw_disk_sel(lv_obj_t*screen){
 	lv_style_set_border_width(&item_style,LV_STATE_CHECKED,0);
 	lv_style_set_border_color(&item_style,LV_STATE_DEFAULT,click);
 	lv_style_set_outline_width(&item_style,LV_STATE_PRESSED,0);
-	lv_style_set_outline_width(&item_style,LV_STATE_FOCUSED,0);
-	lv_style_set_outline_width(&item_style,LV_STATE_DEFAULT,0);
+	lv_style_set_outline_width(&item_style,LV_STATE_DEFAULT,1);
+	lv_style_set_outline_color(&item_style,LV_STATE_DEFAULT,bg);
 	lv_style_set_bg_color(&item_style,LV_STATE_PRESSED,click);
 	lv_style_set_bg_color(&item_style,LV_STATE_CHECKED,bg);
 	lv_style_set_bg_color(&item_style,LV_STATE_CHECKED|LV_STATE_PRESSED,bg);
@@ -367,22 +368,19 @@ void guipm_draw_disk_sel(lv_obj_t*screen){
 	lv_style_init(&btn_style);
 	lv_style_set_radius(&btn_style,LV_STATE_DEFAULT,2);
 	lv_style_set_outline_width(&btn_style,LV_STATE_PRESSED,0);
-	lv_style_set_outline_width(&btn_style,LV_STATE_FOCUSED,0);
 
 	// show all checkbox
-	static lv_style_t chk_style,bul_style;
+	static lv_style_t chk_style;
 	lv_style_init(&chk_style);
-	lv_style_init(&bul_style);
-	if(symbol_font)lv_style_set_text_font(&bul_style,LV_STATE_CHECKED,symbol_font);
 	lv_style_set_outline_width(&chk_style,LV_STATE_DEFAULT,0);
 	lv_style_set_outline_width(&chk_style,LV_STATE_FOCUSED,0);
 	show_all=lv_checkbox_create(selscr,NULL);
 	lv_obj_set_pos(show_all,xdpi,gui_sh-(bth*2)-(xdpi*2));
 	lv_obj_set_size(show_all,gui_sw/3-(xdpi*2),bth);
 	lv_obj_add_style(show_all,LV_CHECKBOX_PART_BG,&chk_style);
-	lv_obj_add_style(show_all,LV_CHECKBOX_PART_BULLET,&bul_style);
 	lv_obj_set_event_cb(show_all,show_all_click);
 	lv_checkbox_set_text(show_all,_("Show all blocks"));
+	lv_group_add_obj(gui_grp,show_all);
 
 	// ok button
 	btn_ok=lv_btn_create(selscr,NULL);
@@ -392,6 +390,7 @@ void guipm_draw_disk_sel(lv_obj_t*screen){
 	lv_obj_add_state(btn_ok,LV_STATE_CHECKED|LV_STATE_DISABLED);
 	lv_obj_set_event_cb(btn_ok,ok_click);
 	lv_label_set_text(lv_label_create(btn_ok,NULL),_("OK"));
+	lv_group_add_obj(gui_grp,btn_ok);
 
 	// refresh button
 	btn_refresh=lv_btn_create(selscr,NULL);
@@ -401,6 +400,7 @@ void guipm_draw_disk_sel(lv_obj_t*screen){
 	lv_obj_add_state(btn_refresh,LV_STATE_CHECKED);
 	lv_obj_set_event_cb(btn_refresh,refresh_click);
 	lv_label_set_text(lv_label_create(btn_refresh,NULL),_("Refresh"));
+	lv_group_add_obj(gui_grp,btn_refresh);
 
 	// cancel button
 	btn_cancel=lv_btn_create(selscr,NULL);
@@ -409,6 +409,7 @@ void guipm_draw_disk_sel(lv_obj_t*screen){
 	lv_obj_add_style(btn_cancel,0,&btn_style);
 	lv_obj_add_state(btn_cancel,LV_STATE_CHECKED);
 	lv_label_set_text(lv_label_create(btn_cancel,NULL),_("Cancel"));
+	lv_group_add_obj(gui_grp,btn_cancel);
 
 	guipm_disk_reload();
 }

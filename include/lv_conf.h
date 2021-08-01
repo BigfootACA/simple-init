@@ -23,11 +23,10 @@ extern uint32_t custom_tick_get();
 #define LV_DISP_SMALL_LIMIT                 30
 #define LV_DISP_MEDIUM_LIMIT                50
 #define LV_DISP_LARGE_LIMIT                 70
-#define LV_MEM_CUSTOM                       0
-#define LV_MEM_SIZE                         (64U*1024U)
-#define LV_MEM_ATTR
-#define LV_MEM_ADR                          0
-#define LV_MEM_AUTO_DEFRAG                  1
+#define LV_MEM_CUSTOM                       1
+#define LV_MEM_CUSTOM_INCLUDE               <stdlib.h>
+#define LV_MEM_CUSTOM_ALLOC                 malloc
+#define LV_MEM_CUSTOM_FREE                  free
 #define LV_ENABLE_GC                        0
 #define LV_INDEV_DEF_READ_PERIOD            30
 #define LV_INDEV_DEF_DRAG_LIMIT             10

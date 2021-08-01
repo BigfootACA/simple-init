@@ -88,6 +88,17 @@ void lv_freetype_destroy(void){
 	FT_Done_FreeType(lib);
 }
 
+static FT_UInt cmapcache_lookup(const lv_font_t*f,FTC_ImageTypeRec*dst,uint32_t l){
+	lv_font_fmt_ft_dsc_t*dsc=(lv_font_fmt_ft_dsc_t*)(f->dsc);
+	FT_Face face;
+	FTC_FaceID fid=(FTC_FaceID)dsc->face_id;
+	FTC_Manager_LookupFace(cmgr,fid,&face);
+	dst->face_id=fid;
+	dst->flags=FT_LOAD_RENDER|FT_LOAD_TARGET_NORMAL;
+	dst->height=dsc->height,dst->width=dsc->height;
+	return FTC_CMapCache_Lookup(cmc,fid,FT_Get_Charmap_Index(face->charmap),l);
+}
+
 static bool get_glyph_dsc_cb(
 	const lv_font_t*f,
 	lv_font_glyph_dsc_t*d,
@@ -100,15 +111,9 @@ static bool get_glyph_dsc_cb(
 		d->adv_w=0,d->bpp=0;
 		return true;
 	}
-	lv_font_fmt_ft_dsc_t*dsc=(lv_font_fmt_ft_dsc_t*)(f->dsc);
-	FT_Face face;
 	FTC_ImageTypeRec dst;
-	FTC_FaceID fid=(FTC_FaceID)dsc->face_id;
-	FTC_Manager_LookupFace(cmgr,fid,&face);
-	dst.face_id=fid;
-	dst.flags=FT_LOAD_RENDER|FT_LOAD_TARGET_NORMAL;
-	dst.height=dsc->height,dst.width=dsc->height;
-	FT_UInt gi=FTC_CMapCache_Lookup(cmc,fid,FT_Get_Charmap_Index(face->charmap),l);
+	FT_UInt gi=cmapcache_lookup(f,&dst,l);
+	if(gi<=0&&f==gui_font&&symbol_font)gi=cmapcache_lookup(symbol_font,&dst,l);
 	if(FTC_SBitCache_Lookup(sc,&dst,gi,&sb,NULL)!=0)telog_error("SBitCache_Lookup error");
 	d->box_h=sb->height,d->box_w=sb->width;
 	d->ofs_x=sb->left,d->ofs_y=sb->top-sb->height;

@@ -47,12 +47,16 @@ static void keyboard_toggle(lv_obj_t*obj,lv_event_t e){
 	}
 	if(sysbar.keyboard){
 		lv_obj_del(sysbar.keyboard);
+		lv_obj_set_height(sysbar.content,gui_sh);
+		lv_page_set_scrlbar_mode(sysbar.content,LV_SCROLLBAR_MODE_HIDE);
 		sysbar.keyboard=NULL;
 		return;
 	}
 	int w=gui_w,h=gui_h/3;
 	sysbar.keyboard=lv_keyboard_create(sysbar.screen,NULL);
 	lv_obj_set_size(sysbar.keyboard,w,h);
+	lv_obj_set_height(sysbar.content,gui_sh-h);
+	lv_page_set_scrlbar_mode(sysbar.content,LV_SCROLLBAR_MODE_UNHIDE);
 	lv_obj_set_y(sysbar.keyboard,gui_h-sysbar.size-h);
 	lv_obj_set_event_cb(sysbar.keyboard,keyboard_toggle);
 }
@@ -125,7 +129,7 @@ int sysbar_draw(lv_obj_t*scr){
 	sysbar_draw_bottom();
 	sysbar_thread(&sysbar);
 
-	sysbar.content=lv_obj_create(scr,NULL);
+	sysbar.content=lv_page_create(scr,NULL);
 	lv_obj_set_size(sysbar.content,gui_sw,gui_sh);
 	lv_obj_set_pos(sysbar.content,0,sysbar.size);
 	lv_theme_apply(sysbar.content,LV_THEME_SCR);

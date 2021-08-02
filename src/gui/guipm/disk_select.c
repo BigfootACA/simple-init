@@ -108,6 +108,7 @@ static int get_fdisk_ctx(struct disk_info*k){
 	if(fdisk_assign_device(k->ctx,k->path,true)!=0){
 		telog_warn("failed assign block %s to fdisk context",k->name);
 		fdisk_unref_context(k->ctx);
+		k->ctx=NULL,k->lbl=NULL;
 		return -1;
 	}
 	k->lbl=fdisk_get_label(k->ctx,NULL);

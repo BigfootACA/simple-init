@@ -5,7 +5,7 @@
 #include"logger.h"
 #include"lvgl.h"
 #include"gui.h"
-#include"font.h"
+#include"../font.h"
 #include FT_FREETYPE_H
 #include FT_GLYPH_H
 #include FT_CACHE_H

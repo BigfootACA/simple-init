@@ -2,6 +2,7 @@
 #include"defines.h"
 #include"lvgl.h"
 #include"gui.h"
+#include"activity.h"
 
 static lv_style_t style;
 static lv_obj_t*screen;
@@ -35,6 +36,14 @@ static void _draw(lv_obj_t*scr){
 	add_button(1,3,_("Multi-Boot Manage"));
 	add_button(0,4,_("Reboot Menu"));
 	add_button(1,4,_("Loggerd Viewer"));
+
+	guiact_register_activity(&(struct gui_activity){
+		.name="guiapp",
+		.ask_exit=NULL,
+		.quiet_exit=NULL,
+		.back=false,
+		.page=NULL
+	});
 }
 
 int guiapp_main(int argc __attribute((unused)),char**argv __attribute((unused))){

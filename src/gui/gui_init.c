@@ -55,8 +55,7 @@ void guess_font_size(){
 	tlog_debug("select font size %d/%d based on dpi",gui_font_size,gui_font_size_small);
 }
 
-int gui_init(draw_func draw){
-	lv_obj_t*screen;
+static int gui_pre_init(){
 	lv_init();
 	gui_grp=lv_group_create();
 	if(guidrv_init(&gui_w,&gui_h,&gui_dpi)<0)return -1;
@@ -86,8 +85,29 @@ int gui_init(draw_func draw){
 		LV_THEME_DEFAULT_COLOR_SECONDARY,
 		LV_THEME_DEFAULT_FLAG,
 		gui_font_small,gui_font,gui_font,gui_font
-	);
+		);
 	lv_theme_set_act(th);
+	return 0;
+}
+
+static void gui_enter_sleep(){
+	int o=guidrv_get_brightness();
+	if(o<=0)o=100;
+	if(o>20)guidrv_set_brightness(20);
+	alarm(20);
+	signal(SIGALRM,off_screen);
+	tlog_debug("enter sleep");
+	gui_sleep=true;
+	sem_wait(&gui_wait);
+	gui_sleep=false;
+	alarm(0);
+	guidrv_set_brightness(o);
+	tlog_debug("quit sleep");
+}
+
+int gui_init(draw_func draw){
+	if(gui_pre_init()<0)return -1;
+	lv_obj_t*screen;
 	if(!(screen=lv_scr_act()))return trlog_error(-1,"failed to get screen");
 	sysbar_draw(screen);
 	draw(sysbar.content);
@@ -96,20 +116,7 @@ int gui_init(draw_func draw){
 		if(lv_disp_get_inactive_time(NULL)<10000){
 			lv_task_handler();
 			guidrv_taskhandler();
-		}else{
-			int o=guidrv_get_brightness();
-			if(o<=0)o=100;
-			if(o>20)guidrv_set_brightness(20);
-			alarm(20);
-			signal(SIGALRM,off_screen);
-			tlog_debug("enter sleep");
-			gui_sleep=true;
-			sem_wait(&gui_wait);
-			gui_sleep=false;
-			alarm(0);
-			guidrv_set_brightness(o);
-			tlog_debug("quit sleep");
-		}
+		}else gui_enter_sleep();
 		usleep(30000);
 	}
 	gui_do_quit();

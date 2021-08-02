@@ -3,6 +3,7 @@
 #define DIS_X(x) (int)((gui_w)/100*(x))
 #define DIS_Y(y) (int)((gui_h)/200*(y))
 typedef void (*draw_func)(lv_obj_t*);
+extern int gui_font_size;
 extern uint32_t gui_w,gui_h;
 extern uint32_t gui_sw,gui_sh,gui_sx,gui_sy;
 extern lv_font_t*gui_font;

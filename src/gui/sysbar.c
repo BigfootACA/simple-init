@@ -123,7 +123,7 @@ static void sysbar_draw_top(){
 
 int sysbar_draw(lv_obj_t*scr){
 	sysbar.screen=scr;
-	sysbar.size=24+(gui_dpi/10);
+	sysbar.size=gui_font_size+(gui_dpi/10);
 	gui_sh=gui_h-(sysbar.size*2);
 	sysbar_draw_top();
 	sysbar_draw_bottom();

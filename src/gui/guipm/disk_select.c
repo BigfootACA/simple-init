@@ -314,7 +314,7 @@ static void show_all_click(lv_obj_t*obj,lv_event_t e){
 void guipm_draw_disk_sel(lv_obj_t*screen){
 
 	xdpi=gui_dpi/10;
-	int mar=(xdpi/2),btw=gui_sw/3-(xdpi*2),bth=gui_sh/xdpi,btt=gui_sh-bth-xdpi;
+	int mar=(xdpi/2),btw=gui_sw/3-(xdpi*2),bth=gui_font_size+xdpi,btt=gui_sh-bth-xdpi;
 
 	static lv_style_t scr_style;
 	lv_style_init(&scr_style);

@@ -200,7 +200,7 @@ static int fbdev_scan_init(){
 static int fbdev_scan_init_register(){
 	if(fbdev_scan_init()<0)return -1;
 	if(_fbdev_register()<0)return -1;
-	ts_scan_register();
+	input_scan_register();
 	return 0;
 }
 static void fbdev_get_sizes(uint32_t*width,uint32_t*height){

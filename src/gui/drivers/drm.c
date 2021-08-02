@@ -698,7 +698,7 @@ static int drm_scan_init(unsigned int fourcc){
 static int drm_scan_init_register(){
 	if(drm_scan_init(DRM_FORMAT_ARGB8888)<0)return -1;
 	if(_drm_register()<0)return -1;
-	ts_scan_register();
+	input_scan_register();
 	return 0;
 }
 

@@ -31,9 +31,9 @@ static size_t
 	es=sizeof(struct epoll_event),
 	is=sizeof(struct input_event),
 	ds=sizeof(struct in_data);
-static pthread_t tsp=0;
+static pthread_t inp=0;
 static int efd=-1;
-void*ts_handler(void*args __attribute__((unused))){
+static void*input_handler(void*args __attribute__((unused))){
 	for(;;){
 		int r=epoll_wait(efd,evs,64,-1);
 		if(r<0){
@@ -87,7 +87,7 @@ void*ts_handler(void*args __attribute__((unused))){
 	}
 	return NULL;
 }
-bool ts_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
+static bool input_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
 	struct in_data*d=indev_drv->user_data;
 	if(!d->enabled)return false;
 	if(indev_drv->user_data==d)switch(indev_drv->type){
@@ -103,7 +103,7 @@ bool ts_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
 	}
 	return false;
 }
-int init_epoll(){
+static int init_epoll(){
 	if(efd>=0)return 0;
 	if((efd=epoll_create(64))<0){
 		telog_error("epoll_create failed");
@@ -117,7 +117,7 @@ int init_epoll(){
 	memset(evs,0,es*64);
 	return 0;
 }
-struct in_data*get_unused_in_data(){
+static struct in_data*get_unused_in_data(){
 	int x;
 	struct in_data*d;
 	for(x=0;x<32;x++){
@@ -134,7 +134,7 @@ struct in_data*get_unused_in_data(){
 	telog_warn("too many input device open");
 	return NULL;
 }
-int ts_init(char*dev,int fd){
+static int input_init(char*dev,int fd){
 	if(fd<0||!dev)return -1;
 	bool support=false;
 	unsigned char mask[EV_MAX/8+1];
@@ -160,7 +160,7 @@ int ts_init(char*dev,int fd){
 	}
 	if(!support)return -1;
 	tlog_debug("found input device %s (%s)",dev,d->name);
-	d->indrv.read_cb=ts_read;
+	d->indrv.read_cb=input_read;
 	d->indrv.user_data=d;
 	d->indev=lv_indev_drv_register(&d->indrv);
 	lv_indev_set_group(d->indev,gui_grp);
@@ -169,13 +169,13 @@ int ts_init(char*dev,int fd){
 	d->enabled=true;
 	errno=0;
 	epoll_ctl(efd,EPOLL_CTL_ADD,d->fd,&(struct epoll_event){.events=EPOLLIN,.data.ptr=d});
-	if(tsp!=0)return 0;
+	if(inp!=0)return 0;
 	tlog_info("starting input device thread");
-	if(pthread_create(&tsp,NULL,ts_handler,NULL)!=0)telog_error("create thread failed");
-	else pthread_setname_np(tsp,"TouchScreen Thread");
+	if(pthread_create(&inp,NULL,input_handler,NULL)!=0)telog_error("create thread failed");
+	else pthread_setname_np(inp,"Input Device Thread");
 	return 0;
 }
-int ts_scan_init(void){
+static int input_scan_init(void){
 	tlog_info("probing input devices");
 	bool found=false;
 	char path[32]={0};
@@ -187,11 +187,11 @@ int ts_scan_init(void){
 			if(errno!=ENOENT)telog_warn("failed to open %s",path);
 			continue;
 		}
-		if(ts_init(path,fd)<0)close(fd);
+		if(input_init(path,fd)<0)close(fd);
 		else found=true;
 	}
 	if(!found)tlog_error("no input devices found");
 	return found?0:-1;
 }
-void ts_register(char*dev){ts_init(dev,open(dev,O_RDONLY|O_CLOEXEC));}
-void ts_scan_register(void){ts_scan_init();}
+void input_register(char*dev){input_init(dev,open(dev,O_RDONLY|O_CLOEXEC));}
+void input_scan_register(void){input_scan_init();}

@@ -5,7 +5,7 @@ add_library(init_gui STATIC
 	guipm/disk_select.c
 	drivers/drm.c
 	drivers/fbdev.c
-	drivers/ts.c
+	drivers/input.c
 	drivers/gtk.c
 	drivers/sdl2.c
 	filesystem.c

@@ -207,7 +207,7 @@ static int monitor_init(){
 	lv_indev_drv_init(&kb_drv);
 	kb_drv.type=LV_INDEV_TYPE_KEYPAD;
 	kb_drv.read_cb=keyboard_read;
-	lv_indev_drv_register(&kb_drv);
+	lv_indev_set_group(lv_indev_drv_register(&kb_drv),gui_grp);
 
 	// Mouse wheel input device
 	lv_indev_drv_t enc_drv;

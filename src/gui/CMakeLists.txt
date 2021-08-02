@@ -13,4 +13,5 @@ add_library(init_gui STATIC
 	freetype.c
 	guidrv.c
 	sysbar.c
+	activity.c
 )

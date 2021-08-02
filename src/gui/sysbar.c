@@ -3,6 +3,7 @@
 #include"lvgl.h"
 #include"gui.h"
 #include"sysbar.h"
+#include"activity.h"
 struct sysbar sysbar;
 
 static void sysbar_thread(struct sysbar*b){
@@ -61,6 +62,18 @@ static void keyboard_toggle(lv_obj_t*obj,lv_event_t e){
 	lv_obj_set_event_cb(sysbar.keyboard,keyboard_toggle);
 }
 
+static void back_click(lv_obj_t*obj,lv_event_t e){
+	if(obj!=sysbar.bottom.content.back||e!=LV_EVENT_CLICKED)return;
+	if(sysbar.keyboard)keyboard_toggle(sysbar.keyboard,LV_EVENT_CANCEL);
+	else guiact_do_back();
+}
+
+static void home_click(lv_obj_t*obj,lv_event_t e){
+	if(obj!=sysbar.bottom.content.home||e!=LV_EVENT_CLICKED)return;
+	if(sysbar.keyboard)keyboard_toggle(sysbar.keyboard,LV_EVENT_CANCEL);
+	guiact_do_home();
+}
+
 static lv_obj_t*draw_bottom_button(char*symbol,lv_coord_t x,lv_event_cb_t cb){
 	int bi=gui_dpi/200;
 	if(!sysbar.bottom.style_inited){
@@ -91,8 +104,8 @@ static void sysbar_draw_bottom(){
 	set_bar_style(sysbar.bottom.bar,LV_OBJ_PART_MAIN);
 
 	int bm=gui_dpi/20;
-	sysbar.bottom.content.back=draw_bottom_button(LV_SYMBOL_LEFT,-(sysbar.size*3+(bm*2)),NULL);
-	sysbar.bottom.content.home=draw_bottom_button(LV_SYMBOL_HOME,-(sysbar.size+bm),NULL);
+	sysbar.bottom.content.back=draw_bottom_button(LV_SYMBOL_LEFT,-(sysbar.size*3+(bm*2)),back_click);
+	sysbar.bottom.content.home=draw_bottom_button(LV_SYMBOL_HOME,-(sysbar.size+bm),home_click);
 	sysbar.bottom.content.keyboard=draw_bottom_button(LV_SYMBOL_KEYBOARD,sysbar.size+bm,keyboard_toggle);
 	sysbar.bottom.content.power=draw_bottom_button(LV_SYMBOL_POWER,sysbar.size*3+(bm*2),NULL);
 }

@@ -18,7 +18,7 @@ uint32_t gui_sw,gui_sh,gui_sx,gui_sy;
 lv_font_t*gui_font=&lv_font_montserrat_24;
 lv_font_t*symbol_font=NULL;
 lv_group_t*gui_grp=NULL;
-bool run=true;
+bool gui_run=true;
 bool gui_sleep=false;
 static sem_t gui_wait;
 
@@ -86,7 +86,7 @@ int gui_init(draw_func draw){
 	sysbar_draw(screen);
 	draw(sysbar.content);
 	sem_init(&gui_wait,0,0);
-	while(run){
+	while(gui_run){
 		if(lv_disp_get_inactive_time(NULL)<10000){
 			lv_task_handler();
 			guidrv_taskhandler();

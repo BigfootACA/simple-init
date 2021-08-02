@@ -89,6 +89,7 @@ extern uint32_t custom_tick_get();
 #define LV_FONT_UNSCII_8                    0
 #define LV_FONT_CUSTOM_DECLARE \
 	LV_FONT_DECLARE(*gui_font) \
+	LV_FONT_DECLARE(*gui_font_small) \
 	LV_FONT_DECLARE(*symbol_font)
 #define LV_FONT_DEFAULT gui_font
 #define LV_FONT_FMT_TXT_LARGE               1
@@ -102,7 +103,7 @@ extern uint32_t custom_tick_get();
 #define LV_THEME_DEFAULT_COLOR_PRIMARY      LV_COLOR_RED
 #define LV_THEME_DEFAULT_COLOR_SECONDARY    LV_COLOR_BLUE
 #define LV_THEME_DEFAULT_FLAG               LV_THEME_MATERIAL_FLAG_LIGHT
-#define LV_THEME_DEFAULT_FONT_SMALL         LV_FONT_DEFAULT
+#define LV_THEME_DEFAULT_FONT_SMALL         gui_font_small
 #define LV_THEME_DEFAULT_FONT_NORMAL        LV_FONT_DEFAULT
 #define LV_THEME_DEFAULT_FONT_SUBTITLE      LV_FONT_DEFAULT
 #define LV_THEME_DEFAULT_FONT_TITLE         LV_FONT_DEFAULT

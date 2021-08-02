@@ -114,7 +114,7 @@ static bool get_glyph_dsc_cb(
 	}
 	FTC_ImageTypeRec dst;
 	FT_UInt gi=cmapcache_lookup(f,&dst,l);
-	if(gi<=0&&f==gui_font&&symbol_font)gi=cmapcache_lookup(symbol_font,&dst,l);
+	if(gi<=0&&(f==gui_font||f==gui_font_small)&&symbol_font)gi=cmapcache_lookup(symbol_font,&dst,l);
 	if(FTC_SBitCache_Lookup(sc,&dst,gi,&sb,NULL)!=0)telog_error("SBitCache_Lookup error");
 	d->box_h=sb->height,d->box_w=sb->width;
 	d->ofs_x=sb->left,d->ofs_y=sb->top-sb->height;

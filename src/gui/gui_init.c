@@ -12,16 +12,17 @@
 #include"sysbar.h"
 #include"guidrv.h"
 #define TAG "gui"
-int gui_dpi=400,gui_font_size=24;
+int gui_dpi=400,gui_font_size=24,gui_font_size_small=16;
 uint32_t gui_w=-1,gui_h=-1;
 uint32_t gui_sw,gui_sh,gui_sx,gui_sy;
 lv_font_t*gui_font=&lv_font_montserrat_24;
+lv_font_t*gui_font_small=&lv_font_montserrat_24;
 lv_font_t*symbol_font=NULL;
 lv_group_t*gui_grp=NULL;
 bool gui_run=true;
 bool gui_sleep=false;
 static sem_t gui_wait;
-
+static int font_sizes[]={10,16,24,32,48,64,72,96};
 void gui_do_quit(){
 	guidrv_exit();
 }
@@ -42,14 +43,16 @@ static void off_screen(int s __attribute__((unused))){
 }
 
 void guess_font_size(){
-	if(gui_dpi>550)gui_font_size=72;
-	else if(gui_dpi>450)gui_font_size=64;
-	else if(gui_dpi>350)gui_font_size=48;
-	else if(gui_dpi>250)gui_font_size=32;
-	else if(gui_dpi>150)gui_font_size=24;
-	else if(gui_dpi>50)gui_font_size=12;
-	else if(gui_dpi>=0)gui_font_size=8;
-	tlog_debug("select font size %d based on dpi",gui_font_size);
+	int i=0;
+	if(gui_dpi>50)i++;
+	if(gui_dpi>150)i++;
+	if(gui_dpi>250)i++;
+	if(gui_dpi>350)i++;
+	if(gui_dpi>450)i++;
+	if(gui_dpi>550)i++;
+	gui_font_size=font_sizes[i];
+	gui_font_size_small=font_sizes[i-1];
+	tlog_debug("select font size %d/%d based on dpi",gui_font_size,gui_font_size_small);
 }
 
 int gui_init(draw_func draw){
@@ -64,11 +67,14 @@ int gui_init(draw_func draw){
 	lv_freetype_init(64,1,0);
 	char*x=getenv("FONT");
 	gui_font=x?
-		lv_ft_init(x,24,0):
+		lv_ft_init(x,gui_font_size,0):
 		lv_ft_init_rootfs(_PATH_ETC"/default.ttf",gui_font_size,0);
+	gui_font_small=x?
+		lv_ft_init(x,gui_font_size_small,0):
+		lv_ft_init_rootfs(_PATH_ETC"/default.ttf",gui_font_size_small,0);
 	x=getenv("FONT_SYMBOL");
 	symbol_font=x?
-		lv_ft_init(x,24,0):
+		lv_ft_init(x,gui_font_size,0):
 		lv_ft_init_rootfs(_PATH_ETC"/symbols.ttf",gui_font_size,0);
 	if(!symbol_font)
 		telog_error("failed to load symbol font");
@@ -79,7 +85,7 @@ int gui_init(draw_func draw){
 		LV_THEME_DEFAULT_COLOR_PRIMARY,
 		LV_THEME_DEFAULT_COLOR_SECONDARY,
 		LV_THEME_DEFAULT_FLAG,
-		gui_font,gui_font,gui_font,gui_font
+		gui_font_small,gui_font,gui_font,gui_font
 	);
 	lv_theme_set_act(th);
 	if(!(screen=lv_scr_act()))return trlog_error(-1,"failed to get screen");

@@ -1,4 +1,6 @@
 #include"guipm.h"
+#include "../activity.h"
+
 static int xdpi;
 static bool is_show_all=false;
 static lv_style_t f24_style,item_style,gray_style;
@@ -311,6 +313,11 @@ static void show_all_click(lv_obj_t*obj,lv_event_t e){
 	guipm_disk_reload();
 }
 
+static int do_cleanup(void*d __attribute__((unused))){
+	guipm_disk_clear();
+	return 0;
+}
+
 void guipm_draw_disk_sel(lv_obj_t*screen){
 
 	xdpi=gui_dpi/10;
@@ -413,4 +420,12 @@ void guipm_draw_disk_sel(lv_obj_t*screen){
 	lv_group_add_obj(gui_grp,btn_cancel);
 
 	guipm_disk_reload();
+
+	guiact_register_activity(&(struct gui_activity){
+		.name="guipm-disk-select",
+		.ask_exit=NULL,
+		.quiet_exit=do_cleanup,
+		.back=true,
+		.page=selscr
+	});
 }

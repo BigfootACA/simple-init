@@ -14,4 +14,5 @@ extern int guiact_remove_last();
 extern int guiact_do_back();
 extern int guiact_do_home();
 extern int guiact_register_activity(struct gui_activity*act);
+extern bool guiact_has_activity(const char*name);
 #endif

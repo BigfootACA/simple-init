@@ -73,3 +73,13 @@ int guiact_register_activity(struct gui_activity*act){
 	);
 	return 0;
 }
+
+bool guiact_has_activity(const char*name){
+	struct list*acts=guiact_get_activities(),*next,*cur;
+	if((next=acts))do{
+		cur=next;
+		LIST_DATA_DECLARE(d,cur,struct gui_activity*);
+		if(strcmp(d->name,name)==0)return true;
+	}while((next=cur->next));
+	return false;
+}

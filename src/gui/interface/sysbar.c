@@ -74,6 +74,13 @@ static void home_click(lv_obj_t*obj,lv_event_t e){
 	guiact_do_home();
 }
 
+static void power_click(lv_obj_t*obj,lv_event_t e){
+	if(obj!=sysbar.bottom.content.power||e!=LV_EVENT_CLICKED)return;
+	if(guiact_has_activity("reboot-menu"))return;
+	if(sysbar.keyboard)keyboard_toggle(sysbar.keyboard,LV_EVENT_CANCEL);
+	reboot_menu_draw(sysbar.content);
+}
+
 static lv_obj_t*draw_bottom_button(char*symbol,lv_coord_t x,lv_event_cb_t cb){
 	int bi=gui_dpi/200;
 	if(!sysbar.bottom.style_inited){
@@ -107,7 +114,7 @@ static void sysbar_draw_bottom(){
 	sysbar.bottom.content.back=draw_bottom_button(LV_SYMBOL_LEFT,-(sysbar.size*3+(bm*2)),back_click);
 	sysbar.bottom.content.home=draw_bottom_button(LV_SYMBOL_HOME,-(sysbar.size+bm),home_click);
 	sysbar.bottom.content.keyboard=draw_bottom_button(LV_SYMBOL_KEYBOARD,sysbar.size+bm,keyboard_toggle);
-	sysbar.bottom.content.power=draw_bottom_button(LV_SYMBOL_POWER,sysbar.size*3+(bm*2),NULL);
+	sysbar.bottom.content.power=draw_bottom_button(LV_SYMBOL_POWER,sysbar.size*3+(bm*2),power_click);
 }
 
 static void sysbar_draw_top(){

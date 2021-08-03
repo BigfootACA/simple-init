@@ -14,5 +14,6 @@
 #include"str.h"
 #include"gui_draw.h"
 #include"activity.h"
+#include"tools.h"
 #define TAG "guipm"
 #endif

@@ -2,8 +2,8 @@
 #include"hardware.h"
 #include"lvgl.h"
 #include"gui.h"
-#include"../sysbar.h"
-#include"../activity.h"
+#include"sysbar.h"
+#include"activity.h"
 struct sysbar sysbar;
 
 static void sysbar_thread(struct sysbar*b){

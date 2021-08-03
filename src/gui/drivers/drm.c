@@ -17,7 +17,7 @@
 #include"hardware.h"
 #include"lvgl.h"
 #include"gui.h"
-#include"../guidrv.h"
+#include"guidrv.h"
 #include"logger.h"
 #define TAG "drm"
 #define DIV_ROUND_UP(n,d)(((n)+(d)-1)/(d))

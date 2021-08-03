@@ -7,7 +7,7 @@
 #include"logger.h"
 #include"lvgl.h"
 #include"gui.h"
-#include"../guidrv.h"
+#include"guidrv.h"
 #define TAG "sdl2"
 #define SDL2_Z 1
 #define SDL2_W 540

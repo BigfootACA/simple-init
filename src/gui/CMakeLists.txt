@@ -1,3 +1,4 @@
+include_directories(include)
 add_library(init_gui STATIC
 	gui_init.c
 	interface/guiapp.c

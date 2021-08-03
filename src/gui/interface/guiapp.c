@@ -68,11 +68,15 @@ static void add_button(char*name,char*img,draw_func draw){
 	lv_obj_set_pos(icon_w,im,im);
 
 	lv_obj_t*icon=lv_img_create(icon_w,NULL);
-	char path[BUFSIZ]={0};
-	if(!img)img="apps.png";
-	snprintf(path,BUFSIZ-1,IMG_RES"/%s",img);
-	lv_img_set_src(icon,path);
+	char path[BUFSIZ]={0},fail[BUFSIZ]={0};
+	strcpy(fail,IMG_RES"/apps.png");
+	if(img)snprintf(path,BUFSIZ-1,IMG_RES"/%s",img);
+	lv_img_set_src(icon,img?path:fail);
 	lv_img_ext_t*x=lv_obj_get_ext_attr(icon);
+	if((x->w<=0||x->h<=0)&&img){
+		lv_img_set_src(icon,fail);
+		x=lv_obj_get_ext_attr(icon);
+	}
 	if(x->w>0&&x->h>0)lv_img_set_zoom(icon,(int)(((float)ix/MAX(x->w,x->h))*256));
 	lv_img_set_pivot(icon,0,0);
 

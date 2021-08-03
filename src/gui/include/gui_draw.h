@@ -3,4 +3,5 @@
 extern int sysbar_draw(lv_obj_t*scr);
 extern void guipm_draw_title(lv_obj_t*screen);
 extern void guipm_draw_disk_sel(lv_obj_t*screen);
+extern void reboot_menu_draw(lv_obj_t*screen);
 #endif

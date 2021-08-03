@@ -4,6 +4,7 @@ add_library(init_gui STATIC
 	interface/guiapp.c
 	interface/guipm/guipm.c
 	interface/guipm/disk_select.c
+	interface/reboot.c
 	interface/sysbar.c
 	drivers/drm.c
 	drivers/fbdev.c

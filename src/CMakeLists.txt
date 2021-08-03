@@ -16,6 +16,10 @@ if("${ENABLE_FREETYPE2}" STREQUAL "ON")
 	set(DEPENDS ${DEPENDS} freetype2)
 endif()
 
+if("${ENABLE_LODEPNG}" STREQUAL "ON")
+	set(DEPENDS ${DEPENDS} lodepng)
+endif()
+
 if("${ENABLE_FDISK}" STREQUAL "ON")
 	set(DEPENDS ${DEPENDS} fdisk)
 endif()

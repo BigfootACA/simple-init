@@ -9,6 +9,7 @@ add_library(init_gui STATIC
 	drivers/gtk.c
 	drivers/sdl2.c
 	decoders/freetype.c
+	decoders/png.c
 	filesystem.c
 	drivers.c
 	guidrv.c

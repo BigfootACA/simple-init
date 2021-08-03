@@ -17,6 +17,7 @@ option(ENABLE_GTK         "Enable GTK"                                        OF
 option(ENABLE_SDL2        "Enable SDL2"                                       OFF)
 option(ENABLE_GUI         "Enable LVGL based GUI"                             ON)
 option(ENABLE_FREETYPE2   "Enable FreeType 2 for GUI fonts"                   ON)
+option(ENABLE_LODEPNG     "Enable lodepng for GUI png decode"                 ON)
 option(ENABLE_FDISK       "Enable libfdisk for GUI partition tools"           ON)
 option(ENABLE_KMOD        "Enable kmod modules load or remove"                ON)
 option(ENABLE_BLKID       "Enable blkid block detect and evalaute tag"        ON)
@@ -47,6 +48,10 @@ endif()
 
 if("${ENABLE_FREETYPE2}" STREQUAL "ON")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_FREETYPE2=1")
+endif()
+
+if("${ENABLE_LODEPNG}" STREQUAL "ON")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_LODEPNG=1")
 endif()
 
 if("${ENABLE_FDISK}" STREQUAL "ON")

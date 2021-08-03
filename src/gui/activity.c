@@ -30,7 +30,7 @@ int guiact_remove_last(){
 	list*last=list_last(acts);
 	LIST_DATA_DECLARE(l,last,struct gui_activity*);
 	tlog_debug("end activity %s",l->name);
-	if(l->page)lv_obj_del(l->page);
+	if(l->page)lv_obj_del_async(l->page);
 	list_remove_free_def(last);
 	return 0;
 }

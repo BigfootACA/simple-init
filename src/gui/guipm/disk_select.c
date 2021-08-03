@@ -306,6 +306,12 @@ static void ok_click(lv_obj_t*obj,lv_event_t e){
 	lv_obj_align(msg,NULL,LV_ALIGN_CENTER,0,0);
 }
 
+static void cancel_click(lv_obj_t*obj,lv_event_t e){
+	if(e!=LV_EVENT_CLICKED||obj!=btn_cancel)return;
+	tlog_debug("cancel clicked");
+	guiact_do_back();
+}
+
 static void show_all_click(lv_obj_t*obj,lv_event_t e){
 	if(e!=LV_EVENT_VALUE_CHANGED||obj!=show_all)return;
 	is_show_all=lv_checkbox_is_checked(obj);
@@ -416,6 +422,7 @@ void guipm_draw_disk_sel(lv_obj_t*screen){
 	lv_obj_set_size(btn_cancel,btw,bth);
 	lv_obj_add_style(btn_cancel,0,&btn_style);
 	lv_obj_add_state(btn_cancel,LV_STATE_CHECKED);
+	lv_obj_set_event_cb(btn_cancel,cancel_click);
 	lv_label_set_text(lv_label_create(btn_cancel,NULL),_("Cancel"));
 	lv_group_add_obj(gui_grp,btn_cancel);
 

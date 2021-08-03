@@ -119,7 +119,7 @@ extern uint32_t custom_tick_get();
 #define LV_USE_OBJ_REALIGN                  1
 #define LV_USE_EXT_CLICK_AREA               LV_EXT_CLICK_AREA_TINY
 #define LV_USE_ARC                          0
-#define LV_USE_BAR                          0
+#define LV_USE_BAR                          1
 #define LV_USE_BTN                          1
 #define LV_USE_BTNMATRIX                    1
 #define LV_USE_CALENDAR                     0
@@ -142,7 +142,7 @@ extern uint32_t custom_tick_get();
 #define LV_USE_MSGBOX                       1
 #define LV_USE_PAGE                         1
 #define LV_USE_ROLLER                       0
-#define LV_USE_SLIDER                       0
+#define LV_USE_SLIDER                       1
 #define LV_USE_SPINBOX                      0
 #define LV_USE_SWITCH                       0
 #define LV_USE_TEXTAREA                     1

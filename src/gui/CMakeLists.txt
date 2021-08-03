@@ -1,8 +1,9 @@
 add_library(init_gui STATIC
 	gui_init.c
-	guiapp.c
-	guipm/guipm.c
-	guipm/disk_select.c
+	interface/guiapp.c
+	interface/guipm/guipm.c
+	interface/guipm/disk_select.c
+	interface/sysbar.c
 	drivers/drm.c
 	drivers/fbdev.c
 	drivers/input.c
@@ -13,6 +14,5 @@ add_library(init_gui STATIC
 	filesystem.c
 	drivers.c
 	guidrv.c
-	sysbar.c
 	activity.c
 )

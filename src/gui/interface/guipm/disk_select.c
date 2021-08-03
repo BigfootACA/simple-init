@@ -1,5 +1,4 @@
 #include"guipm.h"
-#include "../activity.h"
 
 static int xdpi;
 static bool is_show_all=false;

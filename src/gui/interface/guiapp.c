@@ -4,8 +4,8 @@
 #include"defines.h"
 #include"lvgl.h"
 #include"gui.h"
-#include"gui_draw.h"
-#include"activity.h"
+#include"../gui_draw.h"
+#include"../activity.h"
 #define TAG "guiapp"
 static lv_obj_t*screen,*realscr;
 static int app_num=0;

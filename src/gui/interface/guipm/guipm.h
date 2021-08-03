@@ -12,6 +12,7 @@
 #include"lvgl.h"
 #include"gui.h"
 #include"str.h"
-#include"../gui_draw.h"
+#include"../../gui_draw.h"
+#include"../../activity.h"
 #define TAG "guipm"
 #endif

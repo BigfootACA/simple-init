@@ -10,7 +10,6 @@
 #define TAG "reboot"
 
 static lv_obj_t*scr,*box;
-static lv_style_t bg;
 
 enum reboot_mode{
 	REBOOT,
@@ -75,14 +74,7 @@ static lv_obj_t*add_reboot_button(lv_obj_t*last,enum reboot_mode mode){
 }
 
 void reboot_menu_draw(lv_obj_t*screen){
-	lv_style_init(&bg);
-	lv_style_set_bg_opa(&bg,LV_STATE_DEFAULT,LV_OPA_50);
-	lv_style_set_bg_color(&bg,LV_STATE_DEFAULT,LV_COLOR_BLACK);
-
-	scr=lv_objmask_create(screen,NULL);
-	lv_obj_set_size(scr,gui_sw,gui_sh);
-	lv_obj_set_pos(scr,gui_sx,gui_sy);
-	lv_obj_add_style(scr,LV_OBJMASK_PART_MAIN,&bg);
+	scr=lv_create_opa_mask(screen);
 
 	static lv_style_t bs;
 	lv_style_init(&bs);

@@ -107,7 +107,7 @@ static void _draw(lv_obj_t*scr){
 	add_button(_("Enter TWRP"),             "twrp.png",      NULL);
 	add_button(_("System Info"),            "sysinfo.png",   NULL);
 	add_button(_("Multi-Boot Manage"),      "bootmgr.png",   NULL);
-	add_button(_("Reboot Menu"),            "reboot.png",    NULL);
+	add_button(_("Reboot Menu"),            "reboot.png",    reboot_menu_draw);
 	add_button(_("Loggerd Viewer"),         "logviewer.png", NULL);
 
 	guiact_register_activity(&(struct gui_activity){

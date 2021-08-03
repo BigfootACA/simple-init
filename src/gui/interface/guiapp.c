@@ -6,6 +6,7 @@
 #include"gui.h"
 #include"gui_draw.h"
 #include"activity.h"
+#include"tools.h"
 #define TAG "guiapp"
 static lv_obj_t*screen,*realscr;
 static int app_num=0;
@@ -28,28 +29,10 @@ static void click_btn(lv_obj_t*obj,lv_event_t e){
 	if(!obj||e!=LV_EVENT_CLICKED)return;
 	draw_func f=(draw_func)lv_obj_get_user_data(obj);
 	if(f)f(realscr);
-	else{
-		static lv_style_t bg,btn;
-		static const char*btns[2];
-		btns[0]=_("OK"),btns[1]="";
-		lv_style_init(&bg);
-		lv_style_set_bg_opa(&bg,LV_STATE_DEFAULT,LV_OPA_50);
-		lv_style_set_bg_color(&bg,LV_STATE_DEFAULT,LV_COLOR_BLACK);
-		lv_style_init(&btn);
-		lv_style_set_margin_all(&btn,LV_STATE_DEFAULT,0);
-		lv_style_set_pad_all(&btn,LV_STATE_DEFAULT,gui_dpi/10);
-		lv_style_set_radius(&btn,LV_STATE_DEFAULT,gui_dpi/10);
-		lv_obj_t*mask=lv_objmask_create(screen,NULL);
-		lv_obj_set_size(mask,gui_sw,gui_sh);
-		lv_obj_add_style(mask,LV_OBJMASK_PART_MAIN,&bg);
-		lv_obj_t*msg=lv_msgbox_create(mask,NULL);
-		lv_obj_set_width(msg,gui_sw/6*5);
-		lv_msgbox_set_text(msg,_("This function does not implemented"));
-		lv_msgbox_add_btns(msg,btns);
-		lv_obj_add_style(msg,LV_MSGBOX_PART_BTN,&btn);
-		lv_obj_set_event_cb(msg,ok_msg_click);
-		lv_obj_align(msg,NULL,LV_ALIGN_CENTER,0,0);
-	}
+	else lv_create_ok_msgbox_mask(
+		screen,ok_msg_click,
+		"This function does not implemented"
+	);
 }
 
 static void add_button(char*name,char*img,draw_func draw){

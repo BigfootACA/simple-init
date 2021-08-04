@@ -33,6 +33,7 @@ static lv_obj_t*_lv_create_msgbox(lv_obj_t*par,const char**btns,lv_event_cb_t cb
 	lv_style_set_pad_all(&btn,LV_STATE_DEFAULT,gui_dpi/10);
 	lv_style_set_radius(&btn,LV_STATE_DEFAULT,gui_dpi/10);
 	lv_obj_t*msg=lv_msgbox_create(par,NULL);
+	lv_obj_set_click(msg,false);
 	lv_obj_set_width(msg,gui_sw/6*5);
 	lv_msgbox_set_text(msg,txt);
 	if(btns)lv_msgbox_add_btns(msg,btns);

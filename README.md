@@ -10,27 +10,32 @@ This project has not been completed and may not work properly.
 
 ### Depends
 
-| Library  | Project    | Description                |
-| -------- | ---------- | -------------------------- |
-| blkid    | util-linux | used to find block devices |
-| mount    | util-linux | mount anything             |
-| fdisk    | util-linux | for partition manager      |
-| kmod     | kmod       | load kernel modules        |
-| readline | readline   | builtin initshell support  |
-| gtk3     | gtk3       | GUI on GTK-3 for debugging |
-| libdrm   | libdrm     | GUI on DRM                 |
-| lvgl     | lvgl       | GUI support                |
-| wqy      | wenquanyi  | WQY-MicroHei Font for GUI  |
+| Library     | Project     | Description                |
+| ----------- | ----------- | -------------------------- |
+| blkid       | util-linux  | used to find block devices |
+| mount       | util-linux  | mount anything             |
+| fdisk       | util-linux  | for partition manager      |
+| kmod        | kmod        | load kernel modules        |
+| readline    | readline    | builtin initshell support  |
+| gtk3        | gtk         | GUI on GTK-3 for debugging |
+| sdl2        | sdl         | GUI on SDL2 for debugging  |
+| libdrm      | libdrm      | GUI on DRM                 |
+| lvgl        | lvgl        | GUI support                |
+| wqy         | wenquanyi   | WQY-MicroHei Font for GUI  |
+| fontawesone | fontawesone | Font Awesome Font for GUI  |
+| freetype2   | freetype    | GUI load turetype fonts    |
+| lodepng     | lodepng     | GUI load png pictures      |
 
 ### Code used
 
-| Project    | Description                                     | URL                                                       |
-| ---------- | ----------------------------------------------- | --------------------------------------------------------- |
-| busybox    | some builtin commands                           | https://www.busybox.net                                   |
-| coreutils  | some builtin commands                           | https://www.gnu.org/software/coreutils/                   |
-| util-linux | some builtin commands and block lookup / mount  | https://github.com/karelzak/util-linux                    |
-| lv_drivers | fbdev, drm, gtk driver for LVGL GUI             | https://github.com/lvgl/lv_drivers                        |
-| kmod       | some builtin commands and modules load / unload | https://git.kernel.org/pub/scm/utils/kernel/kmod/kmod.git |
+| Project    | Description                                     | URL                                                          |
+| ---------- | ----------------------------------------------- | ------------------------------------------------------------ |
+| busybox    | some builtin commands                           | https://www.busybox.net                                      |
+| coreutils  | some builtin commands                           | https://www.gnu.org/software/coreutils/                      |
+| util-linux | some builtin commands and block lookup / mount  | https://github.com/karelzak/util-linux                       |
+| lv_drivers | fbdev, drm, gtk driver for LVGL GUI             | https://github.com/lvgl/lv_drivers                           |
+| kmod       | some builtin commands and modules load / unload | https://git.kernel.org/pub/scm/utils/kernel/kmod/kmod.git    |
+| papirus    | GUI icons                                       | https://github.com/PapirusDevelopmentTeam/papirus-icon-theme |
 
 ### Features
 
@@ -76,7 +81,7 @@ This project has not been completed and may not work properly.
   - [x] Execute external commands
   - [x] History
   - [x] Line Edit
-  - [ ] Pipe 
+  - [ ] Pipe
   - [ ] Job Control
   - [ ] Shell Script
   - [x] Shell Prompt
@@ -170,7 +175,8 @@ This project has not been completed and may not work properly.
     - [x] Framebuffer
     - [x] Touchscreen
     - [x] GTK
-    - [ ] Buttons
+    - [x] SDL2
+    - [x] Buttons
   - [ ] Application
     - [ ] File Manager
     - [ ] Partition Manager
@@ -204,7 +210,7 @@ This project has not been completed and may not work properly.
     - [ ] Enter TWRP
       - [ ] Manual select TWRP image
     - [ ] System Info
-    - [ ] Reboot Menu
+    - [x] Reboot Menu
     - [ ] Loggerd Viewer
 - [ ] Remote Control Interface
   - [ ] Over USB

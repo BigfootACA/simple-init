@@ -82,6 +82,7 @@ void reboot_menu_draw(lv_obj_t*screen){
 
 	box=lv_page_create(scr,NULL);
 	lv_obj_add_style(box,LV_PAGE_PART_BG,&bs);
+	lv_obj_set_click(box,false);
 	lv_obj_set_width(box,gui_sw/6*5);
 
 	lv_obj_t*txt=lv_label_create(box,NULL);

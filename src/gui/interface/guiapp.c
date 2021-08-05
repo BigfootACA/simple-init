@@ -27,6 +27,7 @@ static void ok_msg_click(lv_obj_t*obj,lv_event_t e){
 
 static void click_btn(lv_obj_t*obj,lv_event_t e){
 	if(!obj||e!=LV_EVENT_CLICKED)return;
+	if(!guiact_is_active_page(screen))return;
 	draw_func f=(draw_func)lv_obj_get_user_data(obj);
 	if(f)f(realscr);
 	else lv_create_ok_msgbox_mask(

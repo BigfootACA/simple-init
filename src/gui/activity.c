@@ -90,3 +90,13 @@ bool guiact_has_activity_name(const char*name){
 	}while((next=cur->next));
 	return false;
 }
+
+bool guiact_has_activity_page(lv_obj_t*page){
+	struct list*acts=guiact_get_activities(),*next,*cur;
+	if((next=acts))do{
+		cur=next;
+		LIST_DATA_DECLARE(d,cur,struct gui_activity*);
+		if(d->page==page)return true;
+	}while((next=cur->next));
+	return false;
+}

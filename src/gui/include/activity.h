@@ -15,4 +15,5 @@ extern int guiact_do_back();
 extern int guiact_do_home();
 extern int guiact_register_activity(struct gui_activity*act);
 extern bool guiact_has_activity_name(const char*name);
+extern bool guiact_has_activity_page(lv_obj_t*page);
 #endif

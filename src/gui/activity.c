@@ -30,14 +30,24 @@ bool guiact_is_alone(){
 	return !acts||list_is_alone(acts);
 }
 
+static list*guiact_get_last_list(){
+	return list_last(guiact_get_activities());
+}
+
+struct gui_activity*guiact_get_last(){
+	list*last=guiact_get_last_list();
+	return last&&last->data?last->data:NULL;
+}
+static void guiact_remove_last_list(){
+	list_remove_free_def(guiact_get_last_list());
+}
+
 int guiact_remove_last(){
-	list*acts=guiact_get_activities();
-	if(guiact_is_alone())return 0;
-	list*last=list_last(acts);
-	LIST_DATA_DECLARE(l,last,struct gui_activity*);
+	struct gui_activity*l=guiact_get_last();
+	if(guiact_is_alone()||!l)return 0;
 	tlog_debug("end activity %s",l->name);
 	if(l->page)lv_obj_del_async(l->page);
-	list_remove_free_def(last);
+	guiact_remove_last_list();
 	return 0;
 }
 
@@ -46,9 +56,8 @@ int guiact_do_back(){
 		sysbar_keyboard_close();
 		return 0;
 	}
-	list*acts=guiact_get_activities();
-	if(!acts)return guiact_do_exit();
-	LIST_DATA_DECLARE(c,list_last(acts),struct gui_activity*);
+	struct gui_activity*c=guiact_get_last();
+	if(!c)return guiact_do_exit();
 	tlog_debug("do back");
 	if(!c->back)return 0;
 	if(guiact_is_alone())return 0;

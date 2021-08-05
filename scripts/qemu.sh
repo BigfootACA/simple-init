@@ -18,4 +18,5 @@ exec "${QEMU_BIN}" \
 	-device virtio-blk-pci,drive=sdb \
 	-device qxl,xres=540,yres=960 \
 	-vga none \
+	-rtc base=localtime \
 	"$@"

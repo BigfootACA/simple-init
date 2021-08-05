@@ -76,13 +76,11 @@ void sysbar_keyboard_open(){
 
 static void back_click(lv_obj_t*obj,lv_event_t e){
 	if(obj!=sysbar.bottom.content.back||e!=LV_EVENT_CLICKED)return;
-	if(sysbar.keyboard)keyboard_toggle(sysbar.keyboard,LV_EVENT_CANCEL);
-	else guiact_do_back();
+	guiact_do_back();
 }
 
 static void home_click(lv_obj_t*obj,lv_event_t e){
 	if(obj!=sysbar.bottom.content.home||e!=LV_EVENT_CLICKED)return;
-	if(sysbar.keyboard)keyboard_toggle(sysbar.keyboard,LV_EVENT_CANCEL);
 	guiact_do_home();
 }
 

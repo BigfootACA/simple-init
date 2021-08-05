@@ -37,10 +37,11 @@ int guiact_remove_last(){
 
 int guiact_do_back(){
 	list*acts=guiact_get_activities();
-	if(!acts||list_is_alone(acts))return guiact_do_exit();
+	if(!acts)return guiact_do_exit();
 	LIST_DATA_DECLARE(c,list_last(acts),struct gui_activity*);
 	tlog_debug("do back");
 	if(!c->back)return 0;
+	if(list_is_alone(acts))return 0;
 	if(c->ask_exit&&c->ask_exit(NULL)!=0)return 0;
 	if(c->quiet_exit&&c->quiet_exit(NULL)!=0)return 0;
 	return guiact_remove_last();

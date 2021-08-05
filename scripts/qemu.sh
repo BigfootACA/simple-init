@@ -16,4 +16,6 @@ exec "${QEMU_BIN}" \
 	-drive file="${MINIDISK}",format=raw,if=none,id=sdb \
 	-device virtio-blk-pci,drive=sda \
 	-device virtio-blk-pci,drive=sdb \
+	-device qxl,xres=540,yres=960 \
+	-vga none \
 	"$@"

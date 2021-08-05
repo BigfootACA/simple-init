@@ -20,4 +20,6 @@ extern bool guiact_is_name(struct gui_activity*act,const char*name);
 extern bool guiact_is_page(struct gui_activity*act,lv_obj_t*page);
 extern bool guiact_has_activity_name(const char*name);
 extern bool guiact_has_activity_page(lv_obj_t*page);
+extern bool guiact_is_active_name(const char*name);
+extern bool guiact_is_active_page(lv_obj_t*page);
 #endif

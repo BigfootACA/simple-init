@@ -122,3 +122,11 @@ bool guiact_has_activity_page(lv_obj_t*page){
 	}while((next=cur->next));
 	return false;
 }
+
+bool guiact_is_active_name(const char*name){
+	return guiact_is_name(guiact_get_last(),name);
+}
+
+bool guiact_is_active_page(lv_obj_t*page){
+	return guiact_is_page(guiact_get_last(),page);
+}

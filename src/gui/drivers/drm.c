@@ -703,6 +703,7 @@ static int drm_scan_init_register(){
 }
 
 static void drm_get_dpi(int*dpi){
+	if(drm_dev.mmWidth<=0||drm_dev.mmHeight<=0)return;
 	if(dpi)*dpi=DIV_ROUND_UP(drm_dev.width*25400,drm_dev.mmWidth*1000);
 }
 

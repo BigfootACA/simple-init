@@ -23,4 +23,7 @@ struct sysbar{
 	}bottom;
 };
 extern struct sysbar sysbar;
+extern void sysbar_keyboard_toggle();
+extern void sysbar_keyboard_close();
+extern void sysbar_keyboard_open();
 #endif

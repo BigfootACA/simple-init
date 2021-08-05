@@ -62,6 +62,18 @@ static void keyboard_toggle(lv_obj_t*obj,lv_event_t e){
 	lv_obj_set_event_cb(sysbar.keyboard,keyboard_toggle);
 }
 
+void sysbar_keyboard_toggle(){
+	keyboard_toggle(sysbar.bottom.content.keyboard,LV_EVENT_CLICKED);
+}
+
+void sysbar_keyboard_close(){
+	if(sysbar.keyboard)sysbar_keyboard_toggle();
+}
+
+void sysbar_keyboard_open(){
+	if(!sysbar.keyboard)sysbar_keyboard_toggle();
+}
+
 static void back_click(lv_obj_t*obj,lv_event_t e){
 	if(obj!=sysbar.bottom.content.back||e!=LV_EVENT_CLICKED)return;
 	if(sysbar.keyboard)keyboard_toggle(sysbar.keyboard,LV_EVENT_CANCEL);

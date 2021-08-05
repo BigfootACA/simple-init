@@ -3,6 +3,7 @@
 #include"lvgl.h"
 #include"gui.h"
 #include"logger.h"
+#include"sysbar.h"
 #include"activity.h"
 #define TAG "activity"
 
@@ -36,6 +37,10 @@ int guiact_remove_last(){
 }
 
 int guiact_do_back(){
+	if(sysbar.keyboard){
+		sysbar_keyboard_close();
+		return 0;
+	}
 	list*acts=guiact_get_activities();
 	if(!acts)return guiact_do_exit();
 	LIST_DATA_DECLARE(c,list_last(acts),struct gui_activity*);
@@ -48,6 +53,7 @@ int guiact_do_back(){
 }
 
 int guiact_do_home(){
+	sysbar_keyboard_close();
 	list*acts=guiact_get_activities(),*d;
 	if(!acts||list_is_alone(acts))return 0;
 	LIST_DATA_DECLARE(c,list_last(acts),struct gui_activity*);

@@ -305,6 +305,7 @@ static void show_all_click(lv_obj_t*obj,lv_event_t e){
 
 static int do_cleanup(void*d __attribute__((unused))){
 	guipm_disk_clear();
+	is_show_all=false;
 	return 0;
 }
 

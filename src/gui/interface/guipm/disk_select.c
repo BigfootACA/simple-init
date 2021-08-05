@@ -313,9 +313,6 @@ void guipm_draw_disk_sel(lv_obj_t*screen){
 	xdpi=gui_dpi/10;
 	int mar=(xdpi/2),btw=gui_sw/3-(xdpi*2),bth=gui_font_size+xdpi,btt=gui_sh-bth-xdpi;
 
-	static lv_style_t scr_style;
-	lv_style_init(&scr_style);
-	lv_style_set_outline_width(&scr_style,0,0);
 	selscr=lv_obj_create(screen,NULL);
 	lv_obj_set_size(selscr,gui_sw,gui_sh);
 	lv_obj_set_pos(selscr,gui_sx,gui_sy);

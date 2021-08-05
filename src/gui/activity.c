@@ -25,9 +25,14 @@ list*guiact_get_activities(){
 	return activities;
 }
 
+bool guiact_is_alone(){
+	list*acts=guiact_get_activities();
+	return !acts||list_is_alone(acts);
+}
+
 int guiact_remove_last(){
 	list*acts=guiact_get_activities();
-	if(!acts||list_is_alone(acts))return 0;
+	if(guiact_is_alone())return 0;
 	list*last=list_last(acts);
 	LIST_DATA_DECLARE(l,last,struct gui_activity*);
 	tlog_debug("end activity %s",l->name);
@@ -46,7 +51,7 @@ int guiact_do_back(){
 	LIST_DATA_DECLARE(c,list_last(acts),struct gui_activity*);
 	tlog_debug("do back");
 	if(!c->back)return 0;
-	if(list_is_alone(acts))return 0;
+	if(guiact_is_alone())return 0;
 	if(c->ask_exit&&c->ask_exit(NULL)!=0)return 0;
 	if(c->quiet_exit&&c->quiet_exit(NULL)!=0)return 0;
 	return guiact_remove_last();

@@ -95,12 +95,20 @@ int guiact_register_activity(struct gui_activity*act){
 	return 0;
 }
 
+bool guiact_is_name(struct gui_activity*act,const char*name){
+	return act&&name&&strcmp(act->name,name)==0;
+}
+
+bool guiact_is_page(struct gui_activity*act,lv_obj_t*page){
+	return act&&page&&act->page==page;
+}
+
 bool guiact_has_activity_name(const char*name){
 	struct list*acts=guiact_get_activities(),*next,*cur;
 	if((next=acts))do{
 		cur=next;
 		LIST_DATA_DECLARE(d,cur,struct gui_activity*);
-		if(strcmp(d->name,name)==0)return true;
+		if(guiact_is_name(d,name))return true;
 	}while((next=cur->next));
 	return false;
 }
@@ -110,7 +118,7 @@ bool guiact_has_activity_page(lv_obj_t*page){
 	if((next=acts))do{
 		cur=next;
 		LIST_DATA_DECLARE(d,cur,struct gui_activity*);
-		if(d->page==page)return true;
+		if(guiact_is_page(d,page))return true;
 	}while((next=cur->next));
 	return false;
 }

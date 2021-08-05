@@ -16,6 +16,8 @@ extern int guiact_remove_last();
 extern int guiact_do_back();
 extern int guiact_do_home();
 extern int guiact_register_activity(struct gui_activity*act);
+extern bool guiact_is_name(struct gui_activity*act,const char*name);
+extern bool guiact_is_page(struct gui_activity*act,lv_obj_t*page);
 extern bool guiact_has_activity_name(const char*name);
 extern bool guiact_has_activity_page(lv_obj_t*page);
 #endif

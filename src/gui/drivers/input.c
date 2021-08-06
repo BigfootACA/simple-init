@@ -15,7 +15,7 @@
 #include"lvgl.h"
 #include"gui.h"
 struct in_data{
-	bool enabled;
+	bool enabled,mouse;
 	int fd,flags,type;
 	char path[64],name[256];
 	lv_indev_drv_t indrv;
@@ -116,6 +116,14 @@ static bool input_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
 			data->key=d->key;
 			data->state=d->down?LV_INDEV_STATE_PR:LV_INDEV_STATE_REL;
 		break;
+	}
+	if(d->flags<0&&!d->mouse&&gui_cursor&&symbol_font){
+		d->mouse=true;
+		lv_indev_t*in=NULL;
+		while((in=lv_indev_get_next(in)))if(indev_drv==&in->driver){
+			lv_indev_set_cursor(in,gui_cursor);
+			break;
+		}
 	}
 	return false;
 }

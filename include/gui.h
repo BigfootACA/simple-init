@@ -8,6 +8,7 @@ extern uint32_t gui_sw,gui_sh,gui_sx,gui_sy;
 extern lv_font_t*gui_font;
 extern lv_font_t*gui_font_small;
 extern lv_group_t*gui_grp;
+extern lv_obj_t*gui_cursor;
 extern bool gui_sleep,gui_run;
 extern void input_scan_register(void);
 extern int init_lvgl_fs(char letter,char*root,bool debug);

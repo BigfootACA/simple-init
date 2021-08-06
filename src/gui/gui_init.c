@@ -19,6 +19,7 @@ lv_font_t*gui_font=&lv_font_montserrat_24;
 lv_font_t*gui_font_small=&lv_font_montserrat_24;
 lv_font_t*symbol_font=NULL;
 lv_group_t*gui_grp=NULL;
+lv_obj_t*gui_cursor=NULL;
 bool gui_run=true;
 bool gui_sleep=false;
 static sem_t gui_wait;
@@ -112,6 +113,8 @@ int gui_init(draw_func draw){
 	if(gui_pre_init()<0)return -1;
 	lv_obj_t*screen;
 	if(!(screen=lv_scr_act()))return trlog_error(-1,"failed to get screen");
+	gui_cursor=lv_img_create(screen,NULL);
+	lv_img_set_src(gui_cursor,"\xef\x89\x85"); // mouse-pointer
 	sysbar_draw(screen);
 	draw(sysbar.content);
 	sem_init(&gui_wait,0,0);

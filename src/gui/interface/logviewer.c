@@ -38,7 +38,8 @@ void logviewer_draw(lv_obj_t*screen){
 	lv_label_set_long_mode(e->label,LV_LABEL_LONG_EXPAND);
 
 	int fd=open(_PATH_DEV"/logger.log",O_RDONLY);
-	if(fd>=0){
+	if(fd<0)telog_warn("open logger.log failed");
+	else{
 		char buff[BUFSIZ]={0};
 		while(read(fd,buff,BUFSIZ-1)>0){
 			lv_textarea_add_text(view,buff);

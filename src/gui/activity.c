@@ -58,9 +58,9 @@ int guiact_do_back(){
 	}
 	struct gui_activity*c=guiact_get_last();
 	if(!c)return guiact_do_exit();
-	tlog_debug("do back");
 	if(!c->back)return 0;
 	if(guiact_is_alone())return 0;
+	tlog_debug("do back");
 	if(c->ask_exit&&c->ask_exit(NULL)!=0)return 0;
 	if(c->quiet_exit&&c->quiet_exit(NULL)!=0)return 0;
 	return guiact_remove_last();

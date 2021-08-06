@@ -31,8 +31,11 @@ void logviewer_draw(lv_obj_t*screen){
 	lv_textarea_set_cursor_hidden(view,true);
 	lv_textarea_set_one_line(view,false);
 	lv_obj_set_click(view,false);
+	lv_page_set_scrollable_fit2(view,LV_FIT_MAX,LV_FIT_MAX);
 	lv_textarea_set_text(view,"");
 	lv_textarea_set_scrollbar_mode(view,LV_SCROLLBAR_MODE_DRAG);
+	lv_textarea_ext_t*e=lv_obj_get_ext_attr(view);
+	lv_label_set_long_mode(e->label,LV_LABEL_LONG_EXPAND);
 
 	int fd=open(_PATH_DEV"/logger.log",O_RDONLY);
 	if(fd>=0){

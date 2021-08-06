@@ -69,7 +69,7 @@ static void*input_handler(void*args __attribute__((unused))){
 			}
 			if(!gui_sleep)switch(d->indrv.type){
 				case LV_INDEV_TYPE_POINTER:switch(event.type){
-					case EV_SYN:if(event.code==SYN_REPORT){
+					case EV_SYN:if(event.code==SYN_REPORT&&d->flags>=0){
 						if((d->flags&0x03)==0x03){
 							d->flags=0x00;
 							d->last_x=d->last_x_tmp;
@@ -82,9 +82,12 @@ static void*input_handler(void*args __attribute__((unused))){
 						case REL_Y:d->last_y_tmp+=event.value,d->flags|=0x02;break;
 					}break;
 					case EV_ABS:switch(event.code){
-						case ABS_X:case ABS_MT_POSITION_X:d->last_x_tmp=event.value,d->flags|=0x01;break;
-						case ABS_Y:case ABS_MT_POSITION_Y:d->last_y_tmp=event.value,d->flags|=0x02;break;
+						case ABS_X:d->last_x=gui_w*event.value/65536,d->flags=-1;break;
+						case ABS_Y:d->last_y=gui_h*event.value/65536,d->flags=-1;break;
+						case ABS_MT_POSITION_X:d->last_x_tmp=event.value,d->flags|=0x01;break;
+						case ABS_MT_POSITION_Y:d->last_y_tmp=event.value,d->flags|=0x02;break;
 					}break;
+					case EV_KEY:if(event.code==BTN_LEFT)d->down=event.value==1;break;
 				}break;
 				case LV_INDEV_TYPE_KEYPAD:switch(event.type){
 					case EV_KEY:
@@ -102,7 +105,8 @@ static void*input_handler(void*args __attribute__((unused))){
 static bool input_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
 	struct in_data*d=indev_drv->user_data;
 	if(!d->enabled)return false;
-	if(indev_drv->user_data==d)switch(indev_drv->type){
+	if(indev_drv->user_data!=d)return false;
+	switch(indev_drv->type){
 		case LV_INDEV_TYPE_POINTER:
 			data->point.x=d->last_x;
 			data->point.y=d->last_y;

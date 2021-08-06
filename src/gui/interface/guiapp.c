@@ -126,5 +126,6 @@ static void _draw(lv_obj_t*scr){
 }
 
 int guiapp_main(int argc __attribute((unused)),char**argv __attribute((unused))){
+	open_socket_logfd_default();
 	return gui_init(_draw);
 }

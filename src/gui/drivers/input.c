@@ -33,6 +33,23 @@ static size_t
 	ds=sizeof(struct in_data);
 static pthread_t inp=0;
 static int efd=-1;
+static uint32_t keymap(uint16_t key){
+	switch(key){
+		case KEY_ENTER:
+		case '\r':
+		case KEY_POWER:return LV_KEY_ENTER;
+		case KEY_LEFT:
+		case KEY_UP:
+		case KEY_PAGEUP:
+		case KEY_VOLUMEUP:return LV_KEY_PREV;
+		case KEY_DOWN:
+		case KEY_RIGHT:
+		case KEY_PAGEDOWN:
+		case KEY_TAB:
+		case KEY_VOLUMEDOWN:return LV_KEY_NEXT;
+		default:return key;
+	}
+}
 static void*input_handler(void*args __attribute__((unused))){
 	for(;;){
 		int r=epoll_wait(efd,evs,64,-1);
@@ -72,12 +89,7 @@ static void*input_handler(void*args __attribute__((unused))){
 				case LV_INDEV_TYPE_KEYPAD:switch(event.type){
 					case EV_KEY:
 						d->down=event.value>0?LV_INDEV_STATE_PR:LV_INDEV_STATE_REL;
-						switch(event.code){
-							case KEY_POWER:d->key=LV_KEY_ENTER;break;
-							case KEY_VOLUMEUP:d->key=LV_KEY_PREV;break;
-							case KEY_VOLUMEDOWN:d->key=LV_KEY_NEXT;break;
-							default:d->key=0,d->down=LV_INDEV_STATE_REL;break;
-						}
+						d->key=keymap(event.code);
 					break;
 					case EV_SW:;break;
 				}break;

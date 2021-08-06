@@ -22,7 +22,7 @@ static void sysbar_thread(struct sysbar*b){
 		else if(lvl>85)sym=LV_SYMBOL_BATTERY_FULL;
 		lv_label_set_text_fmt(b->top.content.level,"%d%%",lvl);
 		lv_label_set_text(b->top.content.battery,sym);
-	}
+	}else lv_label_set_text_fmt(b->top.content.level,"---");
 }
 
 static void sysbar_thread_cb(lv_task_t*a){

@@ -45,6 +45,7 @@ void logviewer_draw(lv_obj_t*screen){
 			lv_textarea_add_text(view,buff);
 			memset(buff,0,BUFSIZ);
 		}
+		lv_textarea_add_text(view,"\n");
 		close(fd);
 		lv_textarea_set_cursor_pos(view,0);
 	}

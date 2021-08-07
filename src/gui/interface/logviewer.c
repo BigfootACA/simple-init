@@ -10,20 +10,30 @@
 static lv_obj_t*scr,*view;
 static lv_obj_t*btn_top,*btn_bottom,*btn_reload;
 
-static void load_log(){
-	lv_textarea_set_text(view,"");
+static void load_log_task(lv_task_t*t __attribute__((unused))){
+	char buff[BUFSIZ]={0};
 	int fd=open(_PATH_DEV"/logger.log",O_RDONLY);
-	if(fd<0)telog_warn("open logger.log failed");
-	else{
-		char buff[BUFSIZ]={0};
+	if(fd<0){
+		telog_warn("open logger.log failed");
+		snprintf(buff,BUFSIZ-1,"Load log failed: %m");
+		lv_textarea_set_text(view,buff);
+	}else{
+		lv_textarea_set_text(view,"");
 		while(read(fd,buff,BUFSIZ-1)>0){
 			lv_textarea_add_text(view,buff);
 			memset(buff,0,BUFSIZ);
+			lv_task_handler();
 		}
 		lv_textarea_add_text(view,"\n");
 		close(fd);
 		lv_textarea_set_cursor_pos(view,0);
 	}
+}
+
+static void load_log(){
+	lv_textarea_set_text(view,"Loading");
+	lv_task_t*t=lv_task_create(load_log_task,500,LV_TASK_PRIO_LOWEST,NULL);
+	lv_task_once(t);
 }
 
 static void go_top_click(lv_obj_t*obj,lv_event_t e){

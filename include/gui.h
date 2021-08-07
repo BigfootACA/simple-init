@@ -17,4 +17,5 @@ extern void gui_quit_sleep();
 extern void gui_do_quit();
 extern uint32_t custom_tick_get(void);
 extern void png_decoder_init();
+extern int register_guiapp();
 #endif

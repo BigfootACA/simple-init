@@ -2,6 +2,8 @@
 #include"gadget.h"
 #include"shell.h"
 #include"boot.h"
+#include"lvgl.h"
+#include"gui.h"
 
 int(*register_services[])()={
 	#ifdef ENABLE_INITSHELL
@@ -9,6 +11,7 @@ int(*register_services[])()={
 	#endif
 	&register_default_boot,
 	&register_gadget_service,
+	&register_guiapp,
 	NULL
 };
 

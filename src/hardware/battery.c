@@ -1,6 +1,7 @@
 #define _GNU_SOURCE
 #include<fcntl.h>
 #include<dirent.h>
+#include<stdlib.h>
 #include<string.h>
 #include<sys/stat.h>
 #include"str.h"
@@ -116,6 +117,7 @@ int pwr_scan_device(int fds[],int max,bool battery){
 	if((ps=_open_ps())<0)return -1;
 	DIR*d=fdopendir(ps);
 	if(!d)return -1;
+	seekdir(d,0);
 	struct dirent*e;
 	while((e=readdir(d))){
 		if(e->d_type!=DT_LNK)continue;
@@ -132,6 +134,7 @@ int pwr_scan_device(int fds[],int max,bool battery){
 		}
 		if(cur++>=max)break;
 	}
+	free(d);
 	return cur;
 }
 

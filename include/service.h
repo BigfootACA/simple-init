@@ -75,6 +75,7 @@ struct service{
 	char*pid_file;
 	bool stop_on_shutdown;
 	bool auto_restart;
+	int restart_max,retry;
 	struct proc_status process;
 	enum svc_work mode;
 	list*depends_on;

@@ -33,6 +33,8 @@ struct service*svc_new_service(char*name,enum svc_work mode){
 	if(svc_set_restart_function(svc,svc_default_restart)<0)goto fail;
 	pthread_mutex_init(&svc->lock,NULL);
 	svc->mode=mode;
+	svc->retry=0;
+	svc->restart_max=5;
 	svc->status=STATUS_STOPPED;
 	svc->stop_on_shutdown=true;
 	return svc;

@@ -32,8 +32,13 @@ static int svc_on_exit_main(struct service*svc,bool fail){
 			}else{
 				tlog_notice(fail?"Service %s failed":"Stopped service %s",name);
 				if(svc->auto_restart&&auto_restart){
-					tlog_info("Trigger service %s auto restart",name);
-					service_start(svc);
+					if(svc->retry++>=svc->restart_max){
+						tlog_info("Service %s auto restart exceeds the limit",name);
+						fail=true;
+					}else{
+						tlog_notice("Trigger service %s auto restart times %d",name,svc->retry);
+						service_start(svc);
+					}
 				}
 			}
 			svc->status=fail?STATUS_FAILED:STATUS_STOPPED;

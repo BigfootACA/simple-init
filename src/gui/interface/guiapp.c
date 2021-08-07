@@ -3,6 +3,7 @@
 #include"logger.h"
 #include"defines.h"
 #include"lvgl.h"
+#include"init_internal.h"
 #include"gui.h"
 #include"gui_draw.h"
 #include"activity.h"
@@ -127,5 +128,6 @@ static void _draw(lv_obj_t*scr){
 
 int guiapp_main(int argc __attribute((unused)),char**argv __attribute((unused))){
 	open_socket_logfd_default();
+	open_socket_initfd(DEFAULT_INITD);
 	return gui_init(_draw);
 }

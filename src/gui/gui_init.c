@@ -13,7 +13,8 @@
 #include"sysbar.h"
 #include"guidrv.h"
 #define TAG "gui"
-int gui_dpi=400,gui_font_size=24,gui_font_size_small=16;
+int gui_dpi_def=200,gui_dpi_force=0;
+int gui_dpi=200,gui_font_size=24,gui_font_size_small=16;
 uint32_t gui_w=-1,gui_h=-1;
 uint32_t gui_sw,gui_sh,gui_sx,gui_sy;
 lv_font_t*gui_font=&lv_font_montserrat_24;

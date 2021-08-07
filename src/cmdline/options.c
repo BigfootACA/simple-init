@@ -15,6 +15,8 @@ DEF_HANDLER(rootfstype);
 DEF_HANDLER(rootwait);
 DEF_HANDLER(logfs);
 DEF_HANDLER(logfile);
+DEF_HANDLER(dpi);
+DEF_HANDLER(dpi_force);
 
 struct cmdline_option*cmdline_options[]={
 
@@ -36,6 +38,12 @@ struct cmdline_option*cmdline_options[]={
 	// logfs.c; logger persistent storage
 	DEF_OPTION(logfs,      false, REQUIRED_VALUE),
 	DEF_OPTION(logfile,    false, REQUIRED_VALUE),
+
+	#ifdef ENABLE_GUI
+	// gui.c; options for gui
+	DEF_OPTION(dpi,        false, REQUIRED_VALUE),
+	DEF_OPTION(dpi_force,  false, REQUIRED_VALUE),
+	#endif
 	NULL
 };
 

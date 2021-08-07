@@ -1,5 +1,6 @@
 #ifdef ENABLE_GUI
 #include<stdlib.h>
+#include <gui.h>
 #include"lvgl.h"
 #include"guidrv.h"
 #include"logger.h"
@@ -18,7 +19,11 @@ int guidrv_getsize(uint32_t*w,uint32_t*h){
 
 int guidrv_getdpi(int*dpi){
 	errno=ENOENT;
-	*dpi=200;
+	if(gui_dpi_force>0){
+		*dpi=gui_dpi_force;
+		return 0;
+	}
+	*dpi=gui_dpi_def;
 	if(!drv)errno=ENOENT;
 	else if(!drv->drv_getdpi)errno=ENOSYS;
 	else drv->drv_getdpi(dpi);

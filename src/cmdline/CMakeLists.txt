@@ -3,4 +3,5 @@ add_library(init_cmdline STATIC
 	logfs.c
 	options.c
 	root.c
+	gui.c
 )

@@ -3,6 +3,7 @@
 #include"lvgl.h"
 #define IMG_RES _PATH_USR"/share/pixmaps/simple-init"
 typedef void (*draw_func)(lv_obj_t*);
+extern int gui_dpi_def,gui_dpi_force;
 extern int gui_font_size;
 extern uint32_t gui_w,gui_h;
 extern uint32_t gui_sw,gui_sh,gui_sx,gui_sy;

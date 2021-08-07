@@ -25,6 +25,21 @@ static void load_log(){
 	}
 }
 
+static void go_top_click(lv_obj_t*obj,lv_event_t e){
+	if(obj!=btn_top||e!=LV_EVENT_CLICKED)return;
+	lv_textarea_set_cursor_pos(view,0);
+}
+
+static void reload_click(lv_obj_t*obj,lv_event_t e){
+	if(obj!=btn_reload||e!=LV_EVENT_CLICKED)return;
+	load_log();
+}
+
+static void go_bottom_click(lv_obj_t*obj,lv_event_t e){
+	if(obj!=btn_bottom||e!=LV_EVENT_CLICKED)return;
+	lv_textarea_set_cursor_pos(view,LV_TEXTAREA_CURSOR_LAST);
+}
+
 void logviewer_draw(lv_obj_t*screen){
 
 	scr=lv_obj_create(screen,NULL);
@@ -65,6 +80,7 @@ void logviewer_draw(lv_obj_t*screen){
 	lv_obj_align(btn_top,view,LV_ALIGN_OUT_BOTTOM_LEFT,0,gui_font_size);
 	lv_obj_add_style(btn_top,LV_BTN_PART_MAIN,&btn_style);
 	lv_obj_add_state(btn_top,LV_STATE_CHECKED);
+	lv_obj_set_event_cb(btn_top,go_top_click);
 	lv_label_set_text(lv_label_create(btn_top,NULL),_("Go top"));
 	lv_group_add_obj(gui_grp,btn_top);
 
@@ -74,6 +90,7 @@ void logviewer_draw(lv_obj_t*screen){
 	lv_obj_add_style(btn_reload,LV_BTN_PART_MAIN,&btn_style);
 	lv_obj_add_state(btn_reload,LV_STATE_CHECKED);
 	lv_label_set_text(lv_label_create(btn_reload,NULL),_("Reload"));
+	lv_obj_set_event_cb(btn_reload,reload_click);
 	lv_group_add_obj(gui_grp,btn_reload);
 
 	btn_bottom=lv_btn_create(scr,NULL);
@@ -82,6 +99,7 @@ void logviewer_draw(lv_obj_t*screen){
 	lv_obj_add_style(btn_bottom,LV_BTN_PART_MAIN,&btn_style);
 	lv_obj_add_state(btn_bottom,LV_STATE_CHECKED);
 	lv_label_set_text(lv_label_create(btn_bottom,NULL),_("Go bottom"));
+	lv_obj_set_event_cb(btn_bottom,go_bottom_click);
 	lv_group_add_obj(gui_grp,btn_bottom);
 
 	load_log();

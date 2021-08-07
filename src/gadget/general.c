@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include<fcntl.h>
 #include<stdio.h>
 #include<dirent.h>
@@ -6,10 +7,8 @@
 #include<sys/mount.h>
 #include"system.h"
 #include"logger.h"
-#include"output.h"
 #include"gadget.h"
 #include"pathnames.h"
-#include"defines.h"
 #define TAG "gadget"
 
 int gadget_write_info(gadget*gadget){
@@ -62,7 +61,7 @@ int open_usb_gadget(){
 	insmod("libcomposite",false);
 	#endif
 	snprintf(p,PATH_MAX,"%s/usb_gadget",c);
-	if((o=open(p,O_DIRECTORY|O_RDONLY|O_CLOEXEC))<0)
+	if((o=open(p,O_DIR|O_CLOEXEC))<0)
 		return terlog_error(-1,"failed to open gadget configfs");
 	return o;
 }

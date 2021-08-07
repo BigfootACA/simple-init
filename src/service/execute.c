@@ -46,7 +46,6 @@ static void _run_exec_child(struct svc_exec*exec,int fd){
 			pthread_mutex_destroy(&services_lock);
 			svc_free_all_services(services);
 			exit(r);
-		return;
 		case TYPE_COMMAND:
 			if(!exec->exec.cmd.path)EGOTO(EINVAL);
 			if(!exec->exec.cmd.args)EGOTO(EINVAL);

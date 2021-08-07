@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #ifdef ENABLE_KMOD
 #include<dirent.h>
 #include<unistd.h>
@@ -14,7 +15,7 @@ static int scan_modalias(int dir);
 static int scan_modalias_dir(int dir,char*name){
 	if(!name||dir<0)return -1;
 	int f,e;
-	if((f=openat(dir,name,O_RDONLY|O_DIRECTORY))>=0){
+	if((f=openat(dir,name,O_DIR))>=0){
 		e=scan_modalias(f);
 		close(f);
 	}else e=-errno;
@@ -58,7 +59,7 @@ static int scan_modalias(int dir){
 }
 
 int load_modalias(){
-	int dfd=open(_PATH_SYS_DEVICES,O_RDONLY|O_DIRECTORY);
+	int dfd=open(_PATH_SYS_DEVICES,O_DIR);
 	if(dfd<0)return -errno;
 	int r=scan_modalias(dfd);
 	close(dfd);

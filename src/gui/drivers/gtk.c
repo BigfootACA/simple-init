@@ -1,3 +1,4 @@
+#ifdef ENABLE_GUI
 #ifdef ENABLE_GTK
 #include<stdlib.h>
 #include<unistd.h>
@@ -254,4 +255,5 @@ struct gui_driver guidrv_gtk={
 	.drv_tickget=gtkdrv_tick_get,
 	.drv_taskhandler=gtkdrv_taskhandler
 };
+#endif
 #endif

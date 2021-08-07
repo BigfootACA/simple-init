@@ -1,3 +1,4 @@
+#ifdef ENABLE_GUI
 #include<libintl.h>
 #include"lvgl.h"
 #include"logger.h"
@@ -70,3 +71,4 @@ void backlight_menu_draw(lv_obj_t*screen){
 		.page=scr
 	});
 }
+#endif

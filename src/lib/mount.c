@@ -11,7 +11,7 @@
 #define TAG "mount"
 
 int xmount(bool ex,const char*dev,const char*dir,const char*type,const char*data,bool warning){
-	int r=0,er;
+	int r,er;
 	char buf[BUFSIZ]={0},xbuf[BUFSIZ]={0};
 	struct libmnt_context *cxt=mnt_new_context();
 	if(!cxt)return terlog_error(-errno,"failed to init libmount context");

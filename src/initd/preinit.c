@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include<fcntl.h>
 #include<errno.h>
 #include<unistd.h>
@@ -37,12 +38,12 @@ int preinit(){
 	if(access(_PATH_ETC,F_OK)!=0){
 		int dfd;
 		if(errno==ENOENT){
-			if((dfd=open(_PATH_ROOT,O_DIRECTORY|O_RDONLY))>0){
+			if((dfd=open(_PATH_ROOT,O_DIR))>0){
 				create_assets_dir(dfd,&assets_rootfs,false);
 				tlog_debug("extract assets done");
 				close(dfd);
 			}
-			if((dfd=open(_PATH_USR_BIN,O_DIRECTORY|O_RDONLY))>0){
+			if((dfd=open(_PATH_USR_BIN,O_DIR))>0){
 				install_cmds(dfd);
 				tlog_debug("install commands done");
 				close(dfd);

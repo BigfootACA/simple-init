@@ -1,3 +1,4 @@
+#ifdef ENABLE_GUI
 #include"hardware.h"
 extern struct gui_driver guidrv_gtk;
 extern struct gui_driver guidrv_sdl2;
@@ -16,3 +17,4 @@ struct gui_driver*gui_drvs[]={
 	&guidrv_fbdev,
 	NULL
 };
+#endif

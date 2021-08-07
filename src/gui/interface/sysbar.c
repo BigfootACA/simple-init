@@ -1,3 +1,4 @@
+#ifdef ENABLE_GUI
 #include<time.h>
 #include"hardware.h"
 #include"lvgl.h"
@@ -167,3 +168,4 @@ int sysbar_draw(lv_obj_t*scr){
 	lv_task_create(sysbar_thread_cb,5000,LV_TASK_PRIO_LOW,&sysbar);
 	return 0;
 }
+#endif

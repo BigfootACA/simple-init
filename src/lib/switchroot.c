@@ -9,10 +9,8 @@
 #include<sys/stat.h>
 #include<sys/mount.h>
 #include<sys/statfs.h>
-#include"devd.h"
 #include"init.h"
 #include"logger.h"
-#include"system.h"
 #include"cmdline.h"
 #include"defines.h"
 #include"pathnames.h"
@@ -135,8 +133,6 @@ int run_switch_root(char*root,char*init){
 		rc=-1;
 	}
 	exit(rc);
-	_exit(rc);
-	return rc;
 }
 
 bool check_init(bool force,char*root,char*init){

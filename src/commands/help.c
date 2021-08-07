@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include<string.h>
 #include"output.h"
 #include"defines.h"

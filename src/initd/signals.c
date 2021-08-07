@@ -81,7 +81,6 @@ static void signal_handlers(int s,siginfo_t*i,void*d __attribute__((unused))){
 			xsleep(3);
 			sync();
 			exit(s);
-		break;
 		case SIGINT:
 			if(status==INIT_SHUTDOWN||i->si_pid!=0)break;
 			memset(&actiondata,0,sizeof(union action_data));

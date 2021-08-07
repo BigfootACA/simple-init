@@ -1,3 +1,4 @@
+#ifdef ENABLE_GUI
 #include<stdlib.h>
 #include"str.h"
 #include"lvgl.h"
@@ -130,3 +131,4 @@ bool guiact_is_active_name(const char*name){
 bool guiact_is_active_page(lv_obj_t*page){
 	return guiact_is_page(guiact_get_last(),page);
 }
+#endif

@@ -1,3 +1,4 @@
+#ifdef ENABLE_GUI
 #ifdef ENABLE_LODEPNG
 #include<lodepng.h>
 #include<stdlib.h>
@@ -96,4 +97,5 @@ void png_decoder_init(){
 	lv_img_decoder_set_open_cb(dec,decoder_open);
 	lv_img_decoder_set_close_cb(dec,decoder_close);
 }
+#endif
 #endif

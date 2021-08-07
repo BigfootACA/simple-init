@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include<sys/stat.h>
 // from busybox libbb/mode_string.c
 static const mode_t flags[]={

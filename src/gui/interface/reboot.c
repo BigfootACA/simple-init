@@ -1,3 +1,4 @@
+#ifdef ENABLE_GUI
 #include<libintl.h>
 #include"init_internal.h"
 #include"lvgl.h"
@@ -107,3 +108,4 @@ void reboot_menu_draw(lv_obj_t*screen){
 		.page=scr
 	});
 }
+#endif

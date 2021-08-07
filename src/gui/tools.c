@@ -1,3 +1,4 @@
+#ifdef ENABLE_GUI
 #include<stdio.h>
 #include<libintl.h>
 #include"lvgl.h"
@@ -90,3 +91,4 @@ lv_obj_t*lv_create_yesno_msgbox_mask(lv_obj_t*par,lv_event_cb_t cb,const char*te
 	use_lv_create_msgbox(o,lv_create_opa_mask(par),btns,cb,text);
 	return o;
 }
+#endif

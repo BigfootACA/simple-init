@@ -1,3 +1,4 @@
+#ifdef ENABLE_GUI
 #define _GNU_SOURCE
 #include<stdio.h>
 #include<fcntl.h>
@@ -219,3 +220,4 @@ static int input_scan_init(void){
 }
 void input_register(char*dev){input_init(dev,open(dev,O_RDONLY|O_CLOEXEC));}
 void input_scan_register(void){input_scan_init();}
+#endif

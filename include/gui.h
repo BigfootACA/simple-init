@@ -1,5 +1,6 @@
 #ifndef GUI_H
 #define GUI_H
+#include"lvgl.h"
 #define IMG_RES _PATH_USR"/share/pixmaps/simple-init"
 typedef void (*draw_func)(lv_obj_t*);
 extern int gui_font_size;

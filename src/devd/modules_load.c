@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #ifdef ENABLE_KMOD
 #include<ctype.h>
 #include<dirent.h>

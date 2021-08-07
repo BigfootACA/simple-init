@@ -1,6 +1,5 @@
 #include<fcntl.h>
 #include<stdio.h>
-#include<stdlib.h>
 #include<string.h>
 #include"getopt.h"
 #include"defines.h"
@@ -15,7 +14,7 @@ static int usage(int e){
 	);
 }
 int cat_fd(int fd){
-	ssize_t r=0;
+	ssize_t r;
 	char buf[BUFSIZ];
 	while(1){
 		memset(buf,0,BUFSIZ);
@@ -35,12 +34,12 @@ int cat_file(char*file){
 }
 static int max(int a,int b){return MAX(a,b);}
 int cat_main(int argc,char**argv){
-	int o;
 	static const struct option lo[]={
 		{"help", no_argument, NULL,'h'},
 		{NULL,0,NULL,0}
 	};
-	while((o=b_getlopt(argc,argv,"h",lo,NULL))>0)switch(o){
+	int o=b_getlopt(argc,argv,"h",lo,NULL);
+	if(o>=0)switch(o){
 		case 'h':return usage(0);
 		default:return 1;
 	}

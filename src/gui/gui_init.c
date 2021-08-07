@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #ifdef ENABLE_GUI
 #include<errno.h>
 #include<stdlib.h>

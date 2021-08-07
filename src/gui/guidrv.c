@@ -1,3 +1,4 @@
+#ifdef ENABLE_GUI
 #include<stdlib.h>
 #include"lvgl.h"
 #include"guidrv.h"
@@ -128,3 +129,4 @@ void guidrv_set_driver(struct gui_driver*driver){
 struct gui_driver*guidrv_get_driver(){
 	return drv;
 }
+#endif

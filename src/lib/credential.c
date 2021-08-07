@@ -4,7 +4,6 @@
 #include<stdio.h>
 #include<string.h>
 #include<sys/socket.h>
-#include"defines.h"
 #include"pathnames.h"
 #include"system.h"
 

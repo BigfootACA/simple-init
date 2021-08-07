@@ -1,3 +1,4 @@
+#ifdef ENABLE_GUI
 #define _GNU_SOURCE
 #include<errno.h>
 #include<fcntl.h>
@@ -464,3 +465,4 @@ int init_lvgl_fs(char letter,char*root,bool debug){
 	lv_fs_drv_register(drv);
 	return 0;
 }
+#endif

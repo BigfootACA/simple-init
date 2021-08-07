@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include<stdbool.h>
 #include<unistd.h>
 #include<errno.h>
@@ -84,7 +85,7 @@ int create_assets_dir(int dfd,entry_dir*dir,bool override){
 	fchown(fd,dir->info.owner,dir->info.group);
 	if(dir->info.mode>0)fchmod(fd,dir->info.mode);
 	close(fd);
-	return 0;
+	return r;
 }
 
 static entry_file*_get_assets_subfile(entry_dir*dir,const char*name){

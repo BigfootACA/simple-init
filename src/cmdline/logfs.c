@@ -3,7 +3,6 @@
 #ifdef ENABLE_BLKID
 #include<blkid/blkid.h>
 #endif
-#include"defines.h"
 #include"logger.h"
 #include"cmdline.h"
 #define TAG "cmdline"

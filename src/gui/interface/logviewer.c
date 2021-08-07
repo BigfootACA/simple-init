@@ -1,3 +1,4 @@
+#ifdef ENABLE_GUI
 #include<libintl.h>
 #include"lvgl.h"
 #include"logger.h"
@@ -112,3 +113,4 @@ void logviewer_draw(lv_obj_t*screen){
 		.page=scr
 	});
 }
+#endif

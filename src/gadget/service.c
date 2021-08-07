@@ -1,4 +1,4 @@
-#include<sys/stat.h>
+#define _GNU_SOURCE
 #include<string.h>
 #include"service.h"
 #include"version.h"

@@ -1,3 +1,4 @@
+#ifdef ENABLE_GUI
 #include"guipm.h"
 
 static int xdpi;
@@ -418,3 +419,4 @@ void guipm_draw_disk_sel(lv_obj_t*screen){
 		.page=selscr
 	});
 }
+#endif

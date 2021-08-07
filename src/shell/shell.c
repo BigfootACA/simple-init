@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #ifdef ENABLE_INITSHELL
 #include<errno.h>
 #include<stdio.h>
@@ -127,7 +128,7 @@ int initshell_main(int argc,char**argv){
 	};
 	int o;
 	if(argc>1){
-		while((o=b_getlopt(argc,argv,so,lo,NULL))!=-1)switch(o){
+		if((o=b_getlopt(argc,argv,so,lo,NULL))!=-1)switch(o){
 			case 'c':
 				linehandler(b_optarg);
 			return exit_code;

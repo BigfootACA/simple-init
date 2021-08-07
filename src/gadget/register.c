@@ -1,4 +1,4 @@
-#include<unistd.h>
+#define _GNU_SOURCE
 #include<fcntl.h>
 #include<sys/stat.h>
 #include"logger.h"
@@ -16,7 +16,7 @@ int gadget_register_fd(int dir_fd,gadget*g){
 	int main=-1;
 	if(!(g&&g->name))return -1;
 	if(mkdirat(dir_fd,g->name,0755)<0)goto er;
-	if((main=openat(dir_fd,g->name,O_RDONLY|O_DIRECTORY|O_CLOEXEC))<0)goto er;
+	if((main=openat(dir_fd,g->name,O_DIR|O_CLOEXEC))<0)goto er;
 	g->dir_fd=main;
 	if(gadget_write_info(g)<0)goto er;
 	tlog_info("registered gadget device '%s'",g->name);
@@ -27,6 +27,6 @@ int gadget_register_fd(int dir_fd,gadget*g){
 }
 
 int gadget_register_path(char*path,gadget*g){
-	int d=open(path,O_RDONLY|O_DIRECTORY|O_CLOEXEC);
+	int d=open(path,O_DIR|O_CLOEXEC);
 	return (d<0)?-1:gadget_register_fd(d,g);
 }

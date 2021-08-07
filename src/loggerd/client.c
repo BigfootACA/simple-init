@@ -193,8 +193,6 @@ int start_loggerd(pid_t*p){
 			close_all_fd((int[]){fds[0]},1);
 			r=loggerd_thread(fds[0]);
 			exit(r);
-			_exit(r);
-			return r;
 	}
 	close(fds[0]);
 	struct log_msg msg;

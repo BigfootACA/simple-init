@@ -2,7 +2,6 @@
 #include<string.h>
 #include"str.h"
 #include"uevent.h"
-#include"output.h"
 #include"array.h"
 
 const char *uevent_actions[]={

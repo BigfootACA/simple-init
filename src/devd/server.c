@@ -218,8 +218,6 @@ int start_devd(char*tag,pid_t*p){
 			close_all_fd((int[]){fds[1]},1);
 			r=devd_thread(fds[1]);
 			exit(r);
-			_exit(r);
-			return r;
 	}
 	close(fds[1]);
 	struct devd_msg msg;

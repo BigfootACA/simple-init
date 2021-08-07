@@ -1,3 +1,4 @@
+#ifdef ENABLE_GUI
 #ifdef ENABLE_SDL2
 #include<stdlib.h>
 #include<stdbool.h>
@@ -231,4 +232,5 @@ struct gui_driver guidrv_sdl2={
 	.drv_getsize=sdl2_get_sizes,
 	.drv_getdpi=sdl2_get_dpi,
 };
+#endif
 #endif

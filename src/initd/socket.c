@@ -70,14 +70,14 @@ int listen_init_socket(){
 	ERET(-er);
 }
 
-static inline int ctl_fd(int action,int fd){
+static inline int ctl_fd(int act,int fd){
 	static struct epoll_event s={.events=EPOLLIN};
 	s.data.fd=fd;
 	int r=epoll_ctl(
-		ep.efd,action,fd,
-		action==EPOLL_CTL_ADD?&s:NULL
+		ep.efd,act,fd,
+		act==EPOLL_CTL_ADD?&s:NULL
 	);
-	if(action==EPOLL_CTL_DEL)close(fd);
+	if(act==EPOLL_CTL_DEL)close(fd);
 	return r;
 }
 

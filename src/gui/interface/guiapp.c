@@ -1,3 +1,4 @@
+#ifdef ENABLE_GUI
 #include<stdlib.h>
 #include<libintl.h>
 #include"service.h"
@@ -147,3 +148,4 @@ int register_guiapp(){
 	}
 	return 0;
 }
+#endif

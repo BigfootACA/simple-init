@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include<utime.h>
 #include<errno.h>
 #include<stdlib.h>

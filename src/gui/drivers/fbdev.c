@@ -1,3 +1,4 @@
+#ifdef ENABLE_GUI
 #define _GNU_SOURCE
 #include<errno.h>
 #include<stdio.h>
@@ -11,8 +12,6 @@
 #include<sys/stat.h>
 #include<sys/ioctl.h>
 #include<linux/fb.h>
-#include<linux/vt.h>
-#include<linux/kd.h>
 #include"pathnames.h"
 #include"logger.h"
 #include"lvgl.h"
@@ -213,3 +212,4 @@ struct gui_driver guidrv_fbdev={
 	.drv_getsize=fbdev_get_sizes,
 	.drv_exit=fbdev_exit
 };
+#endif

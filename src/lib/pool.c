@@ -5,7 +5,6 @@
 #include<pthread.h>
 #include<sys/sysinfo.h>
 #include<sys/prctl.h>
-#include"defines.h"
 #include"pool.h"
 
 static void*_pool_main(void*arg){

@@ -2,7 +2,6 @@
 #include<errno.h>
 #include<stdio.h>
 #include<stdlib.h>
-#include<stdarg.h>
 #include<stdbool.h>
 #include<signal.h>
 #include<string.h>

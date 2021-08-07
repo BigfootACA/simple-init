@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include<unistd.h>
 #include<fcntl.h>
 #include<stdlib.h>
@@ -26,10 +27,10 @@ int gadget_unregister_fd(int dir,char*name){
 	int d=-1,cs=-1,fs=-1,ss=-1;
 	if(!(
 		dir>=0&&name&&
-		(d=openat(dir,name,O_RDONLY|O_DIRECTORY|O_CLOEXEC))>=0&&
-		(cs=openat(d,"configs",O_RDONLY|O_DIRECTORY|O_CLOEXEC))>=0&&
-		(fs=openat(d,"functions",O_RDONLY|O_DIRECTORY|O_CLOEXEC))>=0&&
-		(ss=openat(d,"strings",O_RDONLY|O_DIRECTORY|O_CLOEXEC))>=0
+		(d=openat(dir,name,O_DIR|O_CLOEXEC))>=0&&
+		(cs=openat(d,"configs",O_DIR|O_CLOEXEC))>=0&&
+		(fs=openat(d,"functions",O_DIR|O_CLOEXEC))>=0&&
+		(ss=openat(d,"strings",O_DIR|O_CLOEXEC))>=0
 	))goto er;
 	gadget_stop_fd(d);
 	DIR*subdir;
@@ -37,12 +38,12 @@ int gadget_unregister_fd(int dir,char*name){
 	if(!(subdir=fdopendir(cs)))goto er;
 	while((rent=readdir(subdir)))if(!is_virt_dir(rent)&&rent->d_type==DT_DIR){
 			int cfg,str;
-			if((cfg=openat(cs,rent->d_name,O_RDONLY|O_DIRECTORY|O_CLOEXEC))<0)continue;
+			if((cfg=openat(cs,rent->d_name,O_DIR|O_CLOEXEC))<0)continue;
 			if(remove_folders(cfg,0)<0){
 				close(cfg);
 				continue;
 			}
-			if((str=openat(cfg,"strings",O_RDONLY|O_DIRECTORY|O_CLOEXEC))<0)continue;
+			if((str=openat(cfg,"strings",O_DIR|O_CLOEXEC))<0)continue;
 			if(remove_folders(cfg,AT_REMOVEDIR)<0){
 				close(str);
 				close(cfg);

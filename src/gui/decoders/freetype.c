@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+#ifdef ENABLE_GUI
 #ifdef ENABLE_FREETYPE2
 #include<ft2build.h>
 #include<assets.h>
@@ -215,4 +217,5 @@ void lv_ft_destroy(lv_font_t*font){
 		free(dsc);
 	}
 }
+#endif
 #endif

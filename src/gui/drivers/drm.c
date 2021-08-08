@@ -344,30 +344,6 @@ free_res:
 	drmModeFreeResources(res);
 	return -1;
 }
-static int drm_find_connector_backlight(int conn){
-	int bg;
-	struct stat st;
-	struct dirent*e;
-	DIR*d=fdopendir(conn);
-	if(d){
-		while((e=readdir(d))){
-			if(e->d_type!=DT_DIR&&e->d_type!=DT_LNK)continue;
-			if(e->d_name[0]=='.')continue;
-			if((bg=openat(conn,e->d_name,O_DIR|O_CLOEXEC))<0){
-				telog_warn("open connector backlight %s folder failed",e->d_name);
-				continue;
-			}
-			if(fstatat(bg,"brightness",&st,AT_SYMLINK_NOFOLLOW)<0){
-				close(bg);
-				continue;
-			}
-			tlog_debug("found connector backight %s\n",e->d_name);
-			return bg;
-		}
-		free(d);
-	}
-	ERET(ENOENT);
-}
 static int drm_find_backlight(int sfd){
 	char buff[64];
 	int conn,status,ret;
@@ -400,7 +376,7 @@ static int drm_find_backlight(int sfd){
 				close(conn);
 				continue;
 			}
-			if((ret=drm_find_connector_backlight(conn))<0){
+			if((ret=led_find_class(conn,NULL))<0){
 				close(conn);
 				continue;
 			}
@@ -409,18 +385,7 @@ static int drm_find_backlight(int sfd){
 		}
 		free(d);
 	}
-	if((conn=open(_PATH_SYS_CLASS"/backlight",O_DIR))){
-		if((d=fdopendir(conn))){
-			if((ret=drm_find_connector_backlight(conn))>=0){
-				close(conn);
-				free(d);
-				return ret;
-			}
-			free(d);
-		}
-		close(conn);
-	}
-	ERET(ENOENT);
+	return backlight_find(NULL);
 }
 static int drm_get_brightness(){
 	if(drm_dev.bnfd<0)ERET(ENOTSUP);

@@ -81,12 +81,17 @@ int led_find_class(int sysfs,const char*name){
 	ERET(ENOENT);
 }
 
+int led_find(const char*name){
+	int c;
+	if((c=led_open_sysfs_class())<0)return -1;
+	return led_find_class(c,name);
+}
+
 int led_set_brightness_percent_by_name(char*name,int percent){
 	if(!name)return -1;
-	int c,dir,r;
+	int dir,r;
 	if(!led_check_name(name))return -1;
-	if((c=led_open_sysfs_class())<0)return -1;
-	if((dir=led_find_class(c,name))<0)return -1;
+	if((dir=led_find(name))<0)return -1;
 	r=led_set_brightness_percent(dir,percent);
 	close(dir);
 	return r;

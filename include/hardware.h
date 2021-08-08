@@ -35,6 +35,7 @@ enum power_supply_type{
 	TYPE_DFP,
 };
 
+extern int led_find(const char*name);
 extern int led_find_class(int sysfs,const char*name);
 extern int led_open_sysfs_class();
 extern bool led_check_name(const char*name);

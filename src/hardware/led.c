@@ -83,19 +83,9 @@ int led_find_class(int sysfs,const char*name){
 int led_set_brightness_percent_by_name(char*name,int percent){
 	if(!name)return -1;
 	int c,dir,r;
-	struct stat s;
-	char path[512]={0};
-
 	if(!led_check_name(name))return -1;
-
-	snprintf(path,511,_PATH_SYS_CLASS"/leds/%s",name);
-
-	if(stat(path,&s)<0||!S_ISLNK(s.st_mode))
-		return terlog_error(-1,"not a valid led device %s",name);
-
-	if((dir=open(path,O_DIR))<0)
-		return terlog_error(-1,"failed to open device %s",name);
-
+	if((c=led_open_sysfs_class())<0)return -1;
+	if((dir=led_find_class(c,name))<0)return -1;
 	r=led_set_brightness_percent(dir,percent);
 	close(dir);
 	return r;

@@ -12,6 +12,8 @@
 #include<sys/stat.h>
 #include<sys/ioctl.h>
 #include<linux/fb.h>
+#include"hardware.h"
+#include"defines.h"
 #include"pathnames.h"
 #include"logger.h"
 #include"lvgl.h"
@@ -19,6 +21,7 @@
 #include"guidrv.h"
 #define TAG "fbdev"
 static pthread_t fbrt;
+static bool blank=false;
 static char*fbp=0;
 static long int screensize=0;
 static int fbfd=-1;
@@ -206,10 +209,38 @@ static void fbdev_get_sizes(uint32_t*width,uint32_t*height){
 	if(width)*width=vinfo.xres;
 	if(height)*height=vinfo.yres;
 }
+static int fbdev_get_brightness(){
+	if(default_backlight<0)ERET(ENOTSUP);
+	return led_get_brightness_percent(default_backlight);
+}
+static void fbdev_set_brightness(int value){
+	errno=0;
+	if(blank){
+		if(value>0){
+			ioctl(fbfd,FBIOBLANK,0);
+			telog_debug("screen resume");
+			blank=!blank;
+		}
+	}else{
+		if(value<=0){
+			ioctl(fbfd,FBIOBLANK,1);
+			telog_debug("screen suspend");
+			blank=!blank;
+		}
+	}
+	if(default_backlight<0){
+		errno=ENOTSUP;
+		return;
+	}
+	led_set_brightness_percent(default_backlight,value);
+	telog_debug("set backlight to %d%%",value);
+}
 struct gui_driver guidrv_fbdev={
 	.name="fbdev",
 	.drv_register=fbdev_scan_init_register,
 	.drv_getsize=fbdev_get_sizes,
-	.drv_exit=fbdev_exit
+	.drv_exit=fbdev_exit,
+	.drv_getbrightness=fbdev_get_brightness,
+	.drv_setbrightness=fbdev_set_brightness,
 };
 #endif

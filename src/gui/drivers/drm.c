@@ -421,11 +421,10 @@ static int drm_open(int fd,int sfd){
 	if(drmGetCap(fd,DRM_CAP_DUMB_BUFFER,&has_dumb)<0||has_dumb==0)
 		return trlog_error(-1,"drmGetCap DRM_CAP_DUMB_BUFFER failed or no dumb buffer");
 	drm_dev.fd=fd,drm_dev.sfd=sfd;
-	if((drm_dev.bnfd=drm_find_backlight(sfd))<0)tlog_warn("no backlight device found");
-	else{
-		int b=drm_get_brightness();
-		if(b>=0&&b<=100)tlog_info("current backlight: %d%%\n",b);
-	}
+	if(default_backlight>=0)drm_dev.bnfd=default_backlight;
+	else if((drm_dev.bnfd=drm_find_backlight(sfd))<0)return trlog_warn(fd,"no backlight device found");
+	int b=drm_get_brightness();
+	if(b>=0&&b<=100)tlog_info("current backlight: %d%%\n",b);
 	return fd;
 }
 static int drm_setup(int fd,int sfd,unsigned int fourcc){

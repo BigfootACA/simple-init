@@ -2,6 +2,7 @@
 #include<stdio.h>
 #include<fcntl.h>
 #include<unistd.h>
+#include<stdlib.h>
 #include<string.h>
 #include<sys/stat.h>
 #define TAG "led"
@@ -55,6 +56,28 @@ int led_open_sysfs_class(){
 	if(fd<0)fd=open(_PATH_SYS_CLASS"/leds",O_DIR|O_CLOEXEC);
 	if(fd<0)telog_warn("open leds sysfs class failed");
 	return fd;
+}
+
+int led_find_class(int sysfs,const char*name){
+	if(name&&!led_check_name(name))ERET(EINVAL);
+	int bn;
+	struct dirent*e;
+	DIR*d=fdopendir(sysfs);
+	if(!d)return -1;
+	while((e=readdir(d))){
+		if(e->d_type!=DT_DIR&&e->d_type!=DT_LNK)continue;
+		if(e->d_name[0]=='.')continue;
+		if(name&&strcmp(name,e->d_name)!=0)continue;
+		if((bn=openat(sysfs,e->d_name,O_DIR|O_CLOEXEC))<0){
+			telog_warn("open led %s folder failed",e->d_name);
+			continue;
+		}
+		if(led_is_led(bn))return bn;
+		close(bn);
+
+	}
+	free(d);
+	ERET(ENOENT);
 }
 
 int led_set_brightness_percent_by_name(char*name,int percent){

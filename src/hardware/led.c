@@ -103,3 +103,9 @@ int backlight_open_sysfs_class(){
 	if(fd<0)telog_warn("open backlight sysfs class failed");
 	return fd;
 }
+
+int backlight_find(const char*name){
+	int c;
+	if((c=backlight_open_sysfs_class())<0)return -1;
+	return led_find_class(c,name);
+}

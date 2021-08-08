@@ -40,7 +40,7 @@ int led_set_brightness_percent(int fd,int percent){
 	if(percent<0||percent>100)ERET(EINVAL);
 	if(fd<0)ERET(EBADF);
 	int max=led_get_max_brightness(fd);
-	return max>0?led_set_brightness(fd,max/100*percent):-1;
+	return max>0?led_set_brightness(fd,max*percent/100):-1;
 }
 
 bool led_check_name(const char*name){
@@ -64,6 +64,7 @@ int led_find_class(int sysfs,const char*name){
 	struct dirent*e;
 	DIR*d=fdopendir(sysfs);
 	if(!d)return -1;
+	seekdir(d,0);
 	while((e=readdir(d))){
 		if(e->d_type!=DT_DIR&&e->d_type!=DT_LNK)continue;
 		if(e->d_name[0]=='.')continue;

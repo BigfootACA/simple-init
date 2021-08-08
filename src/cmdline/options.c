@@ -17,6 +17,7 @@ DEF_HANDLER(logfs);
 DEF_HANDLER(logfile);
 DEF_HANDLER(dpi);
 DEF_HANDLER(dpi_force);
+DEF_HANDLER(backlight);
 
 struct cmdline_option*cmdline_options[]={
 
@@ -43,6 +44,7 @@ struct cmdline_option*cmdline_options[]={
 	// gui.c; options for gui
 	DEF_OPTION(dpi,        false, REQUIRED_VALUE),
 	DEF_OPTION(dpi_force,  false, REQUIRED_VALUE),
+	DEF_OPTION(backlight,  false, REQUIRED_VALUE),
 	#endif
 	NULL
 };

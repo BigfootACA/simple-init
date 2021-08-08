@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+#include<stdlib.h>
 #include"str.h"
 #include"gui.h"
 #include"logger.h"
@@ -16,5 +18,10 @@ int cmdline_dpi_force(char*k __attribute__((unused)),char*v){
 	if(r<0||r>1000)
 		return trlog_warn(0,"invalid dpi_force '%s'",v);
 	gui_dpi_force=r;
+	return 0;
+}
+
+int cmdline_backlight(char*k __attribute__((unused)),char*v){
+	setenv("BACKLIGHT",v,1);
 	return 0;
 }

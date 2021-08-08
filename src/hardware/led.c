@@ -42,15 +42,21 @@ int led_set_brightness_percent(int fd,int percent){
 	return max>0?led_set_brightness(fd,max/100*percent):-1;
 }
 
+bool led_check_name(const char*name){
+	if(name[0]=='.')return false;
+	for(int c=0;name[c]!=0;c++)
+		if(name[c]=='/'||strncmp(name+c,"..",2)==0)
+			return false;
+	return true;
+}
+
 int led_set_brightness_percent_by_name(char*name,int percent){
 	if(!name)return -1;
 	int c,dir,r;
 	struct stat s;
 	char path[512]={0};
 
-	for(c=0;name[c]!=0;c++)
-		if(name[c]=='/'||strncmp(name+c,"..",2)==0)
-			return -1;
+	if(!led_check_name(name))return -1;
 
 	snprintf(path,511,_PATH_SYS_CLASS"/leds/%s",name);
 

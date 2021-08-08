@@ -1,5 +1,4 @@
 #define _GNU_SOURCE
-#include<stdio.h>
 #include<fcntl.h>
 #include<unistd.h>
 #include<stdlib.h>
@@ -95,6 +94,23 @@ int led_set_brightness_percent_by_name(char*name,int percent){
 	r=led_set_brightness_percent(dir,percent);
 	close(dir);
 	return r;
+}
+
+int led_parse_arg(const char*arg,char*def){
+	if(!arg)return -1;
+	char*d=def,*buf=strdup(arg),*p;
+	if(!buf)return -1;
+	if(!d)d="leds";
+	if((p=strchr(buf,':'))){
+		*(p++)=0;
+		d=buf;
+	}else p=buf;
+	int sysfs;
+	if(strcasecmp(d,"backlight")==0)sysfs=backlight_open_sysfs_class();
+	else if(strcasecmp(d,"leds")==0)sysfs=led_open_sysfs_class();
+	else return trlog_warn(-1,"unsupport led class: %s",d);
+	if(sysfs<0)return terlog_warn(-1,"open sysfs class %s failed",d);
+	return led_find_class(sysfs,p);
 }
 
 int backlight_open_sysfs_class(){

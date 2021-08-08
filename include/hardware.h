@@ -35,6 +35,7 @@ enum power_supply_type{
 	TYPE_DFP,
 };
 
+extern int led_open_sysfs_class();
 extern bool led_check_name(const char*name);
 extern bool led_is_led(int fd);
 extern int led_get_max_brightness(int fd);

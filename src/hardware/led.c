@@ -50,6 +50,13 @@ bool led_check_name(const char*name){
 	return true;
 }
 
+int led_open_sysfs_class(){
+	static int fd=-1;
+	if(fd<0)fd=open(_PATH_SYS_CLASS"/leds",O_DIR|O_CLOEXEC);
+	if(fd<0)telog_warn("open leds sysfs class failed");
+	return fd;
+}
+
 int led_set_brightness_percent_by_name(char*name,int percent){
 	if(!name)return -1;
 	int c,dir,r;

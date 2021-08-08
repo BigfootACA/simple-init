@@ -11,8 +11,10 @@
 #include"gui.h"
 #include"font.h"
 #include"sysbar.h"
+#include"hardware.h"
 #include"guidrv.h"
 #define TAG "gui"
+int default_backlight=-1;
 int gui_dpi_def=200,gui_dpi_force=0;
 int gui_dpi=200,gui_font_size=24,gui_font_size_small=16;
 uint32_t gui_w=-1,gui_h=-1;
@@ -61,6 +63,8 @@ void guess_font_size(){
 static int gui_pre_init(){
 	lv_init();
 	gui_grp=lv_group_create();
+	char*x=getenv("BACKLIGHT");
+	if(x)default_backlight=led_parse_arg(x,"backlight");
 	if(guidrv_init(&gui_w,&gui_h,&gui_dpi)<0)return -1;
 	gui_sx=0,gui_sy=0,gui_sw=gui_w,gui_sh=gui_h;
 	tlog_debug("driver init done");
@@ -70,7 +74,7 @@ static int gui_pre_init(){
 	#endif
 	#ifdef ENABLE_FREETYPE2
 	lv_freetype_init(64,1,0);
-	char*x=getenv("FONT");
+	x=getenv("FONT");
 	gui_font=x?
 		lv_ft_init(x,gui_font_size,0):
 		lv_ft_init_rootfs(_PATH_ETC"/default.ttf",gui_font_size,0);

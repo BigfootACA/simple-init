@@ -5,6 +5,7 @@
 typedef void (*draw_func)(lv_obj_t*);
 extern int gui_dpi_def,gui_dpi_force;
 extern int gui_font_size;
+extern int default_backlight;
 extern uint32_t gui_w,gui_h;
 extern uint32_t gui_sw,gui_sh,gui_sx,gui_sy;
 extern lv_font_t*gui_font;

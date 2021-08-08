@@ -46,6 +46,7 @@ extern int led_set_brightness(int fd,int value);
 extern int led_get_brightness_percent(int fd);
 extern int led_set_brightness_percent(int fd,int percent);
 extern int led_set_brightness_percent_by_name(char*name,int percent);
+extern int backlight_open_sysfs_class();
 extern int pwr_get_capacity(int fd);
 extern bool pwr_is_battery(int fd);
 extern int pwr_multi_get_capacity(int*fds);

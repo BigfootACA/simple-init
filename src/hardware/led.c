@@ -96,3 +96,10 @@ int led_set_brightness_percent_by_name(char*name,int percent){
 	close(dir);
 	return r;
 }
+
+int backlight_open_sysfs_class(){
+	static int fd=-1;
+	if(fd<0)fd=open(_PATH_SYS_CLASS"/backlight",O_DIR|O_CLOEXEC);
+	if(fd<0)telog_warn("open backlight sysfs class failed");
+	return fd;
+}

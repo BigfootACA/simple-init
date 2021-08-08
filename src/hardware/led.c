@@ -7,8 +7,13 @@
 #define TAG "led"
 #include"str.h"
 #include"system.h"
+#include"hardware.h"
 #include"logger.h"
 #include"pathnames.h"
+
+bool led_is_led(int fd){
+	return fd_is_file(fd,"brightness");
+}
 
 int led_get_max_brightness(int fd){
 	return fd_read_int(fd,"max_brightness");

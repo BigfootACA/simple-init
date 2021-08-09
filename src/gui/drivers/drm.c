@@ -21,7 +21,7 @@
 #include"logger.h"
 #define TAG "drm"
 #define DIV_ROUND_UP(n,d)(((n)+(d)-1)/(d))
-static lv_color_t*buf1=NULL,*buf2=NULL;
+static lv_color_t*buf=NULL;
 struct drm_buffer{
 	uint32_t handle,pitch,offset;
 	unsigned long int size;
@@ -60,10 +60,8 @@ static struct drm_dev{
 }drm_dev;
 static void drm_exit(void){
 	if(drm_dev.fd<0)return;
-	if(buf1)free(buf1);
-	if(buf2)free(buf2);
-	buf1=NULL;
-	buf2=NULL;
+	if(buf)free(buf);
+	buf=NULL;
 	close(drm_dev.fd);
 	drm_dev.fd=-1;
 }
@@ -185,7 +183,7 @@ static int drm_add_conn_property(const char*name,uint64_t value){
 	);
 	return 0;
 }
-static int drm_dmabuf_set_plane(struct drm_buffer*buf){
+static int drm_dmabuf_set_plane(struct drm_buffer*b){
 	int ret;
 	static int first=1;
 	uint32_t flags=DRM_MODE_ATOMIC_ALLOW_MODESET;
@@ -196,7 +194,7 @@ static int drm_dmabuf_set_plane(struct drm_buffer*buf){
 		drm_add_crtc_property("ACTIVE",1);
 		flags|=DRM_MODE_ATOMIC_ALLOW_MODESET;
 	}
-	drm_add_plane_property("FB_ID",buf->fb_handle);
+	drm_add_plane_property("FB_ID",b->fb_handle);
 	drm_add_plane_property("CRTC_ID",drm_dev.crtc_id);
 	drm_add_plane_property("SRC_X",0);
 	drm_add_plane_property("SRC_Y",0);
@@ -465,7 +463,7 @@ static int drm_setup(int fd,int sfd,unsigned int fourcc){
 	);
 	return 0;
 }
-static int drm_allocate_dumb(struct drm_buffer*buf){
+static int drm_allocate_dumb(struct drm_buffer*b){
 	struct drm_mode_create_dumb creq;
 	struct drm_mode_map_dumb mreq;
 	uint32_t handles[4]={0},pitches[4]={0},offsets[4]={0};
@@ -478,9 +476,9 @@ static int drm_allocate_dumb(struct drm_buffer*buf){
 		DRM_IOCTL_MODE_CREATE_DUMB,
 		&creq
 	)<0)return trlog_error(-1,"DRM_IOCTL_MODE_CREATE_DUMB fail");
-	buf->handle=creq.handle;
-	buf->pitch=creq.pitch;
-	buf->size=creq.size;
+	b->handle=creq.handle;
+	b->pitch=creq.pitch;
+	b->size=creq.size;
 	memset(&mreq,0,sizeof(mreq));
 	mreq.handle=creq.handle;
 	if(drmIoctl(
@@ -488,8 +486,8 @@ static int drm_allocate_dumb(struct drm_buffer*buf){
 		DRM_IOCTL_MODE_MAP_DUMB,
 		&mreq
 	))return trlog_error(-1,"DRM_IOCTL_MODE_MAP_DUMB fail");
-	buf->offset=mreq.offset;
-	if((buf->map=mmap(
+	b->offset=mreq.offset;
+	if((b->map=mmap(
 		0,
 		creq.size,
 		PROT_READ|PROT_WRITE,
@@ -497,7 +495,7 @@ static int drm_allocate_dumb(struct drm_buffer*buf){
 		drm_dev.fd,
 		mreq.offset
 	))==MAP_FAILED)return trlog_error(-1,"mmap fail");
-	memset(buf->map,0,creq.size);
+	memset(b->map,0,creq.size);
 	handles[0]=creq.handle;
 	pitches[0]=creq.pitch;
 	offsets[0]=0;
@@ -509,7 +507,7 @@ static int drm_allocate_dumb(struct drm_buffer*buf){
 		handles,
 		pitches,
 		offsets,
-		&buf->fb_handle,
+		&b->fb_handle,
 		0
 	))return trlog_error(-1,"drmModeAddFB fail");
 	return 0;
@@ -558,19 +556,13 @@ static int _drm_register(){
 	}
 	size_t s=drm_dev.width*drm_dev.height;
 	static lv_disp_buf_t disp_buf;
-	if(!(buf1=malloc(s*sizeof(lv_color_t)))){
-		telog_error("malloc buf1");
+	if(!(buf=malloc(s*sizeof(lv_color_t)))){
+		telog_error("malloc display buffer");
 		drm_exit();
 		return -1;
 	}
-	if(!(buf2=malloc(s*sizeof(lv_color_t)))){
-		telog_error("malloc buf2");
-		drm_exit();
-		return -1;
-	}
-	memset(buf1,0,s);
-	memset(buf2,0,s);
-	lv_disp_buf_init(&disp_buf,buf1,buf2,s);
+	memset(buf,0,s);
+	lv_disp_buf_init(&disp_buf,buf,NULL,s);
 	lv_disp_drv_t disp_drv;
 	lv_disp_drv_init(&disp_drv);
 	disp_drv.hor_res=drm_dev.width;
@@ -602,13 +594,13 @@ static int _drm_init_fd(int fd,int sfd,unsigned int fourcc){
 
 static char*_drm_get_driver_name(int fd,char*buff,size_t len){
 	struct stat s;
-	char buf[128]={0},*ret=NULL;
+	char b[128]={0},*ret=NULL;
 	memset(&s,0,sizeof(s));
 	if(
 		fstatat(fd,"device/driver",&s,0)<0||
 		!S_ISLNK(s.st_mode)
 	)return NULL;
-	if(readlinkat(fd,"device/driver",buf,127)>0)ret=basename(buf);
+	if(readlinkat(fd,"device/driver",b,127)>0)ret=basename(b);
 	if(ret)strncpy(buff,ret,len-1);
 	return ret;
 }

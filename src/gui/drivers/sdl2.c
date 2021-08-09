@@ -155,7 +155,7 @@ static int monitor_init(){
 	);
 	monitor.renderer=SDL_CreateRenderer(
 		monitor.window,-1,
-		SDL_RENDERER_SOFTWARE
+		SDL_RENDERER_ACCELERATED
 	);
 	monitor.texture=SDL_CreateTexture(
 		monitor.renderer,
@@ -173,19 +173,14 @@ static int monitor_init(){
 
 	// Display buffers
 	static size_t s=SDL2_H*SDL2_W;
-	static lv_color_t*buf1=NULL,*buf2=NULL;
+	static lv_color_t*buf=NULL;
 	static lv_disp_buf_t disp_buf;
-	if(!(buf1=malloc(s*sizeof(lv_color_t)))){
-		telog_error("malloc buf1");
+	if(!(buf=malloc(s*sizeof(lv_color_t)))){
+		telog_error("malloc display buffer");
 		return -1;
 	}
-	if(!(buf2=malloc(s*sizeof(lv_color_t)))){
-		telog_error("malloc buf2");
-		return -1;
-	}
-	memset(buf1,0,s);
-	memset(buf2,0,s);
-	lv_disp_buf_init(&disp_buf,buf1,buf2,s);
+	memset(buf,0,s);
+	lv_disp_buf_init(&disp_buf,buf,NULL,s);
 
 	// Display device
 	lv_disp_drv_t disp_drv;

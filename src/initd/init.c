@@ -94,11 +94,13 @@ void init_do_exit(){
 static void init_console(){
 	mkdir(_PATH_DEV,0755);
 	mknod(_PATH_DEV_CONSOLE,S_IFCHR|0600,makedev(5,1));
+	mknod(_PATH_DEV_NULL,S_IFCHR|0600,makedev(1,3));
 	close_all_fd(NULL,0);
 	close(0);
 	close(1);
 	close(2);
 	int fd=open(_PATH_DEV_CONSOLE,O_RDWR);
+	if(fd<0)fd=open(_PATH_DEV_NULL,O_RDWR);
 	dup2(fd,0);
 	dup2(fd,1);
 	dup2(fd,2);

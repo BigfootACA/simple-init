@@ -63,9 +63,9 @@ extern uint32_t custom_tick_get();
 #define LV_LOG_LEVEL                        LV_LOG_LEVEL_WARN
 #define LV_LOG_PRINTF                       1
 #define LV_USE_DEBUG                        1
-#define LV_FONT_MONTSERRAT_12               0
+#define LV_FONT_MONTSERRAT_12               1
 #define LV_FONT_MONTSERRAT_14               0
-#define LV_FONT_MONTSERRAT_16               0
+#define LV_FONT_MONTSERRAT_16               1
 #define LV_FONT_MONTSERRAT_18               0
 #define LV_FONT_MONTSERRAT_20               0
 #define LV_FONT_MONTSERRAT_22               0
@@ -118,7 +118,7 @@ extern uint32_t custom_tick_get();
 #define LV_SPRINTF_CUSTOM                   0
 #define LV_USE_OBJ_REALIGN                  1
 #define LV_USE_EXT_CLICK_AREA               LV_EXT_CLICK_AREA_TINY
-#define LV_USE_ARC                          0
+#define LV_USE_ARC                          1
 #define LV_USE_BAR                          1
 #define LV_USE_BTN                          1
 #define LV_USE_BTNMATRIX                    1
@@ -146,7 +146,7 @@ extern uint32_t custom_tick_get();
 #define LV_USE_SPINBOX                      0
 #define LV_USE_SWITCH                       0
 #define LV_USE_TEXTAREA                     1
-#define LV_USE_TABLE                        0
+#define LV_USE_TABLE                        1
 #define LV_USE_TABVIEW                      0
 #define LV_USE_TILEVIEW                     0
 #define LV_USE_WIN                          0

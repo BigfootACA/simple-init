@@ -8,6 +8,7 @@ add_library(init_gui STATIC
 	interface/sysbar.c
 	interface/backlight.c
 	interface/logviewer.c
+	interface/benchmark.c
 	drivers/drm.c
 	drivers/fbdev.c
 	drivers/input.c

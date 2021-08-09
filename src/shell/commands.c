@@ -1,6 +1,7 @@
 #include"shell_internal.h"
 DECLARE_MAIN(adbd);
 DECLARE_MAIN(arch);
+DECLARE_MAIN(benchmark);
 DECLARE_MAIN(cd);
 DECLARE_MAIN(cat);
 DECLARE_MAIN(chdir);
@@ -50,6 +51,7 @@ const struct shell_command*shell_cmds[]={
 	DECLARE_CMD(true,  findfs,      "Find a filesystem by label or UUID")
 	#endif
 	#ifdef ENABLE_GUI
+	DECLARE_CMD(true,  benchmark,   "GUI Benchmark")
 	DECLARE_CMD(true,  guiapp,      "GUI Application")
 	#ifdef ENABLE_FDISK
 	DECLARE_CMD(true,  guipm,       "GUI Partition Manager")

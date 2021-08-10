@@ -14,6 +14,7 @@
 #include<linux/fb.h>
 #include"hardware.h"
 #include"defines.h"
+#include"system.h"
 #include"pathnames.h"
 #include"logger.h"
 #include"lvgl.h"
@@ -21,7 +22,7 @@
 #include"guidrv.h"
 #define TAG "fbdev"
 static pthread_t fbrt;
-static bool blank=false;
+static bool blank=false,swap_abgr=false;
 static char*fbp=0;
 static long int screensize=0;
 static int fbfd=-1;
@@ -70,6 +71,17 @@ static void fbdev_exit(void){
 		fbfd=-1;
 	}
 }
+static inline uint32_t swap(uint32_t x){
+	return swap_abgr?
+		((x&0xff000000))|
+		((x&0x00ff0000)>>16)|
+		((x&0x0000ff00))|
+		((x&0x000000ff)<<16)
+		:x;
+}
+static inline void copy_swapped(uint32_t*a,const uint32_t*b,size_t l){
+	while(l--)*(uint32_t*)a++=swap(*(uint32_t*)b++);
+}
 static void fbdev_flush(lv_disp_drv_t*drv,const lv_area_t*area,lv_color_t*color_p){
 	if(fbp==NULL||area->x2<0||area->y2<0||area->x1>(int32_t)vinfo.xres-1||area->y1>(int32_t)vinfo.yres-1){
 		lv_disp_flush_ready(drv);
@@ -84,7 +96,7 @@ static void fbdev_flush(lv_disp_drv_t*drv,const lv_area_t*area,lv_color_t*color_
 		uint32_t*fbp32=(uint32_t*)fbp;
 		for(int32_t y=act_y1;y<=act_y2;y++){
 			location=(act_x1+vinfo.xoffset)+(y+vinfo.yoffset)*finfo.line_length/4;
-			memcpy(&fbp32[location],(uint32_t*)color_p,(act_x2-act_x1+1)*4);
+			copy_swapped(&fbp32[location],(uint32_t *)color_p,act_x2-act_x1+1);
 			color_p+=w;
 		}
 	}else if(vinfo.bits_per_pixel==16){
@@ -137,12 +149,9 @@ static int _fbdev_register(){
 	return 0;
 }
 static char*_fbdev_get_driver_name(int fd,char*buff,size_t len){
-	struct stat s;
 	char buf[128]={0},*ret=NULL;
-	memset(&s,0,sizeof(s));
-	if(fstatat(fd,"device/driver",&s,0)<0||!S_ISLNK(s.st_mode)){
-		memset(&s,0,sizeof(s));
-		if(fstatat(fd,"msm_fb_type",&s,0)>0&&S_ISREG(s.st_mode))ret="msmfb";
+	if(!fd_is_link(fd,"device/driver")){
+		if(fd_is_file(fd,"msm_fb_type"))ret="msmfb";
 	}else if(readlinkat(fd,"device/driver",buf,127)>0)ret=basename(buf);
 	if(ret)strncpy(buff,ret,len-1);
 	return ret;
@@ -184,6 +193,9 @@ static int _fbdev_scan(){
 				close(sfd);
 				close(dfd);
 				continue;
+			}else if(!strcmp(driver,"msmfb")){
+				tlog_debug("detect device fb%d msm framebuffer, enable ABGR swap",i);
+				swap_abgr=true;
 			}
 		}
 		close(sfd);

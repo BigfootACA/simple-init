@@ -48,7 +48,10 @@ static int svc_on_exit_main(struct service*svc,bool fail){
 			if(svc->status!=STATUS_STARTING){
 				tlog_warn("service %s does not starting",name);
 				memset(&svc->process,0,sizeof(struct proc_status));
-			}else tlog_notice(fail?"Service %s failed":"Started service %s",name);
+			}else{
+				memcpy(&svc->process,&svc->start->status,sizeof(struct proc_status));
+				tlog_notice(fail?"Service %s failed":"Started service %s",name);
+			}
 			svc->status=fail?STATUS_FAILED:STATUS_STARTED;
 		break;
 	}
@@ -69,9 +72,8 @@ static int svc_on_exit_start(struct svc_exec*exec,struct service*svc,bool fail){
 			if(svc_daemon_get_pid(svc)<0)return -1;
 			break;
 		case WORK_ONCE:
-			svc->status=fail?STATUS_FAILED:STATUS_RUNNING;
-			svc->process.running=false;
-			svc->process.start=exec->status.start;
+			svc->status=fail?STATUS_FAILED:STATUS_STARTED;
+			memcpy(&svc->process,&exec->status,sizeof(struct proc_status));
 			svc->process.active=svc->process.start;
 			break;
 		default:

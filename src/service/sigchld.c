@@ -31,7 +31,7 @@ static int svc_on_exit_main(struct service*svc,bool fail){
 				memset(&svc->process,0,sizeof(struct proc_status));
 			}else{
 				tlog_notice(fail?"Service %s failed":"Stopped service %s",name);
-				if(svc->auto_restart&&auto_restart){
+				if(svc->auto_restart&&auto_restart&&svc->retry>=0){
 					if(svc->retry++>=svc->restart_max){
 						tlog_info("Service %s auto restart exceeds the limit",name);
 						fail=true;
@@ -40,6 +40,7 @@ static int svc_on_exit_main(struct service*svc,bool fail){
 						service_start(svc);
 					}
 				}
+				if(svc->retry<0)svc->retry=0;
 			}
 			svc->status=fail?STATUS_FAILED:STATUS_STOPPED;
 		break;

@@ -126,12 +126,15 @@ int init_process_data(int cfd,struct ucred*u,struct init_msg*msg){
 				res.data.status.ret=errno;
 			}
 		break;
-		case ACTION_SVC_STOP:
-			if(service_stop_by_name(msg->data.data)<0){
-				res.action=ACTION_FAIL;
-				res.data.status.ret=errno;
+		case ACTION_SVC_STOP:{
+			struct service*svc;
+			if((svc=svc_lookup_by_name(msg->data.data))){
+				svc->retry=-1;
+				if(service_stop(svc)>=0)break;
 			}
-		break;
+			res.action=ACTION_FAIL;
+			res.data.status.ret=errno;
+		}break;
 		case ACTION_SVC_RESTART:
 			if(service_restart_by_name(msg->data.data)<0){
 				res.action=ACTION_FAIL;

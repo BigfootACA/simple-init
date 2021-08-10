@@ -613,7 +613,7 @@ static void scene_next_task_cb(lv_task_t*task __attribute__((unused))){
 		row++;
 		char buf[256];
 		for(uint32_t i=0;i<sizeof(scenes)/sizeof(scene_dsc_t)- 1;i++){
-			if(scenes[i].fps_normal<20&&scenes[i].weight>=10){
+			if(scenes[i].fps_normal<fps_weighted/3&&scenes[i].weight>=10){
 				lv_table_set_cell_value(table,row,0,scenes[i].name);
 				lv_snprintf(buf,sizeof(buf),"%d",scenes[i].fps_normal);
 				lv_table_set_cell_value(table,row,1,buf);
@@ -683,6 +683,7 @@ static void monitor_cb(
 	}
 }
 int benchmark_main(int argc __attribute__((unused)),char**argv __attribute__((unused))){
+	open_socket_logfd_default();
 	lv_init();
 	if(guidrv_init(&gui_w,&gui_h,&gui_dpi)<0)return -1;
 	png_decoder_init();

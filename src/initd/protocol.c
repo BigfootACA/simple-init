@@ -55,7 +55,7 @@ static void process_switchroot(struct init_msg*msg,struct init_msg*res){
 		res->data.status.ret=errno=EFAULT;
 		return;
 	}
-	if(!is_folder(msg->data.newroot.root)){
+	if(is_folder(msg->data.newroot.root)){
 		action=msg->action;
 		status=INIT_SHUTDOWN;
 	}else{

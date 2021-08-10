@@ -90,11 +90,7 @@ static int svc_on_exit_stop(struct svc_exec*exec,struct service*svc){
 	if(
 		svc->status!=STATUS_STOPPING&&
 		svc->status!=STATUS_STOPPED
-	){
-		tlog_warn("service %s is not stopping but stop exec exited",name);
-		memset(&svc->process,0,sizeof(struct proc_status));
-		return 0;
-	}
+	)return 0;
 	if(
 		!svc->process.finish||
 		(svc->start&&!svc->start->status.running)

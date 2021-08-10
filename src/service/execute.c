@@ -96,7 +96,9 @@ int svc_run_exec(struct svc_exec*exec){
 	exec->status.active=exec->status.start;
 	exec->status.running=true;
 	int e=0;
-	if(read(ps[0],&e,sizeof(int))!=sizeof(int)){
+	ssize_t re;
+	do{errno=0;re=read(ps[0],&e,sizeof(int));}while((errno=EINTR)&&re<=0);
+	if(re!=sizeof(int)){
 		memset(&exec->status,0,sizeof(exec->status));
 		return -(errno==0?EFAULT:errno);
 	}

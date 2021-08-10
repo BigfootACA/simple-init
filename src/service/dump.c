@@ -23,7 +23,7 @@ static int _svc_proc_status_dump(int ident,struct proc_status*status){
 	if(status->pid!=0)tlog_debug("%s    pid:          %d",      prefix,status->pid);
 	if(!status->running){
 		tlog_debug("%s    exit code:    %d",      prefix,status->exit_code);
-		tlog_debug("%s    exit signal:  %d(%s)",  prefix,status->exit_signal,signame(status->exit_signal));
+		if(status->exit_signal>0)tlog_debug("%s    exit signal:  %d %s",  prefix,status->exit_signal,signame(status->exit_signal));
 	}
 	return 0;
 }
@@ -38,12 +38,12 @@ static int _svc_exec_dump(int ident,struct svc_exec*exec){
 	tlog_debug("%sservice execute %p:",prefix,exec);
 	tlog_debug("%s    prop:",prefix);
 	tlog_debug("%s        name:         %s",     prefix,exec->prop.name);
-	tlog_debug("%s        service:      %p (%s)",prefix,exec->prop.svc,exec->prop.svc?exec->prop.name:"null");
+	tlog_debug("%s        service:      %p (%s)",prefix,exec->prop.svc,exec->prop.svc?exec->prop.svc->name:"null");
 	tlog_debug("%s        type:         %s",     prefix,svc_exec_type_string(exec->prop.type));
 	tlog_debug("%s        user:         %d:%d",  prefix,exec->prop.uid,exec->prop.gid);
 	tlog_debug("%s        timeout:      %ld",    prefix,exec->prop.timeout);
 	tlog_debug("%s    status:",prefix);
-	_svc_proc_status_dump(ident+4,&exec->status);
+	_svc_proc_status_dump(ident+8,&exec->status);
 	tlog_debug("%s    exec:",prefix);
 	switch(exec->prop.type){
 		case TYPE_UNKNOWN:tlog_debug("%s        (Unknown)",prefix);break;
@@ -64,55 +64,71 @@ static int _svc_exec_dump(int ident,struct svc_exec*exec){
 	return 0;
 }
 
+static int _svc_list_dump_simple(int ident,list*svcs){
+	int i;
+	char prefix[BUFSIZ];
+	for(i=0;i<ident&&i<BUFSIZ-1;i++)prefix[i]=' ';
+	prefix[i+1]=0;
+	list*next,*cur;
+	if((next=list_first(svcs)))do{
+		cur=next,next=cur->next;
+		LIST_DATA_DECLARE(s,cur,struct service*);
+		if(s)tlog_debug("%s%p (%s)",prefix,s,s->name);
+	}while(next);
+	return 0;
+}
+
 static int _svc_dump(int ident,struct service*svc){
 	if(!svc)ERET(EINVAL);
-	list*cur,*next;
 	char prefix[BUFSIZ];
 	int i;
 	for(i=0;i<ident&&i<BUFSIZ-1;i++)prefix[i]=' ';
 	prefix[i+1]=0;
 	pthread_mutex_lock(&svc->lock);
-	tlog_debug("%sservice execute %p:",prefix,svc);
+	tlog_debug("%sservice %p:",prefix,svc);
 	tlog_debug("%s    name:             %s",     prefix,svc->name);
 	if(svc->description)tlog_debug("%s    description:      %s",     prefix,svc->description);
 	tlog_debug("%s    mode:             %s",     prefix,svc_work_string(svc->mode));
 	tlog_debug("%s    status:           %s",     prefix,svc_status_string(svc->status));
 	tlog_debug("%s    stop on shutdown: %s",     prefix,bool2string(svc->stop_on_shutdown));
 	tlog_debug("%s    auto restart:     %s",     prefix,bool2string(svc->auto_restart));
+	tlog_debug("%s    restart retry:    %d/%d",  prefix,svc->retry,svc->restart_max);
 	if(svc->pid_file)tlog_debug("%s    pid file:         %s",     prefix,svc->pid_file);
-	tlog_debug("%s    depend on:",prefix);
-	if(svc->depends_on)tlog_debug("%s        (null)",prefix);
-	else if((next=list_first(svc->depends_on)))do{
-		cur=next,next=cur->next;
-		LIST_DATA_DECLARE(s,cur,struct service*);
-		if(s)tlog_debug("%s        %p (%s)",prefix,s,s->name);
-	}while(next);
-	tlog_debug("%s    depend of:",prefix);
-	if(!svc->depends_of)tlog_debug("%s        (null)",prefix);
-	else if((next=list_first(svc->depends_of)))do{
-		cur=next,next=cur->next;
-		LIST_DATA_DECLARE(s,cur,struct service*);
-		if(s)tlog_debug("%s        %p (%s)",prefix,s,s->name);
-	}while(next);
 
-	tlog_debug("%s    start exec:",prefix);
-	if(!svc->start)tlog_debug("%s        (null)",prefix);
-	else _svc_exec_dump(i+8,svc->start);
+	if(svc->depends_on){
+		tlog_debug("%s    depend on:",prefix);
+		_svc_list_dump_simple(i+8,svc->depends_on);
+	}
 
-	tlog_debug("%s    stop exec:",prefix);
-	if(!svc->stop)tlog_debug("%s        (null)",prefix);
-	else if(svc->stop->exec.func==svc_default_stop)tlog_debug("%s        (default)",prefix);
-	else _svc_exec_dump(i+8,svc->stop);
+	if(svc->depends_of){
+		tlog_debug("%s    depend of:",prefix);
+		_svc_list_dump_simple(i+8,svc->depends_of);
+	}
 
-	tlog_debug("%s    reload exec:",prefix);
-	if(!svc->reload)tlog_debug("%s        (null)",prefix);
-	else if(svc->reload->exec.func==svc_default_reload)tlog_debug("%s        (default)",prefix);
-	else _svc_exec_dump(i+8,svc->reload);
+	if(svc->start){
+		tlog_debug("%s    start exec:",prefix);
+		_svc_exec_dump(i+8,svc->start);
+	}
 
-	tlog_debug("%s    restart exec:",prefix);
-	if(!svc->restart)tlog_debug("%s        (null)",prefix);
-	else if(svc->restart->exec.func==svc_default_restart)tlog_debug("%s        (default)",prefix);
-	else _svc_exec_dump(i+8,svc->restart);
+	if(svc->stop){
+		bool def=svc->stop->exec.func==svc_default_stop;
+		tlog_debug("%s    stop exec:%s",prefix,def?" (default)":"");
+		if(!def)_svc_exec_dump(i+8,svc->stop);
+	}
+
+	if(svc->reload){
+		bool def=svc->reload->exec.func==svc_default_reload;
+		tlog_debug("%s    reload exec:%s",prefix,def?" (default)":"");
+		if(!def)_svc_exec_dump(i+8,svc->reload);
+	}
+
+	if(svc->restart){
+		bool def=svc->restart->exec.func==svc_default_restart;
+		tlog_debug("%s    restart exec:%s",prefix,def?" (default)":"");
+		if(!def)_svc_exec_dump(i+8,svc->restart);
+	}
+
+	_svc_proc_status_dump(i+4,&svc->process);
 
 	pthread_mutex_unlock(&svc->lock);
 	return 0;

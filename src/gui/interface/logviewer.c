@@ -15,7 +15,7 @@ static void load_log_task(lv_task_t*t __attribute__((unused))){
 	int fd=open(_PATH_DEV"/logger.log",O_RDONLY);
 	if(fd<0){
 		telog_warn("open logger.log failed");
-		snprintf(buff,BUFSIZ-1,"Load log failed: %m");
+		snprintf(buff,BUFSIZ-1,_("Load log failed: %m"));
 		lv_textarea_set_text(view,buff);
 	}else{
 		lv_textarea_set_text(view,"");
@@ -31,7 +31,7 @@ static void load_log_task(lv_task_t*t __attribute__((unused))){
 }
 
 static void load_log(){
-	lv_textarea_set_text(view,"Loading");
+	lv_textarea_set_text(view,_("Loading..."));
 	lv_task_t*t=lv_task_create(load_log_task,500,LV_TASK_PRIO_LOWEST,NULL);
 	lv_task_once(t);
 }
@@ -59,7 +59,7 @@ void logviewer_draw(lv_obj_t*screen){
 	lv_theme_apply(scr,LV_THEME_SCR);
 
 	lv_obj_t*txt=lv_label_create(scr,NULL);
-	lv_label_set_text(txt,_("Logger Viewer"));
+	lv_label_set_text(txt,_("Loggerd Viewer"));
 	lv_obj_set_width(txt,gui_sw);
 	lv_obj_align(txt,NULL,LV_ALIGN_IN_TOP_MID,0,gui_font_size);
 

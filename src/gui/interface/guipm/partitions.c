@@ -344,7 +344,7 @@ void guipm_draw_partitions(lv_obj_t*screen){
 
 	if(init_disk()<0){
 		selscr=lv_create_opa_mask(screen);
-		lv_create_ok_msgbox(selscr,ok_msg_click,"init disk failed");
+		lv_create_ok_msgbox(selscr,ok_msg_click,_("init disk context failed"));
 	}else{
 		int btw=gui_sw/2-(gui_dpi/5),bth=gui_font_size+(gui_dpi/10);
 		selscr=lv_obj_create(screen,NULL);
@@ -419,7 +419,7 @@ void guipm_draw_partitions(lv_obj_t*screen){
 
 		errno=0;
 		if(fdisk_has_label(ctx))reload_partitions();
-		else set_disks_info("This disk has no label");
+		else set_disks_info(_("This disk has no label"));
 	}
 
 	guiact_register_activity(&(struct gui_activity){

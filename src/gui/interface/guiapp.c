@@ -35,7 +35,7 @@ static void click_btn(lv_obj_t*obj,lv_event_t e){
 	if(f)f(realscr);
 	else lv_create_ok_msgbox_mask(
 		screen,ok_msg_click,
-		"This function does not implemented"
+		_("This function does not implemented")
 	);
 }
 

@@ -325,7 +325,7 @@ static void ok_click(lv_obj_t*obj,lv_event_t e){
 	tlog_debug("ok clicked");
 	lv_create_yesno_msgbox_mask(
 		selscr,ok_msg_click,
-		"Are you sure you want to operate on disk %s?",
+		_("Are you sure you want to operate on disk %s?"),
 		selected->name
 	);
 }

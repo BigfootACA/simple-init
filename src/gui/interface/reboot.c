@@ -56,7 +56,7 @@ static void reboot_action(lv_obj_t*obj,lv_event_t e){
 	init_send(&msg,&response);
 	if(errno!=0||response.data.status.ret!=0){
 		int ex=(errno==0)?response.data.status.ret:errno;
-		lv_create_ok_msgbox(scr,ok_msg_click,"init control command failed: %s",strerror(ex));
+		lv_create_ok_msgbox(scr,ok_msg_click,_("init control command failed: %s"),strerror(ex));
 		lv_obj_del_async(box);
 		return;
 	}

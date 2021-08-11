@@ -30,7 +30,7 @@ static void ok_msg_click(lv_obj_t*obj,lv_event_t e){
 void backlight_menu_draw(lv_obj_t*screen){
 	scr=lv_create_opa_mask(screen);
 	int level=guidrv_get_brightness();
-	if(level<0)lv_create_ok_msgbox(scr,ok_msg_click,"get brightness failed: %m");
+	if(level<0)lv_create_ok_msgbox(scr,ok_msg_click,_("get brightness failed: %m"));
 	else{
 		static lv_style_t bs;
 		lv_style_init(&bs);

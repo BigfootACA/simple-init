@@ -221,11 +221,15 @@ static void sdl2_get_sizes(uint32_t*width,uint32_t*height){
 static void sdl2_get_dpi(int*dpi){
 	if(dpi)*dpi=200/SDL2_Z;
 }
+static bool sdl2_can_sleep(){
+	return false;
+}
 struct gui_driver guidrv_sdl2={
 	.name="sdl2",
 	.drv_register=monitor_init,
 	.drv_getsize=sdl2_get_sizes,
 	.drv_getdpi=sdl2_get_dpi,
+	.drv_cansleep=sdl2_can_sleep
 };
 #endif
 #endif

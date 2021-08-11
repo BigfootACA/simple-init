@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.6)
 project(simple-init LANGUAGES C)
 
-include_directories(include lvgl)
+include_directories(include libs/lvgl)
 add_definitions("-Wall -Wextra -Wno-frame-address -rdynamic")
 
 option(DISABLE_WERROR     "Avoid treating compiler warnings as fatal errors"  OFF)
@@ -43,7 +43,7 @@ if("${ENABLE_GUI}" STREQUAL "ON")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLV_CONF_PATH=\"lv_conf.h\"")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLV_LVGL_H_INCLUDE_SIMPLE=1")
     add_definitions("-Wno-cast-function-type")
-    file(GLOB_RECURSE SOURCES lvgl/src/*.c)
+    file(GLOB_RECURSE SOURCES libs/lvgl/src/*.c)
     add_library(lvgl STATIC ${SOURCES})
 endif()
 

@@ -1,7 +1,9 @@
 #define _GNU_SOURCE
 #include<stdio.h>
+#include<stdlib.h>
+#include"defines.h"
 
-const char*make_readable_str(unsigned long long val,unsigned long block_size,unsigned long display){
+const char*make_readable_str_buf(char*buf,size_t len,unsigned long long val,unsigned long block_size,unsigned long display){
 	static const char units[]="\0KMGTPEZY";
 	unsigned frac=0;
 	const char*u=units,*fmt="%llu";
@@ -16,6 +18,14 @@ const char*make_readable_str(unsigned long long val,unsigned long block_size,uns
 			fmt="%llu%*c",frac=1;
 		}
 	}
-	char*ptr;
-	return asprintf(&ptr,fmt,val,frac,*u)<0?NULL:ptr;
+	snprintf(buf,len,fmt,val,frac,*u);
+	return buf;
+}
+
+const char*make_readable_str(unsigned long long val,unsigned long block_size,unsigned long display){
+	static size_t s=1024;
+	char*c=malloc(s);
+	if(!c)EPRET(ENOMEM);
+	return make_readable_str_buf(c,s-1,val,block_size,display);
+
 }

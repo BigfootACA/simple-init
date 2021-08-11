@@ -98,6 +98,9 @@ extern const char*mode_string(mode_t mode);
 // src/lib/readable.c: convert number to readable size string (eg: make_readable_str(1048576,1,0)="1M")
 extern const char* make_readable_str(unsigned long long val,unsigned long block_size,unsigned long display);
 
+// src/lib/readable.c: convert number to readable size string (eg: make_readable_str(1048576,1,0)="1M")
+extern const char* make_readable_str_buf(char*buf,size_t len,unsigned long long val,unsigned long block_size,unsigned long display);
+
 // src/lib/strings.c: parse string to long
 extern long parse_long(char*str,long def);
 

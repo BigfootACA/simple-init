@@ -311,6 +311,9 @@ static void ok_msg_click(lv_obj_t*obj,lv_event_t e){
 	}else if(e==LV_EVENT_VALUE_CHANGED){
 		switch(lv_msgbox_get_active_btn(obj)){
 			case 0:
+				if(guipm_target_disk)free(guipm_target_disk);
+				guipm_target_disk=strdup(selected->name);
+				guipm_draw_partitions(sysbar.content);
 			break;
 		}
 		lv_msgbox_start_auto_close(obj,0);

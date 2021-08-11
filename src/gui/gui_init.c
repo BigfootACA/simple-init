@@ -124,6 +124,7 @@ int gui_init(draw_func draw){
 	sysbar_draw(screen);
 	draw(sysbar.content);
 	sem_init(&gui_wait,0,0);
+	lv_disp_trig_activity(NULL);
 	while(gui_run){
 		if(lv_disp_get_inactive_time(NULL)<10000){
 			lv_task_handler();

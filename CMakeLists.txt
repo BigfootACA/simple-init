@@ -49,6 +49,7 @@ endif()
 
 if("${ENABLE_LODEPNG}" STREQUAL "ON")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_LODEPNG=1")
+    include(libs/lodepng.cmake)
 endif()
 
 if("${ENABLE_FDISK}" STREQUAL "ON")

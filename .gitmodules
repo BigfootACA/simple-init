@@ -1,3 +1,6 @@
 [submodule "libs/lvgl"]
 	path = libs/lvgl
 	url = https://github.com/lvgl/lvgl.git
+[submodule "libs/lodepng"]
+	path = libs/lodepng
+	url = https://github.com/lvandeve/lodepng.git

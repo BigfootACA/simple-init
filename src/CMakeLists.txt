@@ -16,10 +16,6 @@ if("${ENABLE_FREETYPE2}" STREQUAL "ON")
 	set(DEPENDS ${DEPENDS} freetype2)
 endif()
 
-if("${ENABLE_LODEPNG}" STREQUAL "ON")
-	set(DEPENDS ${DEPENDS} lodepng)
-endif()
-
 if("${ENABLE_FDISK}" STREQUAL "ON")
 	set(DEPENDS ${DEPENDS} fdisk)
 endif()
@@ -87,6 +83,10 @@ add_library(init_rootfs STATIC ${CMAKE_CURRENT_BINARY_DIR}/rootfs.c)
 target_link_libraries(init init_rootfs)
 
 target_link_libraries(init -Wl,--end-group)
+
+if("${ENABLE_LODEPNG}" STREQUAL "ON")
+    target_link_libraries(init lodepng)
+endif()
 
 if("${ENABLE_STATIC}" STREQUAL "ON")
     target_link_libraries(init ${DEPS_STATIC_LIBRARIES})

@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.6)
 project(simple-init LANGUAGES C)
 
 include_directories(include)
-add_definitions("-Wall -Wextra -Wno-frame-address -rdynamic")
+set(CONFIG_H "${CMAKE_CURRENT_BINARY_DIR}/config.h")
+add_definitions("-Wall -Wextra -Wno-frame-address -rdynamic -include ${CONFIG_H}")
 
 option(DISABLE_WERROR     "Avoid treating compiler warnings as fatal errors"  OFF)
 option(DISABLE_DEBUG      "Disable debug infomation generate"                 OFF)
@@ -22,49 +23,21 @@ option(ENABLE_FDISK       "Enable libfdisk for GUI partition tools"           ON
 option(ENABLE_KMOD        "Enable kmod modules load or remove"                ON)
 option(ENABLE_BLKID       "Enable blkid block detect and evalaute tag"        ON)
 
-if("${ENABLE_INITSHELL}" STREQUAL "ON")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_INITSHELL=1")
-endif()
-
-if("${ENABLE_DRM}" STREQUAL "ON")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_DRM=1")
-endif()
-
-if("${ENABLE_GTK}" STREQUAL "ON")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_GTK=1")
-endif()
-
-if("${ENABLE_SDL2}" STREQUAL "ON")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_SDL2=1")
-endif()
+configure_file(src/config.h.in "${CONFIG_H}")
 
 if("${ENABLE_GUI}" STREQUAL "ON")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_GUI=1")
     include(libs/lvgl.cmake)
 endif()
 
-if("${ENABLE_FREETYPE2}" STREQUAL "ON")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_FREETYPE2=1")
-endif()
-
 if("${ENABLE_LODEPNG}" STREQUAL "ON")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_LODEPNG=1")
     include(libs/lodepng.cmake)
 endif()
 
-if("${ENABLE_FDISK}" STREQUAL "ON")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_FDISK=1")
-endif()
-
-if("${ENABLE_KMOD}" STREQUAL "ON")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_KMOD=1")
-else()
+if("${ENABLE_KMOD}" STREQUAL "OFF")
     message(WARNING "libkmod disabled, kernel modules will not be loaded")
 endif()
 
-if("${ENABLE_BLKID}" STREQUAL "ON")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_BLKID=1")
-else()
+if("${ENABLE_BLKID}" STREQUAL "OFF")
     message(WARNING "blkid disabled, may not find block devices by tag")
 endif()
 
@@ -85,7 +58,7 @@ if("${ENABLE_PIE}" STREQUAL "ON")
 endif()
 
 if("${ENABLE_ASAN}" STREQUAL "ON")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_ASAN=1 -fsanitize=address -fsanitize=undefined -fsanitize=leak -fsanitize-recover=all -fno-omit-frame-pointer -fno-stack-protector -fsanitize=leak")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -fsanitize=undefined -fsanitize=leak -fsanitize-recover=all -fno-omit-frame-pointer -fno-stack-protector -fsanitize=leak")
 endif()
 
 if("${ENABLE_STATIC}" STREQUAL "ON")

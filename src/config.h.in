@@ -1,0 +1,17 @@
+#cmakedefine DISABLE_WERROR     1
+#cmakedefine DISABLE_DEBUG      1
+#cmakedefine ENABLE_STRIP       1
+#cmakedefine ENABLE_STATIC      1
+#cmakedefine ENABLE_PIE         1
+#cmakedefine ENABLE_ASAN        1
+#cmakedefine ENABLE_INITSHELL   1
+#cmakedefine ENABLE_DRM         1
+#cmakedefine ENABLE_GTK         1
+#cmakedefine ENABLE_SDL2        1
+#cmakedefine ENABLE_GUI         1
+#cmakedefine ENABLE_FREETYPE2   1
+#cmakedefine ENABLE_LODEPNG     1
+#cmakedefine ENABLE_FDISK       1
+#cmakedefine ENABLE_KMOD        1
+#cmakedefine ENABLE_BLKID       1
+

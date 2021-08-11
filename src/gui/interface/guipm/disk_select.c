@@ -3,13 +3,12 @@
 
 static int xdpi;
 static bool is_show_all=false;
-static lv_style_t f24_style,item_style,gray_style;
 static lv_obj_t*lst=NULL,*selscr=NULL;
 static lv_obj_t*btn_ok,*btn_refresh,*btn_cancel;
 static lv_obj_t*disks_info=NULL,*show_all=NULL;
 static struct disk_info{
 	bool enable;
-	lv_obj_t*btn;
+	lv_obj_t*btn,*chk;
 	struct fdisk_context*ctx;
 	struct fdisk_label*lbl;
 	long size;
@@ -24,18 +23,22 @@ static struct disk_info*selected=NULL;
 static char*get_model(struct disk_info*d){return d->model[0]==0?_("Unknown"):d->model;}
 static char*get_layout(struct disk_info*d){return d->layout[0]==0?_("Unknown"):d->layout;}
 
-static void disk_click(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_CLICKED)return;
+void disk_click(lv_obj_t*obj,lv_event_t e){
+	if(e!=LV_EVENT_VALUE_CHANGED)return;
+	lv_checkbox_set_checked(obj,true);
 	if(selected){
-		if(obj==selected->btn)return;
-		else lv_obj_clear_state(selected->btn,LV_STATE_CHECKED);
+		if(obj==selected->chk)return;
+		else{
+			lv_checkbox_set_checked(selected->chk,false);
+			lv_obj_clear_state(selected->btn,LV_STATE_CHECKED);
+		}
 	}
 	selected=NULL;
 	for(int i=0;i<32&&!selected;i++)
-		if(disks[i].enable&&disks[i].btn==obj)
+		if(disks[i].enable&&disks[i].chk==obj)
 			selected=&disks[i];
 	if(!selected)return;
-	lv_obj_add_state(obj,LV_STATE_CHECKED);
+	lv_obj_add_state(selected->btn,LV_STATE_CHECKED);
 	tlog_debug("selected disk %s",selected->name);
 	lv_obj_clear_state(btn_ok,LV_STATE_DISABLED);
 }
@@ -59,7 +62,6 @@ void guipm_set_disks_info(char*text){
 	disks_info=lv_label_create(lst,NULL);
 	lv_label_set_long_mode(disks_info,LV_LABEL_LONG_BREAK);
 	lv_obj_set_size(disks_info,lv_page_get_scrl_width(lst),gui_sh/16);
-	lv_obj_add_style(disks_info,0,&f24_style);
 	lv_label_set_align(disks_info,LV_LABEL_ALIGN_CENTER);
 	lv_label_set_text(disks_info,text);
 }
@@ -148,6 +150,39 @@ static int get_block_model(struct disk_info*k){
 }
 
 static void disks_add_item(int blk,struct disk_info*k){
+	static lv_style_t grays,items,chks,buls;
+	static bool initialized;
+
+	if(!initialized){
+		initialized=true;
+
+		// gray label
+		lv_style_init(&grays);
+		lv_style_set_text_color(&grays,0,lv_color_make(225,225,225));
+
+		// disk item button style
+		lv_style_init(&items);
+		lv_style_set_radius(&items,LV_STATE_DEFAULT,5);
+		lv_color_t click=lv_color_make(240,240,240),bg=lv_color_make(64,64,64);
+		lv_style_set_border_width(&items,LV_STATE_DEFAULT,1);
+		lv_style_set_border_width(&items,LV_STATE_CHECKED,0);
+		lv_style_set_border_color(&items,LV_STATE_DEFAULT,click);
+		lv_style_set_outline_width(&items,LV_STATE_DEFAULT,1);
+		lv_style_set_outline_color(&items,LV_STATE_DEFAULT,bg);
+		lv_style_set_bg_color(&items,LV_STATE_CHECKED,bg);
+
+		// disk item checkbox style
+		lv_style_init(&chks);
+		lv_style_set_outline_width(&chks,LV_STATE_DEFAULT,0);
+		lv_style_set_outline_width(&chks,LV_STATE_FOCUSED,0);
+
+		// disk item checkbox bullet style
+		lv_color_t pri=lv_theme_get_color_primary();
+		lv_color_t bul=lv_color_lighten(pri,LV_OPA_80);
+		lv_style_init(&buls);
+		lv_style_set_bg_color(&buls,LV_STATE_FOCUSED,bul);
+		lv_style_set_bg_color(&buls,LV_STATE_FOCUSED|LV_STATE_CHECKED,pri);
+	}
 
 	lv_coord_t c1w,c2w,c1l,c2l,bw;
 	bw=lv_page_get_scrl_width(lst);
@@ -156,9 +191,8 @@ static void disks_add_item(int blk,struct disk_info*k){
 	k->btn=lv_btn_create(lst,NULL);
 	lv_obj_set_y(k->btn,(xdpi*5+32)*blk);
 	lv_obj_set_size(k->btn,bw,xdpi*5);
-	lv_obj_add_style(k->btn,LV_BTN_PART_MAIN,&item_style);
-	lv_obj_set_event_cb(k->btn,disk_click);
-	lv_group_add_obj(gui_grp,k->btn);
+	lv_obj_add_style(k->btn,LV_BTN_PART_MAIN,&items);
+	lv_obj_set_click(k->btn,false);
 
 	// line for button text
 	lv_obj_t*line=lv_line_create(k->btn,NULL);
@@ -167,13 +201,15 @@ static void disks_add_item(int blk,struct disk_info*k){
 	c1l=16,c2w=(bw-c1l)/4;
 	c2l=c2w*3,c1w=c2l-(c1l*2);
 
-	// disk name
-	lv_obj_t*d_name=lv_label_create(line,NULL);
-	lv_obj_align(d_name,NULL,LV_ALIGN_IN_LEFT_MID,c1l,-xdpi);
-	lv_label_set_long_mode(d_name,LV_LABEL_LONG_SROLL_CIRC);
-	lv_obj_set_width(d_name,c1w);
-	lv_label_set_align(d_name,LV_LABEL_ALIGN_LEFT);
-	lv_label_set_text(d_name,k->name);
+	// disk name and checkbox
+	k->chk=lv_checkbox_create(line,NULL);
+	lv_obj_align(k->chk,NULL,LV_ALIGN_IN_LEFT_MID,c1l,-xdpi);
+	lv_obj_set_width(k->chk,c1w);
+	lv_checkbox_set_text(k->chk,k->name);
+	lv_obj_set_event_cb(k->chk,disk_click);
+	lv_obj_add_style(k->chk,LV_CHECKBOX_PART_BG,&chks);
+	lv_obj_add_style(k->chk,LV_CHECKBOX_PART_BULLET,&buls);
+	lv_group_add_obj(gui_grp,k->chk);
 
 	// disk model name
 	lv_obj_t*d_model=lv_label_create(line,NULL);
@@ -182,7 +218,7 @@ static void disks_add_item(int blk,struct disk_info*k){
 	lv_obj_set_width(d_model,c1w);
 	lv_label_set_align(d_model,LV_LABEL_ALIGN_LEFT);
 	lv_label_set_text(d_model,get_model(k));
-	if(!k->model[0])lv_obj_add_style(d_model,0,&gray_style);
+	if(!k->model[0])lv_obj_add_style(d_model,0,&grays);
 
 	// disk size
 	lv_obj_t*d_size=lv_label_create(line,NULL);
@@ -199,7 +235,7 @@ static void disks_add_item(int blk,struct disk_info*k){
 	lv_obj_set_width(d_layout,c2w);
 	lv_label_set_align(d_layout,LV_LABEL_ALIGN_RIGHT);
 	lv_label_set_text(d_layout,get_layout(k));
-	if(!k->lbl)lv_obj_add_style(d_layout,0,&gray_style);
+	if(!k->lbl)lv_obj_add_style(d_layout,0,&grays);
 }
 
 void guipm_disk_reload(){
@@ -322,25 +358,6 @@ void guipm_draw_disk_sel(lv_obj_t*screen){
 
 	guipm_draw_title(selscr);
 
-	// disk item button style
-	lv_style_init(&item_style);
-	lv_style_set_radius(&item_style,LV_STATE_DEFAULT,5);
-	lv_color_t click=lv_color_make(240,240,240),bg=lv_color_make(64,64,64);
-	lv_style_set_border_width(&item_style,LV_STATE_DEFAULT,1);
-	lv_style_set_border_width(&item_style,LV_STATE_PRESSED,0);
-	lv_style_set_border_width(&item_style,LV_STATE_CHECKED,0);
-	lv_style_set_border_color(&item_style,LV_STATE_DEFAULT,click);
-	lv_style_set_outline_width(&item_style,LV_STATE_PRESSED,0);
-	lv_style_set_outline_width(&item_style,LV_STATE_DEFAULT,1);
-	lv_style_set_outline_color(&item_style,LV_STATE_DEFAULT,bg);
-	lv_style_set_bg_color(&item_style,LV_STATE_PRESSED,click);
-	lv_style_set_bg_color(&item_style,LV_STATE_CHECKED,bg);
-	lv_style_set_bg_color(&item_style,LV_STATE_CHECKED|LV_STATE_PRESSED,bg);
-
-	// gray label
-	lv_style_init(&gray_style);
-	lv_style_set_text_color(&gray_style,0,lv_color_make(225,225,225));
-
 	// function title
 	lv_obj_t*title=lv_label_create(selscr,NULL);
 	lv_label_set_long_mode(title,LV_LABEL_LONG_BREAK);
@@ -367,14 +384,20 @@ void guipm_draw_disk_sel(lv_obj_t*screen){
 	lv_style_set_outline_width(&btn_style,LV_STATE_PRESSED,0);
 
 	// show all checkbox
-	static lv_style_t chk_style;
+	static lv_style_t chk_style,bul_style;
+	lv_color_t pri=lv_theme_get_color_primary();
+	lv_color_t bul=lv_color_lighten(pri,LV_OPA_80);
 	lv_style_init(&chk_style);
 	lv_style_set_outline_width(&chk_style,LV_STATE_DEFAULT,0);
 	lv_style_set_outline_width(&chk_style,LV_STATE_FOCUSED,0);
+	lv_style_init(&bul_style);
+	lv_style_set_bg_color(&bul_style,LV_STATE_FOCUSED,bul);
+	lv_style_set_bg_color(&bul_style,LV_STATE_FOCUSED|LV_STATE_CHECKED,pri);
 	show_all=lv_checkbox_create(selscr,NULL);
 	lv_obj_set_pos(show_all,xdpi,gui_sh-(bth*2)-(xdpi*2));
 	lv_obj_set_size(show_all,gui_sw/3-(xdpi*2),bth);
 	lv_obj_add_style(show_all,LV_CHECKBOX_PART_BG,&chk_style);
+	lv_obj_add_style(show_all,LV_CHECKBOX_PART_BULLET,&bul_style);
 	lv_obj_set_event_cb(show_all,show_all_click);
 	lv_checkbox_set_text(show_all,_("Show all blocks"));
 	lv_group_add_obj(gui_grp,show_all);

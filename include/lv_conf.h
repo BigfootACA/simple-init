@@ -1,7 +1,7 @@
 #ifndef LV_CONF_H
 #define LV_CONF_H
 #include<stdint.h>
-typedef int16_t lv_coord_t;
+typedef int32_t lv_coord_t;
 typedef void*lv_obj_user_data_t;
 typedef void*lv_font_user_data_t;
 typedef void*lv_anim_user_data_t;

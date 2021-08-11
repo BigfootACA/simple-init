@@ -88,6 +88,12 @@ int guidrv_get_brightness(){
 	else return drv->drv_getbrightness();
 }
 
+bool guidrv_can_sleep(){
+	if(!drv)return false;
+	if(!drv->drv_cansleep)return true;
+	return drv->drv_cansleep();
+}
+
 int guidrv_register(){
 	errno=0;
 	if(!drv)ERET(ENOENT);

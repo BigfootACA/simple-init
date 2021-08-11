@@ -152,7 +152,7 @@ int register_console_shell(){
 		svc_set_desc(shell,"Init Shell on Console");
 		svc_set_start_function(shell,console_shell_service);
 		shell->auto_restart=true;
-		svc_add_depend(svc_default,shell);
+		svc_add_depend(svc_system,shell);
 	}
 	return 0;
 }

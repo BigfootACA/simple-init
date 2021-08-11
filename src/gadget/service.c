@@ -47,7 +47,7 @@ int register_gadget_service(){
 	if(gadget){
 		svc_set_desc(gadget,"USB Gadget Startup");
 		svc_set_start_function(gadget,gadget_startup);
-		svc_add_depend(svc_default,gadget);
+		svc_add_depend(svc_system,gadget);
 	}
 	return 0;
 }

@@ -241,6 +241,9 @@ static void gtkdrv_get_sizes(uint32_t*w,uint32_t*h){
 static void gtkdrv_get_dpi(int*dpi){
 	if(dpi)*dpi=200;
 }
+static bool gtkdrv_can_sleep(){
+	return false;
+}
 
 struct gui_driver guidrv_gtk={
 	.name="gtk",
@@ -248,7 +251,8 @@ struct gui_driver guidrv_gtk={
 	.drv_getsize=gtkdrv_get_sizes,
 	.drv_getdpi=gtkdrv_get_dpi,
 	.drv_tickget=gtkdrv_tick_get,
-	.drv_taskhandler=gtkdrv_taskhandler
+	.drv_taskhandler=gtkdrv_taskhandler,
+	.drv_cansleep=gtkdrv_can_sleep
 };
 #endif
 #endif

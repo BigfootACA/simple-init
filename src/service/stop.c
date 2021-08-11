@@ -28,10 +28,12 @@ static int check_stop_service(struct service*svc){
 
 int svc_stop_service_nodep(struct service*svc){
 	char*name=svc_get_desc(svc);
-	tlog_notice("Stopping service %s",name);
-	if(check_stop_service(svc)!=0)
-		return terlog_warn(errno,"stop service %s",name);
 	pthread_mutex_lock(&svc->lock);
+	if(check_stop_service(svc)!=0){
+		if(errno!=EBUSY)telog_warn("stop service %s",name);
+		goto done;
+	}
+	tlog_notice("Stopping service %s",name);
 	enum svc_status old=svc->status;
 	svc->status=STATUS_STOPPING;
 	if(svc->mode==WORK_FAKE)goto stopped;

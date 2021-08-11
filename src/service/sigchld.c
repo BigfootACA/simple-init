@@ -89,6 +89,7 @@ static int svc_on_exit_start(struct svc_exec*exec,struct service*svc,bool fail){
 static int svc_on_exit_stop(struct svc_exec*exec,struct service*svc){
 	if(exec->prop.svc!=svc)ERET(EINVAL);
 	char*name=svc_get_desc(svc);
+	enum svc_status stat=svc->status;
 	if(
 		svc->status!=STATUS_STOPPING&&
 		svc->status!=STATUS_STOPPED
@@ -97,7 +98,7 @@ static int svc_on_exit_stop(struct svc_exec*exec,struct service*svc){
 		!svc->process.finish||
 		(svc->start&&!svc->start->status.running)
 	)svc->status=STATUS_STOPPED;
-	tlog_notice("Stopped service %s",name);
+	if(stat!=STATUS_STOPPED)tlog_notice("Stopped service %s",name);
 	return 0;
 }
 

@@ -692,3 +692,111 @@ msgstr "重启菜单"
 
 msgid "Loggerd Viewer"
 msgstr "查看日志"
+
+msgid "OK"
+msgstr "确定"
+
+msgid "Yes"
+msgstr "是"
+
+msgid "No"
+msgstr "否"
+
+msgid "Unknown"
+msgstr "未知"
+
+msgid "Initialize disks scanner failed"
+msgstr "初始化磁盘扫描器失败"
+
+msgid "Are you sure you want to operate on disk %s?"
+msgstr "你确定要操作硬盘%s吗？"
+
+msgid "Select a disk to process"
+msgstr "选择一个硬盘进行操作"
+
+msgid "Show all blocks"
+msgstr "显示所有块设备"
+
+msgid "Refresh"
+msgstr "刷新"
+
+msgid "Cancel"
+msgstr "取消"
+
+msgid "(none)"
+msgstr "(无)"
+
+msgid "Free Space"
+msgstr "空闲空间"
+
+msgid "Start: %s(%lu) End %s(%lu)"
+msgstr "起始: %s(%lu) 结束: %s(%lu)"
+
+msgid "(unknown)"
+msgstr "(未知)"
+
+msgid "init disk context failed"
+msgstr "初始化磁盘上下文失败"
+
+msgid "Partition a disk"
+msgstr "磁盘分区"
+
+msgid "Disk..."
+msgstr "磁盘..."
+
+msgid "Partition..."
+msgstr "分区..."
+
+msgid "Reload"
+msgstr "重载"
+
+msgid "New"
+msgstr "新建"
+
+msgid "This disk has no label"
+msgstr "此硬盘没有分区表"
+
+msgid "This function does not implemented"
+msgstr "该功能暂未实现"
+
+msgid "Backlight"
+msgstr "背光灯"
+
+msgid "Select an action you want to do"
+msgstr "选择要进行的操作"
+
+msgid "get brightness failed: %m"
+msgstr "获取亮度失败: %m"
+
+msgid "Change backlight level"
+msgstr "更改亮度级别"
+
+msgid "Load log failed: %m"
+msgstr "加载日志失败: %m"
+
+msgid "Loading..."
+msgstr "加载中..."
+
+msgid "Go top"
+msgstr "回到顶部"
+
+msgid "Go bottom"
+msgstr "回到底部"
+
+msgid "init control command failed: %s"
+msgstr "init控制命令失败: %s"
+
+msgid "Reboot"
+msgstr "重启"
+
+msgid "Reboot into EDL (9008)"
+msgstr "重启到紧急下载模式(9008)"
+
+msgid "Reboot into Recovery"
+msgstr "重启到恢复模式(Recovery)"
+
+msgid "Reboot into Bootloader"
+msgstr "重启到线刷模式(Bootloader)"
+
+msgid "Power Off"
+msgstr "关机"

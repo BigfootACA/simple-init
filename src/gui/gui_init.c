@@ -125,8 +125,10 @@ int gui_init(draw_func draw){
 	draw(sysbar.content);
 	sem_init(&gui_wait,0,0);
 	lv_disp_trig_activity(NULL);
+	bool cansleep=guidrv_can_sleep();
+	if(!cansleep)tlog_notice("gui driver disabled sleep");
 	while(gui_run){
-		if(lv_disp_get_inactive_time(NULL)<10000){
+		if(lv_disp_get_inactive_time(NULL)<10000||!cansleep){
 			lv_task_handler();
 			guidrv_taskhandler();
 		}else gui_enter_sleep();

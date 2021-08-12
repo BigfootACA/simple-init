@@ -19,6 +19,7 @@ static int usage(int e){
 		"\tswitchroot <ROOT> [INIT]  Switch to new root\n"
 		"\tsetenv <KEY> <VALUE>      Add environment variable\n"
 		"\taddenv <KEY>=<VALUE>      Add environment variable\n"
+		"\tlanguage <LANGUAGE>       Set system current language\n"
 		"\tstart <SERVICE>           Start service\n"
 		"\tstop <SERVICE>            Stop service\n"
 		"\trestart <SERVICE>         Re-Start service\n"
@@ -117,6 +118,15 @@ static int cmd_setenv(int argc,char**argv){
 	return cmd_wrapper(&msg,argv[0]);
 }
 
+static int cmd_language(int argc,char**argv){
+	if(argc>2)return re_printf(2,"too many arguments\n");
+	if(argc<2)return re_printf(2,"missing arguments\n");
+	struct init_msg msg;
+	init_initialize_msg(&msg,ACTION_LANGUAGE);
+	strncpy(msg.data.data,argv[1],sizeof(msg.data.data)-1);
+	return cmd_wrapper(&msg,argv[0]);
+}
+
 static int cmd_service(int argc,char**argv){
 	if(argc>2)return re_printf(2,"too many arguments\n");
 	if(argc<2)return re_printf(2,"missing arguments\n");
@@ -153,6 +163,8 @@ struct{
 	{"switchroot",    cmd_switchroot},
 	{"setenv",        cmd_setenv},
 	{"addenv",        cmd_setenv},
+	{"language",      cmd_language},
+	{"lang",          cmd_language},
 	{"start",         cmd_service},
 	{"stop",          cmd_service},
 	{"restart",       cmd_service},

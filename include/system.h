@@ -145,6 +145,9 @@ extern int get_max_fd();
 // src/lib/stdio.c: close all fds
 extern int close_all_fd(const int*exclude,int count);
 
+// src/lib/locale.c: init i18n locale
+extern void init_locale();
+
 // file type macros
 #define is_type(fd,err,type,path...) fd_is_type(AT_FDCWD,err,type,path);
 #define fd_is_file(fd,path...) fd_is_type(fd,0,S_IFREG,path)

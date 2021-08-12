@@ -2,6 +2,7 @@
 #include<fcntl.h>
 #include<errno.h>
 #include<unistd.h>
+#include<string.h>
 #include<sys/stat.h>
 #include"cmdline.h"
 #include"assets.h"
@@ -12,6 +13,23 @@
 #include"shell.h"
 #include"pathnames.h"
 #define TAG "preinit"
+
+static bool need_extract_rootfs(){
+	if(access(_PATH_ETC,F_OK)!=0&&errno==ENOENT)return true;
+
+	struct mount_item**ms=read_proc_mounts(),*m;
+	if(!ms)return false;
+	bool need=false;
+	for(int i=0;(m=ms[i]);i++){
+		if(strcmp(m->target,"/")!=0)continue;
+		tlog_debug("root filesystem is %s",m->type);
+		if(strcmp(m->type,"rootfs")==0)need=true;
+		if(strcmp(m->type,"tmpfs")==0)need=true;
+		break;
+	}
+	free_mounts(ms);
+	return need;
+}
 
 int preinit(){
 
@@ -35,20 +53,19 @@ int preinit(){
 	load_cmdline();
 
 	// init empty rootfs
-	if(access(_PATH_ETC,F_OK)!=0){
+	if(need_extract_rootfs()){
 		int dfd;
-		if(errno==ENOENT){
-			if((dfd=open(_PATH_ROOT,O_DIR))>0){
-				create_assets_dir(dfd,&assets_rootfs,false);
-				tlog_debug("extract assets done");
-				close(dfd);
-			}
-			if((dfd=open(_PATH_USR_BIN,O_DIR))>0){
-				install_cmds(dfd);
-				tlog_debug("install commands done");
-				close(dfd);
-			}
-		}else return terlog_emerg(-errno,"cannot access "_PATH_ETC);
+		if((dfd=open(_PATH_ROOT,O_DIR))>0){
+			create_assets_dir(dfd,&assets_rootfs,false);
+			tlog_debug("extract assets done");
+			init_locale();
+			close(dfd);
+		}
+		if((dfd=open(_PATH_USR_BIN,O_DIR))>0){
+			install_cmds(dfd);
+			tlog_debug("install commands done");
+			close(dfd);
+		}
 	}
 
 	// tel loggerd to listen socket

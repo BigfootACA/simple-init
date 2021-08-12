@@ -102,6 +102,21 @@ static void process_setenv(struct init_msg*msg,struct init_msg*res){
 	);
 }
 
+static void process_language(struct init_msg*msg,struct init_msg*res){
+	if(
+		msg->data.data[0]==0||
+		!check_valid(msg->data.data,VALID"-.")
+	){
+		res->data.status.ret=errno=EINVAL;
+		return;
+	}
+	tlog_info("set language to %s",msg->data.data);
+	setenv("LANG",msg->data.data,1);
+	setenv("LANGUAGE",msg->data.data,1);
+	setenv("LC_ALL",msg->data.data,1);
+	init_locale();
+}
+
 int init_process_data(int cfd,struct ucred*u,struct init_msg*msg){
 	char s[BUFSIZ];
 	struct init_msg res;
@@ -120,6 +135,7 @@ int init_process_data(int cfd,struct ucred*u,struct init_msg*msg){
 		break;
 		case ACTION_SWITCHROOT:process_switchroot(msg,&res);break;
 		case ACTION_ADDENV:process_setenv(msg,&res);break;
+		case ACTION_LANGUAGE:process_language(msg,&res);break;
 		case ACTION_SVC_START:
 			if(service_start_by_name(msg->data.data)<0){
 				res.action=ACTION_FAIL;
@@ -162,6 +178,7 @@ const char*action2string(enum init_action act){
 		case ACTION_REBOOT:return "Reboot";
 		case ACTION_SWITCHROOT:return "Switch Root";
 		case ACTION_ADDENV:return "Add Environ";
+		case ACTION_LANGUAGE:return "Set Language";
 		case ACTION_SVC_START:return "Start Service";
 		case ACTION_SVC_STOP:return "Stop Service";
 		case ACTION_SVC_RESTART:return "ReStart Service";

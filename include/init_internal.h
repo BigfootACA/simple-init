@@ -28,6 +28,7 @@ enum init_action{
 	ACTION_SVC_RESTART=0xBE10,
 	ACTION_SVC_RELOAD =0xBE11,
 	ACTION_SVC_DUMP   =0xBE12,
+	ACTION_LANGUAGE   =0xBE13,
 };
 extern enum init_action action;
 

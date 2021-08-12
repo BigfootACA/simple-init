@@ -3,5 +3,6 @@
 /proc/*
 /run/*
 /tmp/*
+/usr/share/locale
 !.gitkeep
 !.gitignore

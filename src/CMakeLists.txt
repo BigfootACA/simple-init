@@ -42,7 +42,7 @@ endif()
 add_custom_command(
 	OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/rootfs.c"
 	COMMAND bash "${CMAKE_SOURCE_DIR}/scripts/gen-rootfs-source.sh" "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}" "${CMAKE_SOURCE_DIR}/root"
-	DEPENDS "${CMAKE_SOURCE_DIR}/root"
+	DEPENDS "${CMAKE_SOURCE_DIR}/root" "${CMAKE_SOURCE_DIR}/root/usr/share/locale"
 )
 
 find_package(PkgConfig REQUIRED)

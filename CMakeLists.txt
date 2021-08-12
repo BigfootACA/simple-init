@@ -69,5 +69,5 @@ if("${ENABLE_STRIP}" STREQUAL "ON")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -s")
 endif()
 
-add_subdirectory(po)
+include(po/CMakeLists.txt)
 include(src/CMakeLists.txt)

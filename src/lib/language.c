@@ -114,3 +114,11 @@ const char*lang_concat(struct language*lang,bool region,bool charset){
 	}
 	return c;
 }
+bool lang_compare(struct language*lang,const char*name){
+	return lang&&name&&(
+		strcmp(name,lang_concat(lang,false,false))==0||
+		strcmp(name,lang_concat(lang,false,true))==0||
+		strcmp(name,lang_concat(lang,true,false))==0||
+		strcmp(name,lang_concat(lang,true,true))==0
+	);
+}

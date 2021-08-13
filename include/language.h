@@ -25,6 +25,9 @@ extern char*lang_gettext(const char*msgid) __attribute_format_arg__(1);
 // src/lib/locale.c: concat language name
 extern const char*lang_concat(struct language*lang,bool region,bool charset);
 
+// src/lib/locale.c: compare language name
+extern bool lang_compare(struct language*lang,const char*name);
+
 #ifndef _
 #define _ lang_gettext
 #endif

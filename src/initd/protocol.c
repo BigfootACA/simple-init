@@ -191,7 +191,8 @@ const char*action2string(enum init_action act){
 
 int init_send_data(int fd,struct init_msg*send){
 	ssize_t s;
-	if(fd<0||!init_check_msg(send))ERET(EINVAL);
+	if(fd<0)ERET(ENOTCONN);
+	if(!init_check_msg(send))ERET(EINVAL);
 	while(true){
 		s=write(fd,send,sizeof(struct init_msg));
 		if(s<0)switch(errno){
@@ -205,7 +206,8 @@ int init_send_data(int fd,struct init_msg*send){
 
 int init_recv_data(int fd,struct init_msg*response){
 	ssize_t s;
-	if(!response||fd<0)ERET(EINVAL);
+	if(fd<0)ERET(ENOTCONN);
+	if(!response)ERET(EINVAL);
 	while(true){
 		memset(response,0,sizeof(struct init_msg));
 		s=read(fd,response,sizeof(struct init_msg));

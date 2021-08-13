@@ -38,14 +38,14 @@
 #error "Do not use assert.h"
 #endif
 #define assert(expr){if(!(expr))exit_stderr_printf(-1,"assert failed.\n");}
-#define _ simple_gettext
+#define _ lang_gettext
 #define MIN(a,b)((b)>(a)?(a):(b))
 #define MAX(a,b)((b)<(a)?(a):(b))
 #define ENUM(err) -(errno=(err))
 #define ERET(err) return ENUM(err)
 #define EPRET(err) {errno=(err);return NULL;}
 #define IOVEC(data,len) ((struct iovec){.iov_base=(data),.iov_len=(len)})
-extern char*simple_gettext(const char*msgid) __attribute_format_arg__(1);
+extern char*lang_gettext(const char*msgid) __attribute_format_arg__(1);
 static inline int min_int(int a,int b){return MIN(a,b);}
 static inline long min_long(long a,long b){return MIN(a,b);}
 static inline int max_int(int a,int b){return MAX(a,b);}

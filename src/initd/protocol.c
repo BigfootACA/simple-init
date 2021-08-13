@@ -115,7 +115,7 @@ static void process_language(struct init_msg*msg,struct init_msg*res){
 	setenv("LANG",msg->data.data,1);
 	setenv("LANGUAGE",msg->data.data,1);
 	setenv("LC_ALL",msg->data.data,1);
-	init_locale();
+	lang_init_locale();
 }
 
 int init_process_data(int cfd,struct ucred*u,struct init_msg*msg){

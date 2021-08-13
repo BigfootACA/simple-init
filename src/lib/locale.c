@@ -37,7 +37,7 @@ static char*mo_lookup(const void*p,size_t size,const char*s){
 		else b+=n/2,n-=n/2;
 	}
 }
-static int open_locale(char*path){
+static int lang_open_locale(char*path){
 	int fd=-1,r=-1;
 	struct stat st;
 	if(locale_map){
@@ -57,7 +57,7 @@ static int open_locale(char*path){
 	if(fd>=0)close(fd);
 	return r;
 }
-void simple_load_locale(const char*dir,const char*lang,const char*domain){
+void lang_load_locale(const char*dir,const char*lang,const char*domain){
 	if(!domain)return;
 	char rl[64],path[PATH_MAX],*p;
 	memset(rl,0,64);
@@ -71,18 +71,18 @@ void simple_load_locale(const char*dir,const char*lang,const char*domain){
 	for(;;){
 		memset(path,0,PATH_MAX);
 		snprintf(path,PATH_MAX-1,"%s/%s/LC_MESSAGES/%s.mo",d,rl,domain);
-		if(open_locale(path)==0)break;
+		if(lang_open_locale(path)==0)break;
 		if((p=strchr(rl,'.')))*p=0;
 		else if((p=strchr(rl,'_')))*p=0;
 		else break;
 	}
 }
-char*simple_gettext(const char*msgid){
+char*lang_gettext(const char*msgid){
 	if(!locale_map||!msgid)return (char*)msgid;
 	char*ret=mo_lookup(locale_map,map_size,msgid);
 	return ret?ret:(char*)msgid;
 }
-void init_locale(){
-	simple_load_locale(NULL,NULL,NAME);
+void lang_init_locale(){
+	lang_load_locale(NULL,NULL,NAME);
 	init_commands_locale();
 }

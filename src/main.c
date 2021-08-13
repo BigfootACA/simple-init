@@ -10,7 +10,7 @@
 
 int main(int argc,char**argv){
 	spt_init(argc,argv);
-	init_locale();
+	lang_init_locale();
 	char*name;
 	if(
 		!(name=getenv("INIT_MAIN"))&&

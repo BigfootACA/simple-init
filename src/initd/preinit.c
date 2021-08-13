@@ -59,7 +59,7 @@ int preinit(){
 		if((dfd=open(_PATH_ROOT,O_DIR))>0){
 			create_assets_dir(dfd,&assets_rootfs,false);
 			tlog_debug("extract assets done");
-			init_locale();
+			lang_init_locale();
 			close(dfd);
 		}
 		if((dfd=open(_PATH_USR_BIN,O_DIR))>0){

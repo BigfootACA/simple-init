@@ -14,6 +14,11 @@
 #include"pathnames.h"
 #include"language.h"
 #define DEFAULT_LOCALE _PATH_USR"/share/locale"
+struct language languages[]={
+	{"en","US","UTF-8","English (USA)"},
+	{"zh","CN","UTF-8","简体中文 (中国大陆)"},
+	{0,0,0,0}
+};
 static void*locale_map=NULL;
 static size_t map_size=-1;
 // swapc and mo_lookup from musl libc

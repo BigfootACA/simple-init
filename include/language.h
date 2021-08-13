@@ -1,6 +1,15 @@
 #ifndef LANGUAGE_H
 #define LANGUAGE_H
 
+struct language{
+	char*lang;
+	char*region;
+	char*charset;
+	char*name;
+};
+
+extern struct language languages[];
+
 // src/lib/locale.c: init i18n locale
 extern void lang_init_locale();
 

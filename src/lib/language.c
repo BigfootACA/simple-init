@@ -96,3 +96,21 @@ void lang_init_locale(){
 	lang_load_locale(NULL,NULL,NAME);
 	init_commands_locale();
 }
+const char*lang_concat(struct language*lang,bool region,bool charset){
+	if(!lang)return NULL;
+	static char c[32];
+	char*p=c;
+	memset(c,0,32);
+	strncpy(p,lang->lang,4);
+	if(region&&lang->region[0]){
+		while(*(++p)!=0);
+		*(p++)='_';
+		strncpy(p,lang->region,4);
+	}
+	if(charset&&lang->charset[0]){
+		while(*(++p)!=0);
+		*(p++)='.';
+		strncpy(p,lang->charset,16);
+	}
+	return c;
+}

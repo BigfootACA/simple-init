@@ -22,6 +22,9 @@ extern char*lang_get_locale(char*def);
 // src/lib/locale.c: gettext implementation
 extern char*lang_gettext(const char*msgid) __attribute_format_arg__(1);
 
+// src/lib/locale.c: concat language name
+extern const char*lang_concat(struct language*lang,bool region,bool charset);
+
 #ifndef _
 #define _ lang_gettext
 #endif

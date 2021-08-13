@@ -57,14 +57,19 @@ static int lang_open_locale(char*path){
 	if(fd>=0)close(fd);
 	return r;
 }
+char*lang_get_locale(char*def){
+	if(def)return def;
+	char*l;
+	if((l=getenv("LC_ALL")))return l;
+	if((l=getenv("LANG")))return l;
+	if((l=getenv("LANGUAGE")))return l;
+	return NULL;
+}
 void lang_load_locale(const char*dir,const char*lang,const char*domain){
 	if(!domain)return;
 	char rl[64],path[PATH_MAX],*p;
 	memset(rl,0,64);
-	char*l=(char*)lang;
-	if(!l)l=getenv("LC_ALL");
-	if(!l)l=getenv("LANG");
-	if(!l)l=getenv("LANGUAGE");
+	char*l=lang_get_locale((char*)lang);
 	if(!l)return;
 	strncpy(rl,l,63);
 	char*d=dir?(char*)dir:DEFAULT_LOCALE;

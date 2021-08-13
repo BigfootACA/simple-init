@@ -12,6 +12,7 @@
 #include"shell.h"
 #include"version.h"
 #include"pathnames.h"
+#include"language.h"
 #define DEFAULT_LOCALE _PATH_USR"/share/locale"
 static void*locale_map=NULL;
 static size_t map_size=-1;

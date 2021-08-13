@@ -12,6 +12,7 @@
 #include"logger.h"
 #include"shell.h"
 #include"pathnames.h"
+#include"language.h"
 #define TAG "preinit"
 
 static bool need_extract_rootfs(){

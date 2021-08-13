@@ -4,7 +4,7 @@
 #include<stdio.h>
 #include"proctitle.h"
 #include"shell.h"
-#include"system.h"
+#include"language.h"
 #include"defines.h"
 #include"output.h"
 

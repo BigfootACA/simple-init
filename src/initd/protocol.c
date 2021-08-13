@@ -8,6 +8,7 @@
 #include"service.h"
 #include"logger.h"
 #include"defines.h"
+#include"language.h"
 #include"init_internal.h"
 #define TAG "init"
 

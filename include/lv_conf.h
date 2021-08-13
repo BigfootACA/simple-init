@@ -128,7 +128,7 @@ extern uint32_t custom_tick_get();
 #define LV_USE_CHART                        0
 #define LV_USE_CONT                         1
 #define LV_USE_CPICKER                      0
-#define LV_USE_DROPDOWN                     0
+#define LV_USE_DROPDOWN                     1
 #define LV_USE_GAUGE                        0
 #define LV_USE_IMG                          1
 #define LV_USE_IMGBTN                       1

@@ -12,6 +12,7 @@
 #include<sys/mman.h>
 #include"str.h"
 #include"shell.h"
+#include"assets.h"
 #include"defines.h"
 #include"version.h"
 #include"pathnames.h"
@@ -22,6 +23,7 @@ struct language languages[]={
 	{"zh","CN","UTF-8","简体中文 (中国大陆)"},
 	{0,0,0,0}
 };
+static bool mmap_map=false;
 static void*locale_map=NULL;
 static size_t map_size=-1;
 // swapc and mo_lookup from musl libc
@@ -49,16 +51,24 @@ static int lang_open_locale(char*path){
 	int fd=-1,r=-1;
 	struct stat st;
 	if(locale_map){
-		munmap(locale_map,map_size);
+		if(mmap_map)munmap(locale_map,map_size);
 		locale_map=NULL;
 		map_size=-1;
 	}
-	if((fd=open(path,O_RDONLY))<=0)goto clean;
-	if(fstat(fd,&st)!=0)goto clean;
-	if((map_size=st.st_size)<=0)goto clean;
-	if(!(locale_map=mmap(NULL,map_size,PROT_READ,MAP_SHARED,fd,0))){
-		map_size=-1;
-		goto clean;
+	struct entry_file*file=rootfs_get_assets_file(path);
+	if(file&&S_ISREG(file->info.mode)&&!getenv("NO_INTERNAL_MO")){
+		locale_map=file->content;
+		map_size=file->length;
+		mmap_map=false;
+	}else if((fd=open(path,O_RDONLY))<0)goto clean;
+	else{
+		if(fstat(fd,&st)!=0)goto clean;
+		if((map_size=st.st_size)<=0)goto clean;
+		if(!(locale_map=mmap(NULL,map_size,PROT_READ,MAP_SHARED,fd,0))){
+			map_size=-1;
+			goto clean;
+		}
+		mmap_map=true;
 	}
 	r=0;
 	clean:

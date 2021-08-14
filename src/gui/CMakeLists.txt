@@ -5,6 +5,7 @@ add_library(init_gui STATIC
 	interface/guipm/guipm.c
 	interface/guipm/disk_select.c
 	interface/guipm/partitions.c
+	interface/filemgr/fileview.c
 	interface/reboot.c
 	interface/sysbar.c
 	interface/backlight.c

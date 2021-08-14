@@ -6,6 +6,7 @@
 #include"defines.h"
 #include"lvgl.h"
 #include"init_internal.h"
+#include"str.h"
 #include"gui.h"
 #include"gui_draw.h"
 #include"activity.h"
@@ -13,6 +14,26 @@
 #define TAG "guiapp"
 static lv_obj_t*screen,*realscr;
 static int app_num=0;
+
+static struct app{
+	char*name;
+	char*img;
+	draw_func draw;
+}apps[]={
+	{"File Manager",           "filemgr.png",   NULL},
+	{"Partition Manager",      "guipm.png",     guipm_draw_disk_sel},
+	{"USB Control",            "usb.png",       NULL},
+	{"Registry Editor",        "regedit.png",   NULL},
+	{"Image Backgup Recovery", "backup.png",    NULL},
+	{"Enter TWRP",             "twrp.png",      NULL},
+	{"System Info",            "sysinfo.png",   NULL},
+	{"Multi-Boot Manage",      "bootmgr.png",   NULL},
+	{"Reboot Menu",            "reboot.png",    reboot_menu_draw},
+	{"Loggerd Viewer",         "logviewer.png", logviewer_draw},
+	{"Backlight",              "backlight.png", backlight_menu_draw},
+	{"Language",               "language.png",  language_menu_draw},
+	{NULL,NULL,NULL}
+};
 
 void clean_buttons(){
 	lv_obj_t*o=lv_obj_get_child(screen,NULL);
@@ -39,7 +60,7 @@ static void click_btn(lv_obj_t*obj,lv_event_t e){
 	);
 }
 
-static void add_button(char*name,char*img,draw_func draw){
+static void add_button(struct app*p){
 	int a=app_num%4,b=app_num/4;
 	int w=(gui_w-gui_font_size)/4,h=(gui_h-gui_font_size)/5;
 
@@ -55,7 +76,7 @@ static void add_button(char*name,char*img,draw_func draw){
 	lv_obj_set_pos(app,(w*a)+(gui_font_size/2),(h*b)+(gui_font_size/2));
 	lv_obj_set_size(app,w,h);
 	lv_obj_add_style(app,LV_OBJ_PART_MAIN,style);
-	lv_obj_set_user_data(app,draw);
+	lv_obj_set_user_data(app,p->draw);
 	lv_obj_set_event_cb(app,click_btn);
 	lv_group_add_obj(gui_grp,app);
 
@@ -74,10 +95,13 @@ static void add_button(char*name,char*img,draw_func draw){
 	lv_obj_t*icon=lv_img_create(icon_w,NULL);
 	char path[BUFSIZ]={0},fail[BUFSIZ]={0};
 	strcpy(fail,IMG_RES"/apps.png");
-	if(img)snprintf(path,BUFSIZ-1,IMG_RES"/%s",img);
-	lv_img_set_src(icon,img?path:fail);
+	if(p->img){
+		if(contains_of("./",2,p->img[0]))strncpy(path,p->img,BUFSIZ-1);
+		else snprintf(path,BUFSIZ-1,IMG_RES"/%s",p->img);
+	}
+	lv_img_set_src(icon,p->img?path:fail);
 	lv_img_ext_t*x=lv_obj_get_ext_attr(icon);
-	if((x->w<=0||x->h<=0)&&img){
+	if((x->w<=0||x->h<=0)&&p->img){
 		lv_img_set_src(icon,fail);
 		x=lv_obj_get_ext_attr(icon);
 	}
@@ -94,9 +118,14 @@ static void add_button(char*name,char*img,draw_func draw){
 	lv_label_set_long_mode(txt,LV_LABEL_LONG_BREAK);
 	lv_obj_set_width(txt,w);
 	lv_label_set_align(txt,LV_LABEL_ALIGN_CENTER);
-	lv_label_set_text(txt,name);
+	lv_label_set_text(txt,_(p->name));
 	lv_obj_align(txt,icon_w,LV_ALIGN_OUT_BOTTOM_MID,0,0);
 	app_num++;
+}
+
+static void redraw_apps(){
+	clean_buttons();
+	for(int i=0;apps[i].name;i++)add_button(&apps[i]);
 }
 
 static void _draw(lv_obj_t*scr){
@@ -106,19 +135,7 @@ static void _draw(lv_obj_t*scr){
 	lv_obj_set_pos(screen,gui_sx,gui_sy);
 	lv_theme_apply(screen,LV_THEME_SCR);
 
-	// buttons
-	add_button(_("File Manager"),           "filemgr.png",   NULL);
-	add_button(_("Partition Manager"),      "guipm.png",     guipm_draw_disk_sel);
-	add_button(_("USB Control"),            "usb.png",       NULL);
-	add_button(_("Registry Editor"),        "regedit.png",   NULL);
-	add_button(_("Image Backgup Recovery"), "backup.png",    NULL);
-	add_button(_("Enter TWRP"),             "twrp.png",      NULL);
-	add_button(_("System Info"),            "sysinfo.png",   NULL);
-	add_button(_("Multi-Boot Manage"),      "bootmgr.png",   NULL);
-	add_button(_("Reboot Menu"),            "reboot.png",    reboot_menu_draw);
-	add_button(_("Loggerd Viewer"),         "logviewer.png", logviewer_draw);
-	add_button(_("Backlight"),              "backlight.png", backlight_menu_draw);
-	add_button(_("Language"),               "language.png",  language_menu_draw);
+	redraw_apps();
 
 	guiact_register_activity(&(struct gui_activity){
 		.name="guiapp",

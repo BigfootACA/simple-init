@@ -28,6 +28,9 @@ extern const char*lang_concat(struct language*lang,bool region,bool charset);
 // src/lib/locale.c: compare language name
 extern bool lang_compare(struct language*lang,const char*name);
 
+// src/lib/locale.c: set current language
+extern int lang_set(const char*lang);
+
 #ifndef _
 #define _ lang_gettext
 #endif

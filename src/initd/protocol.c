@@ -104,18 +104,8 @@ static void process_setenv(struct init_msg*msg,struct init_msg*res){
 }
 
 static void process_language(struct init_msg*msg,struct init_msg*res){
-	if(
-		msg->data.data[0]==0||
-		!check_valid(msg->data.data,VALID"-.")
-	){
-		res->data.status.ret=errno=EINVAL;
-		return;
-	}
-	tlog_info("set language to %s",msg->data.data);
-	setenv("LANG",msg->data.data,1);
-	setenv("LANGUAGE",msg->data.data,1);
-	setenv("LC_ALL",msg->data.data,1);
-	lang_init_locale();
+	if(lang_set(msg->data.data)!=0)res->data.status.ret=errno;
+	else tlog_info("set language to %s",msg->data.data);
 }
 
 int init_process_data(int cfd,struct ucred*u,struct init_msg*msg){

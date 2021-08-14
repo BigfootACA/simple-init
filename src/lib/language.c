@@ -7,9 +7,12 @@
 #include<string.h>
 #include<stdint.h>
 #include<stdlib.h>
+#include<libintl.h>
 #include<sys/stat.h>
 #include<sys/mman.h>
+#include"str.h"
 #include"shell.h"
+#include"defines.h"
 #include"version.h"
 #include"pathnames.h"
 #include"language.h"
@@ -121,4 +124,15 @@ bool lang_compare(struct language*lang,const char*name){
 		strcmp(name,lang_concat(lang,true,false))==0||
 		strcmp(name,lang_concat(lang,true,true))==0
 	);
+}
+int lang_set(const char*lang){
+	if(
+		!lang||lang[0]==0||
+		!check_valid((char*)lang,VALID"-.")
+	)ERET(EINVAL);
+	setenv("LANG",lang,1);
+	setenv("LANGUAGE",lang,1);
+	setenv("LC_ALL",lang,1);
+	lang_init_locale();
+	return 0;
 }

@@ -118,6 +118,7 @@ static void _draw(lv_obj_t*scr){
 	add_button(_("Reboot Menu"),            "reboot.png",    reboot_menu_draw);
 	add_button(_("Loggerd Viewer"),         "logviewer.png", logviewer_draw);
 	add_button(_("Backlight"),              "backlight.png", backlight_menu_draw);
+	add_button(_("Language"),               "language.png",  language_menu_draw);
 
 	guiact_register_activity(&(struct gui_activity){
 		.name="guiapp",

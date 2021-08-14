@@ -150,7 +150,7 @@ static int get_block_model(struct disk_info*k){
 }
 
 static void disks_add_item(int blk,struct disk_info*k){
-	static lv_style_t grays,chks,buls;
+	static lv_style_t grays;
 	static bool initialized;
 
 	if(!initialized){
@@ -160,17 +160,6 @@ static void disks_add_item(int blk,struct disk_info*k){
 		lv_style_init(&grays);
 		lv_style_set_text_color(&grays,0,lv_color_make(225,225,225));
 
-		// disk item checkbox style
-		lv_style_init(&chks);
-		lv_style_set_outline_width(&chks,LV_STATE_DEFAULT,0);
-		lv_style_set_outline_width(&chks,LV_STATE_FOCUSED,0);
-
-		// disk item checkbox bullet style
-		lv_color_t pri=lv_theme_get_color_primary();
-		lv_color_t bul=lv_color_lighten(pri,LV_OPA_80);
-		lv_style_init(&buls);
-		lv_style_set_bg_color(&buls,LV_STATE_FOCUSED,bul);
-		lv_style_set_bg_color(&buls,LV_STATE_FOCUSED|LV_STATE_CHECKED,pri);
 	}
 
 	lv_coord_t c1w,c2w,c1l,c2l,bw;
@@ -196,8 +185,7 @@ static void disks_add_item(int blk,struct disk_info*k){
 	lv_obj_set_width(k->chk,c1w);
 	lv_checkbox_set_text(k->chk,k->name);
 	lv_obj_set_event_cb(k->chk,disk_click);
-	lv_obj_add_style(k->chk,LV_CHECKBOX_PART_BG,&chks);
-	lv_obj_add_style(k->chk,LV_CHECKBOX_PART_BULLET,&buls);
+	lv_style_set_focus_checkbox(k->chk);
 	lv_group_add_obj(gui_grp,k->chk);
 
 	// disk model name

@@ -138,7 +138,7 @@ static void partition_click(lv_obj_t*obj,lv_event_t e){
 }
 
 static void partitions_add_item(int i,struct partition_info*p){
-	static lv_style_t grays,frees,chks,buls,small;
+	static lv_style_t grays,frees,small;
 	static bool initialized;
 	if(!initialized){
 		initialized=true;
@@ -150,18 +150,6 @@ static void partitions_add_item(int i,struct partition_info*p){
 		// free space item button style
 		lv_style_init(&frees);
 		lv_style_set_bg_color(&frees,LV_STATE_DEFAULT,lv_color_make(240,240,240));
-
-		// partition item checkbox style
-		lv_style_init(&chks);
-		lv_style_set_outline_width(&chks,LV_STATE_DEFAULT,0);
-		lv_style_set_outline_width(&chks,LV_STATE_FOCUSED,0);
-
-		// partition item checkbox bullet style
-		lv_color_t pri=lv_theme_get_color_primary();
-		lv_color_t bul=lv_color_lighten(pri,LV_OPA_80);
-		lv_style_init(&buls);
-		lv_style_set_bg_color(&buls,LV_STATE_FOCUSED,bul);
-		lv_style_set_bg_color(&buls,LV_STATE_FOCUSED|LV_STATE_CHECKED,pri);
 
 		lv_style_init(&small);
 		lv_style_set_text_font(&small,LV_STATE_DEFAULT,gui_font_small);
@@ -186,8 +174,7 @@ static void partitions_add_item(int i,struct partition_info*p){
 	p->chk=lv_checkbox_create(line,NULL);
 	lv_checkbox_set_text(p->chk,p->free?_("Free Space"):p->partname);
 	if(p->free)lv_obj_add_style(p->chk,LV_CHECKBOX_PART_BG,&grays);
-	lv_obj_add_style(p->chk,LV_CHECKBOX_PART_BG,&chks);
-	lv_obj_add_style(p->chk,LV_CHECKBOX_PART_BULLET,&buls);
+	lv_style_set_focus_checkbox(p->chk);
 	lv_obj_set_event_cb(p->chk,partition_click);
 	lv_group_add_obj(gui_grp,p->chk);
 	lv_obj_align(p->chk,NULL,LV_ALIGN_IN_TOP_LEFT,m,lv_obj_get_height(p->chk)+m);

@@ -349,6 +349,31 @@ static int do_cleanup(void*d __attribute__((unused))){
 	return 0;
 }
 
+static void do_reload(lv_task_t*t __attribute__((unused))){
+	guipm_disk_reload();
+	lv_group_add_obj(gui_grp,show_all);
+	lv_group_add_obj(gui_grp,btn_ok);
+	lv_group_add_obj(gui_grp,btn_refresh);
+	lv_group_add_obj(gui_grp,btn_cancel);
+}
+
+static int guipm_disk_get_focus(void*d __attribute__((unused))){
+	lv_task_once(lv_task_create(do_reload,100,LV_TASK_PRIO_MID,NULL));
+	return 0;
+}
+
+static int guipm_disk_lost_focus(void*d __attribute__((unused))){
+	for(int i=0;i<32;i++){
+		if(!disks[i].enable)continue;
+		lv_group_remove_obj(disks[i].chk);
+	}
+	lv_group_remove_obj(show_all);
+	lv_group_remove_obj(btn_ok);
+	lv_group_remove_obj(btn_refresh);
+	lv_group_remove_obj(btn_cancel);
+	return 0;
+}
+
 void guipm_draw_disk_sel(lv_obj_t*screen){
 
 	xdpi=gui_dpi/10;
@@ -403,7 +428,6 @@ void guipm_draw_disk_sel(lv_obj_t*screen){
 	lv_obj_add_style(show_all,LV_CHECKBOX_PART_BULLET,&bul_style);
 	lv_obj_set_event_cb(show_all,show_all_click);
 	lv_checkbox_set_text(show_all,_("Show all blocks"));
-	lv_group_add_obj(gui_grp,show_all);
 
 	// ok button
 	btn_ok=lv_btn_create(selscr,NULL);
@@ -413,7 +437,6 @@ void guipm_draw_disk_sel(lv_obj_t*screen){
 	lv_obj_add_state(btn_ok,LV_STATE_CHECKED|LV_STATE_DISABLED);
 	lv_obj_set_event_cb(btn_ok,ok_click);
 	lv_label_set_text(lv_label_create(btn_ok,NULL),_("OK"));
-	lv_group_add_obj(gui_grp,btn_ok);
 
 	// refresh button
 	btn_refresh=lv_btn_create(selscr,NULL);
@@ -423,7 +446,6 @@ void guipm_draw_disk_sel(lv_obj_t*screen){
 	lv_obj_add_state(btn_refresh,LV_STATE_CHECKED);
 	lv_obj_set_event_cb(btn_refresh,refresh_click);
 	lv_label_set_text(lv_label_create(btn_refresh,NULL),_("Refresh"));
-	lv_group_add_obj(gui_grp,btn_refresh);
 
 	// cancel button
 	btn_cancel=lv_btn_create(selscr,NULL);
@@ -433,14 +455,13 @@ void guipm_draw_disk_sel(lv_obj_t*screen){
 	lv_obj_add_state(btn_cancel,LV_STATE_CHECKED);
 	lv_obj_set_event_cb(btn_cancel,cancel_click);
 	lv_label_set_text(lv_label_create(btn_cancel,NULL),_("Cancel"));
-	lv_group_add_obj(gui_grp,btn_cancel);
-
-	guipm_disk_reload();
 
 	guiact_register_activity(&(struct gui_activity){
 		.name="guipm-disk-select",
 		.ask_exit=NULL,
 		.quiet_exit=do_cleanup,
+		.get_focus=guipm_disk_get_focus,
+		.lost_focus=guipm_disk_lost_focus,
 		.back=true,
 		.page=selscr
 	});

@@ -336,6 +336,33 @@ static void reload_click(lv_obj_t*obj,lv_event_t e){
 	reload_partitions();
 }
 
+static void do_reload(lv_task_t*t __attribute__((unused))){
+	errno=0;
+	if(fdisk_has_label(ctx))reload_partitions();
+	else set_disks_info(_("This disk has no label"));
+	lv_group_add_obj(gui_grp,btn_disk);
+	lv_group_add_obj(gui_grp,btn_part);
+	lv_group_add_obj(gui_grp,btn_reload);
+	lv_group_add_obj(gui_grp,btn_new);
+}
+
+static int guipm_part_get_focus(void*d __attribute__((unused))){
+	lv_task_once(lv_task_create(do_reload,100,LV_TASK_PRIO_MID,NULL));
+	return 0;
+}
+
+static int guipm_part_lost_focus(void*d __attribute__((unused))){
+	for(int i=0;i<1024;i++){
+		if(!partitions[i])continue;
+		lv_group_remove_obj(partitions[i]->chk);
+	}
+	lv_group_remove_obj(btn_new);
+	lv_group_remove_obj(btn_disk);
+	lv_group_remove_obj(btn_part);
+	lv_group_remove_obj(btn_reload);
+	return 0;
+}
+
 void guipm_draw_partitions(lv_obj_t*screen){
 	if(!guipm_target_disk){
 		tlog_warn("target disk not set");
@@ -416,16 +443,14 @@ void guipm_draw_partitions(lv_obj_t*screen){
 		lv_obj_add_state(btn_new,LV_STATE_CHECKED|LV_STATE_DISABLED);
 		lv_label_set_text(lv_label_create(btn_new,NULL),_("New"));
 		lv_group_add_obj(gui_grp,btn_new);
-
-		errno=0;
-		if(fdisk_has_label(ctx))reload_partitions();
-		else set_disks_info(_("This disk has no label"));
 	}
 
 	guiact_register_activity(&(struct gui_activity){
 		.name="guipm-partitions",
 		.ask_exit=NULL,
 		.quiet_exit=NULL,
+		.get_focus=guipm_part_get_focus,
+		.lost_focus=guipm_part_lost_focus,
 		.back=true,
 		.page=selscr
 	});

@@ -150,7 +150,7 @@ static int get_block_model(struct disk_info*k){
 }
 
 static void disks_add_item(int blk,struct disk_info*k){
-	static lv_style_t grays,items,chks,buls;
+	static lv_style_t grays,chks,buls;
 	static bool initialized;
 
 	if(!initialized){
@@ -159,17 +159,6 @@ static void disks_add_item(int blk,struct disk_info*k){
 		// gray label
 		lv_style_init(&grays);
 		lv_style_set_text_color(&grays,0,lv_color_make(225,225,225));
-
-		// disk item button style
-		lv_style_init(&items);
-		lv_style_set_radius(&items,LV_STATE_DEFAULT,5);
-		lv_color_t click=lv_color_make(240,240,240),bg=lv_color_make(64,64,64);
-		lv_style_set_border_width(&items,LV_STATE_DEFAULT,1);
-		lv_style_set_border_width(&items,LV_STATE_CHECKED,0);
-		lv_style_set_border_color(&items,LV_STATE_DEFAULT,click);
-		lv_style_set_outline_width(&items,LV_STATE_DEFAULT,1);
-		lv_style_set_outline_color(&items,LV_STATE_DEFAULT,bg);
-		lv_style_set_bg_color(&items,LV_STATE_CHECKED,bg);
 
 		// disk item checkbox style
 		lv_style_init(&chks);
@@ -191,7 +180,7 @@ static void disks_add_item(int blk,struct disk_info*k){
 	k->btn=lv_btn_create(lst,NULL);
 	lv_obj_set_y(k->btn,(xdpi*5+32)*blk);
 	lv_obj_set_size(k->btn,bw,xdpi*5);
-	lv_obj_add_style(k->btn,LV_BTN_PART_MAIN,&items);
+	lv_style_set_btn_item(k->btn);
 	lv_obj_set_click(k->btn,false);
 
 	// line for button text

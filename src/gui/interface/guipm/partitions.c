@@ -138,7 +138,7 @@ static void partition_click(lv_obj_t*obj,lv_event_t e){
 }
 
 static void partitions_add_item(int i,struct partition_info*p){
-	static lv_style_t grays,items,frees,chks,buls,small;
+	static lv_style_t grays,frees,chks,buls,small;
 	static bool initialized;
 	if(!initialized){
 		initialized=true;
@@ -147,20 +147,9 @@ static void partitions_add_item(int i,struct partition_info*p){
 		lv_style_init(&grays);
 		lv_style_set_text_color(&grays,LV_STATE_DEFAULT,lv_color_make(160,160,160));
 
-		// partition item button style
-		lv_style_init(&items);
-		lv_style_set_radius(&items,LV_STATE_DEFAULT,5);
-		lv_color_t click=lv_color_make(240,240,240),bg=lv_color_make(64,64,64);
-		lv_style_set_border_width(&items,LV_STATE_DEFAULT,1);
-		lv_style_set_border_width(&items,LV_STATE_CHECKED,0);
-		lv_style_set_border_color(&items,LV_STATE_DEFAULT,click);
-		lv_style_set_outline_width(&items,LV_STATE_DEFAULT,1);
-		lv_style_set_outline_color(&items,LV_STATE_DEFAULT,bg);
-		lv_style_set_bg_color(&items,LV_STATE_CHECKED,bg);
-
 		// free space item button style
 		lv_style_init(&frees);
-		lv_style_set_bg_color(&frees,LV_STATE_DEFAULT,click);
+		lv_style_set_bg_color(&frees,LV_STATE_DEFAULT,lv_color_make(240,240,240));
 
 		// partition item checkbox style
 		lv_style_init(&chks);
@@ -184,7 +173,7 @@ static void partitions_add_item(int i,struct partition_info*p){
 	p->btn=lv_btn_create(page,NULL);
 	if(i>0)lv_obj_align(p->btn,partitions[i-1]->btn,LV_ALIGN_OUT_BOTTOM_LEFT,0,gui_dpi/10);
 	lv_obj_set_size(p->btn,bw,gui_dpi/3*2);
-	lv_obj_add_style(p->btn,LV_BTN_PART_MAIN,&items);
+	lv_style_set_btn_item(p->btn);
 	if(p->free)lv_obj_add_style(p->btn,LV_BTN_PART_MAIN,&frees);
 	lv_obj_set_click(p->btn,false);
 

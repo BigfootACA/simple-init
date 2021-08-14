@@ -18,6 +18,28 @@ lv_style_t*lv_style_opa_mask(){
 	return &bg;
 }
 
+lv_style_t*lv_style_btn_item(){
+	static lv_style_t items;
+	static bool initialized=false;
+	if(!initialized){
+		lv_style_init(&items);
+		lv_style_set_radius(&items,LV_STATE_DEFAULT,5);
+		lv_color_t click=lv_color_make(240,240,240),bg=lv_color_make(64,64,64);
+		lv_style_set_border_width(&items,LV_STATE_DEFAULT,1);
+		lv_style_set_border_width(&items,LV_STATE_CHECKED,0);
+		lv_style_set_border_color(&items,LV_STATE_DEFAULT,click);
+		lv_style_set_outline_width(&items,LV_STATE_DEFAULT,1);
+		lv_style_set_outline_color(&items,LV_STATE_DEFAULT,bg);
+		lv_style_set_bg_color(&items,LV_STATE_CHECKED,bg);
+		initialized=true;
+	}
+	return &items;
+}
+
+void lv_style_set_btn_item(lv_obj_t*btn){
+	lv_obj_add_style(btn,LV_BTN_PART_MAIN,lv_style_btn_item());
+}
+
 lv_obj_t*lv_create_opa_mask(lv_obj_t*par){
 	lv_obj_t*mask=lv_objmask_create(par,NULL);
 	lv_obj_set_size(mask,gui_sw,gui_sh);

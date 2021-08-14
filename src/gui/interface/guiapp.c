@@ -37,8 +37,10 @@ static struct app{
 
 void clean_buttons(){
 	lv_obj_t*o=lv_obj_get_child(screen,NULL);
-	if(o)do{lv_obj_del_async(o);}
-	while((o=lv_obj_get_child(screen,o)));
+	if(o)do{
+		if(!lv_debug_check_obj_type(o,"lv_objmask"))continue;
+		lv_obj_del_async(o);
+	}while((o=lv_obj_get_child(screen,o)));
 	app_num=0;
 }
 
@@ -151,6 +153,19 @@ static void _draw(lv_obj_t*scr){
 	lv_obj_set_size(screen,gui_sw,gui_sh);
 	lv_obj_set_pos(screen,gui_sx,gui_sy);
 	lv_theme_apply(screen,LV_THEME_SCR);
+
+	static lv_style_t txt_style;
+	lv_style_init(&txt_style);
+	lv_style_set_text_font(&txt_style,LV_STATE_DEFAULT,gui_font_small);
+	lv_style_set_text_color(&txt_style,LV_STATE_DEFAULT,lv_color_make(200,200,200));
+
+	lv_obj_t*author=lv_label_create(screen,NULL);
+	lv_label_set_text(author,"Author: BigfootACA");
+	lv_label_set_long_mode(author,LV_LABEL_LONG_BREAK);
+	lv_label_set_align(author,LV_LABEL_ALIGN_CENTER);
+	lv_obj_add_style(author,LV_LABEL_PART_MAIN,&txt_style);
+	lv_obj_set_width(author,gui_sw);
+	lv_obj_align(author,NULL,LV_ALIGN_IN_BOTTOM_MID,0,-gui_font_size);
 
 	guiact_register_activity(&(struct gui_activity){
 		.name="guiapp",

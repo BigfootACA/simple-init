@@ -39,6 +39,35 @@ struct gui_activity*guiact_get_last(){
 	list*last=guiact_get_last_list();
 	return last&&last->data?last->data:NULL;
 }
+
+static int call_lost_focus(struct gui_activity*act){
+	if(!act)return -1;
+	tlog_debug("%s lost focus",act->name);
+	return act->lost_focus?act->lost_focus(NULL):-1;
+}
+
+static int call_lost_focus_list(list*lst){
+	return lst?call_lost_focus(lst->data):-1;
+}
+
+static int call_lost_focus_last(){
+	return call_lost_focus_list(guiact_get_last_list());
+}
+
+static int call_get_focus(struct gui_activity*act){
+	if(!act)return -1;
+	tlog_debug("%s get focus",act->name);
+	return act->get_focus?act->get_focus(NULL):-1;
+}
+
+static int call_get_focus_list(list*lst){
+	return lst?call_get_focus(lst->data):-1;
+}
+
+static int call_get_focus_last(){
+	return call_get_focus_list(guiact_get_last_list());
+}
+
 static void guiact_remove_last_list(){
 	list_remove_free_def(guiact_get_last_list());
 }
@@ -47,8 +76,10 @@ int guiact_remove_last(){
 	struct gui_activity*l=guiact_get_last();
 	if(guiact_is_alone()||!l)return 0;
 	tlog_debug("end activity %s",l->name);
+	call_lost_focus_last();
 	if(l->page)lv_obj_del_async(l->page);
 	guiact_remove_last_list();
+	call_get_focus_last();
 	return 0;
 }
 
@@ -87,8 +118,11 @@ int guiact_register_activity(struct gui_activity*act){
 	if(!act)ERET(EINVAL);
 	list*e=list_new_dup(act,sizeof(struct gui_activity));
 	if(!e)ERET(ENOMEM);
-	if(activities)list_push(activities,e);
-	else activities=e;
+	if(activities){
+		call_lost_focus_last();
+		list_push(activities,e);
+	}else activities=e;
+	call_get_focus_last();
 	tlog_debug(
 		"add activity %s to stack, now have %d",
 		act->name,list_count(activities)

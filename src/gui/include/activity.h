@@ -6,6 +6,8 @@ struct gui_activity{
 	bool back;
 	runnable_t*ask_exit;
 	runnable_t*quiet_exit;
+	runnable_t*get_focus;
+	runnable_t*lost_focus;
 	lv_obj_t*page;
 };
 extern int guiact_do_exit();

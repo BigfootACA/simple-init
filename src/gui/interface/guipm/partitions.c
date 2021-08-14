@@ -138,23 +138,6 @@ static void partition_click(lv_obj_t*obj,lv_event_t e){
 }
 
 static void partitions_add_item(int i,struct partition_info*p){
-	static lv_style_t grays,frees,small;
-	static bool initialized;
-	if(!initialized){
-		initialized=true;
-
-		// gray label
-		lv_style_init(&grays);
-		lv_style_set_text_color(&grays,LV_STATE_DEFAULT,lv_color_make(160,160,160));
-
-		// free space item button style
-		lv_style_init(&frees);
-		lv_style_set_bg_color(&frees,LV_STATE_DEFAULT,lv_color_make(240,240,240));
-
-		lv_style_init(&small);
-		lv_style_set_text_font(&small,LV_STATE_DEFAULT,gui_font_small);
-	}
-
 	lv_coord_t bw=lv_page_get_scrl_width(page),m;
 
 	// disk select button
@@ -162,7 +145,7 @@ static void partitions_add_item(int i,struct partition_info*p){
 	if(i>0)lv_obj_align(p->btn,partitions[i-1]->btn,LV_ALIGN_OUT_BOTTOM_LEFT,0,gui_dpi/10);
 	lv_obj_set_size(p->btn,bw,gui_dpi/3*2);
 	lv_style_set_btn_item(p->btn);
-	if(p->free)lv_obj_add_style(p->btn,LV_BTN_PART_MAIN,&frees);
+	if(p->free)lv_obj_set_gray240_text_color(p->btn,LV_BTN_PART_MAIN);
 	lv_obj_set_click(p->btn,false);
 
 	// line for button text
@@ -173,7 +156,7 @@ static void partitions_add_item(int i,struct partition_info*p){
 	m=gui_dpi/20;
 	p->chk=lv_checkbox_create(line,NULL);
 	lv_checkbox_set_text(p->chk,p->free?_("Free Space"):p->partname);
-	if(p->free)lv_obj_add_style(p->chk,LV_CHECKBOX_PART_BG,&grays);
+	if(p->free)lv_obj_set_gray160_text_color(p->chk,LV_LABEL_PART_MAIN);
 	lv_style_set_focus_checkbox(p->chk);
 	lv_obj_set_event_cb(p->chk,partition_click);
 	lv_group_add_obj(gui_grp,p->chk);
@@ -196,7 +179,7 @@ static void partitions_add_item(int i,struct partition_info*p){
 	);
 	lv_obj_set_width(pos,bw-gui_dpi/5);
 	lv_label_set_align(pos,LV_LABEL_ALIGN_LEFT);
-	lv_obj_add_style(pos,LV_LABEL_PART_MAIN,&small);
+	lv_obj_set_small_text_font(pos,LV_LABEL_PART_MAIN);
 	lv_obj_align(pos,NULL,LV_ALIGN_IN_LEFT_MID,gui_dpi/10,gui_dpi/20);
 
 	if(!p->free){
@@ -207,8 +190,8 @@ static void partitions_add_item(int i,struct partition_info*p){
 		// partition name
 		lv_obj_t*name=lv_label_create(line,NULL);
 		lv_label_set_long_mode(name,LV_LABEL_LONG_SROLL_CIRC);
-		lv_obj_add_style(name,LV_LABEL_PART_MAIN,&small);
-		if(!p->name[0])lv_obj_add_style(name,LV_LABEL_PART_MAIN,&grays);
+		lv_obj_set_small_text_font(name,LV_LABEL_PART_MAIN);
+		if(!p->name[0])lv_obj_set_gray160_text_color(name,LV_LABEL_PART_MAIN);
 		lv_label_set_text(name,p->name[0]?p->name:_("(none)"));
 		lv_obj_set_width(name,bw/8*3-gui_dpi/10);
 		lv_label_set_align(name,LV_LABEL_ALIGN_LEFT);
@@ -222,8 +205,8 @@ static void partitions_add_item(int i,struct partition_info*p){
 		// partition name
 		lv_obj_t*type=lv_label_create(line,NULL);
 		lv_label_set_long_mode(type,LV_LABEL_LONG_SROLL_CIRC);
-		lv_obj_add_style(type,LV_LABEL_PART_MAIN,&small);
-		if(!p->type_str[0])lv_obj_add_style(type,LV_LABEL_PART_MAIN,&grays);
+		lv_obj_set_small_text_font(type,LV_LABEL_PART_MAIN);
+		if(!p->type_str[0])lv_obj_set_gray160_text_color(type,LV_LABEL_PART_MAIN);
 		lv_label_set_text(type,p->type_str[0]?p->type_str:_("(unknown)"));
 		lv_obj_set_width(type,bw/8*5-gui_dpi/5);
 		lv_label_set_align(type,LV_LABEL_ALIGN_LEFT);

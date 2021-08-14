@@ -150,18 +150,6 @@ static int get_block_model(struct disk_info*k){
 }
 
 static void disks_add_item(int blk,struct disk_info*k){
-	static lv_style_t grays;
-	static bool initialized;
-
-	if(!initialized){
-		initialized=true;
-
-		// gray label
-		lv_style_init(&grays);
-		lv_style_set_text_color(&grays,0,lv_color_make(225,225,225));
-
-	}
-
 	lv_coord_t c1w,c2w,c1l,c2l,bw;
 	bw=lv_page_get_scrl_width(lst);
 
@@ -195,7 +183,7 @@ static void disks_add_item(int blk,struct disk_info*k){
 	lv_obj_set_width(d_model,c1w);
 	lv_label_set_align(d_model,LV_LABEL_ALIGN_LEFT);
 	lv_label_set_text(d_model,get_model(k));
-	if(!k->model[0])lv_obj_add_style(d_model,0,&grays);
+	if(!k->model[0])lv_obj_set_gray240_text_color(d_model,LV_LABEL_PART_MAIN);
 
 	// disk size
 	lv_obj_t*d_size=lv_label_create(line,NULL);
@@ -212,7 +200,7 @@ static void disks_add_item(int blk,struct disk_info*k){
 	lv_obj_set_width(d_layout,c2w);
 	lv_label_set_align(d_layout,LV_LABEL_ALIGN_RIGHT);
 	lv_label_set_text(d_layout,get_layout(k));
-	if(!k->lbl)lv_obj_add_style(d_layout,0,&grays);
+	if(!k->lbl)lv_obj_set_gray240_text_color(d_layout,LV_LABEL_PART_MAIN);
 }
 
 void guipm_disk_reload(){

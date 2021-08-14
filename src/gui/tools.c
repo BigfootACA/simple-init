@@ -1,5 +1,6 @@
 #ifdef ENABLE_GUI
 #include<stdio.h>
+#include<stdlib.h>
 #include<libintl.h>
 #include"lvgl.h"
 #include"gui.h"
@@ -56,6 +57,60 @@ void lv_style_set_focus_checkbox(lv_obj_t*checkbox){
 	}
 	lv_obj_add_style(checkbox,LV_CHECKBOX_PART_BG,&chk);
 	lv_obj_add_style(checkbox,LV_CHECKBOX_PART_BULLET,&bul);
+}
+
+lv_style_t*lv_obj_set_text_font(lv_obj_t*obj,lv_state_t state,uint8_t part,lv_font_t*font){
+	lv_style_t*f=malloc(sizeof(lv_style_t));
+	if(!f)return NULL;
+	lv_style_init(f);
+	lv_style_set_text_font(f,state,font);
+	if(obj)lv_obj_add_style(obj,part,f);
+	return f;
+}
+
+lv_style_t*lv_obj_set_value_font(lv_obj_t*obj,lv_state_t state,uint8_t part,lv_font_t*font){
+	lv_style_t*f=malloc(sizeof(lv_style_t));
+	if(!f)return NULL;
+	lv_style_init(f);
+	lv_style_set_value_font(f,state,font);
+	if(obj)lv_obj_add_style(obj,part,f);
+	return f;
+}
+
+lv_style_t*lv_obj_set_text_color(lv_obj_t*obj,lv_state_t state,uint8_t part,lv_color_t color){
+	lv_style_t*f=malloc(sizeof(lv_style_t));
+	if(!f)return NULL;
+	lv_style_init(f);
+	lv_style_set_text_color(f,state,color);
+	if(obj)lv_obj_add_style(obj,part,f);
+	return f;
+}
+
+lv_style_t*lv_obj_set_bg_color(lv_obj_t*obj,lv_state_t state,uint8_t part,lv_color_t color){
+	lv_style_t*f=malloc(sizeof(lv_style_t));
+	if(!f)return NULL;
+	lv_style_init(f);
+	lv_style_set_bg_color(f,state,color);
+	if(obj)lv_obj_add_style(obj,part,f);
+	return f;
+}
+
+void lv_obj_set_small_text_font(lv_obj_t*obj,uint8_t part){
+	static lv_style_t*f=NULL;
+	if(!f)f=lv_obj_set_text_font(NULL,LV_STATE_DEFAULT,0,gui_font_small);
+	lv_obj_add_style(obj,part,f);
+}
+
+void lv_obj_set_gray160_text_color(lv_obj_t*obj,uint8_t part){
+	static lv_style_t*f=NULL;
+	if(!f)f=lv_obj_set_text_color_def_rgb(NULL,0,160,160,160);
+	lv_obj_add_style(obj,part,f);
+}
+
+void lv_obj_set_gray240_text_color(lv_obj_t*obj,uint8_t part){
+	static lv_style_t*f=NULL;
+	if(!f)f=lv_obj_set_text_color_def_rgb(NULL,0,240,240,240);
+	lv_obj_add_style(obj,part,f);
 }
 
 lv_obj_t*lv_create_opa_mask(lv_obj_t*par){

@@ -51,6 +51,20 @@ static void go_bottom_click(lv_obj_t*obj,lv_event_t e){
 	lv_textarea_set_cursor_pos(view,LV_TEXTAREA_CURSOR_LAST);
 }
 
+static int logviewer_get_focus(void*d __attribute__((unused))){
+	lv_group_add_obj(gui_grp,btn_reload);
+	lv_group_add_obj(gui_grp,btn_bottom);
+	lv_group_add_obj(gui_grp,btn_top);
+	return 0;
+}
+
+static int logviewer_lost_focus(void*d __attribute__((unused))){
+	lv_group_remove_obj(btn_reload);
+	lv_group_remove_obj(btn_bottom);
+	lv_group_remove_obj(btn_top);
+	return 0;
+}
+
 void logviewer_draw(lv_obj_t*screen){
 
 	scr=lv_obj_create(screen,NULL);
@@ -119,6 +133,8 @@ void logviewer_draw(lv_obj_t*screen){
 		.name="logger-viewer",
 		.ask_exit=NULL,
 		.quiet_exit=NULL,
+		.lost_focus=logviewer_lost_focus,
+		.get_focus=logviewer_get_focus,
 		.back=true,
 		.page=scr
 	});

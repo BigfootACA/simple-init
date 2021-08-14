@@ -171,7 +171,7 @@ static entry_file*get_assets_file_component(entry_dir*dir,list*paths,int*cnt){
 	if(!(r=_get_assets_subfile(d,(char*)l->data)))return NULL;
 	if(S_ISLNK(r->info.mode)){
 		if((*cnt)++>=40)EPRET(ELOOP);
-		list*o=resolve_relative_path(paths,l->prev?l->prev:l,r->content);
+		list*o=resolve_relative_path(paths,l,r->content);
 		if(!o)return NULL;
 		r=get_assets_file_component(dir,o,cnt);
 		int e=errno;

@@ -802,3 +802,9 @@ msgstr "重启到线刷模式(Bootloader)"
 
 msgid "Power Off"
 msgstr "关机"
+
+msgid "Language"
+msgstr "语言"
+
+msgid "Select language"
+msgstr "选择语言"

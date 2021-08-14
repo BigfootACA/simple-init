@@ -11,6 +11,7 @@
 #define TAG "reboot"
 
 static lv_obj_t*scr,*box;
+static lv_obj_t*btn_rb,*btn_rb_edl,*btn_rb_rec,*btn_rb_bl,*btn_po;
 
 enum reboot_mode{
 	REBOOT,
@@ -63,6 +64,24 @@ static void reboot_action(lv_obj_t*obj,lv_event_t e){
 	guiact_do_back();
 }
 
+static int reboot_get_focus(void*d __attribute__((unused))){
+	lv_group_add_obj(gui_grp,btn_rb);
+	lv_group_add_obj(gui_grp,btn_rb_edl);
+	lv_group_add_obj(gui_grp,btn_rb_rec);
+	lv_group_add_obj(gui_grp,btn_rb_bl);
+	lv_group_add_obj(gui_grp,btn_po);
+	return 0;
+}
+
+static int reboot_lost_focus(void*d __attribute__((unused))){
+	lv_group_remove_obj(btn_rb);
+	lv_group_remove_obj(btn_rb_edl);
+	lv_group_remove_obj(btn_rb_rec);
+	lv_group_remove_obj(btn_rb_bl);
+	lv_group_remove_obj(btn_po);
+	return 0;
+}
+
 static lv_obj_t*add_reboot_button(lv_obj_t*last,enum reboot_mode mode){
 	lv_obj_t*btn=lv_btn_create(box,NULL);
 	lv_obj_t*txt=lv_label_create(btn,NULL);
@@ -91,19 +110,20 @@ void reboot_menu_draw(lv_obj_t*screen){
 	lv_obj_set_width(txt,lv_page_get_scrl_width(box));
 	lv_label_set_text(txt,_("Select an action you want to do"));
 
-	lv_obj_t*l=txt;
-	l=add_reboot_button(l,REBOOT);
-	l=add_reboot_button(l,REBOOT_EDL);
-	l=add_reboot_button(l,REBOOT_RECOVERY);
-	l=add_reboot_button(l,REBOOT_BOOTLOADER);
-	l=add_reboot_button(l,POWEROFF);
-	lv_obj_set_height(box,lv_obj_get_y(l)+lv_obj_get_height(l)+(gui_font_size*2));
+	btn_rb=add_reboot_button(txt,REBOOT);
+	btn_rb_edl=add_reboot_button(btn_rb,REBOOT_EDL);
+	btn_rb_rec=add_reboot_button(btn_rb_edl,REBOOT_RECOVERY);
+	btn_rb_bl=add_reboot_button(btn_rb_rec,REBOOT_BOOTLOADER);
+	btn_po=add_reboot_button(btn_rb_bl,POWEROFF);
+	lv_obj_set_height(box,lv_obj_get_y(btn_po)+lv_obj_get_height(btn_po)+(gui_font_size/3*8));
 	lv_obj_align(box,NULL,LV_ALIGN_CENTER,0,0);
 
 	guiact_register_activity(&(struct gui_activity){
 		.name="reboot-menu",
 		.ask_exit=NULL,
 		.quiet_exit=NULL,
+		.lost_focus=reboot_lost_focus,
+		.get_focus=reboot_get_focus,
 		.back=true,
 		.page=scr
 	});

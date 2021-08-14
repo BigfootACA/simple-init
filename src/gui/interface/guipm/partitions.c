@@ -322,6 +322,15 @@ static int guipm_part_lost_focus(void*d __attribute__((unused))){
 	return 0;
 }
 
+static int do_cleanup(void*d __attribute__((unused))){
+	partition_clear();
+	if(guipm_target_disk)free(guipm_target_disk);
+	if(ctx)fdisk_unref_context(ctx);
+	if(path)free(path);
+	guipm_target_disk=NULL,ctx=NULL,path=NULL;
+	return 0;
+}
+
 void guipm_draw_partitions(lv_obj_t*screen){
 	if(!guipm_target_disk){
 		tlog_warn("target disk not set");
@@ -407,7 +416,7 @@ void guipm_draw_partitions(lv_obj_t*screen){
 	guiact_register_activity(&(struct gui_activity){
 		.name="guipm-partitions",
 		.ask_exit=NULL,
-		.quiet_exit=NULL,
+		.quiet_exit=do_cleanup,
 		.get_focus=guipm_part_get_focus,
 		.lost_focus=guipm_part_lost_focus,
 		.back=true,

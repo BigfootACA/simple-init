@@ -1,5 +1,6 @@
 #ifndef LANGUAGE_H
 #define LANGUAGE_H
+#include"defines.h"
 
 struct language{
 	char*lang;
@@ -20,7 +21,7 @@ extern void lang_load_locale(const char*dir,const char*lang,const char*domain);
 extern char*lang_get_locale(char*def);
 
 // src/lib/locale.c: gettext implementation
-extern char*lang_gettext(const char*msgid) __attribute_format_arg__(1);
+extern char*lang_gettext(const char*msgid) __fa(1);
 
 // src/lib/locale.c: concat language name
 extern const char*lang_concat(struct language*lang,bool region,bool charset);

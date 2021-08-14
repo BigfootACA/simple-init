@@ -45,7 +45,12 @@
 #define ERET(err) return ENUM(err)
 #define EPRET(err) {errno=(err);return NULL;}
 #define IOVEC(data,len) ((struct iovec){.iov_base=(data),.iov_len=(len)})
-extern char*lang_gettext(const char*msgid) __attribute_format_arg__(1);
+#if __GNUC__ >= 3
+#define __fa(n) __attribute__((__format_arg__(n)))
+#else
+#define __fa(n)
+#endif
+extern char*lang_gettext(const char*msgid) __fa(1);
 static inline int min_int(int a,int b){return MIN(a,b);}
 static inline long min_long(long a,long b){return MIN(a,b);}
 static inline int max_int(int a,int b){return MAX(a,b);}

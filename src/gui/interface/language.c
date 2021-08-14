@@ -10,7 +10,7 @@
 #include"language.h"
 #define TAG "reboot"
 
-static lv_obj_t*scr,*box,*sel;
+static lv_obj_t*scr,*box,*sel,*btn_ok;
 
 static void ok_msg_click(lv_obj_t*obj,lv_event_t e){
 	if(e==LV_EVENT_DELETE){
@@ -21,7 +21,7 @@ static void ok_msg_click(lv_obj_t*obj,lv_event_t e){
 }
 
 static void ok_action(lv_obj_t*obj,lv_event_t e){
-	if(!obj||e!=LV_EVENT_CLICKED)return;
+	if(obj!=btn_ok||e!=LV_EVENT_CLICKED)return;
 	uint16_t i=lv_dropdown_get_selected(sel);
 	if(!languages[i].lang)return;
 	const char*lang=lang_concat(&languages[i],true,true);
@@ -52,6 +52,18 @@ static void init_languages(){
 	lv_dropdown_set_selected(sel,s);
 }
 
+static int language_get_focus(void*d __attribute__((unused))){
+	lv_group_add_obj(gui_grp,sel);
+	lv_group_add_obj(gui_grp,btn_ok);
+	return 0;
+}
+
+static int language_lost_focus(void*d __attribute__((unused))){
+	lv_group_remove_obj(sel);
+	lv_group_remove_obj(btn_ok);
+	return 0;
+}
+
 void language_menu_draw(lv_obj_t*screen){
 	scr=lv_create_opa_mask(screen);
 
@@ -79,21 +91,23 @@ void language_menu_draw(lv_obj_t*screen){
 	lv_style_init(&btn_style);
 	lv_style_set_radius(&btn_style,LV_STATE_DEFAULT,2);
 
-	lv_obj_t*btn=lv_btn_create(box,NULL);
-	lv_obj_add_state(btn,LV_STATE_CHECKED);
-	lv_obj_add_style(btn,LV_STATE_DEFAULT,&btn_style);
-	lv_obj_set_width(btn,lv_page_get_scrl_width(box)-gui_dpi/10);
-	lv_obj_align(btn,sel,LV_ALIGN_OUT_BOTTOM_MID,0,gui_dpi/10);
-	lv_obj_set_event_cb(btn,ok_action);
-	lv_label_set_text(lv_label_create(btn,NULL),_("OK"));
+	btn_ok=lv_btn_create(box,NULL);
+	lv_obj_add_state(btn_ok,LV_STATE_CHECKED);
+	lv_obj_add_style(btn_ok,LV_STATE_DEFAULT,&btn_style);
+	lv_obj_set_width(btn_ok,lv_page_get_scrl_width(box)-gui_dpi/10);
+	lv_obj_align(btn_ok,sel,LV_ALIGN_OUT_BOTTOM_MID,0,gui_dpi/10);
+	lv_obj_set_event_cb(btn_ok,ok_action);
+	lv_label_set_text(lv_label_create(btn_ok,NULL),_("OK"));
 
-	lv_obj_set_height(box,lv_obj_get_y(btn)+lv_obj_get_height(btn)+(gui_font_size*2)+gui_dpi/20);
+	lv_obj_set_height(box,lv_obj_get_y(btn_ok)+lv_obj_get_height(btn_ok)+(gui_font_size*2)+gui_dpi/20);
 	lv_obj_align(box,NULL,LV_ALIGN_CENTER,0,0);
 
 	guiact_register_activity(&(struct gui_activity){
 		.name="language-menu",
 		.ask_exit=NULL,
 		.quiet_exit=NULL,
+		.get_focus=language_get_focus,
+		.lost_focus=language_lost_focus,
 		.back=true,
 		.page=scr
 	});

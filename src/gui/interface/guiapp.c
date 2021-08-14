@@ -37,8 +37,9 @@ static struct app{
 
 void clean_buttons(){
 	lv_obj_t*o=lv_obj_get_child(screen,NULL);
-	if(o)do{lv_obj_del(o);}
+	if(o)do{lv_obj_del_async(o);}
 	while((o=lv_obj_get_child(screen,o)));
+	app_num=0;
 }
 
 static void ok_msg_click(lv_obj_t*obj,lv_event_t e){
@@ -128,6 +129,22 @@ static void redraw_apps(){
 	for(int i=0;apps[i].name;i++)add_button(&apps[i]);
 }
 
+static void do_reload(lv_task_t*t __attribute__((unused))){
+	redraw_apps();
+}
+
+static int guiapp_get_focus(void*d __attribute__((unused))){
+	lv_task_once(lv_task_create(do_reload,100,LV_TASK_PRIO_MID,NULL));
+	return 0;
+}
+
+static int guiapp_lost_focus(void*d __attribute__((unused))){
+	lv_obj_t*o=lv_obj_get_child(screen,NULL);
+	if(o)do{lv_group_remove_obj(o);}
+	while((o=lv_obj_get_child(screen,o)));
+	return 0;
+}
+
 static void _draw(lv_obj_t*scr){
 	realscr=scr;
 	screen=lv_obj_create(scr,NULL);
@@ -135,12 +152,12 @@ static void _draw(lv_obj_t*scr){
 	lv_obj_set_pos(screen,gui_sx,gui_sy);
 	lv_theme_apply(screen,LV_THEME_SCR);
 
-	redraw_apps();
-
 	guiact_register_activity(&(struct gui_activity){
 		.name="guiapp",
 		.ask_exit=NULL,
 		.quiet_exit=NULL,
+		.get_focus=guiapp_get_focus,
+		.lost_focus=guiapp_lost_focus,
 		.back=false,
 		.page=screen
 	});

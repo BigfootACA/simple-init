@@ -186,4 +186,30 @@ lv_obj_t*lv_create_yesno_msgbox_mask(lv_obj_t*par,lv_event_cb_t cb,const char*te
 	use_lv_create_msgbox(o,lv_create_opa_mask(par),btns,cb,text);
 	return o;
 }
+
+bool lv_page_is_top(lv_obj_t*page){
+	if(!page)return false;
+	lv_obj_t*s=lv_page_get_scrollable(page);
+	lv_coord_t pt=lv_obj_get_style_pad_bottom(page,LV_PAGE_PART_BG);
+	return lv_obj_get_y(s)>=pt;
+}
+
+bool lv_page_is_bottom(lv_obj_t*page){
+	if(!page)return false;
+	lv_obj_t*s=lv_page_get_scrollable(page);
+	lv_coord_t pb=lv_obj_get_style_pad_bottom(page,LV_PAGE_PART_BG);
+	return lv_obj_get_height(page)-lv_obj_get_y(s)-lv_obj_get_height(s)>=pb;
+}
+
+void lv_page_go_top(lv_obj_t*page){
+	if(!page)return;
+	lv_obj_t*s=lv_page_get_scrollable(page);
+	lv_page_scroll_ver(page,-lv_obj_get_y(s));
+}
+
+void lv_page_go_bottom(lv_obj_t*page){
+	if(!page)return;
+	lv_obj_t*s=lv_page_get_scrollable(page);
+	lv_page_scroll_ver(page,-lv_obj_get_height(s));
+}
 #endif

@@ -20,7 +20,7 @@ static struct app{
 	char*img;
 	draw_func draw;
 }apps[]={
-	{"File Manager",           "filemgr.png",   NULL},
+	{"File Manager",           "filemgr.png",   filemgr_draw},
 	{"Partition Manager",      "guipm.png",     guipm_draw_disk_sel},
 	{"USB Control",            "usb.png",       NULL},
 	{"Registry Editor",        "regedit.png",   NULL},

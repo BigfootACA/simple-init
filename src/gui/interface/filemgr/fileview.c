@@ -55,7 +55,6 @@ static const char*get_icon(struct fileitem*fi){
 static void call_on_change_dir(struct fileview*view){
 	if(strcmp(view->path,view->old_path)==0)return;
 	tlog_debug("change dir to %s",view->path);
-	lv_page_scroll_ver(view->view,-lv_obj_get_y(lv_page_get_scrollable(view->view)));
 	if(view->on_change_dir)view->on_change_dir(view,view->old_path,view->path);
 }
 
@@ -265,6 +264,7 @@ static void clean_items(struct fileview*view){
 	if(view->info)lv_obj_del(view->info);
 	view->last_btn=NULL,view->items=NULL;
 	view->info=NULL,view->count=0;
+	lv_obj_set_y(lv_page_get_scrollable(view->view),0);
 }
 
 static void scan_items(struct fileview*view){

@@ -20,7 +20,8 @@ jobs:
               net-tools iputils-ping lrzsz cpio nano gpm gdb vim rfkill kbd gzip \
               uuid-runtime kmod bridge-utils tree usbutils dhcpcd5 efibootmgr acl \
               coreutils btrfs-progs pciutils bsdmainutils device-tree-compiler \
-              libdrm-dev libblkid-dev libmount-dev libkmod-dev libreadline-dev
+              libdrm-dev libblkid-dev libmount-dev libkmod-dev libreadline-dev \
+              libfdisk-dev libfreetype-dev pkgconf
       - name: Build Main
         run: bash scripts/build.sh
       - name: Strip Main

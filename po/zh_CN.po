@@ -808,3 +808,15 @@ msgstr "语言"
 
 msgid "Select language"
 msgstr "选择语言"
+
+msgid "fd open dir failed"
+msgstr "打开文件夹对象失败"
+
+msgid "open dir failed"
+msgstr "打开文件夹失败"
+
+msgid "Parent folder"
+msgstr "上级目录"
+
+msgid "nothing here"
+msgstr "空"

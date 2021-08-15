@@ -178,8 +178,8 @@ This project has not been completed and may not work properly.
     - [x] SDL2
     - [x] Buttons
   - [ ] Application
-    - [ ] File Manager
-    - [ ] Partition Manager
+    - [x] File Manager
+    - [x] Partition Manager
       - [ ] Make disk label
       - [ ] Create partition
       - [ ] Delete partition
@@ -211,7 +211,7 @@ This project has not been completed and may not work properly.
       - [ ] Manual select TWRP image
     - [ ] System Info
     - [x] Reboot Menu
-    - [ ] Loggerd Viewer
+    - [x] Loggerd Viewer
 - [ ] Remote Control Interface
   - [ ] Over USB
   - [ ] Over Network

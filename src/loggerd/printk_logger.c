@@ -33,7 +33,7 @@ int printk_logger(char*name __attribute__((unused)),struct log_item *log){
 		buff,
 		size,
 		"<%d>%s: %s\n",
-		level2klevel(log->level),
+		logger_level2klevel(log->level),
 		log->tag,
 		log->content
 	);

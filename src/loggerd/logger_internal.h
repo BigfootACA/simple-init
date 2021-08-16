@@ -118,7 +118,7 @@ extern int logger_internal_send_code(int fd,enum log_oper oper,int code);
 extern int logger_internal_send_string(int fd,enum log_oper oper,char*string);
 
 // src/loggerd/logger_internal.c: convert operation to a readable string
-extern char*oper2string(enum log_oper oper);
+extern char*logger_oper2string(enum log_oper oper);
 
 // src/loggerd/logger_buffer.c: convert log_item to log_buff
 extern struct log_buff*logger_internal_item2buff(struct log_item*log);

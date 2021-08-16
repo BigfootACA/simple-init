@@ -243,7 +243,7 @@ static int loggerd_read(int fd){
 				LEVEL_WARNING,
 				TAG,
 				"operation %s not implemented",
-				oper2string(msg.oper)
+				logger_oper2string(msg.oper)
 			);
 	}
 	logger_internal_send_code(fd,ret,retdata);

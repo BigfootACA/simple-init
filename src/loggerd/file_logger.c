@@ -90,7 +90,7 @@ int file_logger(char*name,struct log_item*log){
 	int r=dprintf(fd,
 		"%s %-6s %s%s: %s\n",
 		time2ndefstr(&log->time,buff,sizeof(buff)),
-		level2string(log->level),
+		logger_level2string(log->level),
 		log->tag,
 		p,
 		log->content

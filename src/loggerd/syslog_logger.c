@@ -7,7 +7,7 @@
 int syslog_logger(char*name __attribute__((unused)),struct log_item *log){
 	if(!log->time)ERET(EFAULT);
 	openlog(log->tag,LOG_CONS,LOG_DAEMON);
-	syslog(level2klevel(log->level),"%s",(char*)log->content);
+	syslog(logger_level2klevel(log->level),"%s",(char*)log->content);
 	closelog();
 	return (int)strlen(log->content);
 }

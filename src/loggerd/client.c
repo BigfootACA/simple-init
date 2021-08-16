@@ -202,7 +202,7 @@ int start_loggerd(pid_t*p){
 	return set_logfd(fds[1]);
 }
 
-char*level2string(enum log_level level){
+char*logger_level2string(enum log_level level){
 	switch(level){
 		case LEVEL_DEBUG:return   "DEBUG";
 		case LEVEL_INFO:return    "INFO";
@@ -216,7 +216,7 @@ char*level2string(enum log_level level){
 	}
 }
 
-enum log_level parse_level(const char*v){
+enum log_level logger_parse_level(const char*v){
 	#define CS (const char*[])
 	if(!v)return 0;
 	if(     fuzzy_cmps(v,CS{"7","debug","dbg"      ,NULL}))return LEVEL_DEBUG;

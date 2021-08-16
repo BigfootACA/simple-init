@@ -33,7 +33,7 @@ struct log_item*read_kmsg_item(struct log_item*b,int fd,bool toff){
 	level=item;
 	if(!(p0=strchr(level,',')))EPRET(EINVAL);
 	p0[0]=0,p0++;
-	b->level=klevel2level(parse_int(level,DEFAULT_KERN_LEVEL));
+	b->level=logger_klevel2level(parse_int(level,DEFAULT_KERN_LEVEL));
 
 	if(!(ktime=strchr(p0,',')))EPRET(EINVAL);
 	ktime++;
@@ -154,7 +154,7 @@ int init_kmesg(){
 	return -errno;
 }
 
-int level2klevel(enum log_level level){
+int logger_level2klevel(enum log_level level){
 	switch(level){
 		case LEVEL_DEBUG:return   KERN_DEBUG;
 		case LEVEL_INFO:return    KERN_INFO;
@@ -168,7 +168,7 @@ int level2klevel(enum log_level level){
 	}
 }
 
-enum log_level klevel2level(int level){
+enum log_level logger_klevel2level(int level){
 	switch(level){
 		case KERN_DEBUG:return   LEVEL_DEBUG;
 		case KERN_INFO:return    LEVEL_INFO;

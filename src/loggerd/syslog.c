@@ -113,7 +113,7 @@ int parse_syslog_item(struct ucred*cred,char*line){
 	// fix log level
 	if(level<0)level=KERN_INFO;
 	while(level>=8)level-=8;
-	b->level=klevel2level(level);
+	b->level=logger_klevel2level(level);
 
 	// skip time
 	poss**po=XPOS_RFC3164S;

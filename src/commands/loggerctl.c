@@ -118,7 +118,7 @@ int loggerctl_main(int argc,char**argv){
 		case 'n':
 			if(op!=OPER_NONE&&op!=OPER_ADD)goto conflict;
 			if(level!=0)goto conflict;
-			if((level=parse_level(b_optarg))==0)
+			if((level=logger_parse_level(b_optarg))==0)
 				return re_printf(2,"invalid log level: %s\n",b_optarg);
 		break;
 		case 'l':

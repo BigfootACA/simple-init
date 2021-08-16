@@ -70,7 +70,7 @@ int logger_internal_buffer_push(struct log_item*log){
 	return -(errno);
 }
 
-char*oper2string(enum log_oper oper){
+char*logger_oper2string(enum log_oper oper){
 	switch(oper){
 		case LOG_OK:return "OK";
 		case LOG_ADD:return "Add";

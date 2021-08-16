@@ -25,58 +25,58 @@ struct log_item{
 	pid_t pid;
 };
 
-// src/loggerd/logger_client.c: current logfd
+// src/loggerd/client.c: current logfd
 extern int logfd;
 
-// src/loggerd/logger_client.c: set logger output fd
+// src/loggerd/client.c: set logger output fd
 extern int set_logfd(int fd);
 
-// src/loggerd/logger_client.c: close current logfd
+// src/loggerd/client.c: close current logfd
 extern void close_logfd();
 
-// src/loggerd/logger_client.c: open and set logger output fd
+// src/loggerd/client.c: open and set logger output fd
 extern int open_file_logfd(char*path);
 
-// src/loggerd/logger_client.c: connect and set logger output fd
+// src/loggerd/client.c: connect and set logger output fd
 extern int open_socket_logfd(char*path);
 
-// src/loggerd/logger_client.c: controll loggerd add new listen
+// src/loggerd/client.c: controll loggerd add new listen
 extern int logger_listen(char*file);
 
-// src/loggerd/logger_client.c: controll loggerd open new log file
+// src/loggerd/client.c: controll loggerd open new log file
 extern int logger_open(char*file);
 
-// src/loggerd/logger_client.c: controll loggerd exit
+// src/loggerd/client.c: controll loggerd exit
 extern int logger_exit();
 
-// src/loggerd/logger_client.c: notify loggerd kernel log now available
+// src/loggerd/client.c: notify loggerd kernel log now available
 extern int logger_klog();
 
-// src/loggerd/logger_client.c: start syslog forwarder
+// src/loggerd/client.c: start syslog forwarder
 extern int logger_syslog();
 
-// src/loggerd/logger_client.c: launch loggerd
+// src/loggerd/client.c: launch loggerd
 extern int start_loggerd(pid_t*p);
 
-// src/loggerd/logger_client.c: send raw log
+// src/loggerd/client.c: send raw log
 extern int logger_write(struct log_item*log);
 
-// src/loggerd/logger_client.c: send log with level, tag, content
+// src/loggerd/client.c: send log with level, tag, content
 extern int logger_print(enum log_level level,char*tag,char*content);
 
-// src/loggerd/logger_client.c: send log with level, tag, formatted content
+// src/loggerd/client.c: send log with level, tag, formatted content
 extern int logger_printf(enum log_level level,char*tag,const char*fmt,...) __attribute__((format(printf,3,4)));
 
-// src/loggerd/logger_client.c: send log with level, tag, formatted content, strerror
+// src/loggerd/client.c: send log with level, tag, formatted content, strerror
 extern int logger_perror(enum log_level level,char*tag,const char*fmt,...) __attribute__((format(printf,3,4)));
 
-// src/loggerd/logger_client.c: send log with level, tag, formatted content and return e
+// src/loggerd/client.c: send log with level, tag, formatted content and return e
 extern int return_logger_printf(enum log_level level,int e,char*tag,const char*fmt,...) __attribute__((format(printf,4,5)));
 
-// src/loggerd/logger_client.c: send log with level, tag, formatted content, strerror and return e
+// src/loggerd/client.c: send log with level, tag, formatted content, strerror and return e
 extern int return_logger_perror(enum log_level level,int e,char*tag,const char*fmt,...) __attribute__((format(printf,4,5)));
 
-// src/loggerd/logger_client.c: convert log_level to string
+// src/loggerd/client.c: convert log_level to string
 extern char*logger_level2string(enum log_level level);
 
 // src/loggerd/klog.c: convert log_level to kernel level
@@ -85,7 +85,7 @@ extern int logger_level2klevel(enum log_level level);
 // src/loggerd/klog.c: convert kernel level to log_level
 extern enum log_level logger_klevel2level(int level);
 
-// src/loggerd/logger_client.c: parse log_level from a string
+// src/loggerd/client.c: parse log_level from a string
 extern enum log_level logger_parse_level(const char*v);
 
 #include"logtag.h"

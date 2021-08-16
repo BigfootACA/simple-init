@@ -54,13 +54,13 @@ struct log_buff{
 	pid_t pid;
 };
 
-// src/loggerd/logger_internal.c: logger output list
+// src/loggerd/internal.c: logger output list
 extern list*loggers;
 
-// src/loggerd/logger_buffer.c: log storage
+// src/loggerd/buffer.c: log storage
 extern list*logbuffer;
 
-// src/loggerd/logger_server.c: logger server thread
+// src/loggerd/server.c: logger server thread
 extern int loggerd_thread(int fd);
 
 // src/loggerd/file_logger.c: file or stdio logger output
@@ -81,61 +81,61 @@ extern void close_log_file(char*path);
 // src/loggerd/file_logger.c: close all openned log file
 extern void close_all_file();
 
-// src/loggerd/logger_internal.c: free loggers
+// src/loggerd/internal.c: free loggers
 extern void logger_internal_clean();
 
-// src/loggerd/logger_internal.c: add new logger
+// src/loggerd/internal.c: add new logger
 extern int logger_internal_add(char*name,enum log_level min_level,on_log log);
 
-// src/loggerd/logger_internal.c: add raw log
+// src/loggerd/internal.c: add raw log
 extern int logger_internal_write(struct log_item*log);
 
-// src/loggerd/logger_internal.c: add log with level, tag, content
+// src/loggerd/internal.c: add log with level, tag, content
 extern int logger_internal_print(enum log_level level,char*tag,char*content);
 
-// src/loggerd/logger_internal.c: add log with level, tag, formatted content
+// src/loggerd/internal.c: add log with level, tag, formatted content
 extern int logger_internal_printf(enum log_level level,char*tag,const char*fmt,...) __attribute__((format(printf,3,4)));
 
-// src/loggerd/logger_internal.c: turn on or off logger output
+// src/loggerd/internal.c: turn on or off logger output
 extern int logger_internal_set(char*name,bool enabled);
 
-// src/loggerd/logger_internal.c: set logger output level
+// src/loggerd/internal.c: set logger output level
 extern int logger_internal_set_level(char*name,enum log_level level);
 
-// src/loggerd/logger_internal.c: init a log packaet
+// src/loggerd/internal.c: init a log packaet
 extern void logger_internal_init_msg(struct log_msg*msg,enum log_oper oper);
 
-// src/devd/internal.c: check log packaet magic
+// src/loggerd/internal.c: check log packaet magic
 extern bool logger_internal_check_magic(struct log_msg*msg);
 
-// src/loggerd/logger_internal.c: read a log packet
+// src/loggerd/internal.c: read a log packet
 extern int logger_internal_read_msg(int fd,struct log_msg*buff);
 
-// src/loggerd/logger_internal.c: send a return code packet
+// src/loggerd/internal.c: send a return code packet
 extern int logger_internal_send_code(int fd,enum log_oper oper,int code);
 
-// src/loggerd/logger_internal.c: send a string log packet
+// src/loggerd/internal.c: send a string log packet
 extern int logger_internal_send_string(int fd,enum log_oper oper,char*string);
 
-// src/loggerd/logger_internal.c: convert operation to a readable string
+// src/loggerd/buffer.c: convert operation to a readable string
 extern char*logger_oper2string(enum log_oper oper);
 
-// src/loggerd/logger_buffer.c: convert log_item to log_buff
+// src/loggerd/buffer.c: convert log_item to log_buff
 extern struct log_buff*logger_internal_item2buff(struct log_item*log);
 
-// src/loggerd/logger_buffer.c: convert log_buff to log_item
+// src/loggerd/buffer.c: convert log_buff to log_item
 extern struct log_item*logger_internal_buff2item(struct log_buff*log);
 
-// src/loggerd/logger_buffer.c: add log to buffer
+// src/loggerd/buffer.c: add log to buffer
 extern int logger_internal_buffer_push(struct log_item*log);
 
-// src/loggerd/logger_buffer.c: free log_buff
+// src/loggerd/buffer.c: free log_buff
 extern int logger_internal_free_buff(void*d);
 
-// src/loggerd/logger_buffer.c: clean log buffers
+// src/loggerd/buffer.c: clean log buffers
 extern void clean_log_buffers();
 
-// src/loggerd/logger_buffer.c: flush buffer to logger
+// src/loggerd/buffer.c: flush buffer to logger
 extern void flush_buffer(struct logger*log);
 
 // src/loggerd/klog.c: read all kmesg to buffer and read new kmsg to logger

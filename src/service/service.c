@@ -9,7 +9,7 @@
 #define TAG "service"
 
 bool auto_restart=false;
-struct service*svc_default,*svc_system;
+struct service*svc_default,*svc_system,*svc_network;
 
 int svc_add_depend(struct service*svc,struct service*dep){
 	if(
@@ -121,12 +121,14 @@ int service_init(){
 	pthread_mutex_init(&services_lock,NULL);
 	svc_default=svc_create_service("default",WORK_FAKE);
 	svc_system=svc_create_service("system",WORK_FAKE);
-	if(!svc_default||!svc_system){
+	svc_network=svc_create_service("network",WORK_FAKE);
+	if(!svc_default||!svc_system||!svc_network){
 		tlog_emerg("FAILED TO CREATE DEFAULT SERVICE");
 		abort();
 	}
 	svc_set_desc(svc_default,"Default Service");
 	svc_set_desc(svc_system,"Default System");
+	svc_set_desc(svc_network,"Network Environment");
 	start_scheduler();
 	auto_restart=true;
 	return 0;

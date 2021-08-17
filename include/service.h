@@ -95,7 +95,7 @@ extern list*services;
 extern bool auto_restart;
 
 // src/service/service.c: default service for boot
-extern struct service*svc_default,*svc_system;
+extern struct service*svc_default,*svc_system,*svc_network;
 
 // src/service/data.c: lock for variable services
 extern pthread_mutex_t services_lock;

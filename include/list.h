@@ -75,6 +75,15 @@ extern list*list_duplicate_chars(list*lst,list*end);
 // src/lib/list.c: return true if there is only one item in the list
 extern bool list_is_alone(list*point);
 
+// src/lib/list.c: add item to an list
+extern int list_obj_add(list**lst,list*item);
+
+// src/lib/list.c: new and add item to an list
+extern int list_obj_add_new(list**lst,void*data);
+
+// src/lib/list.c: delete item from an list
+extern int list_obj_del(list**lst,list*item,runnable_t*datafree);
+
 // src/lib/list.c: default free runnable
 extern int list_default_free(void*data);
 
@@ -84,6 +93,7 @@ static inline int list_add_new_notnull(list*point,void*data){if(!data)ERET(EINVA
 static inline int list_push_new_notnull(list*point,void*data){if(!data)ERET(EINVAL);return list_push_new(point,data);}
 static inline int list_insert_new_notnull(list*point,void*data){if(!data)ERET(EINVAL);return list_insert_new(point,data);}
 static inline int list_unshift_new_notnull(list*point,void*data){if(!data)ERET(EINVAL);return list_unshift_new(point,data);}
+static inline int list_obj_add_new_notnull(list**lst,void*data){if(!data)ERET(EINVAL);return list_obj_add_new(lst,data);}
 
 // duplicate and new
 #define list_new_dup(data,len)                   list_new_notnull(memdup(data,len))
@@ -101,6 +111,9 @@ static inline int list_unshift_new_notnull(list*point,void*data){if(!data)ERET(E
 #define list_unshift_new_dup(point,data,len)     list_unshift_new_notnull(point,memdup(data,len))
 #define list_unshift_new_strdup(point,data)      list_unshift_new_notnull(point,strdup(data))
 #define list_unshift_new_strndup(point,data,len) list_unshift_new_notnull(point,strndup(data,len))
+#define list_obj_add_new_dup(lst,data,len)     list_obj_add_new_notnull(lst,memdup(data,len))
+#define list_obj_add_new_strdup(lst,data)      list_obj_add_new_notnull(lst,strdup(data))
+#define list_obj_add_new_strndup(lst,data,len) list_obj_add_new_notnull(lst,strndup(data,len))
 
 // use default free
 #define list_free_item_def(point)list_free_item(point,list_default_free)

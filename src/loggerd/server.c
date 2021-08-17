@@ -41,22 +41,18 @@ static struct socket_data*new_socket_data(int fd,bool server,char*path){
 }
 
 static struct socket_data*add_fd(int fd,bool server,char*path){
-	list*item=NULL;
 	struct epoll_event*ev=NULL;
 	struct socket_data*data=NULL;
 	if(!(ev=malloc(sizeof(struct epoll_event))))goto fail;
 	if(!(data=new_socket_data(fd,server,path)))goto fail;
-	if(!(item=list_new(data)))goto fail;
 	memset(ev,0,sizeof(struct epoll_event));
 	ev->events=EPOLLIN,ev->data.ptr=data;
 	epoll_ctl(efd,EPOLL_CTL_ADD,fd,ev);
 	free(ev);
-	if(!slist)slist=item;
-	else list_push(slist,item);
+	list_obj_add_new_notnull(&slist,data);
 	return data;
 	fail:
 	if(ev)free(ev);
-	if(data)free(data);
 	return NULL;
 }
 
@@ -80,17 +76,7 @@ static void del_fd(struct socket_data*data){
 	if(d)do{
 		next=d->next;
 		if(data!=d->data)continue;
-		if(list_is_alone(d)){
-			list_free_all(d,_hand_remove_data);
-			slist=NULL;
-			break;
-		}else{
-			if(d==slist){
-				if(d->prev)slist=d->prev;
-				if(d->next)slist=d->next;
-			}
-			list_remove_free(d,_hand_remove_data);
-		}
+		list_obj_del(&slist,d,_hand_remove_data);
 	}while((d=next));
 }
 

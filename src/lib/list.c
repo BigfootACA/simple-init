@@ -204,3 +204,34 @@ int list_remove_free(list*point,runnable_t*datafree){
 bool list_is_alone(list*point){
 	return point&&!point->prev&&!point->next;
 }
+
+int list_obj_add(list**lst,list*item){
+	if(!item||!lst)ERET(EINVAL);
+	if(!*lst)*lst=item;
+	else if(list_push(*lst,item)!=0)return -errno;
+	return 0;
+}
+
+int list_obj_add_new(list**lst,void*data){
+	if(!lst)ERET(EINVAL);
+	list*item=list_new(data);
+	if(!item)return -errno;
+	int r=list_obj_add(lst,item);
+	if(r<0)list_free_item(item,NULL);
+	return r;
+}
+
+int list_obj_del(list**lst,list*item,runnable_t*datafree){
+	if(!item||!lst)ERET(EINVAL);
+	if(list_is_alone(*lst)){
+		list_free_all(*lst,datafree);
+		*lst=NULL;
+	}else{
+		if(*lst==item){
+			if(item->prev)*lst=item->prev;
+			if(item->next)*lst=item->next;
+		}
+		list_remove_free(item,datafree);
+	}
+	return 0;
+}

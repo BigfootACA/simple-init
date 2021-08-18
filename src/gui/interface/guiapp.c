@@ -123,6 +123,8 @@ static void add_button(struct app*p){
 	lv_label_set_align(txt,LV_LABEL_ALIGN_CENTER);
 	lv_label_set_text(txt,_(p->name));
 	lv_obj_align(txt,icon_w,LV_ALIGN_OUT_BOTTOM_MID,0,0);
+	lv_obj_set_height(app,lv_obj_get_y(txt)+lv_obj_get_height(txt)+gui_font_size);
+
 	app_num++;
 }
 

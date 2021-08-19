@@ -1,6 +1,5 @@
 #ifdef ENABLE_GUI
 #include<stdlib.h>
-#include<libintl.h>
 #include"service.h"
 #include"logger.h"
 #include"defines.h"

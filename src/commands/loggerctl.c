@@ -2,7 +2,6 @@
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
-#include<libintl.h>
 #include"defines.h"
 #include"output.h"
 #include"logger.h"

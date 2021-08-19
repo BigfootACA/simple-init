@@ -1,5 +1,4 @@
 #include<stdio.h>
-#include<libintl.h>
 #include"defines.h"
 #include"version.h"
 

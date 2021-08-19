@@ -2,7 +2,6 @@
 #include<errno.h>
 #include<stdio.h>
 #include<libkmod.h>
-#include<libintl.h>
 #include<sys/stat.h>
 #include"defines.h"
 #include"getopt.h"

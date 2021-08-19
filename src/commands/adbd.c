@@ -4,7 +4,6 @@
 #include<unistd.h>
 #include<string.h>
 #include<strings.h>
-#include<libintl.h>
 #include<stdbool.h>
 #include"defines.h"
 #include"output.h"

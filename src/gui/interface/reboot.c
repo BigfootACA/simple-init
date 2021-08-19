@@ -1,5 +1,4 @@
 #ifdef ENABLE_GUI
-#include<libintl.h>
 #include"init_internal.h"
 #include"lvgl.h"
 #include"logger.h"

@@ -27,7 +27,6 @@
 #include<unistd.h>
 #include<sys/utsname.h>
 #include<libkmod.h>
-#include<libintl.h>
 #include"getopt.h"
 #include"kloglevel.h"
 #include"output.h"

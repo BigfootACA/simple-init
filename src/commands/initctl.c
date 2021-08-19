@@ -1,7 +1,6 @@
 #include<errno.h>
 #include<stdio.h>
 #include<string.h>
-#include<libintl.h>
 #include"output.h"
 #include"logger.h"
 #include"getopt.h"

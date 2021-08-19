@@ -2,7 +2,6 @@
 #include<stdio.h>
 #include<errno.h>
 #include<libkmod.h>
-#include<libintl.h>
 #include"defines.h"
 #include"output.h"
 

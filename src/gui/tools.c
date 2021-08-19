@@ -1,7 +1,6 @@
 #ifdef ENABLE_GUI
 #include<stdio.h>
 #include<stdlib.h>
-#include<libintl.h>
 #include"lvgl.h"
 #include"gui.h"
 #include"tools.h"

@@ -1,8 +1,10 @@
-## A simple init for linux
+## A simple init for linux (maybe it can also run under UEFI)
 
 ### Description
 
 A linux system in a single binary (Stuffed with strange things)
+
+Some references of this project may not meet the license, if you find any, please help me to correct it.
 
 ### WARNING
 
@@ -28,14 +30,18 @@ This project has not been completed and may not work properly.
 
 ### Code used
 
-| Project    | Description                                     | URL                                                          |
-| ---------- | ----------------------------------------------- | ------------------------------------------------------------ |
-| busybox    | some builtin commands                           | https://www.busybox.net                                      |
-| coreutils  | some builtin commands                           | https://www.gnu.org/software/coreutils/                      |
-| util-linux | some builtin commands and block lookup / mount  | https://github.com/karelzak/util-linux                       |
-| lv_drivers | fbdev, drm, gtk driver for LVGL GUI             | https://github.com/lvgl/lv_drivers                           |
-| kmod       | some builtin commands and modules load / unload | https://git.kernel.org/pub/scm/utils/kernel/kmod/kmod.git    |
-| papirus    | GUI icons                                       | https://github.com/PapirusDevelopmentTeam/papirus-icon-theme |
+| Project            | Description                                     | URL                                                          |
+| ------------------ | ----------------------------------------------- | ------------------------------------------------------------ |
+| busybox            | some builtin commands                           | https://www.busybox.net                                      |
+| coreutils          | some builtin commands                           | https://www.gnu.org/software/coreutils/                      |
+| util-linux         | some builtin commands and block lookup / mount  | https://github.com/karelzak/util-linux                       |
+| lv_drivers         | fbdev, drm, gtk driver for LVGL GUI             | https://github.com/lvgl/lv_drivers                           |
+| lv_sim_eclipse_sdl | sdl2 driver for LVGL GUI                        | https://github.com/lvgl/lv_sim_eclipse_sdl                   |
+| lv_demos           | gui benchmark                                   | https://github.com/lvgl/lv_demos                             |
+| lv_lib_freetype    | freetype2 true type fonts load                  | https://github.com/lvgl/lv_lib_freetype                      |
+| lv_lib_png         | png image load                                  | https://github.com/lvgl/lv_lib_png                           |
+| kmod               | some builtin commands and modules load / unload | https://git.kernel.org/pub/scm/utils/kernel/kmod/kmod.git    |
+| papirus            | GUI icons                                       | https://github.com/PapirusDevelopmentTeam/papirus-icon-theme |
 
 ### Features
 

@@ -8,4 +8,5 @@ add_library(init_loggerd STATIC
 	server.c
 	syslog.c
 	syslog_logger.c
+	lib.c
 )

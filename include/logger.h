@@ -76,16 +76,16 @@ extern int return_logger_printf(enum log_level level,int e,char*tag,const char*f
 // src/loggerd/client.c: send log with level, tag, formatted content, strerror and return e
 extern int return_logger_perror(enum log_level level,int e,char*tag,const char*fmt,...) __attribute__((format(printf,4,5)));
 
-// src/loggerd/client.c: convert log_level to string
+// src/loggerd/lib.c: convert log_level to string
 extern char*logger_level2string(enum log_level level);
 
-// src/loggerd/klog.c: convert log_level to kernel level
+// src/loggerd/lib.c: convert log_level to kernel level
 extern int logger_level2klevel(enum log_level level);
 
-// src/loggerd/klog.c: convert kernel level to log_level
+// src/loggerd/lib.c: convert kernel level to log_level
 extern enum log_level logger_klevel2level(int level);
 
-// src/loggerd/client.c: parse log_level from a string
+// src/loggerd/lib.c: parse log_level from a string
 extern enum log_level logger_parse_level(const char*v);
 
 #include"logtag.h"

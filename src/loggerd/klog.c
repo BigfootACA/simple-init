@@ -2,7 +2,6 @@
 #include<stdlib.h>
 #include<string.h>
 #include<signal.h>
-#include<linux/fs.h>
 #include<sys/klog.h>
 #include<sys/prctl.h>
 #include<sys/select.h>
@@ -152,32 +151,4 @@ int init_kmesg(){
 	if(buff)free(buff);
 	if(klogfd>=0)close(klogfd);
 	return -errno;
-}
-
-int logger_level2klevel(enum log_level level){
-	switch(level){
-		case LEVEL_DEBUG:return   KERN_DEBUG;
-		case LEVEL_INFO:return    KERN_INFO;
-		case LEVEL_NOTICE:return  KERN_NOTICE;
-		case LEVEL_WARNING:return KERN_WARNING;
-		case LEVEL_ERROR:return   KERN_ERR;
-		case LEVEL_CRIT:return    KERN_CRIT;
-		case LEVEL_ALERT:return   KERN_ALERT;
-		case LEVEL_EMERG:return   KERN_EMERG;
-		default:return            KERN_NOTICE;
-	}
-}
-
-enum log_level logger_klevel2level(int level){
-	switch(level){
-		case KERN_DEBUG:return   LEVEL_DEBUG;
-		case KERN_INFO:return    LEVEL_INFO;
-		case KERN_NOTICE:return  LEVEL_NOTICE;
-		case KERN_WARNING:return LEVEL_WARNING;
-		case KERN_ERR:return     LEVEL_ERROR;
-		case KERN_CRIT:return    LEVEL_CRIT;
-		case KERN_ALERT:return   LEVEL_ALERT;
-		case KERN_EMERG:return   LEVEL_EMERG;
-		default:return          LEVEL_NOTICE;
-	}
 }

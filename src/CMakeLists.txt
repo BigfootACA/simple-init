@@ -48,7 +48,7 @@ add_custom_command(
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(DEPS REQUIRED IMPORTED_TARGET ${DEPENDS})
 include_directories(${DEPS_INCLUDE_DIRS} include)
-add_executable(init src/main.c)
+add_executable(init src/main/main.c)
 set(SUBDIRS
 	src/assets
 	src/boot

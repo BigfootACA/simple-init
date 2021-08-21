@@ -125,6 +125,7 @@ int guidrv_init(uint32_t*w,uint32_t*h,int*dpi){
 		drv=gui_drvs[i];
 		return 0;
 	}
+	tlog_warn("no available gui drivers found");
 	drv=NULL;
 	return -1;
 }

@@ -5,7 +5,10 @@
 #include<unistd.h>
 #include<signal.h>
 #include<sys/time.h>
-#ifndef ENABLE_UEFI
+#ifdef ENABLE_UEFI
+#include<Library/UefiLib.h>
+#include<Library/UefiBootServicesTableLib.h>
+#else
 #include<semaphore.h>
 #endif
 #include"lvgl.h"
@@ -73,13 +76,6 @@ void gui_quit_sleep(){
 	#endif
 }
 
-#ifndef ENABLE_UEFI
-static void off_screen(int s __attribute__((unused))){
-	tlog_debug("screen sleep");
-	guidrv_set_brightness(0);
-}
-#endif
-
 void guess_font_size(){
 	int i=0;
 	if(gui_dpi>50)i++;
@@ -146,6 +142,11 @@ static int gui_pre_init(){
 }
 
 #ifndef ENABLE_UEFI
+static void off_screen(int s __attribute__((unused))){
+	tlog_debug("screen sleep");
+	guidrv_set_brightness(0);
+}
+
 static void gui_enter_sleep(){
 
 	// brightness level min 20
@@ -164,36 +165,6 @@ static void gui_enter_sleep(){
 	guidrv_set_brightness(o);
 	tlog_debug("quit sleep");
 }
-#endif
-
-int gui_init(draw_func draw){
-	if(gui_pre_init()<0)return -1;
-	lv_obj_t*screen;
-	if(!(screen=lv_scr_act()))return trlog_error(-1,"failed to get screen");
-	gui_cursor=lv_img_create(screen,NULL);
-	lv_img_set_src(gui_cursor,"\xef\x89\x85"); // mouse-pointer
-	sysbar_draw(screen);
-	draw(sysbar.content);
-	#ifndef ENABLE_UEFI
-	sem_init(&gui_wait,0,0);
-	#endif
-	lv_disp_trig_activity(NULL);
-	bool cansleep=guidrv_can_sleep();
-	if(!cansleep)tlog_notice("gui driver disabled sleep");
-	while(gui_run){
-		#ifndef ENABLE_UEFI
-		if(
-			lv_disp_get_inactive_time(NULL)>=10000&&
-			cansleep
-		)gui_enter_sleep();
-		#endif
-		lv_task_handler();
-		guidrv_taskhandler();
-		usleep(30000);
-	}
-	gui_do_quit();
-	return 0;
-}
 
 uint32_t custom_tick_get(void){
 	errno=0;
@@ -210,6 +181,59 @@ uint32_t custom_tick_get(void){
 	struct timeval tv_now;
 	gettimeofday(&tv_now,NULL);
 	return (uint64_t)((tv_now.tv_sec*1000000+tv_now.tv_usec)/1000)-start_ms;
+}
+#else
+static VOID EFIAPI efi_exit(IN EFI_EVENT e,IN VOID*ctx){
+	gui_run=false;
+}
+
+static VOID EFIAPI efi_timer(IN EFI_EVENT e,IN VOID*ctx){
+	lv_tick_inc(10);
+	lv_task_handler();
+	guidrv_taskhandler();
+}
+
+#endif
+
+int gui_init(draw_func draw){
+	if(gui_pre_init()<0)return -1;
+	lv_obj_t*screen;
+	if(!(screen=lv_scr_act()))return trlog_error(-1,"failed to get screen");
+	gui_cursor=lv_img_create(screen,NULL);
+	lv_img_set_src(gui_cursor,"\xef\x89\x85"); // mouse-pointer
+	sysbar_draw(screen);
+	draw(sysbar.content);
+	lv_disp_trig_activity(NULL);
+	#ifdef ENABLE_UEFI
+	static EFI_EVENT e_timer,e_exit;
+	if(EFI_ERROR(gBS->CreateEvent(
+		EVT_NOTIFY_SIGNAL|EVT_TIMER,TPL_CALLBACK,
+		efi_timer,NULL,&e_timer
+	)))return trlog_error(-1,"create timer event failed");
+	if(EFI_ERROR(gBS->CreateEvent(
+		EVT_NOTIFY_WAIT,TPL_NOTIFY,
+		efi_exit,NULL,&e_exit
+	)))return trlog_error(-1,"create exit event failed");
+	if(EFI_ERROR(gBS->SetTimer(
+		e_timer,TimerPeriodic,
+		EFI_TIMER_PERIOD_MILLISECONDS(10)
+	)))return trlog_error(-1,"create timer failed");
+	UINTN wi;
+	while(gui_run&&!EFI_ERROR(gBS->WaitForEvent(1,&e_exit,&wi)));
+	#else
+	sem_init(&gui_wait,0,0);
+	bool cansleep=guidrv_can_sleep();
+	if(!cansleep)tlog_notice("gui driver disabled sleep");
+	while(gui_run){
+		if(lv_disp_get_inactive_time(NULL)<10000||!cansleep){
+			lv_task_handler();
+			guidrv_taskhandler();
+		}else gui_enter_sleep();
+		usleep(30000);
+	}
+	#endif
+	gui_do_quit();
+	return 0;
 }
 
 #endif

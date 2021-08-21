@@ -68,6 +68,7 @@ static int uefigop_register(){
 	disp_drv.hor_res=ww;
 	disp_drv.ver_res=hh;
 	lv_disp_drv_register(&disp_drv);
+	logger_set_console(false);
 	return 0;
 }
 static void uefigop_get_sizes(uint32_t*width,uint32_t*height){
@@ -80,12 +81,16 @@ static void uefigop_get_dpi(int*dpi){
 static bool uefigop_can_sleep(){
 	return false;
 }
+static void uefigop_exit(){
+	logger_set_console(true);
+}
 struct gui_driver guidrv_uefigop={
 	.name="uefigop",
 	.drv_register=uefigop_register,
 	.drv_getsize=uefigop_get_sizes,
 	.drv_getdpi=uefigop_get_dpi,
-	.drv_cansleep=uefigop_can_sleep
+	.drv_cansleep=uefigop_can_sleep,
+	.drv_exit=uefigop_exit
 };
 #endif
 #endif

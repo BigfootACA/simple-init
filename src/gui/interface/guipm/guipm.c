@@ -1,4 +1,5 @@
 #ifdef ENABLE_GUI
+#ifdef ENABLE_FDISK
 #include"guipm.h"
 
 void guipm_draw_title(lv_obj_t*screen){
@@ -18,4 +19,5 @@ int guipm_main(int argc __attribute((unused)),char**argv __attribute((unused))){
 	open_socket_logfd_default();
 	return gui_init(_draw);
 }
+#endif
 #endif

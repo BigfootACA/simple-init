@@ -1,4 +1,5 @@
 #include"guipm.h"
+#ifdef ENABLE_FDISK
 
 char*guipm_target_disk=NULL;
 static char*path=NULL;
@@ -423,3 +424,4 @@ void guipm_draw_partitions(lv_obj_t*screen){
 		.page=selscr
 	});
 }
+#endif

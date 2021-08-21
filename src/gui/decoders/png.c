@@ -26,7 +26,7 @@ static lv_res_t decoder_info(struct _lv_img_decoder*decoder __attribute__((unuse
 			if(strcmp(&fn[strlen(fn)-3],"png")!=0)break;
 			uint32_t size[2];
 			int fd;
-			if((fd=open(fn,O_RDONLY))>=0){
+			if((fd=open(fn,O_RDONLY,0644))>=0){
 				lseek(fd,16,SEEK_SET);
 				read(fd,size,8);
 				close(fd);

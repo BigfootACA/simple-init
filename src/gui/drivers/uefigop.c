@@ -12,7 +12,7 @@
 #include"guidrv.h"
 #define TAG "uefigop"
 
-static int ww=800,hh=600;
+static int ww=-1,hh=-1;
 static EFI_GRAPHICS_OUTPUT_PROTOCOL*gop;
 
 static void uefigop_flush(lv_disp_drv_t*disp_drv,const lv_area_t*area,lv_color_t*color_p){
@@ -29,12 +29,29 @@ static void uefigop_flush(lv_disp_drv_t*disp_drv,const lv_area_t*area,lv_color_t
 	lv_disp_flush_ready(disp_drv);
 }
 
-int uefigop_register(){
+static int uefigop_init(){
+	if(!gBS)return -1;
 	if(EFI_ERROR(gBS->LocateProtocol(
 		&gEfiGraphicsOutputProtocolGuid,
 		NULL,
 		(VOID**)&gop
-	)))return -1;
+	))||!gop)return -1;
+	EFI_GRAPHICS_OUTPUT_PROTOCOL_MODE*mode=gop->Mode;
+	if(!mode)
+		return trlog_error(-1,"cannot get uefi graphics mode");
+	EFI_GRAPHICS_OUTPUT_MODE_INFORMATION*info=mode->Info;
+	if(!info)
+		return trlog_error(-1,"cannot get uefi graphics mode info");
+	ww=info->HorizontalResolution;
+	hh=info->VerticalResolution;
+	if(ww<=0||hh<=0)
+		return trlog_error(-1,"invalid uefi graphics mode");
+	tlog_debug("uefigop resolution %dx%d",ww,hh);
+	return 0;
+}
+
+static int uefigop_register(){
+	if(uefigop_init()!=0)return -1;
 	size_t s=ww*hh;
 	static lv_color_t*buf=NULL;
 	static lv_disp_buf_t disp_buf;

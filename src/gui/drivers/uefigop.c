@@ -50,6 +50,7 @@ static int uefigop_init(){
 	return 0;
 }
 
+extern int pointer_register();
 static int uefigop_register(){
 	if(uefigop_init()!=0)return -1;
 	size_t s=ww*hh;
@@ -69,6 +70,7 @@ static int uefigop_register(){
 	disp_drv.ver_res=hh;
 	lv_disp_drv_register(&disp_drv);
 	logger_set_console(false);
+	pointer_register();
 	return 0;
 }
 static void uefigop_get_sizes(uint32_t*width,uint32_t*height){

@@ -42,6 +42,7 @@
   src/gui/guidrv.c
   src/gui/drivers.c
   src/gui/drivers/uefigop.c
+  src/gui/drivers/uefipointer.c
   src/gui/decoders/png.c
   src/gui/decoders/freetype.c
   src/gui/interface/benchmark.c

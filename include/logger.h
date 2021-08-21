@@ -22,9 +22,12 @@ struct log_item{
 	enum log_level level;
 	char tag[64],content[4096];
 	time_t time;
+	#ifndef ENABLE_UEFI
 	pid_t pid;
+	#endif
 };
 
+#ifndef ENABLE_UEFI
 // src/loggerd/client.c: current logfd
 extern int logfd;
 
@@ -57,6 +60,18 @@ extern int logger_syslog();
 
 // src/loggerd/client.c: launch loggerd
 extern int start_loggerd(pid_t*p);
+#else
+static inline int set_logfd(int fd __attribute__((unused))){return -1;}
+static inline void close_logfd(){};
+static inline int open_file_logfd(char*path __attribute__((unused))){return -1;}
+static inline int open_socket_logfd(char*path __attribute__((unused))){return -1;}
+static inline int logger_listen(char*file __attribute__((unused))){return -1;}
+static inline int logger_open(char*file __attribute__((unused))){return -1;}
+static inline int logger_exit(){return -1;}
+static inline int logger_klog(){return -1;}
+static inline int logger_syslog(){return -1;}
+static inline int start_loggerd(int*p __attribute__((unused))){return -1;}
+#endif
 
 // src/loggerd/client.c: send raw log
 extern int logger_write(struct log_item*log);

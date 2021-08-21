@@ -4,13 +4,18 @@
 #include<stdarg.h>
 #include<stdlib.h>
 #include<string.h>
+#ifdef ENABLE_UEFI
+#include<Library/DebugLib.h>
+#else
 #include<sys/un.h>
 #include<sys/socket.h>
+#endif
 #include"defines.h"
 #include"output.h"
 #include"system.h"
 #include"logger_internal.h"
 
+#ifndef ENABLE_UEFI
 int logfd=-1;
 
 int set_logfd(int fd){
@@ -80,13 +85,49 @@ int logger_syslog(){
 	return logger_send_string(LOG_SYSLOG,NULL);
 }
 
+int start_loggerd(pid_t*p){
+	int fds[2],r;
+	if(logfd>=0)ERET(EEXIST);
+	if(socketpair(AF_UNIX,SOCK_STREAM,0,fds)<0)return -errno;
+	pid_t pid=fork();
+	switch(pid){
+		case -1:return -errno;
+		case 0:
+			close_all_fd((int[]){fds[0]},1);
+			r=loggerd_thread(fds[0]);
+			exit(r);
+	}
+	close(fds[0]);
+	struct log_msg msg;
+	do{if(logger_internal_read_msg(fds[1],&msg)<0)ERET(EIO);}
+	while(msg.oper!=LOG_OK);
+	if(p)*p=pid;
+	return set_logfd(fds[1]);
+}
+#else
+static inline UINTN efi_level(enum log_level lvl){
+	switch(lvl){
+		case LEVEL_DEBUG:return   EFI_D_INFO;
+		case LEVEL_INFO:return    EFI_D_INFO;
+		case LEVEL_NOTICE:return  EFI_D_INFO;
+		case LEVEL_WARNING:return EFI_D_WARN;
+		case LEVEL_ERROR:return   EFI_D_WARN;
+		case LEVEL_CRIT:return    EFI_D_ERROR;
+		case LEVEL_ALERT:return   EFI_D_ERROR;
+		case LEVEL_EMERG:return   EFI_D_ERROR;
+		default:return            EFI_D_VERBOSE;
+	}
+}
+#endif
+
 int logger_write(struct log_item*log){
-	static size_t xs=sizeof(struct log_msg);
 	if(!log)ERET(EINVAL);
 	ssize_t s=strlen(log->content)-1;
 	while(s>=0)
 		if(!isspace(log->content[s]))break;
 		else log->content[s]=0,s--;
+	#ifndef ENABLE_UEFI
+	static size_t xs=sizeof(struct log_msg);
 	if(logfd<0)return fprintf(stderr,"%s: %s\n",log->tag,log->content);
 	struct log_msg msg;
 	logger_internal_init_msg(&msg,LOG_ADD);
@@ -97,6 +138,23 @@ int logger_write(struct log_item*log){
 	while(msg.oper!=LOG_OK&&msg.oper!=LOG_FAIL);
 	errno=msg.data.code;
 	return xs;
+	#else
+	wchar_t*mt,*mc;
+	size_t st,sc;
+	st=(strlen(log->tag)+1)*sizeof(wchar_t);
+	sc=(strlen(log->content)+1)*sizeof(wchar_t);
+	if(!(mt=malloc(st))||!(mc=malloc(sc))){
+		if(mt)free(mt);
+		if(mc)free(mc);
+		return -1;
+	}
+	mbstowcs(mt,log->tag,st);
+	mbstowcs(mc,log->content,sc);
+	DebugPrint(efi_level(log->level),"%s: %s\n",mt,mc);
+	free(mt);
+	free(mc);
+	return printf("%s: %s\n",log->tag,log->content);
+	#endif
 }
 
 int logger_print(enum log_level level,char*tag,char*content){
@@ -107,7 +165,9 @@ int logger_print(enum log_level level,char*tag,char*content){
 	strncpy(log.tag,tag,sizeof(log.tag)-1);
 	strncpy(log.content,content,sizeof(log.content)-1);
 	time(&log.time);
+	#ifndef ENABLE_UEFI
 	log.pid=getpid();
+	#endif
 	return logger_write(&log);
 }
 
@@ -179,24 +239,4 @@ int return_logger_perror(enum log_level level,int e,char*tag,const char*fmt,...)
 	logger_perror_x(level,tag,fmt,ap);
 	va_end(ap);
 	return e;
-}
-
-int start_loggerd(pid_t*p){
-	int fds[2],r;
-	if(logfd>=0)ERET(EEXIST);
-	if(socketpair(AF_UNIX,SOCK_STREAM,0,fds)<0)return -errno;
-	pid_t pid=fork();
-	switch(pid){
-		case -1:return -errno;
-		case 0:
-			close_all_fd((int[]){fds[0]},1);
-			r=loggerd_thread(fds[0]);
-			exit(r);
-	}
-	close(fds[0]);
-	struct log_msg msg;
-	do{if(logger_internal_read_msg(fds[1],&msg)<0)ERET(EIO);}
-	while(msg.oper!=LOG_OK);
-	if(p)*p=pid;
-	return set_logfd(fds[1]);
 }

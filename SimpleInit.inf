@@ -31,6 +31,10 @@
   UefiApplicationEntryPoint
   UefiBootManagerLib
 
+[Protocols]
+  gEfiSimplePointerProtocolGuid
+  gEfiGraphicsOutputProtocolGuid
+
 [Sources]
   # UEFI entry point
   src/main/uefimain.c

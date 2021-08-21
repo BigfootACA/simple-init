@@ -39,8 +39,12 @@
 #endif
 #define assert(expr){if(!(expr))exit_stderr_printf(-1,"assert failed.\n");}
 #define _ lang_gettext
+#ifndef MIN
 #define MIN(a,b)((b)>(a)?(a):(b))
+#endif
+#ifndef MAX
 #define MAX(a,b)((b)<(a)?(a):(b))
+#endif
 #define ENUM(err) -(errno=(err))
 #define ERET(err) return ENUM(err)
 #define EPRET(err) {errno=(err);return NULL;}

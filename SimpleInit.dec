@@ -1,0 +1,12 @@
+[Defines]
+  DEC_SPECIFICATION              = 0x00010005
+  PACKAGE_NAME                   = SimpleInit
+  PACKAGE_GUID                   = 81B0EF55-14ED-4720-8073-1F5634E02BFE
+  PACKAGE_VERSION                = 0.01
+
+[Includes]
+  include
+  libs/lvgl
+  libs/lodepng
+  src/gui/include
+  src/compatible/include

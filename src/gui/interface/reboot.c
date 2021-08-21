@@ -11,6 +11,7 @@
 #include"tools.h"
 #define TAG "reboot"
 
+static bool valid=true;
 static lv_obj_t*scr,*box;
 static lv_obj_t*btn_rb,*btn_po;
 #ifndef ENABLE_UEFI
@@ -68,16 +69,19 @@ static void reboot_action(lv_obj_t*obj,lv_event_t e){
 		int ex=(errno==0)?response.data.status.ret:errno;
 		lv_create_ok_msgbox(scr,ok_msg_click,_("init control command failed: %s"),strerror(ex));
 		lv_obj_del_async(box);
+		valid=false;
 		return;
 	}
+	guiact_do_back();
 	#else
 	lv_create_ok_msgbox(scr,ok_msg_click,_("not supported operation: %d"),m);
 	lv_obj_del_async(box);
+	valid=false;
 	#endif
-	guiact_do_back();
 }
 
 static int reboot_get_focus(void*d __attribute__((unused))){
+	if(!valid)return 0;
 	lv_group_add_obj(gui_grp,btn_rb);
 	#ifndef ENABLE_UEFI
 	lv_group_add_obj(gui_grp,btn_rb_edl);
@@ -89,6 +93,7 @@ static int reboot_get_focus(void*d __attribute__((unused))){
 }
 
 static int reboot_lost_focus(void*d __attribute__((unused))){
+	if(!valid)return 0;
 	lv_group_remove_obj(btn_rb);
 	#ifndef ENABLE_UEFI
 	lv_group_remove_obj(btn_rb_edl);

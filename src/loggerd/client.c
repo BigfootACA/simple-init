@@ -105,6 +105,12 @@ int start_loggerd(pid_t*p){
 	return set_logfd(fds[1]);
 }
 #else
+bool console_output=true;
+
+void logger_set_console(bool enabled){
+	console_output=enabled;
+}
+
 static inline UINTN efi_level(enum log_level lvl){
 	switch(lvl){
 		case LEVEL_DEBUG:return   EFI_D_INFO;
@@ -153,7 +159,8 @@ int logger_write(struct log_item*log){
 	DebugPrint(efi_level(log->level),"%s: %s\n",mt,mc);
 	free(mt);
 	free(mc);
-	return printf("%s: %s\n",log->tag,log->content);
+	if(console_output)printf("%s: %s\n",log->tag,log->content);
+	return 0;
 	#endif
 }
 

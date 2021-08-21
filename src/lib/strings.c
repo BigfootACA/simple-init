@@ -90,6 +90,7 @@ char*strrep(char*str,char from,char to){
 	return str;
 }
 
+#ifndef ENABLE_UEFI
 int repeat(int fd,char c,size_t times){
 	char*buff=malloc((times+1)*sizeof(char));
 	if(!buff)return -errno;
@@ -100,6 +101,7 @@ int repeat(int fd,char c,size_t times){
 	fsync(fd);
 	return r;
 }
+#endif
 
 long parse_long(char*str,long def){
 	if(!str)return def;

@@ -5,7 +5,9 @@
 #include<unistd.h>
 #include<signal.h>
 #include<sys/time.h>
+#ifndef ENABLE_UEFI
 #include<semaphore.h>
+#endif
 #include"lvgl.h"
 #include"logger.h"
 #include"gui.h"
@@ -15,8 +17,10 @@
 #include"guidrv.h"
 #define TAG "gui"
 
+#ifndef ENABLE_UEFI
 // default backlight device fd
 int default_backlight=-1;
+#endif
 
 // gui dpi
 int gui_dpi_def=200,gui_dpi_force=0,gui_dpi=200;
@@ -42,11 +46,13 @@ lv_obj_t*gui_cursor=NULL;
 // keep running
 bool gui_run=true;
 
+#ifndef ENABLE_UEFI
 // is sleeping
 bool gui_sleep=false;
 
 // gui sleep lock
 static sem_t gui_wait;
+#endif
 
 // usable gui fontsize
 static int font_sizes[]={10,16,24,32,48,64,72,96};
@@ -56,6 +62,7 @@ void gui_do_quit(){
 }
 
 void gui_quit_sleep(){
+	#ifndef ENABLE_UEFI
 	if(gui_sleep){
 		gui_sleep=false;
 		lv_tick_inc(LV_DISP_DEF_REFR_PERIOD);
@@ -63,12 +70,15 @@ void gui_quit_sleep(){
 		lv_disp_trig_activity(NULL);
 		sem_post(&gui_wait);
 	}
+	#endif
 }
 
+#ifndef ENABLE_UEFI
 static void off_screen(int s __attribute__((unused))){
 	tlog_debug("screen sleep");
 	guidrv_set_brightness(0);
 }
+#endif
 
 void guess_font_size(){
 	int i=0;
@@ -87,9 +97,11 @@ static int gui_pre_init(){
 	lv_init();
 	gui_grp=lv_group_create();
 
+	#ifndef ENABLE_UEFI
 	// parse backlight device
 	char*x=getenv("BACKLIGHT");
 	if(x)default_backlight=led_parse_arg(x,"backlight");
+	#endif
 
 	// init gui
 	if(guidrv_init(&gui_w,&gui_h,&gui_dpi)<0)return -1;
@@ -133,6 +145,7 @@ static int gui_pre_init(){
 	return 0;
 }
 
+#ifndef ENABLE_UEFI
 static void gui_enter_sleep(){
 
 	// brightness level min 20
@@ -151,6 +164,7 @@ static void gui_enter_sleep(){
 	guidrv_set_brightness(o);
 	tlog_debug("quit sleep");
 }
+#endif
 
 int gui_init(draw_func draw){
 	if(gui_pre_init()<0)return -1;
@@ -160,15 +174,21 @@ int gui_init(draw_func draw){
 	lv_img_set_src(gui_cursor,"\xef\x89\x85"); // mouse-pointer
 	sysbar_draw(screen);
 	draw(sysbar.content);
+	#ifndef ENABLE_UEFI
 	sem_init(&gui_wait,0,0);
+	#endif
 	lv_disp_trig_activity(NULL);
 	bool cansleep=guidrv_can_sleep();
 	if(!cansleep)tlog_notice("gui driver disabled sleep");
 	while(gui_run){
-		if(lv_disp_get_inactive_time(NULL)<10000||!cansleep){
-			lv_task_handler();
-			guidrv_taskhandler();
-		}else gui_enter_sleep();
+		#ifndef ENABLE_UEFI
+		if(
+			lv_disp_get_inactive_time(NULL)>=10000&&
+			cansleep
+		)gui_enter_sleep();
+		#endif
+		lv_task_handler();
+		guidrv_taskhandler();
 		usleep(30000);
 	}
 	gui_do_quit();

@@ -9,7 +9,11 @@ struct sysbar{
 	struct{
 		lv_obj_t*bar;
 		struct{
-			lv_obj_t*time,*level,*battery;
+			lv_obj_t*time;
+			#ifndef ENABLE_UEFI
+			lv_obj_t*level;
+			lv_obj_t*battery;
+			#endif
 		}content;
 	}top;
 	lv_obj_t*keyboard;
@@ -18,7 +22,10 @@ struct sysbar{
 		lv_style_t btn_style;
 		bool style_inited;
 		struct{
-			lv_obj_t*back,*home,*keyboard,*power;
+			lv_obj_t*back;
+			lv_obj_t*home;
+			lv_obj_t*keyboard;
+			lv_obj_t*power;
 		}content;
 	}bottom;
 };

@@ -7,9 +7,11 @@
 #include<string.h>
 #include<stdint.h>
 #include<stdlib.h>
+#ifndef ENABLE_UEFI
 #include<libintl.h>
-#include<sys/stat.h>
 #include<sys/mman.h>
+#include<sys/stat.h>
+#endif
 #include"str.h"
 #include"shell.h"
 #include"assets.h"
@@ -23,6 +25,9 @@ struct language languages[]={
 	{"zh","CN","UTF-8","简体中文 (中国大陆)"},
 	{0,0,0,0}
 };
+#ifdef ENABLE_UEFI
+static char cur_lang[64]="C";
+#endif
 static bool mmap_map=false;
 static void*locale_map=NULL;
 static size_t map_size=-1;
@@ -48,18 +53,27 @@ static char*mo_lookup(const void*p,size_t size,const char*s){
 	}
 }
 static int lang_open_locale(char*path){
-	int fd=-1,r=-1;
+	int r=-1;
+	#ifndef ENABLE_UEFI
+	int fd=-1;
 	struct stat st;
 	if(locale_map){
 		if(mmap_map)munmap(locale_map,map_size);
 		locale_map=NULL;
 		map_size=-1;
 	}
+	#endif
 	struct entry_file*file=rootfs_get_assets_file(path);
-	if(file&&S_ISREG(file->info.mode)&&!getenv("NO_INTERNAL_MO")){
+	if(file
+		&&S_ISREG(file->info.mode)
+		#ifndef ENABLE_UEFI
+		&&!getenv("NO_INTERNAL_MO")
+		#endif
+	){
 		locale_map=file->content;
 		map_size=file->length;
 		mmap_map=false;
+	#ifndef ENABLE_UEFI
 	}else if((fd=open(path,O_RDONLY))<0)goto clean;
 	else{
 		if(fstat(fd,&st)!=0)goto clean;
@@ -69,19 +83,26 @@ static int lang_open_locale(char*path){
 			goto clean;
 		}
 		mmap_map=true;
+	#endif
 	}
 	r=0;
+	#ifndef ENABLE_UEFI
 	clean:
 	if(fd>=0)close(fd);
+	#endif
 	return r;
 }
 char*lang_get_locale(char*def){
 	if(def)return def;
+	#ifdef ENABLE_UEFI
+	return cur_lang;
+	#else
 	char*l;
 	if((l=getenv("LC_ALL")))return l;
 	if((l=getenv("LANG")))return l;
 	if((l=getenv("LANGUAGE")))return l;
 	return NULL;
+	#endif
 }
 void lang_load_locale(const char*dir,const char*lang,const char*domain){
 	if(!domain)return;
@@ -107,7 +128,9 @@ char*lang_gettext(const char*msgid){
 }
 void lang_init_locale(){
 	lang_load_locale(NULL,NULL,NAME);
+	#ifndef ENABLE_UEFI
 	init_commands_locale();
+	#endif
 }
 const char*lang_concat(struct language*lang,bool region,bool charset){
 	if(!lang)return NULL;
@@ -140,9 +163,13 @@ int lang_set(const char*lang){
 		!lang||lang[0]==0||
 		!check_valid((char*)lang,VALID"-.")
 	)ERET(EINVAL);
+	#ifdef ENABLE_UEFI
+	strcpy(cur_lang,lang);
+	#else
 	setenv("LANG",lang,1);
 	setenv("LANGUAGE",lang,1);
 	setenv("LC_ALL",lang,1);
+	#endif
 	lang_init_locale();
 	return 0;
 }

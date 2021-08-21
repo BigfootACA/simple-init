@@ -12,6 +12,7 @@
 
 static lv_obj_t*scr,*box,*sel,*btn_ok;
 
+#ifndef ENABLE_UEFI
 static void ok_msg_click(lv_obj_t*obj,lv_event_t e){
 	if(e==LV_EVENT_DELETE){
 		guiact_do_back();
@@ -19,6 +20,7 @@ static void ok_msg_click(lv_obj_t*obj,lv_event_t e){
 		lv_msgbox_start_auto_close(obj,0);
 	}
 }
+#endif
 
 static void ok_action(lv_obj_t*obj,lv_event_t e){
 	if(obj!=btn_ok||e!=LV_EVENT_CLICKED)return;
@@ -26,6 +28,7 @@ static void ok_action(lv_obj_t*obj,lv_event_t e){
 	if(!languages[i].lang)return;
 	const char*lang=lang_concat(&languages[i],true,true);
 	lang_set(lang);
+	#ifndef ENABLE_UEFI
 	struct init_msg msg,response;
 	init_initialize_msg(&msg,ACTION_LANGUAGE);
 	strcpy(msg.data.data,lang);
@@ -37,6 +40,7 @@ static void ok_action(lv_obj_t*obj,lv_event_t e){
 		lv_obj_del_async(box);
 		return;
 	}
+	#endif
 	guiact_do_back();
 }
 

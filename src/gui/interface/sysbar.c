@@ -8,13 +8,18 @@
 struct sysbar sysbar;
 
 static void sysbar_thread(struct sysbar*b){
-	int bats[64]={0},bat,lvl;
-	bat=pwr_scan_device(bats,63,true);
-	char timestr[64]={0},*sym=NULL;
+	#ifndef ENABLE_UEFI
+	int bats[64]={0};
+	int bat,lvl;
+	char*sym=NULL;
+	#endif
+	char timestr[64]={0};
 	time_t t=time(NULL);
 	struct tm*tt=localtime(&t);
 	if(tt&&strftime(timestr,63,"%H:%M",tt)>0)
 		lv_label_set_text(b->top.content.time,timestr);
+	#ifndef ENABLE_UEFI
+	bat=pwr_scan_device(bats,63,true);
 	if(bat>=0&&(lvl=pwr_multi_get_capacity(bats))>=0){
 		if(lvl<10)sym=LV_SYMBOL_BATTERY_EMPTY;
 		else if(lvl<25)sym=LV_SYMBOL_BATTERY_1;
@@ -24,6 +29,7 @@ static void sysbar_thread(struct sysbar*b){
 		lv_label_set_text_fmt(b->top.content.level,"%d%%",lvl);
 		lv_label_set_text(b->top.content.battery,sym);
 	}else lv_label_set_text_fmt(b->top.content.level,"---");
+	#endif
 }
 
 static void sysbar_thread_cb(lv_task_t*a){
@@ -139,6 +145,7 @@ static void sysbar_draw_top(){
 	lv_label_set_text(sysbar.top.content.time,"00:00");
 	lv_obj_align(sysbar.top.content.time,NULL,LV_ALIGN_IN_TOP_LEFT,x,y);
 
+	#ifndef ENABLE_UEFI
 	sysbar.top.content.level=lv_label_create(sysbar.top.bar,NULL);
 	lv_label_set_text(sysbar.top.content.level,"000%");
 	lv_obj_align(sysbar.top.content.level,NULL,LV_ALIGN_IN_TOP_RIGHT,-x,y);
@@ -150,6 +157,7 @@ static void sysbar_draw_top(){
 		-gui_dpi/5-lv_obj_get_width(sysbar.top.content.level),
 		y
 	);
+	#endif
 }
 
 int sysbar_draw(lv_obj_t*scr){

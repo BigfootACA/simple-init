@@ -1,5 +1,7 @@
 #ifdef ENABLE_GUI
+#ifndef ENABLE_UEFI
 #include"init_internal.h"
+#endif
 #include"lvgl.h"
 #include"logger.h"
 #include"activity.h"
@@ -10,21 +12,28 @@
 #define TAG "reboot"
 
 static lv_obj_t*scr,*box;
-static lv_obj_t*btn_rb,*btn_rb_edl,*btn_rb_rec,*btn_rb_bl,*btn_po;
+static lv_obj_t*btn_rb,*btn_po;
+#ifndef ENABLE_UEFI
+static lv_obj_t*btn_rb_edl,*btn_rb_rec,*btn_rb_bl,*btn_po;
+#endif
 
 enum reboot_mode{
 	REBOOT,
+	#ifndef ENABLE_UEFI
 	REBOOT_EDL,
 	REBOOT_RECOVERY,
 	REBOOT_BOOTLOADER,
+	#endif
 	POWEROFF,
 };
 
 static const char*reboot_str[]={
 	[REBOOT]            = "Reboot",
+	#ifndef ENABLE_UEFI
 	[REBOOT_EDL]        = "Reboot into EDL (9008)",
 	[REBOOT_RECOVERY]   = "Reboot into Recovery",
 	[REBOOT_BOOTLOADER] = "Reboot into Bootloader",
+	#endif
 	[POWEROFF]          = "Power Off",
 };
 
@@ -41,6 +50,7 @@ static void reboot_action(lv_obj_t*obj,lv_event_t e){
 	void*d=lv_obj_get_user_data(obj);
 	if(!d)return;
 	enum reboot_mode m=*(enum reboot_mode*)d;
+	#ifndef ENABLE_UEFI
 	struct init_msg msg;
 	init_initialize_msg(&msg,ACTION_REBOOT);
 	switch(m){
@@ -60,23 +70,31 @@ static void reboot_action(lv_obj_t*obj,lv_event_t e){
 		lv_obj_del_async(box);
 		return;
 	}
+	#else
+	lv_create_ok_msgbox(scr,ok_msg_click,_("not supported operation: %d"),m);
+	lv_obj_del_async(box);
+	#endif
 	guiact_do_back();
 }
 
 static int reboot_get_focus(void*d __attribute__((unused))){
 	lv_group_add_obj(gui_grp,btn_rb);
+	#ifndef ENABLE_UEFI
 	lv_group_add_obj(gui_grp,btn_rb_edl);
 	lv_group_add_obj(gui_grp,btn_rb_rec);
 	lv_group_add_obj(gui_grp,btn_rb_bl);
+	#endif
 	lv_group_add_obj(gui_grp,btn_po);
 	return 0;
 }
 
 static int reboot_lost_focus(void*d __attribute__((unused))){
 	lv_group_remove_obj(btn_rb);
+	#ifndef ENABLE_UEFI
 	lv_group_remove_obj(btn_rb_edl);
 	lv_group_remove_obj(btn_rb_rec);
 	lv_group_remove_obj(btn_rb_bl);
+	#endif
 	lv_group_remove_obj(btn_po);
 	return 0;
 }
@@ -109,11 +127,16 @@ void reboot_menu_draw(lv_obj_t*screen){
 	lv_obj_set_width(txt,lv_page_get_scrl_width(box));
 	lv_label_set_text(txt,_("Select an action you want to do"));
 
+	#ifndef ENABLE_UEFI
 	btn_rb=add_reboot_button(txt,REBOOT);
 	btn_rb_edl=add_reboot_button(btn_rb,REBOOT_EDL);
 	btn_rb_rec=add_reboot_button(btn_rb_edl,REBOOT_RECOVERY);
 	btn_rb_bl=add_reboot_button(btn_rb_rec,REBOOT_BOOTLOADER);
 	btn_po=add_reboot_button(btn_rb_bl,POWEROFF);
+	#else
+	btn_rb=add_reboot_button(txt,REBOOT);
+	btn_po=add_reboot_button(btn_rb,POWEROFF);
+	#endif
 	lv_obj_set_height(box,lv_obj_get_y(btn_po)+lv_obj_get_height(btn_po)+(gui_font_size/3*8));
 	lv_obj_align(box,NULL,LV_ALIGN_CENTER,0,0);
 

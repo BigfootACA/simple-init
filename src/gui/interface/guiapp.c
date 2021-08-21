@@ -1,6 +1,8 @@
 #ifdef ENABLE_GUI
 #include<stdlib.h>
+#ifndef ENABLE_UEFI
 #include"service.h"
+#endif
 #include"logger.h"
 #include"defines.h"
 #include"lvgl.h"
@@ -19,8 +21,14 @@ static struct app{
 	char*img;
 	draw_func draw;
 }apps[]={
-	{"File Manager",           "filemgr.png",   filemgr_draw},
+	#ifndef ENABLE_UEFI
+	#ifdef ENABLE_FDISK
 	{"Partition Manager",      "guipm.png",     guipm_draw_disk_sel},
+	#endif
+	{"File Manager",           "filemgr.png",   filemgr_draw},
+	{"Loggerd Viewer",         "logviewer.png", logviewer_draw},
+	{"Backlight",              "backlight.png", backlight_menu_draw},
+	#endif
 	{"USB Control",            "usb.png",       NULL},
 	{"Registry Editor",        "regedit.png",   NULL},
 	{"Image Backgup Recovery", "backup.png",    NULL},
@@ -28,8 +36,6 @@ static struct app{
 	{"System Info",            "sysinfo.png",   NULL},
 	{"Multi-Boot Manage",      "bootmgr.png",   NULL},
 	{"Reboot Menu",            "reboot.png",    reboot_menu_draw},
-	{"Loggerd Viewer",         "logviewer.png", logviewer_draw},
-	{"Backlight",              "backlight.png", backlight_menu_draw},
 	{"Language",               "language.png",  language_menu_draw},
 	{NULL,NULL,NULL}
 };
@@ -180,11 +186,14 @@ static void _draw(lv_obj_t*scr){
 }
 
 int guiapp_main(int argc __attribute((unused)),char**argv __attribute((unused))){
+	#ifndef ENABLE_UEFI
 	open_socket_logfd_default();
 	open_socket_initfd(DEFAULT_INITD);
+	#endif
 	return gui_init(_draw);
 }
 
+#ifndef ENABLE_UEFI
 int guiap_startup(struct service*svc __attribute__((unused))){
 	return guiapp_main(0,NULL);
 }
@@ -199,4 +208,5 @@ int register_guiapp(){
 	}
 	return 0;
 }
+#endif
 #endif

@@ -10,6 +10,7 @@
 #include"assets.h"
 #include"defines.h"
 
+#ifndef ENABLE_UEFI
 int set_assets_file_info(int fd,entry_file*file){
 	int e=0;
 	if(!file||fd<0)ERET(EINVAL);
@@ -87,6 +88,7 @@ int create_assets_dir(int dfd,entry_dir*dir,bool override){
 	close(fd);
 	return r;
 }
+#endif
 
 static entry_file*_get_assets_subfile(entry_dir*dir,const char*name){
 	if(!dir->subfiles)EPRET(ENOENT);

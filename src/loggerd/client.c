@@ -110,20 +110,6 @@ bool console_output=true;
 void logger_set_console(bool enabled){
 	console_output=enabled;
 }
-
-static inline UINTN efi_level(enum log_level lvl){
-	switch(lvl){
-		case LEVEL_DEBUG:return   EFI_D_INFO;
-		case LEVEL_INFO:return    EFI_D_INFO;
-		case LEVEL_NOTICE:return  EFI_D_INFO;
-		case LEVEL_WARNING:return EFI_D_WARN;
-		case LEVEL_ERROR:return   EFI_D_WARN;
-		case LEVEL_CRIT:return    EFI_D_ERROR;
-		case LEVEL_ALERT:return   EFI_D_ERROR;
-		case LEVEL_EMERG:return   EFI_D_ERROR;
-		default:return            EFI_D_VERBOSE;
-	}
-}
 #endif
 
 int logger_write(struct log_item*log){
@@ -156,7 +142,7 @@ int logger_write(struct log_item*log){
 	}
 	mbstowcs(mt,log->tag,st);
 	mbstowcs(mc,log->content,sc);
-	DebugPrint(efi_level(log->level),"%s: %s\n",mt,mc);
+	DebugPrint(EFI_D_INFO,"%s: %s\n",mt,mc);
 	free(mt);
 	free(mc);
 	if(console_output)printf("%s: %s\n",log->tag,log->content);

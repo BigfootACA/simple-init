@@ -65,7 +65,7 @@ extern uint32_t custom_tick_get();
 #endif
 #define LV_USE_LOG                          1
 #define LV_LOG_LEVEL                        LV_LOG_LEVEL_WARN
-#define LV_LOG_PRINTF                       1
+#define LV_LOG_PRINTF                       0
 #define LV_USE_DEBUG                        1
 #define LV_FONT_MONTSERRAT_12               1
 #define LV_FONT_MONTSERRAT_14               0

@@ -13,6 +13,7 @@
 #endif
 #include"lvgl.h"
 #include"logger.h"
+#include"defines.h"
 #include"gui.h"
 #include"font.h"
 #include"sysbar.h"
@@ -89,8 +90,24 @@ void guess_font_size(){
 	tlog_debug("select font size %d/%d based on dpi",gui_font_size,gui_font_size_small);
 }
 
+static void lvgl_logger(lv_log_level_t level,const char*file,uint32_t line,const char*func,const char*buf){
+	enum log_level lvl;
+	switch(level){
+		case LV_LOG_LEVEL_TRACE: lvl=LEVEL_DEBUG;break;
+		case LV_LOG_LEVEL_INFO:  lvl=LEVEL_INFO;break;
+		case LV_LOG_LEVEL_WARN:  lvl=LEVEL_WARNING;break;
+		case LV_LOG_LEVEL_ERROR: lvl=LEVEL_ERROR;break;
+		case LV_LOG_LEVEL_USER:  lvl=LEVEL_INFO;break;
+		default:                 lvl=LEVEL_DEBUG;break;
+	}
+	static char fn[PATH_MAX]={0};
+	strncpy(fn,file,PATH_MAX-1);
+	logger_printf(lvl,"lvgl","%s:%d@%s %s",basename(fn),line,func,buf);
+}
+
 static int gui_pre_init(){
 	lv_init();
+	lv_log_register_print_cb(lvgl_logger);
 	gui_grp=lv_group_create();
 
 	#ifndef ENABLE_UEFI

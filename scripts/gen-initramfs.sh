@@ -12,6 +12,9 @@ if ! [ -d "${ORIGROOT}" ]
 then	MODS="${ORIGROOT}"/usr/lib/modules
 	mkdir -p "${MODS}"
 	[ -f "${MODS_ARCHIVE}" ]&&tar -C "${MODS}" -xf "${MODS_ARCHIVE}"
+	for i in "${MODS}"/*
+	do [ -d "${i}/kernel" ]&&depmod -b "${ORIGROOT}/usr" "$(basename "$i")"
+	done
 fi
 rm -rf "${TESTROOT}"
 rm -f "${INITRAMFS}"

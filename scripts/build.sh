@@ -7,10 +7,6 @@ touch root
 cmake \
 	-B build -S . \
 	-G Ninja \
-	-DENABLE_GTK=OFF \
-	-DENABLE_SDL2=OFF \
-	-DENABLE_ASAN=OFF \
-	-DENABLE_STATIC=OFF \
 	"${@}"
 ninja -C build -j "$(nproc)"
 popd >/dev/null

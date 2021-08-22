@@ -62,7 +62,8 @@ output: `build/init` (ELF Executable)
 bash scripts/gen-minimal-initramfs.sh
 ```
 output:  `/tmp/initramfs.img` (ASCII cpio archive compress with gzip)
-if you want a big initramfs with commands, you can use `gen-initramfs.sh` instead `gen-minimal-initramfs.sh'
+
+if you want a big initramfs with commands, you can use `gen-initramfs.sh` instead `gen-minimal-initramfs.sh`
 
 ##### 3. Generate testing image (just once)
 
@@ -70,7 +71,9 @@ if you want a big initramfs with commands, you can use `gen-initramfs.sh` instea
 bash scripts/gen-logfs.sh
 bash scripts/gen-miniroot.sh
 ```
+
 output: `/tmp/logfs.img` (FAT16 filesystem with MBR label) for save logs (LOGFS)
+
 output: `/tmp/minidisk.img` (EXT4 filesystem image) for a test switchroot
 
 ##### 4. Run QEMU
@@ -88,7 +91,8 @@ NOTICE: you need a `prebuilts/vmlinuz` and `prebuilts/kernel.txz` for boot linux
 bash scripts/build.sh -DENABLE_SDL2=ON
 ```
 output: `build/init` (ELF Executable)
-(enable SDL2 guidrv)
+
+ENABLE_SDL2: enable SDL2 guidrv for GUI Applications
 
 ##### 2. Run GUI Application
 

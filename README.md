@@ -43,6 +43,122 @@ This project has not been completed and may not work properly.
 | kmod               | some builtin commands and modules load / unload | https://git.kernel.org/pub/scm/utils/kernel/kmod/kmod.git    |
 | papirus            | GUI icons                                       | https://github.com/PapirusDevelopmentTeam/papirus-icon-theme |
 
+### Build Guide
+
+Note: only support build on linux
+
+#### Linux target run in initramfs
+
+##### 1. Build Main
+
+```bash
+bash scripts/build.sh
+```
+output: `build/init` (ELF Executable)
+
+##### 2. Generate minimal initramfs
+
+```bash
+bash scripts/gen-minimal-initramfs.sh
+```
+output:  `/tmp/initramfs.img` (ASCII cpio archive compress with gzip)
+if you want a big initramfs with commands, you can use `gen-initramfs.sh` instead `gen-minimal-initramfs.sh'
+
+##### 3. Generate testing image (just once)
+
+```bash
+bash scripts/gen-logfs.sh
+bash scripts/gen-miniroot.sh
+```
+output: `/tmp/logfs.img` (FAT16 filesystem with MBR label) for save logs (LOGFS)
+output: `/tmp/minidisk.img` (EXT4 filesystem image) for a test switchroot
+
+##### 4. Run QEMU
+
+```bash
+bash scripts/qemu.sh
+```
+NOTICE: you need a `prebuilts/vmlinuz` and `prebuilts/kernel.txz` for boot linux
+
+#### Linux target run native (for testing GUI Applications)
+
+##### 1. Build Main
+
+```bash
+bash scripts/build.sh -DENABLE_SDL2=ON
+```
+output: `build/init` (ELF Executable)
+(enable SDL2 guidrv)
+
+##### 2. Run GUI Application
+
+```bash
+INIT_MAIN=guiapp build/init
+```
+NOTICE: need X11 environment
+
+#### UEFI Target GUI Applications (EXPERIMENTAL)
+
+##### 1. Download edk2 and edk2-libc
+
+``` bash
+git clone --recursive https://github.com/BigfootACA/simple-init.git
+git clone --recursive https://github.com/tianocore/edk2.git
+git clone https://github.com/tianocore/edk2-libc
+```
+
+##### 2. Setup Environments
+
+```bash
+export PACKAGES_PATH=$PWD/edk2:$PWD/edk2-libc:$PWD/simple-init
+cd edk2
+source edksetup.sh
+```
+
+#### 3. Edit EmulatorPkg.dsc
+open EmulatorPkg/EmulatorPkg.dsc
+```diff
+diff --git a/EmulatorPkg/EmulatorPkg.dsc b/EmulatorPkg/EmulatorPkg.dsc
+--- a/EmulatorPkg/EmulatorPkg.dsc
++++ b/EmulatorPkg/EmulatorPkg.dsc
+@@ -319,6 +319,7 @@
+   MdeModulePkg/Universal/ReportStatusCodeRouter/Pei/ReportStatusCodeRouterPei.inf
+   MdeModulePkg/Universal/StatusCodeHandler/Pei/StatusCodeHandlerPei.inf
+ 
++  SimpleInit.inf
+   EmulatorPkg/BootModePei/BootModePei.inf
+   MdeModulePkg/Universal/FaultTolerantWritePei/FaultTolerantWritePei.inf
+   MdeModulePkg/Universal/Variable/Pei/VariablePei.inf
+@@ -478,6 +479,7 @@
+   EmulatorPkg/Application/RedfishPlatformConfig/RedfishPlatformConfig.inf
+ !endif
+ !include RedfishPkg/Redfish.dsc.inc
++!include StdLib/StdLib.inc
+ 
+ [BuildOptions]
+   #
+```
+#### 4. Run Build
+
+```bash
+bash EmulatorPkg/build.sh
+```
+
+#### 5. Start UEFI Emulator
+
+``` bash
+bash EmulatorPkg/build.sh run
+```
+then will open a gdb
+```gdb
+(gdb) run
+```
+a GOP window appears with a UEFI shell
+```uefi
+FS0:SimpleInit.efi
+```
+will start GUI Applications
+
 ### Features
 
 - [x] Core Functions

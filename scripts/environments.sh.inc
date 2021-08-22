@@ -11,8 +11,8 @@ export QEMU_MEM=512M
 export MININAME=root
 export COMPRESS=gzip
 export CMDLINE="console=ttyS0 panic=5 root=LABEL=${MININAME}"
-export KERNEL="vmlinuz"
-export MODS_ARCHIVE="kernel.txz"
+export KERNEL="prebuilts/vmlinuz"
+export MODS_ARCHIVE="prebuilts/kernel.txz"
 export ARCH="x86_64"
 export QEMU_BIN="qemu-system-${ARCH}"
 export FONTSIZE=(24 48)

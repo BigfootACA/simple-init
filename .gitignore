@@ -14,10 +14,6 @@
 *.plist
 *.mo
 *.gmo
-*.tar
-*.tar.*
-*.txz
-*.tgz
 *.fd
 *.iso
 *.img
@@ -40,10 +36,6 @@ vgcore.*
 /busybox
 initramfs*.*
 initrd*.*
-vmlinuz*
-bzImage*
-zImage*
-Image*
 System.map*
 /cmake-build-*
 /.idea

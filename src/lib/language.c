@@ -85,7 +85,7 @@ static int lang_open_locale(char*path){
 		mmap_map=true;
 	#endif
 	}
-	r=0;
+	if(locale_map)r=0;
 	#ifndef ENABLE_UEFI
 	clean:
 	if(fd>=0)close(fd);

@@ -1,6 +1,7 @@
 #ifndef GUI_H
 #define GUI_H
 #include"lvgl.h"
+#include"defines.h"
 #define IMG_RES _PATH_USR"/share/pixmaps/simple-init"
 typedef void (*draw_func)(lv_obj_t*);
 extern int gui_dpi_def,gui_dpi_force;
@@ -18,6 +19,8 @@ extern int init_lvgl_fs(char letter,char*root,bool debug);
 extern int gui_init(draw_func draw);
 extern void gui_quit_sleep();
 extern void gui_do_quit();
+extern void gui_set_run_exit(runnable_t*run);
+extern void gui_run_and_exit(runnable_t*run);
 extern uint32_t custom_tick_get(void);
 extern void png_decoder_init();
 extern int register_guiapp();

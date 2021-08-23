@@ -61,6 +61,9 @@ static sem_t gui_wait;
 // usable gui fontsize
 static int font_sizes[]={10,16,24,32,48,64,72,96};
 
+// run on exit
+static runnable_t*run_exit=NULL;
+
 void gui_do_quit(){
 	guidrv_exit();
 }
@@ -206,14 +209,19 @@ uint32_t custom_tick_get(void){
 	return (uint64_t)((tv_now.tv_sec*1000000+tv_now.tv_usec)/1000)-start_ms;
 }
 #else
-static VOID EFIAPI efi_exit(IN EFI_EVENT e,IN VOID*ctx){
-	gui_run=false;
-}
+static EFI_EVENT e_timer,e_loop;
+
+static VOID EFIAPI efi_loop(IN EFI_EVENT e,IN VOID*ctx){}
 
 static VOID EFIAPI efi_timer(IN EFI_EVENT e,IN VOID*ctx){
 	lv_tick_inc(10);
 	lv_task_handler();
 	guidrv_taskhandler();
+	if(!gui_run){
+		tlog_notice("exiting");
+		gBS->CloseEvent(e_timer);
+		gBS->CloseEvent(e_loop);
+	}
 }
 
 #endif
@@ -228,21 +236,20 @@ int gui_init(draw_func draw){
 	draw(sysbar.content);
 	lv_disp_trig_activity(NULL);
 	#ifdef ENABLE_UEFI
-	static EFI_EVENT e_timer,e_exit;
 	if(EFI_ERROR(gBS->CreateEvent(
 		EVT_NOTIFY_SIGNAL|EVT_TIMER,TPL_CALLBACK,
 		efi_timer,NULL,&e_timer
 	)))return trlog_error(-1,"create timer event failed");
 	if(EFI_ERROR(gBS->CreateEvent(
 		EVT_NOTIFY_WAIT,TPL_NOTIFY,
-		efi_exit,NULL,&e_exit
-	)))return trlog_error(-1,"create exit event failed");
+		efi_loop,NULL,&e_loop
+	)))return trlog_error(-1,"create loop event failed");
 	if(EFI_ERROR(gBS->SetTimer(
 		e_timer,TimerPeriodic,
 		EFI_TIMER_PERIOD_MILLISECONDS(10)
 	)))return trlog_error(-1,"create timer failed");
 	UINTN wi;
-	while(gui_run&&!EFI_ERROR(gBS->WaitForEvent(1,&e_exit,&wi)));
+	while(gui_run&&!EFI_ERROR(gBS->WaitForEvent(1,&e_loop,&wi)));
 	#else
 	sem_init(&gui_wait,0,0);
 	bool cansleep=guidrv_can_sleep();
@@ -256,7 +263,15 @@ int gui_init(draw_func draw){
 	}
 	#endif
 	gui_do_quit();
-	return 0;
+	return run_exit?run_exit(NULL):0;
+}
+
+void gui_set_run_exit(runnable_t*run){
+	run_exit=run;
+}
+
+void gui_run_and_exit(runnable_t*run){
+	run_exit=run,gui_run=false;
 }
 
 #endif

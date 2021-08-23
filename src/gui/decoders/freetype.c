@@ -2,8 +2,9 @@
 #ifdef ENABLE_GUI
 #ifdef ENABLE_FREETYPE2
 #include<ft2build.h>
-#include<assets.h>
 #include<sys/stat.h>
+#include<sys/time.h>
+#include"assets.h"
 #include"logger.h"
 #include"lvgl.h"
 #include"gui.h"
@@ -178,14 +179,15 @@ static lv_font_t*_lv_ft_init(
 }
 
 lv_font_t*lv_ft_init(const char*name,int weight,lv_ft_style style){
-	return _lv_ft_init(strdup(name),NULL,0,weight,style);
+	return name?_lv_ft_init(strdup(name),NULL,0,weight,style):NULL;
 }
 
 lv_font_t*lv_ft_init_data(unsigned char*data,long size,int weight,lv_ft_style style){
-	return _lv_ft_init(NULL,data,size,weight,style);
+	return data?_lv_ft_init(NULL,data,size,weight,style):NULL;
 }
 
 lv_font_t*lv_ft_init_assets(entry_dir*assets,char*path,int weight,lv_ft_style style){
+	if(!assets||!path)return NULL;
 	entry_file*f=get_assets_file(assets,path);
 	if(!f){
 		telog_error("failed to load assets font from %s",path);

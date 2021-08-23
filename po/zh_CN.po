@@ -791,6 +791,12 @@ msgstr "init控制命令失败: %s"
 msgid "Reboot"
 msgstr "重启"
 
+msgid "Warm Reboot"
+msgstr "热重启"
+
+msgid "Cold Reboot"
+msgstr "冷重启"
+
 msgid "Reboot into EDL (9008)"
 msgstr "重启到紧急下载模式(9008)"
 

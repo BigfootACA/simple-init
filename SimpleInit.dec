@@ -8,5 +8,7 @@
   include
   libs/lvgl
   libs/lodepng
+  libs/freetype/include
+  libs/freetype-uefi
   src/gui/include
   src/compatible/include

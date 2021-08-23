@@ -7,7 +7,7 @@
   ENTRY_POINT                    = ShellCEntryLib
 
 [BuildOptions]
-  GCC:*_*_*_CC_FLAGS  = -DLV_CONF_PATH=lv_conf.h -DENABLE_GUI=1 -DENABLE_UEFI=1 -DENABLE_LODEPNG=1
+  GCC:*_*_*_CC_FLAGS  = -DLV_CONF_PATH=lv_conf.h -DENABLE_GUI=1 -DENABLE_UEFI=1 -DENABLE_LODEPNG=1 -DENABLE_FREETYPE2=1 -DFT2_BUILD_LIBRARY=1 '-DFT_CONFIG_OPTIONS_H=<ftoption.h>'
 
 [Packages]
   SimpleInit.dec
@@ -30,6 +30,7 @@
   ReportStatusCodeLib
   UefiApplicationEntryPoint
   UefiBootManagerLib
+  UefiRuntimeServicesTableLib
 
 [Protocols]
   gEfiSimplePointerProtocolGuid
@@ -196,3 +197,45 @@
   libs/lvgl/src/lv_widgets/lv_textarea.c
   libs/lvgl/src/lv_widgets/lv_tileview.c
   libs/lvgl/src/lv_widgets/lv_win.c
+
+  # FreeType 2 Library
+  libs/freetype/src/autofit/autofit.c
+  libs/freetype/src/base/ftbase.c
+  libs/freetype/src/base/ftbbox.c
+  libs/freetype/src/base/ftbdf.c
+  libs/freetype/src/base/ftbitmap.c
+  libs/freetype/src/base/ftcid.c
+  libs/freetype/src/base/ftdebug.c
+  libs/freetype/src/base/ftfstype.c
+  libs/freetype/src/base/ftgasp.c
+  libs/freetype/src/base/ftglyph.c
+  libs/freetype/src/base/ftgxval.c
+  libs/freetype/src/base/ftinit.c
+  libs/freetype/src/base/ftmm.c
+  libs/freetype/src/base/ftotval.c
+  libs/freetype/src/base/ftpatent.c
+  libs/freetype/src/base/ftpfr.c
+  libs/freetype/src/base/ftstroke.c
+  libs/freetype/src/base/ftsynth.c
+  libs/freetype/src/base/ftsystem.c
+  libs/freetype/src/base/fttype1.c
+  libs/freetype/src/base/ftwinfnt.c
+  libs/freetype/src/bdf/bdf.c
+  libs/freetype/src/bzip2/ftbzip2.c
+  libs/freetype/src/cache/ftcache.c
+  libs/freetype/src/cff/cff.c
+  libs/freetype/src/cid/type1cid.c
+  libs/freetype/src/gzip/ftgzip.c
+  libs/freetype/src/lzw/ftlzw.c
+  libs/freetype/src/pcf/pcf.c
+  libs/freetype/src/pfr/pfr.c
+  libs/freetype/src/psaux/psaux.c
+  libs/freetype/src/pshinter/pshinter.c
+  libs/freetype/src/psnames/psnames.c
+  libs/freetype/src/raster/raster.c
+  libs/freetype/src/sfnt/sfnt.c
+  libs/freetype/src/smooth/smooth.c
+  libs/freetype/src/truetype/truetype.c
+  libs/freetype/src/type1/type1.c
+  libs/freetype/src/type42/type42.c
+  libs/freetype/src/winfonts/winfnt.c

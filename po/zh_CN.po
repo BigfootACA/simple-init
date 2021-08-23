@@ -689,6 +689,9 @@ msgstr "系统信息"
 msgid "Multi-Boot Manage"
 msgstr "多启动管理"
 
+msgid "UEFI Boot Menu"
+msgstr "UEFI启动管理"
+
 msgid "Reboot Menu"
 msgstr "重启菜单"
 
@@ -826,3 +829,9 @@ msgstr "上级目录"
 
 msgid "nothing here"
 msgstr "空"
+
+msgid "Load options failed"
+msgstr "加载选项失败"
+
+msgid "No options found"
+msgstr "没有找到任何选项"

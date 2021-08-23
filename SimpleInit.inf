@@ -55,6 +55,7 @@
   src/gui/interface/reboot.c
   src/gui/interface/sysbar.c
   src/gui/interface/language.c
+  src/gui/interface/uefi_bootmenu.c
 
   # Simple-Init library
   src/lib/list.c

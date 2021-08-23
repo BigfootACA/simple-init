@@ -28,13 +28,15 @@ static struct app{
 	{"File Manager",           "filemgr.png",   filemgr_draw},
 	{"Loggerd Viewer",         "logviewer.png", logviewer_draw},
 	{"Backlight",              "backlight.png", backlight_menu_draw},
+	{"Multi-Boot Manage",      "bootmgr.png",   NULL},
+	#else
+	{"UEFI Boot Menu",         "bootmgr.png",   uefi_bootmenu_draw},
 	#endif
 	{"USB Control",            "usb.png",       NULL},
 	{"Registry Editor",        "regedit.png",   NULL},
 	{"Image Backgup Recovery", "backup.png",    NULL},
 	{"Enter TWRP",             "twrp.png",      NULL},
 	{"System Info",            "sysinfo.png",   NULL},
-	{"Multi-Boot Manage",      "bootmgr.png",   NULL},
 	{"Reboot Menu",            "reboot.png",    reboot_menu_draw},
 	{"Language",               "language.png",  language_menu_draw},
 	{NULL,NULL,NULL}

@@ -3,7 +3,7 @@ project(simple-init LANGUAGES C)
 
 include_directories(include)
 set(CONFIG_H "${CMAKE_CURRENT_BINARY_DIR}/config.h")
-add_definitions("-Wall -Wextra -Wno-frame-address -fdiagnostics-color=always -rdynamic -include ${CONFIG_H}")
+add_definitions("-Wall -Wextra -Wno-frame-address -fdiagnostics-color=always -Wno-unused-parameter -rdynamic -include ${CONFIG_H}")
 
 option(DISABLE_WERROR     "Avoid treating compiler warnings as fatal errors"  OFF)
 option(DISABLE_DEBUG      "Disable debug infomation generate"                 OFF)

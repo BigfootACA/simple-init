@@ -127,25 +127,31 @@ static int gui_pre_init(){
 	#ifdef ENABLE_FREETYPE2
 	lv_freetype_init(64,1,0);
 
+	#ifdef ENABLE_UEFI
+	gui_font=NULL,gui_font_small=NULL,symbol_font=NULL;
+	#else
 	// load default font with normal size
-	x=getenv("FONT");
-	gui_font=x?
-		lv_ft_init(x,gui_font_size,0):
-		lv_ft_init_rootfs(_PATH_ETC"/default.ttf",gui_font_size,0);
+	gui_font=lv_ft_init(getenv("FONT"),gui_font_size,0);
 
 	// load default font with small size
-	gui_font_small=x?
-		lv_ft_init(x,gui_font_size_small,0):
-		lv_ft_init_rootfs(_PATH_ETC"/default.ttf",gui_font_size_small,0);
+	gui_font_small=lv_ft_init(getenv("FONT"),gui_font_size_small,0);
 
 	// load symbols fonts
-	x=getenv("FONT_SYMBOL");
-	symbol_font=x?
-		lv_ft_init(x,gui_font_size,0):
-		lv_ft_init_rootfs(_PATH_ETC"/symbols.ttf",gui_font_size,0);
+	symbol_font=lv_ft_init(getenv("FONT_SYMBOL"),gui_font_size,0);
+	#endif
+
+	// load default font with normal size
+	if(!gui_font)gui_font=lv_ft_init_rootfs(_PATH_ETC"/default.ttf",gui_font_size,0);
+
+	// load default font with small size
+	if(!gui_font_small)gui_font_small=lv_ft_init_rootfs(_PATH_ETC"/default.ttf",gui_font_size_small,0);
+
+	// load symbols fonts
+	if(!symbol_font)symbol_font=lv_ft_init_rootfs(_PATH_ETC"/symbols.ttf",gui_font_size,0);
+
 	if(!symbol_font)telog_error("failed to load symbol font");
 	#endif
-	if(!gui_font)return terlog_error(-1,"failed to load font");
+	if(!gui_font||!gui_font_small)return terlog_error(-1,"failed to load font");
 
 	// set current fonts
 	lv_theme_t*th=LV_THEME_DEFAULT_INIT(

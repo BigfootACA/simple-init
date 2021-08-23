@@ -4,3 +4,6 @@
 [submodule "libs/lodepng"]
 	path = libs/lodepng
 	url = https://github.com/lvandeve/lodepng.git
+[submodule "libs/freetype"]
+	path = libs/freetype
+	url = https://gitlab.freedesktop.org/freetype/freetype.git

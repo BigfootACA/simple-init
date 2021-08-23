@@ -12,7 +12,7 @@ if("${ENABLE_DRM}" STREQUAL "ON")
 	set(DEPENDS ${DEPENDS} libdrm)
 endif()
 
-if("${ENABLE_FREETYPE2}" STREQUAL "ON")
+if(("${ENABLE_FREETYPE2}" STREQUAL "ON") AND ("${SYSTEM_FREETYPE2}" STREQUAL "ON"))
 	set(DEPENDS ${DEPENDS} freetype2)
 endif()
 
@@ -77,6 +77,10 @@ endforeach()
 
 if("${ENABLE_GUI}" STREQUAL "ON")
     target_link_libraries(init lvgl)
+endif()
+
+if(("${ENABLE_FREETYPE2}" STREQUAL "ON") AND ("${SYSTEM_FREETYPE2}" STREQUAL "OFF"))
+    target_link_libraries(init freetype2)
 endif()
 
 add_library(init_rootfs STATIC ${CMAKE_CURRENT_BINARY_DIR}/rootfs.c)

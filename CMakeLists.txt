@@ -27,51 +27,51 @@ option(SYSTEM_FREETYPE2   "Use system FreeType 2 library"                     OF
 configure_file(src/config.h.in "${CONFIG_H}")
 
 if("${ENABLE_GUI}" STREQUAL "ON")
-    include(libs/lvgl.cmake)
+	include(libs/lvgl.cmake)
 endif()
 
 if("${ENABLE_FREETYPE2}" STREQUAL "ON")
-    include(libs/freetype.cmake)
+	include(libs/freetype.cmake)
 endif()
 
 if("${ENABLE_LODEPNG}" STREQUAL "ON")
-    include(libs/lodepng.cmake)
+	include(libs/lodepng.cmake)
 endif()
 
 if("${ENABLE_KMOD}" STREQUAL "OFF")
-    message(WARNING "libkmod disabled, kernel modules will not be loaded")
+	message(WARNING "libkmod disabled, kernel modules will not be loaded")
 endif()
 
 if("${ENABLE_BLKID}" STREQUAL "OFF")
-    message(WARNING "blkid disabled, may not find block devices by tag")
+	message(WARNING "blkid disabled, may not find block devices by tag")
 endif()
 
 if("${DISABLE_WERROR}" STREQUAL "OFF")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")
 endif()
 
 if("${DISABLE_DEBUG}" STREQUAL "OFF")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
 endif()
 
 if(NOT "${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
-    message(FATAL_ERROR "Need GNU/Linux and GCC")
+	message(FATAL_ERROR "Need GNU/Linux and GCC")
 endif()
 
 if("${ENABLE_PIE}" STREQUAL "ON")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pie")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pie")
 endif()
 
 if("${ENABLE_ASAN}" STREQUAL "ON")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -fsanitize=undefined -fsanitize=leak -fsanitize-recover=all -fno-omit-frame-pointer -fno-stack-protector -fsanitize=leak")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -fsanitize=undefined -fsanitize=leak -fsanitize-recover=all -fno-omit-frame-pointer -fno-stack-protector -fsanitize=leak")
 endif()
 
 if("${ENABLE_STATIC}" STREQUAL "ON")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -static")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -static")
 endif()
 
 if("${ENABLE_STRIP}" STREQUAL "ON")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -s")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -s")
 endif()
 
 include(po/CMakeLists.txt)

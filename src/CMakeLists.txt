@@ -70,17 +70,17 @@ set(SUBDIRS
 target_link_libraries(init -Wl,--start-group)
 
 foreach(SUBDIR ${SUBDIRS})
-    add_subdirectory("${SUBDIR}")
-    string(REPLACE "src/" "init_" SUBLIB "${SUBDIR}")
-    target_link_libraries(init "${SUBLIB}")
+	add_subdirectory("${SUBDIR}")
+	string(REPLACE "src/" "init_" SUBLIB "${SUBDIR}")
+	target_link_libraries(init "${SUBLIB}")
 endforeach()
 
 if("${ENABLE_GUI}" STREQUAL "ON")
-    target_link_libraries(init lvgl)
+	target_link_libraries(init lvgl)
 endif()
 
 if(("${ENABLE_FREETYPE2}" STREQUAL "ON") AND ("${SYSTEM_FREETYPE2}" STREQUAL "OFF"))
-    target_link_libraries(init freetype2)
+	target_link_libraries(init freetype2)
 endif()
 
 add_library(init_rootfs STATIC ${CMAKE_CURRENT_BINARY_DIR}/rootfs.c)
@@ -89,13 +89,13 @@ target_link_libraries(init init_rootfs)
 target_link_libraries(init -Wl,--end-group)
 
 if("${ENABLE_LODEPNG}" STREQUAL "ON")
-    target_link_libraries(init lodepng)
+	target_link_libraries(init lodepng)
 endif()
 
 if("${ENABLE_STATIC}" STREQUAL "ON")
-    target_link_libraries(init ${DEPS_STATIC_LIBRARIES})
+	target_link_libraries(init ${DEPS_STATIC_LIBRARIES})
 else()
-    target_link_libraries(init ${DEPS_LIBRARIES})
+	target_link_libraries(init ${DEPS_LIBRARIES})
 endif()
 
 target_link_libraries(init pthread)

@@ -10,23 +10,23 @@
 #include<Library/UefiBootServicesTableLib.h>
 #include<Protocol/SimplePointer.h>
 #define TAG "uefipointer"
+#include"defines.h"
 #include"logger.h"
 #include"lvgl.h"
 #include"gui.h"
 #include"guidrv.h"
-static lv_indev_t dev;
+static lv_indev_t*dev=NULL;
 static EFI_SIMPLE_POINTER_PROTOCOL*mouse=NULL;
 static bool pointer_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
-	static UINT64 lx=0,ly=0;
-	static bool lp=false,init=false;
-	if(!init){
-		init=true;
-		lv_indev_set_cursor(&dev,gui_cursor);
-	}
+	static INT64 lx=0,ly=0;
+	static bool lp=false;
+	if(!dev->cursor)lv_indev_set_cursor(dev,gui_cursor);
 	EFI_SIMPLE_POINTER_STATE p;
 	if(!EFI_ERROR(mouse->GetState(mouse,&p))){
-		lx+=p.RelativeMovementX/mouse->Mode->ResolutionX;
-		ly+=p.RelativeMovementY/mouse->Mode->ResolutionY;
+		INT64 ix=lx+(p.RelativeMovementX/(INT64)mouse->Mode->ResolutionX);
+		INT64 iy=ly+(p.RelativeMovementY/(INT64)mouse->Mode->ResolutionY);
+		lx=MIN(MAX(ix,0),gui_w);
+		ly=MIN(MAX(iy,0),gui_h);
 		lp=p.LeftButton==1;
 	}
 	data->point.x=lx;
@@ -59,7 +59,7 @@ int pointer_register(){
 	lv_indev_drv_init(&drv);
 	drv.type=LV_INDEV_TYPE_POINTER;
 	drv.read_cb=pointer_read;
-	lv_indev_drv_register(&drv);
+	dev=lv_indev_drv_register(&drv);
 	return 0;
 }
 #endif

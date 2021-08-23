@@ -26,6 +26,10 @@ option(SYSTEM_FREETYPE2   "Use system FreeType 2 library"                     OF
 
 configure_file(src/config.h.in "${CONFIG_H}")
 
+if("${CMAKE_BINARY_DIR}" STREQUAL "${CMAKE_SOURCE_DIR}")
+	message(FATAL_ERROR "Binary folder not specified")
+endif()
+
 if("${ENABLE_GUI}" STREQUAL "ON")
 	include(libs/lvgl.cmake)
 endif()

@@ -8,7 +8,7 @@
 #include"gui.h"
 #include"tools.h"
 #include"language.h"
-#define TAG "reboot"
+#define TAG "language"
 
 static lv_obj_t*scr,*box,*sel,*btn_ok;
 
@@ -27,6 +27,7 @@ static void ok_action(lv_obj_t*obj,lv_event_t e){
 	uint16_t i=lv_dropdown_get_selected(sel);
 	if(!languages[i].lang)return;
 	const char*lang=lang_concat(&languages[i],true,true);
+	tlog_debug("set language to %s",lang);
 	lang_set(lang);
 	#ifndef ENABLE_UEFI
 	struct init_msg msg,response;

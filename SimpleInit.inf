@@ -43,6 +43,7 @@
   # Simple-Init GUI interface
   src/gui/tools.c
   src/gui/activity.c
+  src/gui/activities.c
   src/gui/gui_init.c
   src/gui/guidrv.c
   src/gui/drivers.c

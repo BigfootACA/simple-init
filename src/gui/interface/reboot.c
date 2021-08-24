@@ -102,7 +102,7 @@ static void reboot_action(lv_obj_t*obj,lv_event_t e){
 	guiact_do_back();
 }
 
-static int reboot_get_focus(void*d __attribute__((unused))){
+static int reboot_get_focus(struct gui_activity*d __attribute__((unused))){
 	if(!valid)return 0;
 	#ifndef ENABLE_UEFI
 	lv_group_add_obj(gui_grp,btn_rb);
@@ -117,7 +117,7 @@ static int reboot_get_focus(void*d __attribute__((unused))){
 	return 0;
 }
 
-static int reboot_lost_focus(void*d __attribute__((unused))){
+static int reboot_lost_focus(struct gui_activity*d __attribute__((unused))){
 	if(!valid)return 0;
 	#ifndef ENABLE_UEFI
 	lv_group_remove_obj(btn_rb);
@@ -143,8 +143,8 @@ static lv_obj_t*add_reboot_button(lv_obj_t*last,enum reboot_mode mode){
 	return btn;
 }
 
-void reboot_menu_draw(lv_obj_t*screen){
-	scr=lv_create_opa_mask(screen);
+static int reboot_menu_draw(struct gui_activity*act){
+	scr=act->page;
 
 	static lv_style_t bs;
 	lv_style_init(&bs);
@@ -176,15 +176,15 @@ void reboot_menu_draw(lv_obj_t*screen){
 	#endif
 	lv_obj_set_height(box,lv_obj_get_y(btn_po)+lv_obj_get_height(btn_po)+(gui_font_size/3*8));
 	lv_obj_align(box,NULL,LV_ALIGN_CENTER,0,0);
-
-	guiact_register_activity(&(struct gui_activity){
-		.name="reboot-menu",
-		.ask_exit=NULL,
-		.quiet_exit=NULL,
-		.lost_focus=reboot_lost_focus,
-		.get_focus=reboot_get_focus,
-		.back=true,
-		.page=scr
-	});
+	return 0;
 }
+
+struct gui_register guireg_reboot={
+	.name="reboot-menu",
+	.draw=reboot_menu_draw,
+	.lost_focus=reboot_lost_focus,
+	.get_focus=reboot_get_focus,
+	.back=true,
+	.mask=true,
+};
 #endif

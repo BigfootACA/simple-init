@@ -1,7 +1,7 @@
 #include"guipm.h"
 #ifdef ENABLE_FDISK
 
-char*guipm_target_disk=NULL;
+static char*guipm_target_disk=NULL;
 static char*path=NULL;
 static lv_obj_t*selscr,*page,*disk_info=NULL;
 static lv_obj_t*btn_disk,*btn_part,*btn_reload,*btn_new;
@@ -28,7 +28,7 @@ static struct partition_info{
 	lv_obj_t*btn,*chk;
 }*partitions[1024],*selected;
 
-void partition_clear(){
+static void partition_clear(){
 	selected=NULL;
 	lv_obj_add_state(btn_part,LV_STATE_DISABLED);
 	lv_obj_add_state(btn_new,LV_STATE_DISABLED);
@@ -306,12 +306,12 @@ static void do_reload(lv_task_t*t __attribute__((unused))){
 	lv_group_add_obj(gui_grp,btn_new);
 }
 
-static int guipm_part_get_focus(void*d __attribute__((unused))){
+static int guipm_part_get_focus(struct gui_activity*d __attribute__((unused))){
 	lv_task_once(lv_task_create(do_reload,100,LV_TASK_PRIO_MID,NULL));
 	return 0;
 }
 
-static int guipm_part_lost_focus(void*d __attribute__((unused))){
+static int guipm_part_lost_focus(struct gui_activity*d __attribute__((unused))){
 	for(int i=0;i<1024;i++){
 		if(!partitions[i])continue;
 		lv_group_remove_obj(partitions[i]->chk);
@@ -323,7 +323,7 @@ static int guipm_part_lost_focus(void*d __attribute__((unused))){
 	return 0;
 }
 
-static int do_cleanup(void*d __attribute__((unused))){
+static int do_cleanup(struct gui_activity*d __attribute__((unused))){
 	partition_clear();
 	if(guipm_target_disk)free(guipm_target_disk);
 	if(ctx)fdisk_unref_context(ctx);
@@ -332,21 +332,21 @@ static int do_cleanup(void*d __attribute__((unused))){
 	return 0;
 }
 
-void guipm_draw_partitions(lv_obj_t*screen){
-	if(!guipm_target_disk){
+static int init(struct gui_activity*act){
+	if(!act->args){
 		tlog_warn("target disk not set");
-		return;
+		return -EINVAL;
 	}
+	guipm_target_disk=act->args;
+	act->mask=init_disk()<0;
+	return 0;
+}
 
-	if(init_disk()<0){
-		selscr=lv_create_opa_mask(screen);
-		lv_create_ok_msgbox(selscr,ok_msg_click,_("init disk context failed"));
-	}else{
+static int guipm_draw_partitions(struct gui_activity*act){
+	selscr=act->page;
+	if(act->mask)lv_create_ok_msgbox(selscr,ok_msg_click,_("init disk context failed"));
+	else{
 		int btw=gui_sw/2-(gui_dpi/5),bth=gui_font_size+(gui_dpi/10);
-		selscr=lv_obj_create(screen,NULL);
-		lv_obj_set_size(selscr,gui_sw,gui_sh);
-		lv_obj_set_pos(selscr,gui_sx,gui_sy);
-		lv_theme_apply(selscr,LV_THEME_SCR);
 
 		guipm_draw_title(selscr);
 
@@ -413,15 +413,16 @@ void guipm_draw_partitions(lv_obj_t*screen){
 		lv_label_set_text(lv_label_create(btn_new,NULL),_("New"));
 		lv_group_add_obj(gui_grp,btn_new);
 	}
-
-	guiact_register_activity(&(struct gui_activity){
-		.name="guipm-partitions",
-		.ask_exit=NULL,
-		.quiet_exit=do_cleanup,
-		.get_focus=guipm_part_get_focus,
-		.lost_focus=guipm_part_lost_focus,
-		.back=true,
-		.page=selscr
-	});
+	return 0;
 }
+
+struct gui_register guireg_guipm_partitions={
+	.name="guipm-partitions",
+	.init=init,
+	.quiet_exit=do_cleanup,
+	.get_focus=guipm_part_get_focus,
+	.lost_focus=guipm_part_lost_focus,
+	.draw=guipm_draw_partitions,
+	.back=true
+};
 #endif

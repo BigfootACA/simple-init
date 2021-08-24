@@ -4,7 +4,7 @@
 
 static int xdpi;
 static bool is_show_all=false;
-static lv_obj_t*lst=NULL,*selscr=NULL;
+static  lv_obj_t*lst=NULL,*selscr=NULL;
 static lv_obj_t*btn_ok,*btn_refresh,*btn_cancel;
 static lv_obj_t*disks_info=NULL,*show_all=NULL;
 static struct disk_info{
@@ -277,9 +277,7 @@ static void ok_msg_click(lv_obj_t*obj,lv_event_t e){
 	}else if(e==LV_EVENT_VALUE_CHANGED){
 		switch(lv_msgbox_get_active_btn(obj)){
 			case 0:
-				if(guipm_target_disk)free(guipm_target_disk);
-				guipm_target_disk=strdup(selected->name);
-				guipm_draw_partitions(sysbar.content);
+				guiact_start_activity("guipm-partitions",strdup(selected->name));
 			break;
 		}
 		lv_msgbox_start_auto_close(obj,0);
@@ -309,7 +307,7 @@ static void show_all_click(lv_obj_t*obj,lv_event_t e){
 	guipm_disk_reload();
 }
 
-static int do_cleanup(void*d __attribute__((unused))){
+static int do_cleanup(struct gui_activity*d __attribute__((unused))){
 	guipm_disk_clear();
 	is_show_all=false;
 	return 0;
@@ -323,12 +321,12 @@ static void do_reload(lv_task_t*t __attribute__((unused))){
 	lv_group_add_obj(gui_grp,btn_cancel);
 }
 
-static int guipm_disk_get_focus(void*d __attribute__((unused))){
+static int guipm_disk_get_focus(struct gui_activity*d __attribute__((unused))){
 	lv_task_once(lv_task_create(do_reload,100,LV_TASK_PRIO_MID,NULL));
 	return 0;
 }
 
-static int guipm_disk_lost_focus(void*d __attribute__((unused))){
+static int guipm_disk_lost_focus(struct gui_activity*d __attribute__((unused))){
 	for(int i=0;i<32;i++){
 		if(!disks[i].enable)continue;
 		lv_group_remove_obj(disks[i].chk);
@@ -340,15 +338,11 @@ static int guipm_disk_lost_focus(void*d __attribute__((unused))){
 	return 0;
 }
 
-void guipm_draw_disk_sel(lv_obj_t*screen){
+static int guipm_draw_disk_sel(struct gui_activity*act){
 
 	xdpi=gui_dpi/10;
 	int mar=(xdpi/2),btw=gui_sw/3-(xdpi*2),bth=gui_font_size+xdpi,btt=gui_sh-bth-xdpi;
-
-	selscr=lv_obj_create(screen,NULL);
-	lv_obj_set_size(selscr,gui_sw,gui_sh);
-	lv_obj_set_pos(selscr,gui_sx,gui_sy);
-	lv_theme_apply(selscr,LV_THEME_SCR);
+	selscr=act->page;
 
 	guipm_draw_title(selscr);
 
@@ -421,16 +415,16 @@ void guipm_draw_disk_sel(lv_obj_t*screen){
 	lv_obj_add_state(btn_cancel,LV_STATE_CHECKED);
 	lv_obj_set_event_cb(btn_cancel,cancel_click);
 	lv_label_set_text(lv_label_create(btn_cancel,NULL),_("Cancel"));
-
-	guiact_register_activity(&(struct gui_activity){
-		.name="guipm-disk-select",
-		.ask_exit=NULL,
-		.quiet_exit=do_cleanup,
-		.get_focus=guipm_disk_get_focus,
-		.lost_focus=guipm_disk_lost_focus,
-		.back=true,
-		.page=selscr
-	});
+	return 0;
 }
+
+struct gui_register guireg_guipm_disk_select={
+	.name="guipm-disk-select",
+	.quiet_exit=do_cleanup,
+	.get_focus=guipm_disk_get_focus,
+	.lost_focus=guipm_disk_lost_focus,
+	.draw=guipm_draw_disk_sel,
+	.back=true
+};
 #endif
 #endif

@@ -6,7 +6,7 @@
 #include"gui.h"
 #define TAG "logviewer"
 
-static lv_obj_t*scr,*view;
+static lv_obj_t*view;
 static lv_obj_t*btn_top,*btn_bottom,*btn_reload;
 
 static void load_log_task(lv_task_t*t __attribute__((unused))){
@@ -50,28 +50,24 @@ static void go_bottom_click(lv_obj_t*obj,lv_event_t e){
 	lv_textarea_set_cursor_pos(view,LV_TEXTAREA_CURSOR_LAST);
 }
 
-static int logviewer_get_focus(void*d __attribute__((unused))){
+static int logviewer_get_focus(struct gui_activity*d __attribute__((unused))){
 	lv_group_add_obj(gui_grp,btn_reload);
 	lv_group_add_obj(gui_grp,btn_bottom);
 	lv_group_add_obj(gui_grp,btn_top);
 	return 0;
 }
 
-static int logviewer_lost_focus(void*d __attribute__((unused))){
+static int logviewer_lost_focus(struct gui_activity*d __attribute__((unused))){
 	lv_group_remove_obj(btn_reload);
 	lv_group_remove_obj(btn_bottom);
 	lv_group_remove_obj(btn_top);
 	return 0;
 }
 
-void logviewer_draw(lv_obj_t*screen){
+static int logviewer_draw(struct gui_activity*act){
 
-	scr=lv_obj_create(screen,NULL);
-	lv_obj_set_size(scr,gui_sw,gui_sh);
-	lv_obj_set_pos(scr,gui_sx,gui_sy);
-	lv_theme_apply(scr,LV_THEME_SCR);
 
-	lv_obj_t*txt=lv_label_create(scr,NULL);
+	lv_obj_t*txt=lv_label_create(act->page,NULL);
 	lv_label_set_text(txt,_("Loggerd Viewer"));
 	lv_obj_set_width(txt,gui_sw);
 	lv_obj_align(txt,NULL,LV_ALIGN_IN_TOP_MID,0,gui_font_size);
@@ -82,7 +78,7 @@ void logviewer_draw(lv_obj_t*screen){
 
 	int bth=gui_font_size+(gui_dpi/8),btw=gui_sw/3-(gui_dpi/8);
 
-	view=lv_textarea_create(scr,NULL);
+	view=lv_textarea_create(act->page,NULL);
 	lv_obj_set_size(view,gui_sw-(gui_font_size*2),gui_sh-lv_obj_get_height(txt)-gui_font_size*4-bth);
 	lv_obj_align(view,txt,LV_ALIGN_OUT_BOTTOM_MID,0,gui_font_size);
 	lv_obj_add_style(view,LV_TEXTAREA_PART_BG,&style);
@@ -99,7 +95,7 @@ void logviewer_draw(lv_obj_t*screen){
 	lv_style_set_radius(&btn_style,LV_STATE_DEFAULT,2);
 	lv_style_set_outline_width(&btn_style,LV_STATE_PRESSED,0);
 
-	btn_top=lv_btn_create(scr,NULL);
+	btn_top=lv_btn_create(act->page,NULL);
 	lv_obj_set_size(btn_top,btw,bth);
 	lv_obj_align(btn_top,view,LV_ALIGN_OUT_BOTTOM_LEFT,0,gui_font_size);
 	lv_obj_add_style(btn_top,LV_BTN_PART_MAIN,&btn_style);
@@ -108,7 +104,7 @@ void logviewer_draw(lv_obj_t*screen){
 	lv_label_set_text(lv_label_create(btn_top,NULL),_("Go top"));
 	lv_group_add_obj(gui_grp,btn_top);
 
-	btn_reload=lv_btn_create(scr,NULL);
+	btn_reload=lv_btn_create(act->page,NULL);
 	lv_obj_set_size(btn_reload,btw,bth);
 	lv_obj_align(btn_reload,view,LV_ALIGN_OUT_BOTTOM_MID,0,gui_font_size);
 	lv_obj_add_style(btn_reload,LV_BTN_PART_MAIN,&btn_style);
@@ -117,7 +113,7 @@ void logviewer_draw(lv_obj_t*screen){
 	lv_obj_set_event_cb(btn_reload,reload_click);
 	lv_group_add_obj(gui_grp,btn_reload);
 
-	btn_bottom=lv_btn_create(scr,NULL);
+	btn_bottom=lv_btn_create(act->page,NULL);
 	lv_obj_set_size(btn_bottom,btw,bth);
 	lv_obj_align(btn_bottom,view,LV_ALIGN_OUT_BOTTOM_RIGHT,0,gui_font_size);
 	lv_obj_add_style(btn_bottom,LV_BTN_PART_MAIN,&btn_style);
@@ -127,15 +123,14 @@ void logviewer_draw(lv_obj_t*screen){
 	lv_group_add_obj(gui_grp,btn_bottom);
 
 	load_log();
-
-	guiact_register_activity(&(struct gui_activity){
-		.name="logger-viewer",
-		.ask_exit=NULL,
-		.quiet_exit=NULL,
-		.lost_focus=logviewer_lost_focus,
-		.get_focus=logviewer_get_focus,
-		.back=true,
-		.page=scr
-	});
+	return 0;
 }
+
+struct gui_register guireg_logviewer={
+	.name="logger-viewer",
+	.draw=logviewer_draw,
+	.lost_focus=logviewer_lost_focus,
+	.get_focus=logviewer_get_focus,
+	.back=true,
+};
 #endif

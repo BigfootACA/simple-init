@@ -95,7 +95,7 @@ static void power_click(lv_obj_t*obj,lv_event_t e){
 	if(obj!=sysbar.bottom.content.power||e!=LV_EVENT_CLICKED)return;
 	if(guiact_has_activity_name("reboot-menu"))return;
 	if(sysbar.keyboard)keyboard_toggle(sysbar.keyboard,LV_EVENT_CANCEL);
-	reboot_menu_draw(sysbar.content);
+	guiact_start_activity("reboot-menu",NULL);
 }
 
 static lv_obj_t*draw_bottom_button(char*symbol,lv_coord_t x,lv_event_cb_t cb){

@@ -8,7 +8,7 @@
 #include"logger.h"
 #include"tools.h"
 #define TAG "bootmenu"
-static lv_obj_t*lst=NULL,*selscr=NULL,*last=NULL;
+static lv_obj_t*lst=NULL,*last=NULL;
 static lv_obj_t*options_info,*btn_ok,*btn_refresh;
 static EFI_BOOT_MANAGER_LOAD_OPTION*cur=NULL;
 static struct option_info{
@@ -130,7 +130,7 @@ static void ok_click(lv_obj_t*obj,lv_event_t e){
 	gui_run_and_exit(after_exit);
 }
 
-static int do_cleanup(void*d __attribute__((unused))){
+static int do_cleanup(struct gui_activity*d __attribute__((unused))){
 	bootmenu_option_clear();
 	return 0;
 }
@@ -141,12 +141,12 @@ static void do_reload(lv_task_t*t __attribute__((unused))){
 	lv_group_add_obj(gui_grp,btn_refresh);
 }
 
-static int bootmenu_option_get_focus(void*d __attribute__((unused))){
+static int bootmenu_option_get_focus(struct gui_activity*d __attribute__((unused))){
 	lv_task_once(lv_task_create(do_reload,100,LV_TASK_PRIO_MID,NULL));
 	return 0;
 }
 
-static int bootmenu_option_lost_focus(void*d __attribute__((unused))){
+static int bootmenu_option_lost_focus(struct gui_activity*d __attribute__((unused))){
 	for(int i=0;i<256;i++){
 		if(!options[i].enable)continue;
 		lv_group_remove_obj(options[i].chk);
@@ -156,19 +156,14 @@ static int bootmenu_option_lost_focus(void*d __attribute__((unused))){
 	return 0;
 }
 
-void uefi_bootmenu_draw(lv_obj_t*screen){
+static int uefi_bootmenu_draw(struct gui_activity*act){
 
 	lv_coord_t btm=gui_dpi/10;
 	lv_coord_t btw=gui_sw/2-btm*2;
 	lv_coord_t bth=gui_font_size+gui_dpi/10;
 
-	selscr=lv_obj_create(screen,NULL);
-	lv_obj_set_size(selscr,gui_sw,gui_sh);
-	lv_obj_set_pos(selscr,gui_sx,gui_sy);
-	lv_theme_apply(selscr,LV_THEME_SCR);
-
 	// function title
-	lv_obj_t*title=lv_label_create(selscr,NULL);
+	lv_obj_t*title=lv_label_create(act->page,NULL);
 	lv_label_set_long_mode(title,LV_LABEL_LONG_BREAK);
 	lv_obj_set_y(title,gui_sh/16);
 	lv_obj_set_size(title,gui_sw,gui_sh/16);
@@ -181,7 +176,7 @@ void uefi_bootmenu_draw(lv_obj_t*screen){
 	lv_style_set_border_width(&lst_style,LV_STATE_DEFAULT,0);
 	lv_style_set_border_width(&lst_style,LV_STATE_FOCUSED,0);
 	lv_style_set_border_width(&lst_style,LV_STATE_PRESSED,0);
-	lst=lv_page_create(selscr,NULL);
+	lst=lv_page_create(act->page,NULL);
 	lv_obj_add_style(lst,LV_PAGE_PART_BG,&lst_style);
 	lv_obj_set_pos(lst,gui_dpi/20,gui_sh/8);
 	lv_obj_set_size(lst,gui_sw-gui_dpi/10,gui_sh-lv_obj_get_y(lst)-bth-btm*2);
@@ -193,7 +188,7 @@ void uefi_bootmenu_draw(lv_obj_t*screen){
 	lv_style_set_outline_width(&btn_style,LV_STATE_PRESSED,0);
 
 	// ok button
-	btn_ok=lv_btn_create(selscr,NULL);
+	btn_ok=lv_btn_create(act->page,NULL);
 	lv_obj_set_size(btn_ok,btw,bth);
 	lv_obj_align(btn_ok,NULL,LV_ALIGN_IN_BOTTOM_LEFT,btm,-btm);
 	lv_obj_add_style(btn_ok,0,&btn_style);
@@ -202,7 +197,7 @@ void uefi_bootmenu_draw(lv_obj_t*screen){
 	lv_label_set_text(lv_label_create(btn_ok,NULL),_("OK"));
 
 	// refresh button
-	btn_refresh=lv_btn_create(selscr,NULL);
+	btn_refresh=lv_btn_create(act->page,NULL);
 	lv_obj_set_size(btn_refresh,btw,bth);
 	lv_obj_align(btn_refresh,NULL,LV_ALIGN_IN_BOTTOM_RIGHT,-btm,-btm);
 	lv_obj_add_style(btn_refresh,0,&btn_style);
@@ -210,15 +205,16 @@ void uefi_bootmenu_draw(lv_obj_t*screen){
 	lv_obj_set_event_cb(btn_refresh,refresh_click);
 	lv_label_set_text(lv_label_create(btn_refresh,NULL),_("Refresh"));
 
-	guiact_register_activity(&(struct gui_activity){
-		.name="uefi-bootmenu",
-		.ask_exit=NULL,
-		.quiet_exit=do_cleanup,
-		.get_focus=bootmenu_option_get_focus,
-		.lost_focus=bootmenu_option_lost_focus,
-		.back=true,
-		.page=selscr
-	});
+	return 0;
 }
+
+struct gui_register guireg_uefi_bootmenu={
+	.name="uefi-bootmenu",
+	.draw=uefi_bootmenu_draw,
+	.quiet_exit=do_cleanup,
+	.get_focus=bootmenu_option_get_focus,
+	.lost_focus=bootmenu_option_lost_focus,
+	.back=true,
+};
 #endif
 #endif

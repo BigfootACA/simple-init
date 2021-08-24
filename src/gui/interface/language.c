@@ -57,20 +57,20 @@ static void init_languages(){
 	lv_dropdown_set_selected(sel,s);
 }
 
-static int language_get_focus(void*d __attribute__((unused))){
+static int language_get_focus(struct gui_activity*d __attribute__((unused))){
 	lv_group_add_obj(gui_grp,sel);
 	lv_group_add_obj(gui_grp,btn_ok);
 	return 0;
 }
 
-static int language_lost_focus(void*d __attribute__((unused))){
+static int language_lost_focus(struct gui_activity*d __attribute__((unused))){
 	lv_group_remove_obj(sel);
 	lv_group_remove_obj(btn_ok);
 	return 0;
 }
 
-void language_menu_draw(lv_obj_t*screen){
-	scr=lv_create_opa_mask(screen);
+static int language_menu_draw(struct gui_activity*act){
+	scr=act->page;
 
 	static lv_style_t bs;
 	lv_style_init(&bs);
@@ -106,15 +106,15 @@ void language_menu_draw(lv_obj_t*screen){
 
 	lv_obj_set_height(box,lv_obj_get_y(btn_ok)+lv_obj_get_height(btn_ok)+(gui_font_size*2)+gui_dpi/20);
 	lv_obj_align(box,NULL,LV_ALIGN_CENTER,0,0);
-
-	guiact_register_activity(&(struct gui_activity){
-		.name="language-menu",
-		.ask_exit=NULL,
-		.quiet_exit=NULL,
-		.get_focus=language_get_focus,
-		.lost_focus=language_lost_focus,
-		.back=true,
-		.page=scr
-	});
+	return 0;
 }
+
+struct gui_register guireg_language={
+	.name="language-menu",
+	.get_focus=language_get_focus,
+	.lost_focus=language_lost_focus,
+	.draw=language_menu_draw,
+	.back=true,
+	.mask=true,
+};
 #endif

@@ -17,5 +17,4 @@
 #include"tools.h"
 #include"sysbar.h"
 #define TAG "guipm"
-extern char*guipm_target_disk;
 #endif

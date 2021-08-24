@@ -8,7 +8,7 @@
 #include"guidrv.h"
 #define TAG "reboot"
 
-static lv_obj_t*scr,*box,*value,*slider;
+static lv_obj_t*box,*value,*slider;
 
 static void backlight_change(lv_obj_t*obj,lv_event_t e){
 	if(obj!=slider||e!=LV_EVENT_VALUE_CHANGED)return;
@@ -26,16 +26,15 @@ static void ok_msg_click(lv_obj_t*obj,lv_event_t e){
 	}
 }
 
-void backlight_menu_draw(lv_obj_t*screen){
-	scr=lv_create_opa_mask(screen);
+static int backlight_menu_draw(struct gui_activity*act){
 	int level=guidrv_get_brightness();
-	if(level<0)lv_create_ok_msgbox(scr,ok_msg_click,_("get brightness failed: %m"));
+	if(level<0)lv_create_ok_msgbox(act->page,ok_msg_click,_("get brightness failed: %m"));
 	else{
 		static lv_style_t bs;
 		lv_style_init(&bs);
 		lv_style_set_pad_all(&bs,LV_STATE_DEFAULT,gui_font_size);
 
-		box=lv_obj_create(scr,NULL);
+		box=lv_obj_create(act->page,NULL);
 		lv_obj_add_style(box,LV_PAGE_PART_BG,&bs);
 		lv_obj_set_click(box,false);
 		lv_obj_set_width(box,gui_sw/6*5);
@@ -61,13 +60,13 @@ void backlight_menu_draw(lv_obj_t*screen){
 		lv_obj_set_height(box,lv_obj_get_y(slider)+lv_obj_get_height(slider)+(gui_font_size*2));
 		lv_obj_align(box,NULL,LV_ALIGN_CENTER,0,0);
 	}
-
-	guiact_register_activity(&(struct gui_activity){
-		.name="backlight-menu",
-		.ask_exit=NULL,
-		.quiet_exit=NULL,
-		.back=true,
-		.page=scr
-	});
+	return 0;
 }
+
+struct gui_register guireg_backlight={
+	.name="backlight-menu",
+	.draw=backlight_menu_draw,
+	.back=true,
+	.mask=true,
+};
 #endif

@@ -5,19 +5,18 @@
 #include"logger.h"
 #include"array.h"
 #include"filetab.h"
-#include"gui_draw.h"
 #include"activity.h"
 #define TAG "filemgr"
 
 static lv_obj_t*tabview,*scr,*path;
 static struct filetab*tabs[4],*active=NULL;
 
-static int filemgr_get_focus(void*d __attribute__((unused))){
+static int filemgr_get_focus(struct gui_activity*d __attribute__((unused))){
 	if(active)filetab_add_group(active,gui_grp);
 	return 0;
 }
 
-static int filemgr_lost_focus(void*d __attribute__((unused))){
+static int filemgr_lost_focus(struct gui_activity*d __attribute__((unused))){
 	if(active)filetab_remove_group(active);
 	return 0;
 }
@@ -39,7 +38,7 @@ static void update_active(){
 	}
 }
 
-int do_cleanup(void*d __attribute__((unused))){
+int do_cleanup(struct gui_activity*d __attribute__((unused))){
 	for(size_t i=0;i<ARRLEN(tabs);i++){
 		if(tabs[i])filetab_free(tabs[i]);
 		tabs[i]=NULL;
@@ -70,7 +69,7 @@ static void tabview_create(){
 	}
 }
 
-static int do_back(void*d __attribute__((unused))){
+static int do_back(struct gui_activity*d __attribute__((unused))){
 	lv_obj_t*tab=filetab_get_tab(active);
 	if(!tab)return 0;
 	if(!lv_page_is_top(tab)){
@@ -113,11 +112,8 @@ static void btns_cb(lv_obj_t*obj,lv_event_t e){
 	}
 }
 
-void filemgr_draw(lv_obj_t*screen){
-	scr=lv_obj_create(screen,NULL);
-	lv_obj_set_size(scr,gui_sw,gui_sh);
-	lv_obj_set_pos(scr,gui_sx,gui_sy);
-	lv_theme_apply(scr,LV_THEME_SCR);
+static int filemgr_draw(struct gui_activity*act){
+	scr=act->page;
 
 	static lv_style_t s;
 	lv_style_init(&s);
@@ -150,14 +146,15 @@ void filemgr_draw(lv_obj_t*screen){
 	lv_obj_set_size(tabview,gui_sw,lv_obj_get_y(path));
 
 	tabview_create();
-
-	guiact_register_activity(&(struct gui_activity){
-		.name="file-manager",
-		.ask_exit=do_back,
-		.quiet_exit=do_cleanup,
-		.get_focus=filemgr_get_focus,
-		.lost_focus=filemgr_lost_focus,
-		.back=true,
-		.page=scr
-	});
+	return 0;
 }
+
+struct gui_register guireg_filemgr={
+	.name="file-manager",
+	.ask_exit=do_back,
+	.quiet_exit=do_cleanup,
+	.get_focus=filemgr_get_focus,
+	.lost_focus=filemgr_lost_focus,
+	.draw=filemgr_draw,
+	.back=true
+};

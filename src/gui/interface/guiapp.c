@@ -9,40 +9,39 @@
 #include"init_internal.h"
 #include"str.h"
 #include"gui.h"
-#include"gui_draw.h"
 #include"activity.h"
 #include"tools.h"
 #define TAG "guiapp"
-static lv_obj_t*screen,*realscr;
+static lv_obj_t*screen;
 static int app_num=0;
 
 static struct app{
 	char*name;
 	char*img;
-	draw_func draw;
+	char*act;
 }apps[]={
 	#ifndef ENABLE_UEFI
 	#ifdef ENABLE_FDISK
-	{"Partition Manager",      "guipm.png",     guipm_draw_disk_sel},
+	{"Partition Manager",      "guipm.png",     "guipm-disk-select"},
 	#endif
-	{"File Manager",           "filemgr.png",   filemgr_draw},
-	{"Loggerd Viewer",         "logviewer.png", logviewer_draw},
-	{"Backlight",              "backlight.png", backlight_menu_draw},
+	{"File Manager",           "filemgr.png",   "file-manager"},
+	{"Loggerd Viewer",         "logviewer.png", "logger-viewer"},
+	{"Backlight",              "backlight.png", "backlight-menu"},
 	{"Multi-Boot Manage",      "bootmgr.png",   NULL},
 	#else
-	{"UEFI Boot Menu",         "bootmgr.png",   uefi_bootmenu_draw},
+	{"UEFI Boot Menu",         "bootmgr.png",   "uefi-bootmenu"},
 	#endif
 	{"USB Control",            "usb.png",       NULL},
 	{"Registry Editor",        "regedit.png",   NULL},
 	{"Image Backgup Recovery", "backup.png",    NULL},
 	{"Enter TWRP",             "twrp.png",      NULL},
 	{"System Info",            "sysinfo.png",   NULL},
-	{"Reboot Menu",            "reboot.png",    reboot_menu_draw},
-	{"Language",               "language.png",  language_menu_draw},
+	{"Reboot Menu",            "reboot.png",    "reboot-menu"},
+	{"Language",               "language.png",  "language-menu"},
 	{NULL,NULL,NULL}
 };
 
-void clean_buttons(){
+static void clean_buttons(){
 	lv_obj_t*o=lv_obj_get_child(screen,NULL);
 	if(o)do{
 		if(!lv_debug_check_obj_type(o,"lv_objmask"))continue;
@@ -62,8 +61,8 @@ static void ok_msg_click(lv_obj_t*obj,lv_event_t e){
 static void click_btn(lv_obj_t*obj,lv_event_t e){
 	if(!obj||e!=LV_EVENT_CLICKED)return;
 	if(!guiact_is_active_page(screen))return;
-	draw_func f=(draw_func)lv_obj_get_user_data(obj);
-	if(f)f(realscr);
+	char*f=(char*)lv_obj_get_user_data(obj);
+	if(f)guiact_start_activity(f,NULL);
 	else lv_create_ok_msgbox_mask(
 		screen,ok_msg_click,
 		_("This function does not implemented")
@@ -86,7 +85,7 @@ static void add_button(struct app*p){
 	lv_obj_set_pos(app,(w*a)+(gui_font_size/2),(h*b)+(gui_font_size/2));
 	lv_obj_set_size(app,w,h);
 	lv_obj_add_style(app,LV_OBJ_PART_MAIN,style);
-	lv_obj_set_user_data(app,p->draw);
+	lv_obj_set_user_data(app,p->act);
 	lv_obj_set_event_cb(app,click_btn);
 	lv_group_add_obj(gui_grp,app);
 
@@ -144,48 +143,46 @@ static void do_reload(lv_task_t*t __attribute__((unused))){
 	redraw_apps();
 }
 
-static int guiapp_get_focus(void*d __attribute__((unused))){
+static int guiapp_get_focus(struct gui_activity*d __attribute__((unused))){
 	lv_task_once(lv_task_create(do_reload,100,LV_TASK_PRIO_MID,NULL));
 	return 0;
 }
 
-static int guiapp_lost_focus(void*d __attribute__((unused))){
+static int guiapp_lost_focus(struct gui_activity*d __attribute__((unused))){
 	lv_obj_t*o=lv_obj_get_child(screen,NULL);
 	if(o)do{lv_group_remove_obj(o);}
 	while((o=lv_obj_get_child(screen,o)));
 	return 0;
 }
 
-static void _draw(lv_obj_t*scr){
-	realscr=scr;
-	screen=lv_obj_create(scr,NULL);
-	lv_obj_set_size(screen,gui_sw,gui_sh);
-	lv_obj_set_pos(screen,gui_sx,gui_sy);
-	lv_theme_apply(screen,LV_THEME_SCR);
-
+static int guiapp_draw(struct gui_activity*act){
+	screen=act->page;
 	static lv_style_t txt_style;
 	lv_style_init(&txt_style);
 	lv_style_set_text_font(&txt_style,LV_STATE_DEFAULT,gui_font_small);
 	lv_style_set_text_color(&txt_style,LV_STATE_DEFAULT,lv_color_make(200,200,200));
 
-	lv_obj_t*author=lv_label_create(screen,NULL);
+	lv_obj_t*author=lv_label_create(act->page,NULL);
 	lv_label_set_text(author,"Author: BigfootACA");
 	lv_label_set_long_mode(author,LV_LABEL_LONG_BREAK);
 	lv_label_set_align(author,LV_LABEL_ALIGN_CENTER);
 	lv_obj_add_style(author,LV_LABEL_PART_MAIN,&txt_style);
 	lv_obj_set_width(author,gui_sw);
 	lv_obj_align(author,NULL,LV_ALIGN_IN_BOTTOM_MID,0,-gui_font_size);
-
-	guiact_register_activity(&(struct gui_activity){
-		.name="guiapp",
-		.ask_exit=NULL,
-		.quiet_exit=NULL,
-		.get_focus=guiapp_get_focus,
-		.lost_focus=guiapp_lost_focus,
-		.back=false,
-		.page=screen
-	});
+	return 0;
 }
+
+static void _draw(lv_obj_t*scr __attribute((unused))){
+	guiact_start_activity("guiapp",NULL);
+}
+
+struct gui_register guireg_guiapp={
+	.name="guiapp",
+	.get_focus=guiapp_get_focus,
+	.lost_focus=guiapp_lost_focus,
+	.draw=guiapp_draw,
+	.back=false
+};
 
 int guiapp_main(int argc __attribute((unused)),char**argv __attribute((unused))){
 	#ifndef ENABLE_UEFI
@@ -196,7 +193,7 @@ int guiapp_main(int argc __attribute((unused)),char**argv __attribute((unused)))
 }
 
 #ifndef ENABLE_UEFI
-int guiap_startup(struct service*svc __attribute__((unused))){
+static int guiap_startup(struct service*svc __attribute__((unused))){
 	return guiapp_main(0,NULL);
 }
 

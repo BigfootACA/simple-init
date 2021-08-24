@@ -146,15 +146,10 @@ struct gui_register*guiact_find_register(char*name){
 	EPRET(ENOENT);
 }
 
-int guiact_start_activity(char*name,void*args){
+int guiact_start_activity(struct gui_register*reg,void*args){
 	int r;
-	struct gui_register*reg=guiact_find_register(name);
-	if(!reg){
-		tlog_warn("activity %s not found",name);
-		ERET(ENOENT);
-	}
 	if(!reg->draw){
-		tlog_warn("invalid activity %s",name);
+		tlog_warn("invalid activity %s",reg->name);
 		ERET(EINVAL);
 	}
 	struct gui_activity*act=malloc(sizeof(struct gui_activity));
@@ -182,6 +177,15 @@ int guiact_start_activity(char*name,void*args){
 		return r;
 	}
 	return guiact_add_activity(act);
+}
+
+int guiact_start_activity_by_name(char*name,void*args){
+	struct gui_register*reg=guiact_find_register(name);
+	if(!reg){
+		tlog_warn("activity %s not found",reg->name);
+		ERET(ENOENT);
+	}
+	return guiact_start_activity(reg,args);
 }
 
 bool guiact_is_name(struct gui_activity*act,const char*name){

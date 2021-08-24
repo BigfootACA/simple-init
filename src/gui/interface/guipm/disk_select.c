@@ -277,7 +277,7 @@ static void ok_msg_click(lv_obj_t*obj,lv_event_t e){
 	}else if(e==LV_EVENT_VALUE_CHANGED){
 		switch(lv_msgbox_get_active_btn(obj)){
 			case 0:
-				guiact_start_activity("guipm-partitions",strdup(selected->name));
+				guiact_start_activity_by_name("guipm-partitions",strdup(selected->name));
 			break;
 		}
 		lv_msgbox_start_auto_close(obj,0);

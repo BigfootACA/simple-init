@@ -62,7 +62,7 @@ static void click_btn(lv_obj_t*obj,lv_event_t e){
 	if(!obj||e!=LV_EVENT_CLICKED)return;
 	if(!guiact_is_active_page(screen))return;
 	char*f=(char*)lv_obj_get_user_data(obj);
-	if(f)guiact_start_activity(f,NULL);
+	if(f)guiact_start_activity_by_name(f,NULL);
 	else lv_create_ok_msgbox_mask(
 		screen,ok_msg_click,
 		_("This function does not implemented")
@@ -173,7 +173,7 @@ static int guiapp_draw(struct gui_activity*act){
 }
 
 static void _draw(lv_obj_t*scr __attribute((unused))){
-	guiact_start_activity("guiapp",NULL);
+	guiact_start_activity_by_name("guiapp",NULL);
 }
 
 struct gui_register guireg_guiapp={

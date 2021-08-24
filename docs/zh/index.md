@@ -7,3 +7,7 @@
 ### [Linux调试](build/linux-native.md)
 
 ### [UEFI](build/uefi.md)
+
+## 源码示例
+
+### [简单的GUI APP](examples/simple-guiapp.md)

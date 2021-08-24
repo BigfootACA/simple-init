@@ -152,19 +152,16 @@ diff --git a/src/gui/CMakeLists.txt b/src/gui/CMakeLists.txt
  	drivers/input.c
 ```
 
-#### UEFI Target: 添加到SimpleInit.inf
+#### UEFI Target: 添加到src/gui/SimpleInitGUI.inf
 
 ```diff
-diff --git a/SimpleInit.inf b/SimpleInit.inf
-index 2696fab..0d0daa5 100644
---- a/SimpleInit.inf
-+++ b/SimpleInit.inf
-@@ -57,6 +57,7 @@
-   src/gui/interface/sysbar.c
-   src/gui/interface/language.c
-   src/gui/interface/uefi_bootmenu.c
-+  src/gui/interface/example.c
- 
-   # Simple-Init library
-   src/lib/list.c
+diff --git a/src/gui/SimpleInitGUI.inf b/src/gui/SimpleInitGUI.inf
+index 81b4fcd..aee534a 100644
+--- a/src/gui/SimpleInitGUI.inf
++++ b/src/gui/SimpleInitGUI.inf
+@@ -62,3 +62,4 @@
+   interface/sysbar.c
+   interface/language.c
+   interface/uefi_bootmenu.c
++  interface/example.c
 ```

@@ -22,19 +22,11 @@ open EmulatorPkg/EmulatorPkg.dsc
 diff --git a/EmulatorPkg/EmulatorPkg.dsc b/EmulatorPkg/EmulatorPkg.dsc
 --- a/EmulatorPkg/EmulatorPkg.dsc
 +++ b/EmulatorPkg/EmulatorPkg.dsc
-@@ -319,6 +319,7 @@
-   MdeModulePkg/Universal/ReportStatusCodeRouter/Pei/ReportStatusCodeRouterPei.inf
-   MdeModulePkg/Universal/StatusCodeHandler/Pei/StatusCodeHandlerPei.inf
- 
-+  SimpleInit.inf
-   EmulatorPkg/BootModePei/BootModePei.inf
-   MdeModulePkg/Universal/FaultTolerantWritePei/FaultTolerantWritePei.inf
-   MdeModulePkg/Universal/Variable/Pei/VariablePei.inf
 @@ -478,6 +479,7 @@
    EmulatorPkg/Application/RedfishPlatformConfig/RedfishPlatformConfig.inf
  !endif
  !include RedfishPkg/Redfish.dsc.inc
-+!include StdLib/StdLib.inc
++!include SimpleInit.inc
  
  [BuildOptions]
    #

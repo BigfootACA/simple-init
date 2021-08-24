@@ -65,6 +65,9 @@ static int backlight_menu_draw(struct gui_activity*act){
 
 struct gui_register guireg_backlight={
 	.name="backlight-menu",
+	.title="Backlight",
+	.icon="backlight.png",
+	.show_app=true,
 	.draw=backlight_menu_draw,
 	.back=true,
 	.mask=true,

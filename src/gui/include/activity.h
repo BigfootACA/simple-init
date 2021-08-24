@@ -8,6 +8,9 @@ struct gui_activity;
 typedef int guiact_base(struct gui_activity*);
 struct gui_register{
 	char name[256];
+	char title[512];
+	char icon[256];
+	bool show_app;
 	bool back;
 	bool mask;
 	guiact_base*ask_exit;

@@ -128,6 +128,9 @@ static int logviewer_draw(struct gui_activity*act){
 
 struct gui_register guireg_logviewer={
 	.name="logger-viewer",
+	.title="Loggerd Viewer",
+	.icon="logviewer.png",
+	.show_app=true,
 	.draw=logviewer_draw,
 	.lost_focus=logviewer_lost_focus,
 	.get_focus=logviewer_get_focus,

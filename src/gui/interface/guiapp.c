@@ -178,6 +178,9 @@ static void _draw(lv_obj_t*scr __attribute((unused))){
 
 struct gui_register guireg_guiapp={
 	.name="guiapp",
+	.title="GUI Application",
+	.icon="apps.png",
+	.show_app=false,
 	.get_focus=guiapp_get_focus,
 	.lost_focus=guiapp_lost_focus,
 	.draw=guiapp_draw,

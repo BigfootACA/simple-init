@@ -1,0 +1,40 @@
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = SimpleInitLib
+  FILE_GUID                      = 917BCB1D-3837-40DD-83EC-7596566893FC
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = SimpleInitLib
+
+[BuildOptions]
+  GCC:*_*_*_CC_FLAGS = -DENABLE_GUI=1 -DENABLE_UEFI=1 -DENABLE_LODEPNG=1 -DENABLE_FREETYPE2=1
+
+[Packages]
+  MdePkg/MdePkg.dec
+  StdLib/StdLib.dec
+
+[LibraryClasses]
+  UefiLib
+  LibC
+  SimpleInitCompatible
+
+[Sources]
+  ../../include/str.h
+  ../../include/list.h
+  ../../include/array.h
+  ../../include/keyval.h
+  ../../include/system.h
+  ../../include/defines.h
+  ../../include/language.h
+  ../compatible/include/compatible.h
+
+  # Simple-Init library
+  list.c
+  replace.c
+  keyval.c
+  strings.c
+  base64.c
+  language.c
+  param.c
+  readable.c
+  array.c

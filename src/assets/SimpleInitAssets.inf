@@ -1,0 +1,28 @@
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = SimpleInitAssets
+  FILE_GUID                      = 944F44B0-E8A9-450A-9FFF-952382AEF03E
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = SimpleInitAssets
+
+[BuildOptions]
+  GCC:*_*_*_CC_FLAGS = -DENABLE_GUI=1 -DENABLE_UEFI=1 -DENABLE_LODEPNG=1 -DENABLE_FREETYPE2=1
+
+[Packages]
+  MdePkg/MdePkg.dec
+  StdLib/StdLib.dec
+
+[LibraryClasses]
+  UefiLib
+  LibC
+  SimpleInitLib
+  SimpleInitRootFS
+
+[Sources]
+  ../../include/assets.h
+  ../../include/defines.h
+  ../compatible/include/compatible.h
+
+  # Simple-Init builtin assets library
+  assets.c

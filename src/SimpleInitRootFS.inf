@@ -1,0 +1,26 @@
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = SimpleInitRootFS
+  FILE_GUID                      = CFE20049-25DE-403B-94DE-29EDF36A3092
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = SimpleInitRootFS
+
+[BuildOptions]
+  GCC:*_*_*_CC_FLAGS = -DENABLE_GUI=1 -DENABLE_UEFI=1 -DENABLE_LODEPNG=1 -DENABLE_FREETYPE2=1
+
+[Packages]
+  MdePkg/MdePkg.dec
+  StdLib/StdLib.dec
+
+[LibraryClasses]
+  UefiLib
+  LibC
+
+[Sources]
+  ../include/defines.h
+  ../include/assets.h
+
+  # Simple-Init builtin rootfs generate from ./root (RUN BEFORE BUILD)
+  # bash scripts/gen-rootfs-source.sh ./ ./build ./root
+  ../build/rootfs.c

@@ -1,0 +1,27 @@
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = SimpleInitLoggerd
+  FILE_GUID                      = 88FE3206-389E-4737-B97F-0A029C5508D3
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = SimpleInitLoggerd
+
+[BuildOptions]
+  GCC:*_*_*_CC_FLAGS = -DENABLE_GUI=1 -DENABLE_UEFI=1 -DENABLE_LODEPNG=1 -DENABLE_FREETYPE2=1
+
+[Packages]
+  MdePkg/MdePkg.dec
+  StdLib/StdLib.dec
+
+[LibraryClasses]
+  UefiLib
+  LibC
+  DebugLib
+
+[Sources]
+  ../../include/defines.h
+  ../../include/logger.h
+  ../compatible/include/compatible.h
+
+  # Simple-Init loggerd UEFI wrapper
+  src/loggerd/client.c

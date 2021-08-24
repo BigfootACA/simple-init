@@ -1,0 +1,19 @@
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = LodePNG
+  FILE_GUID                      = F88A41E6-3526-4E28-A189-59876FBC8F28
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = LodePNG
+
+[Packages]
+  MdePkg/MdePkg.dec
+  StdLib/StdLib.dec
+
+[LibraryClasses]
+  UefiLib
+  LibC
+
+[Sources]
+  lodepng/lodepng.h
+  lodepng.c

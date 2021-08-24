@@ -3,11 +3,13 @@
 #include"str.h"
 #include"lvgl.h"
 #include"gui.h"
+#include"tools.h"
 #include"logger.h"
 #include"sysbar.h"
 #include"activity.h"
 #define TAG "activity"
 
+extern struct gui_register*guiact_register[];
 static list*activities=NULL;
 
 int guiact_do_exit(){
@@ -43,7 +45,7 @@ struct gui_activity*guiact_get_last(){
 static int call_lost_focus(struct gui_activity*act){
 	if(!act)return -1;
 	tlog_debug("%s lost focus",act->name);
-	return act->lost_focus?act->lost_focus(NULL):-1;
+	return act->reg->lost_focus?act->reg->lost_focus(act):-1;
 }
 
 static int call_lost_focus_list(list*lst){
@@ -57,7 +59,7 @@ static int call_lost_focus_last(){
 static int call_get_focus(struct gui_activity*act){
 	if(!act)return -1;
 	tlog_debug("%s get focus",act->name);
-	return act->get_focus?act->get_focus(NULL):-1;
+	return act->reg->get_focus?act->reg->get_focus(act):-1;
 }
 
 static int call_get_focus_list(list*lst){
@@ -90,11 +92,11 @@ int guiact_do_back(){
 	}
 	struct gui_activity*c=guiact_get_last();
 	if(!c)return guiact_do_exit();
-	if(!c->back)return 0;
+	if(!c->reg->back)return 0;
 	if(guiact_is_alone())return 0;
 	tlog_debug("do back");
-	if(c->ask_exit&&c->ask_exit(NULL)!=0)return 0;
-	if(c->quiet_exit&&c->quiet_exit(NULL)!=0)return 0;
+	if(c->reg->ask_exit&&c->reg->ask_exit(c)!=0)return 0;
+	if(c->reg->quiet_exit&&c->reg->quiet_exit(c)!=0)return 0;
 	return guiact_remove_last();
 }
 
@@ -103,20 +105,19 @@ int guiact_do_home(){
 	list*acts=guiact_get_activities(),*d;
 	if(!acts||list_is_alone(acts))return 0;
 	LIST_DATA_DECLARE(c,list_last(acts),struct gui_activity*);
-	if(c->back&&c->ask_exit)c->ask_exit(NULL);
-	if(c->quiet_exit)c->quiet_exit(NULL);
+	if(c->reg->back&&c->reg->ask_exit)c->reg->ask_exit(c);
+	if(c->reg->quiet_exit)c->reg->quiet_exit(c);
 	guiact_remove_last();
 	while((d=list_last(acts))&&d->prev){
 		LIST_DATA_DECLARE(z,d,struct gui_activity*);
-		if(z->quiet_exit)z->quiet_exit(NULL);
+		if(z->reg->quiet_exit)z->reg->quiet_exit(c);
 		guiact_remove_last();
 	}
 	return 0;
 }
 
-int guiact_register_activity(struct gui_activity*act){
-	if(!act)ERET(EINVAL);
-	list*e=list_new_dup(act,sizeof(struct gui_activity));
+static int guiact_add_activity(struct gui_activity*act){
+	list*e=list_new(act);
 	if(!e)ERET(ENOMEM);
 	if(activities){
 		call_lost_focus_last();
@@ -128,6 +129,59 @@ int guiact_register_activity(struct gui_activity*act){
 		act->name,list_count(activities)
 	);
 	return 0;
+}
+
+int guiact_register_activity(struct gui_activity*act){
+	if(!act)ERET(EINVAL);
+	return guiact_add_activity(memdup(act,sizeof(struct gui_activity)));
+}
+
+struct gui_register*guiact_find_register(char*name){
+	if(!name)EPRET(EINVAL);
+	struct gui_register*reg=NULL;
+	for(int i=0;(reg=guiact_register[i]);i++){
+		if(strcmp(name,reg->name)!=0)continue;
+		return reg;
+	}
+	EPRET(ENOENT);
+}
+
+int guiact_start_activity(char*name,void*args){
+	int r;
+	struct gui_register*reg=guiact_find_register(name);
+	if(!reg){
+		tlog_warn("activity %s not found",name);
+		ERET(ENOENT);
+	}
+	if(!reg->draw){
+		tlog_warn("invalid activity %s",name);
+		ERET(EINVAL);
+	}
+	struct gui_activity*act=malloc(sizeof(struct gui_activity));
+	if(!act)ERET(ENOMEM);
+	act->reg=reg,act->args=args,act->mask=reg->mask;
+	strcpy(act->name,reg->name);
+	if(reg->init&&(r=reg->init(act))<0){
+		tlog_warn("activity %s init failed: %d",act->name,r);
+		free(act);
+		return r;
+	}
+	if(act->mask){
+		act->page=lv_objmask_create(sysbar.content,NULL);
+		lv_obj_add_style(act->page,LV_OBJMASK_PART_MAIN,lv_style_opa_mask());
+	}else{
+		act->page=lv_obj_create(sysbar.content,NULL);
+		lv_theme_apply(act->page,LV_THEME_SCR);
+	}
+	lv_obj_set_size(act->page,gui_sw,gui_sh);
+	lv_obj_set_pos(act->page,gui_sx,gui_sy);
+	if((r=reg->draw(act))<0){
+		tlog_warn("activity %s draw failed: %d",act->name,r);
+		lv_obj_del(act->page);
+		free(act);
+		return r;
+	}
+	return guiact_add_activity(act);
 }
 
 bool guiact_is_name(struct gui_activity*act,const char*name){

@@ -15,32 +15,6 @@
 static lv_obj_t*screen;
 static int app_num=0;
 
-static struct app{
-	char*name;
-	char*img;
-	char*act;
-}apps[]={
-	#ifndef ENABLE_UEFI
-	#ifdef ENABLE_FDISK
-	{"Partition Manager",      "guipm.png",     "guipm-disk-select"},
-	#endif
-	{"File Manager",           "filemgr.png",   "file-manager"},
-	{"Loggerd Viewer",         "logviewer.png", "logger-viewer"},
-	{"Backlight",              "backlight.png", "backlight-menu"},
-	{"Multi-Boot Manage",      "bootmgr.png",   NULL},
-	#else
-	{"UEFI Boot Menu",         "bootmgr.png",   "uefi-bootmenu"},
-	#endif
-	{"USB Control",            "usb.png",       NULL},
-	{"Registry Editor",        "regedit.png",   NULL},
-	{"Image Backgup Recovery", "backup.png",    NULL},
-	{"Enter TWRP",             "twrp.png",      NULL},
-	{"System Info",            "sysinfo.png",   NULL},
-	{"Reboot Menu",            "reboot.png",    "reboot-menu"},
-	{"Language",               "language.png",  "language-menu"},
-	{NULL,NULL,NULL}
-};
-
 static void clean_buttons(){
 	lv_obj_t*o=lv_obj_get_child(screen,NULL);
 	if(o)do{
@@ -69,7 +43,8 @@ static void click_btn(lv_obj_t*obj,lv_event_t e){
 	);
 }
 
-static void add_button(struct app*p){
+static void add_button(struct gui_register*p){
+	if(!p->show_app)return;
 	int a=app_num%4,b=app_num/4;
 	int w=(gui_w-gui_font_size)/4,h=(gui_h-gui_font_size)/5;
 
@@ -85,7 +60,7 @@ static void add_button(struct app*p){
 	lv_obj_set_pos(app,(w*a)+(gui_font_size/2),(h*b)+(gui_font_size/2));
 	lv_obj_set_size(app,w,h);
 	lv_obj_add_style(app,LV_OBJ_PART_MAIN,style);
-	lv_obj_set_user_data(app,p->act);
+	lv_obj_set_user_data(app,p);
 	lv_obj_set_event_cb(app,click_btn);
 	lv_group_add_obj(gui_grp,app);
 
@@ -104,13 +79,13 @@ static void add_button(struct app*p){
 	lv_obj_t*icon=lv_img_create(icon_w,NULL);
 	char path[BUFSIZ]={0},fail[BUFSIZ]={0};
 	strcpy(fail,IMG_RES"/apps.png");
-	if(p->img){
-		if(contains_of("./",2,p->img[0]))strncpy(path,p->img,BUFSIZ-1);
-		else snprintf(path,BUFSIZ-1,IMG_RES"/%s",p->img);
+	if(p->icon[0]){
+		if(contains_of("./",2,p->icon[0]))strncpy(path,p->icon,BUFSIZ-1);
+		else snprintf(path,BUFSIZ-1,IMG_RES"/%s",p->icon);
 	}
-	lv_img_set_src(icon,p->img?path:fail);
+	lv_img_set_src(icon,p->icon[0]?path:fail);
 	lv_img_ext_t*x=lv_obj_get_ext_attr(icon);
-	if((x->w<=0||x->h<=0)&&p->img){
+	if((x->w<=0||x->h<=0)&&p->icon[0]){
 		lv_img_set_src(icon,fail);
 		x=lv_obj_get_ext_attr(icon);
 	}
@@ -127,7 +102,7 @@ static void add_button(struct app*p){
 	lv_label_set_long_mode(txt,LV_LABEL_LONG_BREAK);
 	lv_obj_set_width(txt,w);
 	lv_label_set_align(txt,LV_LABEL_ALIGN_CENTER);
-	lv_label_set_text(txt,_(p->name));
+	lv_label_set_text(txt,_(p->title));
 	lv_obj_align(txt,icon_w,LV_ALIGN_OUT_BOTTOM_MID,0,0);
 	lv_obj_set_height(app,lv_obj_get_y(txt)+lv_obj_get_height(txt)+gui_font_size);
 
@@ -136,7 +111,8 @@ static void add_button(struct app*p){
 
 static void redraw_apps(){
 	clean_buttons();
-	for(int i=0;apps[i].name;i++)add_button(&apps[i]);
+	for(int i=0;guiact_register[i];i++)
+		add_button(guiact_register[i]);
 }
 
 static void do_reload(lv_task_t*t __attribute__((unused))){

@@ -14,7 +14,6 @@ DECLARE_MAIN(logdumpenv);
 DECLARE_MAIN(exit);
 DECLARE_MAIN(findfs);
 DECLARE_MAIN(guiapp);
-DECLARE_MAIN(guipm);
 DECLARE_MAIN(help);
 DECLARE_MAIN(hotplug);
 DECLARE_MAIN(init);
@@ -53,9 +52,6 @@ const struct shell_command*shell_cmds[]={
 	#ifdef ENABLE_GUI
 	DECLARE_CMD(true,  benchmark,   "GUI Benchmark")
 	DECLARE_CMD(true,  guiapp,      "GUI Application")
-	#ifdef ENABLE_FDISK
-	DECLARE_CMD(true,  guipm,       "GUI Partition Manager")
-	#endif
 	#endif
 	DECLARE_CMD(true,  adbd,        "Android Debug Bridge Daemon")
 	DECLARE_CMD(true,  arch,        "Print system architecture")

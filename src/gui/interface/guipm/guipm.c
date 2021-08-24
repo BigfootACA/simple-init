@@ -11,13 +11,5 @@ void guipm_draw_title(lv_obj_t*screen){
 	lv_label_set_text(title,_("Partition Manager"));
 }
 
-static void _draw(lv_obj_t*scr){
-	guipm_draw_disk_sel(scr);
-}
-
-int guipm_main(int argc __attribute((unused)),char**argv __attribute((unused))){
-	open_socket_logfd_default();
-	return gui_init(_draw);
-}
 #endif
 #endif

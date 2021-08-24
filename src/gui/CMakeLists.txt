@@ -25,5 +25,6 @@ add_library(init_gui STATIC
 	drivers.c
 	guidrv.c
 	activity.c
+	activities.c
 	tools.c
 )

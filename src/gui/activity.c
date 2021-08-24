@@ -9,7 +9,6 @@
 #include"activity.h"
 #define TAG "activity"
 
-extern struct gui_register*guiact_register[];
 static list*activities=NULL;
 
 int guiact_do_exit(){

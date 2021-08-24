@@ -28,6 +28,7 @@ struct gui_activity{
 	lv_obj_t*page;
 	struct gui_register*reg;
 };
+extern struct gui_register*guiact_register[];
 extern int guiact_do_exit();
 extern list*guiact_get_activities();
 extern bool guiact_is_alone();

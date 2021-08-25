@@ -54,6 +54,7 @@ extern char*get_groupname(gid_t gid,char*buff,size_t size);
 // src/lib/credential.c: get process comm name by pid, return pid if fail
 extern char*get_commname(pid_t pid,char*buff,size_t size,bool with_pid);
 
+#ifndef ENABLE_UEFI
 #ifdef _GNU_SOURCE
 // src/lib/credential.c: convert ucred to string
 extern char*ucred2string(struct ucred*c,char*buff,size_t size,bool with_pid);
@@ -62,6 +63,7 @@ extern char*ucred2string(struct ucred*c,char*buff,size_t size,bool with_pid);
 #ifdef ENABLE_KMOD
 // src/lib/modules.c: lookup and load module by alias
 extern int insmod(const char*alias,bool log);
+#endif
 #endif
 
 // src/lib/file.c: remove all sub folders (depth 1)
@@ -76,6 +78,7 @@ extern int fd_read_int(int fd,char*name);
 // src/lib/file.c: write an integer value to a file
 extern int fd_write_int(int fd,char*name,int value,bool lf);
 
+#ifndef ENABLE_UEFI
 // src/lib/reboot.c: advance reboot (with arg)
 extern int adv_reboot(long cmd,char*data);
 
@@ -91,6 +94,7 @@ extern int xmount(
 
 // src/lib/mount.c: get a unused mountpoint
 extern char*auto_mountpoint(char*path,size_t len);
+#endif
 
 // src/lib/file.c: one line write file
 extern int write_file(
@@ -122,6 +126,7 @@ extern ssize_t read_file(char*buff,size_t len,bool lf,char*path,...);
 // src/lib/file.c: one line read file at fd
 extern ssize_t fd_read_file(int fd,char*buff,size_t len,bool lf,char*path,...);
 
+#ifndef ENABLE_UEFI
 // src/lib/signal.c: remove all signal handlers
 extern int reset_signals();
 
@@ -135,6 +140,7 @@ extern void action_signals(int*sigs,int len,void(*action)(int, siginfo_t*,void*)
 
 // src/lib/signal.c: convert sig to string (eg. signame(2) = "SIGINT")
 extern const char*signame(int sig);
+#endif
 
 // src/lib/signal.c: make sure real sleep n seconds
 unsigned int xsleep(unsigned int n);

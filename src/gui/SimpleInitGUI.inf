@@ -23,6 +23,7 @@
   SimpleInitLib
   SimpleInitLoggerd
   SimpleInitAssets
+  ReportStatusCodeLib
   UefiBootManagerLib
   UefiRuntimeServicesTableLib
 

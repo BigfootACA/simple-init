@@ -4,19 +4,21 @@
   FILE_GUID                      = 6D77B2BB-69EB-42AB-BECF-4F40C89568C3
   MODULE_TYPE                    = UEFI_APPLICATION
   VERSION_STRING                 = 1.0
-  ENTRY_POINT                    = ShellCEntryLib
+  ENTRY_POINT                    = UefiMain
 
 [Packages]
   StdLib/StdLib.dec
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
-  ShellPkg/ShellPkg.dec
 
 [LibraryClasses]
   UefiBootManagerLib
   UefiLib
   LibC
   SimpleInitGUI
+  ReportStatusCodeLib
+  UefiRuntimeServicesTableLib
+  UefiApplicationEntryPoint
 
 [Sources]
   # UEFI entry point

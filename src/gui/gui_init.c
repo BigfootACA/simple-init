@@ -7,6 +7,7 @@
 #include<sys/time.h>
 #ifdef ENABLE_UEFI
 #include<Library/UefiLib.h>
+#include<Library/ReportStatusCodeLib.h>
 #include<Library/UefiBootServicesTableLib.h>
 #else
 #include<semaphore.h>
@@ -236,6 +237,7 @@ int gui_init(draw_func draw){
 	draw(sysbar.content);
 	lv_disp_trig_activity(NULL);
 	#ifdef ENABLE_UEFI
+	REPORT_STATUS_CODE(EFI_PROGRESS_CODE,(EFI_SOFTWARE_DXE_BS_DRIVER|EFI_SW_PC_INPUT_WAIT));
 	if(EFI_ERROR(gBS->CreateEvent(
 		EVT_NOTIFY_SIGNAL|EVT_TIMER,TPL_CALLBACK,
 		efi_timer,NULL,&e_timer

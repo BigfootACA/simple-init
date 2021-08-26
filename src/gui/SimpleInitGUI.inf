@@ -32,6 +32,7 @@
 
 [Sources]
   ../../libs/lvgl/lvgl.h
+  ../../libs/lodepng/lodepng.h
   ../../libs/freetype/include/ft2build.h
   ../../include/gui.h
   ../compatible/include/compatible.h

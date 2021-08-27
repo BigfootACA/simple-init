@@ -11,6 +11,9 @@
 #include"gui.h"
 #include"guidrv.h"
 #define TAG "uefigop"
+#ifndef DISPLAY_DPI
+#define DISPLAY_DPI 200
+#endif
 
 static int ww=-1,hh=-1;
 static EFI_GRAPHICS_OUTPUT_PROTOCOL*gop;
@@ -78,7 +81,7 @@ static void uefigop_get_sizes(uint32_t*width,uint32_t*height){
 	if(height)*height=hh;
 }
 static void uefigop_get_dpi(int*dpi){
-	if(dpi)*dpi=200;
+	if(dpi)*dpi=(int)(DISPLAY_DPI);
 }
 static bool uefigop_can_sleep(){
 	return false;

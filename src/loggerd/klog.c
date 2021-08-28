@@ -16,6 +16,9 @@
 #include"kloglevel.h"
 #include"pathnames.h"
 #include"logger_internal.h"
+#ifndef SEEK_DATA
+#include<linux/fs.h>
+#endif
 
 static bool run=true;
 static int klogfd=-1;

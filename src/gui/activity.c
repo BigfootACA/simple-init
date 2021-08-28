@@ -181,7 +181,7 @@ int guiact_start_activity(struct gui_register*reg,void*args){
 int guiact_start_activity_by_name(char*name,void*args){
 	struct gui_register*reg=guiact_find_register(name);
 	if(!reg){
-		tlog_warn("activity %s not found",reg->name);
+		tlog_warn("activity %s not found",name);
 		ERET(ENOENT);
 	}
 	return guiact_start_activity(reg,args);

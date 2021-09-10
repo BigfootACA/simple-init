@@ -4,6 +4,7 @@
 #include"lvgl.h"
 #include"gui.h"
 #include"guidrv.h"
+#include"activity.h"
 #include"pathnames.h"
 #include"logger.h"
 #define TAG "benchmark"
@@ -44,6 +45,7 @@ typedef struct{
 	uint32_t fps_normal,fps_opa;
 	uint8_t weight;
 }scene_dsc_t;
+static bool run=false;
 static lv_style_t style_common;
 static bool opa_mode=true;
 static int32_t scene_act=-1;
@@ -533,6 +535,7 @@ static void result_out(bool opa){
 	);
 }
 static void scene_next_task_cb(lv_task_t*task __attribute__((unused))){
+	if(!run)return;
 	lv_obj_clean(scene_bg);
 	if(opa_mode){
 		if(scene_act>=0){
@@ -682,14 +685,9 @@ static void monitor_cb(
 		scenes[scene_act].time_sum_normal+=time;
 	}
 }
-int benchmark_main(int argc __attribute__((unused)),char**argv __attribute__((unused))){
-	open_socket_logfd_default();
-	lv_init();
-	if(guidrv_init(&gui_w,&gui_h,&gui_dpi)<0)return -1;
-	png_decoder_init();
-	lv_disp_t*disp=lv_disp_get_next(NULL);
-	disp->driver.monitor_cb=monitor_cb;
-	lv_obj_t*scr=lv_scr_act();
+
+static void benchmark_draw(lv_obj_t*scr){
+	lv_disp_get_next(NULL)->driver.monitor_cb=monitor_cb;
 	lv_obj_reset_style_list(scr,LV_OBJ_PART_MAIN);
 	lv_obj_set_style_local_bg_opa(scr,LV_OBJ_PART_MAIN,LV_STATE_DEFAULT,LV_OPA_COVER);
 	title=lv_label_create(scr,NULL);
@@ -698,13 +696,51 @@ int benchmark_main(int argc __attribute__((unused)),char**argv __attribute__((un
 	lv_obj_align(subtitle,title,LV_ALIGN_OUT_BOTTOM_LEFT,0,0);
 	scene_bg=lv_obj_create(scr,NULL);
 	lv_obj_reset_style_list(scene_bg,LV_OBJ_PART_MAIN);
-	lv_obj_set_size(scene_bg,lv_obj_get_width(scr),lv_obj_get_height(scr)- subtitle->coords.y2-LV_DPI/30);
+	lv_obj_set_size(scene_bg,lv_obj_get_width(scr),lv_obj_get_height(scr)-subtitle->coords.y2-LV_DPI/30);
 	lv_obj_align(scene_bg,NULL,LV_ALIGN_IN_BOTTOM_MID,0,0);
 	lv_style_init(&style_common);
 	scene_next_task_cb(NULL);
+}
+
+int benchmark_main(int argc __attribute__((unused)),char**argv __attribute__((unused))){
+	open_socket_logfd_default();
+	lv_init();
+	if(guidrv_init(&gui_w,&gui_h,&gui_dpi)<0)return -1;
+	png_decoder_init();
+	run=true;
+	benchmark_draw(lv_scr_act());
 	for(;;){
 		lv_task_handler();
 		guidrv_taskhandler();
 		usleep(30000);
 	}
 }
+
+static int benchmark_cleanup(struct gui_activity*act __attribute__((unused))){
+	lv_disp_get_next(NULL)->driver.monitor_cb=NULL;
+	scene_act=-1,run=false,opa_mode=true;
+	return 0;
+}
+
+static int benchmark_init(struct gui_activity*act __attribute__((unused))){
+	return (lv_disp_get_next(NULL)->driver.monitor_cb)?-1:0;
+}
+
+static int benchmark_wrapper_draw(struct gui_activity*act){
+	rnd_reset();
+	run=true;
+	benchmark_draw(act->page);
+	return 0;
+}
+
+struct gui_register guireg_benchmark={
+	.name="gui-benchmark",
+	.title="GUI Benchmark",
+	.icon="gui-benchmark.png",
+	.show_app=true,
+	.init=benchmark_init,
+	.quiet_exit=benchmark_cleanup,
+	.draw=benchmark_wrapper_draw,
+	.back=true,
+	.mask=false,
+};

@@ -92,6 +92,48 @@ static void linehandler(char*line){
 	shell_executing=false;
 }
 
+static char*cmd_generator(const char*text,int state){
+	static DIR*d=NULL;
+	static char**x=NULL;
+	static size_t i,s,len;
+	if(!state){
+		if(d)closedir(d);
+		if(x)free_args_array(x);
+		len=strlen(text);
+		s=0,i=0;
+		x=args2array(getenv("PATH"),':');
+		if(x&&x[i])d=opendir(x[i]);
+	}
+	const struct shell_command*cmd;
+	while((cmd=shell_cmds[s])){
+		s++;
+		if(!cmd->enabled||!cmd->name[0])continue;
+		if(strncmp(cmd->name,text,len)==0)return strdup(cmd->name);
+	}
+	if(x)for(;;){
+		if(d){
+			struct dirent*e=NULL;
+			while((e=readdir(d))){
+				switch(e->d_type){
+					case DT_REG:case DT_LNK:break;
+					default:continue;
+				}
+				if(strncmp(e->d_name,text,len)==0)return strdup(e->d_name);
+			}
+			closedir(d);
+			d=NULL;
+		}
+		i++;
+		if(!x[i])break;
+		d=opendir(x[i]);
+	}
+	return NULL;
+}
+
+static char**initshell_completion(const char*text,int start,int end __attribute__((unused))){
+	return start==0?rl_completion_matches(text,cmd_generator):NULL;
+}
+
 void run_shell(){
 	int r;
 	fd_set fds;
@@ -101,6 +143,7 @@ void run_shell(){
 	if(!getenv("PS1"))setenv("PS1","\\VINIT(\\u@\\h):\\w \\$ ",1);
 	update_prompt();
 	rl_callback_handler_install(prompt,linehandler);
+	rl_attempted_completion_function=initshell_completion;
 	shell_running=true;
 	while(shell_running){
 		FD_ZERO(&fds);

@@ -60,33 +60,34 @@ static void sighand(int s __attribute__((unused))){
 static void linehandler(char*line){
 	bool removed=false;
 	shell_executing=true;
-	if(!line)shell_exit(exit_code);
-	else{
-		char**args;
-		if((args=args2array(line,0))){
-			if(args[0]){
-				if(shell_running){
-					switch(line[0]){
-						case ' ':case '\t':case '\n':break;
-						default:if(
-							!last||
-							strlen(last)!=strlen(line)||
-							strcmp(line,last)!=0
-						)add_history(line);
-					}
-					rl_callback_handler_remove();
+	if(!line){
+		shell_exit(exit_code);
+		return;
+	}
+	char**args;
+	if((args=args2array(line,0))){
+		if(args[0]){
+			if(shell_running){
+				switch(line[0]){
+					case ' ':case '\t':case '\n':break;
+					default:if(
+						!last||
+						strlen(last)!=strlen(line)||
+						strcmp(line,last)!=0
+					)add_history(line);
 				}
-				exit_code=run_cmd(args,false);
-				removed=true;
+				rl_callback_handler_remove();
 			}
-			free_args_array(args);
+			exit_code=run_cmd(args,false);
+			removed=true;
 		}
-		if(last)free(last);
-		last=line;
-		if(shell_running){
-			update_prompt();
-			if(removed)rl_callback_handler_install(prompt,linehandler);
-		}
+		free_args_array(args);
+	}
+	if(last)free(last);
+	last=line;
+	if(shell_running){
+		update_prompt();
+		if(removed)rl_callback_handler_install(prompt,linehandler);
 	}
 	shell_executing=false;
 }

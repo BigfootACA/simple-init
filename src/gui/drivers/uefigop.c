@@ -53,6 +53,7 @@ static int uefigop_init(){
 	return 0;
 }
 
+extern int keyboard_register();
 extern int pointer_register();
 static int uefigop_register(){
 	if(uefigop_init()!=0)return -1;
@@ -73,6 +74,7 @@ static int uefigop_register(){
 	disp_drv.ver_res=hh;
 	lv_disp_drv_register(&disp_drv);
 	logger_set_console(false);
+	keyboard_register();
 	pointer_register();
 	return 0;
 }

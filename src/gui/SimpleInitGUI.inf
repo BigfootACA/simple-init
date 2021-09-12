@@ -29,6 +29,7 @@
 
 [Protocols]
   gEfiSimplePointerProtocolGuid
+  gEfiSimpleTextInProtocolGuid
   gEfiGraphicsOutputProtocolGuid
 
 [Sources]
@@ -56,6 +57,7 @@
   drivers.c
   drivers/uefigop.c
   drivers/uefipointer.c
+  drivers/uefikeyboard.c
   decoders/png.c
   decoders/freetype.c
   interface/benchmark.c

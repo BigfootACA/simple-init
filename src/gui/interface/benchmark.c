@@ -10,31 +10,31 @@
 #define TAG "benchmark"
 #define RND_NUM              64
 #define SCENE_TIME           1000
-#define ANIM_TIME_MIN        ((2*SCENE_TIME)/ 10)
+#define ANIM_TIME_MIN        ((2*SCENE_TIME)/10)
 #define ANIM_TIME_MAX        (SCENE_TIME)
 #define OBJ_NUM              8
 #define OBJ_SIZE_MIN         (LV_MATH_MAX(LV_DPI/20,5))
-#define OBJ_SIZE_MAX         (LV_HOR_RES/2)
+#define OBJ_SIZE_MAX         ((int)gui_sw/2)
 #define RADIUS               LV_MATH_MAX(LV_DPI/15,2)
-#define BORDER_WIDTH         LV_MATH_MAX(LV_DPI / 40, 1)
+#define BORDER_WIDTH         LV_MATH_MAX(LV_DPI/40,1)
 #define SHADOW_WIDTH_SMALL   LV_MATH_MAX(LV_DPI/15,5)
 #define SHADOW_OFS_X_SMALL   LV_MATH_MAX(LV_DPI/20,2)
 #define SHADOW_OFS_Y_SMALL   LV_MATH_MAX(LV_DPI/20,2)
 #define SHADOW_SPREAD_SMALL  LV_MATH_MAX(LV_DPI/30,2)
-#define SHADOW_WIDTH_LARGE   LV_MATH_MAX(LV_DPI/5, 10)
+#define SHADOW_WIDTH_LARGE   LV_MATH_MAX(LV_DPI/5,10)
 #define SHADOW_OFS_X_LARGE   LV_MATH_MAX(LV_DPI/10,5)
 #define SHADOW_OFS_Y_LARGE   LV_MATH_MAX(LV_DPI/10,5)
 #define SHADOW_SPREAD_LARGE  LV_MATH_MAX(LV_DPI/30,2)
 #define IMG_WIDTH            100
 #define IMG_HEIGHT           100
-#define IMG_NUM              LV_MATH_MAX((LV_HOR_RES*LV_VER_RES)/5/IMG_WIDTH/IMG_HEIGHT,1)
+#define IMG_NUM              LV_MATH_MAX((int)(gui_sw*gui_sh)/5/IMG_WIDTH/IMG_HEIGHT,1)
 #define IMG_ZOOM_MIN         128
 #define IMG_ZOOM_MAX         (256+64)
 #define TXT                  "hello world\nit is a multi line text to test\nthe performance of text rendering"
 #define LINE_WIDTH           LV_MATH_MAX(LV_DPI/50,2)
 #define LINE_POINT_NUM       16
 #define LINE_POINT_DIFF_MIN  (LV_DPI/10)
-#define LINE_POINT_DIFF_MAX  LV_MATH_MAX(LV_HOR_RES/(LINE_POINT_NUM+2),LINE_POINT_DIFF_MIN*2)
+#define LINE_POINT_DIFF_MAX  LV_MATH_MAX((int)gui_sw/(LINE_POINT_NUM+2),LINE_POINT_DIFF_MIN*2)
 #define ARC_WIDTH_THIN       LV_MATH_MAX(LV_DPI/50,2)
 #define ARC_WIDTH_THICK      LV_MATH_MAX(LV_DPI/10,5)
 typedef struct{
@@ -45,6 +45,7 @@ typedef struct{
 	uint32_t fps_normal,fps_opa;
 	uint8_t weight;
 }scene_dsc_t;
+static lv_obj_t*screen;
 static bool run=false;
 static lv_style_t style_common;
 static bool opa_mode=true;
@@ -73,13 +74,13 @@ static int32_t rnd_next(int32_t min,int32_t max){
 	return r;
 }
 static void fall_anim(lv_obj_t*obj){
-	lv_obj_set_x(obj,rnd_next(0,lv_obj_get_width(scene_bg)- lv_obj_get_width(obj)));
+	lv_obj_set_x(obj,rnd_next(0,lv_obj_get_width(scene_bg)-lv_obj_get_width(obj)));
 	uint32_t t=rnd_next(ANIM_TIME_MIN,ANIM_TIME_MAX);
 	lv_anim_t a;
 	lv_anim_init(&a);
 	lv_anim_set_var(&a,obj);
 	lv_anim_set_exec_cb(&a,(lv_anim_exec_xcb_t)lv_obj_set_y);
-	lv_anim_set_values(&a,0,lv_obj_get_height(scene_bg)- lv_obj_get_height(obj));
+	lv_anim_set_values(&a,0,lv_obj_get_height(scene_bg)-lv_obj_get_height(obj));
 	lv_anim_set_time(&a,t);
 	lv_anim_set_playback_time(&a,t);
 	lv_anim_set_repeat_count(&a,LV_ANIM_REPEAT_INFINITE);
@@ -229,7 +230,7 @@ static void border_top_left_cb(void){
 	lv_style_set_radius(&style_common,LV_STATE_DEFAULT,RADIUS);
 	lv_style_set_border_width(&style_common,LV_STATE_DEFAULT,BORDER_WIDTH);
 	lv_style_set_border_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
-	lv_style_set_border_side(&style_common,LV_STATE_DEFAULT,LV_BORDER_SIDE_LEFT | LV_BORDER_SIDE_TOP);
+	lv_style_set_border_side(&style_common,LV_STATE_DEFAULT,LV_BORDER_SIDE_LEFT|LV_BORDER_SIDE_TOP);
 	rect_create(&style_common);
 }
 static void border_left_right_cb(void){
@@ -237,7 +238,7 @@ static void border_left_right_cb(void){
 	lv_style_set_radius(&style_common,LV_STATE_DEFAULT,RADIUS);
 	lv_style_set_border_width(&style_common,LV_STATE_DEFAULT,BORDER_WIDTH);
 	lv_style_set_border_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
-	lv_style_set_border_side(&style_common,LV_STATE_DEFAULT,LV_BORDER_SIDE_LEFT | LV_BORDER_SIDE_RIGHT);
+	lv_style_set_border_side(&style_common,LV_STATE_DEFAULT,LV_BORDER_SIDE_LEFT|LV_BORDER_SIDE_RIGHT);
 	rect_create(&style_common);
 }
 static void border_top_bottom_cb(void){
@@ -245,7 +246,7 @@ static void border_top_bottom_cb(void){
 	lv_style_set_radius(&style_common,LV_STATE_DEFAULT,RADIUS);
 	lv_style_set_border_width(&style_common,LV_STATE_DEFAULT,BORDER_WIDTH);
 	lv_style_set_border_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
-	lv_style_set_border_side(&style_common,LV_STATE_DEFAULT,LV_BORDER_SIDE_TOP | LV_BORDER_SIDE_BOTTOM);
+	lv_style_set_border_side(&style_common,LV_STATE_DEFAULT,LV_BORDER_SIDE_TOP|LV_BORDER_SIDE_BOTTOM);
 	rect_create(&style_common);
 }
 static void shadow_small_cb(void){
@@ -536,11 +537,12 @@ static void result_out(bool opa){
 }
 static void scene_next_task_cb(lv_task_t*task __attribute__((unused))){
 	if(!run)return;
+	lv_disp_trig_activity(NULL);
 	lv_obj_clean(scene_bg);
 	if(opa_mode){
 		if(scene_act>=0){
 			if(scenes[scene_act].time_sum_opa==0)scenes[scene_act].time_sum_opa=1;
-			scenes[scene_act].fps_opa=(1000*scenes[scene_act].refr_cnt_opa)/ scenes[scene_act].time_sum_opa;
+			scenes[scene_act].fps_opa=(1000*scenes[scene_act].refr_cnt_opa)/scenes[scene_act].time_sum_opa;
 			if(scenes[scene_act].create_cb)scene_act++;
 		}else scene_act++;
 		opa_mode=false;
@@ -580,11 +582,11 @@ static void scene_next_task_cb(lv_task_t*task __attribute__((unused))){
 		uint32_t fps_weighted=fps_sum/weight_sum;
 		uint32_t fps_normal_unweighted=fps_normal_sum/weight_normal_sum;
 		uint32_t fps_opa_unweighted=fps_opa_sum/weight_opa_sum;
-		uint32_t opa_speed_pct=(fps_opa_unweighted*100)/ fps_normal_unweighted;
-		lv_obj_clean(lv_scr_act());
+		uint32_t opa_speed_pct=(fps_opa_unweighted*100)/fps_normal_unweighted;
+		lv_obj_clean(screen);
 		scene_bg=NULL;
-		lv_obj_t* page=lv_page_create(lv_scr_act(),NULL);
-		lv_obj_set_size(page,LV_HOR_RES,LV_VER_RES);
+		lv_obj_t*page=lv_page_create(screen,NULL);
+		lv_obj_set_size(page,gui_sw,gui_sh);
 		title=lv_label_create(page,NULL);
 		lv_label_set_text_fmt(title,"Weighted FPS: %d",fps_weighted);
 		tlog_info("opa speed: %d%%",opa_speed_pct);
@@ -596,8 +598,8 @@ static void scene_next_task_cb(lv_task_t*task __attribute__((unused))){
 		lv_obj_clean_style_list(table,LV_TABLE_PART_BG);
 		lv_obj_set_click(table,false);
 		lv_table_set_col_cnt(table,2);
-		lv_table_set_col_width(table,0,(w*3)/ 4);
-		lv_table_set_col_width(table,1,w /4);
+		lv_table_set_col_width(table,0,(w*3)/4);
+		lv_table_set_col_width(table,1,w/4);
 		static lv_style_t style_cell_slow,style_cell_very_slow,style_cell_title;
 		lv_style_init(&style_cell_title);
 		lv_style_set_bg_color(&style_cell_title,LV_STATE_DEFAULT,LV_COLOR_GRAY);
@@ -687,6 +689,7 @@ static void monitor_cb(
 }
 
 static void benchmark_draw(lv_obj_t*scr){
+	screen=scr;
 	lv_disp_get_next(NULL)->driver.monitor_cb=monitor_cb;
 	lv_obj_reset_style_list(scr,LV_OBJ_PART_MAIN);
 	lv_obj_set_style_local_bg_opa(scr,LV_OBJ_PART_MAIN,LV_STATE_DEFAULT,LV_OPA_COVER);

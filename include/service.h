@@ -73,6 +73,7 @@ struct service{
 	char*name;
 	char*description;
 	char*pid_file;
+	bool terminal_output_signal;
 	bool stop_on_shutdown;
 	bool auto_restart;
 	int restart_max,retry;
@@ -273,6 +274,9 @@ extern int service_reload(struct service*svc);
 
 // src/service/scheduler.c: scheduler reload service by name
 extern int service_reload_by_name(char*name);
+
+// src/service/scheduler.c: send terminal output signal to all service
+extern int service_terminal_output();
 
 // src/service/default.c: default stop execute of service
 extern int svc_default_stop(struct service*svc);

@@ -1,4 +1,5 @@
 #define _GNU_SOURCE
+#include<signal.h>
 #include<stdlib.h>
 #include<string.h>
 #include<pthread.h>
@@ -155,6 +156,21 @@ int service_stop_all(){
 	struct scheduler_msg m;
 	m.action=SCHED_STOP_ALL;
 	return oper_scheduler(&m);
+}
+
+int service_terminal_output(){
+	list*cur,*next;
+	if(!services)ERET(EINVAL);
+	if((next=list_first(services)))do{
+		cur=next,next=cur->next;
+		LIST_DATA_DECLARE(s,cur,struct service*);
+		if(
+			!s||!s->terminal_output_signal||
+			!s->process.running||s->process.pid<=0
+		)continue;
+		kill(s->process.pid,SIGTTOU);
+	}while(next);
+	return 0;
 }
 
 #define DEF_OPER(_oper,_act)\

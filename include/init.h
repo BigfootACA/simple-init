@@ -79,7 +79,7 @@ extern int set_initfd(int fd);
 extern void close_initfd();
 
 // src/initd/client.c: connect to a init control socket
-extern int open_socket_initfd(char*path);
+extern int open_socket_initfd(char*path,bool quiet);
 
 #ifdef INIT_INTERNAL_H
 // src/initd/client.c: send init_msg

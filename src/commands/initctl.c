@@ -188,7 +188,7 @@ int initctl_main(int argc,char**argv){
 		default:return 1;
 	}
 	if(!socket)socket=DEFAULT_INITD;
-	if(open_socket_initfd(socket)<0)return 2;
+	if(open_socket_initfd(socket,false)<0)return 2;
 	if(b_optind>=argc)return re_printf(1,"no command specified\n");
 	int ac=argc-b_optind;
 	char**av=argv+b_optind,*vn=argv[b_optind];

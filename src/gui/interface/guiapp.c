@@ -166,7 +166,7 @@ struct gui_register guireg_guiapp={
 int guiapp_main(int argc __attribute((unused)),char**argv __attribute((unused))){
 	#ifndef ENABLE_UEFI
 	open_socket_logfd_default();
-	open_socket_initfd(DEFAULT_INITD);
+	open_socket_initfd(DEFAULT_INITD,false);
 	#endif
 	return gui_init(_draw);
 }

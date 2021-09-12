@@ -17,19 +17,19 @@ void close_initfd(){
 	initfd=-1;
 }
 
-int open_socket_initfd(char*path){
+int open_socket_initfd(char*path,bool quiet){
 	if(!path)ERET(EINVAL);
 	struct sockaddr_un addr;
 	int sock;
 	if((sock=socket(AF_UNIX,SOCK_STREAM,0))<0){
-		stderr_perror("cannot create socket");
+		if(!quiet)stderr_perror("cannot create socket");
 		return -1;
 	}
 	memset(&addr,0,sizeof(addr));
 	addr.sun_family=AF_UNIX;
 	strncpy(addr.sun_path,path,sizeof(addr.sun_path)-1);
 	if(connect(sock,(struct sockaddr*)&addr,sizeof(addr))<0){
-		stderr_perror("cannot connect socket %s",path);
+		if(!quiet)stderr_perror("cannot connect socket %s",path);
 		close(sock);
 		return -1;
 	}

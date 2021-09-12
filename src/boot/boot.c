@@ -52,7 +52,7 @@ int boot(boot_config*boot){
 }
 
 static int default_boot(struct service*svc __attribute__((unused))){
-	open_socket_initfd(DEFAULT_INITD);
+	open_socket_initfd(DEFAULT_INITD,false);
 	open_socket_logfd_default();
 	if(boot(boot_options.config)!=0){
 		errno=0;

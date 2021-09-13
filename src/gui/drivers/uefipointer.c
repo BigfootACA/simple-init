@@ -18,6 +18,9 @@
 #ifndef MOUSE_SCALE
 #define MOUSE_SCALE 1
 #endif
+#ifndef DISPLAY_DPI
+#define DISPLAY_DPI 200
+#endif
 static int scale=(DISPLAY_DPI/200)*MOUSE_SCALE;
 static lv_indev_t*dev=NULL;
 static EFI_SIMPLE_POINTER_PROTOCOL*mouse=NULL;

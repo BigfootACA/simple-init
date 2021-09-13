@@ -15,8 +15,8 @@
 #include"lvgl.h"
 #include"gui.h"
 #include"guidrv.h"
-static EFI_SIMPLE_TEXT_INPUT_PROTOCOL*keyboard;
 static bool keyboard_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
+	EFI_SIMPLE_TEXT_INPUT_PROTOCOL*keyboard=indev_drv->user_data;
 	EFI_INPUT_KEY p;
 	data->state=LV_INDEV_STATE_REL;
 	if(!EFI_ERROR(keyboard->ReadKeyStroke(keyboard,&p))){
@@ -31,7 +31,8 @@ static bool keyboard_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
 	}
 	return false;
 }
-static int keyboard_init(){
+int keyboard_register(){
+	bool found=false;
 	UINTN cnt=0;
 	EFI_HANDLE*hands=NULL;
 	EFI_STATUS st=gBS->LocateHandleBuffer(
@@ -41,23 +42,22 @@ static int keyboard_init(){
 	);
 	if(EFI_ERROR(st))return trlog_warn(-1,"locate keyboard failed: %lld",st);
 	for(UINTN i=0;i<cnt;i++){
+		EFI_SIMPLE_TEXT_INPUT_PROTOCOL*keyboard=NULL;
 		if(EFI_ERROR(gBS->HandleProtocol(
 			hands[i],
 			&gEfiSimpleTextInProtocolGuid,
 			(VOID**)&keyboard
-		)))continue;
-		if(keyboard)return trlog_debug(0,"found uefi keyboard %p",keyboard);
+		))||!keyboard)continue;
+		static lv_indev_drv_t drv;
+		lv_indev_drv_init(&drv);
+		drv.type=LV_INDEV_TYPE_KEYPAD;
+		drv.read_cb=keyboard_read;
+		drv.user_data=keyboard;
+		lv_indev_set_group(lv_indev_drv_register(&drv),gui_grp);
+		tlog_debug("found uefi keyboard %p",keyboard);
+		found=true;
 	}
-	return trlog_warn(-1,"no uefi keyboard found");
-}
-int keyboard_register(){
-	if(keyboard_init()<0)return -1;
-	static lv_indev_drv_t drv;
-	lv_indev_drv_init(&drv);
-	drv.type=LV_INDEV_TYPE_KEYPAD;
-	drv.read_cb=keyboard_read;
-	lv_indev_set_group(lv_indev_drv_register(&drv),gui_grp);
-	return 0;
+	return found?0:trlog_warn(-1,"no uefi keyboard found");
 }
 #endif
 #endif

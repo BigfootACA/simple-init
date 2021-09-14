@@ -238,6 +238,7 @@ int gui_init(draw_func draw){
 	lv_disp_trig_activity(NULL);
 	#ifdef ENABLE_UEFI
 	REPORT_STATUS_CODE(EFI_PROGRESS_CODE,(EFI_SOFTWARE_DXE_BS_DRIVER|EFI_SW_PC_INPUT_WAIT));
+	gBS->SetWatchdogTimer(0,0,0,NULL);
 	if(EFI_ERROR(gBS->CreateEvent(
 		EVT_NOTIFY_SIGNAL|EVT_TIMER,TPL_CALLBACK,
 		efi_timer,NULL,&e_timer

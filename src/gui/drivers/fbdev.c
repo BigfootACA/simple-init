@@ -59,6 +59,26 @@ static int _fbdev_init_fd(){
 	ioctl(fbfd,FBIOBLANK,0);
 	return 0;
 }
+static int vtconsole_all_bind(int value){
+	int f=open(_PATH_SYS_CLASS"/vtconsole",O_DIR);
+	if(f<0)return -1;
+	DIR*d=fdopendir(f);
+	if(!d){
+		close(f);
+		return -1;
+	}
+	struct dirent*e;
+	while((e=readdir(d))){
+		if(e->d_type!=DT_LNK)continue;
+		if(strncmp(e->d_name,"vtcon",5)!=0)continue;
+		int x=openat(f,e->d_name,O_DIR);
+		if(x<=0)continue;
+		fd_write_int(x,"bind",value,true);
+		close(x);
+	}
+	closedir(d);
+	return 0;
+}
 static void fbdev_exit(void){
 	if(fbp){
 		memset(fbp,0,screensize);
@@ -70,6 +90,7 @@ static void fbdev_exit(void){
 		close(fbfd);
 		fbfd=-1;
 	}
+	vtconsole_all_bind(1);
 }
 static inline uint32_t swap(uint32_t x){
 	return swap_abgr?
@@ -144,6 +165,7 @@ static int _fbdev_register(){
 	tlog_notice("screen resolution: %dx%d",vinfo.xres,vinfo.yres);
 	disp_drv.buffer=&disp_buf;
 	disp_drv.flush_cb=fbdev_flush;
+	vtconsole_all_bind(0);
 	lv_disp_drv_register(&disp_drv);
 	fbdev_refresher_start();
 	return 0;

@@ -186,6 +186,24 @@ lv_obj_t*lv_create_yesno_msgbox_mask(lv_obj_t*par,lv_event_cb_t cb,const char*te
 	return o;
 }
 
+void lv_group_add_msgbox(lv_group_t*grp,lv_obj_t*page,bool focus){
+	lv_obj_t*o=lv_obj_get_child(page,NULL);
+	if(o)do{
+		if(!lv_debug_check_obj_type(o,"lv_cont"))continue;
+		lv_group_add_obj(grp,o);
+		if(focus)lv_group_focus_obj(o);
+		focus=false;
+	}while((o=lv_obj_get_child(page,o)));
+}
+
+void lv_group_remove_msgbox(lv_obj_t*page){
+	lv_obj_t*o=lv_obj_get_child(page,NULL);
+	if(o)do{
+		if(!lv_debug_check_obj_type(o,"lv_cont"))continue;
+		lv_group_remove_obj(o);
+	}while((o=lv_obj_get_child(page,o)));
+}
+
 bool lv_page_is_top(lv_obj_t*page){
 	if(!page)return false;
 	lv_obj_t*s=lv_page_get_scrollable(page);

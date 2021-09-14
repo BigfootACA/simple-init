@@ -18,6 +18,8 @@ extern lv_obj_t*lv_create_ok_msgbox(lv_obj_t*par,lv_event_cb_t cb,const char*tex
 extern lv_obj_t*lv_create_ok_msgbox_mask(lv_obj_t*par,lv_event_cb_t cb,const char*text,...);
 extern lv_obj_t*lv_create_yesno_msgbox(lv_obj_t*par,lv_event_cb_t cb,const char*text,...);
 extern lv_obj_t*lv_create_yesno_msgbox_mask(lv_obj_t*par,lv_event_cb_t cb,const char*text,...);
+extern void lv_group_add_msgbox(lv_group_t*grp,lv_obj_t*page,bool focus);
+extern void lv_group_remove_msgbox(lv_obj_t*page);
 extern bool lv_page_is_top(lv_obj_t*page);
 extern bool lv_page_is_bottom(lv_obj_t*page);
 extern void lv_page_go_top(lv_obj_t*page);

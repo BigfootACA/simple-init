@@ -10,7 +10,8 @@
 #include"language.h"
 #define TAG "language"
 
-static lv_obj_t*scr,*box,*sel,*btn_ok;
+static bool msgbox=false;
+static lv_obj_t*scr,*box,*sel,*btn_ok,*arr_left,*arr_right;
 
 #ifndef ENABLE_UEFI
 static void ok_msg_click(lv_obj_t*obj,lv_event_t e){
@@ -39,10 +40,24 @@ static void ok_action(lv_obj_t*obj,lv_event_t e){
 		int ex=(errno==0)?response.data.status.ret:errno;
 		lv_create_ok_msgbox(scr,ok_msg_click,_("init control command failed: %s"),strerror(ex));
 		lv_obj_del_async(box);
+		lv_group_add_msgbox(gui_grp,scr,true);
+		msgbox=true;
 		return;
 	}
 	#endif
 	guiact_do_back();
+}
+
+static void arrow_action(lv_obj_t*obj,lv_event_t e){
+	if(e!=LV_EVENT_CLICKED)return;
+	uint16_t cnt=lv_dropdown_get_option_cnt(sel);
+	int16_t cur=lv_dropdown_get_selected(sel);
+	if(obj==arr_left)cur--;
+	else if(obj==arr_right)cur++;
+	else return;
+	if(cur<=0)cur=0;
+	if(cur>=cnt-1)cur=cnt-1;
+	lv_dropdown_set_selected(sel,(uint16_t)cur);
 }
 
 static void init_languages(){
@@ -57,20 +72,34 @@ static void init_languages(){
 	lv_dropdown_set_selected(sel,s);
 }
 
-static int language_get_focus(struct gui_activity*d __attribute__((unused))){
+static int language_get_focus(struct gui_activity*d){
+	if(msgbox){
+		lv_group_add_msgbox(gui_grp,d->page,true);
+		return 0;
+	}
 	lv_group_add_obj(gui_grp,sel);
+	lv_group_add_obj(gui_grp,arr_left);
 	lv_group_add_obj(gui_grp,btn_ok);
+	lv_group_add_obj(gui_grp,arr_right);
+	lv_group_focus_obj(sel);
 	return 0;
 }
 
-static int language_lost_focus(struct gui_activity*d __attribute__((unused))){
+static int language_lost_focus(struct gui_activity*d){
+	if(msgbox){
+		lv_group_remove_msgbox(d->page);
+		return 0;
+	}
 	lv_group_remove_obj(sel);
+	lv_group_remove_obj(arr_left);
 	lv_group_remove_obj(btn_ok);
+	lv_group_remove_obj(arr_right);
 	return 0;
 }
 
 static int language_menu_draw(struct gui_activity*act){
-	scr=act->page;
+	int bts=gui_font_size+(gui_dpi/8);
+	scr=act->page,msgbox=false;
 
 	static lv_style_t bs;
 	lv_style_init(&bs);
@@ -99,10 +128,26 @@ static int language_menu_draw(struct gui_activity*act){
 	btn_ok=lv_btn_create(box,NULL);
 	lv_obj_add_state(btn_ok,LV_STATE_CHECKED);
 	lv_obj_add_style(btn_ok,LV_STATE_DEFAULT,&btn_style);
-	lv_obj_set_width(btn_ok,lv_page_get_scrl_width(box)-gui_dpi/10);
+	lv_obj_set_size(btn_ok,lv_page_get_scrl_width(box)-gui_dpi/10-bts*3,bts);
 	lv_obj_align(btn_ok,sel,LV_ALIGN_OUT_BOTTOM_MID,0,gui_dpi/10);
 	lv_obj_set_event_cb(btn_ok,ok_action);
 	lv_label_set_text(lv_label_create(btn_ok,NULL),_("OK"));
+
+	arr_left=lv_btn_create(box,NULL);
+	lv_obj_set_size(arr_left,bts,bts);
+	lv_obj_set_event_cb(arr_left,arrow_action);
+	lv_obj_align(arr_left,btn_ok,LV_ALIGN_OUT_LEFT_MID,-bts/2,0);
+	lv_obj_add_style(arr_left,LV_BTN_PART_MAIN,&btn_style);
+	lv_obj_add_state(arr_left,LV_STATE_CHECKED);
+	lv_label_set_text(lv_label_create(arr_left,NULL),LV_SYMBOL_LEFT);
+
+	arr_right=lv_btn_create(box,NULL);
+	lv_obj_set_size(arr_right,bts,bts);
+	lv_obj_set_event_cb(arr_right,arrow_action);
+	lv_obj_align(arr_right,btn_ok,LV_ALIGN_OUT_RIGHT_MID,bts/2,0);
+	lv_obj_add_style(arr_right,LV_BTN_PART_MAIN,&btn_style);
+	lv_obj_add_state(arr_right,LV_STATE_CHECKED);
+	lv_label_set_text(lv_label_create(arr_right,NULL),LV_SYMBOL_RIGHT);
 
 	lv_obj_set_height(box,lv_obj_get_y(btn_ok)+lv_obj_get_height(btn_ok)+(gui_font_size*2)+gui_dpi/20);
 	lv_obj_align(box,NULL,LV_ALIGN_CENTER,0,0);

@@ -66,3 +66,4 @@
   interface/sysbar.c
   interface/language.c
   interface/uefi_bootmenu.c
+  interface/mouse.c

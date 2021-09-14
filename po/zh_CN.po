@@ -835,3 +835,9 @@ msgstr "加载选项失败"
 
 msgid "No options found"
 msgstr "没有找到任何选项"
+
+msgid "Change mouse scale level"
+msgstr "更改鼠标缩放级别"
+
+msgid "Mouse Tools"
+msgstr "鼠标工具"

@@ -841,3 +841,6 @@ msgstr "更改鼠标缩放级别"
 
 msgid "Mouse Tools"
 msgstr "鼠标工具"
+
+msgid "GUI Benchmark"
+msgstr "GUI性能跑分"

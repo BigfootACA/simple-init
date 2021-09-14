@@ -224,12 +224,26 @@ static void sdl2_get_dpi(int*dpi){
 static bool sdl2_can_sleep(){
 	return false;
 }
+#ifdef SDL2_VIRTUAL_BACKLIGHT
+static int sdl2_vbl=50;
+static int sdl2_get_brightness(){
+	return sdl2_vbl;
+}
+static void sdl2_set_brightness(int value){
+	sdl2_vbl=value;
+	telog_debug("set virtual backlight to %d%%",value);
+}
+#endif
 struct gui_driver guidrv_sdl2={
 	.name="sdl2",
 	.drv_register=monitor_init,
 	.drv_getsize=sdl2_get_sizes,
 	.drv_getdpi=sdl2_get_dpi,
-	.drv_cansleep=sdl2_can_sleep
+	.drv_cansleep=sdl2_can_sleep,
+	#ifdef SDL2_VIRTUAL_BACKLIGHT
+	.drv_getbrightness=sdl2_get_brightness,
+	.drv_setbrightness=sdl2_set_brightness,
+	#endif
 };
 #endif
 #endif

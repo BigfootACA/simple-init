@@ -82,19 +82,22 @@ void gui_quit_sleep(){
 }
 
 void guess_font_size(){
-	int i=0;
-	if(gui_dpi>50)i++;
-	if(gui_dpi>150)i++;
-	if(gui_dpi>250)i++;
-	if(gui_dpi>350)i++;
-	if(gui_dpi>450)i++;
-	if(gui_dpi>550)i++;
+	//                        DPI     Font Size
+	int i=0;            //   0 -  50 : 10
+	if(gui_dpi>50)i++;  //  51 - 150 : 16
+	if(gui_dpi>150)i++; // 151 - 250 : 24
+	if(gui_dpi>250)i++; // 251 - 350 : 32
+	if(gui_dpi>350)i++; // 351 - 450 : 48
+	if(gui_dpi>450)i++; // 451 - 550 : 64
+	if(gui_dpi>550)i++; // >= 551    : 72
+
 	gui_font_size=font_sizes[i];
 	gui_font_size_small=font_sizes[i-1];
 	tlog_debug("select font size %d/%d based on dpi",gui_font_size,gui_font_size_small);
 }
 
 static void lvgl_logger(lv_log_level_t level,const char*file,uint32_t line,const char*func,const char*buf){
+	// translate lvgl log level
 	enum log_level lvl;
 	switch(level){
 		case LV_LOG_LEVEL_TRACE: lvl=LEVEL_DEBUG;break;
@@ -104,14 +107,20 @@ static void lvgl_logger(lv_log_level_t level,const char*file,uint32_t line,const
 		case LV_LOG_LEVEL_USER:  lvl=LEVEL_INFO;break;
 		default:                 lvl=LEVEL_DEBUG;break;
 	}
+
 	static char fn[PATH_MAX]={0};
 	strncpy(fn,file,PATH_MAX-1);
 	logger_printf(lvl,"lvgl","%s:%d@%s %s",basename(fn),line,func,buf);
 }
 
 static int gui_pre_init(){
+	// initialize lvgl
 	lv_init();
+
+	// redirect lvgl log to loggerd
 	lv_log_register_print_cb(lvgl_logger);
+
+	// create group for buttons
 	gui_grp=lv_group_create();
 
 	#ifndef ENABLE_UEFI
@@ -134,23 +143,23 @@ static int gui_pre_init(){
 	#ifdef ENABLE_UEFI
 	gui_font=NULL,gui_font_small=NULL,symbol_font=NULL;
 	#else
-	// load default font with normal size
+	// load default font with normal size from environment variable
 	gui_font=lv_ft_init(getenv("FONT"),gui_font_size,0);
 
-	// load default font with small size
+	// load default font with small size from environment variable
 	gui_font_small=lv_ft_init(getenv("FONT"),gui_font_size_small,0);
 
-	// load symbols fonts
+	// load symbols fonts from environment variable
 	symbol_font=lv_ft_init(getenv("FONT_SYMBOL"),gui_font_size,0);
 	#endif
 
-	// load default font with normal size
+	// load default font with normal size from builtin rootfs
 	if(!gui_font)gui_font=lv_ft_init_rootfs(_PATH_ETC"/default.ttf",gui_font_size,0);
 
-	// load default font with small size
+	// load default font with small size from builtin rootfs
 	if(!gui_font_small)gui_font_small=lv_ft_init_rootfs(_PATH_ETC"/default.ttf",gui_font_size_small,0);
 
-	// load symbols fonts
+	// load symbols fonts from builtin rootfs
 	if(!symbol_font)symbol_font=lv_ft_init_rootfs(_PATH_ETC"/symbols.ttf",gui_font_size,0);
 
 	if(!symbol_font)telog_error("failed to load symbol font");
@@ -231,26 +240,39 @@ int gui_init(draw_func draw){
 	if(gui_pre_init()<0)return -1;
 	lv_obj_t*screen;
 	if(!(screen=lv_scr_act()))return trlog_error(-1,"failed to get screen");
+
+	// add lvgl mouse pointer
 	gui_cursor=lv_img_create(screen,NULL);
 	lv_img_set_src(gui_cursor,"\xef\x89\x85"); // mouse-pointer
+
+	// draw top and bottom sysbar
 	sysbar_draw(screen);
+
+	// draw callback
 	draw(sysbar.content);
+
 	lv_disp_trig_activity(NULL);
 	#ifdef ENABLE_UEFI
 	REPORT_STATUS_CODE(EFI_PROGRESS_CODE,(EFI_SOFTWARE_DXE_BS_DRIVER|EFI_SW_PC_INPUT_WAIT));
+
+	// kill the watchdog
 	gBS->SetWatchdogTimer(0,0,0,NULL);
+
 	if(EFI_ERROR(gBS->CreateEvent(
 		EVT_NOTIFY_SIGNAL|EVT_TIMER,TPL_CALLBACK,
 		efi_timer,NULL,&e_timer
 	)))return trlog_error(-1,"create timer event failed");
+
 	if(EFI_ERROR(gBS->CreateEvent(
 		EVT_NOTIFY_WAIT,TPL_NOTIFY,
 		efi_loop,NULL,&e_loop
 	)))return trlog_error(-1,"create loop event failed");
+
 	if(EFI_ERROR(gBS->SetTimer(
 		e_timer,TimerPeriodic,
 		EFI_TIMER_PERIOD_MILLISECONDS(10)
 	)))return trlog_error(-1,"create timer failed");
+
 	UINTN wi;
 	while(gui_run&&!EFI_ERROR(gBS->WaitForEvent(1,&e_loop,&wi)));
 	#else
@@ -258,6 +280,7 @@ int gui_init(draw_func draw){
 	bool cansleep=guidrv_can_sleep();
 	if(!cansleep)tlog_notice("gui driver disabled sleep");
 	while(gui_run){
+		// 10 seconds inactive sleep
 		if(lv_disp_get_inactive_time(NULL)<10000||!cansleep){
 			lv_task_handler();
 			guidrv_taskhandler();

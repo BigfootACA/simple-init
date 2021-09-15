@@ -8,15 +8,27 @@
 #include"defines.h"
 #include"output.h"
 
+// simple-init linux entry point
 int main(int argc,char**argv){
+
+	// init proctitle
 	spt_init(argc,argv);
+
+	// init i18n locales
 	lang_init_locale();
 	char*name;
 	if(
+		// get command name from environment variable
 		!(name=getenv("INIT_MAIN"))&&
+
+		// get command name from argv 0
 		!(name=basename(argv[0]))
 	)return ee_printf(1,"failed to get name\n");
+
+	// execute command
 	int r=invoke_internal_cmd_nofork_by_name(name,argv);
+
+	// command not found
 	if(errno!=0)fprintf(stderr,_("%s: command not found\n"),name);
 	return r;
 }

@@ -20,19 +20,23 @@
 #include"pathnames.h"
 #include"language.h"
 #define DEFAULT_LOCALE _PATH_USR"/share/locale"
+
 struct language languages[]={
 	{"en","US","UTF-8","English (USA)"},
 	{"zh","CN","UTF-8","简体中文 (中国大陆)"},
 	{0,0,0,0}
 };
+
 #ifdef ENABLE_UEFI
 static char cur_lang[64]="C";
 #endif
 static bool mmap_map=false;
 static void*locale_map=NULL;
 static size_t map_size=-1;
+
 // swapc and mo_lookup from musl libc
 static inline uint32_t swapc(uint32_t x,int c){return c?x>>24|(x>>8&0xff00)|(x<<8&0xff0000)|x<<24:x;}
+
 static char*mo_lookup(const void*p,size_t size,const char*s){
 	const uint32_t*mo=p;
 	int sw=*mo-0x950412de;
@@ -52,6 +56,7 @@ static char*mo_lookup(const void*p,size_t size,const char*s){
 		else b+=n/2,n-=n/2;
 	}
 }
+
 static int lang_open_locale(char*path){
 	int r=-1;
 	#ifndef ENABLE_UEFI
@@ -92,6 +97,7 @@ static int lang_open_locale(char*path){
 	#endif
 	return r;
 }
+
 char*lang_get_locale(char*def){
 	if(def)return def;
 	#ifdef ENABLE_UEFI
@@ -104,6 +110,7 @@ char*lang_get_locale(char*def){
 	return NULL;
 	#endif
 }
+
 void lang_load_locale(const char*dir,const char*lang,const char*domain){
 	if(!domain)return;
 	char rl[64],path[PATH_MAX],*p;
@@ -121,17 +128,20 @@ void lang_load_locale(const char*dir,const char*lang,const char*domain){
 		else break;
 	}
 }
+
 char*lang_gettext(const char*msgid){
 	if(!locale_map||!msgid)return (char*)msgid;
 	char*ret=mo_lookup(locale_map,map_size,msgid);
 	return ret?ret:(char*)msgid;
 }
+
 void lang_init_locale(){
 	lang_load_locale(NULL,NULL,NAME);
 	#ifndef ENABLE_UEFI
 	init_commands_locale();
 	#endif
 }
+
 const char*lang_concat(struct language*lang,bool region,bool charset){
 	if(!lang)return NULL;
 	static char c[32];
@@ -150,6 +160,7 @@ const char*lang_concat(struct language*lang,bool region,bool charset){
 	}
 	return c;
 }
+
 bool lang_compare(struct language*lang,const char*name){
 	return lang&&name&&(
 		strcmp(name,lang_concat(lang,false,false))==0||
@@ -158,6 +169,7 @@ bool lang_compare(struct language*lang,const char*name){
 		strcmp(name,lang_concat(lang,true,true))==0
 	);
 }
+
 int lang_set(const char*lang){
 	if(
 		!lang||lang[0]==0||

@@ -3,7 +3,7 @@
 #include"output.h"
 #include"defines.h"
 #include"str.h"
-#include"shell_internal.h"
+#include"../shell/shell_internal.h"
 
 int help_main(int argc,char**argv __attribute__((unused))){
 	if(argc!=1)return re_printf(1,"Usage: help\n");

@@ -5,7 +5,7 @@
 #include"defines.h"
 #include"str.h"
 #include"output.h"
-#include"shell_internal.h"
+#include"../shell/shell_internal.h"
 
 int exit_main(int argc,char**argv){
 	if(argc<1)ERET(EINVAL);

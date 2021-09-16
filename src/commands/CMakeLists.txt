@@ -26,4 +26,6 @@ add_library(init_commands STATIC
 	adbd.c
 	service.c
 	reboot.c
+	poweroff.c
+	halt.c
 )

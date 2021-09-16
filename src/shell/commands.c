@@ -36,6 +36,8 @@ DECLARE_MAIN(setsid);
 DECLARE_MAIN(service);
 DECLARE_MAIN(true);
 DECLARE_MAIN(false);
+DECLARE_MAIN(halt);
+DECLARE_MAIN(poweroff);
 
 const struct shell_command*shell_cmds[]={
 	#ifdef ENABLE_INITSHELL
@@ -83,5 +85,7 @@ const struct shell_command*shell_cmds[]={
 	DECLARE_CMD(true,  service,     "Control service operation (SysV Compatible)")
 	DECLARE_CMD(true,  true,        "Always exit with 0 (true)")
 	DECLARE_CMD(true,  false,       "Always exit with 1 (false)")
+	DECLARE_CMD(true,  halt,        "Halt the system")
+	DECLARE_CMD(true,  poweroff,    "Halt and shut off power")
 	NULL
 };

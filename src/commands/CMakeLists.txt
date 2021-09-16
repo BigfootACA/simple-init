@@ -24,4 +24,5 @@ add_library(init_commands STATIC
 	version.c
 	initctl.c
 	adbd.c
+	service.c
 )

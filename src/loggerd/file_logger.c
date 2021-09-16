@@ -78,6 +78,20 @@ void close_all_file(){
 	}
 }
 
+static char*level2color(enum log_level level){
+	switch(level){
+		case LEVEL_DEBUG:   return "\033[37;2m";
+		case LEVEL_INFO:    return "\033[32;1m";
+		case LEVEL_NOTICE:  return "\033[34;1m";
+		case LEVEL_WARNING: return "\033[33;1m";
+		case LEVEL_ERROR:   return "\033[31;1m";
+		case LEVEL_CRIT:    return "\033[31;1;5m";
+		case LEVEL_ALERT:   return "\033[31;2;7m";
+		case LEVEL_EMERG:   return "\033[31;1;7m\007";
+		default:            return "";
+	}
+}
+
 int file_logger(char*name,struct log_item*log){
 	char buff[24]={0},p[16]={0};
 	int fd=-1;
@@ -87,13 +101,18 @@ int file_logger(char*name,struct log_item*log){
 	if(fd<0)return -errno;
 	if(!log->time)ERET(EFAULT);
 	if(log->pid>0)snprintf(p,15,"[%d]",log->pid);
+	bool tty=isatty(fd);
+	char*time,*level,level_pad[16]={0},*end;
+	time=time2ndefstr(&log->time,buff,sizeof(buff));
+	level=logger_level2string(log->level);
+	for(size_t i=0;i<(6-strlen(level));i++)level_pad[i]=' ';
+	end=tty?"\033[0m":"";
 	int r=dprintf(fd,
-		"%s %-6s %s%s: %s\n",
-		time2ndefstr(&log->time,buff,sizeof(buff)),
-		logger_level2string(log->level),
-		log->tag,
-		p,
-		log->content
+		"%s[%s]%s %s<%s>%s%s %s%s%s%s: %s%s%s\n",
+		tty?"\r\033[36m":"",time,end,
+		tty?"\033[37;1;4m":"",level,end,level_pad,
+		tty?"\033[33m":"",log->tag,p,end,
+		tty?level2color(log->level):"",log->content,end
 	);
 	return r;
 }

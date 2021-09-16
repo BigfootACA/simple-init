@@ -15,7 +15,7 @@ int help_main(int argc,char**argv __attribute__((unused))){
 		if(!cmd->enabled||!cmd->name[0])continue;
 		dprintf(STDOUT_FILENO,"%s",cmd->name);
 		repeat(STDOUT_FILENO,' ',max-strlen(cmd->name));
-		dprintf(STDOUT_FILENO,"  - %s\n",cmd->help);
+		dprintf(STDOUT_FILENO,"  - %s\n",_(cmd->help));
 	}
 	return 0;
 }

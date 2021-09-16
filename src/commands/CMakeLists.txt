@@ -25,4 +25,5 @@ add_library(init_commands STATIC
 	initctl.c
 	adbd.c
 	service.c
+	reboot.c
 )

@@ -30,6 +30,7 @@ DECLARE_MAIN(mountpoint);
 DECLARE_MAIN(uname);
 DECLARE_MAIN(unlink);
 DECLARE_MAIN(version);
+DECLARE_MAIN(reboot);
 DECLARE_MAIN(rmmod);
 DECLARE_MAIN(setsid);
 DECLARE_MAIN(service);
@@ -77,6 +78,7 @@ const struct shell_command*shell_cmds[]={
 	DECLARE_CMD(true,  uname,       "Print system information")
 	DECLARE_CMD(true,  unlink,      "Remove a directory entry (Direct call)")
 	DECLARE_CMD(true,  version,     "Show simple-init version")
+	DECLARE_CMD(true,  reboot,      "Reboot the system")
 	DECLARE_CMD(true,  setsid,      "Run a program in a new session.")
 	DECLARE_CMD(true,  service,     "Control service operation (SysV Compatible)")
 	DECLARE_CMD(true,  true,        "Always exit with 0 (true)")

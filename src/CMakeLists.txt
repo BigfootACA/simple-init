@@ -65,6 +65,7 @@ set(SUBDIRS
 	src/service
 	src/gui
 	src/adbd
+	src/confd
 )
 
 target_link_libraries(init -Wl,--start-group)

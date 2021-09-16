@@ -303,7 +303,7 @@ static void cancel_click(lv_obj_t*obj,lv_event_t e){
 static void show_all_click(lv_obj_t*obj,lv_event_t e){
 	if(e!=LV_EVENT_VALUE_CHANGED||obj!=show_all)return;
 	is_show_all=lv_checkbox_is_checked(obj);
-	tlog_debug("request show all %s",is_show_all?"true":"false");
+	tlog_debug("request show all %s",BOOL2STR(is_show_all));
 	guipm_disk_reload();
 }
 

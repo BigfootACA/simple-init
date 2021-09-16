@@ -49,6 +49,7 @@ typedef struct possibility poss;
 #define XPOS_TIMES     (poss*[]){POSS_TIME,POS_SPACE,NULL}
 #define XPOS_RFC3164   (poss*[]){POSS_RFC3164,NULL}
 #define XPOS_RFC3164S  (poss*[]){POSS_RFC3164,POS_SPACE,NULL}
+#define BOOL2STR(bool) ((bool)?"true":"false")
 
 // src/lib/strings.c: format time with specified format (buffer size)
 extern char*time2nstr(time_t*time,char*format,char*buff,size_t len);

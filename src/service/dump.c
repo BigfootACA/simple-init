@@ -1,13 +1,10 @@
 #include<pthread.h>
+#include"str.h"
 #include"system.h"
 #include"logger.h"
 #include"service.h"
 #include"defines.h"
 #define TAG "service"
-
-static const char*bool2string(bool b){
-	return b?"true":"false";
-}
 
 static int _svc_proc_status_dump(int ident,struct proc_status*status){
 	int i;
@@ -15,8 +12,8 @@ static int _svc_proc_status_dump(int ident,struct proc_status*status){
 	for(i=0;i<ident&&i<BUFSIZ-1;i++)prefix[i]=' ';
 	prefix[i+1]=0;
 	tlog_debug("%sproc status %p:",prefix,status);
-	tlog_debug("%s    running:      %s",  prefix,bool2string(status->running));
-	tlog_debug("%s    timeout:      %s",      prefix,bool2string(status->timeout));
+	tlog_debug("%s    running:      %s",  prefix,BOOL2STR(status->running));
+	tlog_debug("%s    timeout:      %s",      prefix,BOOL2STR(status->timeout));
 	if(status->start!=0)tlog_debug("%s    start time:   %ld",     prefix,status->start);
 	if(status->active!=0)tlog_debug("%s    active time:  %ld",     prefix,status->active);
 	if(status->finish!=0)tlog_debug("%s    finish time:  %ld",     prefix,status->finish);
@@ -90,8 +87,8 @@ static int _svc_dump(int ident,struct service*svc){
 	if(svc->description)tlog_debug("%s    description:      %s",     prefix,svc->description);
 	tlog_debug("%s    mode:             %s",     prefix,svc_work_string(svc->mode));
 	tlog_debug("%s    status:           %s",     prefix,svc_status_string(svc->status));
-	tlog_debug("%s    stop on shutdown: %s",     prefix,bool2string(svc->stop_on_shutdown));
-	tlog_debug("%s    auto restart:     %s",     prefix,bool2string(svc->auto_restart));
+	tlog_debug("%s    stop on shutdown: %s",     prefix,BOOL2STR(svc->stop_on_shutdown));
+	tlog_debug("%s    auto restart:     %s",     prefix,BOOL2STR(svc->auto_restart));
 	tlog_debug("%s    restart retry:    %d/%d",  prefix,svc->retry,svc->restart_max);
 	if(svc->pid_file)tlog_debug("%s    pid file:         %s",     prefix,svc->pid_file);
 

@@ -25,7 +25,8 @@ static int usage(int e){
 		"\treload <SERVICE>          Re-Load service\n"
 		"\tdump                      Dump all service to loggerd\n"
 		"Options:\n"
-		"\t-h, --help  display this help and exit\n"
+		"\t-s, --socket <SOCKET>     Use custom initd socket\n"
+		"\t-h, --help                Display this help and exit\n"
 	);
 }
 
@@ -131,7 +132,7 @@ static int cmd_service(int argc,char**argv){
 	if(argc<2)return re_printf(2,"missing arguments\n");
 	struct init_msg msg;
 	init_initialize_msg(&msg,ACTION_NONE);
-	if(!argv[1]||strlen(argv[1])<=0)return re_printf(2,"invalid environ name\n");
+	if(!argv[1]||strlen(argv[1])<=0)return re_printf(2,"invalid service name\n");
 	if(strlen(argv[1])>=sizeof(msg.data.data))return re_printf(2,"arguments too long\n");
 	if(strcmp(argv[0],"start")==0)msg.action=ACTION_SVC_START;
 	else if(strcmp(argv[0],"stop")==0)msg.action=ACTION_SVC_STOP;
@@ -175,11 +176,12 @@ struct{
 int initctl_main(int argc,char**argv){
 	static const struct option lo[]={
 		{"help",    no_argument,       NULL,'h'},
+		{"socket",  required_argument, NULL,'s'},
 		{NULL,0,NULL,0}
 	};
 	char*socket=NULL;
 	int o;
-	while((o=b_getlopt(argc,argv,"h",lo,NULL))>0)switch(o){
+	while((o=b_getlopt(argc,argv,"hs:",lo,NULL))>0)switch(o){
 		case 'h':return usage(0);
 		case 's':
 			if(socket)goto conflict;

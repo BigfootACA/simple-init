@@ -82,6 +82,7 @@ static int seconds_handler(){
 				svc_get_desc(s),s->retry
 			);
 			s->wait_restart=false;
+			s->last_update=cur_time;
 			add_queue(s,SCHED_START);
 		}
 	}while(next);

@@ -78,6 +78,7 @@ struct service{
 	bool auto_restart;
 	bool wait_restart;
 	time_t restart_delay;
+	time_t last_update;
 	int restart_max,retry;
 	struct proc_status process;
 	enum svc_work mode;

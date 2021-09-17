@@ -146,6 +146,7 @@ int svc_on_sigchld(pid_t pid,int st){
 		cur=next,next=cur->next;
 		LIST_DATA_DECLARE(s,cur,struct service*);
 		if(!s)continue;
+		time(&s->last_update);
 		int e=1;
 		if(e>0)e=svc_exec_on_exit(pid,NULL,s,st);
 		if(e>0)e=svc_exec_on_exit(pid,s->stop,s,st);

@@ -28,6 +28,7 @@ int svc_add_depend(struct service*svc,struct service*dep){
 	else if(list_push(dep->depends_of,v)!=0)goto fail;
 	pthread_mutex_unlock(&svc->lock);
 	pthread_mutex_unlock(&dep->lock);
+	time(&svc->last_update);
 	return 0;
 	fail:
 	if(errno==0)errno=ENOMEM;
@@ -57,6 +58,7 @@ int svc_add_service(struct service*svc){
 	pthread_mutex_lock(&services_lock);
 	e=list_push(services,l);
 	pthread_mutex_unlock(&services_lock);
+	time(&svc->last_update);
 	if(e==0)return 0;
 	fail:
 	e=errno;
@@ -71,6 +73,7 @@ int svc_set_desc(struct service*svc,char*desc){
 	if(svc->description)free(svc->description);
 	svc->description=strdup(desc);
 	pthread_mutex_unlock(&svc->lock);
+	time(&svc->last_update);
 	if(!svc->description&&desc)ERET(ENOMEM);
 	else return 0;
 }
@@ -82,6 +85,7 @@ int svc_set_name(struct service*svc,char*name){
 	if(svc->name)free(svc->name);
 	svc->name=strdup(name);
 	pthread_mutex_unlock(&svc->lock);
+	time(&svc->last_update);
 	if(!svc->name)ERET(ENOMEM);
 	else return 0;
 }
@@ -141,6 +145,7 @@ int svc_restart_service(struct service*svc){
 		tlog_warn("service %s has no restart operation",name);
 		ERET(ENOTSUP);
 	}
+	time(&svc->last_update);
 	tlog_notice("Restarting service %s",name);
 	svc_run_exec(svc->restart);
 	if(errno>0)tlog_warn("Restart service %s failed",name);
@@ -173,6 +178,7 @@ int svc_reload_service(struct service*svc){
 		case STATUS_STOPPING:ERET(EINPROGRESS);
 		case STATUS_RUNNING:break;
 	}
+	time(&svc->last_update);
 	tlog_notice("Restarting service %s",name);
 	svc_run_exec(svc->restart);
 	if(errno>0)tlog_warn("Restart service %s failed",name);

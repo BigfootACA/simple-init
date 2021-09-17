@@ -76,6 +76,8 @@ struct service{
 	bool terminal_output_signal;
 	bool stop_on_shutdown;
 	bool auto_restart;
+	bool wait_restart;
+	time_t restart_delay;
 	int restart_max,retry;
 	struct proc_status process;
 	enum svc_work mode;

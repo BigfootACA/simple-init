@@ -5,6 +5,7 @@
 #include<pthread.h>
 #include<sys/prctl.h>
 #include<sys/socket.h>
+#include<sys/select.h>
 #include"pool.h"
 #include"list.h"
 #include"init.h"
@@ -61,6 +62,32 @@ void*scheduler_worker(void*data){
 	return NULL;
 }
 
+static int seconds_handler(){
+	time_t cur_time;
+	time(&cur_time);
+	list*cur,*next;
+	if((next=list_first(services)))do{
+		cur=next,next=cur->next;
+		LIST_DATA_DECLARE(s,cur,struct service*);
+		if(!s)continue;
+		time_t finish_offset=cur_time-(s->process.finish);
+		if(
+			s->wait_restart&&
+			s->restart_delay>0&&
+			s->process.finish>0&&
+			finish_offset>(s->restart_delay)
+		){
+			tlog_notice(
+				"Trigger service %s auto restart times %d",
+				svc_get_desc(s),s->retry
+			);
+			s->wait_restart=false;
+			add_queue(s,SCHED_START);
+		}
+	}while(next);
+	return 0;
+}
+
 static int scheduler_main(){
 	open_socket_logfd_default();
 	prctl(PR_SET_NAME,NAME);
@@ -75,10 +102,24 @@ static int scheduler_main(){
 		return -1;
 	}
 	pthread_mutex_init(&queue_lock,NULL);
+	fd_set fs;
+	struct timeval tv={.tv_sec=1,.tv_usec=0};
 	struct scheduler_msg msg;
 	bool run=true;
 	while(run){
+		FD_ZERO(&fs);
+		FD_SET(fds[0],&fs);
+		if(select(FD_SETSIZE,&fs,NULL,NULL,&tv)<0){
+			if(errno==EINTR)continue;
+			perror("select");
+			break;
+		}
+		seconds_handler();
+		run_queue();
+		if(!FD_ISSET(fds[0],&fs))continue;
+		errno=0;
 		ssize_t s=read(fds[0],&msg,sizeof(msg));
+		if(errno==EAGAIN)continue;
 		if(s<0&&errno!=EINTR)break;
 		if(s!=sizeof(msg))continue;
 		switch(msg.action){
@@ -89,14 +130,12 @@ static int scheduler_main(){
 					msg.data.exit.pid,
 					msg.data.exit.stat
 				);
-				run_queue();
 			break;
 			case SCHED_START:
 			case SCHED_STOP:
 			case SCHED_RELOAD:
 			case SCHED_RESTART:
 				add_queue(msg.data.service,msg.action);
-				run_queue();
 			break;
 			case SCHED_STOP_ALL:
 				add_all_stop_queue();
@@ -124,7 +163,7 @@ int start_scheduler(){
 	if(start)ERET(EEXIST);
 	start=true;
 	if(getpid()!=1)ERET(EACCES);
-	if(socketpair(AF_UNIX,SOCK_STREAM,0,fds)<0)return -errno;
+	if(socketpair(AF_UNIX,SOCK_STREAM|SOCK_NONBLOCK,0,fds)<0)return -errno;
 	pthread_mutex_init(&lock,NULL);
 	if(pthread_create(&scheduler,NULL,scheduler_thread,NULL)!=0)return -errno;
 	pthread_setname_np(scheduler,NAME);

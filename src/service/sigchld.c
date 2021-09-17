@@ -35,10 +35,10 @@ static int svc_on_exit_main(struct service*svc,bool fail){
 					if(svc->retry++>=svc->restart_max){
 						tlog_info("Service %s auto restart exceeds the limit",name);
 						fail=true;
-					}else{
+					}else if(svc->restart_delay==0){
 						tlog_notice("Trigger service %s auto restart times %d",name,svc->retry);
 						service_start(svc);
-					}
+					}else svc->wait_restart=true;
 				}
 				if(svc->retry<0)svc->retry=0;
 			}

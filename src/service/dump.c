@@ -89,6 +89,7 @@ static int _svc_dump(int ident,struct service*svc){
 	tlog_debug("%s    status:           %s",     prefix,svc_status_string(svc->status));
 	tlog_debug("%s    stop on shutdown: %s",     prefix,BOOL2STR(svc->stop_on_shutdown));
 	tlog_debug("%s    auto restart:     %s",     prefix,BOOL2STR(svc->auto_restart));
+	if(svc->restart_delay>0)tlog_debug("%s    restart delay:    %ld",    prefix,svc->restart_delay);
 	tlog_debug("%s    restart retry:    %d/%d",  prefix,svc->retry,svc->restart_max);
 	if(svc->pid_file)tlog_debug("%s    pid file:         %s",     prefix,svc->pid_file);
 

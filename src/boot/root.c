@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include<stdio.h>
 #include<stdlib.h>
 #include<stdbool.h>
@@ -16,31 +17,40 @@
 
 static char*get_block(char*path,int wait){
 	struct stat st;
-	char*block=path;
+	char*block=strdup(path);
+	if(!block)EPRET(ENOMEM);
 
 	// wait root block
 	if(wait_block(block,wait,TAG)<0){
 		telog_error("wait rootfs block %s",block);
+		free(block);
 		return NULL;
 	}
 
 	// resolve root block tag
 	#ifdef ENABLE_BLKID
-	if(block[0]!='/'&&!(block=blkid_evaluate_tag(block,NULL,NULL))){
-		telog_error("resolve tag %s",path);
-		return NULL;
+	if(block[0]!='/'){
+		char*x=blkid_evaluate_tag(block,NULL,NULL);
+		free(block);
+		if(!x){
+			telog_error("resolve tag %s",path);
+			return NULL;
+		}
+		block=x;
 	}
 	#endif
 
 	// stat root block
 	if(stat(block,&st)<0){
 		telog_error("stat rootfs block %s",block);
+		free(block);
 		return NULL;
 	}
 
 	// root block is a block device
 	if(!S_ISBLK(st.st_mode)){
 		telog_error("rootfs block %s is not a block",block);
+		free(block);
 		errno=ENOTBLK;
 		return NULL;
 	}
@@ -81,6 +91,7 @@ int run_boot_root(boot_config*boot){
 		blkid_get_cache(&cache,NULL);
 		if(!(type=blkid_get_tag_value(cache,"TYPE",path)))
 			telog_warn("cannot determine fstype in %s",path);
+
 	}
 	#endif
 
@@ -102,8 +113,10 @@ int run_boot_root(boot_config*boot){
 	// mount root block
 	if(xmount(false,path,point,type,flags,true)!=0){
 		e=-errno;
+		free(path);
 		goto ex;
 	}
+	free(path);
 
 	// try to search init
 	if(!(init=search_init(definit,point)))return -errno;

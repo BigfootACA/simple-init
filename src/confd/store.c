@@ -114,7 +114,7 @@ static int conf_del_obj(struct conf*c){
 			conf_del_obj(LIST_DATA(p,struct conf*));
 		}while((p=x));
 		if(c->keys)free(c->keys);
-	}
+	}else if(c->type==TYPE_STRING&&c->value.string)free(c->value.string);
 	if((p=list_first(c->parent->keys)))do{
 		LIST_DATA_DECLARE(d,p,struct conf*);
 		if(d!=c)continue;

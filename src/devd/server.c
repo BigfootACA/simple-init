@@ -62,6 +62,7 @@ static void process_add(char*data){
 	uevent event;
 	uevent_parse(data,&event);
 	process_uevent(&event);
+	kvarr_free(event.environs);
 }
 
 static struct pool*pool;
@@ -107,6 +108,7 @@ static void*process_thread(void*d){
 	}
 	if(s->data)free(s->data);
 	devd_internal_send_msg(s->fd,DEV_OK,NULL,0);
+	free(s);
 	return NULL;
 }
 
@@ -174,9 +176,13 @@ static int devd_thread(int cfd){
 				memset(d,0,ss);
 				ssize_t s=read(f,&d->msg,ds);
 				if(s<0){
-					if(errno==EINTR)continue;
-					else if(errno==EAGAIN)break;
-					else{
+					if(errno==EINTR){
+						free(d);
+						continue;
+					}else if(errno==EAGAIN){
+						free(d);
+						break;
+					}else{
 						telog_error("read %d failed",f);
 						s=0;
 					}
@@ -187,6 +193,7 @@ static int devd_thread(int cfd){
 				)s=0;
 				if(s==0){
 					if(d->data)free(d->data);
+					free(d);
 					ctl_fd(efd,EPOLL_CTL_DEL,f);
 					break;
 				}else{

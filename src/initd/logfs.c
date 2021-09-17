@@ -22,19 +22,27 @@ static pthread_t t_logfs;
 
 static int _setup_logfs(){
 	int e=0;
-	char*logfs=boot_options.logfs_block,*logfile=boot_options.logfs_file;
+	char*logfs=strdup(boot_options.logfs_block);
+	char*logfile=boot_options.logfs_file;
+	if(!logfs)ERET(ENOMEM);
 
 	if(logfile[0]==0)logfile=DEFAULT_LOGFS_FILE;
-	if(logfs[0]==0)logfs=DEFAULT_LOGFS_BLOCK;
+	if(logfs[0]==0){
+		free(logfs);
+		if(!(logfs=strdup(DEFAULT_LOGFS_BLOCK)))ERET(ENOMEM);
+	}
 
 	wait_block(logfs,10,TAG);
 
-	if(logfs[0]!='/')
+	if(logfs[0]!='/'){
 	#ifdef ENABLE_BLKID
-		logfs=blkid_evaluate_tag(logfs,NULL,NULL);
+		char*x=blkid_evaluate_tag(logfs,NULL,NULL);
+		free(logfs);
+		logfs=x;
 	#else
 		tlog_alert("evaluate tag support is disabled");
 	#endif
+	}
 	if(!logfs)return tlog_warn("logfs not found");
 
 	char*type=NULL;
@@ -95,6 +103,7 @@ static int _setup_logfs(){
 		blkid_put_cache(cache);
 	}
 	#endif
+	free(logfs);
 	return e;
 }
 

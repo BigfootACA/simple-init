@@ -133,9 +133,9 @@ int conf_del(const char*path){
 #define FUNCTION_CONF_GET_SET(_tag,_type,_func) \
 	int conf_set_##_func(const char*path,_type data){\
 		struct conf*c=conf_lookup(path,true,TYPE_##_tag);\
-		if(!c)ERET(EINVAL);\
+		if(!c)return -errno;\
 		if(c->type!=TYPE_##_tag)ERET(EBADMSG);\
-		if(data)VALUE_##_tag(c)=data;\
+		VALUE_##_tag(c)=data;\
 		return 0;\
 	}\
 	_type conf_get_##_func(const char*path,_type def){\

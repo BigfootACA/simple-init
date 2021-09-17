@@ -38,7 +38,7 @@ int spt_copyargs(int argc,char*argv[]){
 	int i;
 	for(i=1;i<argc||(i>=argc&&argv[i]);i++){
 		if(!argv[i])continue;
-		size_t s=sizeof(char)*PATH_MAX;
+		size_t s=sizeof(char)*(strlen(argv[i])+1);
 		if(!(tmp=malloc(s)))return errno;
 		memset(tmp,0,s);
 		strcpy(tmp,argv[i]);

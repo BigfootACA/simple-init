@@ -977,3 +977,49 @@ msgstr ""
 
 msgid "Init Config Daemon"
 msgstr "设置存储服务"
+
+msgid ""
+"Usage: confctl [OPTION] [KEY [VALUE]]\n"
+"Control init config daemon.\n\n"
+"Options:\n"
+"\t-s, --socket <SOCKET>  Use custom control socket (default is %s)\n"
+"\t-D, --delete <KEY>     Delete item\n"
+"\t-q, --quit             Terminate confd\n"
+"\t-d, --dump             Dump config store\n"
+"\t-h, --help             Display this help and exit\n"
+msgstr ""
+"使用方法: confctl [选项] [键 [值]]\n"
+"控制设置存储服务.\n\n"
+"选项:\n"
+"\t-s, --socket <SOCKET>  使用自定义的套接字路径 (默认是%s)\n"
+"\t-d, --delete <KEY>     删除项\n"
+"\t-q, --quit             结束设置存储服务\n"
+"\t-D, --dump             导出设置存储到日志服务\n"
+"\t-h, --help             查看此帮助\n"
+
+msgid "Control config daemon"
+msgstr "控制设置存储服务"
+
+msgid "terminate confd failed"
+msgstr "结束设置存储服务失败"
+
+msgid "dump config store failed"
+msgstr "导出设置存储到日志服务失败"
+
+msgid "delete config item failed"
+msgstr "删除项失败"
+
+msgid "set conf key '%s' failed"
+msgstr "设置配置项'%s'失败"
+
+msgid "invalid integer\n"
+msgstr "无效整型数\n"
+
+msgid "invalid boolean\n"
+msgstr "无效布尔值\n"
+
+msgid "read conf key '%s' failed"
+msgstr "读取配置项'%s'失败"
+
+msgid "'%s' is not a value\n"
+msgstr "配置项'%s'不是一个值\n"

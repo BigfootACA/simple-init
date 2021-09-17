@@ -4,6 +4,7 @@ DECLARE_MAIN(arch);
 DECLARE_MAIN(benchmark);
 DECLARE_MAIN(cd);
 DECLARE_MAIN(cat);
+DECLARE_MAIN(confctl);
 DECLARE_MAIN(chdir);
 DECLARE_MAIN(clear);
 DECLARE_MAIN(dmesg);
@@ -60,6 +61,7 @@ const struct shell_command*shell_cmds[]={
 	#endif
 	DECLARE_CMD(true,  adbd,        "Android Debug Bridge Daemon")
 	DECLARE_CMD(true,  arch,        "Print system architecture")
+	DECLARE_CMD(true,  confctl,     "Control config daemon")
 	DECLARE_CMD(true,  cat,         "Concatenate FILE(s) to standard output.")
 	DECLARE_CMD(false, cd,          "Change directory")
 	DECLARE_CMD(false, chdir,       "Change directory (Direct call)")

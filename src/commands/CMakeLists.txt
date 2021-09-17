@@ -28,4 +28,5 @@ add_library(init_commands STATIC
 	reboot.c
 	poweroff.c
 	halt.c
+	confctl.c
 )

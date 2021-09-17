@@ -18,6 +18,7 @@ DECLARE_MAIN(help);
 DECLARE_MAIN(hotplug);
 DECLARE_MAIN(init);
 DECLARE_MAIN(initctl);
+DECLARE_MAIN(initconfd);
 DECLARE_MAIN(initdevd);
 DECLARE_MAIN(initloggerd);
 DECLARE_MAIN(initshell);
@@ -73,6 +74,7 @@ const struct shell_command*shell_cmds[]={
 	DECLARE_CMD(true,  hotplug,     "Init simple device hotplug notifier")
 	DECLARE_CMD(true,  init,        "Simple init")
 	DECLARE_CMD(true,  initctl,     "Init controller")
+	DECLARE_CMD(true,  initconfd,   "Init Config Daemon")
 	DECLARE_CMD(true,  initdevd,    "Init simple device daemon")
 	DECLARE_CMD(true,  initloggerd, "Launch simple init logger daemon")
 	DECLARE_CMD(true,  ls,          "List directory contents")

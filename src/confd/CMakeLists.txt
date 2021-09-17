@@ -1,4 +1,7 @@
 add_library(init_confd STATIC
 	store.c
 	dump.c
+	client.c
+	server.c
+	internal.c
 )

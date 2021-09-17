@@ -71,6 +71,8 @@ static int seconds_handler(){
 		LIST_DATA_DECLARE(s,cur,struct service*);
 		if(!s)continue;
 		time_t finish_offset=cur_time-(s->process.finish);
+		time_t update_offset=cur_time-(s->last_update);
+		time_t reset_delay=MAX(1,s->restart_delay)*5;
 		if(
 			s->wait_restart&&
 			s->restart_delay>0&&
@@ -84,7 +86,12 @@ static int seconds_handler(){
 			s->wait_restart=false;
 			s->last_update=cur_time;
 			add_queue(s,SCHED_START);
+			continue;
 		}
+		if(
+			s->retry>0&&s->last_update>0&&
+			update_offset>reset_delay
+		)s->retry=0,s->last_update=cur_time;
 	}while(next);
 	return 0;
 }

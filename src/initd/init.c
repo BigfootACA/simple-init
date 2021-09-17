@@ -10,6 +10,7 @@
 #define TAG "init"
 #include"init_internal.h"
 #include"devd.h"
+#include"confd.h"
 #include"system.h"
 #include"defines.h"
 #include"cmdline.h"
@@ -80,6 +81,9 @@ void init_do_exit(){
 
 	// shutdown loggered
 	logger_exit();
+
+	// shutdown confd
+	confd_quit();
 
 	// shutdown devd
 	devd_call_quit();

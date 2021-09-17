@@ -6,6 +6,7 @@
 #include<sys/stat.h>
 #include"cmdline.h"
 #include"assets.h"
+#include"confd.h"
 #include"devd.h"
 #include"system.h"
 #include"init.h"
@@ -75,6 +76,9 @@ int preinit(){
 	open_socket_logfd_default();
 	chmod(DEFAULT_LOGGER,0600);
 	chown(DEFAULT_LOGGER,0,0);
+
+	// start config daemon
+	start_confd(TAG,NULL);
 
 	// init /dev
 	if(xmount(false,"dev",_PATH_DEV,"devtmpfs","rw,nosuid,noexec,mode=755",false)!=0)switch(errno){

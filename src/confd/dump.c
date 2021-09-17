@@ -17,7 +17,15 @@ static int dump(struct conf*key,char*name){
 		if(!p)return 0;
 		do{dump(LIST_DATA(p,struct conf*),path);}while((p=p->next));
 	}else switch(key->type){
-		case TYPE_STRING:  tlog_debug("  %s = \"%s\" (string)\n", path,VALUE_STRING(key));break;
+		case TYPE_STRING:{
+			int len=0;
+			char x[256]={0},*p=VALUE_STRING(key);
+			if(p){
+				strncpy(x,p,252);
+				len=strlen(p);
+			}else strcpy(x,"(null)");
+			tlog_debug("  %s = \"%s\"%s %d bytes (string)\n", path,x,len>252?"...":"",len);
+		}break;
 		case TYPE_INTEGER: tlog_debug("  %s = %ld (integer)\n",   path,VALUE_INTEGER(key));break;
 		case TYPE_BOOLEAN: tlog_debug("  %s = %s (boolean)\n",    path,BOOL2STR(VALUE_BOOLEAN(key)));break;
 		default:           tlog_debug("  %s = (Unknown)\n",       path);break;

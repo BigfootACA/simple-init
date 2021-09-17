@@ -66,7 +66,7 @@
 #define elog_warn(tag,content...)                  logger_perror(LEVEL_WARNING,tag,content)
 #define elog_notice(tag,content...)                logger_perror(LEVEL_NOTICE,tag,content)
 #define elog_info(tag,content...)                  logger_perror(LEVEL_INFO,tag,content)
-#define elog_debug(tag,content...)                 log_perror_printf(LEVEL_DEBUG,tag,content)
+#define elog_debug(tag,content...)                 logger_perror(LEVEL_DEBUG,tag,content)
 #define rlog_emerg(ret,tag,content...)             return_logger_printf(ret,LEVEL_EMERG,tag,content)
 #define rlog_alert(ret,tag,content...)             return_logger_printf(ret,LEVEL_ALERT,tag,content)
 #define rlog_crit(ret,tag,content...)              return_logger_printf(ret,LEVEL_CRIT,tag,content)

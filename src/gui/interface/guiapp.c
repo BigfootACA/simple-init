@@ -46,8 +46,9 @@ static void click_btn(lv_obj_t*obj,lv_event_t e){
 
 static void add_button(struct gui_register*p){
 	if(!p->show_app)return;
-	int a=app_num%4,b=app_num/4;
-	int w=(gui_w-gui_font_size)/4,h=(gui_h-gui_font_size)/5;
+	int xnum=gui_w/gui_dpi*2,ynum=gui_h/gui_dpi;
+	int a=app_num%xnum,b=app_num/xnum;
+	int w=(gui_w-gui_font_size)/xnum,h=(gui_h-gui_font_size)/(ynum+1);
 
 	lv_style_t*style=malloc(sizeof(lv_style_t));
 	lv_style_init(style);

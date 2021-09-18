@@ -29,6 +29,7 @@ struct gui_activity{
 	struct gui_register*reg;
 };
 extern struct gui_register*guiact_register[];
+extern void guiact_init();
 extern int guiact_do_exit();
 extern list*guiact_get_activities();
 extern bool guiact_is_alone();

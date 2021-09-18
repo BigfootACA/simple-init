@@ -16,6 +16,19 @@ int guiact_do_exit(){
 	return 0;
 }
 
+static int guiact_force_free(void*data){
+	struct gui_activity*act=(struct gui_activity*)data;
+	if(!act)return 0;
+	if(act->page)lv_obj_del(act->page);
+	free(data);
+	return 0;
+}
+
+void guiact_init(){
+	list_free_all(activities,guiact_force_free);
+	activities=NULL;
+}
+
 list*guiact_get_activities(){
 	if(!activities)return NULL;
 	if(activities->prev)

@@ -5,6 +5,10 @@ DECLARE_MAIN(benchmark);
 DECLARE_MAIN(cd);
 DECLARE_MAIN(cat);
 DECLARE_MAIN(confctl);
+DECLARE_MAIN(confget);
+DECLARE_MAIN(confset);
+DECLARE_MAIN(confdel);
+DECLARE_MAIN(confdump);
 DECLARE_MAIN(chdir);
 DECLARE_MAIN(clear);
 DECLARE_MAIN(dmesg);
@@ -62,6 +66,10 @@ const struct shell_command*shell_cmds[]={
 	DECLARE_CMD(true,  adbd,        "Android Debug Bridge Daemon")
 	DECLARE_CMD(true,  arch,        "Print system architecture")
 	DECLARE_CMD(true,  confctl,     "Control config daemon")
+	DECLARE_CMD(true,  confget,     "Get config item")
+	DECLARE_CMD(true,  confset,     "Set config item")
+	DECLARE_CMD(true,  confdel,     "Delete config item")
+	DECLARE_CMD(true,  confdump,    "Dump config store")
 	DECLARE_CMD(true,  cat,         "Concatenate FILE(s) to standard output.")
 	DECLARE_CMD(false, cd,          "Change directory")
 	DECLARE_CMD(false, chdir,       "Change directory (Direct call)")

@@ -1038,3 +1038,33 @@ msgstr "%s: 选项不需要一个参数: %s\n"
 
 msgid "%s: option is ambiguous: %s\n"
 msgstr "%s: 选项有歧义: %s\n"
+
+msgid "Usage: confget <KEY>\n"
+msgstr "使用方法: confget <键>\n"
+
+msgid "Usage: confset <KEY> <VALUE>\n"
+msgstr "使用方法: confset <键> <值>\n"
+
+msgid "Usage: confdel <KEY>\n"
+msgstr "使用方法: confdel <键>\n"
+
+msgid "config daemon delete failed"
+msgstr "配置项删除失败"
+
+msgid "Usage: confdump\n"
+msgstr "使用方法: confdump\n"
+
+msgid "config daemon dump failed"
+msgstr "配置存储导出失败"
+
+msgid "Get config item"
+msgstr "读取配置项"
+
+msgid "Set config item"
+msgstr "修改配置项"
+
+msgid "Delete config item"
+msgstr "删除配置项"
+
+msgid "Dump config store"
+msgstr "导出配置存储"

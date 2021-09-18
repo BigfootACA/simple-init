@@ -74,6 +74,18 @@ void lv_style_set_focus_checkbox(lv_obj_t*checkbox){
 	lv_obj_add_style(checkbox,LV_CHECKBOX_PART_BULLET,&bul);
 }
 
+void lv_style_set_outline(lv_obj_t*obj,uint8_t part){
+	static lv_style_t outline;
+	static bool initialized=false;
+	if(!initialized){
+		lv_style_init(&outline);
+		lv_style_set_outline_width(&outline,LV_STATE_DEFAULT,1);
+		lv_style_set_outline_color(&outline,LV_STATE_DEFAULT,gui_dark?LV_COLOR_WHITE:LV_COLOR_BLACK);
+		initialized=true;
+	}
+	lv_obj_add_style(obj,part,&outline);
+}
+
 lv_style_t*lv_obj_set_text_font(lv_obj_t*obj,lv_state_t state,uint8_t part,lv_font_t*font){
 	lv_style_t*f=malloc(sizeof(lv_style_t));
 	if(!f)return NULL;

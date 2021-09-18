@@ -5,6 +5,7 @@
 #include<limits.h>
 #include<stdlib.h>
 #include<stdio.h>
+#include"defines.h"
 #include"getopt.h"
 char *b_optarg;
 int b_optind=1;
@@ -41,7 +42,7 @@ int b_getopt(int argc,char*const*argv,const char*optstring){
 		b_optopt=c;
 		if(optstring[0]!=':'&&b_opterr)fprintf(
 			stderr,
-			"%s: unrecognized option: %s\n",
+			_("%s: unrecognized option: %s\n"),
 			program_invocation_short_name,
 			optchar
 		);
@@ -60,7 +61,7 @@ int b_getopt(int argc,char*const*argv,const char*optstring){
 			if(optstring[0]==':')return ':';
 			if(b_opterr)fprintf(
 				stderr,
-				"%s: option requires an argument: %s\n",
+				_("%s: option requires an argument: %s\n"),
 				program_invocation_short_name,
 				optchar
 			);

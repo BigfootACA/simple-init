@@ -5,6 +5,7 @@
 #include<limits.h>
 #include<stdio.h>
 #include<string.h>
+#include"defines.h"
 #include"getopt.h"
 
 extern int __b_optpos,__b_optreset;
@@ -66,7 +67,7 @@ static int __b_getlopt_core(
 					if(colon||!b_opterr)return '?';
 					fprintf(
 						stderr,
-						"%s: option does not take an argument: %s\n",
+						_("%s: option does not take an argument: %s\n"),
 						program_invocation_short_name,
 						longopts[i].name
 					);
@@ -80,7 +81,7 @@ static int __b_getlopt_core(
 					if(!b_opterr)return '?';
 					fprintf(
 						stderr,
-						"%s: option requires an argument: %s\n",
+						_("%s: option requires an argument: %s\n"),
 						program_invocation_short_name,
 						longopts[i].name
 					);
@@ -100,8 +101,8 @@ static int __b_getlopt_core(
 			if(!colon&&b_opterr)fprintf(
 				stderr,
 				cnt?
-					"%s: option is ambiguous: %s\n":
-					"%s: unrecognized option: %s\n",
+					_("%s: option is ambiguous: %s\n"):
+					_("%s: unrecognized option: %s\n"),
 				program_invocation_short_name,
 				argv[b_optind]+2
 			);

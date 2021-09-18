@@ -1026,3 +1026,15 @@ msgstr "配置项'%s'不是一个值\n"
 
 msgid "Exit GUI Application and enter UEFI Shell?"
 msgstr "退出GUI启动器并进入UEFI Shell?"
+
+msgid "%s: unrecognized option: %s\n"
+msgstr "%s: 未知的选项: %s\n"
+
+msgid "%s: option requires an argument: %s\n"
+msgstr "%s: 选项需要一个参数: %s\n"
+
+msgid "%s: option does not take an argument: %s\n"
+msgstr "%s: 选项不需要一个参数: %s\n"
+
+msgid "%s: option is ambiguous: %s\n"
+msgstr "%s: 选项有歧义: %s\n"

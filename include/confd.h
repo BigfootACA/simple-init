@@ -22,8 +22,10 @@ extern void close_confd_socket();
 // src/confd/client.c: set confd socket fd
 extern int set_confd_socket(int fd);
 
+#ifndef ENABLE_UEFI
 // src/confd/client.c: start a config daemon in protect mode
 extern int start_confd(char*tag,pid_t*p);
+#endif
 
 // src/confd/client.c: terminate remote confd
 extern int confd_quit();

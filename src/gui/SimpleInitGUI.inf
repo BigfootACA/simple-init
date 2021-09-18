@@ -12,6 +12,7 @@
 [Packages]
   MdePkg/MdePkg.dec
   StdLib/StdLib.dec
+  ShellPkg/ShellPkg.dec
   MdeModulePkg/MdeModulePkg.dec
 
 [LibraryClasses]
@@ -26,6 +27,9 @@
   ReportStatusCodeLib
   UefiBootManagerLib
   UefiRuntimeServicesTableLib
+
+[Guids]
+  gUefiShellFileGuid
 
 [Protocols]
   gEfiSimplePointerProtocolGuid
@@ -66,4 +70,5 @@
   interface/sysbar.c
   interface/language.c
   interface/uefi_bootmenu.c
+  interface/uefi_shell.c
   interface/mouse.c

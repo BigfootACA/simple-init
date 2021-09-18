@@ -3,6 +3,7 @@
 extern struct gui_register guireg_guipm_disk_select;
 extern struct gui_register guireg_guipm_partitions;
 extern struct gui_register guireg_uefi_bootmenu;
+extern struct gui_register guireg_uefi_shell;
 extern struct gui_register guireg_mouse_menu;
 extern struct gui_register guireg_benchmark;
 extern struct gui_register guireg_backlight;
@@ -14,6 +15,7 @@ extern struct gui_register guireg_guiapp;
 struct gui_register*guiact_register[]={
 	#ifdef ENABLE_UEFI
 	&guireg_uefi_bootmenu,
+	&guireg_uefi_shell,
 	&guireg_mouse_menu,
 	#else
 	#ifdef ENABLE_FDISK

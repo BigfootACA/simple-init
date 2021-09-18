@@ -1023,3 +1023,6 @@ msgstr "读取配置项'%s'失败"
 
 msgid "'%s' is not a value\n"
 msgstr "配置项'%s'不是一个值\n"
+
+msgid "Exit GUI Application and enter UEFI Shell?"
+msgstr "退出GUI启动器并进入UEFI Shell?"

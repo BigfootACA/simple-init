@@ -17,6 +17,7 @@
 #include"defines.h"
 #include"gui.h"
 #include"font.h"
+#include"confd.h"
 #include"sysbar.h"
 #include"hardware.h"
 #include"guidrv.h"
@@ -125,8 +126,10 @@ static int gui_pre_init(){
 
 	#ifndef ENABLE_UEFI
 	// parse backlight device
-	char*x=getenv("BACKLIGHT");
+	char*x=confd_get_string("cmdline.backlight",NULL);
 	if(x)default_backlight=led_parse_arg(x,"backlight");
+	gui_dpi=confd_get_integer("cmdline.dpi",200);
+	gui_dpi_force=confd_get_integer("cmdline.dpi_force",0);
 	#endif
 
 	// init gui

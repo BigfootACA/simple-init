@@ -100,10 +100,10 @@ Build guide and examples: [Docs](docs/index.md)
   - [x] Turn on or off the LED
   - [x] Vibrator / Haptics
   - [x] USB Gadget
-    - [ ] USB Mass Storage
-    - [ ] USB Remote-NDIS Network
+    - [x] USB Mass Storage
+    - [x] USB Remote-NDIS Network
     - [ ] USB Emulate HID Device
-    - [ ] USB Android-Debug-Bridge Daemon
+    - [x] USB Android-Debug-Bridge Daemon
     - [ ] USB MTP
     - [ ] USB Camera
     - [ ] USB Serial Console
@@ -114,7 +114,7 @@ Build guide and examples: [Docs](docs/index.md)
     - [ ] USB Fastboot
     - [ ] USB Over IP
   - [ ] Power Supply
-    - [ ] Battery
+    - [x] Battery
     - [ ] Power low
     - [ ] Charger
   - [ ] Sensors

@@ -8,7 +8,7 @@
 int confd=-1;
 
 int open_confd_socket(char*tag,char*path){
-	if(confd>=0)return confd;
+	if(confd>=0)close(confd);
 	struct sockaddr_un n={0};
 	n.sun_family=AF_UNIX;
 	strncpy(n.sun_path,path,sizeof(n.sun_path)-1);
@@ -20,6 +20,10 @@ int open_confd_socket(char*tag,char*path){
 		confd=-1;
 	}
 	return confd;
+}
+
+int set_confd_socket(int fd){
+	return confd=fd;
 }
 
 void close_confd_socket(){
@@ -39,7 +43,7 @@ int confd_quit(){return confd_command(CONF_QUIT,0);}
 int confd_dump(){return confd_command(CONF_DUMP,0);}
 
 int confd_delete(const char*path){
-	if(!path)ERET(EINVAL);
+	if(!path||confd<0)ERET(EINVAL);
 	errno=0;
 	struct confd_msg msg,res;
 	confd_internal_init_msg(&msg,CONF_DELETE);
@@ -51,7 +55,7 @@ int confd_delete(const char*path){
 }
 
 int confd_set_integer(const char*path,int64_t data){
-	if(!path)ERET(EINVAL);
+	if(!path||confd<0)ERET(EINVAL);
 	errno=0;
 	struct confd_msg msg,res;
 	confd_internal_init_msg(&msg,CONF_SET_INTEGER);
@@ -64,7 +68,7 @@ int confd_set_integer(const char*path,int64_t data){
 }
 
 int confd_set_string(const char*path,char*data){
-	if(!path)ERET(EINVAL);
+	if(!path||confd<0)ERET(EINVAL);
 	errno=0;
 	size_t size=0;
 	struct confd_msg msg,res;
@@ -79,7 +83,7 @@ int confd_set_string(const char*path,char*data){
 }
 
 int confd_set_boolean(const char*path,bool data){
-	if(!path)ERET(EINVAL);
+	if(!path||confd<0)ERET(EINVAL);
 	errno=0;
 	struct confd_msg msg,res;
 	confd_internal_init_msg(&msg,CONF_SET_BOOLEAN);
@@ -92,7 +96,7 @@ int confd_set_boolean(const char*path,bool data){
 }
 
 enum conf_type confd_get_type(const char*path){
-	if(!path)ERET(EINVAL);
+	if(!path||confd<0)ERET(EINVAL);
 	errno=0;
 	struct confd_msg msg,res;
 	confd_internal_init_msg(&msg,CONF_GET_TYPE);
@@ -105,6 +109,7 @@ enum conf_type confd_get_type(const char*path){
 
 char*confd_get_string(const char*path,char*def){
 	if(!path)EPRET(EINVAL);
+	if(confd<0)return def;
 	size_t size=0;
 	struct confd_msg msg,res;
 	confd_internal_init_msg(&msg,CONF_GET_STRING);
@@ -127,6 +132,7 @@ char*confd_get_string(const char*path,char*def){
 
 int64_t confd_get_integer(const char*path,int64_t def){
 	if(!path)ERET(EINVAL);
+	if(confd<0)return def;
 	errno=0;
 	struct confd_msg msg,res;
 	confd_internal_init_msg(&msg,CONF_GET_INTEGER);
@@ -140,6 +146,7 @@ int64_t confd_get_integer(const char*path,int64_t def){
 
 bool confd_get_boolean(const char*path,bool def){
 	if(!path)ERET(EINVAL);
+	if(confd<0)return def;
 	errno=0;
 	struct confd_msg msg,res;
 	confd_internal_init_msg(&msg,CONF_GET_BOOLEAN);

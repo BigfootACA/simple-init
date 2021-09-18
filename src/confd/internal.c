@@ -17,6 +17,7 @@ void confd_internal_init_msg(struct confd_msg*msg,enum confd_action action){
 }
 
 int confd_internal_send(int fd,struct confd_msg*msg){
+	if(fd<0)ERET(EINVAL);
 	static size_t xs=sizeof(struct confd_msg);
 	return ((size_t)write(fd,msg,xs))==xs?(int)xs:-1;
 }

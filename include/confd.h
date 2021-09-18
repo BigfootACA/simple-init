@@ -19,6 +19,9 @@ extern int open_confd_socket(char*tag,char*path);
 // src/confd/client.c: close confd socket
 extern void close_confd_socket();
 
+// src/confd/client.c: set confd socket fd
+extern int set_confd_socket(int fd);
+
 // src/confd/client.c: start a config daemon in protect mode
 extern int start_confd(char*tag,pid_t*p);
 

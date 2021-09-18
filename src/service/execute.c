@@ -7,6 +7,7 @@
 #include<stdlib.h>
 #include<pthread.h>
 #include<sys/prctl.h>
+#include"confd.h"
 #include"logger.h"
 #include"system.h"
 #include"service.h"
@@ -41,6 +42,7 @@ static void _run_exec_child(struct svc_exec*exec,int fd){
 			write_close(fd,0);
 			close_all_fd(NULL,0);
 			reset_signals();
+			set_confd_socket(-1);
 			open_socket_logfd_default();
 			r=exec->exec.func(exec->prop.svc);
 			pthread_mutex_destroy(&services_lock);

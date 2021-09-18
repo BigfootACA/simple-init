@@ -34,6 +34,10 @@ static void sysbar_thread(struct sysbar*b){
 }
 
 static void sysbar_thread_cb(lv_task_t*a){
+	if(!sysbar.content){
+		lv_task_del(a);
+		return;
+	}
 	sysbar_thread((struct sysbar*)a->user_data);
 }
 

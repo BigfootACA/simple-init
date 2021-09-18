@@ -191,18 +191,16 @@ static int uefi_bootmenu_draw(struct gui_activity*act){
 	btn_ok=lv_btn_create(act->page,NULL);
 	lv_obj_set_size(btn_ok,btw,bth);
 	lv_obj_align(btn_ok,NULL,LV_ALIGN_IN_BOTTOM_LEFT,btm,-btm);
-	lv_obj_add_style(btn_ok,0,&btn_style);
-	lv_obj_add_state(btn_ok,LV_STATE_CHECKED|LV_STATE_DISABLED);
 	lv_obj_set_event_cb(btn_ok,ok_click);
+	lv_style_set_action_button(btn_ok,false);
 	lv_label_set_text(lv_label_create(btn_ok,NULL),_("OK"));
 
 	// refresh button
 	btn_refresh=lv_btn_create(act->page,NULL);
 	lv_obj_set_size(btn_refresh,btw,bth);
 	lv_obj_align(btn_refresh,NULL,LV_ALIGN_IN_BOTTOM_RIGHT,-btm,-btm);
-	lv_obj_add_style(btn_refresh,0,&btn_style);
-	lv_obj_add_state(btn_refresh,LV_STATE_CHECKED);
 	lv_obj_set_event_cb(btn_refresh,refresh_click);
+	lv_style_set_action_button(btn_refresh,true);
 	lv_label_set_text(lv_label_create(btn_refresh,NULL),_("Refresh"));
 
 	return 0;

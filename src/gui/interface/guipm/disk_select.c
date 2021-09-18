@@ -365,12 +365,6 @@ static int guipm_draw_disk_sel(struct gui_activity*act){
 	lv_obj_set_size(lst,gui_sw-xdpi,gui_sh-(gui_sh/16*2)-(bth*2)-(xdpi*3));
 	lv_obj_set_pos(lst,mar,gui_sh/16*2);
 
-	// button style
-	static lv_style_t btn_style;
-	lv_style_init(&btn_style);
-	lv_style_set_radius(&btn_style,LV_STATE_DEFAULT,2);
-	lv_style_set_outline_width(&btn_style,LV_STATE_PRESSED,0);
-
 	// show all checkbox
 	static lv_style_t chk_style,bul_style;
 	lv_color_t pri=lv_theme_get_color_primary();
@@ -393,8 +387,7 @@ static int guipm_draw_disk_sel(struct gui_activity*act){
 	btn_ok=lv_btn_create(selscr,NULL);
 	lv_obj_set_pos(btn_ok,xdpi,btt);
 	lv_obj_set_size(btn_ok,btw,bth);
-	lv_obj_add_style(btn_ok,0,&btn_style);
-	lv_obj_add_state(btn_ok,LV_STATE_CHECKED|LV_STATE_DISABLED);
+	lv_style_set_action_button(btn_ok,false);
 	lv_obj_set_event_cb(btn_ok,ok_click);
 	lv_label_set_text(lv_label_create(btn_ok,NULL),_("OK"));
 
@@ -402,8 +395,7 @@ static int guipm_draw_disk_sel(struct gui_activity*act){
 	btn_refresh=lv_btn_create(selscr,NULL);
 	lv_obj_set_pos(btn_refresh,gui_sw/3+xdpi,btt);
 	lv_obj_set_size(btn_refresh,btw,bth);
-	lv_obj_add_style(btn_refresh,0,&btn_style);
-	lv_obj_add_state(btn_refresh,LV_STATE_CHECKED);
+	lv_style_set_action_button(btn_refresh,true);
 	lv_obj_set_event_cb(btn_refresh,refresh_click);
 	lv_label_set_text(lv_label_create(btn_refresh,NULL),_("Refresh"));
 
@@ -411,8 +403,7 @@ static int guipm_draw_disk_sel(struct gui_activity*act){
 	btn_cancel=lv_btn_create(selscr,NULL);
 	lv_obj_set_pos(btn_cancel,gui_sw/3*2+xdpi,btt);
 	lv_obj_set_size(btn_cancel,btw,bth);
-	lv_obj_add_style(btn_cancel,0,&btn_style);
-	lv_obj_add_state(btn_cancel,LV_STATE_CHECKED);
+	lv_style_set_action_button(btn_cancel,true);
 	lv_obj_set_event_cb(btn_cancel,cancel_click);
 	lv_label_set_text(lv_label_create(btn_cancel,NULL),_("Cancel"));
 	return 0;

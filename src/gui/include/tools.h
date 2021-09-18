@@ -4,6 +4,7 @@ extern lv_style_t*lv_style_opa_mask();
 extern lv_style_t*lv_style_btn_item();
 extern void lv_style_set_btn_item(lv_obj_t*btn);
 extern void lv_style_set_focus_checkbox(lv_obj_t*checkbox);
+extern void lv_style_set_action_button(lv_obj_t*btn,bool status);
 extern lv_style_t*lv_obj_set_text_font(lv_obj_t*obj,lv_state_t state,uint8_t part,lv_font_t*font);
 extern lv_style_t*lv_obj_set_value_font(lv_obj_t*obj,lv_state_t state,uint8_t part,lv_font_t*font);
 extern lv_style_t*lv_obj_set_text_color(lv_obj_t*obj,lv_state_t state,uint8_t part,lv_color_t color);

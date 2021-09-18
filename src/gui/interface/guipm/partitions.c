@@ -370,17 +370,10 @@ static int guipm_draw_partitions(struct gui_activity*act){
 		lv_obj_align(page,title,LV_ALIGN_OUT_BOTTOM_MID,0,gui_dpi/10);
 		lv_obj_set_height(page,gui_sh-bth*2-gui_font_size*3-gui_sh/16*2);
 
-		// button style
-		static lv_style_t btn_style;
-		lv_style_init(&btn_style);
-		lv_style_set_radius(&btn_style,LV_STATE_DEFAULT,2);
-		lv_style_set_outline_width(&btn_style,LV_STATE_PRESSED,0);
-
 		// disk operate button
 		btn_disk=lv_btn_create(selscr,NULL);
 		lv_obj_set_size(btn_disk,btw,bth);
-		lv_obj_add_style(btn_disk,0,&btn_style);
-		lv_obj_add_state(btn_disk,LV_STATE_CHECKED);
+		lv_style_set_action_button(btn_disk,true);
 		lv_label_set_text(lv_label_create(btn_disk,NULL),_("Disk..."));
 		lv_obj_align(btn_disk,page,LV_ALIGN_OUT_BOTTOM_LEFT,gui_font_size/2,gui_font_size);
 		lv_group_add_obj(gui_grp,btn_disk);
@@ -388,8 +381,7 @@ static int guipm_draw_partitions(struct gui_activity*act){
 		// partition operate button
 		btn_part=lv_btn_create(selscr,NULL);
 		lv_obj_set_size(btn_part,btw,bth);
-		lv_obj_add_style(btn_part,0,&btn_style);
-		lv_obj_add_state(btn_part,LV_STATE_CHECKED|LV_STATE_DISABLED);
+		lv_style_set_action_button(btn_part,false);
 		lv_label_set_text(lv_label_create(btn_part,NULL),_("Partition..."));
 		lv_obj_align(btn_part,page,LV_ALIGN_OUT_BOTTOM_RIGHT,-gui_font_size/2,gui_font_size);
 		lv_group_add_obj(gui_grp,btn_part);
@@ -398,8 +390,7 @@ static int guipm_draw_partitions(struct gui_activity*act){
 		btn_reload=lv_btn_create(selscr,NULL);
 		lv_obj_align(btn_reload,btn_disk,LV_ALIGN_OUT_BOTTOM_LEFT,0,gui_font_size);
 		lv_obj_set_size(btn_reload,btw,bth);
-		lv_obj_add_style(btn_reload,0,&btn_style);
-		lv_obj_add_state(btn_reload,LV_STATE_CHECKED);
+		lv_style_set_action_button(btn_reload,true);
 		lv_obj_set_event_cb(btn_reload,reload_click);
 		lv_label_set_text(lv_label_create(btn_reload,NULL),_("Reload"));
 		lv_group_add_obj(gui_grp,btn_reload);
@@ -408,8 +399,7 @@ static int guipm_draw_partitions(struct gui_activity*act){
 		btn_new=lv_btn_create(selscr,NULL);
 		lv_obj_align(btn_new,btn_part,LV_ALIGN_OUT_BOTTOM_LEFT,0,gui_font_size);
 		lv_obj_set_size(btn_new,btw,bth);
-		lv_obj_add_style(btn_new,0,&btn_style);
-		lv_obj_add_state(btn_new,LV_STATE_CHECKED|LV_STATE_DISABLED);
+		lv_style_set_action_button(btn_new,false);
 		lv_label_set_text(lv_label_create(btn_new,NULL),_("New"));
 		lv_group_add_obj(gui_grp,btn_new);
 	}

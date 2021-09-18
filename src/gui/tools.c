@@ -36,6 +36,22 @@ lv_style_t*lv_style_btn_item(){
 	return &items;
 }
 
+void lv_style_set_action_button(lv_obj_t*btn,bool status){
+	static lv_style_t btn_style;
+	static bool initialized=false;
+	if(!initialized){
+		lv_style_init(&btn_style);
+		lv_style_set_radius(&btn_style,LV_STATE_DEFAULT,2);
+		lv_style_set_outline_width(&btn_style,LV_STATE_PRESSED,0);
+		lv_style_set_text_color(&btn_style,LV_STATE_DISABLED,LV_COLOR_WHITE);
+		initialized=true;
+	}
+	lv_obj_set_state(btn,LV_STATE_CHECKED);
+	if(!status)lv_obj_add_state(btn,LV_STATE_DISABLED);
+	lv_theme_apply(btn,LV_THEME_BTN);
+	lv_obj_add_style(btn,LV_BTN_PART_MAIN,&btn_style);
+}
+
 void lv_style_set_btn_item(lv_obj_t*btn){
 	lv_obj_add_style(btn,LV_BTN_PART_MAIN,lv_style_btn_item());
 }

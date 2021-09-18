@@ -3,6 +3,7 @@
 #include"logger.h"
 #include"activity.h"
 #include"defines.h"
+#include"tools.h"
 #include"gui.h"
 #define TAG "logviewer"
 
@@ -90,36 +91,28 @@ static int logviewer_draw(struct gui_activity*act){
 	lv_textarea_ext_t*e=lv_obj_get_ext_attr(view);
 	lv_label_set_long_mode(e->label,LV_LABEL_LONG_EXPAND);
 
-	static lv_style_t btn_style;
-	lv_style_init(&btn_style);
-	lv_style_set_radius(&btn_style,LV_STATE_DEFAULT,2);
-	lv_style_set_outline_width(&btn_style,LV_STATE_PRESSED,0);
-
 	btn_top=lv_btn_create(act->page,NULL);
 	lv_obj_set_size(btn_top,btw,bth);
-	lv_obj_align(btn_top,view,LV_ALIGN_OUT_BOTTOM_LEFT,0,gui_font_size);
-	lv_obj_add_style(btn_top,LV_BTN_PART_MAIN,&btn_style);
-	lv_obj_add_state(btn_top,LV_STATE_CHECKED);
 	lv_obj_set_event_cb(btn_top,go_top_click);
+	lv_obj_align(btn_top,view,LV_ALIGN_OUT_BOTTOM_LEFT,0,gui_font_size);
+	lv_style_set_action_button(btn_top,true);
 	lv_label_set_text(lv_label_create(btn_top,NULL),_("Go top"));
 	lv_group_add_obj(gui_grp,btn_top);
 
 	btn_reload=lv_btn_create(act->page,NULL);
 	lv_obj_set_size(btn_reload,btw,bth);
-	lv_obj_align(btn_reload,view,LV_ALIGN_OUT_BOTTOM_MID,0,gui_font_size);
-	lv_obj_add_style(btn_reload,LV_BTN_PART_MAIN,&btn_style);
-	lv_obj_add_state(btn_reload,LV_STATE_CHECKED);
-	lv_label_set_text(lv_label_create(btn_reload,NULL),_("Reload"));
 	lv_obj_set_event_cb(btn_reload,reload_click);
+	lv_obj_align(btn_reload,view,LV_ALIGN_OUT_BOTTOM_MID,0,gui_font_size);
+	lv_style_set_action_button(btn_reload,true);
+	lv_label_set_text(lv_label_create(btn_reload,NULL),_("Reload"));
 	lv_group_add_obj(gui_grp,btn_reload);
 
 	btn_bottom=lv_btn_create(act->page,NULL);
 	lv_obj_set_size(btn_bottom,btw,bth);
-	lv_obj_align(btn_bottom,view,LV_ALIGN_OUT_BOTTOM_RIGHT,0,gui_font_size);
-	lv_obj_add_style(btn_bottom,LV_BTN_PART_MAIN,&btn_style);
-	lv_obj_add_state(btn_bottom,LV_STATE_CHECKED);
-	lv_label_set_text(lv_label_create(btn_bottom,NULL),_("Go bottom"));
 	lv_obj_set_event_cb(btn_bottom,go_bottom_click);
+	lv_obj_align(btn_bottom,view,LV_ALIGN_OUT_BOTTOM_RIGHT,0,gui_font_size);
+	lv_style_set_action_button(btn_bottom,true);
+	lv_label_set_text(lv_label_create(btn_bottom,NULL),_("Go bottom"));
 	lv_group_add_obj(gui_grp,btn_bottom);
 
 	load_log();

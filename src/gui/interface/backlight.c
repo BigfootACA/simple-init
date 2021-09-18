@@ -71,25 +71,18 @@ static int backlight_menu_draw(struct gui_activity*act){
 		lv_obj_align(slider,value,LV_ALIGN_OUT_BOTTOM_MID,gui_font_size,gui_font_size);
 		lv_obj_set_width(slider,lv_obj_get_width(box)-gui_font_size*4);
 
-		static lv_style_t btn_style;
-		lv_style_init(&btn_style);
-		lv_style_set_radius(&btn_style,LV_STATE_DEFAULT,2);
-		lv_style_set_outline_width(&btn_style,LV_STATE_PRESSED,0);
-
 		arr_left=lv_btn_create(box,NULL);
 		lv_obj_set_size(arr_left,bts,bts);
 		lv_obj_set_event_cb(arr_left,backlight_click);
 		lv_obj_align(arr_left,slider,LV_ALIGN_OUT_BOTTOM_LEFT,0,gui_font_size);
-		lv_obj_add_style(arr_left,LV_BTN_PART_MAIN,&btn_style);
-		lv_obj_add_state(arr_left,LV_STATE_CHECKED);
+		lv_style_set_action_button(arr_left,true);
 		lv_label_set_text(lv_label_create(arr_left,NULL),LV_SYMBOL_LEFT);
 
 		arr_right=lv_btn_create(box,NULL);
 		lv_obj_set_size(arr_right,bts,bts);
 		lv_obj_set_event_cb(arr_right,backlight_click);
 		lv_obj_align(arr_right,slider,LV_ALIGN_OUT_BOTTOM_RIGHT,0,gui_font_size);
-		lv_obj_add_style(arr_right,LV_BTN_PART_MAIN,&btn_style);
-		lv_obj_add_state(arr_right,LV_STATE_CHECKED);
+		lv_style_set_action_button(arr_right,true);
 		lv_label_set_text(lv_label_create(arr_right,NULL),LV_SYMBOL_RIGHT);
 
 		lv_obj_set_height(box,

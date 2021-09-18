@@ -52,6 +52,14 @@ lv_obj_t*gui_cursor=NULL;
 // keep running
 bool gui_run=true;
 
+// dark mode
+#ifdef DEFAULT_DARK
+#define DARK_MODE true
+#else
+#define DARK_MODE false
+#endif
+bool gui_dark=DARK_MODE;
+
 #ifndef ENABLE_UEFI
 // is sleeping
 bool gui_sleep=false;
@@ -130,6 +138,7 @@ static int gui_pre_init(){
 	if(x)default_backlight=led_parse_arg(x,"backlight");
 	gui_dpi=confd_get_integer("cmdline.dpi",200);
 	gui_dpi_force=confd_get_integer("cmdline.dpi_force",0);
+	gui_dark=confd_get_boolean("gui.dark",DARK_MODE);
 	#endif
 
 	// init gui
@@ -171,9 +180,8 @@ static int gui_pre_init(){
 
 	// set current fonts
 	lv_theme_t*th=LV_THEME_DEFAULT_INIT(
-		LV_THEME_DEFAULT_COLOR_PRIMARY,
-		LV_THEME_DEFAULT_COLOR_SECONDARY,
-		LV_THEME_DEFAULT_FLAG,
+		LV_THEME_DEFAULT_COLOR_PRIMARY,LV_THEME_DEFAULT_COLOR_SECONDARY,
+		gui_dark?LV_THEME_MATERIAL_FLAG_DARK:LV_THEME_MATERIAL_FLAG_LIGHT,
 		gui_font_small,gui_font,gui_font,gui_font
 	);
 	lv_theme_set_act(th);

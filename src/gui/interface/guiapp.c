@@ -150,10 +150,6 @@ static int guiapp_draw(struct gui_activity*act){
 	return 0;
 }
 
-static void _draw(lv_obj_t*scr __attribute((unused))){
-	guiact_start_activity_by_name("guiapp",NULL);
-}
-
 struct gui_register guireg_guiapp={
 	.name="guiapp",
 	.title="GUI Application",
@@ -171,7 +167,7 @@ int guiapp_main(int argc __attribute((unused)),char**argv __attribute((unused)))
 	open_default_confd_socket(TAG);
 	open_socket_initfd(DEFAULT_INITD,false);
 	#endif
-	return gui_init(_draw);
+	return gui_init();
 }
 
 #ifndef ENABLE_UEFI

@@ -15,6 +15,7 @@
 #include"lvgl.h"
 #include"logger.h"
 #include"defines.h"
+#include"activity.h"
 #include"gui.h"
 #include"font.h"
 #include"confd.h"
@@ -178,13 +179,6 @@ static int gui_pre_init(){
 	#endif
 	if(!gui_font||!gui_font_small)return terlog_error(-1,"failed to load font");
 
-	// set current fonts
-	lv_theme_t*th=LV_THEME_DEFAULT_INIT(
-		LV_THEME_DEFAULT_COLOR_PRIMARY,LV_THEME_DEFAULT_COLOR_SECONDARY,
-		gui_dark?LV_THEME_MATERIAL_FLAG_DARK:LV_THEME_MATERIAL_FLAG_LIGHT,
-		gui_font_small,gui_font,gui_font,gui_font
-	);
-	lv_theme_set_act(th);
 	return 0;
 }
 
@@ -247,10 +241,24 @@ static VOID EFIAPI efi_timer(IN EFI_EVENT e,IN VOID*ctx){
 
 #endif
 
-int gui_init(draw_func draw){
-	if(gui_pre_init()<0)return -1;
+int gui_draw(){
 	lv_obj_t*screen;
 	if(!(screen=lv_scr_act()))return trlog_error(-1,"failed to get screen");
+
+	// init gui activity
+	guiact_init();
+
+	// set current fonts and themes
+	lv_theme_t*th=LV_THEME_DEFAULT_INIT(
+		LV_THEME_DEFAULT_COLOR_PRIMARY,LV_THEME_DEFAULT_COLOR_SECONDARY,
+		gui_dark?LV_THEME_MATERIAL_FLAG_DARK:LV_THEME_MATERIAL_FLAG_LIGHT,
+		gui_font_small,gui_font,gui_font,gui_font
+	);
+	lv_theme_set_act(th);
+
+	// clean screen
+	lv_obj_clean(screen);
+	memset(&sysbar,0,sizeof(struct sysbar));
 
 	// add lvgl mouse pointer
 	gui_cursor=lv_img_create(screen,NULL);
@@ -260,9 +268,15 @@ int gui_init(draw_func draw){
 	sysbar_draw(screen);
 
 	// draw callback
-	draw(sysbar.content);
+	guiact_start_activity_by_name("guiapp",NULL);
 
 	lv_disp_trig_activity(NULL);
+	return 0;
+}
+
+int gui_init(){
+	if(gui_pre_init()<0||gui_draw()<0)return -1;
+
 	#ifdef ENABLE_UEFI
 	REPORT_STATUS_CODE(EFI_PROGRESS_CODE,(EFI_SOFTWARE_DXE_BS_DRIVER|EFI_SW_PC_INPUT_WAIT));
 

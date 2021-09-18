@@ -694,8 +694,10 @@ static void benchmark_draw(lv_obj_t*scr){
 	lv_obj_reset_style_list(scr,LV_OBJ_PART_MAIN);
 	lv_obj_set_style_local_bg_opa(scr,LV_OBJ_PART_MAIN,LV_STATE_DEFAULT,LV_OPA_COVER);
 	title=lv_label_create(scr,NULL);
+	lv_obj_set_style_local_text_color(title,LV_LABEL_PART_MAIN,LV_STATE_DEFAULT,LV_COLOR_BLACK);
 	lv_obj_set_pos(title,LV_DPI/30,LV_DPI/30);
 	subtitle=lv_label_create(scr,NULL);
+	lv_obj_set_style_local_text_color(subtitle,LV_LABEL_PART_MAIN,LV_STATE_DEFAULT,LV_COLOR_BLACK);
 	lv_obj_align(subtitle,title,LV_ALIGN_OUT_BOTTOM_LEFT,0,0);
 	scene_bg=lv_obj_create(scr,NULL);
 	lv_obj_reset_style_list(scene_bg,LV_OBJ_PART_MAIN);

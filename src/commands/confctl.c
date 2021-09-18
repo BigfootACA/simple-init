@@ -22,9 +22,9 @@ static int usage(int e){
 		"Control init config daemon.\n\n"
 		"Options:\n"
 		"\t-s, --socket <SOCKET>  Use custom control socket (default is %s)\n"
-		"\t-D, --delete <KEY>     Delete item\n"
+		"\t-d, --delete <KEY>     Delete item\n"
 		"\t-q, --quit             Terminate confd\n"
-		"\t-d, --dump             Dump config store\n"
+		"\t-D, --dump             Dump config store\n"
 		"\t-h, --help             Display this help and exit\n",
 		DEFAULT_CONFD
 	);

@@ -149,6 +149,7 @@ static int scheduler_main(){
 				add_all_stop_queue();
 			default:;
 		}
+		run_queue();
 		memset(&msg,0,sizeof(struct scheduler_msg));
 	}
 	if(!run){

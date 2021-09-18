@@ -1,5 +1,6 @@
 #ifdef ENABLE_GUI
 #include<time.h>
+#include<stdlib.h>
 #include"hardware.h"
 #include"lvgl.h"
 #include"gui.h"
@@ -37,14 +38,15 @@ static void sysbar_thread_cb(lv_task_t*a){
 }
 
 static void set_bar_style(lv_obj_t*obj,uint8_t part){
-	static lv_style_t bar;
-	static bool initialized;
-	if(!initialized){
-		lv_style_init(&bar);
-		lv_style_set_bg_color(&bar,LV_STATE_DEFAULT,LV_COLOR_SILVER);
-	}
 	lv_theme_apply(obj,LV_THEME_SCR);
-	lv_obj_add_style(obj,part,&bar);
+	lv_obj_set_style_local_bg_color(
+		obj,part,
+		LV_STATE_DEFAULT,
+		lv_color_darken(
+			lv_obj_get_style_bg_color(obj,part),
+			LV_OPA_20
+		)
+	);
 }
 
 static void keyboard_toggle(lv_obj_t*obj,lv_event_t e){
@@ -108,7 +110,16 @@ static lv_obj_t*draw_bottom_button(char*symbol,lv_coord_t x,lv_event_cb_t cb){
 		lv_style_set_margin_all(&sysbar.bottom.btn_style,LV_STATE_DEFAULT,0);
 		lv_style_set_pad_all(&sysbar.bottom.btn_style,LV_STATE_DEFAULT,0);
 		lv_style_set_radius(&sysbar.bottom.btn_style,LV_STATE_DEFAULT,8);
-		lv_style_set_bg_color(&sysbar.bottom.btn_style,LV_STATE_DEFAULT,LV_COLOR_SILVER);
+		lv_style_set_bg_color(
+			&sysbar.bottom.btn_style,
+			LV_STATE_DEFAULT,
+			lv_color_darken(
+				lv_obj_get_style_bg_color(
+					sysbar.screen,
+					LV_OBJ_PART_MAIN
+				),LV_OPA_20
+			)
+		);
 	}
 	lv_obj_t*btn=lv_btn_create(sysbar.bottom.bar,NULL);
 	lv_obj_t*text=lv_label_create(btn,NULL);

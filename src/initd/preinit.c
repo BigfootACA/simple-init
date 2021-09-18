@@ -48,11 +48,8 @@ int preinit(){
 	if(is_folder(_PATH_PROC"/1"))tlog_warn("%s already mounted",_PATH_PROC);
 	else exmount("proc",_PATH_PROC,"proc","rw,nosuid,noexec,nodev");
 	xmount(false,"run",_PATH_RUN,"tmpfs","rw,nosuid,nodev,mode=755",true);
-
-	// load cmdline
 	if(access(_PATH_PROC_CMDLINE,R_OK)!=0)
 		return terlog_error(2,"failed to find proc mountpoint");
-	load_cmdline();
 
 	// init empty rootfs
 	if(need_extract_rootfs()){
@@ -79,6 +76,9 @@ int preinit(){
 
 	// start config daemon
 	start_confd(TAG,NULL);
+
+	// load cmdline
+	load_cmdline();
 
 	// init /dev
 	if(xmount(false,"dev",_PATH_DEV,"devtmpfs","rw,nosuid,noexec,mode=755",false)!=0)switch(errno){

@@ -30,10 +30,10 @@ static int usage(int e){
 	);
 }
 
-static int do_get(char*key){
+int confctl_do_get(char*key){
 	errno=0;
 	enum conf_type t=confd_get_type(key);
-	if(errno!=0)return re_err(1,"read conf key %s failed",key);
+	if(errno!=0)return re_err(1,"read conf key '%s' failed",key);
 	switch(t){
 		case TYPE_KEY:fprintf(stderr,_("'%s' is not a value\n"),key);return 1;
 		case TYPE_STRING:printf("%s\n",confd_get_string(key,""));break;
@@ -41,10 +41,10 @@ static int do_get(char*key){
 		case TYPE_BOOLEAN:printf("%s\n",BOOL2STR(confd_get_boolean(key,false)));break;
 	}
 	if(errno!=0)return re_err(1,"read conf key '%s' failed",key);
-	return 0;
+	return errno;
 }
 
-static int do_set(char*key,char*value){
+int confctl_do_set(char*key,char*value){
 	errno=0;
 	int r;
 	enum conf_type t=confd_get_type(key);
@@ -78,7 +78,7 @@ static int do_set(char*key,char*value){
 }
 
 static int do_get_set(char*key,char*value){
-	return value?do_set(key,value):do_get(key);
+	return value?confctl_do_set(key,value):confctl_do_get(key);
 }
 
 int confctl_main(int argc,char**argv){

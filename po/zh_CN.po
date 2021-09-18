@@ -1068,3 +1068,18 @@ msgstr "删除配置项"
 
 msgid "Dump config store"
 msgstr "导出配置存储"
+
+msgid "Themes"
+msgstr "主题"
+
+msgid "Select theme"
+msgstr "选择主题"
+
+msgid "Dark Mode"
+msgstr "暗色模式"
+
+msgid "Need to restart GUI when changing theme"
+msgstr "更改主题后需要重启GUI"
+
+msgid "Restart"
+msgstr "重启"

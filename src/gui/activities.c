@@ -5,6 +5,7 @@ extern struct gui_register guireg_guipm_partitions;
 extern struct gui_register guireg_uefi_bootmenu;
 extern struct gui_register guireg_uefi_shell;
 extern struct gui_register guireg_mouse_menu;
+extern struct gui_register guireg_theme_menu;
 extern struct gui_register guireg_benchmark;
 extern struct gui_register guireg_backlight;
 extern struct gui_register guireg_logviewer;
@@ -26,6 +27,7 @@ struct gui_register*guiact_register[]={
 	&guireg_backlight,
 	&guireg_logviewer,
 	#endif
+	&guireg_theme_menu,
 	&guireg_benchmark,
 	&guireg_language,
 	&guireg_reboot,

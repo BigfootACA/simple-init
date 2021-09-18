@@ -72,3 +72,4 @@
   interface/uefi_bootmenu.c
   interface/uefi_shell.c
   interface/mouse.c
+  interface/theme.c

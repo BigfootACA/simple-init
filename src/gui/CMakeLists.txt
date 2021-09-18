@@ -14,6 +14,7 @@ add_library(init_gui STATIC
 	interface/logviewer.c
 	interface/benchmark.c
 	interface/language.c
+	interface/theme.c
 	drivers/drm.c
 	drivers/fbdev.c
 	drivers/input.c

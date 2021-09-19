@@ -18,6 +18,7 @@
 #include"activity.h"
 #include"gui.h"
 #include"font.h"
+#include"tools.h"
 #include"confd.h"
 #include"sysbar.h"
 #include"hardware.h"
@@ -123,6 +124,19 @@ static void lvgl_logger(lv_log_level_t level,const char*file,uint32_t line,const
 	logger_printf(lvl,"lvgl","%s:%d@%s %s",basename(fn),line,func,buf);
 }
 
+static void scroll_on_focus(lv_group_t*grp){
+	lv_obj_t*focus=lv_group_get_focused(grp),*obj=focus;
+	while((obj=lv_obj_get_parent(obj)))if(lv_debug_check_obj_type(obj,"lv_page")){
+		lv_coord_t oy=lv_obj_get_rel_y(obj,focus),ox=lv_obj_get_rel_x(obj,focus);
+		lv_coord_t ph=lv_obj_get_height(obj),pw=lv_obj_get_width(obj);
+		lv_coord_t oh=lv_obj_get_height(focus),ow=lv_obj_get_width(focus);
+		if(oy<0)lv_page_scroll_ver(obj,-oy);
+		else if(oy+oh>ph)lv_page_scroll_ver(obj,-oy+ph-oh);
+		if(ox<0)lv_page_scroll_ver(obj,-ox);
+		else if(ox+ow>pw)lv_page_scroll_ver(obj,-ox+pw-ow);
+	}
+}
+
 static int gui_pre_init(){
 	// initialize lvgl
 	lv_init();
@@ -132,6 +146,7 @@ static int gui_pre_init(){
 
 	// create group for buttons
 	gui_grp=lv_group_create();
+	lv_group_set_focus_cb(gui_grp,scroll_on_focus);
 
 	#ifndef ENABLE_UEFI
 	// parse backlight device

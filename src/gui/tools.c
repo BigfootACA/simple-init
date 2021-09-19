@@ -265,4 +265,11 @@ lv_coord_t lv_obj_get_rel_y(lv_obj_t*rel,lv_obj_t*obj){
 	return c;
 }
 
+lv_coord_t lv_obj_get_rel_x(lv_obj_t*rel,lv_obj_t*obj){
+	lv_coord_t c=0;
+	do{c+=lv_obj_get_x(obj);}
+	while((obj=lv_obj_get_parent(obj))&&obj!=rel);
+	return c;
+}
+
 #endif

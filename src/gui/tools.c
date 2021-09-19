@@ -257,4 +257,12 @@ void lv_page_go_bottom(lv_obj_t*page){
 	lv_obj_t*s=lv_page_get_scrollable(page);
 	lv_page_scroll_ver(page,-lv_obj_get_height(s));
 }
+
+lv_coord_t lv_obj_get_rel_y(lv_obj_t*rel,lv_obj_t*obj){
+	lv_coord_t c=0;
+	do{c+=lv_obj_get_y(obj);}
+	while((obj=lv_obj_get_parent(obj))&&obj!=rel);
+	return c;
+}
+
 #endif

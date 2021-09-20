@@ -51,21 +51,13 @@ int boot(boot_config*boot){
 	return r;
 }
 
+extern boot_config boot_system;
 static int default_boot(struct service*svc __attribute__((unused))){
 	open_socket_initfd(DEFAULT_INITD,false);
 	open_socket_logfd_default();
-	if(boot(boot_options.config)!=0){
-		errno=0;
-		struct init_msg msg,response;
-		init_initialize_msg(&msg,ACTION_SVC_START);
-		strcpy(msg.data.data,"system");
-		init_send(&msg,&response);
-		if(errno!=0)telog_error("send service command failed");
-		errno=response.data.status.ret;
-		if(errno!=0)telog_error("start system failed");
-		return response.data.status.ret;
-	}
-	return 0;
+	if(boot(boot_options.config)==0)return 0;
+	if(boot_options.config==&boot_system)return -1;
+	return boot(&boot_system);
 }
 
 int register_default_boot(){

@@ -3,4 +3,5 @@ add_library(init_boot STATIC
 	bootdef.c
 	reboot.c
 	root.c
+	system.c
 )

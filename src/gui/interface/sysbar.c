@@ -30,6 +30,7 @@ static void sysbar_thread(struct sysbar*b){
 		lv_label_set_text_fmt(b->top.content.level,"%d%%",lvl);
 		lv_label_set_text(b->top.content.battery,sym);
 	}else lv_label_set_text_fmt(b->top.content.level,"---");
+	pwr_close_device(bats);
 	#endif
 }
 

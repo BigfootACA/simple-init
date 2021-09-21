@@ -137,7 +137,7 @@ static void scroll_on_focus(lv_group_t*grp){
 	}
 }
 
-static int gui_pre_init(){
+int gui_pre_init(){
 	// initialize lvgl
 	lv_init();
 
@@ -289,9 +289,7 @@ int gui_draw(){
 	return 0;
 }
 
-int gui_init(){
-	if(gui_pre_init()<0||gui_draw()<0)return -1;
-
+int gui_main(){
 	#ifdef ENABLE_UEFI
 	REPORT_STATUS_CODE(EFI_PROGRESS_CODE,(EFI_SOFTWARE_DXE_BS_DRIVER|EFI_SW_PC_INPUT_WAIT));
 
@@ -330,6 +328,14 @@ int gui_init(){
 	#endif
 	gui_do_quit();
 	return run_exit?run_exit(NULL):0;
+}
+
+int gui_init(){
+	return (
+		gui_pre_init()<0||
+		gui_draw()<0||
+		gui_main()<0
+	)?-1:0;
 }
 
 void gui_set_run_exit(runnable_t*run){

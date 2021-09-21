@@ -54,5 +54,6 @@ extern bool pwr_is_battery(int fd);
 extern int pwr_multi_get_capacity(int*fds);
 extern int pwr_scan_device(int fds[],int max,bool battery);
 extern int pwr_open_device(const char*name);
+extern void pwr_close_device(int*fds);
 extern void vibrate(char*dev,int time);
 #endif

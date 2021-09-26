@@ -64,7 +64,7 @@ static int theme_menu_draw(struct gui_activity*act){
 	lv_label_set_align(lbl_tip_icon,LV_LABEL_ALIGN_CENTER);
 	lv_obj_align(lbl_tip_icon,chk_dark,LV_ALIGN_OUT_BOTTOM_LEFT,0,gui_font_size);
 	lv_obj_set_x(lbl_tip_icon,gui_font_size);
-	lv_obj_set_text_font(lbl_tip_icon,LV_STATE_DEFAULT,LV_LABEL_PART_MAIN,symbol_font);
+	lv_obj_set_style_local_text_font(lbl_tip_icon,LV_STATE_DEFAULT,LV_LABEL_PART_MAIN,symbol_font);
 	lv_label_set_text(lbl_tip_icon,LV_SYMBOL_WARNING);
 
 	lbl_tips=lv_label_create(box,NULL);

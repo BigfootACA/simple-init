@@ -50,34 +50,23 @@ static void add_button(struct gui_register*p){
 	int a=app_num%xnum,b=app_num/xnum;
 	int w=(gui_w-gui_font_size)/xnum,h=(gui_h-gui_font_size)/(ynum+1);
 
-	lv_style_t*style=malloc(sizeof(lv_style_t));
-	lv_style_init(style);
-	lv_style_set_radius(style,LV_STATE_DEFAULT,10);
-	lv_color_t c=lv_obj_get_style_text_color(screen,LV_OBJ_PART_MAIN);
-	lv_style_set_outline_color(style,LV_STATE_PRESSED,c);
-	lv_style_set_outline_color(style,LV_STATE_FOCUSED,c);
-	lv_style_set_outline_color(style,LV_STATE_CHECKED,c);
-	lv_style_set_outline_width(style,LV_STATE_PRESSED,1);
-	lv_style_set_outline_width(style,LV_STATE_FOCUSED,1);
-	lv_style_set_outline_width(style,LV_STATE_CHECKED,1);
-
 	lv_obj_t*app=lv_objmask_create(screen,NULL);
 	lv_obj_set_click(app,true);
 	lv_obj_set_pos(app,(w*a)+(gui_font_size/2),(h*b)+(gui_font_size/2));
 	lv_obj_set_size(app,w,h);
-	lv_obj_add_style(app,LV_OBJ_PART_MAIN,style);
+	lv_color_t c=lv_obj_get_style_text_color(screen,LV_OBJ_PART_MAIN);
+	lv_obj_set_style_local_outline_color(app,LV_OBJMASK_PART_MAIN,LV_STATE_PRESSED,c);
+	lv_obj_set_style_local_outline_color(app,LV_OBJMASK_PART_MAIN,LV_STATE_FOCUSED,c);
+	lv_obj_set_style_local_outline_width(app,LV_OBJMASK_PART_MAIN,LV_STATE_PRESSED,1);
+	lv_obj_set_style_local_outline_width(app,LV_OBJMASK_PART_MAIN,LV_STATE_FOCUSED,1);
+	lv_obj_set_style_local_radius(app,LV_OBJMASK_PART_MAIN,LV_STATE_DEFAULT,10);
 	lv_obj_set_user_data(app,p);
 	lv_obj_set_event_cb(app,click_btn);
 	lv_group_add_obj(gui_grp,app);
 
-	lv_style_t*app_style=malloc(sizeof(lv_style_t));
-	lv_style_init(app_style);
-	lv_style_set_bg_color(app_style,LV_STATE_DEFAULT,LV_COLOR_WHITE);
-	lv_style_set_radius(app_style,LV_STATE_DEFAULT,w/10);
-
 	int ix=w-gui_font_size,im=gui_font_size/2;
 	lv_obj_t*icon_w=lv_objmask_create(app,NULL);
-	lv_obj_add_style(icon_w,LV_OBJMASK_PART_MAIN,app_style);
+	lv_obj_set_style_local_radius(icon_w,LV_OBJMASK_PART_MAIN,LV_STATE_DEFAULT,w/10);
 	lv_obj_set_click(icon_w,false);
 	lv_obj_set_size(icon_w,ix,ix);
 	lv_obj_set_pos(icon_w,im,im);
@@ -98,19 +87,15 @@ static void add_button(struct gui_register*p){
 	if(x->w>0&&x->h>0)lv_img_set_zoom(icon,(int)(((float)ix/MAX(x->w,x->h))*256));
 	lv_img_set_pivot(icon,0,0);
 
-	lv_style_t*txt_style=malloc(sizeof(lv_style_t));
-	lv_style_init(txt_style);
-	lv_style_set_text_font(txt_style,LV_STATE_DEFAULT,gui_font_small);
-	lv_style_set_pad_top(txt_style,LV_STATE_DEFAULT,gui_dpi/100);
-
 	lv_obj_t*txt=lv_label_create(app,NULL);
-	lv_obj_add_style(txt,LV_LABEL_PART_MAIN,txt_style);
 	lv_label_set_long_mode(txt,LV_LABEL_LONG_BREAK);
 	lv_obj_set_width(txt,w);
 	lv_label_set_align(txt,LV_LABEL_ALIGN_CENTER);
 	lv_label_set_text(txt,_(p->title));
 	lv_obj_align(txt,icon_w,LV_ALIGN_OUT_BOTTOM_MID,0,0);
 	lv_obj_set_height(app,lv_obj_get_y(txt)+lv_obj_get_height(txt)+gui_font_size);
+	lv_obj_set_style_local_text_font(txt,LV_LABEL_PART_MAIN,LV_STATE_DEFAULT,gui_font_small);
+	lv_obj_set_style_local_pad_top(txt,LV_LABEL_PART_MAIN,LV_STATE_DEFAULT,gui_dpi/100);
 
 	app_num++;
 }

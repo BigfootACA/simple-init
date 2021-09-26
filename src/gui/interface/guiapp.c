@@ -53,6 +53,10 @@ static void add_button(struct gui_register*p){
 	lv_style_t*style=malloc(sizeof(lv_style_t));
 	lv_style_init(style);
 	lv_style_set_radius(style,LV_STATE_DEFAULT,10);
+	lv_color_t c=lv_obj_get_style_text_color(screen,LV_OBJ_PART_MAIN);
+	lv_style_set_outline_color(style,LV_STATE_PRESSED,c);
+	lv_style_set_outline_color(style,LV_STATE_FOCUSED,c);
+	lv_style_set_outline_color(style,LV_STATE_CHECKED,c);
 	lv_style_set_outline_width(style,LV_STATE_PRESSED,1);
 	lv_style_set_outline_width(style,LV_STATE_FOCUSED,1);
 	lv_style_set_outline_width(style,LV_STATE_CHECKED,1);

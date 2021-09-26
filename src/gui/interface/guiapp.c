@@ -171,7 +171,7 @@ int guiapp_main(int argc __attribute((unused)),char**argv __attribute((unused)))
 }
 
 #ifndef ENABLE_UEFI
-static int guiap_startup(struct service*svc __attribute__((unused))){
+static int guiapp_startup(struct service*svc __attribute__((unused))){
 	return guiapp_main(0,NULL);
 }
 
@@ -179,7 +179,7 @@ int register_guiapp(){
 	struct service*guiapp=svc_create_service("guiapp",WORK_FOREGROUND);
 	if(guiapp){
 		svc_set_desc(guiapp,"GUI Application Launcher");
-		svc_set_start_function(guiapp,guiap_startup);
+		svc_set_start_function(guiapp,guiapp_startup);
 		guiapp->auto_restart=true;
 		svc_add_depend(svc_system,guiapp);
 	}

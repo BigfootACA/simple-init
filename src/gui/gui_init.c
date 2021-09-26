@@ -256,12 +256,9 @@ static VOID EFIAPI efi_timer(IN EFI_EVENT e,IN VOID*ctx){
 
 #endif
 
-int gui_draw(){
+int gui_screen_init(){
 	lv_obj_t*screen;
 	if(!(screen=lv_scr_act()))return trlog_error(-1,"failed to get screen");
-
-	// init gui activity
-	guiact_init();
 
 	// set current fonts and themes
 	lv_theme_t*th=LV_THEME_DEFAULT_INIT(
@@ -278,9 +275,15 @@ int gui_draw(){
 	// add lvgl mouse pointer
 	gui_cursor=lv_img_create(screen,NULL);
 	lv_img_set_src(gui_cursor,"\xef\x89\x85"); // mouse-pointer
+	return 0;
+}
+
+int gui_draw(){
+	// init gui activity
+	guiact_init();
 
 	// draw top and bottom sysbar
-	sysbar_draw(screen);
+	sysbar_draw(lv_scr_act());
 
 	// draw callback
 	guiact_start_activity_by_name("guiapp",NULL);
@@ -333,6 +336,7 @@ int gui_main(){
 int gui_init(){
 	return (
 		gui_pre_init()<0||
+		gui_screen_init()<0||
 		gui_draw()<0||
 		gui_main()<0
 	)?-1:0;

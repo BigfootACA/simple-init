@@ -17,6 +17,7 @@ extern bool gui_sleep,gui_run,gui_dark;
 extern void input_scan_register(void);
 extern int init_lvgl_fs(char letter,char*root,bool debug);
 extern int gui_pre_init();
+extern int gui_screen_init();
 extern int gui_init();
 extern int gui_main();
 extern int gui_draw();

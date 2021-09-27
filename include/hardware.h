@@ -55,5 +55,11 @@ extern int pwr_multi_get_capacity(int*fds);
 extern int pwr_scan_device(int fds[],int max,bool battery);
 extern int pwr_open_device(const char*name);
 extern void pwr_close_device(int*fds);
+extern enum power_supply_type pwr_get_type(int fd);
+extern enum power_supply_type pwr_chars2type(const char*type);
+extern enum power_supply_status pwr_get_status(int fd);
+extern enum power_supply_status pwr_chars2status(const char*status);
+extern const char*pwr_status2chars(enum power_supply_status status);
+extern const char*pwr_type2chars(enum power_supply_type type);
 extern void vibrate(char*dev,int time);
 #endif

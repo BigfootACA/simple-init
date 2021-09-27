@@ -158,5 +158,9 @@ int pwr_open_device(const char*name){
 }
 
 void pwr_close_device(int*fds){
-	if(fds)for(int i=0;fds[i];i++)close(fds[i]);
+	if(!fds)return;
+	for(int i=0;(fds[i]>0);i++){
+		close(fds[i]);
+		fds[i]=-1;
+	}
 }

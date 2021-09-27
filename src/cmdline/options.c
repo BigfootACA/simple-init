@@ -3,6 +3,7 @@
 #include"cmdline.h"
 #define DEF_HANDLER(name)extern int cmdline_##name(char*,char*)
 #define DEF_OPTION(_name,_always,_type)&(struct cmdline_option){.name=#_name,.type=(_type),.always=(_always),.handler=&cmdline_##_name}
+#define DEF_XOPTION(_name,_handler,_always,_type)&(struct cmdline_option){.name=#_name,.type=(_type),.always=(_always),.handler=&cmdline_##_handler}
 
 DEF_HANDLER(rw);
 DEF_HANDLER(ro);
@@ -18,6 +19,7 @@ DEF_HANDLER(logfile);
 DEF_HANDLER(dpi);
 DEF_HANDLER(dpi_force);
 DEF_HANDLER(backlight);
+DEF_HANDLER(androidboot_mode);
 
 struct cmdline_option*cmdline_options[]={
 
@@ -46,6 +48,9 @@ struct cmdline_option*cmdline_options[]={
 	DEF_OPTION(dpi_force,  false, REQUIRED_VALUE),
 	DEF_OPTION(backlight,  false, REQUIRED_VALUE),
 	#endif
+
+	// androidboot.c; android bootloader pass arguments
+	DEF_XOPTION(androidboot.mode,   androidboot_mode,  true, REQUIRED_VALUE),
 	NULL
 };
 

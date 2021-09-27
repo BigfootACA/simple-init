@@ -4,4 +4,5 @@ add_library(init_cmdline STATIC
 	options.c
 	root.c
 	gui.c
+	androidboot.c
 )

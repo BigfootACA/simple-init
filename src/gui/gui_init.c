@@ -275,6 +275,7 @@ int gui_screen_init(){
 	// add lvgl mouse pointer
 	gui_cursor=lv_img_create(screen,NULL);
 	lv_img_set_src(gui_cursor,"\xef\x89\x85"); // mouse-pointer
+	lv_obj_set_pos(gui_cursor,-gui_w,-gui_h);
 	return 0;
 }
 

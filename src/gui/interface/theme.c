@@ -27,7 +27,10 @@ static void ok_click(lv_obj_t*obj,lv_event_t e){
 	guiact_do_back();
 }
 
-static void do_restart(lv_task_t*t __attribute__((unused))){gui_draw();}
+static void do_restart(lv_task_t*t __attribute__((unused))){
+	gui_screen_init();
+	gui_draw();
+}
 
 static void restart_click(lv_obj_t*obj,lv_event_t e){
 	if(obj!=btn_restart||e!=LV_EVENT_CLICKED)return;

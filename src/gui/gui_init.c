@@ -268,6 +268,9 @@ int gui_screen_init(){
 	);
 	lv_theme_set_act(th);
 
+	// init gui activity
+	guiact_init();
+
 	// clean screen
 	lv_obj_clean(screen);
 	memset(&sysbar,0,sizeof(struct sysbar));
@@ -287,9 +290,6 @@ int gui_screen_init(){
 }
 
 int gui_draw(){
-	// init gui activity
-	guiact_init();
-
 	// draw top and bottom sysbar
 	sysbar_draw(lv_scr_act());
 

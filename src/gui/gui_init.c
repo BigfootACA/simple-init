@@ -273,9 +273,16 @@ int gui_screen_init(){
 	memset(&sysbar,0,sizeof(struct sysbar));
 
 	// add lvgl mouse pointer
-	gui_cursor=lv_img_create(screen,NULL);
+	if(!gui_cursor||!lv_obj_is_visible(gui_cursor))
+		gui_cursor=lv_img_create(screen,NULL);
 	lv_img_set_src(gui_cursor,"\xef\x89\x85"); // mouse-pointer
 	lv_obj_set_pos(gui_cursor,-gui_w,-gui_h);
+	lv_obj_set_style_local_image_recolor(
+		gui_cursor,
+		LV_IMG_PART_MAIN,
+		LV_STATE_DEFAULT,
+		lv_obj_get_style_text_color(screen,LV_OBJ_PART_MAIN)
+	);
 	return 0;
 }
 

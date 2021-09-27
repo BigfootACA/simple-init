@@ -2,6 +2,7 @@
 
 extern int run_boot_root(boot_config*boot);
 extern int run_boot_system(boot_config*boot);
+extern int run_boot_charger(boot_config*boot);
 
 boot_config boot_switchroot={
 	.mode=BOOT_SWITCHROOT,
@@ -17,4 +18,12 @@ boot_config boot_system={
 	.desc="Default System",
 	.data={},
 	.main=&run_boot_system
+};
+
+boot_config boot_charger={
+	.mode=BOOT_CHARGER,
+	.ident="charger",
+	.desc="Default Charger Screen",
+	.data={},
+	.main=&run_boot_charger
 };

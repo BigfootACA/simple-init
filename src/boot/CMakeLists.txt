@@ -4,4 +4,5 @@ add_library(init_boot STATIC
 	reboot.c
 	root.c
 	system.c
+	charger.c
 )

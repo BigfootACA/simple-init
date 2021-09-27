@@ -83,6 +83,12 @@ extern int pwr_get_capacity(int fd);
 // src/hardware/battery.c: is device a battery
 extern bool pwr_is_battery(int fd);
 
+// src/hardware/battery.c: is battery charging
+extern bool pwr_is_charging(int fd);
+
+// src/hardware/battery.c: is multi battery charging
+extern bool pwr_multi_is_charging(int*fds);
+
 // src/hardware/battery.c: get capacity from multi battery
 extern int pwr_multi_get_capacity(int*fds);
 

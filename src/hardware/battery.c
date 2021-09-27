@@ -98,6 +98,23 @@ bool pwr_is_battery(int fd){
 	return pwr_get_type(fd)==TYPE_BATTERY;
 }
 
+bool pwr_is_charging(int fd){
+	switch(pwr_get_status(fd)){
+		case STATUS_CHARGING:
+		case STATUS_NOT_CHARGING:
+		case STATUS_FULL:return true;
+		default:return false;
+	}
+}
+
+bool pwr_multi_is_charging(int*fds){
+	if(!fds||!fds[0])return false;
+	bool charge=false;
+	for(int i=0;fds[i];i++)
+		charge=charge||pwr_is_charging(fds[i]);
+	return charge;
+}
+
 int pwr_multi_get_capacity(int*fds){
 	if(!fds||!fds[0])ERET(EINVAL);
 	int count=0,size=0,i;

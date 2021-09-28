@@ -157,3 +157,25 @@ bool confd_get_boolean(const char*path,bool def){
 	if(res.code>0)errno=res.code;
 	return res.data.boolean;
 }
+
+#define EXT_BASE(func,arg,type,ret) \
+ret func##_base(const char*base,const char*path,type arg){\
+	char xpath[PATH_MAX]={0};\
+	snprintf(xpath,PATH_MAX-1,"%s.%s",base,path);\
+	return func(xpath,arg);\
+}
+#define EXT_ARRAY(func,arg,type,ret) \
+ret func##_array(const char*base,int index,const char*path,type arg){\
+	char xpath[PATH_MAX]={0};\
+	snprintf(xpath,PATH_MAX-1,"%s.%d.%s",base,index,path);\
+	return func(xpath,arg);\
+}
+#define EXT(func,arg,type,ret) \
+	EXT_BASE(func,arg,type,ret) \
+	EXT_ARRAY(func,arg,type,ret)
+EXT(confd_set_integer, data,int64_t,int);
+EXT(confd_set_string,  data,char*,  int);
+EXT(confd_set_boolean, data,bool,   int);
+EXT(confd_get_string,  data,char*,  char*);
+EXT(confd_get_integer, data,int64_t,int64_t);
+EXT(confd_get_boolean, data,bool,   bool);

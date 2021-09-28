@@ -36,26 +36,19 @@ extern int confd_dump();
 // src/confd/client.c: delete a config item
 extern int confd_delete(const char*path);
 
-// src/confd/client.c: set an integer config item
-extern int confd_set_integer(const char*path,int64_t def);
-
-// src/confd/client.c: set a string config item
-extern int confd_set_string(const char*path,char*def);
-
-// src/confd/client.c: set a boolean config item
-extern int confd_set_boolean(const char*path,bool def);
-
 // src/confd/client.c: get type of config item
 extern enum conf_type confd_get_type(const char*path);
 
-// src/confd/client.c: get string config item
-extern char*confd_get_string(const char*path,char*data);
-
-// src/confd/client.c: get integer config item
-extern int64_t confd_get_integer(const char*path,int64_t def);
-
-// src/confd/client.c: get boolean config item
-extern bool confd_get_boolean(const char*path,bool def);
+#define DECLARE_FUNC(func,arg,type,ret) \
+	extern ret func(const char*path,type arg); \
+	extern ret func##_base(const char*base,const char*path,type arg);\
+	extern ret func##_array(const char*base,int index,const char*path,type arg);
+DECLARE_FUNC(confd_set_integer, data,int64_t,int);
+DECLARE_FUNC(confd_set_string,  data,char*,  int);
+DECLARE_FUNC(confd_set_boolean, data,bool,   int);
+DECLARE_FUNC(confd_get_string,  data,char*,  char*);
+DECLARE_FUNC(confd_get_integer, data,int64_t,int64_t);
+DECLARE_FUNC(confd_get_boolean, data,bool,   bool);
 
 // open default socket
 #define open_default_confd_socket(tag) open_confd_socket(tag,DEFAULT_CONFD)

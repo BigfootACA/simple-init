@@ -266,7 +266,7 @@ static int drm_find_connector(void){
 		if(conn->connection==DRM_MODE_CONNECTED&&conn->count_modes>0)break;
 		drmModeFreeConnector(conn);
 		conn=NULL;
-	};
+	}
 	if(!conn){
 		tlog_error("suitable connector not found");
 		goto free_res;
@@ -291,7 +291,7 @@ static int drm_find_connector(void){
 			drm_dev.fd,
 			res->encoders[i]
 		)))continue;
-		if(enc->encoder_id==conn->encoder_id)break;
+		if(enc->encoder_id==conn->encoder_id&&enc->crtc_id>0)break;
 		drmModeFreeEncoder(enc);
 		enc=NULL;
 	}

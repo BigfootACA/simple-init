@@ -120,5 +120,5 @@ extern const char*pwr_status2chars(enum power_supply_status status);
 extern const char*pwr_type2chars(enum power_supply_type type);
 
 // src/hardware/vibrate.c: vibrate device
-extern void vibrate(char*dev,int time);
+extern void vibrate(int time);
 #endif

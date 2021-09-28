@@ -1,14 +1,20 @@
+#define _GNU_SOURCE
 #include<fcntl.h>
-#include<stdio.h>
-#include<string.h>
 #include<unistd.h>
+#include"system.h"
+#include"pathnames.h"
+#include"hardware.h"
 
-void vibrate(char*dev,int time){
+void vibrate(int time){
 	if(time<0||time>0xFFFF)return;
-	int wr;
-	char buff[8]={0};
-	snprintf(buff,7,"%d\n",time);
-	if((wr=open(dev,O_WRONLY))<0)return;
-	write(wr,buff,strlen(buff));
-	close(wr);
+	if(fd_write_int(
+		AT_FDCWD,
+		_PATH_SYS_CLASS"/timed_output/vibrator/enable",
+		time,true
+	)==0)return;
+	int v=led_find("vibrator");
+	if(v<0)return;
+	fd_write_int(v,"duration",time,true);
+	fd_write_int(v,"activate",1,true);
+	close(v);
 }

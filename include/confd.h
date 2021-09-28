@@ -36,6 +36,9 @@ extern int confd_dump();
 // src/confd/client.c: delete a config item
 extern int confd_delete(const char*path);
 
+// src/confd/client.c: list config items
+extern char**confd_ls(const char*path);
+
 // src/confd/client.c: get type of config item
 extern enum conf_type confd_get_type(const char*path);
 

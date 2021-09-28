@@ -95,6 +95,42 @@ int confd_set_boolean(const char*path,bool data){
 	return res.code;
 }
 
+char**confd_ls(const char*path){
+	if(!path)EPRET(EINVAL);
+	if(confd<0)return NULL;
+	struct confd_msg msg,res;
+	confd_internal_init_msg(&msg,CONF_LIST);
+	strncpy(msg.path,path,sizeof(msg.path)-1);
+	if(confd_internal_send(confd,&msg)<0)return NULL;
+	if(confd_internal_read_msg(confd,&res)<0)return NULL;
+	size_t s=res.data.data_len;
+	if(res.data.data_len==0)return NULL;
+	size_t i=0,p=0;
+	char*ret=malloc(s);
+	if(!ret){
+		lseek(confd,sizeof(i)+s,SEEK_CUR);
+		EPRET(ENOMEM);
+	}
+	memset(ret,0,s);
+	if(
+		(size_t)read(confd,&i,sizeof(i))!=sizeof(i)||
+		(size_t)read(confd,ret,s)!=s
+	){
+		free(ret);
+		return NULL;
+	}
+	char**ls=malloc((i+1)*sizeof(char*));
+	if(!ls){
+		free(ret);
+		EPRET(ENOMEM);
+	}
+	ls[p++]=ret;
+	for(size_t x=0;x<s;x++)if(!ret[x])ls[p++]=ret+x+1;
+	ls[p-1]=0;
+	if(res.code>0)errno=res.code;
+	return ls;
+}
+
 enum conf_type confd_get_type(const char*path){
 	if(!path||confd<0)ERET(EINVAL);
 	errno=0;

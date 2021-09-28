@@ -11,6 +11,7 @@
 enum ctl_oper{
 	OPER_NONE,
 	OPER_DUMP,
+	OPER_LIST,
 	OPER_DELETE,
 	OPER_QUIT,
 };
@@ -23,11 +24,22 @@ static int usage(int e){
 		"Options:\n"
 		"\t-s, --socket <SOCKET>  Use custom control socket (default is %s)\n"
 		"\t-d, --delete <KEY>     Delete item\n"
+		"\t-l, --list <KEY>       List items\n"
 		"\t-q, --quit             Terminate confd\n"
 		"\t-D, --dump             Dump config store\n"
 		"\t-h, --help             Display this help and exit\n",
 		DEFAULT_CONFD
 	);
+}
+
+int confctl_do_ls(char*key){
+	errno=0;
+	char**r=confd_ls(key);
+	if(errno!=0||!r||!r[0])return re_err(1,"list conf key '%s' failed",key);
+	for(int i=0;r[i];i++)puts(r[i]);
+	free(r[0]);
+	free(r);
+	return errno;
 }
 
 int confctl_do_get(char*key){
@@ -86,6 +98,7 @@ int confctl_main(int argc,char**argv){
 		{"help",    no_argument,       NULL,'h'},
 		{"quit",    no_argument,       NULL,'q'},
 		{"dump",    no_argument,       NULL,'D'},
+		{"list",    required_argument, NULL,'l'},
 		{"delete",  required_argument, NULL,'d'},
 		{"socket",  required_argument, NULL,'s'},
 		{NULL,0,NULL,0}
@@ -93,7 +106,7 @@ int confctl_main(int argc,char**argv){
 	char*socket=NULL,*key=NULL;
 	enum ctl_oper op=OPER_NONE;
 	int o;
-	while((o=b_getlopt(argc,argv,"hqDd:s:",lo,NULL))>0)switch(o){
+	while((o=b_getlopt(argc,argv,"hqDd:l:s:",lo,NULL))>0)switch(o){
 		case 'h':return usage(0);
 		case 'q':
 			if(op!=OPER_NONE)goto conflict;
@@ -106,6 +119,10 @@ int confctl_main(int argc,char**argv){
 		case 'd':
 			if(op!=OPER_NONE)goto conflict;
 			op=OPER_DELETE,key=b_optarg;
+		break;
+		case 'l':
+			if(op!=OPER_NONE)goto conflict;
+			op=OPER_LIST,key=b_optarg;
 		break;
 		case 's':
 			if(socket)goto conflict;
@@ -130,7 +147,11 @@ int confctl_main(int argc,char**argv){
 		case OPER_DUMP:
 			r=confd_dump();
 			if(errno>0)perror(_("dump config store failed"));
-			break;
+		break;
+		case OPER_LIST:
+			r=confctl_do_ls(key);
+			if(errno>0)perror(_("list config items failed"));
+		break;
 		case OPER_DELETE:
 			r=confd_delete(key);
 			if(errno>0)perror(_("delete config item failed"));

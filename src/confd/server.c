@@ -70,6 +70,32 @@ static int confd_read(int fd){
 			conf_del(msg.path);
 		break;
 
+		// list items in key
+		case CONF_LIST:{
+			size_t s=0,i;
+			char**ls,*l,*p;
+			if(!(ls=(char**)conf_ls(msg.path)))goto fail;
+			for(i=0;ls[i];i++)s+=strlen(ls[i])+1;
+			if(s<=0||!(p=l=malloc(s)))goto fail;
+			for(i=0;ls[i];i++){
+				size_t c=strlen(ls[i]);
+				strcpy(p,ls[i]);
+				p+=c+1;
+			}
+			ret.data.data_len=s;
+			confd_internal_send(fd,&ret);
+			write(fd,&i,sizeof(i));
+			write(fd,l,ret.data.data_len);
+			free(ls);
+			free(l);
+			return e;
+			fail:
+			if(ls)free(ls);
+			if(l)free(l);
+			ret.data.data_len=0;
+			confd_internal_send(fd,&ret);
+		}return e;
+
 		// get item type
 		case CONF_GET_TYPE:
 			ret.data.type=conf_get_type(msg.path);

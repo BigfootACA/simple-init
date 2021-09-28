@@ -14,6 +14,7 @@
 #include"shell.h"
 #include"pathnames.h"
 #include"language.h"
+#include"hardware.h"
 #define TAG "preinit"
 
 static bool need_extract_rootfs(){
@@ -50,6 +51,9 @@ int preinit(){
 	xmount(false,"run",_PATH_RUN,"tmpfs","rw,nosuid,nodev,mode=755",true);
 	if(access(_PATH_PROC_CMDLINE,R_OK)!=0)
 		return terlog_error(2,"failed to find proc mountpoint");
+
+	// vibrate device
+	vibrate(100);
 
 	// init empty rootfs
 	if(need_extract_rootfs()){

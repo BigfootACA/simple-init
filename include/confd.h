@@ -45,6 +45,7 @@ extern enum conf_type confd_get_type(const char*path);
 #define DECLARE_FUNC(func,arg,type,ret) \
 	extern ret func(const char*path,type arg); \
 	extern ret func##_base(const char*base,const char*path,type arg);\
+	extern ret func##_dict(const char*base,const char*key,const char*path,type arg);\
 	extern ret func##_array(const char*base,int index,const char*path,type arg);
 DECLARE_FUNC(confd_set_integer, data,int64_t,int);
 DECLARE_FUNC(confd_set_string,  data,char*,  int);

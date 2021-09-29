@@ -40,6 +40,71 @@ static void signal_handler(int s,siginfo_t*info,void*c __attribute__((unused))){
 	exit(0);
 }
 
+static void do_ls(int fd,struct confd_msg*msg,struct confd_msg*ret){
+	size_t s=0,i;
+	char**ls=NULL,*l=NULL,*p=NULL;
+	if(!(ls=(char**)conf_ls(msg->path)))goto fail;
+	for(i=0;ls[i];i++)s+=strlen(ls[i])+1;
+	if(s<=0||!(p=l=malloc(s)))goto fail;
+	for(i=0;ls[i];i++){
+		size_t c=strlen(ls[i]);
+		strcpy(p,ls[i]);
+		p+=c+1;
+	}
+	ret->data.data_len=s;
+	confd_internal_send(fd,ret);
+	write(fd,&i,sizeof(i));
+	write(fd,l,s);
+	free(ls);
+	free(l);
+	return;
+	fail:
+	if(ls)free(ls);
+	if(l)free(l);
+	ret->data.data_len=0;
+	confd_internal_send(fd,ret);
+}
+
+static void do_get_string(int fd,struct confd_msg*msg,struct confd_msg*ret){
+	size_t s=msg->data.data_len;
+	char*data=malloc(s+1);
+	if(!data){
+		if(s>0)lseek(fd,s,SEEK_CUR);
+		goto fail;
+	}
+	memset(data,0,s+1);
+	if((size_t)read(fd,data,s)!=s)goto fail;
+	char*re=conf_get_string(msg->path,data);
+	if(!re)re=data;
+	ret->data.data_len=strlen(re);
+	confd_internal_send(fd,ret);
+	write(fd,re,ret->data.data_len);
+	free(data);
+	return;
+	fail:
+	if(data)free(data);
+	ret->data.data_len=0;
+	confd_internal_send(fd,ret);
+}
+
+static int do_set_string(int fd,struct confd_msg*msg){
+	size_t s=msg->data.data_len,r;
+	char*data=malloc(s+1);
+	if(!data){
+		if(s>0)lseek(fd,s,SEEK_CUR);
+		return 0;
+	}
+	memset(data,0,s+1);
+	do{errno=0;r=(size_t)read(fd,data,s);}while(errno==EAGAIN);
+	if(r!=s){
+		free(data);
+		return 0;
+	}
+	int retdata=-conf_set_string(msg->path,data);
+	if(retdata!=0)free(data);
+	return retdata;
+}
+
 static int confd_read(int fd){
 	if(fd<0)ERET(EINVAL);
 	errno=0;
@@ -71,30 +136,9 @@ static int confd_read(int fd){
 		break;
 
 		// list items in key
-		case CONF_LIST:{
-			size_t s=0,i;
-			char**ls,*l,*p;
-			if(!(ls=(char**)conf_ls(msg.path)))goto fail;
-			for(i=0;ls[i];i++)s+=strlen(ls[i])+1;
-			if(s<=0||!(p=l=malloc(s)))goto fail;
-			for(i=0;ls[i];i++){
-				size_t c=strlen(ls[i]);
-				strcpy(p,ls[i]);
-				p+=c+1;
-			}
-			ret.data.data_len=s;
-			confd_internal_send(fd,&ret);
-			write(fd,&i,sizeof(i));
-			write(fd,l,ret.data.data_len);
-			free(ls);
-			free(l);
-			return e;
-			fail:
-			if(ls)free(ls);
-			if(l)free(l);
-			ret.data.data_len=0;
-			confd_internal_send(fd,&ret);
-		}return e;
+		case CONF_LIST:
+			do_ls(fd,&msg,&ret);
+		return e;
 
 		// get item type
 		case CONF_GET_TYPE:
@@ -102,22 +146,9 @@ static int confd_read(int fd){
 		break;
 
 		// get item as string
-		case CONF_GET_STRING:{
-			size_t s=msg.data.data_len;
-			char*data=malloc(s+1);
-			if(!data){
-				if(s>0)lseek(fd,s,SEEK_CUR);
-				break;
-			}
-			memset(data,0,s+1);
-			if((size_t)read(fd,data,s)!=s)break;
-			char*re=conf_get_string(msg.path,data);
-			if(!re)re="";
-			ret.data.data_len=strlen(re);
-			confd_internal_send(fd,&ret);
-			write(fd,re,ret.data.data_len);
-			free(data);
-		}return e;
+		case CONF_GET_STRING:
+			do_get_string(fd,&msg,&ret);
+		return e;
 
 		// get item as integer
 		case CONF_GET_INTEGER:
@@ -130,22 +161,9 @@ static int confd_read(int fd){
 		break;
 
 		// put item as string
-		case CONF_SET_STRING:{
-			size_t s=msg.data.data_len,r;
-			char*data=malloc(s+1);
-			if(!data){
-				if(s>0)lseek(fd,s,SEEK_CUR);
-				break;
-			}
-			memset(data,0,s+1);
-			do{errno=0;r=(size_t)read(fd,data,s);}while(errno==EAGAIN);
-			if(r!=s){
-				free(data);
-				break;
-			}
-			retdata=-conf_set_string(msg.path,data);
-			if(retdata!=0)free(data);
-		}break;
+		case CONF_SET_STRING:
+			retdata=do_set_string(fd,&msg);
+		break;
 
 		// put item as integer
 		case CONF_SET_INTEGER:

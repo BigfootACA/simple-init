@@ -25,6 +25,7 @@ static void ctl_fd(int op,int fd){
 	static struct epoll_event ev;
 	ev.events=EPOLLIN,ev.data.fd=fd;
 	epoll_ctl(efd,op,fd,&ev);
+	if(op==EPOLL_CTL_DEL)close(fd);
 }
 
 static void confd_cleanup(int s __attribute__((unused))){

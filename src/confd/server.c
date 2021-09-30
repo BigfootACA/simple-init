@@ -101,6 +101,8 @@ static int do_set_string(int fd,struct confd_msg*msg){
 		free(data);
 		return 0;
 	}
+	char*old=conf_get_string(msg->path,NULL);
+	if(old)free(old);
 	int retdata=-conf_set_string(msg->path,data);
 	if(retdata!=0)free(data);
 	return retdata;

@@ -271,27 +271,10 @@ static void refresh_click(lv_obj_t*obj,lv_event_t e){
 	guipm_disk_reload();
 }
 
-static void ok_msg_click(lv_obj_t*obj,lv_event_t e){
-	if(e==LV_EVENT_DELETE){
-		lv_obj_del_async(lv_obj_get_parent(obj));
-	}else if(e==LV_EVENT_VALUE_CHANGED){
-		switch(lv_msgbox_get_active_btn(obj)){
-			case 0:
-				guiact_start_activity_by_name("guipm-partitions",strdup(selected->name));
-			break;
-		}
-		lv_msgbox_start_auto_close(obj,0);
-	}
-}
-
 static void ok_click(lv_obj_t*obj,lv_event_t e){
 	if(e!=LV_EVENT_CLICKED||obj!=btn_ok||!selected)return;
 	tlog_debug("ok clicked");
-	lv_create_yesno_msgbox_mask(
-		selscr,ok_msg_click,
-		_("Are you sure you want to operate on disk %s?"),
-		selected->name
-	);
+	guiact_start_activity_by_name("guipm-partitions",strdup(selected->name));
 }
 
 static void cancel_click(lv_obj_t*obj,lv_event_t e){

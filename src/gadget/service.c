@@ -12,8 +12,10 @@
 static char*base="gadget.func";
 
 static void init_gadget_conf(){
-	char*serial;
-	if(!(serial=confd_get_string("cmdline.serial","1234567890")))return;
+	char*udc=confd_get_string("cmdline.udc",NULL);
+	char*serial=confd_get_string("cmdline.serial","1234567890");
+	if(!serial)return;
+	if(!udc)udc=gadget_find_udc();
 
 	confd_set_string("gadget.name","gadget");
 	confd_set_integer("gadget.id_vendor",0x0519);
@@ -22,6 +24,7 @@ static void init_gadget_conf(){
 	confd_set_string("gadget.product",NAME);
 	confd_set_string("gadget.serial",serial);
 	confd_set_string("gadget.config",NAME);
+	if(udc)confd_set_string("gadget.udc",udc);
 
 	confd_set_string_array(base,0,"name","usb0");
 	confd_set_string_array(base,0,"func","rndis");
@@ -107,14 +110,11 @@ static int gadget_startup(struct service*svc __attribute__((unused))){
 		if(path)free(path);
 		if(mode)free(mode);
 	}
-	if((udc=confd_get_string("cmdline.udc",NULL))){
-		if(gadget_start(&g,udc)<0)
-			tlog_warn("start gadget failed with %s",udc);
+	if((udc=confd_get_string("gadget.udc",NULL))){
+		int r=gadget_start(&g,udc);
+		if(r!=0)tlog_error("start gadget failed with %s",udc);
 		free(udc);
-	}
-	if(gadget_start_auto(&g)<0){
-		tlog_error("failed to start gadget");
-		goto fail;
+		if(r!=0)return -1;
 	}
 	tlog_info("usb gadget initialized");
 	return 0;

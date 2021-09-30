@@ -67,25 +67,10 @@ static void do_ls(int fd,struct confd_msg*msg,struct confd_msg*ret){
 }
 
 static void do_get_string(int fd,struct confd_msg*msg,struct confd_msg*ret){
-	size_t s=msg->data.data_len;
-	char*data=malloc(s+1);
-	if(!data){
-		if(s>0)lseek(fd,s,SEEK_CUR);
-		goto fail;
-	}
-	memset(data,0,s+1);
-	if((size_t)read(fd,data,s)!=s)goto fail;
-	char*re=conf_get_string(msg->path,data);
-	if(!re)re=data;
-	ret->data.data_len=strlen(re);
+	char*re=conf_get_string(msg->path,NULL);
+	ret->data.data_len=re?strlen(re):0;
 	confd_internal_send(fd,ret);
-	write(fd,re,ret->data.data_len);
-	free(data);
-	return;
-	fail:
-	if(data)free(data);
-	ret->data.data_len=0;
-	confd_internal_send(fd,ret);
+	if(re)write(fd,re,ret->data.data_len);
 }
 
 static int do_set_string(int fd,struct confd_msg*msg){

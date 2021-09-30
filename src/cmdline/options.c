@@ -19,7 +19,7 @@ DEF_HANDLER(logfile);
 DEF_HANDLER(dpi);
 DEF_HANDLER(dpi_force);
 DEF_HANDLER(backlight);
-DEF_HANDLER(androidboot_mode);
+DEF_HANDLER(androidboot);
 
 struct cmdline_option*cmdline_options[]={
 
@@ -50,7 +50,11 @@ struct cmdline_option*cmdline_options[]={
 	#endif
 
 	// androidboot.c; android bootloader pass arguments
-	DEF_XOPTION(androidboot.mode,   androidboot_mode,  true, REQUIRED_VALUE),
+	DEF_XOPTION(androidboot.mode,          androidboot,  true, REQUIRED_VALUE),
+	DEF_XOPTION(androidboot.serialno,      androidboot,  true, REQUIRED_VALUE),
+	DEF_XOPTION(androidboot.usbcontroller, androidboot,  true, REQUIRED_VALUE),
+	DEF_XOPTION(androidboot.bootdevice,    androidboot,  true, REQUIRED_VALUE),
+	DEF_XOPTION(androidboot.hardware,      androidboot,  true, REQUIRED_VALUE),
 	NULL
 };
 

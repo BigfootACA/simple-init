@@ -55,6 +55,7 @@ static int uefigop_init(){
 
 extern int keyboard_register();
 extern int pointer_register();
+extern int touch_register();
 static int uefigop_register(){
 	if(uefigop_init()!=0)return -1;
 	size_t s=ww*hh;
@@ -76,6 +77,7 @@ static int uefigop_register(){
 	logger_set_console(false);
 	keyboard_register();
 	pointer_register();
+	touch_register();
 	return 0;
 }
 static void uefigop_get_sizes(uint32_t*width,uint32_t*height){

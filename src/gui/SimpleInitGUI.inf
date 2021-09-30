@@ -32,6 +32,7 @@
   gUefiShellFileGuid
 
 [Protocols]
+  gEfiAbsolutePointerProtocolGuid
   gEfiSimplePointerProtocolGuid
   gEfiSimpleTextInProtocolGuid
   gEfiGraphicsOutputProtocolGuid
@@ -62,6 +63,7 @@
   drivers/uefigop.c
   drivers/uefipointer.c
   drivers/uefikeyboard.c
+  drivers/uefitouch.c
   decoders/png.c
   decoders/freetype.c
   interface/benchmark.c

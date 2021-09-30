@@ -46,9 +46,15 @@ int confctl_do_get(char*key){
 	errno=0;
 	enum conf_type t=confd_get_type(key);
 	if(errno!=0)return re_err(1,"read conf key '%s' failed",key);
+	char*x;
 	switch(t){
 		case TYPE_KEY:fprintf(stderr,_("'%s' is not a value\n"),key);return 1;
-		case TYPE_STRING:printf("%s\n",confd_get_string(key,""));break;
+		case TYPE_STRING:
+			if((x=confd_get_string(key,""))){
+				puts(x);
+				free(x);
+			}
+		break;
 		case TYPE_INTEGER:printf("%ld\n",confd_get_integer(key,0));break;
 		case TYPE_BOOLEAN:printf("%s\n",BOOL2STR(confd_get_boolean(key,false)));break;
 	}

@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include<stdlib.h>
 #include<string.h>
 #include<sys/un.h>
@@ -145,24 +146,27 @@ enum conf_type confd_get_type(const char*path){
 
 char*confd_get_string(const char*path,char*def){
 	if(!path)EPRET(EINVAL);
-	if(confd<0)return def;
+	char*xdef=def?strdup(def):NULL;
+	if(def&&!xdef)EPRET(ENOMEM);
+	if(confd<0)return xdef;
 	size_t size=0;
 	struct confd_msg msg,res;
 	confd_internal_init_msg(&msg,CONF_GET_STRING);
 	strncpy(msg.path,path,sizeof(msg.path)-1);
 	if(def)msg.data.data_len=size=strlen(def);
-	if(confd_internal_send(confd,&msg)<0)return def;
-	if(def&&size>0&&(size_t)write(confd,def,size)!=size)return def;
-	if(confd_internal_read_msg(confd,&res)<0)return def;
+	if(confd_internal_send(confd,&msg)<0)return xdef;
+	if(def&&size>0&&(size_t)write(confd,def,size)!=size)return xdef;
+	if(confd_internal_read_msg(confd,&res)<0)return xdef;
 	size_t s=res.data.data_len;
-	if(res.data.data_len==0)return def;
+	if(res.data.data_len==0)return xdef;
 	char*ret=malloc(s+1);
 	if(!ret)EPRET(ENOMEM);
 	memset(ret,0,s+1);
 	if(s>0&&(size_t)read(confd,ret,s)!=s){
 		free(ret);
-		return def;
+		return xdef;
 	}
+	if(xdef)free(xdef);
 	if(res.code>0)errno=res.code;
 	return ret;
 }

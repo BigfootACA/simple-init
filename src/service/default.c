@@ -2,9 +2,11 @@
 #include<time.h>
 #include<errno.h>
 #include<signal.h>
+#include<string.h>
 #include"system.h"
 #include"logger.h"
 #include"service.h"
+#include"init_internal.h"
 #include"defines.h"
 #include"pathnames.h"
 #define TAG "service"
@@ -46,7 +48,16 @@ int svc_default_stop(struct service*svc){
 int svc_default_restart(struct service*svc){
 	if(svc_default_stop(svc)<0)return -errno;
 	tlog_notice("try to starting %s",svc_get_desc(svc));
-	service_start(svc);
+	open_socket_initfd(DEFAULT_INITD,true);
+	struct init_msg msg,response;
+	init_initialize_msg(&msg,ACTION_SVC_START);
+	strcpy(msg.data.data,svc->name);
+	errno=0;
+	init_send(&msg,&response);
+	if(errno!=0||response.data.status.ret!=0){
+		if(errno==0)errno=response.data.status.ret;
+		telog_warn("start failed");
+	}
 	return 0;
 }
 

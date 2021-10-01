@@ -22,26 +22,32 @@
 #define DISPLAY_DPI 200
 #endif
 int gui_mouse_scale=(DISPLAY_DPI/200)*MOUSE_SCALE;
-static lv_indev_t*dev=NULL;
-static EFI_SIMPLE_POINTER_PROTOCOL*mouse=NULL;
+struct input_data{
+	bool lp;
+	INT64 rx,lx;
+	INT64 ry,ly;
+	EFI_SIMPLE_POINTER_PROTOCOL*mouse;
+	lv_indev_drv_t drv;
+	lv_indev_t*dev;
+};
 static bool pointer_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
-	static INT64 lx=0,ly=0;
-	static bool lp=false;
-	if(!dev->cursor)lv_indev_set_cursor(dev,gui_cursor);
 	EFI_SIMPLE_POINTER_STATE p;
-	if(!EFI_ERROR(mouse->GetState(mouse,&p))){
-		INT64 ix=lx+(p.RelativeMovementX*gui_mouse_scale/(INT64)mouse->Mode->ResolutionX);
-		INT64 iy=ly+(p.RelativeMovementY*gui_mouse_scale/(INT64)mouse->Mode->ResolutionY);
-		lx=MIN(MAX(ix,0),gui_w);
-		ly=MIN(MAX(iy,0),gui_h);
-		lp=p.LeftButton==1;
+	struct input_data*d=indev_drv->user_data;
+	if(!d->dev->cursor)lv_indev_set_cursor(d->dev,gui_cursor);
+	if(!EFI_ERROR(d->mouse->GetState(d->mouse,&p))){
+		INT64 ix=d->lx+(p.RelativeMovementX*gui_mouse_scale/d->rx);
+		INT64 iy=d->ly+(p.RelativeMovementY*gui_mouse_scale/d->ry);
+		d->lx=MIN(MAX(ix,0),gui_w);
+		d->ly=MIN(MAX(iy,0),gui_h);
+		d->lp=p.LeftButton==1;
 	}
-	data->point.x=lx;
-	data->point.y=ly;
-	data->state=lp?LV_INDEV_STATE_PR:LV_INDEV_STATE_REL;
+	data->point.x=d->lx;
+	data->point.y=d->ly;
+	data->state=d->lp?LV_INDEV_STATE_PR:LV_INDEV_STATE_REL;
 	return false;
 }
-static int pointer_init(){
+int pointer_register(){
+	bool found=false;
 	UINTN cnt=0;
 	EFI_HANDLE*hands=NULL;
 	EFI_STATUS st=gBS->LocateHandleBuffer(
@@ -51,23 +57,25 @@ static int pointer_init(){
 	);
 	if(EFI_ERROR(st))return trlog_warn(-1,"locate pointer failed: %lld",st);
 	for(UINTN i=0;i<cnt;i++){
+		struct input_data*data=malloc(sizeof(struct input_data));
+		if(!data)break;
+		memset(data,0,sizeof(struct input_data));
 		if(EFI_ERROR(gBS->HandleProtocol(
 			hands[i],
 			&gEfiSimplePointerProtocolGuid,
-			(VOID**)&mouse
+			(VOID**)&data->mouse
 		)))continue;
-		if(mouse)return trlog_debug(0,"found uefi pointer %p",mouse);
+		lv_indev_drv_init(&data->drv);
+		data->drv.type=LV_INDEV_TYPE_POINTER;
+		data->drv.read_cb=pointer_read;
+		data->drv.user_data=data;
+		data->dev=lv_indev_drv_register(&data->drv);
+		data->rx=data->mouse->Mode->ResolutionX;
+		data->ry=data->mouse->Mode->ResolutionY;
+		tlog_debug("found uefi pointer %p",data->mouse);
+		found=true;
 	}
-	return trlog_warn(-1,"no uefi pointer found");
-}
-int pointer_register(){
-	if(pointer_init()<0)return -1;
-	static lv_indev_drv_t drv;
-	lv_indev_drv_init(&drv);
-	drv.type=LV_INDEV_TYPE_POINTER;
-	drv.read_cb=pointer_read;
-	dev=lv_indev_drv_register(&drv);
-	return 0;
+	return found?0:trlog_warn(-1,"no uefi pointer found");
 }
 #endif
 #endif

@@ -15,26 +15,35 @@
 #include"lvgl.h"
 #include"gui.h"
 #include"guidrv.h"
-static lv_indev_t*dev=NULL;
-static EFI_ABSOLUTE_POINTER_PROTOCOL*touch=NULL;
+struct input_data{
+	bool lp,oldp;
+	INT64 rx,lx,oldx;
+	INT64 ry,ly,oldy;
+	EFI_ABSOLUTE_POINTER_PROTOCOL*touch;
+	lv_indev_drv_t drv;
+	lv_indev_t*dev;
+};
 static bool touch_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
-	static bool lp=false,oldp=false;
-	static INT64 lx=0,oldx=0;
-	static INT64 ly=0,oldy=0;
 	EFI_ABSOLUTE_POINTER_STATE p;
-	if(!EFI_ERROR(touch->GetState(touch,&p))){
-		lx=(p.CurrentX*gui_w/(INT64)touch->Mode->AbsoluteMaxX);
-		ly=(p.CurrentY*gui_h/(INT64)touch->Mode->AbsoluteMaxY);
-		lp=p.ActiveButtons==1;
-		if(oldx==lx&&oldy==ly&&oldp==lp)return true;
-		oldx=lx,oldy=ly,oldp=lp;
+	struct input_data*d=indev_drv->user_data;
+	if(!EFI_ERROR(d->touch->GetState(d->touch,&p))){
+		d->lx=(p.CurrentX*gui_w/d->rx);
+		d->ly=(p.CurrentY*gui_h/d->ry);
+		d->lp=p.ActiveButtons==1;
+		if(
+			d->oldx==d->lx&&
+			d->oldy==d->ly&&
+			d->oldp==d->lp
+		)return true;
+		d->oldx=d->lx,d->oldy=d->ly,d->oldp=d->lp;
 	}
-	data->point.x=lx;
-	data->point.y=ly;
-	data->state=lp?LV_INDEV_STATE_PR:LV_INDEV_STATE_REL;
+	data->point.x=d->lx;
+	data->point.y=d->ly;
+	data->state=d->lp?LV_INDEV_STATE_PR:LV_INDEV_STATE_REL;
 	return false;
 }
-static int touch_init(){
+int touch_register(){
+	bool found=false;
 	UINTN cnt=0;
 	EFI_HANDLE*hands=NULL;
 	EFI_STATUS st=gBS->LocateHandleBuffer(
@@ -44,23 +53,25 @@ static int touch_init(){
 	);
 	if(EFI_ERROR(st))return trlog_warn(-1,"locate absolute failed: %lld",st);
 	for(UINTN i=0;i<cnt;i++){
+		struct input_data*data=malloc(sizeof(struct input_data));
+		if(!data)break;
+		memset(data,0,sizeof(struct input_data));
 		if(EFI_ERROR(gBS->HandleProtocol(
 			hands[i],
 			&gEfiAbsolutePointerProtocolGuid,
-			(VOID**)&touch
+			(VOID**)&data->touch
 		)))continue;
-		if(touch)return trlog_debug(0,"found uefi absolute %p",touch);
+		lv_indev_drv_init(&data->drv);
+		data->drv.type=LV_INDEV_TYPE_POINTER;
+		data->drv.read_cb=touch_read;
+		data->drv.user_data=data;
+		data->dev=lv_indev_drv_register(&data->drv);
+		data->rx=data->touch->Mode->AbsoluteMaxX;
+		data->ry=data->touch->Mode->AbsoluteMaxY;
+		tlog_debug("found uefi absolute %p",data->touch);
+		found=true;
 	}
-	return trlog_warn(-1,"no uefi absolute found");
-}
-int touch_register(){
-	if(touch_init()<0)return -1;
-	static lv_indev_drv_t drv;
-	lv_indev_drv_init(&drv);
-	drv.type=LV_INDEV_TYPE_POINTER;
-	drv.read_cb=touch_read;
-	dev=lv_indev_drv_register(&drv);
-	return 0;
+	return found?0:trlog_warn(-1,"no uefi absolute found");
 }
 #endif
 #endif

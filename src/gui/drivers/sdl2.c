@@ -37,18 +37,18 @@ static bool mousewheel_read(lv_indev_drv_t*indev_drv __attribute__((unused)),lv_
 }
 static uint32_t keycode_to_ascii(uint32_t sdl_key){
 	switch(sdl_key) {
-		case SDLK_RIGHT:
-		case SDLK_KP_PLUS:return LV_KEY_RIGHT;
-		case SDLK_LEFT:
-		case SDLK_KP_MINUS:return LV_KEY_LEFT;
-		case SDLK_UP:return LV_KEY_UP;
-		case SDLK_DOWN:return LV_KEY_DOWN;
 		case SDLK_ESCAPE:return LV_KEY_ESC;
 		case SDLK_BACKSPACE:return LV_KEY_BACKSPACE;
 		case SDLK_DELETE:return LV_KEY_DEL;
 		case SDLK_KP_ENTER:
 		case '\r':return LV_KEY_ENTER;
+		case SDLK_DOWN:
+		case SDLK_RIGHT:
+		case SDLK_KP_PLUS:
 		case SDLK_PAGEDOWN:return LV_KEY_NEXT;
+		case SDLK_UP:
+		case SDLK_LEFT:
+		case SDLK_KP_MINUS:
 		case SDLK_PAGEUP:return LV_KEY_PREV;
 		default:return sdl_key;
 	}

@@ -56,6 +56,24 @@ static void on_change_dir(struct filetab*fv,char*old __attribute__((unused)),cha
 	if(filetab_is_active(fv))lv_label_set_text(path,new);
 }
 
+extern void uefi_start_image(const char*path);
+static bool on_item_click(struct filetab*fv,char*item,bool dir){
+	if(!filetab_is_active(fv)||dir)return true;
+	char full_path[PATH_MAX]={0};
+	char*parent=filetab_get_path(fv);
+	char*x=parent+strlen(parent)-1;
+	if(*x=='/')*x=0;
+	snprintf(full_path,PATH_MAX-1,"%s/%s",parent,item);
+	#ifdef ENABLE_UEFI
+	char*type=(char*)lv_fs_get_ext(full_path);
+	if(type&&strcasecmp(type,"efi")==0){
+		uefi_start_image(full_path);
+		return false;
+	}
+	#endif
+	return true;
+}
+
 static void tabview_create(){
 	for(size_t i=0;i<ARRLEN(tabs);i++){
 		if(tabs[i])continue;
@@ -63,6 +81,7 @@ static void tabview_create(){
 			tlog_error("cannot allocate filetab");
 			abort();
 		}
+		filetab_set_on_item_click(tabs[i],on_item_click);
 		filetab_set_on_change_dir(tabs[i],on_change_dir);
 		filetab_set_show_parent(tabs[i],false);
 		filetab_set_path(tabs[i],"/");

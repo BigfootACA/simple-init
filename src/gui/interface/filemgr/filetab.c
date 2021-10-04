@@ -42,7 +42,7 @@ struct filetab*filetab_create(lv_obj_t*view,char*path){
 	for(uint16_t i=0;i<lv_tabview_get_tab_count(view);i++){
 		if(lv_tabview_get_tab(view,i)!=tb->tab)continue;
 		tb->tab_id=i;
-		fileview_set_path(tb->fv,path);
+		if(path)fileview_set_path(tb->fv,path);
 		return tb;
 	}
 	tlog_error("cannot get new tab");

@@ -59,12 +59,13 @@ static void on_change_dir(struct filetab*fv,char*old __attribute__((unused)),cha
 static void tabview_create(){
 	for(size_t i=0;i<ARRLEN(tabs);i++){
 		if(tabs[i])continue;
-		if(!(tabs[i]=filetab_create(tabview,"/"))){
+		if(!(tabs[i]=filetab_create(tabview,NULL))){
 			tlog_error("cannot allocate filetab");
 			abort();
 		}
 		filetab_set_on_change_dir(tabs[i],on_change_dir);
 		filetab_set_show_parent(tabs[i],false);
+		filetab_set_path(tabs[i],"/");
 		update_active();
 	}
 }

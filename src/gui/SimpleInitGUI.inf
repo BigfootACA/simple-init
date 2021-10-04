@@ -68,6 +68,9 @@
   drivers/uefitouch.c
   decoders/png.c
   decoders/freetype.c
+  interface/filemgr/filemgr.c
+  interface/filemgr/filetab.c
+  interface/filemgr/fileview.c
   interface/benchmark.c
   interface/guiapp.c
   interface/reboot.c

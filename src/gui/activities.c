@@ -23,13 +23,13 @@ struct gui_register*guiact_register[]={
 	&guireg_guipm_disk_select,
 	&guireg_guipm_partitions,
 	#endif
-	&guireg_filemgr,
 	&guireg_backlight,
 	&guireg_logviewer,
 	#endif
 	&guireg_theme_menu,
 	&guireg_benchmark,
 	&guireg_language,
+	&guireg_filemgr,
 	&guireg_reboot,
 	&guireg_guiapp,
 	NULL

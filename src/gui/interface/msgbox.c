@@ -17,7 +17,7 @@ static void msg_click(lv_obj_t*obj,lv_event_t e){
 			if(cb&&cb(id,btn))return;
 			break;
 		}while((o=lv_obj_get_parent(o)));
-		lv_msgbox_start_auto_close(obj,0);
+		lv_obj_del_async(obj);
 	}
 }
 
@@ -56,17 +56,22 @@ struct gui_register guireg_msgbox={
 };
 
 void msgbox_create(
-	char*content,
 	enum msgbox_mode mode,
 	msgbox_callback callback,
-	const char**buttons
+	const char**buttons,
+	const char*content,
+	...
 ){
-	struct msgbox msg={
-		.title=content,
-		.mode=mode,
-		.callback=callback,
-		.buttons=buttons
-	};
+	static struct msgbox msg;
+	static char txt[BUFSIZ]={0};
+	va_list va;
+	va_start(va,content);
+	vsnprintf(txt,BUFSIZ-1,_(content),va);
+	va_end(va);
+	msg.title=txt;
+	msg.mode=mode;
+	msg.callback=callback;
+	msg.buttons=buttons;
 	guiact_start_activity(&guireg_msgbox,&msg);
 }
 

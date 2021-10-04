@@ -13,9 +13,10 @@ struct msgbox{
 	msgbox_callback callback;
 };
 extern void msgbox_create(
-	char*content,
 	enum msgbox_mode mode,
 	msgbox_callback callback,
-	const char**buttons
+	const char**buttons,
+	const char*content,
+	...
 );
 #endif

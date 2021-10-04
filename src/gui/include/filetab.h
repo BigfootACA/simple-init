@@ -2,7 +2,7 @@
 #define FILEMGR_H
 #include"defines.h"
 struct filetab;
-typedef bool(*filetab_on_item_click)(struct filetab*,char*item);
+typedef bool(*filetab_on_item_click)(struct filetab*,char*item,bool dir);
 typedef void(*filetab_on_change_dir)(struct filetab*,char*old,char*new);
 extern struct filetab*filetab_create(lv_obj_t*view,char*path);
 extern void filetab_add_group(struct filetab*tab,lv_group_t*grp);

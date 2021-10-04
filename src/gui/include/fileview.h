@@ -1,7 +1,7 @@
 #ifndef FILEVIEW_H
 #define FILEVIEW_H
 struct fileview;
-typedef bool(*fileview_on_item_click)(struct fileview*,char*item);
+typedef bool(*fileview_on_item_click)(struct fileview*,char*item,bool dir);
 typedef void(*fileview_on_change_dir)(struct fileview*,char*old,char*new);
 extern struct fileview*fileview_create(lv_obj_t*screen);
 extern void fileview_add_group(struct fileview*view,lv_group_t*grp);

@@ -17,6 +17,7 @@ int cmdline_androidboot(char*k,char*v){
 	else if(strcmp(k,"serialno")==0)conf="serial";
 	else if(strcmp(k,"bootdevice")==0)conf="disk";
 	else if(strlen(k)>0)conf=k;
+	else return 0;
 	confd_set_string_base(base,conf,v);
 	return 0;
 }

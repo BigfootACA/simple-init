@@ -79,6 +79,7 @@
   interface/language.c
   interface/uefi_bootmenu.c
   interface/uefi_shell.c
+  interface/uefi_start.c
   interface/msgbox.c
   interface/mouse.c
   interface/theme.c

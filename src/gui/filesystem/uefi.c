@@ -5,6 +5,7 @@
 #include<Guid/FileSystemVolumeLabelInfo.h>
 #include<Library/BaseLib.h>
 #include<Library/UefiLib.h>
+#include<Library/DevicePathLib.h>
 #include<Library/MemoryAllocationLib.h>
 #include<Library/UefiBootServicesTableLib.h>
 #include<Protocol/SimpleFileSystem.h>
@@ -21,6 +22,7 @@ bool fsext_is_multi=true;
 
 struct fs_root{
 	bool debug;
+	EFI_HANDLE hand;
 	EFI_FILE_PROTOCOL*proto;
 };
 
@@ -467,7 +469,7 @@ static lv_res_t fs_dir_close_cb(
 	return efi_status_to_lv_res(st);
 }
 
-int init_lvgl_uefi_fs(char letter,EFI_FILE_PROTOCOL*proto,bool debug){
+int init_lvgl_uefi_fs(char letter,EFI_HANDLE hand,EFI_FILE_PROTOCOL*proto,bool debug){
 	lv_fs_drv_t*drv;
 	struct fs_root*fs;
 	struct fsext*fse;
@@ -481,6 +483,7 @@ int init_lvgl_uefi_fs(char letter,EFI_FILE_PROTOCOL*proto,bool debug){
 		if(fse)FreePool(fse);
 		return -1;
 	}
+	fs->hand=hand;
 	fs->proto=proto;
 	fs->debug=debug;
 	lv_fs_drv_init(drv);
@@ -531,13 +534,25 @@ void lvgl_init_all_fs_uefi(bool debug){
 			tlog_warn("open volume failed: %llx",st);
 			continue;
 		}
-		if(init_lvgl_uefi_fs(letter,fh,debug)!=0){
+		if(init_lvgl_uefi_fs(letter,hb[i],fh,debug)!=0){
 			tlog_warn("init fs failed");
 			continue;
 		}
 		if(debug)tlog_debug("add drive %c",letter);
 	}
-	FreePool(hb);
+}
+
+EFI_DEVICE_PATH_PROTOCOL*fs_get_device_path(const char*path){
+	if(!path)return NULL;
+	char letter=path[0];
+	lv_fs_drv_t*drv=lv_fs_get_drv(letter);
+	if(!drv)return NULL;
+	if(drv->ready_cb&&!drv->ready_cb(drv))return NULL;
+	struct fsext*fse=drv->user_data;
+	struct fs_root*fs=fse->user_data;
+	CHAR16 xp[PATH_MAX]={0};
+	mbstowcs(xp,path+2,PATH_MAX-1);
+	return FileDevicePath(fs->hand,xp);
 }
 #endif
 #endif

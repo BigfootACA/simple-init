@@ -53,6 +53,7 @@
   include/filetab.h
   include/activity.h
   include/fileview.h
+  include/msgbox.h
   include/tools.h
 
   # Simple-Init GUI interface
@@ -78,6 +79,7 @@
   interface/language.c
   interface/uefi_bootmenu.c
   interface/uefi_shell.c
+  interface/msgbox.c
   interface/mouse.c
   interface/theme.c
   filesystem/fsext.c

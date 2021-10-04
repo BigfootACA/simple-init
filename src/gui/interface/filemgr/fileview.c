@@ -109,12 +109,13 @@ static void item_click(lv_obj_t*obj,lv_event_t e){
 	struct fileitem*fi=(struct fileitem*)lv_obj_get_user_data(obj);
 	if(!fi)return;
 	struct fileview*fv=fi->view;
-	if(!fv||!call_on_click_item(fi))return;
+	if(!fv)return;
 	if(fi->letter){
 		fv->letter=fi->letter;
 		fileview_set_path(fv,"/");
 		return;
 	}
+	if(!call_on_click_item(fi))return;
 	char path[PATH_MAX+4]={0};
 	fileitem_get_path(path,PATH_MAX+3,fi);
 	if(strcmp(fi->name,"..")==0)fileview_go_back(fv);
@@ -382,7 +383,7 @@ void*fileview_get_data(struct fileview*view){
 }
 
 char*fileview_get_path(struct fileview*view){
-	return view?view->path:NULL;
+	return view?view->full_path:NULL;
 }
 
 void fileview_set_show_parent(struct fileview*view,bool parent){

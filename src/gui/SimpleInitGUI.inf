@@ -30,6 +30,7 @@
 
 [Guids]
   gUefiShellFileGuid
+  gEfiFileSystemVolumeLabelInfoIdGuid
 
 [Protocols]
   gEfiAbsolutePointerProtocolGuid
@@ -48,6 +49,7 @@
   include/guidrv.h
   include/guipm.h
   include/font.h
+  include/fsext.h
   include/filetab.h
   include/activity.h
   include/fileview.h
@@ -75,3 +77,5 @@
   interface/uefi_shell.c
   interface/mouse.c
   interface/theme.c
+  filesystem/fsext.c
+  filesystem/uefi.c

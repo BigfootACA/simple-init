@@ -275,7 +275,7 @@ int gui_screen_init(){
 	memset(&sysbar,0,sizeof(struct sysbar));
 
 	// add lvgl mouse pointer
-	if(!gui_cursor||!lv_obj_is_visible(gui_cursor))
+	if(!gui_cursor||lv_obj_get_parent(gui_cursor)!=screen)
 		gui_cursor=lv_img_create(screen,NULL);
 	lv_img_set_src(gui_cursor,"\xef\x89\x85"); // mouse-pointer
 	lv_obj_set_pos(gui_cursor,-gui_w,-gui_h);

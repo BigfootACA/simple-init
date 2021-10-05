@@ -16,6 +16,7 @@ struct msgbox{
 	lv_obj_t*label;
 	lv_obj_t*btn[64];
 	void*btn_data_p;
+	struct gui_activity*act;
 };
 
 struct msgbox_btn{
@@ -37,6 +38,7 @@ static void msg_click(lv_obj_t*obj,lv_event_t e){
 	if(box->callback&&box->callback(btn->id,btn->text))return;
 	for(uint16_t i=0;i<box->btn_cnt;i++)
 		lv_obj_set_user_data(box->btn[i],NULL);
+	box->act->args=NULL;
 	free(box->btn_data_p);
 	free(box);
 	guiact_do_back();
@@ -50,6 +52,7 @@ static int msgbox_draw(struct gui_activity*act){
 	if(!box->buttons)box->buttons=null_btn;
 	for(box->btn_cnt=0;*box->buttons[box->btn_cnt];box->btn_cnt++);
 	if(box->btn_cnt>64)return 3;
+	box->act=act;
 
 	box->mask=lv_create_opa_mask(act->page);
 	box->box=lv_page_create(box->mask,NULL);
@@ -108,6 +111,7 @@ static int msgbox_draw(struct gui_activity*act){
 
 static int msgbox_get_focus(struct gui_activity*d){
 	struct msgbox*box=d->args;
+	if(!box)return 0;
 	for(uint16_t i=0;i<box->btn_cnt;i++)
 		lv_group_add_obj(gui_grp,box->btn[i]);
 	return 0;
@@ -115,6 +119,7 @@ static int msgbox_get_focus(struct gui_activity*d){
 
 static int msgbox_lost_focus(struct gui_activity*d){
 	struct msgbox*box=d->args;
+	if(!box)return 0;
 	for(uint16_t i=0;i<box->btn_cnt;i++)
 		lv_group_remove_obj(box->btn[i]);
 	return 0;

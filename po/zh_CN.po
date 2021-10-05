@@ -1085,3 +1085,21 @@ msgstr "更改主题后需要重启GUI"
 
 msgid "Restart"
 msgstr "重启"
+
+msgid "USB Gadget"
+msgstr "USB工具"
+
+msgid "not a UEFI Application"
+msgstr "不是一个UEFI应用"
+
+msgid "Start UEFI Application '%s'?"
+msgstr "启动UEFI程序'%s'?"
+
+msgid "Restart gadget service failed: %m"
+msgstr "重启USB工具服务失败: %m"
+
+msgid "Are you sure to restart gadget service?"
+msgstr "确定要重启USB工具服务？"
+
+msgid "Are you sure to delete function %s?"
+msgstr "确定删除功能%s?"

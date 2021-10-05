@@ -15,6 +15,7 @@
 #include"gui_draw.h"
 #include"activity.h"
 #include"tools.h"
+#include"msgbox.h"
 #include"sysbar.h"
 #define TAG "guipm"
 #endif

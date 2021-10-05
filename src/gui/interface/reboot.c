@@ -11,6 +11,7 @@
 #include"gui.h"
 #include"str.h"
 #include"tools.h"
+#include"msgbox.h"
 #define TAG "reboot"
 
 static bool valid=true;
@@ -48,16 +49,6 @@ static const char*reboot_str[]={
 	[POWEROFF]          = "Power Off",
 };
 
-#ifndef ENABLE_UEFI
-static void ok_msg_click(lv_obj_t*obj,lv_event_t e){
-	if(e==LV_EVENT_DELETE){
-		guiact_do_back();
-	}else if(e==LV_EVENT_VALUE_CHANGED){
-		lv_msgbox_start_auto_close(obj,0);
-	}
-}
-#endif
-
 static void reboot_action(lv_obj_t*obj,lv_event_t e){
 	if(!obj||e!=LV_EVENT_CLICKED)return;
 	void*d=lv_obj_get_user_data(obj);
@@ -79,8 +70,8 @@ static void reboot_action(lv_obj_t*obj,lv_event_t e){
 	init_send(&msg,&response);
 	if(errno!=0||response.data.status.ret!=0){
 		int ex=(errno==0)?response.data.status.ret:errno;
-		lv_create_ok_msgbox(scr,ok_msg_click,_("init control command failed: %s"),strerror(ex));
-		lv_obj_del_async(box);
+		guiact_do_back();
+		msgbox_alert("init control command failed: %s",strerror(ex));
 		valid=false;
 		return;
 	}

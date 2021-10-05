@@ -12,6 +12,7 @@
 #include"gui.h"
 #include"activity.h"
 #include"tools.h"
+#include"msgbox.h"
 #define TAG "guiapp"
 static lv_obj_t*screen;
 static int app_num=0;
@@ -25,23 +26,12 @@ static void clean_buttons(){
 	app_num=0;
 }
 
-static void ok_msg_click(lv_obj_t*obj,lv_event_t e){
-	if(e==LV_EVENT_DELETE){
-		lv_obj_del_async(lv_obj_get_parent(obj));
-	}else if(e==LV_EVENT_VALUE_CHANGED){
-		lv_msgbox_start_auto_close(obj,0);
-	}
-}
-
 static void click_btn(lv_obj_t*obj,lv_event_t e){
 	if(!obj||e!=LV_EVENT_CLICKED)return;
 	if(!guiact_is_active_page(screen))return;
 	char*f=(char*)lv_obj_get_user_data(obj);
 	if(f)guiact_start_activity_by_name(f,NULL);
-	else lv_create_ok_msgbox_mask(
-		screen,ok_msg_click,
-		_("This function does not implemented")
-	);
+	else msgbox_alert("This function does not implemented");
 }
 
 static void add_button(struct gui_register*p){

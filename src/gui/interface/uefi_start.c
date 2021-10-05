@@ -1,10 +1,9 @@
 #ifdef ENABLE_GUI
 #ifdef ENABLE_UEFI
-#include"stdlib.h"
+#include<stdlib.h>
 #include<Uefi.h>
 #include<Library/UefiLib.h>
 #include<Library/DevicePathLib.h>
-#include<Library/DxeServicesLib.h>
 #include<Library/UefiBootServicesTableLib.h>
 #include<Protocol/LoadedImage.h>
 #include"gui.h"
@@ -35,14 +34,14 @@ static void start_cb(lv_task_t*t __attribute__((unused))){
 	EFI_LOADED_IMAGE_PROTOCOL*li;
 	EFI_DEVICE_PATH_PROTOCOL*p=fs_get_device_path(full_path);
 	if(!p){
-		msgbox_create(MODE_OK,NULL,NULL,"get DevicePath failed");
+		msgbox_alert("get DevicePath failed");
 		tlog_warn("get DevicePath failed");
 		return;
 	}
 	st=gBS->LoadImage(FALSE,gImageHandle,p,NULL,0,&ih);
 	if(EFI_ERROR(st)){
 		if(ih)gBS->UnloadImage(ih);
-		msgbox_create(MODE_OK,NULL,NULL,"LoadImage failed: %llx",st);
+		msgbox_alert("LoadImage failed: %llx",st);
 		tlog_warn("LoadImage failed: %llx",st);
 		return;
 	}
@@ -52,14 +51,14 @@ static void start_cb(lv_task_t*t __attribute__((unused))){
 		EFI_OPEN_PROTOCOL_GET_PROTOCOL
 	);
 	if(EFI_ERROR(st)){
-		msgbox_create(MODE_OK,NULL,NULL,"OpenProtocol failed: %llx",st);
+		msgbox_alert("OpenProtocol failed: %llx",st);
 		tlog_warn("OpenProtocol failed: %llx",st);
 		return;
 	}
 	if(li->ImageCodeType!=EfiLoaderCode){
 
 		if(ih)gBS->UnloadImage(ih);
-		msgbox_create(MODE_OK,NULL,NULL,"not a UEFI Application");
+		msgbox_alert("not a UEFI Application");
 		tlog_warn("not a UEFI Application");
 		return;
 	}
@@ -74,7 +73,7 @@ static bool confirm_click(uint16_t id,const char*text __attribute__((unused))){
 void uefi_start_image(const char*path){
 	memset(full_path,0,PATH_MAX-1);
 	strncpy(full_path,path,PATH_MAX-1);
-	msgbox_create(MODE_YESNO,confirm_click,NULL,"Start UEFI Application '%s'?",path);
+	msgbox_create_yesno(confirm_click,"Start UEFI Application '%s'?",path);
 }
 #endif
 #endif

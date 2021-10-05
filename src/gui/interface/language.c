@@ -7,21 +7,12 @@
 #include"defines.h"
 #include"gui.h"
 #include"tools.h"
+#include"msgbox.h"
 #include"language.h"
 #define TAG "language"
 
 static bool msgbox=false;
 static lv_obj_t*scr,*box,*sel,*btn_ok,*arr_left,*arr_right;
-
-#ifndef ENABLE_UEFI
-static void ok_msg_click(lv_obj_t*obj,lv_event_t e){
-	if(e==LV_EVENT_DELETE){
-		guiact_do_back();
-	}else if(e==LV_EVENT_VALUE_CHANGED){
-		lv_msgbox_start_auto_close(obj,0);
-	}
-}
-#endif
 
 static void ok_action(lv_obj_t*obj,lv_event_t e){
 	if(obj!=btn_ok||e!=LV_EVENT_CLICKED)return;
@@ -38,8 +29,8 @@ static void ok_action(lv_obj_t*obj,lv_event_t e){
 	init_send(&msg,&response);
 	if(errno!=0||response.data.status.ret!=0){
 		int ex=(errno==0)?response.data.status.ret:errno;
-		lv_create_ok_msgbox(scr,ok_msg_click,_("init control command failed: %s"),strerror(ex));
-		lv_obj_del_async(box);
+		guiact_do_back();
+		msgbox_alert("init control command failed: %s",strerror(ex));
 		lv_group_add_msgbox(gui_grp,scr,true);
 		msgbox=true;
 		return;

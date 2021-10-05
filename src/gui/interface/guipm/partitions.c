@@ -284,12 +284,6 @@ static int init_disk(){
 	return 0;
 }
 
-static void ok_msg_click(lv_obj_t*obj,lv_event_t e){
-	if(!guiact_is_active_page(selscr))return;
-	if(e==LV_EVENT_DELETE)guiact_do_back();
-	else if(e==LV_EVENT_VALUE_CHANGED)lv_msgbox_start_auto_close(obj,0);
-}
-
 static void reload_click(lv_obj_t*obj,lv_event_t e){
 	if(e!=LV_EVENT_CLICKED||obj!=btn_reload)return;
 	tlog_debug("request reload");
@@ -344,8 +338,10 @@ static int init(struct gui_activity*act){
 
 static int guipm_draw_partitions(struct gui_activity*act){
 	selscr=act->page;
-	if(act->mask)lv_create_ok_msgbox(selscr,ok_msg_click,_("init disk context failed"));
-	else{
+	if(act->mask){
+		msgbox_alert("init disk context failed");
+		return -1;
+	}else{
 		int btw=gui_sw/2-(gui_dpi/5),bth=gui_font_size+(gui_dpi/10);
 
 		guipm_draw_title(selscr);

@@ -4,7 +4,6 @@
 #include<Uefi.h>
 #include<Pi/PiFirmwareFile.h>
 #include<Library/UefiLib.h>
-#include<Library/DebugLib.h>
 #include<Library/DevicePathLib.h>
 #include<Library/DxeServicesLib.h>
 #include<Library/UefiBootServicesTableLib.h>
@@ -12,19 +11,11 @@
 #include"gui.h"
 #include"activity.h"
 #include"language.h"
+#include"msgbox.h"
 #include"logger.h"
 #include"tools.h"
 #define TAG "shell"
 static EFI_HANDLE ih;
-static int shell_get_focus(struct gui_activity*d){
-	lv_group_add_msgbox(gui_grp,d->page,true);
-	return 0;
-}
-
-static int shell_lost_focus(struct gui_activity*d){
-	lv_group_remove_msgbox(d->page);
-	return 0;
-}
 
 static int after_exit(void*d __attribute__((unused))){
 	if(!ih)return -1;
@@ -38,49 +29,46 @@ static int after_exit(void*d __attribute__((unused))){
 	return r;
 }
 
-static void msg_click(lv_obj_t*obj,lv_event_t e){
-	if(e==LV_EVENT_DELETE){
-		guiact_do_back();
-	}else if(e==LV_EVENT_VALUE_CHANGED){
-		if(lv_msgbox_get_active_btn(obj)==0){
-			MEDIA_FW_VOL_FILEPATH_DEVICE_PATH fn;
-			EFI_LOADED_IMAGE_PROTOCOL*li;
-			EFI_DEVICE_PATH_PROTOCOL*dp;
-			EFI_STATUS st;
-			EfiInitializeFwVolDevicepathNode(&fn,&gUefiShellFileGuid);
-			st=gBS->HandleProtocol(
-				gImageHandle,
-				&gEfiLoadedImageProtocolGuid,
-				(VOID**)&li
-			);
-			if(EFI_ERROR(st)){
-				DebugPrint(EFI_D_ERROR,"HandleProtocol failed with %r\n",st);
-				tlog_error("HandleProtocol failed");
-				return;
-			}
-			if(!(dp=AppendDevicePathNode(
-				DevicePathFromHandle(li->DeviceHandle),
-				(EFI_DEVICE_PATH_PROTOCOL*)&fn
-			))){
-				tlog_error("AppendDevicePathNode failed");
-				return;
-			}
-			st=gBS->LoadImage(FALSE,gImageHandle,dp,NULL,0,&ih);
-			if(EFI_ERROR(st)){
-				if(ih)gBS->UnloadImage(ih);
-				DebugPrint(EFI_D_ERROR,"LoadImage failed: %r\n",st);
-				tlog_error("LoadImage failed");
-				return;
-			}
-			gui_run_and_exit(after_exit);
+static bool msg_click(uint16_t id,const char*text){
+	if(id==0){
+		MEDIA_FW_VOL_FILEPATH_DEVICE_PATH fn;
+		EFI_LOADED_IMAGE_PROTOCOL*li;
+		EFI_DEVICE_PATH_PROTOCOL*dp;
+		EFI_STATUS st;
+		EfiInitializeFwVolDevicepathNode(&fn,&gUefiShellFileGuid);
+		st=gBS->HandleProtocol(
+			gImageHandle,
+			&gEfiLoadedImageProtocolGuid,
+			(VOID**)&li
+		);
+		if(EFI_ERROR(st)){
+			tlog_error("HandleProtocol failed: %llx",st);
+			msgbox_alert("HandleProtocol failed: %llx",st);
+			return false;
 		}
-		lv_msgbox_start_auto_close(obj,0);
+		if(!(dp=AppendDevicePathNode(
+			DevicePathFromHandle(li->DeviceHandle),
+			(EFI_DEVICE_PATH_PROTOCOL*)&fn
+		))){
+			tlog_error("AppendDevicePathNode failed");
+			msgbox_alert("AppendDevicePathNode failed");
+			return false;
+		}
+		st=gBS->LoadImage(FALSE,gImageHandle,dp,NULL,0,&ih);
+		if(EFI_ERROR(st)){
+			if(ih)gBS->UnloadImage(ih);
+			tlog_error("LoadImage failed: %llx",st);
+			msgbox_alert("LoadImage failed: %llx",st);
+			return false;
+		}
+		gui_run_and_exit(after_exit);
 	}
+	return false;
 }
 
 static int uefi_shell_draw(struct gui_activity*act){
-	lv_create_yesno_msgbox(act->page,msg_click,_("Exit GUI Application and enter UEFI Shell?"));
-	return 0;
+	msgbox_create_yesno(msg_click,"Exit GUI Application and enter UEFI Shell?");
+	return -1;
 }
 
 struct gui_register guireg_uefi_shell={
@@ -89,10 +77,6 @@ struct gui_register guireg_uefi_shell={
 	.icon="shell.png",
 	.show_app=true,
 	.draw=uefi_shell_draw,
-	.get_focus=shell_get_focus,
-	.lost_focus=shell_lost_focus,
-	.back=true,
-	.mask=true,
 };
 #endif
 #endif

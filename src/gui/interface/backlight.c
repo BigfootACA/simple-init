@@ -6,6 +6,7 @@
 #include"gui.h"
 #include"tools.h"
 #include"guidrv.h"
+#include"msgbox.h"
 #define TAG "backlight"
 
 static lv_obj_t*box,*value,*slider,*arr_left,*arr_right;
@@ -31,19 +32,13 @@ static void backlight_click(lv_obj_t*obj,lv_event_t e){
 	guidrv_set_brightness(val);
 }
 
-static void ok_msg_click(lv_obj_t*obj,lv_event_t e){
-	if(e==LV_EVENT_DELETE){
-		guiact_do_back();
-	}else if(e==LV_EVENT_VALUE_CHANGED){
-		lv_msgbox_start_auto_close(obj,0);
-	}
-}
-
 static int backlight_menu_draw(struct gui_activity*act){
 	int bts=gui_font_size+(gui_dpi/8);
 	int level=guidrv_get_brightness();
-	if(level<0)lv_create_ok_msgbox(act->page,ok_msg_click,_("get brightness failed: %m"));
-	else{
+	if(level<0){
+		msgbox_alert("get brightness failed: %m");
+		return -1;
+	}else{
 		static lv_style_t bs;
 		lv_style_init(&bs);
 		lv_style_set_pad_all(&bs,LV_STATE_DEFAULT,gui_font_size);

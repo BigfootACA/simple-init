@@ -85,14 +85,14 @@ static void guiact_remove_last_list(){
 	list_remove_free_def(guiact_get_last_list());
 }
 
-int guiact_remove_last(){
+int guiact_remove_last(bool focus){
 	struct gui_activity*l=guiact_get_last();
 	if(guiact_is_alone()||!l)return 0;
 	tlog_debug("end activity %s",l->name);
 	call_lost_focus_last();
 	if(l->page)lv_obj_del_async(l->page);
 	guiact_remove_last_list();
-	call_get_focus_last();
+	if(focus)call_get_focus_last();
 	return 0;
 }
 
@@ -108,7 +108,7 @@ int guiact_do_back(){
 	tlog_debug("do back");
 	if(c->reg->ask_exit&&c->reg->ask_exit(c)!=0)return 0;
 	if(c->reg->quiet_exit&&c->reg->quiet_exit(c)!=0)return 0;
-	return guiact_remove_last();
+	return guiact_remove_last(true);
 }
 
 int guiact_do_home(){
@@ -118,12 +118,13 @@ int guiact_do_home(){
 	LIST_DATA_DECLARE(c,list_last(acts),struct gui_activity*);
 	if(c->reg->back&&c->reg->ask_exit)c->reg->ask_exit(c);
 	if(c->reg->quiet_exit)c->reg->quiet_exit(c);
-	guiact_remove_last();
+	guiact_remove_last(false);
 	while((d=list_last(acts))&&d->prev){
 		LIST_DATA_DECLARE(z,d,struct gui_activity*);
 		if(z->reg->quiet_exit)z->reg->quiet_exit(c);
-		guiact_remove_last();
+		guiact_remove_last(false);
 	}
+	call_get_focus_last();
 	return 0;
 }
 

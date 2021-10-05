@@ -33,7 +33,7 @@ extern int guiact_do_exit();
 extern list*guiact_get_activities();
 extern bool guiact_is_alone();
 extern struct gui_activity*guiact_get_last();
-extern int guiact_remove_last();
+extern int guiact_remove_last(bool focus);
 extern int guiact_do_back();
 extern int guiact_do_home();
 extern struct gui_register*guiact_find_register(char*name);

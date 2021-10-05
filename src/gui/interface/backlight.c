@@ -1,12 +1,11 @@
 #ifdef ENABLE_GUI
-#include"lvgl.h"
-#include"logger.h"
-#include"activity.h"
-#include"defines.h"
 #include"gui.h"
-#include"tools.h"
-#include"guidrv.h"
-#include"msgbox.h"
+#include"logger.h"
+#include"defines.h"
+#include"gui/tools.h"
+#include"gui/guidrv.h"
+#include"gui/msgbox.h"
+#include"gui/activity.h"
 #define TAG "backlight"
 
 static lv_obj_t*box,*value,*slider,*arr_left,*arr_right;

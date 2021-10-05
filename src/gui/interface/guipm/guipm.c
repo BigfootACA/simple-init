@@ -1,6 +1,7 @@
 #ifdef ENABLE_GUI
 #ifdef ENABLE_FDISK
-#include"guipm.h"
+#include"gui.h"
+#define TAG "guipm"
 
 void guipm_draw_title(lv_obj_t*screen){
 	lv_obj_t*title=lv_label_create(screen,NULL);

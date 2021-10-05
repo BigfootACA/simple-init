@@ -1,5 +1,6 @@
-#ifndef TOOLS_H
-#define TOOLS_H
+#ifndef _TOOLS_H
+#define _TOOLS_H
+#include"gui.h"
 extern lv_style_t*lv_style_opa_mask();
 extern lv_style_t*lv_style_btn_item();
 extern void lv_style_set_btn_item(lv_obj_t*btn);

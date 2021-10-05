@@ -44,17 +44,6 @@
   ../../libs/freetype/include/ft2build.h
   ../../include/gui.h
   ../compatible/include/compatible.h
-  include/sysbar.h
-  include/gui_draw.h
-  include/guidrv.h
-  include/guipm.h
-  include/font.h
-  include/fsext.h
-  include/filetab.h
-  include/activity.h
-  include/fileview.h
-  include/msgbox.h
-  include/tools.h
 
   # Simple-Init GUI interface
   tools.c

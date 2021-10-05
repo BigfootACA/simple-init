@@ -12,14 +12,13 @@
 #include<sys/stat.h>
 #include<sys/ioctl.h>
 #include<linux/fb.h>
-#include"hardware.h"
-#include"defines.h"
-#include"system.h"
-#include"pathnames.h"
-#include"logger.h"
-#include"lvgl.h"
 #include"gui.h"
-#include"guidrv.h"
+#include"logger.h"
+#include"system.h"
+#include"defines.h"
+#include"hardware.h"
+#include"pathnames.h"
+#include"gui/guidrv.h"
 #define TAG "fbdev"
 static pthread_t fbrt;
 static bool blank=false,swap_abgr=false;

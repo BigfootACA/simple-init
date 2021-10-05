@@ -1,6 +1,5 @@
 #define _GNU_SOURCE
 #include<string.h>
-#include<sys/types.h>
 #include"confd.h"
 #include"cmdline.h"
 #define TAG "cmdline"

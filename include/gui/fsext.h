@@ -1,5 +1,6 @@
-#ifndef SIMPLE_INIT_FSEXT_H
-#define SIMPLE_INIT_FSEXT_H
+#ifndef _FSEXT_H
+#define _FSEXT_H
+#include"gui.h"
 enum item_type{
 	TYPE_DISK=1,
 	TYPE_FILE,

@@ -1,5 +1,7 @@
-#ifndef FILEMGR_H
-#define FILEMGR_H
+#ifndef _FILEMGR_H
+#define _FILEMGR_H
+#include<stdbool.h>
+#include"gui.h"
 #include"defines.h"
 struct filetab;
 typedef bool(*filetab_on_item_click)(struct filetab*,char*item,bool dir);

@@ -10,11 +10,10 @@
 #include<Library/UefiBootServicesTableLib.h>
 #include<Protocol/SimpleTextIn.h>
 #define TAG "uefikeyboard"
-#include"defines.h"
-#include"logger.h"
-#include"lvgl.h"
 #include"gui.h"
-#include"guidrv.h"
+#include"logger.h"
+#include"defines.h"
+#include"gui/guidrv.h"
 static bool keyboard_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
 	EFI_SIMPLE_TEXT_INPUT_PROTOCOL*keyboard=indev_drv->user_data;
 	EFI_INPUT_KEY p;

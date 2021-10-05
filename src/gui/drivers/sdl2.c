@@ -1,14 +1,13 @@
 #ifdef ENABLE_GUI
 #ifdef ENABLE_SDL2
+#include<string.h>
 #include<stdlib.h>
 #include<stdbool.h>
-#include<string.h>
 #include<SDL.h>
-#include"version.h"
-#include"logger.h"
-#include"lvgl.h"
 #include"gui.h"
-#include"guidrv.h"
+#include"logger.h"
+#include"version.h"
+#include"gui/guidrv.h"
 #define TAG "sdl2"
 #define SDL2_Z 1
 #define SDL2_W 540

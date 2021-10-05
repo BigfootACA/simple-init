@@ -1,6 +1,15 @@
 #ifdef ENABLE_GUI
 #ifdef ENABLE_FDISK
-#include"guipm.h"
+#define _GNU_SOURCE
+#include<stdlib.h>
+#include<libfdisk/libfdisk.h>
+#include"gui.h"
+#include"str.h"
+#include"system.h"
+#include"logger.h"
+#include"gui/tools.h"
+#include"gui/activity.h"
+#define TAG "guipm"
 
 static int xdpi;
 static bool is_show_all=false;
@@ -20,6 +29,8 @@ static struct disk_info{
 	int sysfs_fd;
 }disks[32]={0};
 static struct disk_info*selected=NULL;
+
+extern void guipm_draw_title(lv_obj_t*screen);
 
 static char*get_model(struct disk_info*d){return d->model[0]==0?_("Unknown"):d->model;}
 static char*get_layout(struct disk_info*d){return d->layout[0]==0?_("Unknown"):d->layout;}

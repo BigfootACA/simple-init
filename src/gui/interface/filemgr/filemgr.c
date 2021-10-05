@@ -1,11 +1,11 @@
+#ifdef ENABLE_GUI
 #include<stdlib.h>
-#include"lvgl.h"
 #include"gui.h"
-#include"tools.h"
-#include"logger.h"
 #include"array.h"
-#include"filetab.h"
-#include"activity.h"
+#include"logger.h"
+#include"gui/tools.h"
+#include"gui/filetab.h"
+#include"gui/activity.h"
 #define TAG "filemgr"
 
 static lv_obj_t*tabview,*scr,*path;
@@ -181,3 +181,4 @@ struct gui_register guireg_filemgr={
 	.draw=filemgr_draw,
 	.back=true
 };
+#endif

@@ -10,9 +10,9 @@
 #include<Library/UefiBootServicesTableLib.h>
 #include<Protocol/SimpleFileSystem.h>
 #include"lvgl.h"
-#include"fsext.h"
 #include"logger.h"
 #include"defines.h"
+#include"gui/fsext.h"
 #define TAG "filesystem"
 
 #define XWARN(str...){if(fs->debug)tlog_warn(str);}

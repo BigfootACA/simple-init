@@ -2,6 +2,7 @@
 #define CONFD_H
 #include<stdint.h>
 #include<stdbool.h>
+#include<sys/types.h>
 #include"pathnames.h"
 #define DEFAULT_CONFD _PATH_RUN"/confd.sock"
 

@@ -1,12 +1,11 @@
 #ifdef ENABLE_GUI
 #include<stdlib.h>
 #include"str.h"
-#include"lvgl.h"
 #include"gui.h"
-#include"tools.h"
 #include"logger.h"
-#include"sysbar.h"
-#include"activity.h"
+#include"gui/tools.h"
+#include"gui/sysbar.h"
+#include"gui/activity.h"
 #define TAG "activity"
 
 static list*activities=NULL;

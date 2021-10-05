@@ -1,12 +1,12 @@
 #ifdef ENABLE_GUI
 #ifdef ENABLE_UEFI
-#include"stdlib.h"
+#include<stdlib.h>
 #include<Library/UefiBootManagerLib.h>
 #include"gui.h"
-#include"activity.h"
-#include"language.h"
 #include"logger.h"
-#include"tools.h"
+#include"language.h"
+#include"gui/tools.h"
+#include"gui/activity.h"
 #define TAG "bootmenu"
 static lv_obj_t*lst=NULL,*last=NULL;
 static lv_obj_t*options_info,*btn_ok,*btn_refresh;

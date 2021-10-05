@@ -1,8 +1,7 @@
 #ifndef _ACTIVITY_H
 #define _ACTIVITY_H
-#include"list.h"
-#include"lvgl.h"
 #include"gui.h"
+#include"list.h"
 struct gui_register;
 struct gui_activity;
 typedef int guiact_base(struct gui_activity*);

@@ -1,5 +1,7 @@
 #ifndef _GUIDRV_H
 #define _GUIDRV_H
+#include<stdint.h>
+#include<stdbool.h>
 struct gui_driver{
 	char name[32];
 	int(*drv_register)(void);

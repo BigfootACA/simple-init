@@ -1,5 +1,0 @@
-#ifndef GUI_DRAW_H
-#define GUI_DRAW_H
-extern int sysbar_draw(lv_obj_t*scr);
-extern void guipm_draw_title(lv_obj_t*screen);
-#endif

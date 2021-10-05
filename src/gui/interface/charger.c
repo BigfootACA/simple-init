@@ -1,9 +1,10 @@
+#ifdef ENABLE_GUI
 #include<pthread.h>
 #include<sys/time.h>
 #include"gui.h"
-#include"init_internal.h"
 #include"logger.h"
 #include"hardware.h"
+#include"init_internal.h"
 #define TAG "charger"
 
 static lv_obj_t*bc,*bb,*bh,*bl,*bi;
@@ -128,3 +129,4 @@ int charger_main(){
 	gui_main();
 	return 0;
 }
+#endif

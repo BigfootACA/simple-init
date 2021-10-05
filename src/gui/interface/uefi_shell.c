@@ -1,6 +1,6 @@
 #ifdef ENABLE_GUI
 #ifdef ENABLE_UEFI
-#include"stdlib.h"
+#include<stdlib.h>
 #include<Uefi.h>
 #include<Pi/PiFirmwareFile.h>
 #include<Library/UefiLib.h>
@@ -9,11 +9,11 @@
 #include<Library/UefiBootServicesTableLib.h>
 #include<Protocol/LoadedImage.h>
 #include"gui.h"
-#include"activity.h"
-#include"language.h"
-#include"msgbox.h"
 #include"logger.h"
-#include"tools.h"
+#include"language.h"
+#include"gui/tools.h"
+#include"gui/msgbox.h"
+#include"gui/activity.h"
 #define TAG "shell"
 static EFI_HANDLE ih;
 

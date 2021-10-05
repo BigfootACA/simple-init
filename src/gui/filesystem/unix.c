@@ -9,9 +9,9 @@
 #include<sys/stat.h>
 #include<sys/statfs.h>
 #include"lvgl.h"
-#include"fsext.h"
 #include"logger.h"
 #include"defines.h"
+#include"gui/fsext.h"
 #define TAG "filesystem"
 bool fsext_is_multi=false;
 

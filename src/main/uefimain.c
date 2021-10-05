@@ -1,3 +1,4 @@
+#ifdef ENABLE_UEFI
 #include<Library/DebugLib.h>
 #include<Library/UefiBootManagerLib.h>
 #include<Library/ReportStatusCodeLib.h>
@@ -24,3 +25,4 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ih,IN EFI_SYSTEM_TABLE*st){
 	static CHAR16*argv[]={L"guiapp",NULL};
 	return ShellAppMain(argc,argv);
 }
+#endif

@@ -1,10 +1,10 @@
 #ifdef ENABLE_GUI
 #include<stdlib.h>
 #include"gui.h"
-#include"activity.h"
 #include"logger.h"
-#include"tools.h"
-#include"msgbox.h"
+#include"gui/tools.h"
+#include"gui/msgbox.h"
+#include"gui/activity.h"
 
 struct msgbox{
 	char text[BUFSIZ];

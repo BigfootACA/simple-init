@@ -1,11 +1,10 @@
 #ifdef ENABLE_GUI
-#include"lvgl.h"
-#include"logger.h"
-#include"activity.h"
-#include"defines.h"
 #include"gui.h"
-#include"tools.h"
 #include"confd.h"
+#include"logger.h"
+#include"defines.h"
+#include"gui/tools.h"
+#include"gui/activity.h"
 #define TAG "theme"
 
 static lv_obj_t*box,*chk_dark,*btn_ok,*btn_restart,*lbl_tips,*lbl_tip_icon;

@@ -10,11 +10,10 @@
 #include<Library/UefiBootServicesTableLib.h>
 #include<Protocol/AbsolutePointer.h>
 #define TAG "uefitouch"
-#include"defines.h"
-#include"logger.h"
-#include"lvgl.h"
 #include"gui.h"
-#include"guidrv.h"
+#include"logger.h"
+#include"defines.h"
+#include"gui/guidrv.h"
 struct input_data{
 	bool lp,oldp;
 	INT64 rx,lx,oldx;

@@ -4,14 +4,12 @@
 #else
 #include"init_internal.h"
 #endif
-#include"lvgl.h"
-#include"logger.h"
-#include"activity.h"
-#include"defines.h"
 #include"gui.h"
 #include"str.h"
-#include"tools.h"
-#include"msgbox.h"
+#include"logger.h"
+#include"defines.h"
+#include"gui/msgbox.h"
+#include"gui/activity.h"
 #define TAG "reboot"
 
 static bool valid=true;

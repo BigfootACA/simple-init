@@ -1,15 +1,14 @@
 #ifdef ENABLE_GUI
 #ifdef ENABLE_UEFI
+#include<string.h>
 #include<stdlib.h>
 #include<stdbool.h>
-#include<string.h>
 #include<Library/UefiBootServicesTableLib.h>
 #include<Protocol/GraphicsOutput.h>
-#include"version.h"
-#include"logger.h"
-#include"lvgl.h"
 #include"gui.h"
-#include"guidrv.h"
+#include"logger.h"
+#include"version.h"
+#include"gui/guidrv.h"
 #define TAG "uefigop"
 #ifndef DISPLAY_DPI
 #define DISPLAY_DPI 200

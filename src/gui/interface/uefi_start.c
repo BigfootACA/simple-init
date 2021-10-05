@@ -7,11 +7,11 @@
 #include<Library/UefiBootServicesTableLib.h>
 #include<Protocol/LoadedImage.h>
 #include"gui.h"
-#include"activity.h"
-#include"msgbox.h"
-#include"language.h"
 #include"logger.h"
-#include"tools.h"
+#include"language.h"
+#include"gui/tools.h"
+#include"gui/msgbox.h"
+#include"gui/activity.h"
 #define TAG "start"
 
 static char full_path[PATH_MAX];

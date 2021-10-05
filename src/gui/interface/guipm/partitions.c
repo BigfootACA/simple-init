@@ -1,5 +1,16 @@
-#include"guipm.h"
+#ifdef ENABLE_GUI
 #ifdef ENABLE_FDISK
+#define _GNU_SOURCE
+#include<stdlib.h>
+#include<libfdisk/libfdisk.h>
+#include"gui.h"
+#include"str.h"
+#include"system.h"
+#include"logger.h"
+#include"gui/activity.h"
+#include"gui/tools.h"
+#include"gui/msgbox.h"
+#define TAG "guipm"
 
 static char*guipm_target_disk=NULL;
 static char*path=NULL;
@@ -27,6 +38,8 @@ static struct partition_info{
 	char type_str[128];
 	lv_obj_t*btn,*chk;
 }*partitions[1024],*selected;
+
+extern void guipm_draw_title(lv_obj_t*screen);
 
 static void partition_clear(){
 	selected=NULL;
@@ -414,4 +427,5 @@ struct gui_register guireg_guipm_partitions={
 	.draw=guipm_draw_partitions,
 	.back=true
 };
+#endif
 #endif

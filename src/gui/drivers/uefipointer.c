@@ -10,11 +10,10 @@
 #include<Library/UefiBootServicesTableLib.h>
 #include<Protocol/SimplePointer.h>
 #define TAG "uefipointer"
-#include"defines.h"
-#include"logger.h"
-#include"lvgl.h"
 #include"gui.h"
-#include"guidrv.h"
+#include"logger.h"
+#include"defines.h"
+#include"gui/guidrv.h"
 #ifndef MOUSE_SCALE
 #define MOUSE_SCALE 1
 #endif

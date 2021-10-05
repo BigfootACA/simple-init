@@ -1,5 +1,6 @@
 #ifndef LANGUAGE_H
 #define LANGUAGE_H
+#include<stdbool.h>
 #include"defines.h"
 
 struct language{

@@ -3,8 +3,8 @@
 #include<lodepng.h>
 #include<stdlib.h>
 #include<stdio.h>
-#include <fcntl.h>
-#include <unistd.h>
+#include<fcntl.h>
+#include<unistd.h>
 #include"lvgl.h"
 #include"logger.h"
 #include"assets.h"

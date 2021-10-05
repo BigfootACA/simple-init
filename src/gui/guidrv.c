@@ -1,10 +1,9 @@
 #ifdef ENABLE_GUI
 #include<stdlib.h>
-#include <gui.h>
-#include"lvgl.h"
-#include"guidrv.h"
+#include"gui.h"
 #include"logger.h"
 #include"defines.h"
+#include"gui/guidrv.h"
 #define TAG "guidrv"
 
 static struct gui_driver*drv;

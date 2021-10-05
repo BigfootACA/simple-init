@@ -1,12 +1,11 @@
 #ifdef ENABLE_GUI
 #ifdef ENABLE_UEFI
-#include"lvgl.h"
-#include"logger.h"
-#include"activity.h"
-#include"defines.h"
 #include"gui.h"
-#include"tools.h"
-#include"guidrv.h"
+#include"logger.h"
+#include"defines.h"
+#include"gui/tools.h"
+#include"gui/guidrv.h"
+#include"gui/activity.h"
 #define TAG "mouse"
 
 extern int gui_mouse_scale;

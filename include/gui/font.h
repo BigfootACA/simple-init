@@ -1,5 +1,6 @@
 #ifndef _FONT_H
 #define _FONT_H
+#include"gui.h"
 typedef enum{
 	FT_FONT_STYLE_NORMAL = 0,
 	FT_FONT_STYLE_ITALIC = 1<<0,

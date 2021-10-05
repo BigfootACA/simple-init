@@ -1,20 +1,19 @@
 #define _GNU_SOURCE
+#ifdef ENABLE_GUI
 #include<stdlib.h>
 #ifndef ENABLE_UEFI
 #include<fcntl.h>
 #include<sys/stat.h>
 #include<sys/sysmacros.h>
 #endif
-#include"list.h"
-#include"lvgl.h"
 #include"gui.h"
 #include"str.h"
-#include"fsext.h"
-#include"tools.h"
+#include"list.h"
 #include"logger.h"
 #include"system.h"
-#include"filetab.h"
-#include"fileview.h"
+#include"gui/fsext.h"
+#include"gui/tools.h"
+#include"gui/fileview.h"
 #define TAG "fileview"
 #define MIME_DIR _PATH_USR"/share/pixmaps/mime"
 #define MIME_EXT ".png"
@@ -423,3 +422,4 @@ void fileview_free(struct fileview*view){
 	clean_items(view);
 	free(view);
 }
+#endif

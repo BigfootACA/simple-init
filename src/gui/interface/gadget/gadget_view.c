@@ -1,10 +1,11 @@
+#ifdef ENABLE_GUI
 #include<unistd.h>
 #include"gui.h"
 #include"confd.h"
-#include"tools.h"
 #include"logger.h"
-#include"msgbox.h"
-#include"activity.h"
+#include"gui/tools.h"
+#include"gui/msgbox.h"
+#include"gui/activity.h"
 #include"init_internal.h"
 #define TAG "gadget"
 
@@ -297,3 +298,4 @@ struct gui_register guireg_gadget={
 	.lost_focus=gadget_lost_focus,
 	.back=true
 };
+#endif

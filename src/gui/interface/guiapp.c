@@ -3,16 +3,14 @@
 #ifndef ENABLE_UEFI
 #include"service.h"
 #endif
+#include"str.h"
+#include"gui.h"
 #include"confd.h"
 #include"logger.h"
 #include"defines.h"
-#include"lvgl.h"
 #include"init_internal.h"
-#include"str.h"
-#include"gui.h"
-#include"activity.h"
-#include"tools.h"
-#include"msgbox.h"
+#include"gui/msgbox.h"
+#include"gui/activity.h"
 #define TAG "guiapp"
 static lv_obj_t*screen;
 static int app_num=0;

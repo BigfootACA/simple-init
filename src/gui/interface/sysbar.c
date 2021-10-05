@@ -1,11 +1,10 @@
 #ifdef ENABLE_GUI
 #include<time.h>
 #include<stdlib.h>
-#include"hardware.h"
-#include"lvgl.h"
 #include"gui.h"
-#include"sysbar.h"
-#include"activity.h"
+#include"hardware.h"
+#include"gui/sysbar.h"
+#include"gui/activity.h"
 struct sysbar sysbar;
 
 static void sysbar_thread(struct sysbar*b){

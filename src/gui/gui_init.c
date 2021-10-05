@@ -12,17 +12,16 @@
 #else
 #include<semaphore.h>
 #endif
-#include"lvgl.h"
+#include"gui.h"
+#include"confd.h"
 #include"logger.h"
 #include"defines.h"
-#include"activity.h"
-#include"gui.h"
-#include"font.h"
-#include"tools.h"
-#include"confd.h"
-#include"sysbar.h"
 #include"hardware.h"
-#include"guidrv.h"
+#include"gui/font.h"
+#include"gui/tools.h"
+#include"gui/sysbar.h"
+#include"gui/guidrv.h"
+#include"gui/activity.h"
 #define TAG "gui"
 
 #ifndef ENABLE_UEFI

@@ -1,7 +1,6 @@
 #ifndef _SYSBAR_H
 #define _SYSBAR_H
 #include"gui.h"
-#include"gui_draw.h"
 struct sysbar{
 	int size;
 	lv_obj_t*screen;
@@ -30,6 +29,7 @@ struct sysbar{
 	}bottom;
 };
 extern struct sysbar sysbar;
+extern int sysbar_draw(lv_obj_t*scr);
 extern void sysbar_keyboard_toggle();
 extern void sysbar_keyboard_close();
 extern void sysbar_keyboard_open();

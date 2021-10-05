@@ -12,9 +12,8 @@
 #include<sys/ioctl.h>
 #include<linux/input.h>
 #define TAG "input"
-#include"logger.h"
-#include"lvgl.h"
 #include"gui.h"
+#include"logger.h"
 struct in_data{
 	bool enabled,mouse;
 	int fd,flags,type;

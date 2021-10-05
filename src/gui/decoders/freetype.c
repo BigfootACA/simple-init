@@ -3,12 +3,10 @@
 #ifdef ENABLE_FREETYPE2
 #include<ft2build.h>
 #include<sys/stat.h>
-#include<sys/time.h>
+#include"gui.h"
 #include"assets.h"
 #include"logger.h"
-#include"lvgl.h"
-#include"gui.h"
-#include"font.h"
+#include"gui/font.h"
 #include FT_FREETYPE_H
 #include FT_GLYPH_H
 #include FT_CACHE_H

@@ -1,5 +1,6 @@
 #ifdef ENABLE_GUI
-#include"hardware.h"
+#include<stdlib.h>
+#include"gui/guidrv.h"
 extern struct gui_driver guidrv_gtk;
 extern struct gui_driver guidrv_sdl2;
 extern struct gui_driver guidrv_drm;

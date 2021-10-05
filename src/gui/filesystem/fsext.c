@@ -1,6 +1,7 @@
-#include"defines.h"
+#ifdef ENABLE_GUI
 #include"lvgl.h"
-#include"fsext.h"
+#include"defines.h"
+#include"gui/fsext.h"
 
 static const char*lv_fs_get_real_path(const char*path){
 	path++;
@@ -54,3 +55,4 @@ lv_res_t lv_fs_get_label(enum item_type*type,const char*path){
 	if(!fse||!fse->get_type_cb)return LV_FS_RES_NOT_IMP;
 	return fse->get_type_cb(drv,lv_fs_get_real_path(path),type);
 }
+#endif

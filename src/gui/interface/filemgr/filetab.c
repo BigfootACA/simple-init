@@ -1,10 +1,11 @@
+#ifdef ENABLE_GUI
 #include<libgen.h>
 #include<stdlib.h>
 #include<string.h>
-#include"lvgl.h"
+#include"gui.h"
 #include"logger.h"
-#include"filetab.h"
-#include"fileview.h"
+#include"gui/filetab.h"
+#include"gui/fileview.h"
 #define TAG "filetab"
 
 struct filetab{
@@ -114,3 +115,4 @@ void filetab_set_path(struct filetab*tab,char*path){
 	fileview_set_path(tab->fv,path);
 
 }
+#endif

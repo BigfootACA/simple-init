@@ -1,5 +1,7 @@
-#ifndef FILEVIEW_H
-#define FILEVIEW_H
+#ifndef _FILEVIEW_H
+#define _FILEVIEW_H
+#include<stdbool.h>
+#include"gui.h"
 struct fileview;
 typedef bool(*fileview_on_item_click)(struct fileview*,char*item,bool dir);
 typedef void(*fileview_on_change_dir)(struct fileview*,char*old,char*new);

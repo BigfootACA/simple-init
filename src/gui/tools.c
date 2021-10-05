@@ -1,10 +1,7 @@
 #ifdef ENABLE_GUI
-#include<stdio.h>
 #include<stdlib.h>
-#include"lvgl.h"
 #include"gui.h"
-#include"tools.h"
-#include"defines.h"
+#include"gui/tools.h"
 
 lv_style_t*lv_style_opa_mask(){
 	static lv_style_t bg;

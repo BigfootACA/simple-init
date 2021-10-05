@@ -1,12 +1,12 @@
+#ifdef ENABLE_GUI
 #define _GNU_SOURCE
 #include<unistd.h>
 #include<stdlib.h>
-#include"lvgl.h"
 #include"gui.h"
-#include"guidrv.h"
-#include"activity.h"
-#include"pathnames.h"
 #include"logger.h"
+#include"pathnames.h"
+#include"gui/guidrv.h"
+#include"gui/activity.h"
 #define TAG "benchmark"
 #define RND_NUM              64
 #define SCENE_TIME           1000
@@ -749,3 +749,4 @@ struct gui_register guireg_benchmark={
 	.back=true,
 	.mask=false,
 };
+#endif

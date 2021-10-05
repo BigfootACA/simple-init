@@ -13,12 +13,11 @@
 #include<xf86drm.h>
 #include<xf86drmMode.h>
 #include<drm_fourcc.h>
+#include"gui.h"
+#include"logger.h"
 #include"defines.h"
 #include"hardware.h"
-#include"lvgl.h"
-#include"gui.h"
-#include"guidrv.h"
-#include"logger.h"
+#include"gui/guidrv.h"
 #define TAG "drm"
 #define DIV_ROUND_UP(n,d)(((n)+(d)-1)/(d))
 static lv_color_t*buf=NULL;

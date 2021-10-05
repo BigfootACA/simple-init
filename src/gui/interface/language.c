@@ -1,14 +1,13 @@
 #ifdef ENABLE_GUI
 #include<stdlib.h>
-#include"init_internal.h"
-#include"lvgl.h"
-#include"logger.h"
-#include"activity.h"
-#include"defines.h"
 #include"gui.h"
-#include"tools.h"
-#include"msgbox.h"
+#include"logger.h"
+#include"defines.h"
 #include"language.h"
+#include"init_internal.h"
+#include"gui/tools.h"
+#include"gui/msgbox.h"
+#include"gui/activity.h"
 #define TAG "language"
 
 static lv_obj_t*scr,*box,*sel,*btn_ok,*arr_left,*arr_right;

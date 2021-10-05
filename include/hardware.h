@@ -1,6 +1,5 @@
 #ifndef HARDWARE_H
 #define HARDWARE_H
-#include<lvgl.h>
 #include<stdbool.h>
 enum power_supply_status{
 	STATUS_UNKNOWN=0,

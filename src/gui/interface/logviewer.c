@@ -1,10 +1,9 @@
 #ifdef ENABLE_GUI
-#include"lvgl.h"
-#include"logger.h"
-#include"activity.h"
-#include"defines.h"
-#include"tools.h"
 #include"gui.h"
+#include"logger.h"
+#include"defines.h"
+#include"gui/tools.h"
+#include"gui/activity.h"
 #define TAG "logviewer"
 
 static lv_obj_t*view;

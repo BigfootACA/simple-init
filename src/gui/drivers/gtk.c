@@ -5,11 +5,10 @@
 #include<gtk/gtk.h>
 #include<pthread.h>
 #include<sys/time.h>
-#include"lvgl.h"
 #include"gui.h"
-#include"guidrv.h"
 #include"logger.h"
 #include"hardware.h"
+#include"gui/guidrv.h"
 #define TAG "gtk"
 
 #define GTK_W 540

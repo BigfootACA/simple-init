@@ -7,7 +7,7 @@ enum msgbox_mode{
 };
 typedef bool(*msgbox_callback)(uint16_t id,const char*btn);
 struct msgbox{
-	char*title;
+	char text[BUFSIZ];
 	const char**buttons;
 	enum msgbox_mode mode;
 	msgbox_callback callback;
@@ -19,4 +19,7 @@ extern void msgbox_create(
 	const char*content,
 	...
 );
+extern void msgbox_create_yesno(msgbox_callback callback,const char*content,...);
+extern void msgbox_create_ok(msgbox_callback callback,const char*content,...);
+extern void msgbox_alert(const char*content,...);
 #endif

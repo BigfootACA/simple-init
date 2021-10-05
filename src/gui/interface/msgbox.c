@@ -6,44 +6,117 @@
 #include"tools.h"
 #include"msgbox.h"
 
+struct msgbox{
+	char text[BUFSIZ];
+	const char**buttons;
+	msgbox_callback callback;
+	uint16_t btn_cnt;
+	lv_obj_t*mask;
+	lv_obj_t*box;
+	lv_obj_t*label;
+	lv_obj_t*btn[64];
+	void*btn_data_p;
+};
+
+struct msgbox_btn{
+	uint16_t id;
+	const char*text;
+	struct msgbox*box;
+};
+
+static const char*null_btn[]={""};
+static const char*ok_btn[]={LV_SYMBOL_OK,""};
+static const char*yesno_btn[]={LV_SYMBOL_OK,LV_SYMBOL_CLOSE,""};
+
 static void msg_click(lv_obj_t*obj,lv_event_t e){
-	struct msgbox*cb=NULL;
-	if(e==LV_EVENT_DELETE)guiact_do_back();
-	else if(e==LV_EVENT_VALUE_CHANGED){
-		lv_obj_t*o=obj;
-		do{
-			if(!lv_debug_check_obj_type(o,"lv_msgbox"))continue;
-			uint16_t id=lv_msgbox_get_active_btn(obj);
-			const char*btn=lv_msgbox_get_active_btn_text(obj);
-			cb=o->user_data;
-			if(cb&&cb->callback&&cb->callback(id,btn))return;
-			break;
-		}while((o=lv_obj_get_parent(o)));
-		if(cb)free(cb);
-		lv_obj_del_async(obj);
-	}
+	if(!obj||e!=LV_EVENT_CLICKED)return;
+	struct msgbox_btn*btn;
+	struct msgbox*box;
+	if(!(btn=lv_obj_get_user_data(obj))||!(box=btn->box))return;
+	if(guiact_get_last()->args!=box)return;
+	if(box->callback&&box->callback(btn->id,btn->text))return;
+	for(uint16_t i=0;i<box->btn_cnt;i++)
+		lv_obj_set_user_data(box->btn[i],NULL);
+	free(box->btn_data_p);
+	free(box);
+	guiact_do_back();
 }
 
 static int msgbox_draw(struct gui_activity*act){
-	lv_obj_t*o;
+	lv_coord_t box_h=0;
+	lv_coord_t max_w=gui_dpi*4,cur_w=gui_sw/4*3,xw=MIN(max_w,cur_w);
+	lv_coord_t max_h=gui_dpi*6,cur_h=gui_sh/3*2,xh=MIN(max_h,cur_h);
 	struct msgbox*box=act->args;
-	switch(box->mode){
-		case MODE_OK:o=lv_create_ok_msgbox(act->page,msg_click,box->text);break;
-		case MODE_YESNO:o=lv_create_yesno_msgbox(act->page,msg_click,box->text);break;
-		case MODE_CUSTOM:o=lv_create_msgbox(act->page,box->buttons,msg_click,box->text);break;
-		default:return 1;
+	if(!box->buttons)box->buttons=null_btn;
+	for(box->btn_cnt=0;*box->buttons[box->btn_cnt];box->btn_cnt++);
+	if(box->btn_cnt>64)return 3;
+
+	box->mask=lv_create_opa_mask(act->page);
+	box->box=lv_page_create(box->mask,NULL);
+	lv_obj_set_style_local_border_width(box->box,LV_PAGE_PART_BG,LV_STATE_DEFAULT,0);
+	lv_obj_set_style_local_border_width(box->box,LV_PAGE_PART_BG,LV_STATE_PRESSED,0);
+	lv_obj_set_style_local_border_width(box->box,LV_PAGE_PART_BG,LV_STATE_FOCUSED,0);
+	lv_obj_set_width(box->box,xw);
+
+	box->label=lv_label_create(box->box,NULL);
+	lv_label_set_align(box->label,LV_LABEL_ALIGN_CENTER);
+	lv_label_set_long_mode(box->label,LV_LABEL_LONG_BREAK);
+	lv_obj_set_width(box->label,lv_page_get_scrl_width(box->box));
+	lv_label_set_text(box->label,box->text);
+	box_h+=lv_obj_get_height(box->label);
+
+	if(box->btn_cnt>0){
+		lv_coord_t
+			btn_m=gui_font_size/2,
+			btn_w=lv_page_get_scrl_width(box->box),
+			btn_h=gui_font_size+(gui_dpi/8);
+		box_h+=btn_m;
+		struct msgbox_btn*d=malloc(sizeof(struct msgbox_btn)*box->btn_cnt);
+		if(!d){
+			free(box);
+			return 4;
+		}
+		box->btn_data_p=d;
+		for(uint16_t i=0;i<box->btn_cnt;i++){
+			d[i].box=box,d[i].id=i,d[i].text=box->buttons[i];
+			box->btn[i]=lv_btn_create(box->box,NULL);
+			lv_label_set_text(lv_label_create(box->btn[i],NULL),box->buttons[i]);
+			lv_obj_set_style_local_margin_bottom(box->btn[i],LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btn_m);
+			lv_obj_set_style_local_radius(box->btn[i],LV_BTN_PART_MAIN,LV_STATE_DEFAULT,gui_dpi/15);
+			lv_obj_set_size(box->btn[i],btn_w-btn_m,btn_h);
+			lv_obj_set_user_data(box->btn[i],&d[i]);
+			lv_obj_set_event_cb(box->btn[i],msg_click);
+		}
+		if(box->btn_cnt<=5){
+			btn_w/=box->btn_cnt,box_h+=btn_m;
+			for(uint16_t i=0;i<box->btn_cnt;i++){
+				lv_obj_set_pos(box->btn[i],(btn_w*i)+(btn_m/2),box_h);
+				lv_obj_set_width(box->btn[i],btn_w-btn_m);
+			}
+			box_h+=btn_h+btn_m;
+		}else for(uint16_t i=0;i<box->btn_cnt;i++){
+			lv_obj_set_pos(box->btn[i],0,box_h+btn_m);
+			box_h+=btn_h+btn_m;
+		}
 	}
-	lv_obj_set_user_data(o,box);
+	box_h+=gui_dpi/4;
+	lv_obj_set_height(box->box,MIN(box_h,xh));
+	lv_obj_align(box->box,NULL,LV_ALIGN_CENTER,0,0);
+
 	return 0;
 }
 
 static int msgbox_get_focus(struct gui_activity*d){
-	lv_group_add_msgbox(gui_grp,d->page,true);
+	struct msgbox*box=d->args;
+	for(uint16_t i=0;i<box->btn_cnt;i++)
+		lv_group_add_obj(gui_grp,box->btn[i]);
 	return 0;
 }
 
 static int msgbox_lost_focus(struct gui_activity*d){
-	lv_group_remove_msgbox(d->page);
+	struct msgbox*box=d->args;
+	for(uint16_t i=0;i<box->btn_cnt;i++)
+		lv_group_remove_obj(box->btn[i]);
 	return 0;
 }
 
@@ -63,7 +136,6 @@ static void msgbox_cb(lv_task_t*t){
 }
 
 static void _msgbox_create(
-	enum msgbox_mode mode,
 	msgbox_callback callback,
 	const char**buttons,
 	const char*content,
@@ -71,44 +143,38 @@ static void _msgbox_create(
 ){
 	struct msgbox*msg=malloc(sizeof(struct msgbox));
 	if(!msg)return;
+	memset(msg,0,sizeof(struct msgbox));
 	vsnprintf(msg->text,sizeof(msg->text)-1,_(content),va);
-	msg->mode=mode;
 	msg->callback=callback;
 	msg->buttons=buttons;
 	lv_task_once(lv_task_create(msgbox_cb,0,LV_TASK_PRIO_LOWEST,msg));
 }
 
-void msgbox_create(
-	enum msgbox_mode mode,
-	msgbox_callback callback,
-	const char**buttons,
-	const char*content,
-	...
-){
-	va_list va;
-	va_start(va,content);
-	_msgbox_create(mode,callback,buttons,content,va);
-	va_end(va);
-}
-
 void msgbox_create_yesno(msgbox_callback callback,const char*content,...){
 	va_list va;
 	va_start(va,content);
-	_msgbox_create(MODE_YESNO,callback,NULL,content,va);
+	_msgbox_create(callback,yesno_btn,content,va);
 	va_end(va);
 }
 
 void msgbox_create_ok(msgbox_callback callback,const char*content,...){
 	va_list va;
 	va_start(va,content);
-	_msgbox_create(MODE_OK,callback,NULL,content,va);
+	_msgbox_create(callback,ok_btn,content,va);
+	va_end(va);
+}
+
+void msgbox_create_custom(msgbox_callback callback,const char**btns,const char*content,...){
+	va_list va;
+	va_start(va,content);
+	_msgbox_create(callback,btns,content,va);
 	va_end(va);
 }
 
 void msgbox_alert(const char*content,...){
 	va_list va;
 	va_start(va,content);
-	_msgbox_create(MODE_OK,NULL,NULL,content,va);
+	_msgbox_create(NULL,ok_btn,content,va);
 	va_end(va);
 }
 

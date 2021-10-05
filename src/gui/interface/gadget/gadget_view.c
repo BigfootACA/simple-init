@@ -33,7 +33,6 @@ static void btns_toggle(bool state){
 static void clean_items(){
 	if(info)lv_obj_del(info);
 	info=NULL,selected=NULL,last=NULL;
-	btns_toggle(false);
 	for(int i=0;i<64;i++){
 		if(!items[i].enable)continue;
 		lv_obj_del(items[i].btn);
@@ -42,6 +41,7 @@ static void clean_items(){
 }
 
 static void set_info(char*text){
+	btns_toggle(false);
 	clean_items();
 	info=lv_label_create(view,NULL);
 	lv_label_set_long_mode(info,LV_LABEL_LONG_BREAK);
@@ -118,6 +118,7 @@ static void view_add_item(struct func_item*k){
 }
 
 static void view_reload(){
+	btns_toggle(false);
 	clean_items();
 	int i=0;
 	char**list=confd_ls(base),*item;

@@ -6,6 +6,9 @@
   VERSION_STRING                 = 1.0
   ENTRY_POINT                    = UefiMain
 
+[BuildOptions]
+  GCC:*_*_*_CC_FLAGS = -DENABLE_UEFI=1
+
 [Packages]
   StdLib/StdLib.dec
   MdePkg/MdePkg.dec

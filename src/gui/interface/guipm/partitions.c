@@ -234,8 +234,21 @@ static void partitions_add_item(int i,struct partition_info*p){
 	}
 }
 
+static void set_disks_info(char*text){
+	if(disk_info)lv_obj_del(disk_info);
+	disk_info=lv_label_create(page,NULL);
+	lv_label_set_long_mode(disk_info,LV_LABEL_LONG_BREAK);
+	lv_obj_set_size(disk_info,lv_page_get_scrl_width(page),gui_sh/16);
+	lv_label_set_align(disk_info,LV_LABEL_ALIGN_CENTER);
+	lv_label_set_text(disk_info,text);
+}
+
 static int reload_partitions(){
 	partition_clear();
+	if(!fdisk_has_label(ctx)){
+		set_disks_info(_("This disk has no label"));
+		return 0;
+	}
 	fill_disk_info();
 	if(fdisk_get_partitions(ctx,&diskinfo.table)!=0)
 		return tlog_warn("no any partitions found");
@@ -257,15 +270,6 @@ static int reload_partitions(){
 	}
 	fdisk_free_iter(itr);
 	return 0;
-}
-
-static void set_disks_info(char*text){
-	if(disk_info)lv_obj_del(disk_info);
-	disk_info=lv_label_create(page,NULL);
-	lv_label_set_long_mode(disk_info,LV_LABEL_LONG_BREAK);
-	lv_obj_set_size(disk_info,lv_page_get_scrl_width(page),gui_sh/16);
-	lv_label_set_align(disk_info,LV_LABEL_ALIGN_CENTER);
-	lv_label_set_text(disk_info,text);
 }
 
 static int init_disk(){
@@ -305,8 +309,7 @@ static void reload_click(lv_obj_t*obj,lv_event_t e){
 
 static void do_reload(lv_task_t*t __attribute__((unused))){
 	errno=0;
-	if(fdisk_has_label(ctx))reload_partitions();
-	else set_disks_info(_("This disk has no label"));
+	reload_partitions();
 	lv_group_add_obj(gui_grp,btn_disk);
 	lv_group_add_obj(gui_grp,btn_part);
 	lv_group_add_obj(gui_grp,btn_reload);

@@ -92,10 +92,6 @@ static int backlight_menu_draw(struct gui_activity*act){
 }
 
 static int backlight_get_focus(struct gui_activity*d __attribute__((unused))){
-	if(guidrv_get_brightness()<0){
-		lv_group_add_msgbox(gui_grp,d->page,true);
-		return 0;
-	}
 	lv_group_add_obj(gui_grp,slider);
 	lv_group_add_obj(gui_grp,arr_left);
 	lv_group_add_obj(gui_grp,arr_right);
@@ -104,10 +100,6 @@ static int backlight_get_focus(struct gui_activity*d __attribute__((unused))){
 }
 
 static int backlight_lost_focus(struct gui_activity*d __attribute__((unused))){
-	if(guidrv_get_brightness()<0){
-		lv_group_remove_msgbox(d->page);
-		return 0;
-	}
 	lv_group_remove_obj(slider);
 	lv_group_remove_obj(arr_left);
 	lv_group_remove_obj(arr_right);

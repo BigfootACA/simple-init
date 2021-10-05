@@ -11,7 +11,6 @@
 #include"language.h"
 #define TAG "language"
 
-static bool msgbox=false;
 static lv_obj_t*scr,*box,*sel,*btn_ok,*arr_left,*arr_right;
 
 static void ok_action(lv_obj_t*obj,lv_event_t e){
@@ -31,8 +30,6 @@ static void ok_action(lv_obj_t*obj,lv_event_t e){
 		int ex=(errno==0)?response.data.status.ret:errno;
 		guiact_do_back();
 		msgbox_alert("init control command failed: %s",strerror(ex));
-		lv_group_add_msgbox(gui_grp,scr,true);
-		msgbox=true;
 		return;
 	}
 	#endif
@@ -63,11 +60,7 @@ static void init_languages(){
 	lv_dropdown_set_selected(sel,s);
 }
 
-static int language_get_focus(struct gui_activity*d){
-	if(msgbox){
-		lv_group_add_msgbox(gui_grp,d->page,true);
-		return 0;
-	}
+static int language_get_focus(struct gui_activity*d __attribute__((unused))){
 	lv_group_add_obj(gui_grp,sel);
 	lv_group_add_obj(gui_grp,arr_left);
 	lv_group_add_obj(gui_grp,btn_ok);
@@ -76,11 +69,7 @@ static int language_get_focus(struct gui_activity*d){
 	return 0;
 }
 
-static int language_lost_focus(struct gui_activity*d){
-	if(msgbox){
-		lv_group_remove_msgbox(d->page);
-		return 0;
-	}
+static int language_lost_focus(struct gui_activity*d __attribute__((unused))){
 	lv_group_remove_obj(sel);
 	lv_group_remove_obj(arr_left);
 	lv_group_remove_obj(btn_ok);
@@ -90,7 +79,7 @@ static int language_lost_focus(struct gui_activity*d){
 
 static int language_menu_draw(struct gui_activity*act){
 	int bts=gui_font_size+(gui_dpi/8);
-	scr=act->page,msgbox=false;
+	scr=act->page;
 
 	static lv_style_t bs;
 	lv_style_init(&bs);

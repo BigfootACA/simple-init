@@ -143,7 +143,7 @@ extern uint32_t custom_tick_get();
 #define LV_USE_LIST                         1
 #define LV_USE_LINEMETER                    0
 #define LV_USE_OBJMASK                      1
-#define LV_USE_MSGBOX                       1
+#define LV_USE_MSGBOX                       0
 #define LV_USE_PAGE                         1
 #define LV_USE_ROLLER                       0
 #define LV_USE_SLIDER                       1

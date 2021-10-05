@@ -10,6 +10,7 @@ static lv_obj_t*view;
 static lv_obj_t*btn_top,*btn_bottom,*btn_reload;
 
 static void load_log_task(lv_task_t*t __attribute__((unused))){
+	if(!view)return;
 	char buff[BUFSIZ]={0};
 	int fd=open(_PATH_DEV"/logger.log",O_RDONLY);
 	if(fd<0){
@@ -64,8 +65,12 @@ static int logviewer_lost_focus(struct gui_activity*d __attribute__((unused))){
 	return 0;
 }
 
-static int logviewer_draw(struct gui_activity*act){
+static int do_clean(struct gui_activity*act __attribute__((unused))){
+	view=NULL;
+	return 0;
+}
 
+static int logviewer_draw(struct gui_activity*act){
 
 	lv_obj_t*txt=lv_label_create(act->page,NULL);
 	lv_label_set_text(txt,_("Loggerd Viewer"));
@@ -123,6 +128,7 @@ struct gui_register guireg_logviewer={
 	.title="Loggerd Viewer",
 	.icon="logviewer.png",
 	.show_app=true,
+	.quiet_exit=do_clean,
 	.draw=logviewer_draw,
 	.lost_focus=logviewer_lost_focus,
 	.get_focus=logviewer_get_focus,

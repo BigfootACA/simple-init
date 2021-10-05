@@ -116,7 +116,7 @@ static int fill_partition_info(struct partition_info*part,struct fdisk_iter*itr)
 			part->start_str,part->start_sec,
 			part->end_str,part->end_sec,
 			part->size_str,part->size_sec,
-			part->name[0]?part->name:_("(none)"),
+			part->name[0]?part->name:"(none)",
 			part->type_str
 		);
 	}

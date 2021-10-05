@@ -32,8 +32,8 @@ static struct disk_info*selected=NULL;
 
 extern void guipm_draw_title(lv_obj_t*screen);
 
-static char*get_model(struct disk_info*d){return d->model[0]==0?_("Unknown"):d->model;}
-static char*get_layout(struct disk_info*d){return d->layout[0]==0?_("Unknown"):d->layout;}
+static char*get_model(struct disk_info*d){return d->model[0]==0?"Unknown":d->model;}
+static char*get_layout(struct disk_info*d){return d->layout[0]==0?"Unknown":d->layout;}
 
 void disk_click(lv_obj_t*obj,lv_event_t e){
 	if(e!=LV_EVENT_VALUE_CHANGED)return;
@@ -194,7 +194,7 @@ static void disks_add_item(int blk,struct disk_info*k){
 	lv_label_set_long_mode(d_model,LV_LABEL_LONG_SROLL_CIRC);
 	lv_obj_set_width(d_model,c1w);
 	lv_label_set_align(d_model,LV_LABEL_ALIGN_LEFT);
-	lv_label_set_text(d_model,get_model(k));
+	lv_label_set_text(d_model,_(get_model(k)));
 	if(!k->model[0])lv_obj_set_gray240_text_color(d_model,LV_LABEL_PART_MAIN);
 
 	// disk size
@@ -211,7 +211,7 @@ static void disks_add_item(int blk,struct disk_info*k){
 	lv_label_set_long_mode(d_layout,LV_LABEL_LONG_SROLL_CIRC);
 	lv_obj_set_width(d_layout,c2w);
 	lv_label_set_align(d_layout,LV_LABEL_ALIGN_RIGHT);
-	lv_label_set_text(d_layout,get_layout(k));
+	lv_label_set_text(d_layout,_(get_layout(k)));
 	if(!k->lbl)lv_obj_set_gray240_text_color(d_layout,LV_LABEL_PART_MAIN);
 }
 

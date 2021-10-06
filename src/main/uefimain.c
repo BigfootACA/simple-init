@@ -4,7 +4,7 @@
 #include<Library/ReportStatusCodeLib.h>
 
 extern int guiapp_main(int argc,char**argv);
-extern INTN ShellAppMain(UINTN argc,CHAR16**argv);
+extern INTN EFIAPI ShellAppMain(UINTN argc,CHAR16**argv);
 
 // main for uefi shell app
 int main(int argc,char**argv){

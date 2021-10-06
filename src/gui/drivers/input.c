@@ -34,7 +34,20 @@ static size_t
 static pthread_t inp=0;
 static int efd=-1;
 static uint32_t keymap(uint16_t key){
-	switch(key){
+	if(lv_group_get_editing(gui_grp))switch(key){
+		case KEY_ENTER:
+		case '\r':
+		case KEY_POWER:return LV_KEY_ENTER;
+		case KEY_UP:
+		case KEY_PAGEUP:return LV_KEY_UP;
+		case KEY_LEFT:
+		case KEY_VOLUMEUP:return LV_KEY_LEFT;
+		case KEY_DOWN:
+		case KEY_PAGEDOWN:return LV_KEY_DOWN;
+		case KEY_RIGHT:
+		case KEY_VOLUMEDOWN:return LV_KEY_RIGHT;
+		default:return key;
+	}else switch(key){
 		case KEY_ENTER:
 		case '\r':
 		case KEY_POWER:return LV_KEY_ENTER;

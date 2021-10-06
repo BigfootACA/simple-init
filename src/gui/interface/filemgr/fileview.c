@@ -175,7 +175,7 @@ static struct fileitem*add_item(struct fileview*view,char*name){
 	lv_coord_t si=view->bh-gui_font_size;
 	fi->img=lv_img_create(line,NULL);
 	lv_obj_set_size(fi->img,si,si);
-	lv_obj_align(fi->img,NULL,LV_ALIGN_IN_LEFT_MID,gui_font_size/2,0);
+	lv_obj_align(fi->img,fi->btn,LV_ALIGN_IN_LEFT_MID,gui_font_size/2,0);
 	lv_obj_set_click(fi->img,true);
 	lv_obj_set_event_cb(fi->img,item_click);
 	lv_obj_set_user_data(fi->img,fi);
@@ -192,12 +192,13 @@ static struct fileitem*add_item(struct fileview*view,char*name){
 		x=lv_obj_get_ext_attr(fi->img);
 	}
 	if(x->w>0&&x->h>0)lv_img_set_zoom(fi->img,(int)(((float)si/MAX(x->w,x->h))*256));
+	lv_img_set_pivot(fi->img,0,0);
 
 	// file name and checkbox
 	fi->chk=lv_checkbox_create(line,NULL);
 	lv_checkbox_set_text(fi->chk,strcmp(fi->name,"..")==0?_("Parent folder"):name);
 	lv_style_set_focus_checkbox(fi->chk);
-	lv_obj_align(fi->chk,fi->img,LV_ALIGN_OUT_RIGHT_TOP,gui_font_size/2,0);
+	lv_obj_align(fi->chk,NULL,LV_ALIGN_IN_LEFT_MID,gui_font_size+si,-gui_font_size);
 	lv_checkbox_ext_t*e=lv_obj_get_ext_attr(fi->chk);
 	lv_label_set_long_mode(e->label,LV_LABEL_LONG_SROLL_CIRC);
 

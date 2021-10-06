@@ -35,7 +35,22 @@ static bool mousewheel_read(lv_indev_drv_t*indev_drv __attribute__((unused)),lv_
 	return false;
 }
 static uint32_t keycode_to_ascii(uint32_t sdl_key){
-	switch(sdl_key) {
+	if(lv_group_get_editing(gui_grp))switch(sdl_key){
+		case SDLK_ESCAPE:return LV_KEY_ESC;
+		case SDLK_BACKSPACE:return LV_KEY_BACKSPACE;
+		case SDLK_DELETE:return LV_KEY_DEL;
+		case SDLK_KP_ENTER:
+		case '\r':return LV_KEY_ENTER;
+		case SDLK_DOWN:
+		case SDLK_RIGHT:return LV_KEY_RIGHT;
+		case SDLK_UP:
+		case SDLK_LEFT:return LV_KEY_LEFT;
+		case SDLK_KP_MINUS:
+		case SDLK_PAGEDOWN:return LV_KEY_DOWN;
+		case SDLK_KP_PLUS:
+		case SDLK_PAGEUP:return LV_KEY_UP;
+		default:return sdl_key;
+	}else switch(sdl_key){
 		case SDLK_ESCAPE:return LV_KEY_ESC;
 		case SDLK_BACKSPACE:return LV_KEY_BACKSPACE;
 		case SDLK_DELETE:return LV_KEY_DEL;

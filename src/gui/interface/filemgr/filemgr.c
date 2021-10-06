@@ -14,11 +14,35 @@ static lv_obj_t*btn_paste,*btn_copy,*btn_delete,*btn_new,*btn_cut,*btn_back;
 static struct filetab*tabs[4],*active=NULL;
 
 static int filemgr_get_focus(struct gui_activity*d __attribute__((unused))){
+	lv_group_add_obj(gui_grp,btn_prev);
+	lv_group_add_obj(gui_grp,btn_refresh);
+	lv_group_add_obj(gui_grp,btn_edit);
+	lv_group_add_obj(gui_grp,btn_home);
+	lv_group_add_obj(gui_grp,btn_info);
+	lv_group_add_obj(gui_grp,btn_next);
+	lv_group_add_obj(gui_grp,btn_paste);
+	lv_group_add_obj(gui_grp,btn_copy);
+	lv_group_add_obj(gui_grp,btn_delete);
+	lv_group_add_obj(gui_grp,btn_next);
+	lv_group_add_obj(gui_grp,btn_cut);
+	lv_group_add_obj(gui_grp,btn_back);
 	if(active)filetab_add_group(active,gui_grp);
 	return 0;
 }
 
 static int filemgr_lost_focus(struct gui_activity*d __attribute__((unused))){
+	lv_group_remove_obj(btn_prev);
+	lv_group_remove_obj(btn_refresh);
+	lv_group_remove_obj(btn_edit);
+	lv_group_remove_obj(btn_home);
+	lv_group_remove_obj(btn_info);
+	lv_group_remove_obj(btn_next);
+	lv_group_remove_obj(btn_paste);
+	lv_group_remove_obj(btn_copy);
+	lv_group_remove_obj(btn_delete);
+	lv_group_remove_obj(btn_next);
+	lv_group_remove_obj(btn_cut);
+	lv_group_remove_obj(btn_back);
 	if(active)filetab_remove_group(active);
 	return 0;
 }

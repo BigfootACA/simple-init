@@ -63,6 +63,8 @@ static void keyboard_toggle(lv_obj_t*obj,lv_event_t e){
 		lv_obj_del(sysbar.keyboard);
 		lv_obj_set_height(sysbar.content,gui_sh);
 		lv_page_set_scrlbar_mode(sysbar.content,LV_SCROLLBAR_MODE_HIDE);
+		if(sysbar.focus_input)lv_textarea_set_cursor_hidden(sysbar.focus_input,true);
+		lv_group_set_editing(gui_grp,false);
 		sysbar.keyboard=NULL;
 		return;
 	}
@@ -73,6 +75,15 @@ static void keyboard_toggle(lv_obj_t*obj,lv_event_t e){
 	lv_page_set_scrlbar_mode(sysbar.content,LV_SCROLLBAR_MODE_UNHIDE);
 	lv_obj_set_y(sysbar.keyboard,gui_h-sysbar.size-h);
 	lv_obj_set_event_cb(sysbar.keyboard,keyboard_toggle);
+	lv_keyboard_set_cursor_manage(sysbar.keyboard,true);
+	if(sysbar.focus_input){
+		lv_group_focus_obj(sysbar.focus_input);
+		lv_group_get_focus_cb(gui_grp)(gui_grp);
+		lv_keyboard_set_textarea(sysbar.keyboard,sysbar.focus_input);
+	}
+	lv_group_add_obj(gui_grp,sysbar.keyboard);
+	lv_group_focus_obj(sysbar.keyboard);
+	lv_group_set_editing(gui_grp,true);
 }
 
 void sysbar_keyboard_toggle(){
@@ -85,6 +96,15 @@ void sysbar_keyboard_close(){
 
 void sysbar_keyboard_open(){
 	if(!sysbar.keyboard)sysbar_keyboard_toggle();
+}
+
+void sysbar_focus_input(lv_obj_t*obj){
+	if(sysbar.focus_input)lv_textarea_set_cursor_hidden(sysbar.focus_input,true);
+	sysbar.focus_input=obj;
+	if(!obj)return;
+	lv_group_focus_obj(sysbar.keyboard);
+	lv_group_set_editing(gui_grp,true);
+	if(sysbar.keyboard)lv_keyboard_set_textarea(sysbar.keyboard,sysbar.focus_input);
 }
 
 static void back_click(lv_obj_t*obj,lv_event_t e){

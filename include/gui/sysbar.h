@@ -16,6 +16,7 @@ struct sysbar{
 		}content;
 	}top;
 	lv_obj_t*keyboard;
+	lv_obj_t*focus_input;
 	struct{
 		lv_obj_t*bar;
 		lv_style_t btn_style;
@@ -33,4 +34,5 @@ extern int sysbar_draw(lv_obj_t*scr);
 extern void sysbar_keyboard_toggle();
 extern void sysbar_keyboard_close();
 extern void sysbar_keyboard_open();
+extern void sysbar_focus_input(lv_obj_t*obj);
 #endif

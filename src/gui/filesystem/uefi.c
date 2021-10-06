@@ -405,14 +405,20 @@ static lv_res_t fs_dir_open_cb(
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
 	if(!fs||!fs->proto)return LV_FS_RES_INV_PARAM;
+	EFI_STATUS st;
 	EFI_FILE_PROTOCOL*fh;
-	CHAR16 xpath[4096]={0};
-	mbstowcs(xpath,path,sizeof(xpath)-1);
-	EFI_STATUS st=fs->proto->Open(fs->proto,&fh,xpath,EFI_FILE_MODE_READ,0);
-	if(EFI_ERROR(st))XWARN(
-		"open dir %c:%s failed: %llx",
-		drv->letter,path,st
-	)
+	if(!*path||strcmp(path,"/")==0){
+		fh=fs->proto,st=EFI_SUCCESS;
+		fh->SetPosition(fh,0);
+	}else{
+		CHAR16 xpath[4096]={0};
+		mbstowcs(xpath,path,sizeof(xpath)-1);
+		st=fs->proto->Open(fs->proto,&fh,xpath,EFI_FILE_READ_ONLY,0);
+		if(EFI_ERROR(st))XWARN(
+			"open dir %c:%s failed: %llx",
+			drv->letter,path,st
+		)
+	}
 	if(fh)((lv_fs_dir_t*)rddir_p)->dir_d=fh;
 	return efi_status_to_lv_res(st);
 }
@@ -461,6 +467,7 @@ static lv_res_t fs_dir_close_cb(
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
 	if(!fs)return LV_FS_RES_INV_PARAM;
+	if(dh==fs->proto)return LV_FS_RES_OK;
 	EFI_STATUS st=dh->Close(dh);
 	if(EFI_ERROR(st))XWARN(
 		"close dir %c:#%p: %llx",
@@ -550,8 +557,10 @@ EFI_DEVICE_PATH_PROTOCOL*fs_get_device_path(const char*path){
 	if(drv->ready_cb&&!drv->ready_cb(drv))return NULL;
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
+	char*ep=(char*)path+2,*cp=ep;
 	CHAR16 xp[PATH_MAX]={0};
-	mbstowcs(xp,path+2,PATH_MAX-1);
+	do{if(*cp=='/')*cp='\\';}while(*cp++);
+	mbstowcs(xp,ep,PATH_MAX-1);
 	return FileDevicePath(fs->hand,xp);
 }
 #endif

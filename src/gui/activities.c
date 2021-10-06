@@ -2,6 +2,7 @@
 #include"gui/activity.h"
 extern struct gui_register guireg_guipm_disk_select;
 extern struct gui_register guireg_guipm_partitions;
+extern struct gui_register guireg_gadget_base_info;
 extern struct gui_register guireg_uefi_bootmenu;
 extern struct gui_register guireg_uefi_shell;
 extern struct gui_register guireg_mouse_menu;
@@ -28,6 +29,7 @@ struct gui_register*guiact_register[]={
 	&guireg_backlight,
 	&guireg_logviewer,
 	&guireg_gadget,
+	&guireg_gadget_base_info,
 	#endif
 	&guireg_theme_menu,
 	&guireg_benchmark,

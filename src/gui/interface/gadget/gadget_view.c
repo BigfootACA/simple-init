@@ -201,7 +201,7 @@ static void btns_cb(lv_obj_t*obj,lv_event_t e){
 	}else if(obj==btn_reload){
 		view_reload();
 	}else if(obj==btn_base){
-
+		guiact_start_activity_by_name("usb-gadget-base-info",NULL);
 	}else if(!selected)return;
 	else if(obj==btn_add){
 

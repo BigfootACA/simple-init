@@ -20,9 +20,24 @@ static bool keyboard_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
 	data->state=LV_INDEV_STATE_REL;
 	if(!EFI_ERROR(keyboard->ReadKeyStroke(keyboard,&p))){
 		data->state=0;
-		if(p.ScanCode!=0)switch(p.ScanCode){
-			case SCAN_UP:case SCAN_LEFT:case SCAN_PAGE_UP:data->key=LV_KEY_PREV;break;
-			case SCAN_DOWN:case SCAN_RIGHT:case SCAN_PAGE_DOWN:data->key=LV_KEY_NEXT;break;
+		if(p.ScanCode!=0){
+			if(lv_group_get_editing(gui_grp))switch(p.ScanCode){
+				// why UP and DOWN map to LEFT and RIGHT?
+				// because volume keys only have UP and DOWN.
+				case SCAN_UP:
+				case SCAN_LEFT:data->key=LV_KEY_LEFT;break;
+				case SCAN_PAGE_UP:data->key=LV_KEY_UP;break;
+				case SCAN_DOWN:
+				case SCAN_RIGHT:data->key=LV_KEY_RIGHT;break;
+				case SCAN_PAGE_DOWN:data->key=LV_KEY_DOWN;break;
+			}else switch(p.ScanCode){
+				case SCAN_UP:
+				case SCAN_LEFT:
+				case SCAN_PAGE_UP:data->key=LV_KEY_PREV;break;
+				case SCAN_DOWN:
+				case SCAN_RIGHT:
+				case SCAN_PAGE_DOWN:data->key=LV_KEY_NEXT;break;
+			}
 		}else if(p.UnicodeChar!=0)switch(p.UnicodeChar){
 			case ' ':case '\n':case '\r':data->key=LV_KEY_ENTER;break;
 		}else return false;

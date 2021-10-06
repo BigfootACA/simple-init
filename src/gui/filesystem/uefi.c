@@ -157,8 +157,11 @@ static lv_res_t fs_open_cb(
 		default:return LV_FS_RES_INV_PARAM;
 	}
 	EFI_FILE_PROTOCOL*fh;
+	char ep[4096]={0},*cp=ep;
 	CHAR16 xpath[4096]={0};
-	mbstowcs(xpath,path,sizeof(xpath)-1);
+	strcpy(ep,path);
+	do{if(*cp=='/')*cp='\\';}while(*cp++);
+	mbstowcs(xpath,ep,sizeof(xpath)-1);
 	EFI_STATUS st=fs->proto->Open(fs->proto,&fh,xpath,flags,0);
 	if(!fh)XWARN(
 		"open %c:%s mode %d failed: %llx",
@@ -194,8 +197,11 @@ static lv_res_t fs_remove_cb(
 	struct fs_root*fs=fse->user_data;
 	if(!fs)return LV_FS_RES_INV_PARAM;
 	EFI_FILE_PROTOCOL*fh;
+	char ep[4096]={0},*cp=ep;
 	CHAR16 xpath[4096]={0};
-	mbstowcs(xpath,fn,sizeof(xpath)-1);
+	strcpy(ep,fn);
+	do{if(*cp=='/')*cp='\\';}while(*cp++);
+	mbstowcs(xpath,ep,sizeof(xpath)-1);
 	EFI_STATUS st=fs->proto->Open(fs->proto,&fh,xpath,EFI_FILE_MODE_WRITE,0);
 	if(EFI_ERROR(st))XWARN(
 		"open %c:%s failed: %llx",
@@ -222,8 +228,11 @@ static lv_res_t fs_get_type_cb(
 	EFI_FILE_PROTOCOL*fh;
 	EFI_FILE_INFO*info=AllocateZeroPool(infos);
 	if(!info)return false;
+	char ep[4096]={0},*cp=ep;
 	CHAR16 xpath[4096]={0};
-	mbstowcs(xpath,fn,sizeof(xpath)-1);
+	strcpy(ep,fn);
+	do{if(*cp=='/')*cp='\\';}while(*cp++);
+	mbstowcs(xpath,ep,sizeof(xpath)-1);
 	st=fs->proto->Open(fs->proto,&fh,xpath,EFI_FILE_MODE_READ,0);
 	if(EFI_ERROR(st))XWARN(
 		"get type open %c:%s failed: %llx",
@@ -254,8 +263,11 @@ static bool fs_is_dir_cb(
 	EFI_FILE_PROTOCOL*fh;
 	EFI_FILE_INFO*info=AllocateZeroPool(infos);
 	if(!info)return false;
+	char ep[4096]={0},*cp=ep;
 	CHAR16 xpath[4096]={0};
-	mbstowcs(xpath,fn,sizeof(xpath)-1);
+	strcpy(ep,fn);
+	do{if(*cp=='/')*cp='\\';}while(*cp++);
+	mbstowcs(xpath,ep,sizeof(xpath)-1);
 	st=fs->proto->Open(fs->proto,&fh,xpath,EFI_FILE_MODE_READ,0);
 	if(EFI_ERROR(st))XWARN(
 		"is dir open %c:%s failed: %llx",
@@ -411,8 +423,11 @@ static lv_res_t fs_dir_open_cb(
 		fh=fs->proto,st=EFI_SUCCESS;
 		fh->SetPosition(fh,0);
 	}else{
+		char ep[4096]={0},*cp=ep;
 		CHAR16 xpath[4096]={0};
-		mbstowcs(xpath,path,sizeof(xpath)-1);
+		strcpy(ep,path);
+		do{if(*cp=='/')*cp='\\';}while(*cp++);
+		mbstowcs(xpath,ep,sizeof(xpath)-1);
 		st=fs->proto->Open(fs->proto,&fh,xpath,EFI_FILE_READ_ONLY,0);
 		if(EFI_ERROR(st))XWARN(
 			"open dir %c:%s failed: %llx",
@@ -557,9 +572,11 @@ EFI_DEVICE_PATH_PROTOCOL*fs_get_device_path(const char*path){
 	if(drv->ready_cb&&!drv->ready_cb(drv))return NULL;
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
-	char*ep=(char*)path+2,*cp=ep;
+	char ep[4096]={0},*cp=ep;
 	CHAR16 xp[PATH_MAX]={0};
+	strcpy(ep,path+2);
 	do{if(*cp=='/')*cp='\\';}while(*cp++);
+	tlog_debug("PATH: %s",ep);
 	mbstowcs(xp,ep,PATH_MAX-1);
 	return FileDevicePath(fs->hand,xp);
 }

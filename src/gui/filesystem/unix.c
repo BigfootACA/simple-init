@@ -384,6 +384,47 @@ static lv_res_t fs_rename_cb(
 	return errno_to_lv_res(errno);
 }
 
+static lv_res_t fs_mkdir_cb(
+	struct _lv_fs_drv_t*drv,
+	const char*name
+){
+	if(!drv||!name)return LV_FS_RES_INV_PARAM;
+	struct fsext*fse=drv->user_data;
+	struct fs_root*fs=fse->user_data;
+	if(!fs)return LV_FS_RES_INV_PARAM;
+	int ret;
+	do{
+		errno=0;
+		ret=mkdirat(fs->fd,name,0755);
+	}while(ret<0&&errno==EINTR);
+	if(fs->debug&&errno>0)telog_warn(
+		"%s: mkdir %c:%s",
+		fs->root,drv->letter,name
+	);
+	return errno_to_lv_res(errno);
+}
+
+static lv_res_t fs_creat_cb(
+	struct _lv_fs_drv_t*drv,
+	const char*name
+){
+	if(!drv||!name)return LV_FS_RES_INV_PARAM;
+	struct fsext*fse=drv->user_data;
+	struct fs_root*fs=fse->user_data;
+	if(!fs)return LV_FS_RES_INV_PARAM;
+	int ret;
+	do{
+		errno=0;
+		ret=openat(fs->fd,name,O_WRONLY|O_CREAT|O_TRUNC,0644);
+	}while(ret<0&&errno==EINTR);
+	if(ret>0)close(ret);
+	if(fs->debug&&errno>0)telog_warn(
+		"%s: create file %c:%s",
+		fs->root,drv->letter,name
+	);
+	return errno_to_lv_res(errno);
+}
+
 static lv_res_t fs_free_space_cb(
 	struct _lv_fs_drv_t*drv,
 	uint32_t*total_p,
@@ -520,6 +561,8 @@ int init_lvgl_fs(char letter,char*root,bool debug){
 	lv_fs_drv_init(drv);
 	fse->get_type_cb=fs_get_type_cb;
 	fse->is_dir_cb=fs_is_dir_cb;
+	fse->creat=fs_creat_cb;
+	fse->mkdir=fs_mkdir_cb;
 	fse->user_data=fs;
 	drv->user_data=fse;
 	drv->letter=letter;

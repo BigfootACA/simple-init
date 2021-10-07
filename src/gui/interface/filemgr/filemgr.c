@@ -4,7 +4,10 @@
 #include"array.h"
 #include"logger.h"
 #include"gui/tools.h"
+#include"gui/fsext.h"
+#include"gui/msgbox.h"
 #include"gui/filetab.h"
+#include"gui/inputbox.h"
 #include"gui/activity.h"
 #define TAG "filemgr"
 
@@ -23,7 +26,7 @@ static int filemgr_get_focus(struct gui_activity*d __attribute__((unused))){
 	lv_group_add_obj(gui_grp,btn_paste);
 	lv_group_add_obj(gui_grp,btn_copy);
 	lv_group_add_obj(gui_grp,btn_delete);
-	lv_group_add_obj(gui_grp,btn_next);
+	lv_group_add_obj(gui_grp,btn_new);
 	lv_group_add_obj(gui_grp,btn_cut);
 	lv_group_add_obj(gui_grp,btn_back);
 	if(active)filetab_add_group(active,gui_grp);
@@ -40,7 +43,7 @@ static int filemgr_lost_focus(struct gui_activity*d __attribute__((unused))){
 	lv_group_remove_obj(btn_paste);
 	lv_group_remove_obj(btn_copy);
 	lv_group_remove_obj(btn_delete);
-	lv_group_remove_obj(btn_next);
+	lv_group_remove_obj(btn_new);
 	lv_group_remove_obj(btn_cut);
 	lv_group_remove_obj(btn_back);
 	if(active)filetab_remove_group(active);
@@ -129,6 +132,33 @@ static int do_back(struct gui_activity*d __attribute__((unused))){
 	return 0;
 }
 
+static bool create_name_cb(bool ok,const char*name,void*user_data){
+	if(!ok)return false;
+	char*fp=filetab_get_lvgl_path(active);
+	char xp[PATH_MAX]={0};
+	snprintf(xp,PATH_MAX-1,"%s/%s",fp,name);
+	lv_res_t r;
+	switch(*(uint16_t*)user_data){
+		case 0:r=lv_fs_creat(xp);break;//file
+		case 1:r=lv_fs_mkdir(xp);break;//folder
+		default:return false;
+	}
+	filetab_set_path(active,NULL);
+	if(r!=LV_FS_RES_OK)msgbox_alert(
+		"Create '%s' failed: %s",
+		name,lv_fs_res_to_i18n_string(r)
+	);
+	return false;
+}
+
+static bool create_cb(uint16_t id,const char*text __attribute__((unused))){
+	static uint16_t xid;
+	xid=id;
+	struct inputbox*in=inputbox_create(create_name_cb,"New item name");
+	inputbox_set_user_data(in,&xid);
+	return false;
+}
+
 static void btns_cb(lv_obj_t*obj,lv_event_t e){
 	if(!obj||e!=LV_EVENT_CLICKED)return;
 	if(strcmp(guiact_get_last()->name,"file-manager")!=0)return;
@@ -158,7 +188,13 @@ static void btns_cb(lv_obj_t*obj,lv_event_t e){
 	}else if(obj==btn_delete){
 
 	}else if(obj==btn_new){
-
+		static const char*types[]={
+			LV_SYMBOL_FILE,
+			LV_SYMBOL_DIRECTORY,
+			""
+		};
+		if(fsext_is_multi&&filetab_is_top(active))return;
+		msgbox_create_custom(create_cb,types,"Choose type to create");
 	}else if(obj==btn_cut){
 
 	}else if(obj==btn_back){
@@ -283,7 +319,6 @@ static int filemgr_draw(struct gui_activity*act){
 	lv_label_set_text(lv_label_create(btn_delete,NULL),LV_SYMBOL_TRASH);
 
 	btn_new=lv_btn_create(act->page,NULL);
-	lv_obj_add_state(btn_new,LV_STATE_DISABLED);
 	lv_obj_set_size(btn_new,btw,bth);
 	lv_obj_set_event_cb(btn_new,btns_cb);
 	lv_obj_set_user_data(btn_new,"new");

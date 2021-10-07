@@ -73,9 +73,9 @@ static void call_on_change_dir(struct fileview*view,char*oldpath){
 	if(view->on_change_dir)view->on_change_dir(view,oldpath,view->full_path);
 }
 
-static bool call_on_click_item(struct fileitem*fi,bool dir){
+static bool call_on_click_item(struct fileitem*fi,enum item_type type){
 	if(!fi->view||!fi->view->on_click_item)return true;
-	return fi->view->on_click_item(fi->view,fi->name,dir);
+	return fi->view->on_click_item(fi->view,fi->name,type);
 }
 
 void fileview_go_back(struct fileview*fv){
@@ -104,9 +104,8 @@ static void item_click(lv_obj_t*obj,lv_event_t e){
 	}
 	if(strcmp(fi->name,"..")==0)fileview_go_back(fv);
 	else{
-		bool dir=fi->type==TYPE_DIR;
-		if(!call_on_click_item(fi,dir))return;
-		if(!dir)return;
+		if(!call_on_click_item(fi,fi->type))return;
+		if(fi->type!=TYPE_DIR)return;
 		size_t s=strlen(fv->path);
 		if(fv->path[s-1]=='/')fv->path[s-1]=0;
 		char xpath[sizeof(fv->path)+sizeof(fi->name)+2]={0};

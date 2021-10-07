@@ -16,6 +16,7 @@ add_library(init_gui STATIC
 	interface/benchmark.c
 	interface/language.c
 	interface/charger.c
+	interface/inputbox.c
 	interface/msgbox.c
 	interface/theme.c
 	drivers/drm.c

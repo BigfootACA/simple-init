@@ -226,7 +226,15 @@ static void btns_cb(lv_obj_t*obj,lv_event_t e){
 		filetab_set_path(active,NULL);
 	}else if(obj==btn_edit){
 		if(filetab_get_checked_count(active)!=1)return;
-		inputbox_create(rename_cb,"Item rename");
+		struct inputbox*in=inputbox_create(rename_cb,"Item rename");
+		char**sel=filetab_get_checked(active);
+		if(!sel||!sel[0]||sel[1]){
+			if(sel)free(sel);
+			msgbox_alert("File select invalid");
+			return;
+		}
+		inputbox_set_content(in,"%s",sel[0]);
+		free(sel);
 	}else if(obj==btn_home){
 		filetab_set_path(active,"/");
 	}else if(obj==btn_info){

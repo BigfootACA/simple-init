@@ -297,7 +297,7 @@ static void clean_items(struct fileview*view){
 	lv_obj_set_y(lv_page_get_scrollable(view->view),0);
 }
 
-static void set_info(struct fileview*view,char*text){
+static void set_info(struct fileview*view,char*text,...){
 	if(!view->view)return;
 	clean_items(view);
 	if(view->info)lv_obj_del(view->info);
@@ -305,7 +305,12 @@ static void set_info(struct fileview*view,char*text){
 	lv_label_set_long_mode(view->info,LV_LABEL_LONG_BREAK);
 	lv_obj_set_width(view->info,lv_page_get_scrl_width(view->view)-gui_font_size);
 	lv_label_set_align(view->info,LV_LABEL_ALIGN_CENTER);
-	lv_label_set_text(view->info,text);
+	char buf[BUFSIZ]={0};
+	va_list va;
+	va_start(va,text);
+	vsnprintf(buf,BUFSIZ-1,text,va);
+	va_end(va);
+	lv_label_set_text(view->info,buf);
 }
 
 static void scan_items(struct fileview*view){

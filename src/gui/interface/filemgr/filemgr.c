@@ -182,8 +182,34 @@ static bool create_name_cb(bool ok,const char*name,void*user_data){
 static bool create_cb(uint16_t id,const char*text __attribute__((unused))){
 	static uint16_t xid;
 	xid=id;
-	struct inputbox*in=inputbox_create(create_name_cb,"New item name");
+	struct inputbox*in=inputbox_create(create_name_cb,"Create item name");
 	inputbox_set_user_data(in,&xid);
+	return false;
+}
+
+static bool rename_cb(bool ok,const char*name,void*user_data __attribute__((unused))){
+	if(!ok||filetab_get_checked_count(active)!=1)return false;
+	char oldname[256]={0};
+	char oldpath[PATH_MAX]={0};
+	char newpath[PATH_MAX]={0};
+	char*fp=filetab_get_lvgl_path(active);
+	char**sel=filetab_get_checked(active);
+	if(!sel||!sel[0]||sel[1]){
+		if(sel)free(sel);
+		msgbox_alert("File select invalid");
+		return true;
+	}
+	strncpy(oldname,sel[0],255);
+	free(sel);
+	snprintf(oldpath,PATH_MAX-1,"%s/%s",fp,oldname);
+	snprintf(newpath,PATH_MAX-1,"%s/%s",fp,name);
+	lv_res_t r=lv_fs_rename(oldpath,newpath);
+	filetab_set_path(active,NULL);
+	if(r!=LV_FS_RES_OK)msgbox_alert(
+		"Rename '%s' to '%s' failed: %s",
+		oldname,name,
+		lv_fs_res_to_i18n_string(r)
+	);
 	return false;
 }
 
@@ -199,7 +225,8 @@ static void btns_cb(lv_obj_t*obj,lv_event_t e){
 	}else if(obj==btn_refresh){
 		filetab_set_path(active,NULL);
 	}else if(obj==btn_edit){
-
+		if(filetab_get_checked_count(active)!=1)return;
+		inputbox_create(rename_cb,"Item rename");
 	}else if(obj==btn_home){
 		filetab_set_path(active,"/");
 	}else if(obj==btn_info){

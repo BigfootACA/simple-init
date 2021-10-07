@@ -407,6 +407,15 @@ char*fileview_get_path(struct fileview*view){
 	return view?view->full_path:NULL;
 }
 
+char*fileview_get_lvgl_path(struct fileview*view){
+	if(!view)return NULL;
+	if(!view->letter)return "/";
+	static char path[PATH_MAX];
+	memset(path,0,PATH_MAX);
+	snprintf(path,PATH_MAX-1,"%c:%s",view->letter,view->path);
+	return path;
+}
+
 void fileview_set_show_parent(struct fileview*view,bool parent){
 	if(view)view->parent=parent;
 }

@@ -1,5 +1,6 @@
 #ifdef ENABLE_GUI
 #include<stdlib.h>
+#include"str.h"
 #include"gui.h"
 #include"array.h"
 #include"logger.h"
@@ -103,6 +104,32 @@ static bool on_item_click(struct filetab*fv,char*item,enum item_type type){
 	return true;
 }
 
+static void on_item_select(
+	struct filetab*fv __attribute__((unused)),
+	char*name __attribute__((unused)),
+	enum item_type type __attribute__((unused)),
+	bool checked __attribute__((unused)),
+	uint16_t cnt
+){
+	if(fsext_is_multi&&filetab_is_top(active))return;
+	if(cnt==1){
+		lv_obj_clear_state(btn_edit,LV_STATE_DISABLED);
+		lv_obj_clear_state(btn_info,LV_STATE_DISABLED);
+	}else{
+		lv_obj_add_state(btn_edit,LV_STATE_DISABLED);
+		lv_obj_add_state(btn_info,LV_STATE_DISABLED);
+	}
+	if(cnt>0){
+		lv_obj_clear_state(btn_cut,LV_STATE_DISABLED);
+		lv_obj_clear_state(btn_copy,LV_STATE_DISABLED);
+		lv_obj_clear_state(btn_delete,LV_STATE_DISABLED);
+	}else{
+		lv_obj_add_state(btn_cut,LV_STATE_DISABLED);
+		lv_obj_add_state(btn_copy,LV_STATE_DISABLED);
+		lv_obj_add_state(btn_delete,LV_STATE_DISABLED);
+	}
+}
+
 static void tabview_create(){
 	for(size_t i=0;i<ARRLEN(tabs);i++){
 		if(tabs[i])continue;
@@ -110,6 +137,7 @@ static void tabview_create(){
 			tlog_error("cannot allocate filetab");
 			abort();
 		}
+		filetab_set_on_item_select(tabs[i],on_item_select);
 		filetab_set_on_item_click(tabs[i],on_item_click);
 		filetab_set_on_change_dir(tabs[i],on_change_dir);
 		filetab_set_show_parent(tabs[i],false);

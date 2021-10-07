@@ -823,11 +823,8 @@ msgstr "语言"
 msgid "Select language"
 msgstr "选择语言"
 
-msgid "fd open dir failed"
-msgstr "打开文件夹对象失败"
-
-msgid "open dir failed"
-msgstr "打开文件夹失败"
+msgid "open dir failed: %s"
+msgstr "打开文件夹失败: %s"
 
 msgid "Parent folder"
 msgstr "上级目录"
@@ -1103,3 +1100,96 @@ msgstr "确定要重启USB工具服务？"
 
 msgid "Are you sure to delete function %s?"
 msgstr "确定删除功能%s?"
+
+msgid "Invalid idVendor or idProduct number"
+msgstr "无效的idVendor或idProduct数字"
+
+msgid "USB Gadget Base Info Edit"
+msgstr "USB工具基本信息编辑"
+
+msgid "Gadget Name:"
+msgstr "工具名称:"
+
+msgid "USB Configuration:"
+msgstr "USB配置(configuration):"
+
+msgid "USB Serial Number:"
+msgstr "USB序列号(serial):"
+
+msgid "USB Vendor ID:"
+msgstr "USB制造商ID:"
+
+msgid "USB Product ID:"
+msgstr "USB产品ID:"
+
+msgid "Manufacturer String:"
+msgstr "制造商字符串(manufacturer):"
+
+msgid "Product String:"
+msgstr "产品字符串(product):"
+
+msgid "Reset"
+msgstr "重置"
+
+msgid "USB Gadget Base Info"
+msgstr "USB工具基本信息"
+
+msgid "USB Device Controller (UDC):"
+msgstr "USB设备控制器(UDC):"
+
+msgid "Normal"
+msgstr "正常"
+
+msgid "Hardware error"
+msgstr "硬件错误"
+
+msgid "Filesystem structure error"
+msgstr "文件系统结构错误"
+
+msgid "Not exists"
+msgstr "不存在"
+
+msgid "Disk full"
+msgstr "磁盘已满"
+
+msgid "File locked"
+msgstr "文件已锁"
+
+msgid "Access denied"
+msgstr "拒绝访问"
+
+msgid "Filesystem busy"
+msgstr "文件系统忙"
+
+msgid "Process timeout"
+msgstr "处理超时"
+
+msgid "Not implemented"
+msgstr "未实现"
+
+msgid "Out of memory"
+msgstr "资源不足"
+
+msgid "Invalid parameter"
+msgstr "无效的参数"
+
+msgid "Unknown error"
+msgstr "未知错误"
+
+msgid "Choose type to create"
+msgstr "选择要创建的类型"
+
+msgid "Create item name"
+msgstr "新建名称"
+
+msgid "Create '%s' failed: %s"
+msgstr "创建'%s'失败: %s"
+
+msgid "Item rename"
+msgstr "项目重命名"
+
+msgid "File select invalid"
+msgstr "文件选择无效"
+
+msgid "Rename '%s' to '%s' failed: %s"
+msgstr "重命名'%s'为'%s'失败: %s"

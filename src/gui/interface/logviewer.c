@@ -32,7 +32,7 @@ static void load_log_task(lv_task_t*t __attribute__((unused))){
 
 static void load_log(){
 	lv_textarea_set_text(view,_("Loading..."));
-	lv_task_t*t=lv_task_create(load_log_task,500,LV_TASK_PRIO_LOWEST,NULL);
+	lv_task_t*t=lv_task_create(load_log_task,20,LV_TASK_PRIO_LOWEST,NULL);
 	lv_task_once(t);
 }
 

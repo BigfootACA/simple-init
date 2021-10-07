@@ -83,8 +83,8 @@ static void on_change_dir(struct filetab*fv,char*old __attribute__((unused)),cha
 }
 
 extern void uefi_start_image(const char*path);
-static bool on_item_click(struct filetab*fv,char*item,bool dir){
-	if(!filetab_is_active(fv)||dir)return true;
+static bool on_item_click(struct filetab*fv,char*item,enum item_type type){
+	if(!filetab_is_active(fv)||type!=TYPE_FILE)return true;
 	char full_path[PATH_MAX]={0};
 	char*parent=filetab_get_path(fv);
 	char*x=parent+strlen(parent)-1;

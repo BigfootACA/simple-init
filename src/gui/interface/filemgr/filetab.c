@@ -15,6 +15,7 @@ struct filetab{
 	struct fileview*fv;
 	filetab_on_change_dir on_change_dir;
 	filetab_on_item_click on_item_click;
+	filetab_on_item_select on_item_select;
 };
 
 static void on_change_dir(struct fileview*fv,char*old,char*new){
@@ -28,6 +29,11 @@ static void on_change_dir(struct fileview*fv,char*old,char*new){
 static bool on_item_click(struct fileview*fv,char*item,enum item_type type){
 	struct filetab*ft=fileview_get_data(fv);
 	return (ft->on_item_click)?ft->on_item_click(ft,item,type):true;
+}
+
+static void on_item_select(struct fileview*fv,char*item,enum item_type type,bool checked,uint16_t cnt){
+	struct filetab*ft=fileview_get_data(fv);
+	if(ft->on_item_select)ft->on_item_select(ft,item,type,checked,cnt);
 }
 
 struct filetab*filetab_create(lv_obj_t*view,char*path){
@@ -47,6 +53,7 @@ struct filetab*filetab_create(lv_obj_t*view,char*path){
 	fileview_set_data(tb->fv,tb);
 	fileview_set_on_change_dir(tb->fv,on_change_dir);
 	fileview_set_on_item_click(tb->fv,on_item_click);
+	fileview_set_on_item_select(tb->fv,on_item_select);
 	for(uint16_t i=0;i<lv_tabview_get_tab_count(view);i++){
 		if(lv_tabview_get_tab(view,i)!=tb->tab)continue;
 		tb->tab_id=i;
@@ -87,6 +94,14 @@ char*filetab_get_lvgl_path(struct filetab*tab){
 	return tab?fileview_get_lvgl_path(tab->fv):NULL;
 }
 
+uint16_t filetab_get_checked_count(struct filetab*tab){
+	return tab?fileview_get_checked_count(tab->fv):0;
+}
+
+char**filetab_get_checked(struct filetab*tab){
+	return tab?fileview_get_checked(tab->fv):NULL;
+}
+
 bool filetab_is_top(struct filetab*tab){
 	return tab?fileview_is_top(tab->fv):true;
 }
@@ -102,6 +117,10 @@ void filetab_set_on_change_dir(struct filetab*tab,filetab_on_change_dir cb){
 
 void filetab_set_on_item_click(struct filetab*tab,filetab_on_item_click cb){
 	tab->on_item_click=cb;
+}
+
+void filetab_set_on_item_select(struct filetab*tab,filetab_on_item_select cb){
+	tab->on_item_select=cb;
 }
 
 void filetab_set_show_parent(struct filetab*tab,bool parent){

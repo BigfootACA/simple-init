@@ -13,6 +13,7 @@ extern void filetab_free(struct filetab*tab);;
 extern uint16_t filetab_get_id(struct filetab*tab);
 extern lv_obj_t*filetab_get_tab(struct filetab*tab);
 extern char*filetab_get_path(struct filetab*tab);
+extern char*filetab_get_lvgl_path(struct filetab*tab);
 extern void filetab_set_path(struct filetab*tab,char*path);
 extern void filetab_set_show_parent(struct filetab*tab,bool parent);
 extern bool filetab_is_active(struct filetab*tab);

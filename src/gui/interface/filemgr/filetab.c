@@ -83,6 +83,10 @@ char*filetab_get_path(struct filetab*tab){
 	return tab?fileview_get_path(tab->fv):NULL;
 }
 
+char*filetab_get_lvgl_path(struct filetab*tab){
+	return tab?fileview_get_lvgl_path(tab->fv):NULL;
+}
+
 bool filetab_is_top(struct filetab*tab){
 	return tab?fileview_is_top(tab->fv):true;
 }

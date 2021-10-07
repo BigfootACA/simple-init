@@ -63,9 +63,12 @@ static void keyboard_toggle(lv_obj_t*obj,lv_event_t e){
 		lv_obj_del(sysbar.keyboard);
 		lv_obj_set_height(sysbar.content,gui_sh);
 		lv_page_set_scrlbar_mode(sysbar.content,LV_SCROLLBAR_MODE_HIDE);
-		if(sysbar.focus_input)lv_textarea_set_cursor_hidden(sysbar.focus_input,true);
-		lv_group_set_editing(gui_grp,false);
 		sysbar.keyboard=NULL;
+		if(sysbar.focus_input){
+			lv_event_send(sysbar.focus_input,LV_EVENT_DEFOCUSED,NULL);
+			lv_textarea_set_cursor_hidden(sysbar.focus_input,true);
+		}
+		lv_group_set_editing(gui_grp,false);
 		return;
 	}
 	int w=gui_w,h=gui_h/3;

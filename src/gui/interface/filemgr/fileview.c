@@ -38,6 +38,8 @@ struct fileitem{
 	lv_obj_t*size,*info1,*info2;
 	char name[256],letter;
 	struct stat st;
+	char path[PATH_MAX];
+	enum item_type type;
 };
 
 static char*get_parent(char*buff,size_t size,char*path){
@@ -51,22 +53,8 @@ static char*get_parent(char*buff,size_t size,char*path){
 	return buff;
 }
 
-static const char*fileitem_get_path(char*path,size_t size,struct fileitem*fi){
-	snprintf(path,size,"%c:%s/%s",fi->view->letter,fi->view->path,fi->name);
-	return path;
-}
-
-static enum item_type get_type(struct fileitem*fi){
-	if(!fi->view->letter)return TYPE_DISK;
-	enum item_type type=0;
-	char xpath[PATH_MAX+4]={0};
-	fileitem_get_path(xpath,PATH_MAX+3,fi);
-	lv_fs_get_type(&type,xpath);
-	return type;
-}
-
 static const char*get_icon(struct fileitem*fi){
-	switch(get_type(fi)){
+	switch(fi->type){
 		case TYPE_DIR:return strcmp(fi->name,"..")==0?"inode-parent":"inode-dir";
 		case TYPE_BLOCK:return "inode-blockdevice";
 		case TYPE_CHAR:return "inode-chardevice";
@@ -114,11 +102,9 @@ static void item_click(lv_obj_t*obj,lv_event_t e){
 		fileview_set_path(fv,"/");
 		return;
 	}
-	char path[PATH_MAX+4]={0};
-	fileitem_get_path(path,PATH_MAX+3,fi);
 	if(strcmp(fi->name,"..")==0)fileview_go_back(fv);
 	else{
-		bool dir=lv_fs_is_dir(path);
+		bool dir=fi->type==TYPE_DIR;
 		if(!call_on_click_item(fi,dir))return;
 		if(!dir)return;
 		size_t s=strlen(fv->path);
@@ -141,6 +127,13 @@ static struct fileitem*add_item(struct fileview*view,char*name){
 	memset(fi,0,sizeof(struct fileitem));
 	fi->view=view;
 	strncpy(fi->name,name,sizeof(fi->name)-1);
+	snprintf(
+		fi->path,sizeof(fi->path)-1,"%c:%s/%s",
+		view->letter,view->path,fi->name
+	);
+	if(!view->letter)fi->type=TYPE_DISK;
+	else lv_fs_get_type(&fi->type,fi->path);
+
 	// file item button
 	fi->btn=lv_btn_create(view->view,NULL);
 	lv_obj_set_size(fi->btn,view->bw,view->bh);
@@ -205,12 +198,10 @@ static struct fileitem*add_item(struct fileview*view,char*name){
 		lv_group_add_obj(view->grp,fi->chk);
 	}
 
-	if(get_type(fi)==TYPE_FILE){
+	if(fi->type==TYPE_FILE){
 		lv_fs_file_t f;
-		char fp[PATH_MAX+4]={0};
-		fileitem_get_path(fp,PATH_MAX+3,fi);
 		uint32_t s=0;
-		if(lv_fs_open(&f,fp,LV_FS_MODE_RD)==LV_FS_RES_OK){
+		if(lv_fs_open(&f,fi->path,LV_FS_MODE_RD)==LV_FS_RES_OK){
 			if(lv_fs_size(&f,&s)==LV_FS_RES_OK){
 				char size[32]={0};
 				fi->size=lv_label_create(line,NULL);

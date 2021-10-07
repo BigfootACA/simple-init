@@ -1,10 +1,11 @@
 #ifndef _FILEMGR_H
 #define _FILEMGR_H
 #include<stdbool.h>
-#include"gui.h"
 #include"defines.h"
+#include"gui.h"
+#include"gui/fsext.h"
 struct filetab;
-typedef bool(*filetab_on_item_click)(struct filetab*,char*item,bool dir);
+typedef bool(*filetab_on_item_click)(struct filetab*,char*item,enum item_type type);
 typedef void(*filetab_on_change_dir)(struct filetab*,char*old,char*new);
 extern struct filetab*filetab_create(lv_obj_t*view,char*path);
 extern void filetab_add_group(struct filetab*tab,lv_group_t*grp);

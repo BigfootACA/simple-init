@@ -25,9 +25,9 @@ static void on_change_dir(struct fileview*fv,char*old,char*new){
 	if(ft->on_change_dir)ft->on_change_dir(ft,old,new);
 }
 
-static bool on_item_click(struct fileview*fv,char*item,bool dir){
+static bool on_item_click(struct fileview*fv,char*item,enum item_type type){
 	struct filetab*ft=fileview_get_data(fv);
-	return (ft->on_item_click)?ft->on_item_click(ft,item,dir):true;
+	return (ft->on_item_click)?ft->on_item_click(ft,item,type):true;
 }
 
 struct filetab*filetab_create(lv_obj_t*view,char*path){

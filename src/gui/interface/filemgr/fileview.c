@@ -207,30 +207,44 @@ static struct fileitem*add_item(struct fileview*view,char*name){
 		lv_group_add_obj(view->grp,fi->img);
 		lv_group_add_obj(view->grp,fi->chk);
 	}
+
+	if(get_type(fi)==TYPE_FILE){
+		lv_fs_file_t f;
+		char fp[PATH_MAX+4]={0};
+		fileitem_get_path(fp,PATH_MAX+3,fi);
+		uint32_t s=0;
+		if(lv_fs_open(&f,fp,LV_FS_MODE_RD)==LV_FS_RES_OK){
+			if(lv_fs_size(&f,&s)==LV_FS_RES_OK){
+				char size[32]={0};
+				fi->size=lv_label_create(line,NULL);
+				lv_label_set_text(fi->size,make_readable_str_buf(size,31,s,1,0));
+				lv_label_set_long_mode(fi->size,LV_LABEL_LONG_CROP);
+				lv_coord_t xs=lv_obj_get_width(fi->size),min=view->bw/5;
+				if(xs>min){
+					lv_obj_set_width(fi->size,min);
+					xs=min;
+				}
+				lv_obj_align(
+					fi->size,fi->btn,
+					LV_ALIGN_IN_TOP_RIGHT,
+					-gui_font_size/2,
+					gui_font_size/2
+				);
+				lv_obj_set_width(e->label,
+					 view->bw-si-gui_font_size*2-
+					 xs-lv_obj_get_width(e->bullet)
+				);
+			}
+			lv_fs_close(&f);
+		}
+	}
+
 	#ifndef ENABLE_UEFI
 	int fd=open(view->path,O_DIR);
 	if(fd>=0&&fstatat(fd,name,&fi->st,AT_SYMLINK_NOFOLLOW)==0){
 		mode_t m=fi->st.st_mode;
 		char times[64]={0};
 		strftime(times,63,"%Y/%m/%d %H:%M:%S",localtime(&fi->st.st_mtime));
-
-		// file size
-		if(S_ISREG(m)){
-			char size[32]={0};
-			fi->size=lv_label_create(line,NULL);
-			lv_label_set_text(fi->size,make_readable_str_buf(size,31,fi->st.st_size,1,0));
-			lv_label_set_long_mode(fi->size,LV_LABEL_LONG_CROP);
-			lv_coord_t xs=lv_obj_get_width(fi->size),min=view->bw/5;
-			if(xs>min){
-				lv_obj_set_width(fi->size,min);
-				xs=min;
-			}
-			lv_obj_align(fi->size,fi->btn,LV_ALIGN_IN_TOP_RIGHT,-gui_font_size/2,gui_font_size/2);
-			lv_obj_set_width(e->label,
-				 view->bw-si-gui_font_size*2-
-				 xs-lv_obj_get_width(e->bullet)
-			 );
-		}
 
 		// file info1 (time and permission)
 		fi->info1=lv_label_create(line,NULL);

@@ -504,6 +504,8 @@ int init_lvgl_fs(char letter,char*root,bool debug){
 	if(!root)ERET(EINVAL);
 	if(!(fs=malloc(sizeof(struct fs_root))))return -errno;
 	if(!(fse=malloc(sizeof(struct fsext))))return -errno;
+	memset(fs,0,sizeof(struct fs_root));
+	memset(fse,0,sizeof(struct fsext));
 	if(!(fs->root=strdup(root))){
 		free(fs);
 		return -errno;

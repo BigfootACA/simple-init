@@ -15,11 +15,15 @@ struct fsext{
 	void*user_data;
 	lv_res_t(*get_type_cb)(struct _lv_fs_drv_t*,const char*,enum item_type*);
 	lv_res_t(*get_volume_label)(struct _lv_fs_drv_t*,char*,size_t);
+	lv_res_t(*mkdir)(struct _lv_fs_drv_t*,const char*);
+	lv_res_t(*creat)(struct _lv_fs_drv_t*,const char*);
 	bool(*is_dir_cb)(struct _lv_fs_drv_t*,const char*);
 };
 extern bool fsext_is_multi;
 extern lv_res_t lv_fs_get_type(enum item_type*type,const char*path);
 extern lv_res_t lv_fs_get_volume_label(lv_fs_drv_t*drv,char*label,size_t len);
+extern lv_res_t lv_fs_mkdir(const char*name);
+extern lv_res_t lv_fs_creat(const char*name);
 extern bool lv_fs_is_dir(const char*path);
 extern const char*lv_fs_res_to_string(lv_fs_res_t res);
 extern const char*lv_fs_res_to_i18n_string(lv_fs_res_t res);

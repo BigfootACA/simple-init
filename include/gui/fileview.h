@@ -4,6 +4,7 @@
 #include"gui.h"
 #include"gui/fsext.h"
 struct fileview;
+typedef void(*fileview_on_item_select)(struct fileview*,char*item,enum item_type type,bool checked,uint16_t cnt);
 typedef bool(*fileview_on_item_click)(struct fileview*,char*item,enum item_type type);
 typedef void(*fileview_on_change_dir)(struct fileview*,char*old,char*new);
 extern struct fileview*fileview_create(lv_obj_t*screen);
@@ -14,6 +15,9 @@ extern void fileview_set_path(struct fileview*view,char*path);
 extern void fileview_set_show_parent(struct fileview*view,bool parent);
 extern void fileview_set_on_change_dir(struct fileview*view,fileview_on_change_dir cb);
 extern void fileview_set_on_item_click(struct fileview*view,fileview_on_item_click cb);
+extern void fileview_set_on_item_select(struct fileview*view,fileview_on_item_select cb);
+extern uint16_t fileview_get_checked_count(struct fileview*view);
+extern char**fileview_get_checked(struct fileview*view);
 extern void*fileview_get_data(struct fileview*view);
 extern char*fileview_get_path(struct fileview*view);
 extern char*fileview_get_lvgl_path(struct fileview*view);

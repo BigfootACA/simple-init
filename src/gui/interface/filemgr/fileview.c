@@ -27,6 +27,7 @@ struct fileview{
 	int count;
 	lv_coord_t bw,bh;
 	lv_group_t*grp;
+	fileview_on_item_select on_select_item;
 	fileview_on_item_click on_click_item;
 	fileview_on_change_dir on_change_dir;
 	void*data;
@@ -78,6 +79,11 @@ static bool call_on_click_item(struct fileitem*fi,enum item_type type){
 	return fi->view->on_click_item(fi->view,fi->name,type);
 }
 
+static void call_on_select_item(struct fileview*view,char*item,enum item_type type,bool checked,uint16_t cnt){
+	if(!view||!view->on_select_item)return;
+	view->on_select_item(view,item,type,checked,cnt);
+}
+
 void fileview_go_back(struct fileview*fv){
 	if(strcmp(fv->path,"/")!=0){
 		char path[PATH_MAX]={0};
@@ -112,6 +118,23 @@ static void item_click(lv_obj_t*obj,lv_event_t e){
 		snprintf(xpath,sizeof(xpath)-1,"%s/%s",fv->path,fi->name);
 		fileview_set_path(fv,xpath);
 	}
+}
+
+static void item_check(lv_obj_t*obj,lv_event_t e){
+	if(!obj||e!=LV_EVENT_VALUE_CHANGED)return;
+	struct fileitem*fi=(struct fileitem*)lv_obj_get_user_data(obj);
+	if(!fi)return;
+	struct fileview*fv=fi->view;
+	if(!fv)return;
+	if(fi->letter){
+		lv_checkbox_set_checked(obj,false);
+		return;
+	}
+	call_on_select_item(
+		fi->view,fi->name,fi->type,
+		lv_checkbox_is_checked(fi->chk),
+		fileview_get_checked_count(fi->view)
+	);
 }
 
 static struct fileitem*add_item(struct fileview*view,char*name){
@@ -187,6 +210,8 @@ static struct fileitem*add_item(struct fileview*view,char*name){
 	fi->chk=lv_checkbox_create(line,NULL);
 	lv_checkbox_set_text(fi->chk,strcmp(fi->name,"..")==0?_("Parent folder"):name);
 	lv_style_set_focus_checkbox(fi->chk);
+	lv_obj_set_event_cb(fi->chk,item_check);
+	lv_obj_set_user_data(fi->chk,fi);
 	lv_obj_align(fi->chk,NULL,LV_ALIGN_IN_LEFT_MID,gui_font_size+si,-gui_font_size);
 	lv_checkbox_ext_t*e=lv_obj_get_ext_attr(fi->chk);
 	lv_label_set_long_mode(e->label,LV_LABEL_LONG_SROLL_CIRC);
@@ -281,6 +306,7 @@ static void clean_items(struct fileview*view){
 	if(view->info)lv_obj_del(view->info);
 	view->last_btn=NULL,view->items=NULL;
 	view->info=NULL,view->count=0;
+	call_on_select_item(view,NULL,0,false,0);
 	lv_obj_set_y(lv_page_get_scrollable(view->view),0);
 }
 
@@ -382,8 +408,38 @@ void fileview_set_on_item_click(struct fileview*view,fileview_on_item_click cb){
 	view->on_click_item=cb;
 }
 
+void fileview_set_on_item_select(struct fileview*view,fileview_on_item_select cb){
+	view->on_select_item=cb;
+}
+
 void fileview_set_data(struct fileview*view,void*data){
 	if(view)view->data=data;
+}
+
+uint16_t fileview_get_checked_count(struct fileview*view){
+	uint16_t checked=0;
+	list*l=list_first(view->items);
+	if(l)do{
+		LIST_DATA_DECLARE(ffi,l,struct fileitem*);
+		if(ffi&&lv_checkbox_is_checked(ffi->chk))checked++;
+	}while((l=l->next));
+	return checked;
+}
+
+char**fileview_get_checked(struct fileview*view){
+	uint16_t checked=fileview_get_checked_count(view),num=0;
+	size_t size=sizeof(char*)*(checked+1);
+	char**arr=malloc(size);
+	if(!arr)return NULL;
+	memset(arr,0,size);
+	if(checked>0){
+		list*l=list_first(view->items);
+		if(l)do{
+			LIST_DATA_DECLARE(ffi,l,struct fileitem*);
+			if(ffi&&lv_checkbox_is_checked(ffi->chk))arr[num++]=ffi->name;
+		}while((l=l->next));
+	}
+	return arr;
 }
 
 void*fileview_get_data(struct fileview*view){

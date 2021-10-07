@@ -21,4 +21,6 @@ extern bool fsext_is_multi;
 extern lv_res_t lv_fs_get_type(enum item_type*type,const char*path);
 extern lv_res_t lv_fs_get_volume_label(lv_fs_drv_t*drv,char*label,size_t len);
 extern bool lv_fs_is_dir(const char*path);
+extern const char*lv_fs_res_to_string(lv_fs_res_t res);
+extern const char*lv_fs_res_to_i18n_string(lv_fs_res_t res);
 #endif

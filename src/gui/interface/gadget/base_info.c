@@ -1,5 +1,6 @@
 #ifdef ENABLE_GUI
-#include<unistd.h>
+#define _GNU_SOURCE
+#include<dirent.h>
 #include"str.h"
 #include"gui.h"
 #include"confd.h"
@@ -10,6 +11,7 @@
 #include"gui/activity.h"
 #define TAG "gadget"
 
+static lv_obj_t*sel_udc;
 static lv_obj_t*txt_name,*txt_config,*txt_serial;
 static lv_obj_t*txt_id_vendor,*txt_id_product;
 static lv_obj_t*txt_manufacturer,*txt_product;
@@ -28,6 +30,22 @@ static void load_base_info(){
 	lv_textarea_set_text(txt_serial,confd_get_string_base(base,"serial","1234567890"));
 	lv_textarea_set_text(txt_manufacturer,confd_get_string_base(base,"manufacturer","manufacturer"));
 	lv_textarea_set_text(txt_product,confd_get_string_base(base,"product","product"));
+	lv_dropdown_clear_options(sel_udc);
+	lv_dropdown_add_option(sel_udc,_("(None)"),0);
+	lv_dropdown_set_selected(sel_udc,0);
+	DIR*d=opendir(_PATH_SYS_CLASS"/udc");
+	if(d){
+		char*p=confd_get_string_base(base,"udc",NULL);
+		struct dirent*ent;
+		while((ent=readdir(d))){
+			if(ent->d_type!=DT_LNK)continue;
+			if(ent->d_name[0]=='.')continue;
+			uint16_t i=lv_dropdown_get_option_cnt(sel_udc);
+			lv_dropdown_add_option(sel_udc,ent->d_name,i);
+			if(p&&strcmp(p,ent->d_name)==0)lv_dropdown_set_selected(sel_udc,i);
+		}
+		closedir(d);
+	}
 }
 
 static int save_base_info(){
@@ -48,6 +66,12 @@ static int save_base_info(){
 	confd_set_string_base(base,"serial",(char*)lv_textarea_get_text(txt_serial));
 	confd_set_string_base(base,"manufacturer",(char*)lv_textarea_get_text(txt_manufacturer));
 	confd_set_string_base(base,"product",(char*)lv_textarea_get_text(txt_product));
+	if(lv_dropdown_get_selected(sel_udc)==0)confd_delete("gadget.udc");
+	else{
+		char name[256]={0};
+		lv_dropdown_get_selected_str(sel_udc,name,255);
+		confd_set_string_base(base,"udc",name);
+	}
 	return 0;
 }
 
@@ -119,7 +143,7 @@ static int base_info_draw(struct gui_activity*act){
 	lv_textarea_set_cursor_hidden(txt_name,true);
 	lv_obj_set_event_cb(txt_name,input_cb);
 	lv_obj_set_width(txt_name,gui_sw-gui_font_size*2);
-	lv_obj_align(txt_name,title,LV_ALIGN_OUT_BOTTOM_LEFT,gui_font_size,gui_font_size*3);
+	lv_obj_align(txt_name,title,LV_ALIGN_OUT_BOTTOM_LEFT,gui_font_size,gui_font_size*2);
 	lv_obj_t*lbl_name=lv_label_create(act->page,NULL);
 	lv_label_set_text(lbl_name,_("Gadget Name:"));
 	lv_obj_align(lbl_name,txt_name,LV_ALIGN_OUT_TOP_LEFT,gui_font_size/2,0);
@@ -199,11 +223,19 @@ static int base_info_draw(struct gui_activity*act){
 	lv_label_set_text(lbl_product,_("Product String:"));
 	lv_obj_align(lbl_product,txt_product,LV_ALIGN_OUT_TOP_LEFT,gui_font_size/2,0);
 
+	// udc selector
+	sel_udc=lv_dropdown_create(act->page,NULL);
+	lv_obj_set_width(sel_udc,gui_sw-gui_font_size*2);
+	lv_obj_align(sel_udc,txt_product,LV_ALIGN_OUT_BOTTOM_LEFT,0,gui_font_size*2);
+	lv_obj_t*lbl_udc=lv_label_create(act->page,NULL);
+	lv_label_set_text(lbl_udc,_("USB Device Controller (UDC):"));
+	lv_obj_align(lbl_udc,sel_udc,LV_ALIGN_OUT_TOP_LEFT,gui_font_size/2,0);
+
 	// ok button
 	btn_ok=lv_btn_create(act->page,NULL);
 	lv_obj_set_event_cb(btn_ok,btn_cb);
 	lv_obj_set_size(btn_ok,btw,bth);
-	lv_obj_align(btn_ok,txt_product,LV_ALIGN_OUT_BOTTOM_LEFT,0,gui_font_size*2);
+	lv_obj_align(btn_ok,sel_udc,LV_ALIGN_OUT_BOTTOM_LEFT,0,gui_font_size);
 	lv_style_set_action_button(btn_ok,true);
 	lv_label_set_text(lv_label_create(btn_ok,NULL),_("OK"));
 
@@ -211,7 +243,7 @@ static int base_info_draw(struct gui_activity*act){
 	btn_reset=lv_btn_create(act->page,NULL);
 	lv_obj_set_event_cb(btn_reset,btn_cb);
 	lv_obj_set_size(btn_reset,btw,bth);
-	lv_obj_align(btn_reset,txt_product,LV_ALIGN_OUT_BOTTOM_MID,0,gui_font_size*2);
+	lv_obj_align(btn_reset,sel_udc,LV_ALIGN_OUT_BOTTOM_MID,0,gui_font_size);
 	lv_style_set_action_button(btn_reset,true);
 	lv_label_set_text(lv_label_create(btn_reset,NULL),_("Reset"));
 
@@ -219,7 +251,7 @@ static int base_info_draw(struct gui_activity*act){
 	btn_cancel=lv_btn_create(act->page,NULL);
 	lv_obj_set_event_cb(btn_cancel,btn_cb);
 	lv_obj_set_size(btn_cancel,btw,bth);
-	lv_obj_align(btn_cancel,txt_product,LV_ALIGN_OUT_BOTTOM_RIGHT,0,gui_font_size*2);
+	lv_obj_align(btn_cancel,sel_udc,LV_ALIGN_OUT_BOTTOM_RIGHT,0,gui_font_size);
 	lv_style_set_action_button(btn_cancel,true);
 	lv_label_set_text(lv_label_create(btn_cancel,NULL),_("Cancel"));
 

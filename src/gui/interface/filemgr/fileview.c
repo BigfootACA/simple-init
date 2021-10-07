@@ -153,13 +153,10 @@ static struct fileitem*add_item(struct fileview*view,char*name){
 		0,gui_font_size/2
 	);
 	view->last_btn=fi->btn;
-	list*l=list_new(fi);
-	if(!l){
-		telog_error("cannot allocate fileitem list");
+	if(list_obj_add_new(&view->items,fi)!=0){
+		telog_error("cannot add fileitem list");
 		abort();
 	}
-	if(!view->items)view->items=l;
-	else list_push(view->items,l);
 
 	// line for button text
 	lv_obj_t*line=lv_line_create(fi->btn,NULL);

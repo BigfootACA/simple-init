@@ -337,9 +337,10 @@ static void scan_items(struct fileview*view){
 	char fn[256],*fp;
 	char path[PATH_MAX+4]={0};
 	snprintf(path,PATH_MAX+3,"%c:%s",view->letter,view->path);
-	if(lv_fs_dir_open(&dir,path)!=LV_FS_RES_OK){
-		telog_warn("open folder %s failed",view->path);
-		set_info(view,_("open dir failed"));
+	lv_fs_res_t res=lv_fs_dir_open(&dir,path);
+	if(res!=LV_FS_RES_OK){
+		telog_warn("open folder %s failed (%s)",view->path,lv_fs_res_to_string(res));
+		set_info(view,_("open dir failed: %s"),lv_fs_res_to_i18n_string(res));
 		return;
 	}
 	for(i=0;i<1024;i++){

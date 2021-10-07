@@ -230,18 +230,18 @@ static void btns_cb(lv_obj_t*obj,lv_event_t e){
 	}else if(obj==btn_home){
 		filetab_set_path(active,"/");
 	}else if(obj==btn_info){
-
+		msgbox_alert("This function does not implemented");
 	}else if(obj==btn_next){
 		uint16_t act=lv_tabview_get_tab_act(tabview);
 		if(act>=lv_tabview_get_tab_count(tabview)-1)act=-1;
 		lv_tabview_set_tab_act(tabview,act+1,LV_ANIM_ON);
 		update_active();
 	}else if(obj==btn_paste){
-
+		msgbox_alert("This function does not implemented");
 	}else if(obj==btn_copy){
-
+		msgbox_alert("This function does not implemented");
 	}else if(obj==btn_delete){
-
+		msgbox_alert("This function does not implemented");
 	}else if(obj==btn_new){
 		static const char*types[]={
 			LV_SYMBOL_FILE,
@@ -251,7 +251,7 @@ static void btns_cb(lv_obj_t*obj,lv_event_t e){
 		if(fsext_is_multi&&filetab_is_top(active))return;
 		msgbox_create_custom(create_cb,types,"Choose type to create");
 	}else if(obj==btn_cut){
-
+		msgbox_alert("This function does not implemented");
 	}else if(obj==btn_back){
 		if(!filetab_is_top(active)){
 			lv_obj_t*tab=filetab_get_tab(active);

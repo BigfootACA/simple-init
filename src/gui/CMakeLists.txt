@@ -17,8 +17,8 @@ add_library(init_gui STATIC
 	interface/core/sysbar.c
 	interface/core/charger.c
 	interface/core/guiapp.c
-	interface/logviewer.c
-	interface/benchmark.c
+	interface/apps/logviewer.c
+	interface/apps/benchmark.c
 	drivers/drm.c
 	drivers/fbdev.c
 	drivers/input.c

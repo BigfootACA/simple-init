@@ -69,9 +69,9 @@
   interface/core/reboot.c
   interface/core/sysbar.c
   interface/core/guiapp.c
-  interface/benchmark.c
-  interface/uefi_bootmenu.c
-  interface/uefi_shell.c
+  interface/apps/benchmark.c
+  interface/apps/uefi_bootmenu.c
+  interface/apps/uefi_shell.c
   interface/uefi_start.c
   filesystem/lv_fs_string.c
   filesystem/fsext.c

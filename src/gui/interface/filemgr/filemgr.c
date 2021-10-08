@@ -179,7 +179,7 @@ static bool create_name_cb(bool ok,const char*name,void*user_data){
 	return false;
 }
 
-static bool create_cb(uint16_t id,const char*text __attribute__((unused))){
+static bool create_cb(uint16_t id,const char*text __attribute__((unused)),void*user_data __attribute__((unused))){
 	static uint16_t xid;
 	xid=id;
 	struct inputbox*in=inputbox_create(create_name_cb,"Create item name");

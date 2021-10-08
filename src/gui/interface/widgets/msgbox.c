@@ -16,6 +16,7 @@ struct msgbox{
 	lv_obj_t*label;
 	lv_obj_t*btn[64];
 	void*btn_data_p;
+	void*user_data;
 	struct gui_activity*act;
 };
 
@@ -35,7 +36,7 @@ static void msg_click(lv_obj_t*obj,lv_event_t e){
 	struct msgbox*box;
 	if(!(btn=lv_obj_get_user_data(obj))||!(box=btn->box))return;
 	if(guiact_get_last()->args!=box)return;
-	if(box->callback&&box->callback(btn->id,btn->text))return;
+	if(box->callback&&box->callback(btn->id,btn->text,box->user_data))return;
 	for(uint16_t i=0;i<box->btn_cnt;i++)
 		lv_obj_set_user_data(box->btn[i],NULL);
 	box->act->args=NULL;
@@ -140,47 +141,56 @@ static void msgbox_cb(lv_task_t*t){
 	guiact_start_activity(&guireg_msgbox,t->user_data);
 }
 
-static void _msgbox_create(
+static struct msgbox*_msgbox_create(
 	msgbox_callback callback,
 	const char**buttons,
 	const char*content,
 	va_list va
 ){
 	struct msgbox*msg=malloc(sizeof(struct msgbox));
-	if(!msg)return;
+	if(!msg)return NULL;
 	memset(msg,0,sizeof(struct msgbox));
 	vsnprintf(msg->text,sizeof(msg->text)-1,_(content),va);
 	msg->callback=callback;
 	msg->buttons=buttons;
 	lv_task_once(lv_task_create(msgbox_cb,0,LV_TASK_PRIO_LOWEST,msg));
+	return msg;
 }
 
-void msgbox_create_yesno(msgbox_callback callback,const char*content,...){
+struct msgbox*msgbox_create_yesno(msgbox_callback callback,const char*content,...){
 	va_list va;
 	va_start(va,content);
-	_msgbox_create(callback,yesno_btn,content,va);
+	struct msgbox*msg=_msgbox_create(callback,yesno_btn,content,va);
 	va_end(va);
+	return msg;
 }
 
-void msgbox_create_ok(msgbox_callback callback,const char*content,...){
+struct msgbox*msgbox_create_ok(msgbox_callback callback,const char*content,...){
 	va_list va;
 	va_start(va,content);
-	_msgbox_create(callback,ok_btn,content,va);
+	struct msgbox*msg=_msgbox_create(callback,ok_btn,content,va);
 	va_end(va);
+	return msg;
 }
 
-void msgbox_create_custom(msgbox_callback callback,const char**btns,const char*content,...){
+struct msgbox*msgbox_create_custom(msgbox_callback callback,const char**btns,const char*content,...){
 	va_list va;
 	va_start(va,content);
-	_msgbox_create(callback,btns,content,va);
+	struct msgbox*msg=_msgbox_create(callback,btns,content,va);
 	va_end(va);
+	return msg;
 }
 
-void msgbox_alert(const char*content,...){
+struct msgbox*msgbox_alert(const char*content,...){
 	va_list va;
 	va_start(va,content);
-	_msgbox_create(NULL,ok_btn,content,va);
+	struct msgbox*msg=_msgbox_create(NULL,ok_btn,content,va);
 	va_end(va);
+	return msg;
 }
 
+void msgbox_set_user_data(struct msgbox*box,void*user_data){
+	if(!box)return;
+	box->user_data=user_data;
+}
 #endif

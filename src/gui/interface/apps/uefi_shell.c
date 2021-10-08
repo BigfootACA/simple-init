@@ -29,7 +29,7 @@ static int after_exit(void*d __attribute__((unused))){
 	return r;
 }
 
-static bool msg_click(uint16_t id,const char*text){
+static bool msg_click(uint16_t id,const char*text,void*user_data __attribute__((unused))){
 	if(id==0){
 		MEDIA_FW_VOL_FILEPATH_DEVICE_PATH fn;
 		EFI_LOADED_IMAGE_PROTOCOL*li;

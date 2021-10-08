@@ -65,7 +65,7 @@ static void start_cb(lv_task_t*t __attribute__((unused))){
 	gui_run_and_exit(after_exit);
 }
 
-static bool confirm_click(uint16_t id,const char*text __attribute__((unused))){
+static bool confirm_click(uint16_t id,const char*text __attribute__((unused)),void*user_data __attribute__((unused))){
 	if(id==0)lv_task_once(lv_task_create(start_cb,1,LV_TASK_PRIO_LOWEST,NULL));
 	return false;
 }

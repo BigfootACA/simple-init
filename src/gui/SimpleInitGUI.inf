@@ -66,10 +66,10 @@
   interface/settings/language.c
   interface/settings/mouse.c
   interface/settings/theme.c
+  interface/core/reboot.c
+  interface/core/sysbar.c
+  interface/core/guiapp.c
   interface/benchmark.c
-  interface/guiapp.c
-  interface/reboot.c
-  interface/sysbar.c
   interface/uefi_bootmenu.c
   interface/uefi_shell.c
   interface/uefi_start.c

@@ -1,6 +1,5 @@
 add_library(init_gui STATIC
 	gui_init.c
-	interface/guiapp.c
 	interface/guipm/guipm.c
 	interface/guipm/disk_select.c
 	interface/guipm/partitions.c
@@ -14,11 +13,12 @@ add_library(init_gui STATIC
 	interface/settings/backlight.c
 	interface/settings/language.c
 	interface/settings/theme.c
-	interface/reboot.c
-	interface/sysbar.c
+	interface/core/reboot.c
+	interface/core/sysbar.c
+	interface/core/charger.c
+	interface/core/guiapp.c
 	interface/logviewer.c
 	interface/benchmark.c
-	interface/charger.c
 	drivers/drm.c
 	drivers/fbdev.c
 	drivers/input.c

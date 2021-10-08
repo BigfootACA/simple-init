@@ -61,6 +61,7 @@
   interface/filemgr/filemgr.c
   interface/filemgr/filetab.c
   interface/filemgr/fileview.c
+  interface/widgets/filepicker.c
   interface/widgets/inputbox.c
   interface/widgets/msgbox.c
   interface/settings/language.c

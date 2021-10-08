@@ -8,6 +8,7 @@ add_library(init_gui STATIC
 	interface/filemgr/filetab.c
 	interface/gadget/gadget_view.c
 	interface/gadget/base_info.c
+	interface/widgets/filepicker.c
 	interface/widgets/inputbox.c
 	interface/widgets/msgbox.c
 	interface/settings/backlight.c

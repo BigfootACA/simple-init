@@ -236,11 +236,16 @@ int list_obj_del(list**lst,list*item,runnable_t*datafree){
 	return 0;
 }
 
-int list_obj_del_data(list**lst,void*data,runnable_t*datafree){
-	if(!lst||!data)ERET(EINVAL);
-	if(!*lst)ERET(ENOENT);
-	list*cur=list_first(*lst);
+list*list_lookup_data(list*lst,void*data){
+	if(!lst||!data)EPRET(EINVAL);
+	list*cur=list_first(lst);
 	if(cur)while(cur->data!=data&&(cur=cur->next));
-	if(cur->data!=data)ERET(ENOENT);
-	return list_obj_del(lst,cur,datafree);
+	if(!cur||cur->data!=data)EPRET(ENOENT);
+	return cur;
+}
+
+int list_obj_del_data(list**lst,void*data,runnable_t*datafree){
+	if(!lst)ERET(EINVAL);
+	list*item=list_lookup_data(*lst,data);
+	return item?list_obj_del(lst,item,datafree):-errno;
 }

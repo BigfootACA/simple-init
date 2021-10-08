@@ -72,6 +72,9 @@ extern list*list_duplicate(list*lst,list*end);
 // src/lib/list.c: duplicate chars list
 extern list*list_duplicate_chars(list*lst,list*end);
 
+// src/lib/list.c: lookup list by data
+extern list*list_lookup_data(list*lst,void*data);
+
 // src/lib/list.c: return true if there is only one item in the list
 extern bool list_is_alone(list*point);
 

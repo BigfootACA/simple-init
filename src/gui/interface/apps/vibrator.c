@@ -11,7 +11,8 @@
 #include"gui/inputbox.h"
 #include"gui/activity.h"
 
-static pthread_t run_t=0;
+static volatile bool thread_run=false;
+static pthread_t run_t;
 static lv_obj_t*view;
 static lv_obj_t*btn_prev,*btn_delete,*btn_next;
 static lv_obj_t*btn_create,*btn_clean,*btn_start;
@@ -272,7 +273,7 @@ static void*worker_thread(void*data  __attribute__((unused))){
 			int time=d->time;
 			pthread_mutex_unlock(&lock);
 			i++;
-			if(run_t<=0)return NULL;
+			if(!thread_run)return NULL;
 			switch(type){
 				case TYPE_VIBRATE:vibrate(time);break;
 				case TYPE_IDLE:usleep(time*1000);break;
@@ -282,13 +283,13 @@ static void*worker_thread(void*data  __attribute__((unused))){
 		pthread_mutex_unlock(&lock);
 		if(i<=0)break;
 	}
-	run_t=0;
+	thread_run=false;
 	return NULL;
 }
 
 static void start_cb(lv_obj_t*obj,lv_event_t e){
 	if(obj!=btn_start||e!=LV_EVENT_CLICKED)return;
-	if(run_t==0){
+	if(!thread_run){
 		if(list_count(steps)<=0){
 			msgbox_alert("No any steps configured");
 			return;
@@ -304,7 +305,8 @@ static void start_cb(lv_obj_t*obj,lv_event_t e){
 			msgbox_alert("Create thread failed: %m");
 			return;
 		}
-	}else run_t=0;
+	}
+	thread_run=!thread_run;
 }
 
 static int vibrator_draw(struct gui_activity*act){

@@ -15,6 +15,7 @@ extern bool lv_page_is_top(lv_obj_t*page);
 extern bool lv_page_is_bottom(lv_obj_t*page);
 extern void lv_page_go_top(lv_obj_t*page);
 extern void lv_page_go_bottom(lv_obj_t*page);
+extern void lv_scroll_to(lv_obj_t*focus,bool anim);
 extern lv_coord_t lv_obj_get_rel_y(lv_obj_t*rel,lv_obj_t*obj);
 extern lv_coord_t lv_obj_get_rel_x(lv_obj_t*rel,lv_obj_t*obj);
 

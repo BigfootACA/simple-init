@@ -128,6 +128,27 @@ void lv_page_go_bottom(lv_obj_t*page){
 	lv_page_scroll_ver(page,-lv_obj_get_height(s));
 }
 
+static void _lv_page_scroll_ver(lv_obj_t*obj,lv_coord_t dist,bool anim){
+	if(anim)lv_page_scroll_ver(obj,dist);
+	else{
+		lv_obj_t*scrl=lv_page_get_scrl(obj);
+		lv_obj_set_y(scrl,lv_obj_get_y(scrl)+dist);
+	}
+}
+
+void lv_scroll_to(lv_obj_t*focus,bool anim){
+	lv_obj_t*obj=focus;
+	while((obj=lv_obj_get_parent(obj)))if(lv_debug_check_obj_type(obj,"lv_page")){
+		lv_coord_t oy=lv_obj_get_rel_y(obj,focus),ox=lv_obj_get_rel_x(obj,focus);
+		lv_coord_t ph=lv_obj_get_height(obj),pw=lv_obj_get_width(obj);
+		lv_coord_t oh=lv_obj_get_height(focus),ow=lv_obj_get_width(focus);
+		if(oy<0)_lv_page_scroll_ver(obj,-oy,anim);
+		else if(oy+oh>ph)_lv_page_scroll_ver(obj,-oy+ph-oh,anim);
+		if(ox<0)_lv_page_scroll_ver(obj,-ox,anim);
+		else if(ox+ow>pw)_lv_page_scroll_ver(obj,-ox+pw-ow,anim);
+	}
+}
+
 lv_coord_t lv_obj_get_rel_y(lv_obj_t*rel,lv_obj_t*obj){
 	lv_coord_t c=0;
 	do{c+=lv_obj_get_y(obj);}

@@ -1,5 +1,6 @@
 #ifdef ENABLE_GUI
 #define _GNU_SOURCE
+#include<stdlib.h>
 #include<dirent.h>
 #include"str.h"
 #include"gui.h"

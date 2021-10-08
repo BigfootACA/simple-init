@@ -84,7 +84,7 @@ static int msgbox_draw(struct gui_activity*act){
 		for(uint16_t i=0;i<box->btn_cnt;i++){
 			d[i].box=box,d[i].id=i,d[i].text=box->buttons[i];
 			box->btn[i]=lv_btn_create(box->box,NULL);
-			lv_label_set_text(lv_label_create(box->btn[i],NULL),box->buttons[i]);
+			lv_label_set_text(lv_label_create(box->btn[i],NULL),_(box->buttons[i]));
 			lv_obj_set_style_local_margin_bottom(box->btn[i],LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btn_m);
 			lv_obj_set_style_local_radius(box->btn[i],LV_BTN_PART_MAIN,LV_STATE_DEFAULT,gui_dpi/15);
 			lv_obj_set_size(box->btn[i],btn_w-btn_m,btn_h);

@@ -20,6 +20,7 @@ add_library(init_gui STATIC
 	interface/core/guiapp.c
 	interface/apps/logviewer.c
 	interface/apps/benchmark.c
+	interface/apps/vibrator.c
 	drivers/drm.c
 	drivers/fbdev.c
 	drivers/input.c

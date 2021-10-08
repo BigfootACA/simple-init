@@ -11,6 +11,7 @@ extern struct gui_register guireg_filepicker;
 extern struct gui_register guireg_benchmark;
 extern struct gui_register guireg_backlight;
 extern struct gui_register guireg_logviewer;
+extern struct gui_register guireg_vibrator;
 extern struct gui_register guireg_language;
 extern struct gui_register guireg_inputbox;
 extern struct gui_register guireg_filemgr;
@@ -30,6 +31,7 @@ struct gui_register*guiact_register[]={
 	#endif
 	&guireg_backlight,
 	&guireg_logviewer,
+	&guireg_vibrator,
 	&guireg_gadget,
 	&guireg_gadget_base_info,
 	#endif

@@ -1193,3 +1193,39 @@ msgstr "文件选择无效"
 
 msgid "Rename '%s' to '%s' failed: %s"
 msgstr "重命名'%s'为'%s'失败: %s"
+
+msgid "Vibrate %dms"
+msgstr "振动%d毫秒"
+
+msgid "Sleep %dms"
+msgstr "等待%d毫秒"
+
+msgid "Invalid time number"
+msgstr "无效的时间数字"
+
+msgid "Input step time (ms)"
+msgstr "输入步骤时间（毫秒）"
+
+msgid "Vibrate"
+msgstr "震动"
+
+msgid "Sleep"
+msgstr "等待"
+
+msgid "Select step type"
+msgstr "选择步骤类型"
+
+msgid "Clean all items?"
+msgstr "清空所有项目？"
+
+msgid "No any steps configured"
+msgstr "没有配置任何步骤"
+
+msgid "Call vibrator failed: %m"
+msgstr "调用震动失败: %m"
+
+msgid "Create thread failed: %m"
+msgstr "创建线程失败: %m"
+
+msgid "Vibrator Tester"
+msgstr "震动测试器"

@@ -121,6 +121,9 @@ static int guiapp_draw(struct gui_activity*act){
 	lv_obj_add_style(author,LV_LABEL_PART_MAIN,&txt_style);
 	lv_obj_set_width(author,gui_sw);
 	lv_obj_align(author,NULL,LV_ALIGN_IN_BOTTOM_MID,0,-gui_font_size);
+
+	list_free_all(apps,NULL);
+	apps=NULL,app_num=0;
 	return 0;
 }
 

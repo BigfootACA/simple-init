@@ -11,14 +11,14 @@ add_library(init_gui STATIC
 	interface/gadget/base_info.c
 	interface/widgets/inputbox.c
 	interface/widgets/msgbox.c
+	interface/settings/backlight.c
+	interface/settings/language.c
+	interface/settings/theme.c
 	interface/reboot.c
 	interface/sysbar.c
-	interface/backlight.c
 	interface/logviewer.c
 	interface/benchmark.c
-	interface/language.c
 	interface/charger.c
-	interface/theme.c
 	drivers/drm.c
 	drivers/fbdev.c
 	drivers/input.c

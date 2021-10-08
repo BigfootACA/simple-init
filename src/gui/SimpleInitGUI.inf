@@ -63,16 +63,16 @@
   interface/filemgr/fileview.c
   interface/widgets/inputbox.c
   interface/widgets/msgbox.c
+  interface/settings/language.c
+  interface/settings/mouse.c
+  interface/settings/theme.c
   interface/benchmark.c
   interface/guiapp.c
   interface/reboot.c
   interface/sysbar.c
-  interface/language.c
   interface/uefi_bootmenu.c
   interface/uefi_shell.c
   interface/uefi_start.c
-  interface/mouse.c
-  interface/theme.c
   filesystem/lv_fs_string.c
   filesystem/fsext.c
   filesystem/uefi.c

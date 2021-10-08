@@ -23,9 +23,9 @@ struct fileview{
 	char path[PATH_MAX],full_path[PATH_MAX];
 	lv_obj_t*view,*info,*last_btn;
 	list*items;
-	bool hidden,parent;
+	bool hidden,parent,verbose;
 	int count;
-	lv_coord_t bw,bh;
+	lv_coord_t bw,bh,margin;
 	lv_group_t*grp;
 	fileview_on_item_select on_select_item;
 	fileview_on_item_click on_click_item;
@@ -139,7 +139,7 @@ static void item_check(lv_obj_t*obj,lv_event_t e){
 
 static struct fileitem*add_item(struct fileview*view,char*name){
 	if(!view->view||!name)return NULL;
-	if(view->bw==0)view->bw=lv_page_get_scrl_width(view->view)-gui_font_size;
+	if(view->bw==0)view->bw=lv_page_get_scrl_width(view->view)-view->margin;
 	if(view->bh==0)view->bh=gui_dpi/2;
 	struct fileitem*fi=malloc(sizeof(struct fileitem));
 	if(!fi){
@@ -165,7 +165,7 @@ static struct fileitem*add_item(struct fileview*view,char*name){
 		fi->btn,view->last_btn,view->last_btn?
 			LV_ALIGN_OUT_BOTTOM_LEFT:
 			LV_ALIGN_IN_TOP_MID,
-		0,gui_font_size/2
+		0,view->margin/8+(view->last_btn?gui_dpi/20:0)
 	);
 	view->last_btn=fi->btn;
 	if(list_obj_add_new(&view->items,fi)!=0){
@@ -212,7 +212,7 @@ static struct fileitem*add_item(struct fileview*view,char*name){
 	lv_style_set_focus_checkbox(fi->chk);
 	lv_obj_set_event_cb(fi->chk,item_check);
 	lv_obj_set_user_data(fi->chk,fi);
-	lv_obj_align(fi->chk,NULL,LV_ALIGN_IN_LEFT_MID,gui_font_size+si,-gui_font_size);
+	lv_obj_align(fi->chk,NULL,LV_ALIGN_IN_LEFT_MID,gui_font_size+si,view->verbose?-gui_font_size:0);
 	lv_checkbox_ext_t*e=lv_obj_get_ext_attr(fi->chk);
 	lv_label_set_long_mode(e->label,LV_LABEL_LONG_SROLL_CIRC);
 
@@ -222,73 +222,77 @@ static struct fileitem*add_item(struct fileview*view,char*name){
 		lv_group_add_obj(view->grp,fi->chk);
 	}
 
-	if(fi->type==TYPE_FILE){
-		lv_fs_file_t f;
-		uint32_t s=0;
-		if(lv_fs_open(&f,fi->path,LV_FS_MODE_RD)==LV_FS_RES_OK){
-			if(lv_fs_size(&f,&s)==LV_FS_RES_OK){
-				char size[32]={0};
-				fi->size=lv_label_create(line,NULL);
-				lv_label_set_text(fi->size,make_readable_str_buf(size,31,s,1,0));
-				lv_label_set_long_mode(fi->size,LV_LABEL_LONG_CROP);
-				lv_coord_t xs=lv_obj_get_width(fi->size),min=view->bw/5;
-				if(xs>min){
-					lv_obj_set_width(fi->size,min);
-					xs=min;
+	lv_coord_t lbl_w=view->bw-si-gui_font_size*2-lv_obj_get_width(e->bullet);
+	if(lv_obj_get_width(e->label)>lbl_w)lv_obj_set_width(e->label,lbl_w);
+
+	if(view->verbose){
+		if(fi->type==TYPE_FILE){
+			lv_fs_file_t f;
+			uint32_t s=0;
+			if(lv_fs_open(&f,fi->path,LV_FS_MODE_RD)==LV_FS_RES_OK){
+				if(lv_fs_size(&f,&s)==LV_FS_RES_OK){
+					char size[32]={0};
+					fi->size=lv_label_create(line,NULL);
+					lv_label_set_text(fi->size,make_readable_str_buf(size,31,s,1,0));
+					lv_label_set_long_mode(fi->size,LV_LABEL_LONG_CROP);
+					lv_coord_t xs=lv_obj_get_width(fi->size),min=view->bw/5;
+					if(xs>min){
+						lv_obj_set_width(fi->size,min);
+						xs=min;
+					}
+					lv_obj_align(
+						fi->size,fi->btn,
+						LV_ALIGN_IN_TOP_RIGHT,
+						-gui_font_size/2,
+						gui_font_size/2
+					);
+					lbl_w-=xs+gui_dpi/20;
+					if(lv_obj_get_width(e->label)>lbl_w)
+						lv_obj_set_width(e->label,lbl_w);
 				}
-				lv_obj_align(
-					fi->size,fi->btn,
-					LV_ALIGN_IN_TOP_RIGHT,
-					-gui_font_size/2,
-					gui_font_size/2
-				);
-				lv_obj_set_width(e->label,
-					 view->bw-si-gui_font_size*2-
-					 xs-lv_obj_get_width(e->bullet)
-				);
+				lv_fs_close(&f);
 			}
-			lv_fs_close(&f);
 		}
-	}
-
-	#ifndef ENABLE_UEFI
-	int fd=open(view->path,O_DIR);
-	if(fd>=0&&fstatat(fd,name,&fi->st,AT_SYMLINK_NOFOLLOW)==0){
-		mode_t m=fi->st.st_mode;
-		char times[64]={0};
-		strftime(times,63,"%Y/%m/%d %H:%M:%S",localtime(&fi->st.st_mtime));
-
-		// file info1 (time and permission)
-		fi->info1=lv_label_create(line,NULL);
-		lv_obj_align(fi->info1,fi->chk,LV_ALIGN_OUT_BOTTOM_LEFT,0,gui_font_size/4);
-		lv_obj_set_small_text_font(fi->info1,LV_LABEL_PART_MAIN);
-		lv_label_set_text_fmt(fi->info1,"%s %s",times,mode_string(fi->st.st_mode));
 
 		#ifndef ENABLE_UEFI
-		dev_t d=fi->st.st_dev;
-		char dev[32]={0};
-		if(S_ISCHR(m))snprintf(dev,31,"char[%d:%d] ",major(d),minor(d));
-		if(S_ISBLK(m))snprintf(dev,31,"block[%d:%d] ",major(d),minor(d));
-		// symbolic link target
-		char tgt[128]={0};
-		if(S_ISLNK(m))readlinkat(fd,name,tgt,127);
+		int fd=open(view->path,O_DIR);
+		if(fd>=0&&fstatat(fd,name,&fi->st,AT_SYMLINK_NOFOLLOW)==0){
+			mode_t m=fi->st.st_mode;
+			char times[64]={0};
+			strftime(times,63,"%Y/%m/%d %H:%M:%S",localtime(&fi->st.st_mtime));
 
-		// file info2 (owner/group, device node and symbolic link target)
-		char owner[128]={0},group[128]={0};
-		fi->info2=lv_label_create(line,NULL);
-		lv_obj_align(fi->info2,fi->info1,LV_ALIGN_OUT_BOTTOM_LEFT,0,0);
-		lv_obj_set_small_text_font(fi->info2,LV_LABEL_PART_MAIN);
-		lv_label_set_text_fmt(
-			fi->info2,
-			"%s:%s %s%s",
-			get_username(fi->st.st_uid,owner,127),
-			get_groupname(fi->st.st_gid,group,127),
-			dev,tgt
-		);
+			// file info1 (time and permission)
+			fi->info1=lv_label_create(line,NULL);
+			lv_obj_align(fi->info1,fi->chk,LV_ALIGN_OUT_BOTTOM_LEFT,0,gui_font_size/4);
+			lv_obj_set_small_text_font(fi->info1,LV_LABEL_PART_MAIN);
+			lv_label_set_text_fmt(fi->info1,"%s %s",times,mode_string(fi->st.st_mode));
+
+			#ifndef ENABLE_UEFI
+			dev_t d=fi->st.st_dev;
+			char dev[32]={0};
+			if(S_ISCHR(m))snprintf(dev,31,"char[%d:%d] ",major(d),minor(d));
+			if(S_ISBLK(m))snprintf(dev,31,"block[%d:%d] ",major(d),minor(d));
+			// symbolic link target
+			char tgt[128]={0};
+			if(S_ISLNK(m))readlinkat(fd,name,tgt,127);
+
+			// file info2 (owner/group, device node and symbolic link target)
+			char owner[128]={0},group[128]={0};
+			fi->info2=lv_label_create(line,NULL);
+			lv_obj_align(fi->info2,fi->info1,LV_ALIGN_OUT_BOTTOM_LEFT,0,0);
+			lv_obj_set_small_text_font(fi->info2,LV_LABEL_PART_MAIN);
+			lv_label_set_text_fmt(
+				fi->info2,
+				"%s:%s %s%s",
+				get_username(fi->st.st_uid,owner,127),
+				get_groupname(fi->st.st_gid,group,127),
+				dev,tgt
+			);
+			#endif
+			close(fd);
+		}
 		#endif
-		close(fd);
 	}
-	#endif
 	view->count++;
 	return fi;
 }
@@ -388,6 +392,8 @@ struct fileview*fileview_create(lv_obj_t*screen){
 	struct fileview*view=malloc(sizeof(struct fileview));
 	if(!view)return NULL;
 	memset(view,0,sizeof(struct fileview));
+	view->verbose=true;
+	view->margin=gui_font_size;
 	view->view=screen;
 	view->parent=true;
 	#ifdef ENABLE_UEFI
@@ -414,6 +420,18 @@ void fileview_set_on_item_select(struct fileview*view,fileview_on_item_select cb
 
 void fileview_set_data(struct fileview*view,void*data){
 	if(view)view->data=data;
+}
+
+void fileview_set_margin(struct fileview*view,lv_coord_t margin){
+	if(view)view->margin=margin;
+}
+
+void fileview_set_item_height(struct fileview*view,lv_coord_t height){
+	if(view)view->bh=height;
+}
+
+void fileview_set_verbose(struct fileview*view,bool verbose){
+	if(view)view->verbose=verbose;
 }
 
 uint16_t fileview_get_checked_count(struct fileview*view){

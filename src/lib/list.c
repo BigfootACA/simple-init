@@ -90,6 +90,30 @@ int list_count(list*point){
 	return t;
 }
 
+static int list_swap_neighbor(list*p1,list*p2){
+	errno=0;
+	if(!p1||!p2)ERET(EINVAL);
+	if(p1->prev)p1->prev->next=p2;
+	if(p2->next)p2->next->prev=p1;
+	p1->next=p2->next,p2->prev=p1->prev;
+	p1->prev=p2,p2->next=p1;
+	return 0;
+}
+
+int list_swap_prev(list*point){
+	errno=0;
+	if(!point)ERET(EINVAL);
+	if(!point->prev)ERET(ENOENT);
+	return list_swap_neighbor(point->prev,point);
+}
+
+int list_swap_next(list*point){
+	errno=0;
+	if(!point)ERET(EINVAL);
+	if(!point->next)ERET(ENOENT);
+	return list_swap_neighbor(point,point->next);
+}
+
 list*list_last(list*point){
 	errno=0;
 	if(!point)EPRET(EINVAL);

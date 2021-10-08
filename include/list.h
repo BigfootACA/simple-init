@@ -54,6 +54,12 @@ extern int list_free_all(list*point,runnable_t*datafree);
 // src/lib/list.c: count items
 extern int list_count(list*point);
 
+// src/lib/list.c: swap item and prev item
+extern int list_swap_prev(list*point);
+
+// src/lib/list.c: swap item and next item
+extern int list_swap_next(list*point);
+
 // src/lib/list.c: new item with data
 extern list*list_new(void*data);
 

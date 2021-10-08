@@ -1,6 +1,6 @@
 # 简单的GUI App示例
 
-## 1. 编写src/gui/interface/example.c
+## 1. 编写src/gui/interface/apps/example.c
 
 ```C
 #ifdef ENABLE_GUI
@@ -89,7 +89,7 @@ struct gui_register guireg_example={
 	// App图标，显示在主界面
 	.icon="example.png",
 
-	// 控制时候在主界面显示图标
+	// 控制是否在主界面显示图标
 	.show_app=true,
 
 	// 事件注册
@@ -143,10 +143,10 @@ diff --git a/src/gui/CMakeLists.txt b/src/gui/CMakeLists.txt
 --- a/src/gui/CMakeLists.txt
 +++ b/src/gui/CMakeLists.txt
 @@ -14,6 +14,7 @@ add_library(init_gui STATIC
- 	interface/logviewer.c
- 	interface/benchmark.c
- 	interface/language.c
-+	interface/example.c
+ 	interface/settings/language.c
+ 	interface/apps/logviewer.c
+ 	interface/apps/benchmark.c
++	interface/apps/example.c
  	drivers/drm.c
  	drivers/fbdev.c
  	drivers/input.c
@@ -160,8 +160,8 @@ index 81b4fcd..aee534a 100644
 --- a/src/gui/SimpleInitGUI.inf
 +++ b/src/gui/SimpleInitGUI.inf
 @@ -62,3 +62,4 @@
-   interface/sysbar.c
-   interface/language.c
-   interface/uefi_bootmenu.c
-+  interface/example.c
+   interface/core/sysbar.c
+   interface/apps/uefi_bootmenu.c
+   interface/apps/uefi_shell.c
++  interface/apps/example.c
 ```

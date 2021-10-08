@@ -47,7 +47,7 @@ static void add_button(struct gui_register*p){
 	lv_obj_set_style_local_radius(app,LV_OBJMASK_PART_MAIN,LV_STATE_DEFAULT,10);
 	lv_obj_set_user_data(app,p);
 	lv_obj_set_event_cb(app,click_btn);
-	lv_group_add_obj(gui_grp,app);
+	if(guiact_is_active_page(screen))lv_group_add_obj(gui_grp,app);
 
 	int ix=w-gui_font_size,im=gui_font_size/2;
 	lv_obj_t*icon_w=lv_objmask_create(app,NULL);

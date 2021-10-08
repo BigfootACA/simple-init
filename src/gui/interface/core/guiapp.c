@@ -13,15 +13,12 @@
 #include"gui/activity.h"
 #define TAG "guiapp"
 static lv_obj_t*screen;
+static list*apps=NULL;
 static int app_num=0;
 
 static void clean_buttons(){
-	lv_obj_t*o=lv_obj_get_child(screen,NULL);
-	if(o)do{
-		if(!lv_debug_check_obj_type(o,"lv_objmask"))continue;
-		lv_obj_del_async(o);
-	}while((o=lv_obj_get_child(screen,o)));
-	app_num=0;
+	list_free_all(apps,(int(*)(void*))lv_obj_del_async);
+	apps=NULL,app_num=0;
 }
 
 static void click_btn(lv_obj_t*obj,lv_event_t e){
@@ -85,6 +82,7 @@ static void add_button(struct gui_register*p){
 	lv_obj_set_style_local_text_font(txt,LV_LABEL_PART_MAIN,LV_STATE_DEFAULT,gui_font_small);
 	lv_obj_set_style_local_pad_top(txt,LV_LABEL_PART_MAIN,LV_STATE_DEFAULT,gui_dpi/100);
 
+	list_obj_add_new(&apps,app);
 	app_num++;
 }
 
@@ -104,9 +102,8 @@ static int guiapp_get_focus(struct gui_activity*d __attribute__((unused))){
 }
 
 static int guiapp_lost_focus(struct gui_activity*d __attribute__((unused))){
-	lv_obj_t*o=lv_obj_get_child(screen,NULL);
-	if(o)do{lv_group_remove_obj(o);}
-	while((o=lv_obj_get_child(screen,o)));
+	list*app=list_first(apps);
+	if(app)do{lv_group_remove_obj(LIST_DATA(app,lv_obj_t*));}while((app=app->next));
 	return 0;
 }
 

@@ -126,6 +126,10 @@ static void item_check(lv_obj_t*obj,lv_event_t e){
 	if(!fi)return;
 	struct fileview*fv=fi->view;
 	if(!fv)return;
+	if(strcmp(fi->name,"..")==0){
+		fileview_go_back(fv);
+		return;
+	}
 	if(fi->letter){
 		lv_checkbox_set_checked(obj,false);
 		return;
@@ -154,6 +158,7 @@ static struct fileitem*add_item(struct fileview*view,char*name){
 		view->letter,view->path,fi->name
 	);
 	if(!view->letter)fi->type=TYPE_DISK;
+	else if(strcmp(name,"..")==0)fi->type=TYPE_DIR;
 	else lv_fs_get_type(&fi->type,fi->path);
 
 	// file item button
@@ -348,7 +353,7 @@ static void scan_items(struct fileview*view){
 		}
 		return;
 	}
-	if(view->parent)add_item(view,"..");
+	if(view->parent&&!fileview_is_top(view))add_item(view,"..");
 	lv_fs_dir_t dir;
 	int i;
 	char fn[256],*fp;

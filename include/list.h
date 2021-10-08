@@ -45,7 +45,7 @@ extern int list_remove(list*point);
 // src/lib/list.c: remove an item from list and free
 extern int list_remove_free(list*point,runnable_t*datafree);
 
-// src/lib/list.c: free a item
+// src/lib/list.c: free an item
 extern int list_free_item(list*point,runnable_t*datafree);
 
 // src/lib/list.c: free all items in list
@@ -75,14 +75,17 @@ extern list*list_duplicate_chars(list*lst,list*end);
 // src/lib/list.c: return true if there is only one item in the list
 extern bool list_is_alone(list*point);
 
-// src/lib/list.c: add item to an list
+// src/lib/list.c: add item to a list
 extern int list_obj_add(list**lst,list*item);
 
-// src/lib/list.c: new and add item to an list
+// src/lib/list.c: new and add item to a list
 extern int list_obj_add_new(list**lst,void*data);
 
-// src/lib/list.c: delete item from an list
+// src/lib/list.c: delete item from a list
 extern int list_obj_del(list**lst,list*item,runnable_t*datafree);
+
+// src/lib/list.c: lookup item and delete from a list
+extern int list_obj_del_data(list**lst,void*data,runnable_t*datafree);
 
 // src/lib/list.c: default free runnable
 extern int list_default_free(void*data);

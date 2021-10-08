@@ -95,8 +95,8 @@ static bool on_item_click(struct filetab*fv,char*item,enum item_type type){
 	if(*x=='/')*x=0;
 	snprintf(full_path,PATH_MAX-1,"%s/%s",parent,item);
 	#ifdef ENABLE_UEFI
-	char*type=(char*)lv_fs_get_ext(full_path);
-	if(type&&strcasecmp(type,"efi")==0){
+	char*ext=(char*)lv_fs_get_ext(full_path);
+	if(ext&&strcasecmp(ext,"efi")==0){
 		uefi_start_image(full_path);
 		return false;
 	}

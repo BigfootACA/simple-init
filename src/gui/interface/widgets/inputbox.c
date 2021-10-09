@@ -97,7 +97,7 @@ static int inputbox_draw(struct gui_activity*act){
 	lv_textarea_set_cursor_hidden(box->input,true);
 	lv_textarea_set_pwd_mode(box->input,box->pwd);
 	lv_textarea_set_one_line(box->input,box->one_line);
-	lv_textarea_set_text_align(box->input,box->align);
+	if(box->align!=LV_LABEL_ALIGN_AUTO)lv_textarea_set_text_align(box->input,box->align);
 	if(box->max>0)lv_textarea_set_max_length(box->input,box->max);
 	if(box->holder[0])lv_textarea_set_placeholder_text(box->input,box->holder);
 	if(box->accepts)lv_textarea_set_accepted_chars(box->input,box->accepts);

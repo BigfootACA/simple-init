@@ -1,6 +1,7 @@
 #ifndef LV_CONF_H
 #define LV_CONF_H
 #include<stdint.h>
+#include<stdlib.h>
 typedef int32_t lv_coord_t;
 typedef void*lv_obj_user_data_t;
 typedef void*lv_font_user_data_t;
@@ -63,6 +64,11 @@ extern uint32_t custom_tick_get();
 #define LV_TICK_CUSTOM_INCLUDE              <stdint.h>
 #define LV_TICK_CUSTOM_SYS_TIME_EXPR        (custom_tick_get())
 #endif
+#define LV_DEBUG_ASSERT(expr,msg,value) {if(!(expr)){\
+	LV_LOG_ERROR(__func__);\
+	lv_debug_log_error(msg,(uint64_t)((uintptr_t)value));\
+	abort();while(1);\
+}}
 #define LV_USE_LOG                          1
 #define LV_LOG_LEVEL                        LV_LOG_LEVEL_WARN
 #define LV_LOG_PRINTF                       0

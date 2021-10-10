@@ -42,7 +42,8 @@ static struct conf*conf_lookup(const char*path,bool create,enum conf_type type){
 	errno=0;
 	struct conf*cur=&conf_store,*x;
 	char xpath[PATH_MAX]={0},*p=xpath,*key=p;
-	strncpy(xpath,path,PATH_MAX-1);
+	if(strcmp(path,"/")==0&&type==0)return &conf_store;
+	else strncpy(xpath,path,PATH_MAX-1);
 	if(!path[0]&&type==0)return &conf_store;
 	if(p)do{
 		if(*p!='.')continue;
@@ -62,7 +63,8 @@ static struct conf*conf_lookup(const char*path,bool create,enum conf_type type){
 		if(!x)return NULL;
 		x->type=type;
 	}
-	if(type==0&&type==x->type)EPRET(EBADMSG);
+	if(x->type==0)EPRET(EBADMSG);
+	if(type!=0&&type!=x->type)EPRET(ENOENT);
 	return x;
 }
 

@@ -112,6 +112,7 @@ int guiact_do_back(){
 }
 
 int guiact_do_home(){
+	sysbar_focus_input(NULL);
 	sysbar_keyboard_close();
 	list*acts=guiact_get_activities(),*d;
 	if(!acts||list_is_alone(acts))return 0;

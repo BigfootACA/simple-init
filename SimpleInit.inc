@@ -7,6 +7,7 @@
   SimpleInitAssets|src/assets/SimpleInitAssets.inf
   SimpleInitLoggerd|src/loggerd/SimpleInitLoggerd.inf
   SimpleInitCompatible|src/compatible/SimpleInitCompatible.inf
+  SimpleInitConfd|src/confd/SimpleInitConfd.inf
   SimpleInitRootFS|src/SimpleInitRootFS.inf
 
 [Components]

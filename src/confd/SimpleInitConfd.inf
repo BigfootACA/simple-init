@@ -1,0 +1,25 @@
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = SimpleInitConfd
+  FILE_GUID                      = 8BE9190F-4974-4625-8725-2F3913CCAE07
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = SimpleInitConfd
+
+[Packages]
+  MdePkg/MdePkg.dec
+  StdLib/StdLib.dec
+
+[LibraryClasses]
+  UefiLib
+  LibC
+  SimpleInitCompatible
+
+[Sources]
+  ../../include/confd.h
+  ../compatible/include/compatible.h
+
+  # Simple-Init confd
+  dump.c
+  uefi.c
+  store.c

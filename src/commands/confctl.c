@@ -89,7 +89,7 @@ int confctl_do_set(char*key,char*value){
 		r=confd_set_string(key,value);
 		goto done;
 	}
-	return 0;
+	r=-1,errno=t==TYPE_KEY?EISDIR:0;
 	done:
 	if(r!=0)fd_perror(STDERR_FILENO,_("set conf key '%s' failed"),key);
 	return r;

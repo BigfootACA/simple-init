@@ -71,6 +71,26 @@ void lv_style_set_focus_checkbox(lv_obj_t*checkbox){
 	lv_obj_add_style(checkbox,LV_CHECKBOX_PART_BULLET,&bul);
 }
 
+void lv_style_set_focus_radiobox(lv_obj_t*checkbox){
+	static lv_style_t chk,bul;
+	static bool initialized=false;
+	if(!initialized){
+		lv_style_init(&chk);
+		lv_style_set_outline_width(&chk,LV_STATE_DEFAULT,0);
+		lv_style_set_outline_width(&chk,LV_STATE_FOCUSED,0);
+		lv_color_t pri_c=lv_theme_get_color_primary();
+		lv_color_t bul_c=lv_color_lighten(pri_c,LV_OPA_80);
+		lv_style_init(&bul);
+		lv_style_set_pattern_image(&bul,LV_STATE_CHECKED,NULL);
+		lv_style_set_radius(&bul,LV_STATE_DEFAULT,LV_RADIUS_CIRCLE);
+		lv_style_set_bg_color(&bul,LV_STATE_FOCUSED,bul_c);
+		lv_style_set_bg_color(&bul,LV_STATE_FOCUSED|LV_STATE_CHECKED,pri_c);
+		initialized=true;
+	}
+	lv_obj_add_style(checkbox,LV_CHECKBOX_PART_BG,&chk);
+	lv_obj_add_style(checkbox,LV_CHECKBOX_PART_BULLET,&bul);
+}
+
 void lv_style_set_outline(lv_obj_t*obj,uint8_t part){
 	static lv_style_t outline;
 	static bool initialized=false;

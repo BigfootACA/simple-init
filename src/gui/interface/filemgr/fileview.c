@@ -134,9 +134,11 @@ static void item_check(lv_obj_t*obj,lv_event_t e){
 		lv_checkbox_set_checked(obj,false);
 		return;
 	}
+	bool checked=lv_checkbox_is_checked(fi->chk);
+	if(checked)lv_obj_add_state(fi->btn,LV_STATE_CHECKED);
+	else lv_obj_clear_state(fi->btn,LV_STATE_CHECKED);
 	call_on_select_item(
-		fi->view,fi->name,fi->type,
-		lv_checkbox_is_checked(fi->chk),
+		fi->view,fi->name,fi->type,checked,
 		fileview_get_checked_count(fi->view)
 	);
 }

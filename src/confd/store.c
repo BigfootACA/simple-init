@@ -93,6 +93,7 @@ const char**conf_ls(const char*path){
 	if(!c)return NULL;
 	if(c->type!=TYPE_KEY)EPRET(ENOTDIR);
 	int i=list_count(c->keys),x=0;
+	if(i<0)i=0;
 	size_t s=sizeof(char*)*(i+1);
 	const char**r=malloc(s);
 	if(!r)EPRET(ENOMEM);

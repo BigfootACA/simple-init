@@ -1229,3 +1229,45 @@ msgstr "创建线程失败: %m"
 
 msgid "Vibrator Tester"
 msgstr "震动测试器"
+
+msgid "Parent key"
+msgstr "上级键"
+
+msgid "Are you sure you want to delete the selected items?"
+msgstr "确定要删除选中的项目吗？"
+
+msgid "Config Manager"
+msgstr "配置管理器"
+
+msgid "save config item '%s' failed: %m"
+msgstr "保存配置项'%s'失败: %m"
+
+msgid "'%s' is an exists key, do you want to overwrite it?"
+msgstr "'%s'是一个存在的键，确定要覆盖它吗？"
+
+msgid "Edit config item"
+msgstr "编辑配置项"
+
+msgid "Create config item"
+msgstr "创建配置项"
+
+msgid "Config item path:"
+msgstr "配置项路径："
+
+msgid "String"
+msgstr "字符串"
+
+msgid "Integer"
+msgstr "整型数字"
+
+msgid "Boolean"
+msgstr "布尔值"
+
+msgid "Value:"
+msgstr "值："
+
+msgid "Config Manager Create"
+msgstr "配置管理器-创建"
+
+msgid "list items failed"
+msgstr "列出项目失败"

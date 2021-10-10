@@ -22,6 +22,7 @@
   FreeType
   LodePNG
   SimpleInitLib
+  SimpleInitConfd
   SimpleInitLoggerd
   SimpleInitAssets
   ReportStatusCodeLib
@@ -67,6 +68,8 @@
   interface/settings/language.c
   interface/settings/mouse.c
   interface/settings/theme.c
+  interface/conftool/create.c
+  interface/conftool/conftool.c
   interface/core/reboot.c
   interface/core/sysbar.c
   interface/core/guiapp.c

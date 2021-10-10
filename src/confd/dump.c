@@ -26,7 +26,7 @@ static int dump(struct conf*key,char*name){
 			}else strcpy(x,"(null)");
 			tlog_debug("  %s = \"%s\"%s %d bytes (string)\n", path,x,len>252?"...":"",len);
 		}break;
-		case TYPE_INTEGER: tlog_debug("  %s = %ld (integer)\n",   path,VALUE_INTEGER(key));break;
+		case TYPE_INTEGER: tlog_debug("  %s = %lld (integer)\n",   path,(long long int)VALUE_INTEGER(key));break;
 		case TYPE_BOOLEAN: tlog_debug("  %s = %s (boolean)\n",    path,BOOL2STR(VALUE_BOOLEAN(key)));break;
 		default:           tlog_debug("  %s = (Unknown)\n",       path);break;
 	}

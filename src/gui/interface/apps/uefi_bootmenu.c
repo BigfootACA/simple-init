@@ -35,13 +35,13 @@ static void option_click(lv_obj_t*obj,lv_event_t e){
 			selected=&options[i];
 	if(!selected)return;
 	lv_obj_add_state(selected->btn,LV_STATE_CHECKED);
-	lv_obj_clear_state(btn_ok,LV_STATE_DISABLED);
+	lv_obj_set_enabled(btn_ok,true);
 	tlog_debug("selected option %s",selected->name);
 }
 
 static void bootmenu_option_clear(){
 	selected=NULL;
-	lv_obj_add_state(btn_ok,LV_STATE_DISABLED);
+	lv_obj_set_enabled(btn_ok,false);
 	if(options_info)lv_obj_del(options_info);
 	options_info=NULL,last=NULL;
 	for(int i=0;i<256;i++){

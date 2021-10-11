@@ -52,12 +52,12 @@ void disk_click(lv_obj_t*obj,lv_event_t e){
 	if(!selected)return;
 	lv_obj_add_state(selected->btn,LV_STATE_CHECKED);
 	tlog_debug("selected disk %s",selected->name);
-	lv_obj_clear_state(btn_ok,LV_STATE_DISABLED);
+	lv_obj_set_enabled(btn_ok,true);
 }
 
 void guipm_disk_clear(){
 	selected=NULL;
-	lv_obj_add_state(btn_ok,LV_STATE_DISABLED);
+	lv_obj_set_enabled(btn_ok,false);
 	if(disks_info)lv_obj_del(disks_info);
 	disks_info=NULL;
 	for(int i=0;i<32;i++){

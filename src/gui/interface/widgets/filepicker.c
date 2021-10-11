@@ -113,10 +113,7 @@ static void on_change_dir(struct fileview*fv,char*old __attribute__((unused)),ch
 	struct filepicker*fp=fileview_get_data(fv);
 	if(!fp)return;
 	lv_label_set_text(fp->cur_path,new);
-	(fsext_is_multi&&fileview_is_top(fv)?
-		lv_obj_add_state:
-		lv_obj_clear_state
-	)(fp->new,LV_STATE_DISABLED);
+	lv_obj_set_enabled(fp->new,!fsext_is_multi&&!fileview_is_top(fv));
 }
 
 static void on_item_select(
@@ -129,10 +126,7 @@ static void on_item_select(
 	if(fsext_is_multi&&fileview_is_top(fv))return;
 	struct filepicker*fp=fileview_get_data(fv);
 	if(!fp)return;
-	((cnt>0&&(cnt<=fp->max||fp->max==0))?
-		lv_obj_clear_state:
-		lv_obj_add_state
-	)(fp->ok,LV_STATE_DISABLED);
+	lv_obj_set_enabled(fp->ok,cnt>0&&(cnt<=fp->max||fp->max==0));
 }
 
 static int filepicker_draw(struct gui_activity*act){
@@ -208,7 +202,7 @@ static int filepicker_draw(struct gui_activity*act){
 	lv_obj_set_pos(fp->reload,bm/2,box_h);
 
 	fp->new=lv_btn_create(fp->box,NULL);
-	if(fsext_is_multi)lv_obj_add_state(fp->new,LV_STATE_DISABLED);
+	lv_obj_set_enabled(fp->new,!fsext_is_multi);
 	lv_label_set_text(lv_label_create(fp->new,NULL),LV_SYMBOL_PLUS);
 	lv_obj_set_style_local_margin_bottom(fp->new,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,bm);
 	lv_obj_set_style_local_radius(fp->new,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,gui_dpi/15);
@@ -229,7 +223,7 @@ static int filepicker_draw(struct gui_activity*act){
 
 	box_h+=bm;
 	fp->ok=lv_btn_create(fp->box,NULL);
-	lv_obj_add_state(fp->ok,LV_STATE_DISABLED);
+	lv_obj_set_enabled(fp->ok,false);
 	lv_label_set_text(lv_label_create(fp->ok,NULL),LV_SYMBOL_OK);
 	lv_obj_set_style_local_margin_bottom(fp->ok,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,bm);
 	lv_obj_set_style_local_radius(fp->ok,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,gui_dpi/15);

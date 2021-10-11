@@ -44,7 +44,7 @@ void lv_style_set_action_button(lv_obj_t*btn,bool status){
 		initialized=true;
 	}
 	lv_obj_set_state(btn,LV_STATE_CHECKED);
-	if(!status)lv_obj_add_state(btn,LV_STATE_DISABLED);
+	lv_obj_set_enabled(btn,status);
 	lv_theme_apply(btn,LV_THEME_BTN);
 	lv_obj_add_style(btn,LV_BTN_PART_MAIN,&btn_style);
 }

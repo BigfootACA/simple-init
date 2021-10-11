@@ -70,8 +70,8 @@ static void clean_view(){
 	if(info)lv_obj_del(info);
 	list_free_all(items,clean_item);
 	items=NULL,info=NULL,last_btn=NULL;
-	lv_obj_add_state(btn_delete,LV_STATE_DISABLED);
-	lv_obj_add_state(btn_edit,LV_STATE_DISABLED);
+	lv_obj_set_enabled(btn_delete,false);
+	lv_obj_set_enabled(btn_edit,false);
 }
 
 static void set_info(char*text){
@@ -135,14 +135,14 @@ static void check_item(lv_obj_t*obj,lv_event_t e){
 		if(item&&item->chk&&lv_checkbox_is_checked(item->chk))c++;
 	}while((o=o->next));
 	if(c==0){
-		lv_obj_add_state(btn_delete,LV_STATE_DISABLED);
-		lv_obj_add_state(btn_edit,LV_STATE_DISABLED);
+		lv_obj_set_enabled(btn_delete,false);
+		lv_obj_set_enabled(btn_edit,false);
 	}else if(c==1){
-		lv_obj_clear_state(btn_delete,LV_STATE_DISABLED);
-		lv_obj_clear_state(btn_edit,LV_STATE_DISABLED);
+		lv_obj_set_enabled(btn_delete,true);
+		lv_obj_set_enabled(btn_edit,true);
 	}else{
-		lv_obj_clear_state(btn_delete,LV_STATE_DISABLED);
-		lv_obj_add_state(btn_edit,LV_STATE_DISABLED);
+		lv_obj_set_enabled(btn_delete,true);
+		lv_obj_set_enabled(btn_edit,false);
 	}
 }
 
@@ -404,7 +404,7 @@ static int conftool_draw(struct gui_activity*act){
 	lv_label_set_text(lv_label_create(btn_reload,NULL),LV_SYMBOL_REFRESH);
 
 	btn_delete=lv_btn_create(act->page,NULL);
-	lv_obj_add_state(btn_delete,LV_STATE_DISABLED);
+	lv_obj_set_enabled(btn_delete,false);
 	lv_obj_set_size(btn_delete,btw,bth);
 	lv_obj_set_event_cb(btn_delete,btns_cb);
 	lv_obj_set_user_data(btn_delete,"delete");
@@ -413,7 +413,7 @@ static int conftool_draw(struct gui_activity*act){
 	lv_label_set_text(lv_label_create(btn_delete,NULL),LV_SYMBOL_TRASH);
 
 	btn_edit=lv_btn_create(act->page,NULL);
-	lv_obj_add_state(btn_edit,LV_STATE_DISABLED);
+	lv_obj_set_enabled(btn_edit,false);
 	lv_obj_set_size(btn_edit,btw,bth);
 	lv_obj_set_event_cb(btn_edit,btns_cb);
 	lv_obj_set_user_data(btn_edit,"edit");

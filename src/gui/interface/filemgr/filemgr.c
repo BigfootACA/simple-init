@@ -113,20 +113,20 @@ static void on_item_select(
 ){
 	if(fsext_is_multi&&filetab_is_top(active))return;
 	if(cnt==1){
-		lv_obj_clear_state(btn_edit,LV_STATE_DISABLED);
-		lv_obj_clear_state(btn_info,LV_STATE_DISABLED);
+		lv_obj_set_enabled(btn_edit,true);
+		lv_obj_set_enabled(btn_info,true);
 	}else{
-		lv_obj_add_state(btn_edit,LV_STATE_DISABLED);
-		lv_obj_add_state(btn_info,LV_STATE_DISABLED);
+		lv_obj_set_enabled(btn_edit,false);
+		lv_obj_set_enabled(btn_info,false);
 	}
 	if(cnt>0){
-		lv_obj_clear_state(btn_cut,LV_STATE_DISABLED);
-		lv_obj_clear_state(btn_copy,LV_STATE_DISABLED);
-		lv_obj_clear_state(btn_delete,LV_STATE_DISABLED);
+		lv_obj_set_enabled(btn_cut,true);
+		lv_obj_set_enabled(btn_copy,true);
+		lv_obj_set_enabled(btn_delete,true);
 	}else{
-		lv_obj_add_state(btn_cut,LV_STATE_DISABLED);
-		lv_obj_add_state(btn_copy,LV_STATE_DISABLED);
-		lv_obj_add_state(btn_delete,LV_STATE_DISABLED);
+		lv_obj_set_enabled(btn_cut,false);
+		lv_obj_set_enabled(btn_copy,false);
+		lv_obj_set_enabled(btn_delete,false);
 	}
 }
 
@@ -321,7 +321,7 @@ static int filemgr_draw(struct gui_activity*act){
 	lv_label_set_text(lv_label_create(btn_refresh,NULL),LV_SYMBOL_REFRESH);
 
 	btn_edit=lv_btn_create(act->page,NULL);
-	lv_obj_add_state(btn_edit,LV_STATE_DISABLED);
+	lv_obj_set_enabled(btn_edit,false);
 	lv_obj_set_size(btn_edit,btw,bth);
 	lv_obj_set_event_cb(btn_edit,btns_cb);
 	lv_obj_set_user_data(btn_edit,"edit");
@@ -338,7 +338,7 @@ static int filemgr_draw(struct gui_activity*act){
 	lv_label_set_text(lv_label_create(btn_home,NULL),LV_SYMBOL_HOME);
 
 	btn_info=lv_btn_create(act->page,NULL);
-	lv_obj_add_state(btn_info,LV_STATE_DISABLED);
+	lv_obj_set_enabled(btn_info,false);
 	lv_obj_set_size(btn_info,btw,bth);
 	lv_obj_set_event_cb(btn_info,btns_cb);
 	lv_obj_set_user_data(btn_info,"info");
@@ -355,7 +355,7 @@ static int filemgr_draw(struct gui_activity*act){
 	lv_label_set_text(lv_label_create(btn_next,NULL),LV_SYMBOL_RIGHT);
 
 	btn_paste=lv_btn_create(act->page,NULL);
-	lv_obj_add_state(btn_paste,LV_STATE_DISABLED);
+	lv_obj_set_enabled(btn_paste,false);
 	lv_obj_set_size(btn_paste,btw,bth);
 	lv_obj_set_event_cb(btn_paste,btns_cb);
 	lv_obj_set_user_data(btn_paste,"paste");
@@ -364,7 +364,7 @@ static int filemgr_draw(struct gui_activity*act){
 	lv_label_set_text(lv_label_create(btn_paste,NULL),LV_SYMBOL_PASTE);
 
 	btn_copy=lv_btn_create(act->page,NULL);
-	lv_obj_add_state(btn_copy,LV_STATE_DISABLED);
+	lv_obj_set_enabled(btn_copy,false);
 	lv_obj_set_size(btn_copy,btw,bth);
 	lv_obj_set_event_cb(btn_copy,btns_cb);
 	lv_obj_set_user_data(btn_copy,"copy");
@@ -373,7 +373,7 @@ static int filemgr_draw(struct gui_activity*act){
 	lv_label_set_text(lv_label_create(btn_copy,NULL),LV_SYMBOL_COPY);
 
 	btn_delete=lv_btn_create(act->page,NULL);
-	lv_obj_add_state(btn_delete,LV_STATE_DISABLED);
+	lv_obj_set_enabled(btn_delete,false);
 	lv_obj_set_size(btn_delete,btw,bth);
 	lv_obj_set_event_cb(btn_delete,btns_cb);
 	lv_obj_set_user_data(btn_delete,"delete");
@@ -390,7 +390,7 @@ static int filemgr_draw(struct gui_activity*act){
 	lv_label_set_text(lv_label_create(btn_new,NULL),LV_SYMBOL_PLUS);
 
 	btn_cut=lv_btn_create(act->page,NULL);
-	lv_obj_add_state(btn_cut,LV_STATE_DISABLED);
+	lv_obj_set_enabled(btn_cut,false);
 	lv_obj_set_size(btn_cut,btw,bth);
 	lv_obj_set_event_cb(btn_cut,btns_cb);
 	lv_obj_set_user_data(btn_cut,"cut");

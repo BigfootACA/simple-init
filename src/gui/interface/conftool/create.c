@@ -107,8 +107,7 @@ static void input_cb(lv_obj_t*obj,lv_event_t e){
 		break;
 		case LV_EVENT_VALUE_CHANGED:
 			if(obj!=box->key)break;
-			if(!buf[0])lv_obj_add_state(box->ok,LV_STATE_DISABLED);
-			else lv_obj_clear_state(box->ok,LV_STATE_DISABLED);
+			lv_obj_set_enabled(box->ok,buf[0]!=0);
 		break;
 	}
 }
@@ -272,7 +271,7 @@ static int createbox_draw(struct gui_activity*act){
 	box_h+=lv_obj_get_height(box.val)+btn_m;
 
 	box.ok=lv_btn_create(box.box,NULL);
-	if(!*p)lv_obj_add_state(box.ok,LV_STATE_DISABLED);
+	lv_obj_set_enabled(box.ok,*p);
 	lv_label_set_text(lv_label_create(box.ok,NULL),LV_SYMBOL_OK);
 	lv_obj_set_style_local_margin_bottom(box.ok,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btn_m);
 	lv_obj_set_style_local_radius(box.ok,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,gui_dpi/15);

@@ -43,8 +43,8 @@ extern void guipm_draw_title(lv_obj_t*screen);
 
 static void partition_clear(){
 	selected=NULL;
-	lv_obj_add_state(btn_part,LV_STATE_DISABLED);
-	lv_obj_add_state(btn_new,LV_STATE_DISABLED);
+	lv_obj_set_enabled(btn_part,false);
+	lv_obj_set_enabled(btn_new,false);
 	if(disk_info)lv_obj_del(disk_info);
 	disk_info=NULL;
 	if(diskinfo.table)fdisk_unref_table(diskinfo.table);
@@ -127,8 +127,8 @@ static void partition_click(lv_obj_t*obj,lv_event_t e){
 	if(e!=LV_EVENT_VALUE_CHANGED)return;
 	if(selected){
 		lv_obj_clear_state(selected->btn,LV_STATE_CHECKED);
-		lv_obj_add_state(btn_part,LV_STATE_DISABLED);
-		lv_obj_add_state(btn_new,LV_STATE_DISABLED);
+		lv_obj_set_enabled(btn_part,false);
+		lv_obj_set_enabled(btn_new,false);
 		if(obj==selected->chk){
 			tlog_debug("clear selected");
 			selected=NULL;
@@ -144,10 +144,10 @@ static void partition_click(lv_obj_t*obj,lv_event_t e){
 	lv_obj_add_state(selected->btn,LV_STATE_CHECKED);
 	if(selected->free){
 		tlog_debug("selected free space %d",i);
-		lv_obj_clear_state(btn_new,LV_STATE_DISABLED);
+		lv_obj_set_enabled(btn_new,true);
 	}else{
 		tlog_debug("selected partition %s",selected->partname);
-		lv_obj_clear_state(btn_part,LV_STATE_DISABLED);
+		lv_obj_set_enabled(btn_part,true);
 	}
 }
 

@@ -75,9 +75,9 @@ static void chk_click(lv_obj_t*obj,lv_event_t e){
 	}
 	selected=lv_obj_get_user_data(obj);
 	lv_obj_add_state(selected->btn,LV_STATE_CHECKED);
-	lv_obj_clear_state(btn_prev,LV_STATE_DISABLED);
-	lv_obj_clear_state(btn_next,LV_STATE_DISABLED);
-	lv_obj_clear_state(btn_delete,LV_STATE_DISABLED);
+	lv_obj_set_enabled(btn_prev,true);
+	lv_obj_set_enabled(btn_next,true);
+	lv_obj_set_enabled(btn_delete,true);
 }
 
 static void clean_view(){
@@ -194,9 +194,9 @@ static int _datafree(void*d){
 
 static void clean_steps(){
 	clean_view();
-	lv_obj_add_state(btn_prev,LV_STATE_DISABLED);
-	lv_obj_add_state(btn_next,LV_STATE_DISABLED);
-	lv_obj_add_state(btn_delete,LV_STATE_DISABLED);
+	lv_obj_set_enabled(btn_prev,false);
+	lv_obj_set_enabled(btn_next,false);
+	lv_obj_set_enabled(btn_delete,false);
 	pthread_mutex_lock(&lock);
 	list_free_all(steps,_datafree);
 	steps=NULL,selected=NULL;
@@ -232,9 +232,9 @@ static void delete_cb(lv_obj_t*obj,lv_event_t e){
 	list_obj_del_data(&steps,selected,_datafree);
 	pthread_mutex_unlock(&lock);
 	selected=NULL;
-	lv_obj_add_state(btn_prev,LV_STATE_DISABLED);
-	lv_obj_add_state(btn_next,LV_STATE_DISABLED);
-	lv_obj_add_state(btn_delete,LV_STATE_DISABLED);
+	lv_obj_set_enabled(btn_prev,false);
+	lv_obj_set_enabled(btn_next,false);
+	lv_obj_set_enabled(btn_delete,false);
 	redraw_view();
 }
 
@@ -326,7 +326,7 @@ static int vibrator_draw(struct gui_activity*act){
 	lv_obj_set_height(view,gui_sh-gui_sw/6-lv_obj_get_y(view));
 
 	btn_prev=lv_btn_create(act->page,NULL);
-	lv_obj_add_state(btn_prev,LV_STATE_DISABLED);
+	lv_obj_set_enabled(btn_prev,false);
 	lv_obj_set_size(btn_prev,bts,bts);
 	lv_obj_set_event_cb(btn_prev,move_cb);
 	lv_obj_set_user_data(btn_prev,"move up");
@@ -335,7 +335,7 @@ static int vibrator_draw(struct gui_activity*act){
 	lv_label_set_text(lv_label_create(btn_prev,NULL),LV_SYMBOL_UP);
 
 	btn_next=lv_btn_create(act->page,NULL);
-	lv_obj_add_state(btn_next,LV_STATE_DISABLED);
+	lv_obj_set_enabled(btn_next,false);
 	lv_obj_set_size(btn_next,bts,bts);
 	lv_obj_set_event_cb(btn_next,move_cb);
 	lv_obj_set_user_data(btn_next,"move down");
@@ -344,7 +344,7 @@ static int vibrator_draw(struct gui_activity*act){
 	lv_label_set_text(lv_label_create(btn_next,NULL),LV_SYMBOL_DOWN);
 
 	btn_delete=lv_btn_create(act->page,NULL);
-	lv_obj_add_state(btn_delete,LV_STATE_DISABLED);
+	lv_obj_set_enabled(btn_delete,false);
 	lv_obj_set_size(btn_delete,bts,bts);
 	lv_obj_set_event_cb(btn_delete,delete_cb);
 	lv_obj_set_user_data(btn_delete,"delete");

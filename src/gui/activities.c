@@ -8,6 +8,7 @@ extern struct gui_register guireg_uefi_shell;
 extern struct gui_register guireg_mouse_menu;
 extern struct gui_register guireg_theme_menu;
 extern struct gui_register guireg_filepicker;
+extern struct gui_register guireg_text_edit;
 extern struct gui_register guireg_benchmark;
 extern struct gui_register guireg_backlight;
 extern struct gui_register guireg_logviewer;
@@ -39,6 +40,7 @@ struct gui_register*guiact_register[]={
 	&guireg_theme_menu,
 	&guireg_filepicker,
 	&guireg_benchmark,
+	&guireg_text_edit,
 	&guireg_language,
 	&guireg_conftool,
 	&guireg_inputbox,

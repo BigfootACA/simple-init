@@ -76,6 +76,7 @@
   interface/apps/benchmark.c
   interface/apps/uefi_bootmenu.c
   interface/apps/uefi_shell.c
+  interface/apps/text_editor.c
   interface/uefi_start.c
   filesystem/lv_fs_string.c
   filesystem/fsext.c

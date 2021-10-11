@@ -12,6 +12,7 @@ struct gui_register{
 	bool show_app;
 	bool back;
 	bool mask;
+	bool open_file;
 	guiact_base*ask_exit;
 	guiact_base*quiet_exit;
 	guiact_base*get_focus;

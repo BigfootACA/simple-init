@@ -1271,3 +1271,66 @@ msgstr "配置管理器-创建"
 
 msgid "list items failed"
 msgstr "列出项目失败"
+
+msgid "Text Editor"
+msgstr "文本编辑器"
+
+msgid "Read file failed: %s"
+msgstr "读取文件失败: %s"
+
+msgid "Open file failed: %s"
+msgstr "打开文件失败: %s"
+
+msgid "Get file size failed: %s"
+msgstr "获取文件大小失败: %s"
+
+msgid "Write file failed: %s"
+msgstr "写入文件失败: %s"
+
+msgid "Write file maybe failed, wrote %d of %d bytes"
+msgstr "写入文件可能失败，已写入%d字节，总共%d字节"
+
+msgid "This file is bigger than 64 KiB (%d bytes), are you sure you want to open this file?"
+msgstr "这个文件大于64KiB（%d字节），你确定要打开这个文件吗？"
+
+msgid "The buffer has changed, do you want to discard any changes?"
+msgstr "缓冲区已经修改，确定要丢弃所有更改吗？"
+
+msgid "No matching string found"
+msgstr "找不到匹配的字符串"
+
+msgid "Searched to the end of the file, do you want to go back to the head and continue searching?"
+msgstr "已经搜索到文件结尾，是否要回到文件顶部继续搜索？"
+
+msgid "Open file"
+msgstr "打开文件"
+
+msgid "Save file"
+msgstr "保存文件"
+
+msgid "Search text"
+msgstr "查找文本"
+
+msgid "Menu"
+msgstr "菜单"
+
+msgid "Copy selected"
+msgstr "复制所选"
+
+msgid "Cut selected"
+msgstr "剪切所选"
+
+msgid "Paste"
+msgstr "粘贴"
+
+msgid "New file"
+msgstr "新建文件"
+
+msgid "Save"
+msgstr "保存文件"
+
+msgid "Save as"
+msgstr "另存为文件"
+
+msgid "Search"
+msgstr "搜索"

@@ -1394,3 +1394,9 @@ msgstr "十二月"
 
 msgid "Calendar"
 msgstr "日历"
+
+msgid "File Open"
+msgstr "文件打开"
+
+msgid "Open file with"
+msgstr "文件打开方式"

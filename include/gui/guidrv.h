@@ -28,6 +28,7 @@ extern int guidrv_set_brightness(int percent);
 extern int guidrv_get_brightness();
 extern bool guidrv_can_sleep();
 extern int guidrv_init(uint32_t*w,uint32_t*h,int*dpi);
+extern struct gui_driver*guidrv_get_by_name(const char*name);
 extern void guidrv_exit();
 extern void guidrv_set_driver(struct gui_driver*driver);
 extern struct gui_driver*guidrv_get_driver();

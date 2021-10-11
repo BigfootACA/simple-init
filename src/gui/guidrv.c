@@ -117,6 +117,14 @@ static int guidrv_try_init(uint32_t*w,uint32_t*h,int*dpi){
 	return 0;
 }
 
+struct gui_driver*guidrv_get_by_name(const char*name){
+	if(!name)EPRET(EINVAL);
+	struct gui_driver*d;
+	for(int i=0;(d=gui_drvs[i]);i++)
+		if(d->name[0]&&strcmp(d->name,name)==0)return d;
+	EPRET(ENOENT);
+}
+
 int guidrv_init(uint32_t*w,uint32_t*h,int*dpi){
 	errno=0;
 	if(drv){

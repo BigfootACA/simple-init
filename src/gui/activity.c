@@ -159,20 +159,28 @@ struct gui_register*guiact_find_register(char*name){
 	EPRET(ENOENT);
 }
 
-int guiact_start_activity(struct gui_register*reg,void*args){
+struct guiact_data{
+	struct gui_register*reg;
+	void*args;
+};
+
+static void guiact_start_task(lv_task_t*t){
 	int r;
-	if(!reg->draw){
-		tlog_warn("invalid activity %s",reg->name);
-		ERET(EINVAL);
-	}
+	struct guiact_data*d=t->user_data;
+	if(!d)return;
+	struct gui_register*reg=d->reg;
+	void*args=d->args;
+	free(d);
+	if(!reg)return;
 	struct gui_activity*act=malloc(sizeof(struct gui_activity));
-	if(!act)ERET(ENOMEM);
+	if(!act)return;
+	memset(act,0,sizeof(struct gui_activity));
 	act->reg=reg,act->args=args,act->mask=reg->mask;
 	strcpy(act->name,reg->name);
 	if(reg->init&&(r=reg->init(act))<0){
 		tlog_warn("activity %s init failed: %d",act->name,r);
 		free(act);
-		return r;
+		return;
 	}
 	if(act->mask){
 		act->page=lv_objmask_create(sysbar.content,NULL);
@@ -187,9 +195,23 @@ int guiact_start_activity(struct gui_register*reg,void*args){
 		tlog_warn("activity %s draw failed: %d",act->name,r);
 		lv_obj_del(act->page);
 		free(act);
-		return r;
+		return;
 	}
-	return guiact_add_activity(act);
+	guiact_add_activity(act);
+}
+
+int guiact_start_activity(struct gui_register*reg,void*args){
+	if(!reg)ERET(EINVAL);
+	if(!reg->draw){
+		tlog_warn("invalid activity %s",reg->name);
+		ERET(EINVAL);
+	}
+	struct guiact_data*d=malloc(sizeof(struct guiact_data));
+	if(!d)ERET(ENOMEM);
+	memset(d,0,sizeof(struct guiact_data));
+	d->reg=reg,d->args=args;
+	lv_task_once(lv_task_create(guiact_start_task,0,LV_TASK_PRIO_LOWEST,d));
+	return 0;
 }
 
 int guiact_start_activity_by_name(char*name,void*args){

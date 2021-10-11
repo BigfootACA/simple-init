@@ -183,4 +183,9 @@ lv_coord_t lv_obj_get_rel_x(lv_obj_t*rel,lv_obj_t*obj){
 	return c;
 }
 
+void lv_obj_set_enabled(lv_obj_t*obj,bool enabled){
+	if(enabled)lv_obj_clear_state(obj,LV_STATE_DISABLED);
+	else lv_obj_add_state(obj,LV_STATE_DISABLED);
+}
+
 #endif

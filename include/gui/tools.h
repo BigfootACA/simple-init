@@ -19,6 +19,7 @@ extern void lv_page_go_bottom(lv_obj_t*page);
 extern void lv_scroll_to(lv_obj_t*focus,bool anim);
 extern lv_coord_t lv_obj_get_rel_y(lv_obj_t*rel,lv_obj_t*obj);
 extern lv_coord_t lv_obj_get_rel_x(lv_obj_t*rel,lv_obj_t*obj);
+extern void lv_obj_set_enabled(lv_obj_t*obj,bool enabled);
 
 #define lv_obj_set_text_font_def(obj,part,font) lv_obj_set_text_font(obj,LV_STATE_DEFAULT,part,font)
 #define lv_obj_set_bg_color_def(obj,part,color) lv_obj_set_bg_color(obj,LV_STATE_DEFAULT,part,color)

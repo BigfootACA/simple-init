@@ -14,4 +14,4 @@
 #cmakedefine ENABLE_FDISK       1
 #cmakedefine ENABLE_KMOD        1
 #cmakedefine ENABLE_BLKID       1
-
+#cmakedefine ENABLE_VNCSERVER   1

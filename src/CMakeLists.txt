@@ -24,6 +24,10 @@ if("${ENABLE_BLKID}" STREQUAL "ON")
 	set(DEPENDS ${DEPENDS} blkid)
 endif()
 
+if("${ENABLE_VNCSERVER}" STREQUAL "ON")
+	set(DEPENDS ${DEPENDS} libvncserver)
+endif()
+
 if("${ENABLE_GTK}" STREQUAL "ON")
 	set(DEPENDS ${DEPENDS} gtk+-3.0)
 endif()

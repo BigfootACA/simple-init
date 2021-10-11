@@ -25,6 +25,7 @@ add_library(init_gui STATIC
 	interface/apps/benchmark.c
 	interface/apps/vibrator.c
 	drivers/drm.c
+	drivers/vnc.c
 	drivers/fbdev.c
 	drivers/input.c
 	drivers/gtk.c

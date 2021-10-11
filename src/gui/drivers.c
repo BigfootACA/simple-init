@@ -4,6 +4,7 @@
 extern struct gui_driver guidrv_gtk;
 extern struct gui_driver guidrv_sdl2;
 extern struct gui_driver guidrv_drm;
+extern struct gui_driver guidrv_vnc;
 extern struct gui_driver guidrv_fbdev;
 extern struct gui_driver guidrv_uefigop;
 struct gui_driver*gui_drvs[]={
@@ -15,6 +16,9 @@ struct gui_driver*gui_drvs[]={
 	#endif
 	#ifdef ENABLE_SDL2
 	&guidrv_sdl2,
+	#endif
+	#ifdef ENABLE_VNCSERVER
+	&guidrv_vnc,
 	#endif
 	#ifdef ENABLE_DRM
 	&guidrv_drm,

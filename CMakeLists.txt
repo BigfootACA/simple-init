@@ -32,6 +32,7 @@ option(ENABLE_LODEPNG     "Enable lodepng for GUI png decode"                 ON
 option(ENABLE_FDISK       "Enable libfdisk for GUI partition tools"           ON)
 option(ENABLE_KMOD        "Enable kmod modules load or remove"                ON)
 option(ENABLE_BLKID       "Enable blkid block detect and evalaute tag"        ON)
+option(ENABLE_VNCSERVER   "Enable VNC Server for remote GUI"                  OFF)
 option(SYSTEM_FREETYPE2   "Use system FreeType 2 library"                     OFF)
 
 configure_file(src/config.h.in "${CONFIG_H}")

@@ -27,6 +27,7 @@ This project has not been completed and may not work properly.
 | fontawesone | fontawesone | Font Awesome Font for GUI  |
 | freetype2   | freetype    | GUI load turetype fonts    |
 | lodepng     | lodepng     | GUI load png pictures      |
+| vncserver   | libvnc      | GUI over VNC Server        |
 
 ### Code used
 

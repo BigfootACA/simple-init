@@ -14,7 +14,6 @@
 #include"gui/activity.h"
 #define TAG "start"
 
-static char full_path[PATH_MAX];
 static EFI_HANDLE ih;
 static int after_exit(void*d __attribute__((unused))){
 	if(!ih)return -1;
@@ -29,7 +28,8 @@ static int after_exit(void*d __attribute__((unused))){
 }
 
 extern EFI_DEVICE_PATH_PROTOCOL*fs_get_device_path(const char*path);
-static void start_cb(lv_task_t*t __attribute__((unused))){
+static void start_cb(lv_task_t*t){
+	char*full_path=t->user_data;
 	EFI_STATUS st;
 	EFI_LOADED_IMAGE_PROTOCOL*li;
 	EFI_DEVICE_PATH_PROTOCOL*p=fs_get_device_path(full_path);
@@ -65,15 +65,31 @@ static void start_cb(lv_task_t*t __attribute__((unused))){
 	gui_run_and_exit(after_exit);
 }
 
-static bool confirm_click(uint16_t id,const char*text __attribute__((unused)),void*user_data __attribute__((unused))){
-	if(id==0)lv_task_once(lv_task_create(start_cb,1,LV_TASK_PRIO_LOWEST,NULL));
+static bool confirm_click(uint16_t id,const char*text __attribute__((unused)),void*user_data){
+	if(id==0)lv_task_once(lv_task_create(start_cb,1,LV_TASK_PRIO_LOWEST,user_data));
 	return false;
 }
 
-void uefi_start_image(const char*path){
+static int uefi_start_draw(struct gui_activity*d){
+	if(!d)return -1;
+	static char full_path[PATH_MAX];
 	memset(full_path,0,PATH_MAX-1);
-	strncpy(full_path,path,PATH_MAX-1);
-	msgbox_create_yesno(confirm_click,"Start UEFI Application '%s'?",path);
+	strncpy(full_path,(char*)d->args,PATH_MAX-1);
+	msgbox_set_user_data(msgbox_create_yesno(
+		confirm_click,
+		"Start UEFI Application '%s'?",
+		full_path
+	),full_path);
+	return -2;
 }
+
+struct gui_register guireg_uefi_start={
+	.name="uefi-app-start",
+	.title="UEFI Application Start",
+	.icon="efi.png",
+	.show_app=false,
+	.open_file=true,
+	.draw=uefi_start_draw,
+};
 #endif
 #endif

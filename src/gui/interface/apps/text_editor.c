@@ -124,7 +124,6 @@ static bool open_read_cb(uint16_t id,const char*name __attribute__((unused)),voi
 		lv_textarea_ext_t*ext=lv_obj_get_ext_attr(text);
 		ext->sel_start=ext->sel_end=0;
 		lv_obj_set_enabled(btn_copy,false);
-		set_changed(false);
 		for(;;){
 			if((res=lv_fs_read(&od->file,buf,BUFSIZ-1,&bs))!=LV_FS_RES_OK){
 				msgbox_alert("Read file failed: %s",lv_fs_res_to_i18n_string(res));
@@ -138,6 +137,7 @@ static bool open_read_cb(uint16_t id,const char*name __attribute__((unused)),voi
 			buf[bs]=0,rs+=bs;
 			lv_textarea_add_text(text,buf);
 		}
+		set_changed(false);
 		tlog_debug("read %d bytes",rs);
 	}
 	lv_fs_close(&od->file);
@@ -145,32 +145,40 @@ static bool open_read_cb(uint16_t id,const char*name __attribute__((unused)),voi
 	return false;
 }
 
-static bool open_select_cb(bool ok,const char**path,uint16_t cnt,void*user_data __attribute__((unused))){
-	if(!ok)return false;
-	if(!path||!path[0]||path[1]||cnt!=1)return true;
+static void open_start_read(lv_task_t*t){
+	open_read_cb(0,NULL,t->user_data);
+}
+
+static bool read_file(const char*path){
 	uint32_t s=0;
 	lv_res_t res;
 	struct open_data*od=malloc(sizeof(struct open_data));
 	memset(od,0,sizeof(struct open_data));
-	if(!(od->path=strdup(path[0])))return true;
-	if((res=lv_fs_open(&od->file,path[0],LV_FS_MODE_RD))!=LV_FS_RES_OK){
+	if(!(od->path=strdup(path)))return true;
+	if((res=lv_fs_open(&od->file,od->path,LV_FS_MODE_RD))!=LV_FS_RES_OK){
 		msgbox_alert("Open file failed: %s",lv_fs_res_to_i18n_string(res));
 		free(od->path);
-		return true;
+		return false;
 	}
 	if((res=lv_fs_size(&od->file,&s))!=LV_FS_RES_OK){
 		msgbox_alert("Get file size failed: %s",lv_fs_res_to_i18n_string(res));
 		lv_fs_close(&od->file);
 		free(od->path);
-		return true;
+		return false;
 	}
-	if(s<0x10000)open_read_cb(0,NULL,od);
+	if(s<0x10000)lv_task_once(lv_task_create(open_start_read,20,LV_TASK_PRIO_LOWEST,od));
 	else msgbox_set_user_data(msgbox_create_yesno(
 		open_read_cb,
 		"This file is bigger than 64 KiB (%d bytes), "
 		"are you sure you want to open this file?",s
 	),od);
-	return false;
+	return true;
+}
+
+static bool open_select_cb(bool ok,const char**path,uint16_t cnt,void*user_data __attribute__((unused))){
+	if(!ok)return false;
+	if(!path||!path[0]||path[1]||cnt!=1)return true;
+	return !read_file(path[0]);
 }
 
 static bool open_cb(uint16_t id,const char*name __attribute__((unused)),void*user_data __attribute__((unused))){
@@ -435,6 +443,13 @@ static int editor_draw(struct gui_activity*act){
 	lv_label_set_text(lv_label_create(btn_menu,NULL),LV_SYMBOL_LIST);
 
 	set_changed(false);
+	if(act->args){
+		char*path=(char*)act->args;
+		if(!*path)return -1;
+		if(strlen(path)<3||path[1]!=':')
+			return trlog_warn(-1,"invalid file %s",path);
+		read_file(path);
+	}
 	return 0;
 }
 

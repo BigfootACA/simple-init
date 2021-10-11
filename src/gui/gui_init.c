@@ -124,7 +124,7 @@ static void lvgl_logger(lv_log_level_t level,const char*file,uint32_t line,const
 }
 
 static void scroll_on_focus(lv_group_t*grp){
-	lv_scroll_to(lv_group_get_focused(grp),true);
+	lv_scroll_to(lv_group_get_focused(grp),false);
 }
 
 int gui_pre_init(){

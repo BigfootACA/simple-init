@@ -39,10 +39,16 @@ static void msg_click(lv_obj_t*obj,lv_event_t e){
 	if(box->callback&&box->callback(btn->id,btn->text,box->user_data))return;
 	for(uint16_t i=0;i<box->btn_cnt;i++)
 		lv_obj_set_user_data(box->btn[i],NULL);
-	box->act->args=NULL;
+	guiact_do_back();
+}
+
+static int msgbox_clean(struct gui_activity*act){
+	struct msgbox*box=act->args;
+	if(!box)return 0;
 	free(box->btn_data_p);
 	free(box);
-	guiact_do_back();
+	act->args=NULL;
+	return 0;
 }
 
 static int msgbox_draw(struct gui_activity*act){
@@ -130,6 +136,7 @@ struct gui_register guireg_msgbox={
 	.name="msgbox",
 	.title="Message Box",
 	.show_app=false,
+	.quiet_exit=msgbox_clean,
 	.draw=msgbox_draw,
 	.get_focus=msgbox_get_focus,
 	.lost_focus=msgbox_lost_focus,

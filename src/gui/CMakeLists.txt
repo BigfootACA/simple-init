@@ -3,6 +3,7 @@ add_library(init_gui STATIC
 	interface/guipm/guipm.c
 	interface/guipm/disk_select.c
 	interface/guipm/partitions.c
+	interface/filemgr/fileopen.c
 	interface/filemgr/filemgr.c
 	interface/filemgr/fileview.c
 	interface/filemgr/filetab.c

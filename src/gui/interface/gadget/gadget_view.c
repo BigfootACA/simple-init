@@ -22,12 +22,9 @@ struct func_item{
 }items[64],*selected;
 
 static void btns_toggle(bool state){
-	void(*func)(lv_obj_t*,lv_state_t)=state?
-		&lv_obj_clear_state:
-		&lv_obj_add_state;
-	func(btn_add,LV_STATE_DISABLED);
-	func(btn_edit,LV_STATE_DISABLED);
-	func(btn_delete,LV_STATE_DISABLED);
+	lv_obj_set_enabled(btn_add,state);
+	lv_obj_set_enabled(btn_edit,state);
+	lv_obj_set_enabled(btn_delete,state);
 }
 
 static void clean_items(){
@@ -58,7 +55,7 @@ static void item_click(lv_obj_t*obj,lv_event_t e){
 		if(obj==selected->chk)return;
 		else{
 			lv_checkbox_set_checked(selected->chk,false);
-			lv_obj_clear_state(selected->btn,LV_STATE_CHECKED);
+			lv_obj_set_checked(selected->btn,false);
 		}
 	}
 	selected=NULL;
@@ -66,7 +63,7 @@ static void item_click(lv_obj_t*obj,lv_event_t e){
 		if(items[i].enable&&items[i].chk==obj)
 			selected=&items[i];
 	if(!selected)return;
-	lv_obj_add_state(selected->btn,LV_STATE_CHECKED);
+	lv_obj_set_checked(selected->btn,true);
 	btns_toggle(true);
 	tlog_debug("selected function %s",selected->id);
 }

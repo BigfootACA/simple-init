@@ -42,7 +42,7 @@ void disk_click(lv_obj_t*obj,lv_event_t e){
 		if(obj==selected->chk)return;
 		else{
 			lv_checkbox_set_checked(selected->chk,false);
-			lv_obj_clear_state(selected->btn,LV_STATE_CHECKED);
+			lv_obj_set_checked(selected->btn,false);
 		}
 	}
 	selected=NULL;
@@ -50,7 +50,7 @@ void disk_click(lv_obj_t*obj,lv_event_t e){
 		if(disks[i].enable&&disks[i].chk==obj)
 			selected=&disks[i];
 	if(!selected)return;
-	lv_obj_add_state(selected->btn,LV_STATE_CHECKED);
+	lv_obj_set_checked(selected->btn,true);
 	tlog_debug("selected disk %s",selected->name);
 	lv_obj_set_enabled(btn_ok,true);
 }

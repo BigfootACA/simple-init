@@ -26,7 +26,7 @@ static void option_click(lv_obj_t*obj,lv_event_t e){
 		if(obj==selected->chk)return;
 		else{
 			lv_checkbox_set_checked(selected->chk,false);
-			lv_obj_clear_state(selected->btn,LV_STATE_CHECKED);
+			lv_obj_set_checked(selected->btn,false);
 		}
 	}
 	selected=NULL;
@@ -34,7 +34,7 @@ static void option_click(lv_obj_t*obj,lv_event_t e){
 		if(options[i].enable&&options[i].chk==obj)
 			selected=&options[i];
 	if(!selected)return;
-	lv_obj_add_state(selected->btn,LV_STATE_CHECKED);
+	lv_obj_set_checked(selected->btn,true);
 	lv_obj_set_enabled(btn_ok,true);
 	tlog_debug("selected option %s",selected->name);
 }

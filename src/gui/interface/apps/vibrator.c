@@ -71,10 +71,10 @@ static void chk_click(lv_obj_t*obj,lv_event_t e){
 	lv_checkbox_set_checked(obj,true);
 	if(selected&&obj!=selected->chk){
 		lv_checkbox_set_checked(selected->chk,false);
-		lv_obj_clear_state(selected->btn,LV_STATE_CHECKED);
+		lv_obj_set_checked(selected->btn,false);
 	}
 	selected=lv_obj_get_user_data(obj);
-	lv_obj_add_state(selected->btn,LV_STATE_CHECKED);
+	lv_obj_set_checked(selected->btn,true);
 	lv_obj_set_enabled(btn_prev,true);
 	lv_obj_set_enabled(btn_next,true);
 	lv_obj_set_enabled(btn_delete,true);

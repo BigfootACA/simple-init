@@ -126,7 +126,7 @@ static int fill_partition_info(struct partition_info*part,struct fdisk_iter*itr)
 static void partition_click(lv_obj_t*obj,lv_event_t e){
 	if(e!=LV_EVENT_VALUE_CHANGED)return;
 	if(selected){
-		lv_obj_clear_state(selected->btn,LV_STATE_CHECKED);
+		lv_obj_set_checked(selected->btn,false);
 		lv_obj_set_enabled(btn_part,false);
 		lv_obj_set_enabled(btn_new,false);
 		if(obj==selected->chk){
@@ -141,7 +141,7 @@ static void partition_click(lv_obj_t*obj,lv_event_t e){
 		if(partitions[i]&&partitions[i]->chk==obj)
 			selected=partitions[i];
 	if(!selected)return;
-	lv_obj_add_state(selected->btn,LV_STATE_CHECKED);
+	lv_obj_set_checked(selected->btn,true);
 	if(selected->free){
 		tlog_debug("selected free space %d",i);
 		lv_obj_set_enabled(btn_new,true);

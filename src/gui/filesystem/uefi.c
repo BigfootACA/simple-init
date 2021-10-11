@@ -317,8 +317,9 @@ static lv_res_t fs_write_cb(
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
 	if(!fs||!fs->proto)return LV_FS_RES_INV_PARAM;
-	*bw=btw;
-	EFI_STATUS st=fh->Write(fh,(UINTN*)bw,(void*)buf);
+	UINTN w=(UINTN)btw;
+	EFI_STATUS st=fh->Write(fh,&w,(void*)buf);
+	*bw=(uint32_t)w;
 	if(EFI_ERROR(st))XWARN(
 		"write %c:#%p: %llx",
 		drv->letter,fh,st

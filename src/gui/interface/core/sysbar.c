@@ -81,6 +81,7 @@ static void keyboard_toggle(lv_obj_t*obj,lv_event_t e){
 		lv_group_focus_obj(sysbar.focus_input);
 		lv_group_get_focus_cb(gui_grp)(gui_grp);
 		lv_keyboard_set_textarea(sysbar.keyboard,sysbar.focus_input);
+		lv_event_send(sysbar.focus_input,LV_EVENT_FOCUSED,NULL);
 	}
 	lv_group_add_obj(gui_grp,sysbar.keyboard);
 	lv_group_focus_obj(sysbar.keyboard);
@@ -100,12 +101,16 @@ void sysbar_keyboard_open(){
 }
 
 void sysbar_focus_input(lv_obj_t*obj){
-	if(sysbar.focus_input)lv_textarea_set_cursor_hidden(sysbar.focus_input,true);
+	if(sysbar.focus_input){
+		lv_textarea_set_cursor_hidden(sysbar.focus_input,true);
+		if(sysbar.focus_input!=obj)lv_event_send(sysbar.focus_input,LV_EVENT_DEFOCUSED,NULL);
+	}
 	sysbar.focus_input=obj;
 	if(!obj)return;
 	lv_group_focus_obj(sysbar.keyboard);
 	lv_group_set_editing(gui_grp,true);
 	if(sysbar.keyboard)lv_keyboard_set_textarea(sysbar.keyboard,sysbar.focus_input);
+	lv_event_send(sysbar.focus_input,LV_EVENT_FOCUSED,NULL);
 }
 
 static void back_click(lv_obj_t*obj,lv_event_t e){

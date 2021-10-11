@@ -458,6 +458,7 @@ struct gui_register guireg_text_edit={
 	.title="Text Editor",
 	.icon="text-editor.png",
 	.show_app=true,
+	.open_file=true,
 	.ask_exit=do_back,
 	.quiet_exit=do_clean,
 	.draw=editor_draw,

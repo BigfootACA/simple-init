@@ -3,6 +3,7 @@
 #include<stdlib.h>
 #include"gui.h"
 #include"hardware.h"
+#include"gui/tools.h"
 #include"gui/sysbar.h"
 #include"gui/activity.h"
 struct sysbar sysbar;
@@ -79,7 +80,7 @@ static void keyboard_toggle(lv_obj_t*obj,lv_event_t e){
 	lv_keyboard_set_cursor_manage(sysbar.keyboard,true);
 	if(sysbar.focus_input){
 		lv_group_focus_obj(sysbar.focus_input);
-		lv_group_get_focus_cb(gui_grp)(gui_grp);
+		lv_scroll_to(sysbar.focus_input,false);
 		lv_keyboard_set_textarea(sysbar.keyboard,sysbar.focus_input);
 		lv_event_send(sysbar.focus_input,LV_EVENT_FOCUSED,NULL);
 	}

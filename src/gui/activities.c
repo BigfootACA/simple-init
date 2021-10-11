@@ -16,6 +16,7 @@ extern struct gui_register guireg_vibrator;
 extern struct gui_register guireg_language;
 extern struct gui_register guireg_inputbox;
 extern struct gui_register guireg_conftool;
+extern struct gui_register guireg_calendar;
 extern struct gui_register guireg_filemgr;
 extern struct gui_register guireg_gadget;
 extern struct gui_register guireg_msgbox;
@@ -42,6 +43,7 @@ struct gui_register*guiact_register[]={
 	&guireg_benchmark,
 	&guireg_text_edit,
 	&guireg_language,
+	&guireg_calendar,
 	&guireg_conftool,
 	&guireg_inputbox,
 	&guireg_filemgr,

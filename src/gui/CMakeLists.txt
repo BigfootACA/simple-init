@@ -24,6 +24,7 @@ add_library(init_gui STATIC
 	interface/apps/logviewer.c
 	interface/apps/benchmark.c
 	interface/apps/vibrator.c
+	interface/apps/calendar.c
 	drivers/drm.c
 	drivers/vnc.c
 	drivers/fbdev.c

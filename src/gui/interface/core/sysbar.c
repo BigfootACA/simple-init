@@ -62,7 +62,6 @@ static void keyboard_toggle(lv_obj_t*obj,lv_event_t e){
 	if(sysbar.keyboard){
 		lv_obj_del(sysbar.keyboard);
 		lv_obj_set_height(sysbar.content,gui_sh);
-		lv_page_set_scrlbar_mode(sysbar.content,LV_SCROLLBAR_MODE_HIDE);
 		sysbar.keyboard=NULL;
 		if(sysbar.focus_input){
 			lv_event_send(sysbar.focus_input,LV_EVENT_DEFOCUSED,NULL);
@@ -75,7 +74,6 @@ static void keyboard_toggle(lv_obj_t*obj,lv_event_t e){
 	sysbar.keyboard=lv_keyboard_create(sysbar.screen,NULL);
 	lv_obj_set_size(sysbar.keyboard,w,h);
 	lv_obj_set_height(sysbar.content,gui_sh-h);
-	lv_page_set_scrlbar_mode(sysbar.content,LV_SCROLLBAR_MODE_UNHIDE);
 	lv_obj_set_y(sysbar.keyboard,gui_h-sysbar.size-h);
 	lv_obj_set_event_cb(sysbar.keyboard,keyboard_toggle);
 	lv_keyboard_set_cursor_manage(sysbar.keyboard,true);

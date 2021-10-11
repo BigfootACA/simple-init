@@ -8,6 +8,7 @@
 #include"gui/fsext.h"
 #include"gui/msgbox.h"
 #include"gui/filetab.h"
+#include"gui/fileopen.h"
 #include"gui/inputbox.h"
 #include"gui/activity.h"
 #define TAG "filemgr"
@@ -86,21 +87,14 @@ static void on_change_dir(struct filetab*fv,char*old __attribute__((unused)),cha
 	if(filetab_is_active(fv))lv_label_set_text(path,new);
 }
 
-extern void uefi_start_image(const char*path);
 static bool on_item_click(struct filetab*fv,char*item,enum item_type type){
 	if(!filetab_is_active(fv)||type!=TYPE_FILE)return true;
 	char full_path[PATH_MAX]={0};
-	char*parent=filetab_get_path(fv);
+	char*parent=filetab_get_lvgl_path(fv);
 	char*x=parent+strlen(parent)-1;
 	if(*x=='/')*x=0;
 	snprintf(full_path,PATH_MAX-1,"%s/%s",parent,item);
-	#ifdef ENABLE_UEFI
-	char*ext=(char*)lv_fs_get_ext(full_path);
-	if(ext&&strcasecmp(ext,"efi")==0){
-		uefi_start_image(full_path);
-		return false;
-	}
-	#endif
+	fileopen_open(full_path);
 	return true;
 }
 

@@ -491,6 +491,64 @@ static lv_res_t fs_dir_close_cb(
 	return efi_status_to_lv_res(st);
 }
 
+static lv_res_t fs_mkdir_cb(
+	struct _lv_fs_drv_t*drv,
+	const char*name
+){
+	if(!drv||!name||!*name)return LV_FS_RES_INV_PARAM;
+	struct fsext*fse=drv->user_data;
+	struct fs_root*fs=fse->user_data;
+	if(!fs||!fs->proto)return LV_FS_RES_INV_PARAM;
+	EFI_STATUS st;
+	EFI_FILE_PROTOCOL*fh;
+	char ep[4096]={0},*cp=ep;
+	CHAR16 xpath[4096]={0};
+	strcpy(ep,name);
+	do{if(*cp=='/')*cp='\\';}while(*cp++);
+	mbstowcs(xpath,ep,sizeof(xpath)-1);
+	if(EFI_ERROR((st=fs->proto->Open(
+		fs->proto,&fh,xpath,
+		EFI_FILE_MODE_READ|
+		EFI_FILE_MODE_WRITE|
+		EFI_FILE_MODE_CREATE,
+		EFI_FILE_DIRECTORY
+	))))XWARN(
+		"create dir %c:%s failed: %llx",
+		drv->letter,name,st
+	)
+	if(fh)fh->Close(fh);
+	return efi_status_to_lv_res(st);
+}
+
+static lv_res_t fs_creat_cb(
+	struct _lv_fs_drv_t*drv,
+	const char*name
+){
+	if(!drv||!name||!*name)return LV_FS_RES_INV_PARAM;
+	struct fsext*fse=drv->user_data;
+	struct fs_root*fs=fse->user_data;
+	if(!fs||!fs->proto)return LV_FS_RES_INV_PARAM;
+	EFI_STATUS st;
+	EFI_FILE_PROTOCOL*fh;
+	char ep[4096]={0},*cp=ep;
+	CHAR16 xpath[4096]={0};
+	strcpy(ep,name);
+	do{if(*cp=='/')*cp='\\';}while(*cp++);
+	mbstowcs(xpath,ep,sizeof(xpath)-1);
+	if(EFI_ERROR((st=fs->proto->Open(
+		fs->proto,&fh,xpath,
+		EFI_FILE_MODE_READ|
+		EFI_FILE_MODE_WRITE|
+		EFI_FILE_MODE_CREATE,
+		0
+	))))XWARN(
+		"create file %c:%s failed: %llx",
+		drv->letter,name,st
+	)
+	if(fh)fh->Close(fh);
+	return efi_status_to_lv_res(st);
+}
+
 int init_lvgl_uefi_fs(char letter,EFI_HANDLE hand,EFI_FILE_PROTOCOL*proto,bool debug){
 	lv_fs_drv_t*drv;
 	struct fs_root*fs;
@@ -512,6 +570,8 @@ int init_lvgl_uefi_fs(char letter,EFI_HANDLE hand,EFI_FILE_PROTOCOL*proto,bool d
 	fse->get_volume_label=fs_get_volume_label;
 	fse->get_type_cb=fs_get_type_cb;
 	fse->is_dir_cb=fs_is_dir_cb;
+	fse->creat=fs_creat_cb;
+	fse->mkdir=fs_mkdir_cb;
 	fse->user_data=fs;
 	drv->user_data=fse;
 	drv->letter=letter;

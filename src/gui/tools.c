@@ -188,4 +188,9 @@ void lv_obj_set_enabled(lv_obj_t*obj,bool enabled){
 	else lv_obj_add_state(obj,LV_STATE_DISABLED);
 }
 
+void lv_obj_set_checked(lv_obj_t*obj,bool checked){
+	if(checked)lv_obj_add_state(obj,LV_STATE_CHECKED);
+	else lv_obj_clear_state(obj,LV_STATE_CHECKED);
+}
+
 #endif

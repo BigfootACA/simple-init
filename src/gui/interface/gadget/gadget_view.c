@@ -47,7 +47,6 @@ static void set_info(char*text){
 	lv_label_set_text(info,text);
 }
 
-
 static void item_click(lv_obj_t*obj,lv_event_t e){
 	if(e!=LV_EVENT_VALUE_CHANGED)return;
 	lv_checkbox_set_checked(obj,true);
@@ -189,6 +188,7 @@ static bool restart_cb(uint16_t id,const char*text __attribute__((unused)),void*
 	return false;
 }
 
+extern struct gui_register guireg_gadget_base_info;
 static void btns_cb(lv_obj_t*obj,lv_event_t e){
 	if(!obj||e!=LV_EVENT_CLICKED)return;
 	if(strcmp(guiact_get_last()->name,"usb-gadget")!=0)return;
@@ -198,7 +198,7 @@ static void btns_cb(lv_obj_t*obj,lv_event_t e){
 	}else if(obj==btn_reload){
 		view_reload();
 	}else if(obj==btn_base){
-		guiact_start_activity_by_name("usb-gadget-base-info",NULL);
+		guiact_start_activity(&guireg_gadget_base_info,NULL);
 	}else if(!selected)return;
 	else if(obj==btn_add){
 

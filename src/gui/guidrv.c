@@ -100,6 +100,23 @@ int guidrv_register(){
 	return drv->drv_register();
 }
 
+static int guidrv_try_init(uint32_t*w,uint32_t*h,int*dpi){
+	if(!drv->drv_getsize)return -1;
+	const char*name=guidrv_getname();
+	tlog_debug("try to init gui driver %s",name);
+	if(guidrv_register()<0){
+		telog_error("failed to start gui driver %s",name);
+		return -1;
+	}
+	guidrv_getsize(w,h);
+	guidrv_getdpi(dpi);
+	if(*w<=0||*h<=0){
+		tlog_error("failed to get screen size with gui driver %s",name);
+		abort();
+	}
+	return 0;
+}
+
 int guidrv_init(uint32_t*w,uint32_t*h,int*dpi){
 	errno=0;
 	if(drv){
@@ -107,23 +124,8 @@ int guidrv_init(uint32_t*w,uint32_t*h,int*dpi){
 		guidrv_getdpi(dpi);
 		return 0;
 	}
-	for(int i=0;(drv=gui_drvs[i]);i++){
-		if(!drv->drv_getsize)continue;
-		const char*name=guidrv_getname();
-		tlog_debug("try to init gui driver %s",name);
-		if(guidrv_register()<0){
-			telog_error("failed to start gui driver %s",name);
-			continue;
-		}
-		guidrv_getsize(w,h);
-		guidrv_getdpi(dpi);
-		if(*w<=0||*h<=0){
-			tlog_error("failed to get screen size with gui driver %s",name);
-			abort();
-		}
-		drv=gui_drvs[i];
-		return 0;
-	}
+	for(int i=0;(drv=gui_drvs[i]);i++)
+		if(guidrv_try_init(w,h,dpi)==0)return 0;
 	tlog_warn("no available gui drivers found");
 	drv=NULL;
 	return -1;

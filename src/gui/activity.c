@@ -89,6 +89,7 @@ int guiact_remove_last(bool focus){
 	struct gui_activity*l=guiact_get_last();
 	if(guiact_is_alone()||!l)return 0;
 	tlog_debug("end activity %s",l->name);
+	sysbar_focus_input(NULL);
 	call_lost_focus_last();
 	if(l->page)lv_obj_del_async(l->page);
 	guiact_remove_last_list();
@@ -112,7 +113,6 @@ int guiact_do_back(){
 }
 
 int guiact_do_home(){
-	sysbar_focus_input(NULL);
 	sysbar_keyboard_close();
 	list*acts=guiact_get_activities(),*d;
 	if(!acts||list_is_alone(acts))return 0;

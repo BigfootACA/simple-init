@@ -1,6 +1,7 @@
 #ifdef ENABLE_GUI
 #include<stdlib.h>
 #include"gui.h"
+#include"confd.h"
 #include"logger.h"
 #include"defines.h"
 #include"gui/guidrv.h"
@@ -132,6 +133,17 @@ int guidrv_init(uint32_t*w,uint32_t*h,int*dpi){
 		guidrv_getdpi(dpi);
 		return 0;
 	}
+	#ifndef ENABLE_UEFI
+	if(
+		(drv=guidrv_get_by_name(getenv("GUIDRV")))&&
+		guidrv_try_init(w,h,dpi)==0
+	)return 0;
+	#endif
+	if(
+		(drv=guidrv_get_by_name(confd_get_string("gui.driver",NULL)))&&
+		guidrv_try_init(w,h,dpi)==0
+	)return 0;
+	errno=0;
 	for(int i=0;(drv=gui_drvs[i]);i++)
 		if(guidrv_try_init(w,h,dpi)==0)return 0;
 	tlog_warn("no available gui drivers found");

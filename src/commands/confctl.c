@@ -14,6 +14,9 @@ enum ctl_oper{
 	OPER_LIST,
 	OPER_DELETE,
 	OPER_QUIT,
+	OPER_SAVE,
+	OPER_LOAD,
+	OPER_SET_DEFAULT,
 };
 
 static int usage(int e){
@@ -25,6 +28,9 @@ static int usage(int e){
 		"\t-s, --socket <SOCKET>  Use custom control socket (default is %s)\n"
 		"\t-d, --delete <KEY>     Delete item\n"
 		"\t-l, --list <KEY>       List items\n"
+		"\t-L, --load <PATH>      Load config from a file\n"
+		"\t-S, --save <PATH>      Save config to a file\n"
+		"\t-x, --path <PATH>      Set default config path\n"
 		"\t-q, --quit             Terminate confd\n"
 		"\t-D, --dump             Dump config store\n"
 		"\t-h, --help             Display this help and exit\n",
@@ -104,6 +110,9 @@ int confctl_main(int argc,char**argv){
 		{"help",    no_argument,       NULL,'h'},
 		{"quit",    no_argument,       NULL,'q'},
 		{"dump",    no_argument,       NULL,'D'},
+		{"save",    required_argument, NULL,'S'},
+		{"load",    required_argument, NULL,'L'},
+		{"path",    required_argument, NULL,'x'},
 		{"list",    required_argument, NULL,'l'},
 		{"delete",  required_argument, NULL,'d'},
 		{"socket",  required_argument, NULL,'s'},
@@ -112,7 +121,7 @@ int confctl_main(int argc,char**argv){
 	char*socket=NULL,*key=NULL;
 	enum ctl_oper op=OPER_NONE;
 	int o;
-	while((o=b_getlopt(argc,argv,"hqDd:l:s:",lo,NULL))>0)switch(o){
+	while((o=b_getlopt(argc,argv,"hqDS:L:p:d:l:s:",lo,NULL))>0)switch(o){
 		case 'h':return usage(0);
 		case 'q':
 			if(op!=OPER_NONE)goto conflict;
@@ -129,6 +138,18 @@ int confctl_main(int argc,char**argv){
 		case 'l':
 			if(op!=OPER_NONE)goto conflict;
 			op=OPER_LIST,key=b_optarg;
+		break;
+		case 'S':
+			if(op!=OPER_NONE)goto conflict;
+			op=OPER_SAVE,key=b_optarg;
+		break;
+		case 'L':
+			if(op!=OPER_NONE)goto conflict;
+			op=OPER_LOAD,key=b_optarg;
+		break;
+		case 'x':
+			if(op!=OPER_NONE)goto conflict;
+			op=OPER_SET_DEFAULT,key=b_optarg;
 		break;
 		case 's':
 			if(socket)goto conflict;
@@ -161,6 +182,18 @@ int confctl_main(int argc,char**argv){
 		case OPER_DELETE:
 			r=confd_delete(key);
 			if(errno>0)perror(_("delete config item failed"));
+		break;
+		case OPER_SAVE:
+			r=confd_save_file(key);
+			if(errno>0)perror(_("save config failed"));
+		break;
+		case OPER_LOAD:
+			r=confd_load_file(key);
+			if(errno>0)perror(_("load config failed"));
+		break;
+		case OPER_SET_DEFAULT:
+			r=confd_set_default_config(key);
+			if(errno>0)perror(_("set default config failed"));
 		break;
 		case OPER_NONE:{
 			if(ac>2)return re_printf(2,"too many arguments\n");

@@ -4,6 +4,7 @@
 #include<stdlib.h>
 #include<string.h>
 #include<unistd.h>
+#include<pthread.h>
 #include<sys/un.h>
 #include<sys/epoll.h>
 #include<sys/prctl.h>
@@ -94,6 +95,58 @@ static int do_set_string(int fd,struct confd_msg*msg){
 	return retdata;
 }
 
+struct async_load_save_data{
+	int fd;
+	char path[PATH_MAX];
+	pthread_t tid;
+};
+
+static void*_async_load_thread(void*d){
+	if(!d)return NULL;
+	struct async_load_save_data*data=d;
+	struct confd_msg ret;
+	confd_internal_init_msg(&ret,CONF_OK);
+	ret.code=-conf_load_file(AT_FDCWD,data->path[0]?data->path:def_path);
+	if(ret.code==0&&errno!=0)ret.code=errno;
+	confd_internal_send(data->fd,&ret);
+	free(data);
+	return NULL;
+}
+
+static void*_async_save_thread(void*d){
+	if(!d)return NULL;
+	struct async_load_save_data*data=d;
+	struct confd_msg ret;
+	confd_internal_init_msg(&ret,CONF_OK);
+	ret.code=-conf_save_file(AT_FDCWD,data->path[0]?data->path:def_path);
+	if(ret.code==0&&errno!=0)ret.code=errno;
+	confd_internal_send(data->fd,&ret);
+	free(data);
+	return NULL;
+}
+
+static int do_async_load(int fd,const char*path){
+	if(!path)return -1;
+	struct async_load_save_data*d=malloc(sizeof(struct async_load_save_data));
+	if(!d)return -1;
+	d->fd=fd;
+	strcpy(d->path,path);
+	int r=pthread_create(&d->tid,NULL,_async_load_thread,d);
+	if(r!=0)free(d);
+	return r;
+}
+
+static int do_async_save(int fd,const char*path){
+	if(!path)return -1;
+	struct async_load_save_data*d=malloc(sizeof(struct async_load_save_data));
+	if(!d)return -1;
+	d->fd=fd;
+	strcpy(d->path,path);
+	int r=pthread_create(&d->tid,NULL,_async_save_thread,d);
+	if(r!=0)free(d);
+	return r;
+}
+
 static int confd_read(int fd){
 	if(fd<0)ERET(EINVAL);
 	errno=0;
@@ -175,15 +228,14 @@ static int confd_read(int fd){
 			if(!def_path)errno=ENOMEM;
 		break;
 
-
 		// load config
 		case CONF_LOAD:
-			retdata=-conf_load_file(AT_FDCWD,msg.path[0]?msg.path:def_path);
+			if(do_async_load(fd,msg.path)==0)return e;
 		break;
 
-		// load config
+		// save config
 		case CONF_SAVE:
-			retdata=-conf_save_file(AT_FDCWD,msg.path[0]?msg.path:def_path);
+			if(do_async_save(fd,msg.path)==0)return e;
 		break;
 
 		// unknown

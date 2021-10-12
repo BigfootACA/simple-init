@@ -9,7 +9,7 @@
 #include"gui.h"
 
 // GUI活动管理
-#include"activity.h"
+#include"gui/activity.h"
 
 // 日志
 #include"logger.h"

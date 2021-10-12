@@ -6,6 +6,9 @@
   VERSION_STRING                 = 1.0
   LIBRARY_CLASS                  = SimpleInitConfd
 
+[BuildOptions]
+  GCC:*_*_*_CC_FLAGS = -DENABLE_UEFI=1
+
 [Packages]
   MdePkg/MdePkg.dec
   StdLib/StdLib.dec

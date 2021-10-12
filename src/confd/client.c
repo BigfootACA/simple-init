@@ -196,6 +196,31 @@ bool confd_get_boolean(const char*path,bool def){
 	return res.data.boolean;
 }
 
+static int _confd_file(const char*file,enum confd_action act){
+	if(act==CONF_SET_DEFAULT&&!file)ERET(EINVAL);
+	if(confd<0)ERET(ENOTCONN);
+	errno=0;
+	struct confd_msg msg,res;
+	confd_internal_init_msg(&msg,act);
+	if(file)realpath(file,msg.path);
+	if(confd_internal_send(confd,&msg)<0)return -1;
+	if(confd_internal_read_msg(confd,&res)<0)return -1;
+	if(res.code>0)errno=res.code;
+	return res.code;
+}
+
+int confd_load_file(const char*file){
+	return _confd_file(file,CONF_LOAD);
+}
+
+int confd_save_file(const char*file){
+	return _confd_file(file,CONF_SAVE);
+}
+
+int confd_set_default_config(const char*file){
+	return _confd_file(file,CONF_SET_DEFAULT);
+}
+
 #define EXT_BASE(func,arg,type,ret) \
 ret func##_base(const char*base,const char*path,type arg){\
 	char xpath[PATH_MAX]={0};\

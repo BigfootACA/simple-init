@@ -4,4 +4,6 @@ add_library(init_confd STATIC
 	client.c
 	server.c
 	internal.c
+	file.c
+	file_conf.c
 )

@@ -17,6 +17,7 @@
 #include"proctitle.h"
 #define TAG "confd"
 
+static char*def_path=NULL;
 static char*sock=DEFAULT_CONFD;
 static bool clean=false,protect=false;
 static int efd=-1;
@@ -161,6 +162,28 @@ static int confd_read(int fd){
 		// put item as boolean
 		case CONF_SET_BOOLEAN:
 			retdata=-conf_set_boolean(msg.path,msg.data.boolean);
+		break;
+
+		// set default config path
+		case CONF_SET_DEFAULT:
+			if(!msg.path[0]){
+				errno=EINVAL;
+				break;
+			}
+			if(def_path)free(def_path);
+			def_path=strdup(msg.path);
+			if(!def_path)errno=ENOMEM;
+		break;
+
+
+		// load config
+		case CONF_LOAD:
+			retdata=-conf_load_file(AT_FDCWD,msg.path[0]?msg.path:def_path);
+		break;
+
+		// load config
+		case CONF_SAVE:
+			retdata=-conf_save_file(AT_FDCWD,msg.path[0]?msg.path:def_path);
 		break;
 
 		// unknown

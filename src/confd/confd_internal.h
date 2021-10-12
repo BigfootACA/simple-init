@@ -1,11 +1,13 @@
 #ifndef CONFD_INTERNAL_H
 #define CONFD_INTERNAL_H
 #include<inttypes.h>
+#include"str.h"
 #include"list.h"
 #include"confd.h"
 
 #define CONFD_MAGIC0 0xEF
 #define CONFD_MAGIC1 0x66
+#define CONF_KEY_CHARS LETTER NUMBER "-_."
 
 // initconfd remote action
 enum confd_action{
@@ -22,6 +24,9 @@ enum confd_action{
 	CONF_SET_STRING   =0xAC41,
 	CONF_SET_INTEGER  =0xAC42,
 	CONF_SET_BOOLEAN  =0xAC43,
+	CONF_SET_DEFAULT  =0xACA1,
+	CONF_SAVE         =0xACA2,
+	CONF_LOAD         =0xACA3,
 };
 
 // initconfd message
@@ -55,6 +60,24 @@ struct conf{
 		}value;
 	};
 };
+
+#ifdef ENABLE_UEFI
+#include<Protocol/SimpleFileSystem.h>
+#define _ROOT_TYPE EFI_FILE_PROTOCOL*
+#else
+#define _ROOT_TYPE int
+#endif
+
+typedef int(*conf_file_hand_func)(_ROOT_TYPE root,const char*path);
+
+// config file handler
+struct conf_file_hand{
+	char**ext;
+	conf_file_hand_func load;
+	conf_file_hand_func save;
+};
+
+extern struct conf_file_hand*conf_hands[];
 
 // src/confd/client.c: current confd fd
 extern int confd;
@@ -97,6 +120,12 @@ extern const char**conf_ls(const char*path);
 
 // src/confd/store.c: delete config item and all children
 extern int conf_del(const char*path);
+
+// src/confd/file.c: load config file to config store
+extern int conf_load_file(_ROOT_TYPE root,const char*path);
+
+// src/confd/file.c: save config store to config file
+extern int conf_save_file(_ROOT_TYPE root,const char*path);
 
 // config item value
 #define VALUE_STRING(conf)conf->value.string

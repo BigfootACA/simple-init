@@ -34,6 +34,15 @@ extern int confd_quit();
 // src/confd/client.c: dump config store to logger
 extern int confd_dump();
 
+// src/confd/client.c: save config store as a file
+extern int confd_save_file(const char*file);
+
+// src/confd/client.c: load config store from a file
+extern int confd_load_file(const char*file);
+
+// src/confd/client.c: set default config file path
+extern int confd_set_default_config(const char*file);
+
 // src/confd/client.c: delete a config item
 extern int confd_delete(const char*path);
 

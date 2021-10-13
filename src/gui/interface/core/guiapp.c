@@ -78,9 +78,9 @@ static void add_button(struct gui_register*p){
 	lv_label_set_align(txt,LV_LABEL_ALIGN_CENTER);
 	lv_label_set_text(txt,_(p->title));
 	lv_obj_align(txt,icon_w,LV_ALIGN_OUT_BOTTOM_MID,0,0);
-	lv_obj_set_height(app,lv_obj_get_y(txt)+lv_obj_get_height(txt)+gui_font_size);
 	lv_obj_set_style_local_text_font(txt,LV_LABEL_PART_MAIN,LV_STATE_DEFAULT,gui_font_small);
 	lv_obj_set_style_local_pad_top(txt,LV_LABEL_PART_MAIN,LV_STATE_DEFAULT,gui_dpi/100);
+	lv_obj_set_height(app,lv_obj_get_y(txt)+lv_obj_get_height(txt)+gui_font_size);
 
 	list_obj_add_new(&apps,app);
 	app_num++;

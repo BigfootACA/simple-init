@@ -75,6 +75,7 @@ int pointer_register(){
 		data->ry=data->mouse->Mode->ResolutionY;
 		tlog_debug("found uefi pointer %p",data->mouse);
 		found=true;
+		if(confd_get_boolean("gui.driver.pointer.use_first",false))break;
 	}
 	return found?0:trlog_warn(-1,"no uefi pointer found");
 }

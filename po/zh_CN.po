@@ -1439,3 +1439,6 @@ msgstr "保存配置文件"
 
 msgid "Load Config"
 msgstr "加载配置文件"
+
+msgid "UEFI Application Start"
+msgstr "启动UEFI程序"

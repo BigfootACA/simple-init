@@ -202,7 +202,7 @@ static lv_res_t fs_remove_cb(
 	strcpy(ep,fn);
 	do{if(*cp=='/')*cp='\\';}while(*cp++);
 	mbstowcs(xpath,ep,sizeof(xpath)-1);
-	EFI_STATUS st=fs->proto->Open(fs->proto,&fh,xpath,EFI_FILE_MODE_WRITE,0);
+	EFI_STATUS st=fs->proto->Open(fs->proto,&fh,xpath,EFI_FILE_MODE_READ|EFI_FILE_MODE_WRITE,0);
 	if(EFI_ERROR(st))XWARN(
 		"open %c:%s failed: %llx",
 		drv->letter,fn,st

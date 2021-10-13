@@ -34,6 +34,7 @@ static void click_btn(lv_obj_t*obj,lv_event_t e){
 static void tabview_cb(lv_obj_t*obj,lv_event_t e){
 	if(!obj||e!=LV_EVENT_VALUE_CHANGED)return;
 	cur_page=lv_tabview_get_tab_act(tabview);
+	confd_set_integer("gui.guiapp.page",cur_page);
 }
 
 static void add_page(){
@@ -113,6 +114,7 @@ static void add_button(struct gui_register*p){
 	lv_obj_set_style_local_pad_top(txt,LV_LABEL_PART_MAIN,LV_STATE_DEFAULT,gui_dpi/100);
 	lv_obj_set_height(app,lv_obj_get_y(txt)+lv_obj_get_height(txt)+gui_font_size);
 
+	cur_page=confd_get_integer("gui.guiapp.page",0);
 	list_obj_add_new(&apps,app);
 	app_num++;
 }
@@ -122,6 +124,7 @@ static void redraw_apps(){
 	add_page();
 	for(int i=0;guiact_register[i];i++)
 		add_button(guiact_register[i]);
+	if(cur_page>=lv_tabview_get_tab_count(tabview))cur_page=0;
 	lv_tabview_set_tab_act(tabview,cur_page,LV_ANIM_OFF);
 }
 

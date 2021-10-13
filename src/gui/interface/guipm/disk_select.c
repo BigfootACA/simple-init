@@ -285,7 +285,7 @@ static void refresh_click(lv_obj_t*obj,lv_event_t e){
 static void ok_click(lv_obj_t*obj,lv_event_t e){
 	if(e!=LV_EVENT_CLICKED||obj!=btn_ok||!selected)return;
 	tlog_debug("ok clicked");
-	guiact_start_activity_by_name("guipm-partitions",strdup(selected->name));
+	guiact_start_activity_by_name("guipm-partitions",selected->name);
 }
 
 static void cancel_click(lv_obj_t*obj,lv_event_t e){

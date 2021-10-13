@@ -280,25 +280,43 @@ static int init_disk(){
 	if(path)free(path);
 	if(!(path=malloc(s)))
 		return terlog_error(-1,"malloc path failed");
-	snprintf(path,s-1,_PATH_DEV"/%s",guipm_target_disk);
-	if(!is_block(path)){
-		snprintf(path,s-1,_PATH_DEV"/block/%s",guipm_target_disk);
+	if(guipm_target_disk[0]=='/'){
+		strcpy(path,guipm_target_disk);
+		struct stat st;
+		if(stat(path,&st)!=0){
+			telog_error("cannot stat %s",path);
+			goto fail;
+		}
+		if(!S_ISREG(st.st_mode)&&!S_ISBLK(st.st_mode)){
+			telog_error("unknown type %s",path);
+			goto fail;
+		}
+		if(S_ISREG(st.st_mode)&&st.st_size==0){
+			telog_error("empty file %s",path);
+			goto fail;
+		}
+	}else{
+		snprintf(path,s-1,_PATH_DEV"/%s",guipm_target_disk);
 		if(!is_block(path)){
-			telog_error("cannot found device %s real path",guipm_target_disk);
-			free(path);
-			path=NULL;
-			return -1;
+			snprintf(path,s-1,_PATH_DEV"/block/%s",guipm_target_disk);
+			if(!is_block(path)){
+				telog_error("cannot found device %s real path",guipm_target_disk);
+				goto fail;
+			}
 		}
 	}
 	tlog_debug("found disk %s",path);
 	errno=0;
 	if(fdisk_assign_device(ctx,path,true)!=0){
 		telog_error("failed assign block %s to fdisk context",guipm_target_disk);
-		fdisk_unref_context(ctx);
-		ctx=NULL;
-		return -1;
+		goto fail;
 	}
 	return 0;
+	fail:
+	if(ctx)fdisk_unref_context(ctx);
+	if(path)free(path);
+	ctx=NULL,path=NULL;
+	return -1;
 }
 
 static void reload_click(lv_obj_t*obj,lv_event_t e){
@@ -347,7 +365,9 @@ static int init(struct gui_activity*act){
 		tlog_warn("target disk not set");
 		return -EINVAL;
 	}
-	guipm_target_disk=act->args;
+	char*disk=act->args;
+	if(disk[0]!='/'&&disk[1]==':')disk+=2;
+	if(!(guipm_target_disk=strdup(disk)))return -ENOMEM;
 	act->mask=init_disk()<0;
 	return 0;
 }
@@ -423,6 +443,7 @@ struct gui_register guireg_guipm_partitions={
 	.title="Partition Manager",
 	.icon="guipm.png",
 	.show_app=false,
+	.open_file=true,
 	.init=init,
 	.quiet_exit=do_cleanup,
 	.get_focus=guipm_part_get_focus,

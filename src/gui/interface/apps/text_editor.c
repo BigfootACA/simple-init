@@ -223,6 +223,7 @@ static void write_save(){
 	lv_res_t res;
 	const char*cont=lv_textarea_get_text(text);
 	uint32_t s=(uint32_t)strlen(cont),bs=0;
+	lv_fs_remove(cur_path);
 	if((res=lv_fs_open(&file,cur_path,LV_FS_MODE_WR))!=LV_FS_RES_OK){
 		msgbox_alert("Open file failed: %s",lv_fs_res_to_i18n_string(res));
 		return;

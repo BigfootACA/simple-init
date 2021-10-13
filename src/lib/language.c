@@ -14,6 +14,7 @@
 #endif
 #include"str.h"
 #include"shell.h"
+#include"confd.h"
 #include"assets.h"
 #include"defines.h"
 #include"version.h"
@@ -28,7 +29,7 @@ struct language languages[]={
 };
 
 #ifdef ENABLE_UEFI
-static char cur_lang[64]="C";
+static char cur_lang[64]={0};
 #endif
 static bool mmap_map=false;
 static void*locale_map=NULL;
@@ -101,6 +102,7 @@ static int lang_open_locale(char*path){
 char*lang_get_locale(char*def){
 	if(def)return def;
 	#ifdef ENABLE_UEFI
+	if(!cur_lang[0])strcpy(cur_lang,confd_get_string("language","C"));
 	return cur_lang;
 	#else
 	char*l;
@@ -176,12 +178,14 @@ int lang_set(const char*lang){
 		!check_valid((char*)lang,VALID"-.")
 	)ERET(EINVAL);
 	#ifdef ENABLE_UEFI
+	memset(cur_lang,0,sizeof(cur_lang));
 	strcpy(cur_lang,lang);
 	#else
 	setenv("LANG",lang,1);
 	setenv("LANGUAGE",lang,1);
 	setenv("LC_ALL",lang,1);
 	#endif
+	confd_set_string("language",(char*)lang);
 	lang_init_locale();
 	return 0;
 }

@@ -1,6 +1,7 @@
 #ifdef ENABLE_GUI
 #ifdef ENABLE_UEFI
 #include"gui.h"
+#include"confd.h"
 #include"logger.h"
 #include"defines.h"
 #include"gui/tools.h"
@@ -16,7 +17,7 @@ static void mouse_scale_change(lv_obj_t*obj,lv_event_t e){
 	gui_mouse_scale=lv_slider_get_value(slider);
 	if(gui_mouse_scale<=0)gui_mouse_scale=1;
 	lv_label_set_text_fmt(value,"%d",gui_mouse_scale);
-	guidrv_set_brightness(gui_mouse_scale);
+	confd_set_integer("gui.mouse_scale",gui_mouse_scale);
 }
 
 static void mouse_scale_click(lv_obj_t*obj,lv_event_t e){
@@ -29,6 +30,7 @@ static void mouse_scale_click(lv_obj_t*obj,lv_event_t e){
 	if(gui_mouse_scale>=64)gui_mouse_scale=64;
 	lv_label_set_text_fmt(value,"%d",gui_mouse_scale);
 	lv_slider_set_value(slider,gui_mouse_scale,LV_ANIM_ON);
+	confd_set_integer("gui.mouse_scale",gui_mouse_scale);
 }
 
 static int mouse_menu_draw(struct gui_activity*act){

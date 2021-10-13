@@ -11,6 +11,7 @@
 #include<Protocol/SimplePointer.h>
 #define TAG "uefipointer"
 #include"gui.h"
+#include"confd.h"
 #include"logger.h"
 #include"defines.h"
 #include"gui/guidrv.h"
@@ -20,7 +21,7 @@
 #ifndef DISPLAY_DPI
 #define DISPLAY_DPI 200
 #endif
-int gui_mouse_scale=(DISPLAY_DPI/200)*MOUSE_SCALE;
+int gui_mouse_scale=0;
 struct input_data{
 	bool lp;
 	INT64 rx,lx;
@@ -49,6 +50,7 @@ int pointer_register(){
 	bool found=false;
 	UINTN cnt=0;
 	EFI_HANDLE*hands=NULL;
+	gui_mouse_scale=confd_get_integer("gui.mouse_scale",(DISPLAY_DPI/200)*MOUSE_SCALE);
 	EFI_STATUS st=gBS->LocateHandleBuffer(
 		ByProtocol,
 		&gEfiSimplePointerProtocolGuid,

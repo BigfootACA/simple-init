@@ -19,6 +19,7 @@ struct entry_file{
 	struct entry info;
 	dev_t dev;
 	char*content;
+	size_t offset;
 	size_t length;
 };
 typedef struct entry_dir entry_dir;

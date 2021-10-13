@@ -44,7 +44,7 @@ if("${ENABLE_ASAN}" STREQUAL "ON")
 endif()
 
 add_custom_command(
-	OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/rootfs.c"
+	OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/rootfs.c" "${CMAKE_CURRENT_BINARY_DIR}/rootfs_data.o"
 	COMMAND bash "${CMAKE_SOURCE_DIR}/scripts/gen-rootfs-source.sh" "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}" "${CMAKE_SOURCE_DIR}/root"
 	DEPENDS "${CMAKE_SOURCE_DIR}/root" "${CMAKE_SOURCE_DIR}/root/usr/share/locale"
 )
@@ -88,7 +88,7 @@ if(("${ENABLE_FREETYPE2}" STREQUAL "ON") AND ("${SYSTEM_FREETYPE2}" STREQUAL "OF
 	target_link_libraries(init freetype2)
 endif()
 
-add_library(init_rootfs STATIC ${CMAKE_CURRENT_BINARY_DIR}/rootfs.c)
+add_library(init_rootfs STATIC ${CMAKE_CURRENT_BINARY_DIR}/rootfs.c ${CMAKE_CURRENT_BINARY_DIR}/rootfs_data.o)
 target_link_libraries(init init_rootfs)
 
 target_link_libraries(init -Wl,--end-group)

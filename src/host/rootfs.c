@@ -12,8 +12,8 @@
 #include<sys/time.h>
 #include<sys/mman.h>
 
-char*output,*folder;
-static int dfd,ofd;
+char source[PATH_MAX],binary[PATH_MAX],*folder;
+static int dfd,ofd,bfd;
 
 static void print_info(struct stat*st,int depth);
 static void print_file(int cfd,char*name,size_t size,int depth);
@@ -23,7 +23,9 @@ static void print_entity(int fd,char*name,int depth);
 static void on_failure(){
 	close(ofd);
 	close(dfd);
-	unlink(output);
+	close(bfd);
+	unlink(source);
+	unlink(binary);
 	exit(1);
 }
 
@@ -106,37 +108,24 @@ static void print_file(int cfd,char*name,size_t size,int depth){
 		on_failure();
 		return;
 	}
-	void*v=mmap(NULL,size,PROT_READ,MAP_PRIVATE,fd,0);
-	if(!v){
-		perror("mmap failed");
-		on_failure();
-		return;
-	}
 	add_int_val(".length",size);
-	add_line(".content=(char[]){\n");
-	depth++;
-	int c=0;
-	size_t xs=sizeof(char)*200;
-	char*x=malloc(xs),*p=x;
-	if(!x)abort();
-	memset(x,0,xs);
-	for(size_t l=0;l<size;l++){
-		p+=snprintf(p,10,"0x%02x,",((unsigned char*)v)[l]);
-		if(c++>=20){
-			p[0]=0;
-			add_line("%s\n",x);
-			c=0,p=x;
+	add_int_val(".offset",lseek(bfd,0,SEEK_CUR));
+	if(size>0){
+		void*v=mmap(NULL,size,PROT_READ,MAP_PRIVATE,fd,0);
+		if(!v){
+			perror("mmap failed");
+			on_failure();
+			return;
 		}
+		ssize_t x=write(bfd,v,size);
+		munmap(v,size);
+		if((size_t)x!=size){
+			fprintf(stderr,"write binary size mismatch %ld != %ld: %m\n",x,size);
+			on_failure();
+			return;
+		}
+		write(bfd,(char[]){0,0},1);
 	}
-	if(c>0){
-		p[0]=0;
-		add_line("%s\n",x);
-	}
-	add_line("0\n",x);
-	free(x);
-	munmap(v,size);
-	depth--;
-	add_line("},\n");
 	close(fd);
 }
 
@@ -178,16 +167,22 @@ static void print_entity(int fd,char*name,int depth){
 }
 int main(int argc,char**argv){
 	if(argc!=4){
-		fputs("Usage: assets <FOLDER> <OUTPUT> <VARIABLE>\n",stderr);
+		fputs("Usage: assets <FOLDER> <SOURCE_DIR> <VARIABLE>\n",stderr);
 		return 1;
 	}
-	folder=argv[1],output=argv[2];
+	folder=argv[1];
+	snprintf(source,PATH_MAX-1,"%s/rootfs.c",argv[2]);
+	snprintf(binary,PATH_MAX-1,"%s/rootfs.bin",argv[2]);
 	if((dfd=open(folder,O_RDONLY|O_DIRECTORY))<0){
 		perror("open folder");
 		return -1;
 	}
-	if((ofd=open(output,O_WRONLY|O_TRUNC|O_CREAT,0644))<0){
-		perror("open output");
+	if((ofd=open(source,O_WRONLY|O_TRUNC|O_CREAT,0644))<0){
+		perror("open source");
+		return -1;
+	}
+	if((bfd=open(binary,O_WRONLY|O_TRUNC|O_CREAT,0644))<0){
+		perror("open binary");
 		return -1;
 	}
 	dprintf(ofd,"#include<stddef.h>\n");

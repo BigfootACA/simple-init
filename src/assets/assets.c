@@ -10,6 +10,8 @@
 #include"assets.h"
 #include"defines.h"
 
+extern char _binary_rootfs_bin_start;
+
 #ifndef ENABLE_UEFI
 int set_assets_file_info(int fd,entry_file*file){
 	int e=0;
@@ -20,6 +22,7 @@ int set_assets_file_info(int fd,entry_file*file){
 }
 
 int write_assets_file(int fd,entry_file*file,bool pres){
+	if(!file->content&&file->length>0)file->content=&_binary_rootfs_bin_start+file->offset;
 	if(file->content){
 		if(file->length==0)file->length=strlen(file->content);
 		if(write(fd,file->content,file->length)<0)return -errno;
@@ -180,6 +183,7 @@ static entry_file*get_assets_file_component(entry_dir*dir,list*paths,int*cnt){
 		list_free_all_def(o);
 		if(!r)EPRET(e);
 	}
+	if(!r->content&&r->length>0)r->content=&_binary_rootfs_bin_start+r->offset;
 	return r;
 }
 

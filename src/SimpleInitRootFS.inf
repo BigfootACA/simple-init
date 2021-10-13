@@ -24,3 +24,4 @@
   # Simple-Init builtin rootfs generate from ./root (RUN BEFORE BUILD)
   # bash scripts/gen-rootfs-source.sh ./ ./build ./root
   ../build/rootfs.c
+  ../build/rootfs_data.o

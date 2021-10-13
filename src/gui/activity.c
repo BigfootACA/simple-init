@@ -192,7 +192,7 @@ static void guiact_start_task(lv_task_t*t){
 	lv_obj_set_size(act->page,gui_sw,gui_sh);
 	lv_obj_set_pos(act->page,gui_sx,gui_sy);
 	if((r=reg->draw(act))<0){
-		tlog_warn("activity %s draw failed: %d",act->name,r);
+		if(r!=-10)tlog_warn("activity %s draw failed: %d",act->name,r);
 		lv_obj_del(act->page);
 		free(act);
 		return;

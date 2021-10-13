@@ -68,7 +68,7 @@ static bool msg_click(uint16_t id,const char*text,void*user_data __attribute__((
 
 static int uefi_shell_draw(struct gui_activity*act){
 	msgbox_create_yesno(msg_click,"Exit GUI Application and enter UEFI Shell?");
-	return -1;
+	return -10;
 }
 
 struct gui_register guireg_uefi_shell={

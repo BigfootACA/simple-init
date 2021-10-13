@@ -80,7 +80,7 @@ static int uefi_start_draw(struct gui_activity*d){
 		"Start UEFI Application '%s'?",
 		full_path
 	),full_path);
-	return -2;
+	return -10;
 }
 
 struct gui_register guireg_uefi_start={

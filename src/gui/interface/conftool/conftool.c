@@ -474,7 +474,7 @@ static int conftool_draw(struct gui_activity*act){
 static int do_clean(struct gui_activity*d __attribute__((unused))){
 	list_free_all_def(items);
 	list_free_all_def(path);
-	items=NULL,path=NULL;
+	items=NULL,path=NULL,info=NULL;
 	return 0;
 }
 

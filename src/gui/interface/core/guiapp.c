@@ -12,13 +12,15 @@
 #include"gui/msgbox.h"
 #include"gui/activity.h"
 #define TAG "guiapp"
-static lv_obj_t*screen;
+static lv_obj_t*screen,*tabview,*author;
 static list*apps=NULL;
-static int app_num=0;
+static int app_num=0,app_page=-1,cur_page=0;
 
 static void clean_buttons(){
-	list_free_all(apps,(int(*)(void*))lv_obj_del_async);
-	apps=NULL,app_num=0;
+	list_free_all(apps,(int(*)(void*))lv_obj_del);
+	if(tabview)lv_obj_del(tabview);
+	apps=NULL,tabview=NULL;
+	app_num=0,app_page=-1;
 }
 
 static void click_btn(lv_obj_t*obj,lv_event_t e){
@@ -29,17 +31,46 @@ static void click_btn(lv_obj_t*obj,lv_event_t e){
 	else msgbox_alert("This function does not implemented");
 }
 
+static void tabview_cb(lv_obj_t*obj,lv_event_t e){
+	if(!obj||e!=LV_EVENT_VALUE_CHANGED)return;
+	cur_page=lv_tabview_get_tab_act(tabview);
+}
+
+static void add_page(){
+	app_page++,app_num=0;
+	char name[16]={0};
+	snprintf(name,15,"%d",app_page);
+	if(!tabview){
+		tabview=lv_tabview_create(screen,NULL);
+		lv_obj_set_pos(tabview,0,0);
+		lv_obj_set_size(tabview,gui_sw,gui_sh-lv_obj_get_height(author)-gui_font_size);
+		lv_obj_set_event_cb(tabview,tabview_cb);
+		lv_tabview_set_btns_pos(tabview,LV_TABVIEW_TAB_POS_NONE);
+	}
+	lv_obj_t*t=lv_tabview_add_tab(tabview,name);
+	lv_page_set_scrlbar_mode(t,LV_SCROLLBAR_MODE_HIDE);
+}
+
 static void add_button(struct gui_register*p){
 	if(!p->show_app)return;
-	int xnum=gui_w/gui_dpi*2,ynum=gui_h/gui_dpi;
-	int a=app_num%xnum,b=app_num/xnum;
-	int w=(gui_w-gui_font_size)/xnum,h=(gui_h-gui_font_size)/(ynum+1);
-
-	lv_obj_t*app=lv_objmask_create(screen,NULL);
+	lv_obj_t*scr=lv_tabview_get_tab(tabview,app_page);
+	lv_coord_t pw=lv_page_get_scrl_width(scr);
+	lv_coord_t ph=lv_page_get_scrl_height(scr);
+	lv_coord_t xnum=pw/gui_dpi*2,ynum=ph/gui_dpi;
+	lv_coord_t a=app_num%xnum,b=app_num/xnum;
+	lv_coord_t w=(pw-gui_font_size-8)/xnum,h=(ph-gui_font_size-8)/(ynum+1);
+	lv_coord_t xx=(w*a)+(gui_font_size/2),yy=(h*b)+(gui_font_size/2);
+	if(yy+h>ph){
+		add_page();
+		add_button(p);
+		return;
+	}
+	lv_obj_t*app=lv_objmask_create(scr,NULL);
 	lv_obj_set_click(app,true);
-	lv_obj_set_pos(app,(w*a)+(gui_font_size/2),(h*b)+(gui_font_size/2));
+	lv_obj_set_drag_parent(app,true);
+	lv_obj_set_pos(app,xx,yy);
 	lv_obj_set_size(app,w,h);
-	lv_color_t c=lv_obj_get_style_text_color(screen,LV_OBJ_PART_MAIN);
+	lv_color_t c=lv_obj_get_style_text_color(scr,LV_OBJ_PART_MAIN);
 	lv_obj_set_style_local_outline_color(app,LV_OBJMASK_PART_MAIN,LV_STATE_PRESSED,c);
 	lv_obj_set_style_local_outline_color(app,LV_OBJMASK_PART_MAIN,LV_STATE_FOCUSED,c);
 	lv_obj_set_style_local_outline_width(app,LV_OBJMASK_PART_MAIN,LV_STATE_PRESSED,1);
@@ -88,8 +119,10 @@ static void add_button(struct gui_register*p){
 
 static void redraw_apps(){
 	clean_buttons();
+	add_page();
 	for(int i=0;guiact_register[i];i++)
 		add_button(guiact_register[i]);
+	lv_tabview_set_tab_act(tabview,cur_page,LV_ANIM_OFF);
 }
 
 static void do_reload(lv_task_t*t __attribute__((unused))){
@@ -114,7 +147,7 @@ static int guiapp_draw(struct gui_activity*act){
 	lv_style_set_text_font(&txt_style,LV_STATE_DEFAULT,gui_font_small);
 	lv_style_set_text_color(&txt_style,LV_STATE_DEFAULT,lv_color_make(200,200,200));
 
-	lv_obj_t*author=lv_label_create(act->page,NULL);
+	author=lv_label_create(act->page,NULL);
 	lv_label_set_text(author,"Author: BigfootACA");
 	lv_label_set_long_mode(author,LV_LABEL_LONG_BREAK);
 	lv_label_set_align(author,LV_LABEL_ALIGN_CENTER);
@@ -123,7 +156,7 @@ static int guiapp_draw(struct gui_activity*act){
 	lv_obj_align(author,NULL,LV_ALIGN_IN_BOTTOM_MID,0,-gui_font_size);
 
 	list_free_all(apps,NULL);
-	apps=NULL,app_num=0;
+	apps=NULL,tabview=NULL,app_num=0,app_page=-1;
 	return 0;
 }
 

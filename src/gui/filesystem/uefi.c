@@ -641,5 +641,14 @@ EFI_DEVICE_PATH_PROTOCOL*fs_get_device_path(const char*path){
 	mbstowcs(xp,ep,PATH_MAX-1);
 	return FileDevicePath(fs->hand,xp);
 }
+
+EFI_FILE_PROTOCOL*fs_get_root_by_letter(char letter){
+	lv_fs_drv_t*drv=lv_fs_get_drv(letter);
+	if(!drv)return NULL;
+	if(drv->ready_cb&&!drv->ready_cb(drv))return NULL;
+	struct fsext*fse=drv->user_data;
+	struct fs_root*fs=fse->user_data;
+	return fs->proto;
+}
 #endif
 #endif

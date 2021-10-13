@@ -88,7 +88,7 @@ static void on_change_dir(struct filetab*fv,char*old __attribute__((unused)),cha
 }
 
 static bool on_item_click(struct filetab*fv,char*item,enum item_type type){
-	if(!filetab_is_active(fv)||type!=TYPE_FILE)return true;
+	if(!filetab_is_active(fv)||type==TYPE_DIR)return true;
 	char full_path[PATH_MAX]={0};
 	char*parent=filetab_get_lvgl_path(fv);
 	char*x=parent+strlen(parent)-1;

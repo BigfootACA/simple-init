@@ -26,3 +26,5 @@
   dump.c
   uefi.c
   store.c
+  file.c
+  file_conf.c

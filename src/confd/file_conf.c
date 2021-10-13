@@ -2,7 +2,13 @@
 #include<string.h>
 #include<stdlib.h>
 #include<sys/stat.h>
+#ifdef ENABLE_UEFI
+#include<Guid/FileInfo.h>
+#include<Protocol/SimpleFileSystem.h>
+#include<Library/MemoryAllocationLib.h>
+#else
 #include<sys/mman.h>
+#endif
 #include"str.h"
 #include"logger.h"
 #include"confd_internal.h"
@@ -53,8 +59,35 @@ static char*str_unescape(char*str){
 	return dup;
 }
 
-static int print_conf(int fd,struct conf*key,const char*name){
-	char path[PATH_MAX]={0};
+static char*get_buffer(size_t size){
+	static size_t buf_size=0;
+	static char*buf=NULL;
+	if(size==0){
+		free(buf);
+		buf=NULL,buf_size=0;
+		return NULL;
+	}
+	if(size>buf_size||!buf){
+		if(buf)free(buf);
+		buf_size=size,buf=malloc(size);
+		if(buf)memset(buf,0,size);
+	}
+	return buf;
+}
+
+static void str_write(_ROOT_TYPE fd,char*str){
+	size_t s=strlen(str);
+	#ifdef ENABLE_UEFI
+	UINTN w=(UINTN)s;
+	fd->Write(fd,&w,str);
+	#else
+	write(fd,str,s);
+	#endif
+}
+
+static int print_conf(_ROOT_TYPE fd,struct conf*key,const char*name){
+	size_t size=0;
+	char path[PATH_MAX]={0},*buf,*str;
 	if(key->name[0]){
 		if(!name[0])strcpy(path,key->name);
 		else snprintf(path,PATH_MAX-1,"%s.%s",name,key->name);
@@ -64,35 +97,69 @@ static int print_conf(int fd,struct conf*key,const char*name){
 		if(!p)return 0;
 		do{print_conf(fd,LIST_DATA(p,struct conf*),path);}while((p=p->next));
 	}else switch(key->type){
-		case TYPE_STRING:{
-			char*p=str_escape(VALUE_STRING(key));
-			if(p){
-				dprintf(fd,"%s = \"%s\"\n",path,p);
-				free(p);
+		case TYPE_STRING:
+			if(!(str=str_escape(VALUE_STRING(key))))break;
+			size=strlen(str)+strlen(path)+10;
+			if((buf=get_buffer(size))){
+				snprintf(buf,size-1,"%s = \"%s\"\n",path,str);
+				str_write(fd,buf);
 			}
-		}break;
+			free(str);
+		break;
 		case TYPE_INTEGER:
-			dprintf(fd,"%s = %lld\n", path,(long long int)VALUE_INTEGER(key));
+			size=strlen(path)+50;
+			if((buf=get_buffer(size))){
+				snprintf(buf,size-1,"%s = %lld\n",path,(long long int)VALUE_INTEGER(key));
+				str_write(fd,buf);
+			}
 		break;
 		case TYPE_BOOLEAN:
-			dprintf(fd,"%s = %s\n",   path,BOOL2STR(VALUE_BOOLEAN(key)));
+			size=strlen(path)+15;
+			if((buf=get_buffer(size))){
+				snprintf(buf,size-1,"%s = %s\n",path,BOOL2STR(VALUE_BOOLEAN(key)));
+				str_write(fd,buf);
+			}
 		break;
 		default:;
 	}
 	return 0;
 }
 
-static int conf_save(int dir,const char*path){
-	int fd;
+static int conf_save(_ROOT_TYPE dir,const char*path){
+	_ROOT_TYPE fd;
 	struct conf*store=conf_get_store();
 	if(!store)ERET(EINVAL);
-	if((fd=openat(dir,path,O_WRONLY|O_CREAT|O_TRUNC,0644))<0)return -errno;
-	dprintf(fd,"#!/usr/bin/confctl -L\n");
-	dprintf(fd,"# -*- coding: utf-8 -*-\n");
-	dprintf(fd,"##\n## Simple Init Configuration Store\n##\n\n");
+	char xpath[PATH_MAX]={0};
+	strncpy(xpath,path,PATH_MAX-1);
+	#ifdef ENABLE_UEFI
+	char*cp=xpath;
+	CHAR16 xp[PATH_MAX]={0};
+	do{if(*cp=='/')*cp='\\';}while(*cp++);
+	mbstowcs(xp,xpath,sizeof(xp)-1);
+	EFI_STATUS st=dir->Open(dir,&fd,xp,EFI_FILE_MODE_READ|EFI_FILE_MODE_WRITE,0);
+	if(!EFI_ERROR(st))fd->Delete(fd);
+	fd=NULL,st=dir->Open(dir,&fd,xp,EFI_FILE_MODE_READ|EFI_FILE_MODE_WRITE|EFI_FILE_MODE_CREATE,0);
+	if(EFI_ERROR(st)){
+		tlog_warn("open config '%s' failed: %llx",path,st);
+		return -efi_status_to_errno(st);
+	}
+	#else
+	if((fd=openat(dir,path,O_WRONLY|O_CREAT|O_TRUNC,0644))<0){
+		telog_warn("open config '%s' failed",path);
+		return -errno;
+	}
+	#endif
+	str_write(fd,"#!/usr/bin/confctl -L\n");
+	str_write(fd,"# -*- coding: utf-8 -*-\n");
+	str_write(fd,"##\n## Simple Init Configuration Store\n##\n\n");
 	print_conf(fd,store,"");
+	get_buffer(0);
+	#ifdef ENABLE_UEFI
+	fd->Close(fd);
+	#else
 	close(fd);
 	sync();
+	#endif
 	return 0;
 }
 
@@ -213,13 +280,69 @@ static int conf_parse(const char*path,char*data,size_t len){
 	return 0;
 }
 
-static int conf_load(int dir,const char*path){
-	int fd=-1,r=0;
+static int conf_load(_ROOT_TYPE dir,const char*path){
+	int r;
 	void*data;
-	struct stat st;
 	struct conf*store=conf_get_store();
 	errno=0;
 	if(!store)ERET(EINVAL);
+	char xpath[PATH_MAX]={0};
+	strncpy(xpath,path,PATH_MAX-1);
+	#ifdef ENABLE_UEFI
+	EFI_FILE_PROTOCOL*fd;
+	EFI_FILE_INFO*info;
+	UINTN infos=sizeof(EFI_FILE_INFO)+256;
+	char *cp=xpath;
+	CHAR16 xp[PATH_MAX]={0};
+	do{if(*cp=='/')*cp='\\';}while(*cp++);
+	mbstowcs(xp,xpath,sizeof(xp)-1);
+	EFI_STATUS st=dir->Open(dir,&fd,xp,EFI_FILE_MODE_READ,0);
+	if(EFI_ERROR(st)){
+		tlog_debug("open config '%s' failed: %llx",path,st);
+		r=-efi_status_to_errno(st);
+		goto fail;
+	}
+	if(!(info=AllocateZeroPool(infos))){
+		tlog_debug("allocate file info failed");
+		r=-ENOMEM;
+		goto fail;
+	}
+	st=fd->GetInfo(fd,&gEfiFileInfoGuid,&infos,info);
+	if(EFI_ERROR(st)){
+		tlog_debug("get config '%s' file info failed: %llx",path,st);
+		r=-efi_status_to_errno(st);
+		goto fail;
+	}
+	UINTN size=info->FileSize;
+	if(size>0x400000){
+		tlog_debug("config '%s' too large",path);
+		r=-EFBIG;
+		goto fail;
+	}
+	if(size>0){
+		if(!(data=AllocateZeroPool(size))){
+			tlog_debug("allocate file content failed");
+			r=ENOMEM;
+			goto fail;
+		}
+		st=fd->Read(fd,&size,data);
+		if(EFI_ERROR(st)){
+			tlog_debug("read '%s' failed: %llx",path,st);
+			FreePool(data);
+			r=-efi_status_to_errno(st);
+			goto fail;
+		}
+		r=conf_parse(path,(char*)data,size);
+		if(r==0)errno=0;
+		FreePool(data);
+	}
+	fail:
+	if(info)FreePool(info);
+	if(fd)fd->Close(fd);
+	return r;
+	#else
+	int fd=-1;
+	struct stat st;
 	if((fd=openat(dir,path,O_RDONLY))<0){
 		telog_debug("open config '%s' failed",path);
 		r=-errno;
@@ -247,6 +370,7 @@ static int conf_load(int dir,const char*path){
 	fail:
 	if(fd>0)close(fd);
 	return r;
+	#endif
 }
 
 struct conf_file_hand conf_hand_conf={

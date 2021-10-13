@@ -1,6 +1,7 @@
 #define _GNU_SOURCE
 #include<stdlib.h>
 #include<string.h>
+#include<Protocol/SimpleFileSystem.h>
 #include"confd_internal.h"
 
 int confd=-1;
@@ -66,6 +67,14 @@ char**confd_ls(const char*path){
 	}
 	if(as==0)free(vx);
 	return rx;
+}
+
+int confd_load_file(EFI_FILE_PROTOCOL*fd,const char*file){
+	return conf_load_file(fd,file);
+}
+
+int confd_save_file(EFI_FILE_PROTOCOL*fd,const char*file){
+	return conf_save_file(fd,file);
 }
 
 enum conf_type confd_get_type(const char*path){

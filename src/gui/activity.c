@@ -117,7 +117,6 @@ int guiact_do_home(){
 	list*acts=guiact_get_activities(),*d;
 	if(!acts||list_is_alone(acts))return 0;
 	LIST_DATA_DECLARE(c,list_last(acts),struct gui_activity*);
-	if(c->reg->back&&c->reg->ask_exit)c->reg->ask_exit(c);
 	if(c->reg->quiet_exit)c->reg->quiet_exit(c);
 	guiact_remove_last(false);
 	while((d=list_last(acts))&&d->prev){

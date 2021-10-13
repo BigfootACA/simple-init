@@ -10,12 +10,13 @@
 #include"gui/tools.h"
 #include"gui/msgbox.h"
 #include"gui/activity.h"
+#include"gui/filepicker.h"
 #define TAG "conftool"
 #define MIME_DIR _PATH_USR"/share/pixmaps/mime"
 #define MIME_EXT ".png"
 
 static lv_obj_t*view,*scr,*info,*lbl_path,*last_btn;
-static lv_obj_t*btn_add,*btn_reload,*btn_delete,*btn_edit,*btn_home;
+static lv_obj_t*btn_add,*btn_reload,*btn_delete,*btn_edit,*btn_home,*btn_load,*btn_save;
 static list*path=NULL,*items=NULL;
 static lv_coord_t bm,bw,bh,si;
 static lv_style_t img_s;
@@ -298,6 +299,8 @@ static int conftool_get_focus(struct gui_activity*d __attribute__((unused))){
 	lv_group_add_obj(gui_grp,btn_delete);
 	lv_group_add_obj(gui_grp,btn_edit);
 	lv_group_add_obj(gui_grp,btn_home);
+	lv_group_add_obj(gui_grp,btn_save);
+	lv_group_add_obj(gui_grp,btn_load);
 	return 0;
 }
 
@@ -313,6 +316,8 @@ static int conftool_lost_focus(struct gui_activity*d __attribute__((unused))){
 	lv_group_remove_obj(btn_delete);
 	lv_group_remove_obj(btn_edit);
 	lv_group_remove_obj(btn_home);
+	lv_group_remove_obj(btn_save);
+	lv_group_remove_obj(btn_load);
 	return 0;
 }
 
@@ -327,6 +332,20 @@ static bool call_delete(uint16_t id,const char*text __attribute__((unused)),void
 		}while((o=o->next));
 		load_view();
 	}
+	return false;
+}
+
+static bool config_save_cb(bool ok,const char**p,uint16_t cnt,void*user_data __attribute__((unused))){
+	if(!ok)return false;
+	if(!p||!p[0]||p[1]||cnt!=1)return true;
+	guiact_start_activity_by_name("config-save",(void*)p[0]);
+	return false;
+}
+
+static bool config_load_cb(bool ok,const char**p,uint16_t cnt,void*user_data __attribute__((unused))){
+	if(!ok)return false;
+	if(!p||!p[0]||p[1]||cnt!=1)return true;
+	guiact_start_activity_by_name("config-load",(void*)p[0]);
 	return false;
 }
 
@@ -356,11 +375,15 @@ static void btns_cb(lv_obj_t*obj,lv_event_t e){
 		list_free_all_def(path);
 		path=NULL;
 		load_view();
+	}else if(obj==btn_save){
+		filepicker_set_max_item(filepicker_create(config_save_cb,"Select file to save"),1);
+	}else if(obj==btn_load){
+		filepicker_set_max_item(filepicker_create(config_load_cb,"Select file to load"),1);
 	}
 }
 
 static int conftool_draw(struct gui_activity*act){
-	lv_coord_t btx=gui_font_size,btm=btx/2,btw=(gui_sw-btm)/5-btm,bth=btx*2;
+	lv_coord_t btx=gui_font_size,btm=btx/2,btw=(gui_sw-btm)/7-btm,bth=btx*2;
 	scr=act->page;
 
 	view=lv_page_create(scr,NULL);
@@ -428,6 +451,22 @@ static int conftool_draw(struct gui_activity*act){
 	lv_obj_align(btn_home,btn_edit,LV_ALIGN_OUT_RIGHT_MID,btm,0);
 	lv_obj_set_style_local_radius(btn_home,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
 	lv_label_set_text(lv_label_create(btn_home,NULL),LV_SYMBOL_HOME);
+
+	btn_save=lv_btn_create(act->page,NULL);
+	lv_obj_set_size(btn_save,btw,bth);
+	lv_obj_set_event_cb(btn_save,btns_cb);
+	lv_obj_set_user_data(btn_save,"save");
+	lv_obj_align(btn_save,btn_home,LV_ALIGN_OUT_RIGHT_MID,btm,0);
+	lv_obj_set_style_local_radius(btn_save,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
+	lv_label_set_text(lv_label_create(btn_save,NULL),LV_SYMBOL_SAVE);
+
+	btn_load=lv_btn_create(act->page,NULL);
+	lv_obj_set_size(btn_load,btw,bth);
+	lv_obj_set_event_cb(btn_load,btns_cb);
+	lv_obj_set_user_data(btn_load,"load");
+	lv_obj_align(btn_load,btn_save,LV_ALIGN_OUT_RIGHT_MID,btm,0);
+	lv_obj_set_style_local_radius(btn_load,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
+	lv_label_set_text(lv_label_create(btn_load,NULL),LV_SYMBOL_UPLOAD);
 
 	return 0;
 }

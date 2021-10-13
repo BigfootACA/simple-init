@@ -8,6 +8,8 @@ extern struct gui_register guireg_uefi_shell;
 extern struct gui_register guireg_mouse_menu;
 extern struct gui_register guireg_theme_menu;
 extern struct gui_register guireg_text_edit;
+extern struct gui_register guireg_conf_save;
+extern struct gui_register guireg_conf_load;
 extern struct gui_register guireg_benchmark;
 extern struct gui_register guireg_backlight;
 extern struct gui_register guireg_logviewer;
@@ -38,6 +40,8 @@ struct gui_register*guiact_register[]={
 	&guireg_theme_menu,
 	&guireg_benchmark,
 	&guireg_text_edit,
+	&guireg_conf_save,
+	&guireg_conf_load,
 	&guireg_language,
 	&guireg_calendar,
 	&guireg_conftool,

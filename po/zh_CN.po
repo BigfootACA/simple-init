@@ -1415,3 +1415,27 @@ msgstr "文件打开"
 
 msgid "Open file with"
 msgstr "文件打开方式"
+
+msgid "Select file to save"
+msgstr "选择要保存的文件"
+
+msgid "Select file to load"
+msgstr "选择要加载的文件"
+
+msgid "Save config failed: %m"
+msgstr "保存配置文件失败: %m"
+
+msgid "Load config failed: %m"
+msgstr "加载配置文件失败: %m"
+
+msgid "Save config to '%s'?"
+msgstr "是否保存配置到文件'%s'？"
+
+msgid "Load config to '%s'?"
+msgstr "是否从文件'%s'加载配置？"
+
+msgid "Save Config"
+msgstr "保存配置文件"
+
+msgid "Load Config"
+msgstr "加载配置文件"

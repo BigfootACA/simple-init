@@ -70,6 +70,8 @@
   interface/settings/mouse.c
   interface/settings/theme.c
   interface/conftool/create.c
+  interface/conftool/confsave.c
+  interface/conftool/confload.c
   interface/conftool/conftool.c
   interface/core/reboot.c
   interface/core/sysbar.c

@@ -113,7 +113,7 @@ static void on_change_dir(struct fileview*fv,char*old __attribute__((unused)),ch
 	struct filepicker*fp=fileview_get_data(fv);
 	if(!fp)return;
 	lv_label_set_text(fp->cur_path,new);
-	lv_obj_set_enabled(fp->new,!fsext_is_multi&&!fileview_is_top(fv));
+	lv_obj_set_enabled(fp->new,!fsext_is_multi||!fileview_is_top(fv));
 }
 
 static void on_item_select(

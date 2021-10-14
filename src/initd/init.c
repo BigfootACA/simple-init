@@ -15,6 +15,7 @@
 #include"defines.h"
 #include"cmdline.h"
 #include"service.h"
+#include"language.h"
 #include"proctitle.h"
 
 enum init_status status;
@@ -37,6 +38,8 @@ static int system_boot(){
 	wait_logfs();
 	wait_conffs();
 
+	char*lang=confd_get_string("language",NULL);
+	if(lang)lang_set(lang);
 	return r;
 }
 

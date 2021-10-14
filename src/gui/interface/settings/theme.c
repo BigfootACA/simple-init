@@ -16,9 +16,7 @@ static void dark_switch(lv_obj_t*obj,lv_event_t e){
 	lv_obj_set_x(lbl_tip_icon,gui_font_size);
 	lv_obj_set_x(lbl_tips,gui_font_size+lv_obj_get_width(lbl_tip_icon));
 	gui_dark=val;
-	#ifndef ENABLE_UEFI
 	confd_set_boolean("gui.dark",gui_dark);
-	#endif
 }
 
 static void ok_click(lv_obj_t*obj,lv_event_t e){

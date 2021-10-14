@@ -84,7 +84,7 @@ void init_do_exit(){
 	// terminate service scheduler
 	stop_scheduler();
 
-	// shutdown loggered
+	// shutdown loggerd
 	logger_exit();
 
 	// shutdown confd
@@ -119,7 +119,7 @@ int init_main(int argc __attribute__((unused)),char**argv __attribute__((unused)
 	int r;
 	status=INIT_BOOT;
 
-	// precheck
+	// pre check
 	if(getpid()!=1)return trlog_emerg(1,"must be run as PID 1.");
 	if(getuid()!=0||geteuid()!=0)return trlog_emerg(1,"must be run as USER 0(root)");
 	if(getgid()!=0||getegid()!=0)return trlog_emerg(1,"must be run as GROUP 0(root)");

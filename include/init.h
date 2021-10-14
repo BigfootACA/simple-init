@@ -63,6 +63,12 @@ extern int setup_logfs();
 // src/initd/logfs.c: wait logfs setup done
 extern int wait_logfs();
 
+// src/initd/conffs.c: setup conffs
+extern int setup_conffs();
+
+// src/initd/conffs.c: wait conffs setup done
+extern int wait_conffs();
+
 // src/initd/reboot.c: init call reboot
 extern int call_reboot(long rb,char*cmd);
 

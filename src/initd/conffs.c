@@ -1,0 +1,103 @@
+#define _GNU_SOURCE
+#include<errno.h>
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+#include<pthread.h>
+#ifdef ENABLE_BLKID
+#include<blkid/blkid.h>
+#endif
+#include"str.h"
+#include"init.h"
+#include"confd.h"
+#include"logger.h"
+#include"system.h"
+#include"defines.h"
+
+#define TAG "conffs"
+#define DEFAULT_CONFFS_FILE "simple-init.linux.conf"
+#define DEFAULT_CONFFS_BLOCK "PARTLABEL=logfs"
+
+static pthread_t t_conffs;
+
+static int _setup_conffs(){
+	int e=0;
+	static char*base="runtime.cmdline";
+	char*conffs=strdup(confd_get_string_base(base,"conffs",DEFAULT_CONFFS_BLOCK));
+	char*conffile=confd_get_string_base(base,"conffile",DEFAULT_CONFFS_FILE);
+	if(!conffs)ERET(ENOMEM);
+
+	wait_block(conffs,10,TAG);
+
+	if(conffs[0]!='/'){
+	#ifdef ENABLE_BLKID
+		char*x=blkid_evaluate_tag(conffs,NULL,NULL);
+		free(conffs);
+		conffs=x;
+	#else
+		tlog_alert("evaluate tag support is disabled");
+	#endif
+	}
+	if(!conffs)return tlog_warn("conffs not found");
+
+	char*type=NULL;
+	#ifdef ENABLE_BLKID
+	blkid_cache cache=NULL;
+	blkid_get_cache(&cache,NULL);
+	if(!(type=blkid_get_tag_value(cache,"TYPE",conffs))){
+		telog_warn("cannot determine fstype in conffs %s",conffs);
+		type="vfat";
+		blkid_put_cache(cache);
+		cache=NULL;
+	}
+
+	#ifdef ENABLE_KMOD
+	char mod[64]={0};
+	snprintf(mod,63,"fs-%s",type);
+	insmod(mod,false);
+	#endif
+	#endif
+
+	char point[256];
+	if(!auto_mountpoint(point,256)){
+		e=terlog_error(-errno,"cannot get new mountpoint");
+		goto ex;
+	}
+
+	if(xmount(false,conffs,point,type,"rw,noatime",true)!=0){
+		e=-errno;
+		goto ex;
+	}
+
+	char path[PATH_MAX]={0};
+	snprintf(path,PATH_MAX-1,"%s/%s",point,conffile);
+	e=confd_set_default_config(path);
+	confd_load_file(path);
+	ex:
+	#ifdef ENABLE_BLKID
+	if(cache){
+		if(type)free(type);
+		blkid_put_cache(cache);
+	}
+	#endif
+	free(conffs);
+	return e;
+}
+
+static void*_conffs_thread(void*d __attribute__((unused))){
+	_setup_conffs();
+	return NULL;
+}
+
+int setup_conffs(){
+	pthread_create(&t_conffs,NULL,_conffs_thread,NULL);
+	if(!t_conffs)return -1;
+	pthread_setname_np(t_conffs,"ConfFS Setup");
+	return 0;
+}
+
+int wait_conffs(){
+	if(!t_conffs)return -1;
+	pthread_join(t_conffs,NULL);
+	return 0;
+}

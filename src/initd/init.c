@@ -35,6 +35,7 @@ static int system_boot(){
 	init_environ();
 
 	wait_logfs();
+	wait_conffs();
 
 	return r;
 }
@@ -51,6 +52,7 @@ int system_down(){
 		tlog_info("found init %s in %s",newinit,root);
 		return run_switch_root(root,newinit);
 	}
+	confd_save_file(NULL);
 	tlog_alert("system is going down...");
 	long cmd=RB_AUTOBOOT;
 	char*data=NULL;

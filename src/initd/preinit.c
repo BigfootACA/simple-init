@@ -130,5 +130,8 @@ int preinit(){
 	// setup logfs and save log
 	setup_logfs();
 
+	// setup conffs and load conf
+	setup_conffs();
+
 	return 0;
 }

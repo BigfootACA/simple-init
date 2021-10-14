@@ -11,4 +11,5 @@ add_library(init_initd STATIC
 	socket.c
 	client.c
 	bootsvc.c
+	conffs.c
 )

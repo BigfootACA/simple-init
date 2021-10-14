@@ -18,7 +18,7 @@ enum conf_type{
 };
 
 // src/confd/client.c: open confd socket
-extern int open_confd_socket(char*tag,char*path);
+extern int open_confd_socket(bool quiet,char*tag,char*path);
 
 // src/confd/client.c: close confd socket
 extern void close_confd_socket();
@@ -76,6 +76,6 @@ DECLARE_FUNC(confd_get_integer, data,int64_t,int64_t);
 DECLARE_FUNC(confd_get_boolean, data,bool,   bool);
 
 // open default socket
-#define open_default_confd_socket(tag) open_confd_socket(tag,DEFAULT_CONFD)
+#define open_default_confd_socket(quiet,tag) open_confd_socket(quiet,tag,DEFAULT_CONFD)
 
 #endif

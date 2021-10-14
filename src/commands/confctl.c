@@ -164,7 +164,7 @@ int confctl_main(int argc,char**argv){
 		(op!=OPER_NONE&&ac>0)
 	)return usage(1);
 	if(!socket)socket=DEFAULT_CONFD;
-	if(open_confd_socket("confctl",socket)<0)return 2;
+	if(open_confd_socket(false,"confctl",socket)<0)return 2;
 	int r;
 	switch(op){
 		case OPER_QUIT:

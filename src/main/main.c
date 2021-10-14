@@ -4,6 +4,7 @@
 #include<stdio.h>
 #include"proctitle.h"
 #include"shell.h"
+#include"confd.h"
 #include"language.h"
 #include"defines.h"
 #include"output.h"
@@ -13,6 +14,9 @@ int main(int argc,char**argv){
 
 	// init proctitle
 	spt_init(argc,argv);
+
+	// init config daemon connection
+	open_default_confd_socket(true,NULL);
 
 	// init i18n locales
 	lang_init_locale();

@@ -8,6 +8,7 @@
 #include"confd.h"
 #include"logger.h"
 #include"defines.h"
+#include"language.h"
 #include"init_internal.h"
 #include"gui/msgbox.h"
 #include"gui/activity.h"
@@ -177,8 +178,9 @@ struct gui_register guireg_guiapp={
 int guiapp_main(int argc __attribute((unused)),char**argv __attribute((unused))){
 	#ifndef ENABLE_UEFI
 	open_socket_logfd_default();
-	open_default_confd_socket(TAG);
+	open_default_confd_socket(false,TAG);
 	open_socket_initfd(DEFAULT_INITD,false);
+	lang_init_locale();
 	#endif
 	return gui_init();
 }

@@ -57,7 +57,6 @@ static int gadget_startup(struct service*svc __attribute__((unused))){
 		.configs = GADGET_CFGARRAY{&gc,NULL},
 	};
 	char**items,*item,*udc;
-	open_default_confd_socket(TAG);
 	if(confd_get_type("gadget")!=TYPE_KEY)init_gadget_conf();
 	if(
 		!(g.name=confd_get_string("gadget.name",NULL))||

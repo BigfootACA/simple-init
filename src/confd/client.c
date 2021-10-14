@@ -8,15 +8,15 @@
 
 int confd=-1;
 
-int open_confd_socket(char*tag,char*path){
+int open_confd_socket(bool quiet,char*tag,char*path){
 	if(confd>=0)close(confd);
 	struct sockaddr_un n={0};
 	n.sun_family=AF_UNIX;
 	strncpy(n.sun_path,path,sizeof(n.sun_path)-1);
 	if((confd=socket(AF_UNIX,SOCK_STREAM,0))<0)
-		return erlog_error(-errno,tag,"cannot create socket");
+		return quiet?-errno:erlog_error(-errno,tag,"cannot create socket");
 	if(connect(confd,(struct sockaddr*)&n,sizeof(n))<0){
-		elog_error(tag,"cannot connect confd socket %s",n.sun_path);
+		if(!quiet)elog_error(tag,"cannot connect confd socket %s",n.sun_path);
 		close(confd);
 		confd=-1;
 	}

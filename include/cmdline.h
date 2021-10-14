@@ -15,12 +15,6 @@ struct boot_options{
 	// verbose log
 	bool verbose;
 
-	// logfs block path
-	char logfs_block[64];
-
-	// log file name template
-	char logfs_file[64];
-
 	// boot config
 	boot_config*config;
 };

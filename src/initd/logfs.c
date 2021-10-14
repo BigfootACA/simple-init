@@ -9,6 +9,7 @@
 #endif
 #include"str.h"
 #include"init.h"
+#include"confd.h"
 #include"logger.h"
 #include"system.h"
 #include"defines.h"
@@ -22,15 +23,10 @@ static pthread_t t_logfs;
 
 static int _setup_logfs(){
 	int e=0;
-	char*logfs=strdup(boot_options.logfs_block);
-	char*logfile=boot_options.logfs_file;
+	static char*base="runtime.cmdline";
+	char*logfs=strdup(confd_get_string_base(base,"logfs",DEFAULT_LOGFS_BLOCK));
+	char*logfile=confd_get_string_base(base,"logfile",DEFAULT_LOGFS_FILE);
 	if(!logfs)ERET(ENOMEM);
-
-	if(logfile[0]==0)logfile=DEFAULT_LOGFS_FILE;
-	if(logfs[0]==0){
-		free(logfs);
-		if(!(logfs=strdup(DEFAULT_LOGFS_BLOCK)))ERET(ENOMEM);
-	}
 
 	wait_block(logfs,10,TAG);
 

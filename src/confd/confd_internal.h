@@ -77,6 +77,8 @@ struct conf_file_hand{
 	conf_file_hand_func save;
 };
 
+extern bool conf_store_changed;
+
 extern struct conf_file_hand*conf_hands[];
 
 // src/confd/client.c: current confd fd

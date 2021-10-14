@@ -372,6 +372,7 @@ static int conf_load(_ROOT_TYPE dir,const char*path){
 			goto fail;
 		}
 		r=conf_parse(path,(char*)data,st.st_size);
+		conf_store_changed=true;
 		munmap(data,st.st_size);
 	}
 	fail:

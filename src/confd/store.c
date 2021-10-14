@@ -16,6 +16,7 @@ static pthread_mutex_t store_lock;
 #define UNLOCK(lock) pthread_mutex_unlock(&lock)
 #endif
 
+bool conf_store_changed=false;
 static struct conf conf_store={.type=TYPE_KEY};
 
 struct conf*conf_get_store(){return &conf_store;}
@@ -159,6 +160,7 @@ static int conf_del_obj(struct conf*c){
 		break;
 	}while((p=p->next));
 	free(c);
+	conf_store_changed=true;
 	UNLOCK(store_lock);
 	return 0;
 }
@@ -178,6 +180,7 @@ int conf_del(const char*path){
 			ERET(EBADMSG);\
 		}\
 		VALUE_##_tag(c)=data;\
+		conf_store_changed=true;\
 		UNLOCK(store_lock);\
 		return 0;\
 	}\

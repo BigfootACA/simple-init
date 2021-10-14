@@ -88,6 +88,7 @@ static void str_write(_ROOT_TYPE fd,char*str){
 static int print_conf(_ROOT_TYPE fd,struct conf*key,const char*name){
 	size_t size=0;
 	char path[PATH_MAX]={0},*buf,*str;
+	if(strcmp(key->name,"runtime")==0&&!*name)return 0;
 	if(key->name[0]){
 		if(!name[0])strcpy(path,key->name);
 		else snprintf(path,PATH_MAX-1,"%s.%s",name,key->name);
@@ -195,7 +196,9 @@ static void conf_parse_line(int*err,const char*name,size_t n,char*data){
 	char*p=strchr(data,'=');
 	if(!p){
 		if(!check_valid(data,CONF_KEY_CHARS))goto inv_key;
-		if(strlen(data)==0)goto inv_key;
+		size_t ds=strlen(data);
+		if(ds==0)goto inv_key;
+		if(strncmp(data,"runtime.",MIN(7,ds))==0)goto runtime;
 		conf_del(data);
 		return;
 	}
@@ -207,6 +210,7 @@ static void conf_parse_line(int*err,const char*name,size_t n,char*data){
 	if(ks==0)goto inv_key;
 	if(vs==0)goto inv_val;
 	if(!check_valid(key,CONF_KEY_CHARS))goto inv_key;
+	if(strncmp(key,"runtime.",MIN(7,ks))==0)goto runtime;
 	if(value[0]=='\''){
 		if(vs<2||value[vs-1]!='\'')goto inv_val;
 		line_set_string(key,value,vs);
@@ -222,6 +226,9 @@ static void conf_parse_line(int*err,const char*name,size_t n,char*data){
 		if(errno!=0||end==value)goto inv_val;
 		conf_set_integer(key,i);
 	}
+	return;
+	runtime:
+	tlog_debug("%s: skip runtime config in line %zu",name,n);
 	return;
 	inv_key:
 	tlog_warn("%s: invalid key in line %zu",name,n);
@@ -281,7 +288,7 @@ static int conf_parse(const char*path,char*data,size_t len){
 }
 
 static int conf_load(_ROOT_TYPE dir,const char*path){
-	int r;
+	int r=0;
 	void*data;
 	struct conf*store=conf_get_store();
 	errno=0;

@@ -17,8 +17,8 @@ set -e
 	"${BUILD}" \
 	assets_rootfs
 pushd "${BUILD}" >/dev/null
-"${LD:-${CROSS_COMPILE}ld}" \
-	-r -b binary \
+"${CC:-${CROSS_COMPILE}gcc}" \
+	-r -Wl,-b,binary \
 	-o rootfs_data.o \
 	rootfs.bin
 popd >/dev/null

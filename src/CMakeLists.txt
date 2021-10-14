@@ -44,9 +44,17 @@ if("${ENABLE_ASAN}" STREQUAL "ON")
 endif()
 
 add_custom_command(
-	OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/rootfs.c" "${CMAKE_CURRENT_BINARY_DIR}/rootfs_data.o"
-	COMMAND bash "${CMAKE_SOURCE_DIR}/scripts/gen-rootfs-source.sh" "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}" "${CMAKE_SOURCE_DIR}/root"
-	DEPENDS "${CMAKE_SOURCE_DIR}/root" "${CMAKE_SOURCE_DIR}/root/usr/share/locale"
+	OUTPUT
+		"${CMAKE_CURRENT_BINARY_DIR}/rootfs.c"
+		"${CMAKE_CURRENT_BINARY_DIR}/rootfs_data.o"
+	COMMAND env CC="${CMAKE_C_COMPILER}" bash
+		"${CMAKE_SOURCE_DIR}/scripts/gen-rootfs-source.sh"
+		"${CMAKE_SOURCE_DIR}"
+		"${CMAKE_CURRENT_BINARY_DIR}"
+		"${CMAKE_SOURCE_DIR}/root"
+	DEPENDS
+		"${CMAKE_SOURCE_DIR}/root"
+		"${CMAKE_SOURCE_DIR}/root/usr/share/locale"
 )
 
 find_package(PkgConfig REQUIRED)

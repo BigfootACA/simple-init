@@ -6,7 +6,7 @@
 
 extern boot_config boot_charger;
 int cmdline_androidboot(char*k,char*v){
-	char*base="cmdline",*conf;
+	char*base="runtime.cmdline",*conf;
 	if(strncmp(k,"androidboot.",12)!=0)return 0;
 	k+=12;
 	if(strcmp(k,"mode")==0){

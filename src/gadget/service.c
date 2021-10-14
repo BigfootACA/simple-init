@@ -12,8 +12,8 @@
 static char*base="gadget.func";
 
 static void init_gadget_conf(){
-	char*udc=confd_get_string("cmdline.udc",NULL);
-	char*serial=confd_get_string("cmdline.serial","1234567890");
+	char*udc=confd_get_string("runtime.cmdline.udc",NULL);
+	char*serial=confd_get_string("runtime.cmdline.serial","1234567890");
 	if(!serial)return;
 	if(!udc)udc=gadget_find_udc();
 

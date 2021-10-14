@@ -18,6 +18,7 @@
 #include"proctitle.h"
 #define TAG "confd"
 
+static pthread_t save_thread;
 static char*def_path=NULL;
 static char*sock=DEFAULT_CONFD;
 static bool clean=false,protect=false;
@@ -119,7 +120,10 @@ static void*_async_save_thread(void*d){
 	struct confd_msg ret;
 	confd_internal_init_msg(&ret,CONF_OK);
 	ret.code=-conf_save_file(AT_FDCWD,data->path[0]?data->path:def_path);
-	if(ret.code==0&&errno!=0)ret.code=errno;
+	if(ret.code==0){
+		if(errno!=0)ret.code=errno;
+		else if(!data->path[0])conf_store_changed=false;
+	}
 	confd_internal_send(data->fd,&ret);
 	free(data);
 	return NULL;
@@ -275,6 +279,19 @@ static int listen_confd_socket(){
 	ERET(er);
 }
 
+static void*confd_save_thread(void*d __attribute__((unused))){
+	for(;;){
+		sleep(conf_get_integer("confd.save_interval",10));
+		if(!def_path)continue;
+		if(conf_store_changed){
+			int r=confd_save_file(def_path);
+			if(r==0&&errno==0)conf_store_changed=false;
+			sync();
+		}
+	}
+	return NULL;
+}
+
 int confd_thread(int cfd){
 	static size_t es=sizeof(struct epoll_event);
 	int r,e=0,fd;
@@ -301,6 +318,7 @@ int confd_thread(int cfd){
 		confd_internal_send_code(cfd,CONF_OK,0);
 		close(cfd);
 	}
+	pthread_create(&save_thread,NULL,confd_save_thread,NULL);
 	while(1){
 		r=epoll_wait(efd,evs,64,-1);
 		if(r==-1){
@@ -395,5 +413,5 @@ int start_confd(char*tag,pid_t*p){
 	while(msg.action!=CONF_OK);
 	if(p)*p=pid;
 	close(fds[0]);
-	return open_default_confd_socket(tag);
+	return open_default_confd_socket(false,tag);
 }

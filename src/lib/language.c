@@ -109,6 +109,7 @@ char*lang_get_locale(char*def){
 	if((l=getenv("LC_ALL")))return l;
 	if((l=getenv("LANG")))return l;
 	if((l=getenv("LANGUAGE")))return l;
+	if((l=confd_get_string("language","C")))return l;
 	return NULL;
 	#endif
 }

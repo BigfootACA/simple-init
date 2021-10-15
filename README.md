@@ -28,6 +28,7 @@ This project has not been completed and may not work properly.
 | freetype2   | freetype    | GUI load turetype fonts    |
 | lodepng     | lodepng     | GUI load png pictures      |
 | vncserver   | libvnc      | GUI over VNC Server        |
+| hivex       | libguestfs  | Windows Registry/BCD Edit  |
 
 ### Code used
 

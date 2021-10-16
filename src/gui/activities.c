@@ -22,6 +22,7 @@ extern struct gui_register guireg_regedit;
 extern struct gui_register guireg_gadget;
 extern struct gui_register guireg_reboot;
 extern struct gui_register guireg_guiapp;
+extern struct gui_register guireg_mount;
 struct gui_register*guiact_register[]={
 	#ifdef ENABLE_UEFI
 	&guireg_uefi_bootmenu,
@@ -37,6 +38,7 @@ struct gui_register*guiact_register[]={
 	&guireg_logviewer,
 	&guireg_vibrator,
 	&guireg_gadget,
+	&guireg_mount,
 	#endif
 	#ifdef ENABLE_HIVEX
 	&guireg_regedit,

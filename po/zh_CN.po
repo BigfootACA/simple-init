@@ -1454,3 +1454,21 @@ msgstr "保存注册表失败: %m"
 
 msgid "Select registry file to load"
 msgstr "选择要加载的注册表文件"
+
+msgid "Mount Manager"
+msgstr "挂载管理器"
+
+msgid "Mount"
+msgstr "挂载"
+
+msgid "Unmount"
+msgstr "卸载"
+
+msgid "Unmount failed: %m"
+msgstr "卸载失败: %m"
+
+msgid "Are you sure you want to unmount '%s'?"
+msgstr "你确定要卸载'%s'吗？"
+
+msgid "Read mount table failed"
+msgstr "读取挂载表失败"

@@ -30,6 +30,7 @@ add_library(init_gui STATIC
 	interface/apps/benchmark.c
 	interface/apps/vibrator.c
 	interface/apps/calendar.c
+	interface/apps/mount.c
 	drivers/drm.c
 	drivers/vnc.c
 	drivers/fbdev.c

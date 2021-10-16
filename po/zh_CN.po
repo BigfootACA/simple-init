@@ -1442,3 +1442,15 @@ msgstr "加载配置文件"
 
 msgid "UEFI Application Start"
 msgstr "启动UEFI程序"
+
+msgid "open registry file '%s' failed: %m"
+msgstr "打开注册表文件'%s'失败: %m"
+
+msgid "open registry root failed: %m"
+msgstr "打开注册表根失败: %m"
+
+msgid "Save registry file failed: %m"
+msgstr "保存注册表失败: %m"
+
+msgid "Select registry file to load"
+msgstr "选择要加载的注册表文件"

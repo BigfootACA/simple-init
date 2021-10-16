@@ -19,6 +19,8 @@ add_library(init_gui STATIC
 	interface/conftool/confsave.c
 	interface/conftool/confload.c
 	interface/conftool/create.c
+	interface/regedit/string.c
+	interface/regedit/regedit.c
 	interface/core/reboot.c
 	interface/core/sysbar.c
 	interface/core/charger.c

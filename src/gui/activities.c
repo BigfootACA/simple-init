@@ -18,6 +18,7 @@ extern struct gui_register guireg_language;
 extern struct gui_register guireg_conftool;
 extern struct gui_register guireg_calendar;
 extern struct gui_register guireg_filemgr;
+extern struct gui_register guireg_regedit;
 extern struct gui_register guireg_gadget;
 extern struct gui_register guireg_reboot;
 extern struct gui_register guireg_guiapp;
@@ -36,6 +37,9 @@ struct gui_register*guiact_register[]={
 	&guireg_logviewer,
 	&guireg_vibrator,
 	&guireg_gadget,
+	#endif
+	#ifdef ENABLE_HIVEX
+	&guireg_regedit,
 	#endif
 	&guireg_theme_menu,
 	&guireg_benchmark,

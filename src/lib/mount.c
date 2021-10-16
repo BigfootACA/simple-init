@@ -76,9 +76,11 @@ struct mount_item**read_proc_mounts(){
 	if(!f)return NULL;
 	size_t bs=sizeof(struct mount_item);
 	struct mount_item**array=NULL,**arr,*buff;
-	char line[BUFFER_SIZE]={0};
+	char line[BUFFER_SIZE];
 	while(!feof(f)){
+		memset(line,0,BUFSIZ);
 		fgets(line,BUFFER_SIZE,f);
+		if(!line[0])continue;
 		char**c=args2array(line,0);
 		if(!c||char_array_len(c)!=6)continue;
 		if(!(buff=malloc(bs))){

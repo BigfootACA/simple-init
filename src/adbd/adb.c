@@ -10,6 +10,7 @@
 #include<sys/utsname.h>
 #include"str.h"
 #include"list.h"
+#include"confd.h"
 #include"logger.h"
 #include"keyval.h"
 #include"version.h"
@@ -482,11 +483,22 @@ int free_adb_data(struct adb_data*d){
 	free(d);
 	return 0;
 }
+static void adbd_exit(){
+	tlog_debug("adbd exiting");
+	confd_delete("runtime.pid.adbd");
+}
+static void adbd_signal(int s __attribute__((unused))){
+	exit(0);
+}
 int adbd_init(struct adb_data*d){
 	if(!d)ERET(EINVAL);
 	data=d;
 	umask(000);
-	signal(SIGPIPE,SIG_IGN);
+	atexit(adbd_exit);
+	signal(SIGINT,adbd_signal);
+	signal(SIGTERM,adbd_signal);
+	signal(SIGQUIT,adbd_signal);
+	signal(SIGPIPE,adbd_signal);
 	init_transport_registration();
 	if(d->auth_enabled)adb_auth_init();
 	char local_name[30];
@@ -508,6 +520,7 @@ int adbd_init(struct adb_data*d){
 		break;
 		default:return trlog_error(-1,"unknown adb protocol");
 	}
+	confd_set_integer("runtime.pid.adbd",getpid());
 	fdevent_loop();
 	return 0;
 }

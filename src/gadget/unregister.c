@@ -2,10 +2,10 @@
 #include<unistd.h>
 #include<fcntl.h>
 #include<stdlib.h>
+#include<string.h>
+#include<sys/mount.h>
 #include"system.h"
-#include"logger.h"
 #include"gadget.h"
-#define TAG "gadget"
 
 int gadget_unregister_all(){
 	int o=open_usb_gadget();
@@ -54,7 +54,18 @@ int gadget_unregister_fd(int dir,char*name){
 		unlinkat(cs,rent->d_name,AT_REMOVEDIR);
 	}
 	closedir(subdir);
-	if(remove_folders(fs,AT_REMOVEDIR)<0)goto er;
+	struct mount_item**ms=read_proc_mounts();
+	if((cd=fdopendir(fs))){
+		while((ent=readdir(cd)))if(!is_virt_dir(ent)&&ent->d_type==DT_DIR){
+			char*e=ent->d_name,*x=strchr(e,'.');
+			if(ms&&x&&strncmp(e,"ffs",x-e)==0)for(size_t i=0;ms[i];i++)
+				if(strcmp(ms[i]->type,"functionfs")==0&&strcmp(ms[i]->source,x+1)==0)
+					umount(ms[i]->target);
+			unlinkat(fs,ent->d_name,AT_REMOVEDIR);
+		}
+		free(cd);
+	}
+	if(ms)free_mounts(ms);
 	if(remove_folders(ss,AT_REMOVEDIR)<0)goto er;
 	close(d);
 	return unlinkat(dir,name,AT_REMOVEDIR);

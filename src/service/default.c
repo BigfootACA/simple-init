@@ -46,7 +46,22 @@ int svc_default_stop(struct service*svc){
 }
 
 int svc_default_restart(struct service*svc){
-	if(svc_default_stop(svc)<0)return -errno;
+	switch(svc->status){
+		case STATUS_UNKNOWN:
+		case STATUS_FAILED:
+		case STATUS_STARTED:
+		case STATUS_RUNNING:
+			if((
+				svc->stop&&
+				svc->stop->prop.type==TYPE_FUNCTION&&
+				svc->stop->exec.func!=svc_default_stop?
+				svc->stop->exec.func:svc_default_stop
+			)(svc)<0)return -errno;
+		break;
+		case STATUS_STOPPING:
+		case STATUS_STARTING:ERET(EBUSY);
+		case STATUS_STOPPED:break;
+	}
 	tlog_notice("try to starting %s",svc_get_desc(svc));
 	open_socket_initfd(DEFAULT_INITD,true);
 	struct init_msg msg,response;

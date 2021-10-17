@@ -148,7 +148,9 @@ static int conf_del_obj(struct conf*c){
 		list*x;
 		if((p=list_first(c->keys)))do{
 			x=p->next;
+			UNLOCK(store_lock);
 			conf_del_obj(LIST_DATA(p,struct conf*));
+			LOCK(store_lock);
 		}while((p=x));
 		if(c->keys)free(c->keys);
 		c->keys=NULL;

@@ -16,8 +16,10 @@ static int check_stop_service(struct service*svc){
 		case STATUS_STARTING:
 		case STATUS_STOPPING:
 			ERET(EBUSY);
-		case STATUS_STOPPED:
 		case STATUS_FAILED:
+			if(svc->mode==WORK_ONCE)break;
+			// fallthrough
+		case STATUS_STOPPED:
 			ERET(ECHILD);
 		case STATUS_RUNNING:
 		case STATUS_STARTED:

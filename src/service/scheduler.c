@@ -41,8 +41,8 @@ void*scheduler_worker(void*data){
 		case SCHED_STOP:switch(w->service->status){
 			case STATUS_STARTING:
 			case STATUS_STOPPING:
-			case STATUS_STOPPED:
-			case STATUS_FAILED:break;
+			case STATUS_STOPPED:break;
+			case STATUS_FAILED:
 			default:svc_stop_service_nodep(w->service);
 		}break;
 		case SCHED_RELOAD:svc_reload_service(w->service);break;

@@ -21,12 +21,16 @@ int add_queue(struct service*svc,enum scheduler_action act){
 	switch(act){
 		case SCHED_START:switch(svc->status){
 			case STATUS_STARTED:
-			case STATUS_RUNNING:return 0;
+			case STATUS_RUNNING:
+				return 0;
 			default:;
 		}break;
 		case SCHED_STOP:switch(svc->status){
+			case STATUS_FAILED:
+				if(svc->mode==WORK_ONCE)break;
+				// fallthrough
 			case STATUS_STOPPED:
-			case STATUS_FAILED:return 0;
+				return 0;
 			default:;
 		}break;
 		default:;

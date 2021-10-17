@@ -1,5 +1,7 @@
 #ifndef FILEPICKER_H
 #define FILEPICKER_H
+#include<stdint.h>
+#include<stdbool.h>
 struct filepicker;
 typedef bool(*filepicker_callback)(bool ok,const char**path,uint16_t cnt,void*user_data);
 extern struct filepicker*filepicker_create(filepicker_callback callback,const char*title,...) __attribute__((format(printf,2,3)));

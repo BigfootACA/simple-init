@@ -254,6 +254,7 @@ int service_to_fd(const char *value){
 		if(strcmp(services[i].name,name)!=0)continue;
 		int ret=services[i].handle(arg);
 		if(ret>=0)fcntl(ret,F_SETFD,FD_CLOEXEC);
+		free(val);
 		return ret;
 	}
 	return terlog_warn(-1,"service %s not found",name);

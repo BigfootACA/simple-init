@@ -43,6 +43,7 @@ static void init_gadget_conf(){
 }
 
 static int gadget_startup(struct service*svc __attribute__((unused))){
+	#define XERR(msg...) {tlog_error(msg);goto fail;}
 	struct gadget_string gs={
 		.id=0x409,.serialnumber=NULL,
 		.product=NULL,.manufacturer=NULL,
@@ -57,28 +58,18 @@ static int gadget_startup(struct service*svc __attribute__((unused))){
 		.configs = GADGET_CFGARRAY{&gc,NULL},
 	};
 	char**items,*item,*udc;
+	open_default_confd_socket(false,TAG);
 	if(confd_get_type("gadget")!=TYPE_KEY)init_gadget_conf();
-	if(
-		!(g.name=confd_get_string("gadget.name",NULL))||
-		(g.vendor=confd_get_integer("gadget.id_vendor",0))==0||
-		(g.product=confd_get_integer("gadget.id_product",0))==0||
-		!(gs.manufacturer=confd_get_string("gadget.manufacturer",NULL))||
-		!(gs.product=confd_get_string("gadget.product",NULL))||
-		!(gs.serialnumber=confd_get_string("gadget.serial",NULL))||
-		!(gcs.configuration=confd_get_string("gadget.config",NULL))
-	){
-		tlog_error("invalid config");
-		goto fail;
-	}
+	if(!(g.name=confd_get_string("gadget.name",NULL)))XERR("invalid gadget name")
+	if((g.vendor=confd_get_integer("gadget.id_vendor",0))==0)XERR("invalid vendor id")
+	if((g.product=confd_get_integer("gadget.id_product",0))==0)XERR("invalid product id")
+	if(!(gs.manufacturer=confd_get_string("gadget.manufacturer",NULL)))XERR("invalid manufacturer")
+	if(!(gs.product=confd_get_string("gadget.product",NULL)))XERR("invalid product")
+	if(!(gs.serialnumber=confd_get_string("gadget.serial",NULL)))XERR("invalid serial")
+	if(!(gcs.configuration=confd_get_string("gadget.config",NULL)))XERR("invalid config")
 	tlog_info("register gadget");
-	if(gadget_register(&g)<0){
-		tlog_error("failed to register gadget");
-		goto fail;
-	}
-	if(!(items=confd_ls(base))){
-		tlog_error("failed to read functions list");
-		goto fail;
-	}
+	if(gadget_register(&g)<0)XERR("failed to register gadget");
+	if(!(items=confd_ls(base)))XERR("failed to read functions list")
 	for(int i=0;(item=items[i]);i++){
 		gadget_func f={0};
 		char*path,*mode;
@@ -109,12 +100,11 @@ static int gadget_startup(struct service*svc __attribute__((unused))){
 		if(path)free(path);
 		if(mode)free(mode);
 	}
-	if((udc=confd_get_string("gadget.udc",NULL))){
-		int r=gadget_start(&g,udc);
-		if(r!=0)tlog_error("start gadget failed with %s",udc);
-		free(udc);
-		if(r!=0)return -1;
-	}
+	if(!(udc=confd_get_string("gadget.udc",gadget_find_udc())))return trlog_error(-1,"get gadget udc failed");
+	int r=gadget_start(&g,udc);
+	if(r!=0)tlog_error("start gadget failed with %s",udc);
+	free(udc);
+	if(r!=0)return -1;
 	tlog_info("usb gadget initialized");
 	return 0;
 	fail:

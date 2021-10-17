@@ -108,9 +108,19 @@ int led_parse_arg(const char*arg,char*def){
 	int sysfs;
 	if(strcasecmp(d,"backlight")==0)sysfs=backlight_open_sysfs_class();
 	else if(strcasecmp(d,"leds")==0)sysfs=led_open_sysfs_class();
-	else return trlog_warn(-1,"unsupport led class: %s",d);
-	if(sysfs<0)return terlog_warn(-1,"open sysfs class %s failed",d);
-	return led_find_class(sysfs,p);
+	else{
+		tlog_warn("unsupport led class: %s",d);
+		free(buf);
+		return -1;
+	}
+	if(sysfs<0){
+		tlog_warn("open sysfs class %s failed",d);
+		free(buf);
+		return -1;
+	}
+	int r=led_find_class(sysfs,p);
+	free(buf);
+	return r;
 }
 
 int backlight_open_sysfs_class(){

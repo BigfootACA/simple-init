@@ -37,22 +37,22 @@ int gadget_unregister_fd(int dir,char*name){
 	struct dirent*rent;
 	if(!(subdir=fdopendir(cs)))goto er;
 	while((rent=readdir(subdir)))if(!is_virt_dir(rent)&&rent->d_type==DT_DIR){
-			int cfg,str;
-			if((cfg=openat(cs,rent->d_name,O_DIR|O_CLOEXEC))<0)continue;
-			if(remove_folders(cfg,0)<0){
-				close(cfg);
-				continue;
-			}
-			if((str=openat(cfg,"strings",O_DIR|O_CLOEXEC))<0)continue;
-			if(remove_folders(cfg,AT_REMOVEDIR)<0){
-				close(str);
-				close(cfg);
-				continue;
-			}
+		int cfg,str;
+		if((cfg=openat(cs,rent->d_name,O_DIR|O_CLOEXEC))<0)continue;
+		if(remove_folders(cfg,0)<0){
+			close(cfg);
+			continue;
+		}
+		if((str=openat(cfg,"strings",O_DIR|O_CLOEXEC))<0)continue;
+		if(remove_folders(cfg,AT_REMOVEDIR)<0){
 			close(str);
 			close(cfg);
-			unlinkat(cs,rent->d_name,AT_REMOVEDIR);
+			continue;
 		}
+		close(str);
+		close(cfg);
+		unlinkat(cs,rent->d_name,AT_REMOVEDIR);
+	}
 	closedir(subdir);
 	if(remove_folders(fs,AT_REMOVEDIR)<0)goto er;
 	if(remove_folders(ss,AT_REMOVEDIR)<0)goto er;
@@ -61,7 +61,7 @@ int gadget_unregister_fd(int dir,char*name){
 	tlog_info("unregister %s",name);
 	return z;
 	er:
-	telog_error("unregister %s failed",name);
+	if(name)telog_error("unregister %s failed",name);
 	if(cs>=0)close(cs);
 	if(fs>=0)close(fs);
 	if(ss>=0)close(ss);

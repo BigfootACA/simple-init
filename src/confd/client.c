@@ -157,7 +157,10 @@ char*confd_get_string(const char*path,char*def){
 	size_t s=res.data.data_len;
 	if(res.data.data_len==0)return xdef;
 	char*ret=malloc(s+1);
-	if(!ret)EPRET(ENOMEM);
+	if(!ret){
+		if(def)free(xdef);
+		EPRET(ENOMEM);
+	}
 	memset(ret,0,s+1);
 	if(s>0&&(size_t)read(confd,ret,s)!=s){
 		free(ret);

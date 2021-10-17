@@ -159,6 +159,6 @@ extern void*_memdup(void*mem,size_t len);
 #endif
 
 // src/lib/base64.c: base64 encode
-extern int b64_pton(char const*src,u_char*target,size_t targsize);
+extern int b64_pton(char const*src,unsigned char*target,size_t targsize);
 
 #endif

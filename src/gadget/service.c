@@ -3,6 +3,7 @@
 #include<stdlib.h>
 #include"service.h"
 #include"version.h"
+#include"system.h"
 #include"gadget.h"
 #include"logger.h"
 #include"confd.h"
@@ -102,9 +103,9 @@ static int gadget_startup(struct service*svc __attribute__((unused))){
 	}
 	if(!(udc=confd_get_string("gadget.udc",gadget_find_udc())))return trlog_error(-1,"get gadget udc failed");
 	int r=gadget_start(&g,udc);
-	if(r!=0)tlog_error("start gadget failed with %s",udc);
+	if(r<0)tlog_error("start gadget failed with %s",udc);
 	free(udc);
-	if(r!=0)return -1;
+	if(r<0)return -1;
 	tlog_info("usb gadget initialized");
 	return 0;
 	fail:
@@ -116,11 +117,21 @@ static int gadget_startup(struct service*svc __attribute__((unused))){
 	return -1;
 }
 
+static int gadget_shutdown(struct service*svc __attribute__((unused))){
+	open_default_confd_socket(false,TAG);
+	pid_t p=(pid_t)confd_get_integer("runtime.pid.adbd",0);
+	if(p>0)kill(p,SIGTERM);
+	char*gadget=confd_get_string("gadget.name",NULL);
+	if(gadget)gadget_unregister(gadget);
+	return 0;
+}
+
 int register_gadget_service(){
 	struct service*gadget=svc_create_service("usb-gadget",WORK_ONCE);
 	if(gadget){
 		svc_set_desc(gadget,"USB Gadget Startup");
 		svc_set_start_function(gadget,gadget_startup);
+		svc_set_stop_function(gadget,gadget_shutdown);
 		svc_add_depend(svc_system,gadget);
 	}
 	return 0;

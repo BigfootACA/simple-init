@@ -2,6 +2,12 @@
 #define ASSETS_H
 #include<stdbool.h>
 #include<sys/types.h>
+#ifndef uid_t
+typedef unsigned uid_t;
+#endif
+#ifndef gid_t
+typedef unsigned gid_t;
+#endif
 
 // generic entry metadata
 struct entry{

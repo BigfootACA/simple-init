@@ -116,38 +116,46 @@ static void do_paste(){
 
 struct open_data{
 	char*path;
+	uint32_t size;
 	lv_fs_file_t file;
 };
 
 static bool open_read_cb(uint16_t id,const char*name __attribute__((unused)),void*user_data){
 	struct open_data*od=user_data;
-	char buf[BUFSIZ];
-	uint32_t bs=0,rs=0;
+	char*buf;
+	uint32_t rs=0;
 	lv_fs_res_t res;
 	if(id==0){
 		if(cur_path)free(cur_path);
 		cur_path=od->path;
+		set_changed(false);
 		lv_textarea_clear_selection(text);
 		lv_textarea_set_text(text,"");
 		lv_textarea_ext_t*ext=lv_obj_get_ext_attr(text);
 		ext->sel_start=ext->sel_end=0;
 		lv_obj_set_enabled(btn_copy,false);
-		for(;;){
-			if((res=lv_fs_read(&od->file,buf,BUFSIZ-1,&bs))!=LV_FS_RES_OK){
-				msgbox_alert("Read file failed: %s",lv_fs_res_to_i18n_string(res));
-				lv_textarea_clear_selection(text);
-				lv_textarea_set_text(text,"");
-				free(od->path);
-				cur_path=NULL;
-				break;
-			}
-			if(bs==0)break;
-			buf[bs]=0,rs+=bs;
-			lv_textarea_add_text(text,buf);
+		if(od->size==0)goto end;
+		if(!(buf=malloc(od->size))){
+			msgbox_alert("Allocate file buffer failed");
+			free(od->path);
+			cur_path=NULL;
+			goto end;
 		}
+		memset(buf,0,sizeof(od->size));
+		rs=od->size;
+		if((res=lv_fs_read(&od->file,buf,rs,&rs))!=LV_FS_RES_OK){
+			msgbox_alert("Read file failed: %s",lv_fs_res_to_i18n_string(res));
+			free(od->path);
+			cur_path=NULL;
+			goto end;
+		}
+		lv_textarea_set_text(text,buf);
+		lv_textarea_set_cursor_pos(text,0);
+		free(buf);
 		set_changed(false);
 		tlog_debug("read %d bytes",rs);
 	}
+	end:
 	lv_fs_close(&od->file);
 	free(od);
 	return false;
@@ -158,7 +166,6 @@ static void open_start_read(lv_task_t*t){
 }
 
 static bool read_file(const char*path){
-	uint32_t s=0;
 	lv_res_t res;
 	struct open_data*od=malloc(sizeof(struct open_data));
 	memset(od,0,sizeof(struct open_data));
@@ -168,23 +175,23 @@ static bool read_file(const char*path){
 		free(od->path);
 		return false;
 	}
-	if((res=lv_fs_size(&od->file,&s))!=LV_FS_RES_OK){
+	if((res=lv_fs_size(&od->file,&od->size))!=LV_FS_RES_OK){
 		msgbox_alert("Get file size failed: %s",lv_fs_res_to_i18n_string(res));
 		lv_fs_close(&od->file);
 		free(od->path);
 		return false;
 	}
-	if(s>0x800000){
-		msgbox_alert("File too large, size limit is 8MiB, file is %d bytes",s);
+	if(od->size>0x800000){
+		msgbox_alert("File too large; size limit is 8MiB, file is %d bytes",od->size);
 		lv_fs_close(&od->file);
 		free(od->path);
 		return false;
 	}
-	if(s<0x10000)lv_task_once(lv_task_create(open_start_read,20,LV_TASK_PRIO_LOWEST,od));
+	if(od->size<0x10000)lv_task_once(lv_task_create(open_start_read,20,LV_TASK_PRIO_LOWEST,od));
 	else msgbox_set_user_data(msgbox_create_yesno(
 		open_read_cb,
 		"This file is bigger than 64 KiB (%d bytes), "
-		"are you sure you want to open this file?",s
+		"are you sure you want to open this file?",od->size
 	),od);
 	return true;
 }

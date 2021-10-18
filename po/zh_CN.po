@@ -1290,6 +1290,12 @@ msgstr "列出项目失败"
 msgid "Text Editor"
 msgstr "文本编辑器"
 
+msgid "Allocate file buffer failed"
+msgstr "分配文件缓冲区失败"
+
+msgid "File too large; size limit is 8MiB, file is %d bytes"
+msgstr "文件过大；文件大小限制为8MiB，文件大小为%d字节"
+
 msgid "Read file failed: %s"
 msgstr "读取文件失败: %s"
 

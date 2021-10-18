@@ -38,9 +38,19 @@ struct sysbar{
 	}bottom;
 };
 extern struct sysbar sysbar;
+
+// src/gui/interface/core/sysbar.c: init sysbar in screen
 extern int sysbar_draw(lv_obj_t*scr);
+
+// src/gui/interface/core/sysbar.c: toggle keyboard status
 extern void sysbar_keyboard_toggle();
+
+// src/gui/interface/core/sysbar.c: close keyboard
 extern void sysbar_keyboard_close();
+
+// src/gui/interface/core/sysbar.c: open keyboard
 extern void sysbar_keyboard_open();
+
+// src/gui/interface/core/sysbar.c: focus textarea
 extern void sysbar_focus_input(lv_obj_t*obj);
 #endif

@@ -22,22 +22,58 @@ struct gui_driver{
 	int(*drv_getbrightness)(void);
 	bool(*drv_cansleep)(void);
 };
+
+// src/gui/drivers.c: initial drivers storage
 extern struct gui_driver*gui_drvs[];
+
+// src/gui/guidrv.c: get screen width and height from driver
 extern int guidrv_getsize(uint32_t*w,uint32_t*h);
+
+// src/gui/guidrv.c: get screen dpi from driver
 extern int guidrv_getdpi(int*dpi);
+
+// src/gui/guidrv.c: get screen width from driver
 extern uint32_t guidrv_get_width();
+
+// src/gui/guidrv.c: get screen height from driver
 extern uint32_t guidrv_get_height();
+
+// src/gui/guidrv.c: get screen dpi from driver
 extern int guidrv_get_dpi();
+
+// src/gui/guidrv.c: get driver name
 extern const char*guidrv_getname();
+
+// src/gui/guidrv.c: gui driver custom lvgl taskhandler
 extern int guidrv_taskhandler();
+
+// src/gui/guidrv.c: gui driver custom lvgl tickget
 extern uint32_t guidrv_tickget();
+
+// src/gui/guidrv.c: register current gui driver
 extern int guidrv_register();
+
+// src/gui/guidrv.c: call gui driver set brightness percent (0-100)
 extern int guidrv_set_brightness(int percent);
+
+// src/gui/guidrv.c: call gui driver get brightness percent (0-100)
 extern int guidrv_get_brightness();
+
+// src/gui/guidrv.c: get gui driver is screen suspendable
 extern bool guidrv_can_sleep();
+
+// src/gui/guidrv.c: try init all drivers and return screen width height dpi
 extern int guidrv_init(uint32_t*w,uint32_t*h,int*dpi);
+
+// src/gui/guidrv.c: get gui driver by name
 extern struct gui_driver*guidrv_get_by_name(const char*name);
+
+// src/gui/guidrv.c: call gui driver exit handler
 extern void guidrv_exit();
+
+// src/gui/guidrv.c: set current gui driver
 extern void guidrv_set_driver(struct gui_driver*driver);
+
+// src/gui/guidrv.c: get current gui driver
 extern struct gui_driver*guidrv_get_driver();
 #endif

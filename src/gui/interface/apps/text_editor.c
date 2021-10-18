@@ -174,6 +174,12 @@ static bool read_file(const char*path){
 		free(od->path);
 		return false;
 	}
+	if(s>0x800000){
+		msgbox_alert("File too large, size limit is 8MiB, file is %d bytes",s);
+		lv_fs_close(&od->file);
+		free(od->path);
+		return false;
+	}
 	if(s<0x10000)lv_task_once(lv_task_create(open_start_read,20,LV_TASK_PRIO_LOWEST,od));
 	else msgbox_set_user_data(msgbox_create_yesno(
 		open_read_cb,

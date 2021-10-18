@@ -6,7 +6,7 @@
 
 int confd=-1;
 
-int open_confd_socket(char*tag __attribute__((unused)),char*path __attribute__((unused))){
+int open_confd_socket(bool quiet __attribute__((unused)),char*tag __attribute__((unused)),char*path __attribute__((unused))){
 	return -1;
 }
 

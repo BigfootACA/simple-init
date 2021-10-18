@@ -139,8 +139,10 @@ int gui_pre_init(){
 	lv_group_set_focus_cb(gui_grp,scroll_on_focus);
 
 	// parse backlight device
+	#ifndef ENABLE_UEFI
 	char*x=confd_get_string("runtime.cmdline.backlight",NULL);
 	if(x)default_backlight=led_parse_arg(x,"backlight");
+	#endif
 	gui_dpi=confd_get_integer("runtime.cmdline.dpi",200);
 	gui_dpi_force=confd_get_integer("runtime.cmdline.dpi_force",0);
 	gui_dark=confd_get_boolean("gui.dark",DARK_MODE);

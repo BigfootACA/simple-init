@@ -1,3 +1,13 @@
+/*
+ *
+ * Copyright (C) 2021 BigfootACA <bigfoot@classfun.cn>
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ *
+ * based on coreutils, busybox
+ *
+ */
+
 #define _GNU_SOURCE
 #include<fcntl.h>
 #include<stdio.h>

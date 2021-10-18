@@ -1,3 +1,11 @@
+/*
+ *
+ * Copyright (C) 2021 BigfootACA <bigfoot@classfun.cn>
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ *
+ */
+
 #ifndef _COMPATIBLE_H
 #define _COMPATIBLE_H
 #include<stddef.h>

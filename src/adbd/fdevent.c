@@ -1,3 +1,9 @@
+/*
+ *
+ * Copyright 2008, The Android Open Source Project
+ *
+ */
+
 #include<errno.h>
 #include<fcntl.h>
 #include<stdlib.h>

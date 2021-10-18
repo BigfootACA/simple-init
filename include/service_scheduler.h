@@ -1,3 +1,11 @@
+/*
+ *
+ * Copyright (C) 2021 BigfootACA <bigfoot@classfun.cn>
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ *
+ */
+
 #ifndef SERVICE_SCHEDULER_H
 #define SERVICE_SCHEDULER_H
 #include"pool.h"

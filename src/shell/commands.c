@@ -1,3 +1,11 @@
+/*
+ *
+ * Copyright (C) 2021 BigfootACA <bigfoot@classfun.cn>
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ *
+ */
+
 #include"shell_internal.h"
 DECLARE_MAIN(adbd);
 DECLARE_MAIN(arch);

@@ -1,3 +1,9 @@
+/*
+ *
+ * Copyright 2008, The Android Open Source Project
+ *
+ */
+
 #include<stdio.h>
 #include<stdlib.h>
 #include<unistd.h>

@@ -1,3 +1,9 @@
+/*
+ *
+ * Copyright 2008, The Android Open Source Project
+ *
+ */
+
 #define _GNU_SOURCE
 #include<stdio.h>
 #include<stdlib.h>

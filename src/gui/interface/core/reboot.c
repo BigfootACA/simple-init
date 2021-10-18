@@ -1,3 +1,11 @@
+/*
+ *
+ * Copyright (C) 2021 BigfootACA <bigfoot@classfun.cn>
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ *
+ */
+
 #ifdef ENABLE_GUI
 #ifdef ENABLE_UEFI
 #include<Library/UefiRuntimeServicesTableLib.h>

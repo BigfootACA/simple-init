@@ -1,3 +1,9 @@
+/*
+ *
+ * Copyright 2008, The Android Open Source Project
+ *
+ */
+
 #include<stdio.h>
 #include<string.h>
 #include"adbd_internal.h"

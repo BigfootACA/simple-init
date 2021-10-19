@@ -27,11 +27,12 @@
 int logfd=-1;
 
 int set_logfd(int fd){
-	return logfd=fd<0?logfd:fd;
+	if(fd<0)return logfd;
+	logfd=fd;
+	return fd;
 }
 
 void close_logfd(){
-	if(logfd<0)return;
 	close(logfd);
 	logfd=-1;
 }
@@ -47,6 +48,7 @@ int open_socket_logfd(char*path){
 	if(!path)ERET(EINVAL);
 	struct sockaddr_un addr;
 	int sock;
+	close_logfd();
 	if((sock=socket(AF_UNIX,SOCK_STREAM,0))<0){
 		stderr_perror("cannot create socket");
 		return -1;

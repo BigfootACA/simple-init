@@ -12,6 +12,7 @@
 #include<stddef.h>
 #include<pthread.h>
 #include"str.h"
+#include"confd.h"
 #include"logger.h"
 #include"system.h"
 #include"service.h"
@@ -68,6 +69,7 @@ int svc_daemon_get_pid(struct service*svc){
 		svc->status=STATUS_STOPPED;
 		return -1;
 	}
+	confd_set_integer_base("runtime.pid",svc->name,p);
 	svc->status=STATUS_RUNNING;
 	svc->process.pid=p;
 	svc->process.running=true;
@@ -98,6 +100,7 @@ int svc_start_service_nodep(struct service*svc){
 			if(run){
 				memcpy(&svc->process,&svc->start->status,sizeof(struct proc_status));
 				memset(&svc->start->status,0,sizeof(struct proc_status));
+				confd_set_integer_base("runtime.pid",svc->name,svc->process.pid);
 				goto running;
 			}else goto stopped;
 		case WORK_ONCE:

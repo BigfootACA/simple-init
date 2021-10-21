@@ -62,7 +62,8 @@ keyval**read_params(int fd){
 			memset(buff,0,PATH_MAX);
 		}else if(b==' '||b=='\t'||b=='\n'||b=='\r'||b=='#'){
 			if(idx==0)continue;
-			if(!read_key&&!(value=strndup(buff,idx)))goto e1;
+			if(!(value=strndup(buff,idx)))goto e1;
+			if(read_key)key=value,value=NULL;
 			idx=0,read_key=true;
 			memset(buff,0,PATH_MAX);
 			if(!(entrys=configs_add_entry(entrys,key,value,eid++)))goto e1;

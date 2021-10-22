@@ -204,7 +204,8 @@ int register_guiapp(){
 		svc_set_desc(guiapp,"GUI Application Launcher");
 		svc_set_start_function(guiapp,guiapp_startup);
 		guiapp->auto_restart=true;
-		svc_add_depend(svc_system,guiapp);
+		if(!confd_get_boolean("runtime.cmdline.gui_disable",false))
+			svc_add_depend(svc_system,guiapp);
 	}
 	return 0;
 }

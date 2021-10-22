@@ -28,6 +28,7 @@ DEF_HANDLER(conffs);
 DEF_HANDLER(conffile);
 DEF_HANDLER(dpi);
 DEF_HANDLER(dpi_force);
+DEF_HANDLER(gui_disable);
 DEF_HANDLER(backlight);
 DEF_HANDLER(androidboot);
 
@@ -61,6 +62,7 @@ struct cmdline_option*cmdline_options[]={
 	DEF_OPTION(dpi,        false, REQUIRED_VALUE),
 	DEF_OPTION(dpi_force,  false, REQUIRED_VALUE),
 	DEF_OPTION(backlight,  false, REQUIRED_VALUE),
+	DEF_OPTION(gui_disable,false, NO_VALUE),
 	#endif
 
 	// androidboot.c; android bootloader pass arguments

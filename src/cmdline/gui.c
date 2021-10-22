@@ -32,3 +32,8 @@ int cmdline_backlight(char*k __attribute__((unused)),char*v){
 	confd_set_string("runtime.cmdline.backlight",v);
 	return 0;
 }
+
+int cmdline_gui_disable(char*k __attribute__((unused)),char*v __attribute__((unused))){
+	confd_set_boolean("runtime.cmdline.gui_disable",true);
+	return 0;
+}

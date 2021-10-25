@@ -13,6 +13,7 @@
 #include<libfdisk/libfdisk.h>
 #include"gui.h"
 #include"str.h"
+#include"confd.h"
 #include"system.h"
 #include"logger.h"
 #include"gui/tools.h"
@@ -196,10 +197,14 @@ static void disks_add_item(int blk,struct disk_info*k){
 	lv_style_set_focus_checkbox(k->chk);
 	lv_group_add_obj(gui_grp,k->chk);
 
+	lv_label_long_mode_t lm=confd_get_boolean("gui.text_scroll",true)?
+		LV_LABEL_LONG_SROLL_CIRC:
+		LV_LABEL_LONG_DOT;
+
 	// disk model name
 	lv_obj_t*d_model=lv_label_create(line,NULL);
 	lv_obj_align(d_model,NULL,LV_ALIGN_IN_LEFT_MID,c1l,xdpi);
-	lv_label_set_long_mode(d_model,LV_LABEL_LONG_SROLL_CIRC);
+	lv_label_set_long_mode(d_model,lm);
 	lv_obj_set_width(d_model,c1w);
 	lv_label_set_align(d_model,LV_LABEL_ALIGN_LEFT);
 	lv_label_set_text(d_model,_(get_model(k)));
@@ -208,7 +213,7 @@ static void disks_add_item(int blk,struct disk_info*k){
 	// disk size
 	lv_obj_t*d_size=lv_label_create(line,NULL);
 	lv_obj_align(d_size,NULL,LV_ALIGN_IN_LEFT_MID,c2l,-xdpi);
-	lv_label_set_long_mode(d_size,LV_LABEL_LONG_SROLL_CIRC);
+	lv_label_set_long_mode(d_size,lm);
 	lv_obj_set_width(d_size,c2w);
 	lv_label_set_align(d_size,LV_LABEL_ALIGN_RIGHT);
 	lv_label_set_text(d_size,make_readable_str(k->size,512,0));
@@ -216,7 +221,7 @@ static void disks_add_item(int blk,struct disk_info*k){
 	// disk layout type
 	lv_obj_t*d_layout=lv_label_create(line,NULL);
 	lv_obj_align(d_layout,NULL,LV_ALIGN_IN_LEFT_MID,c2l,xdpi);
-	lv_label_set_long_mode(d_layout,LV_LABEL_LONG_SROLL_CIRC);
+	lv_label_set_long_mode(d_layout,lm);
 	lv_obj_set_width(d_layout,c2w);
 	lv_label_set_align(d_layout,LV_LABEL_ALIGN_RIGHT);
 	lv_label_set_text(d_layout,_(get_layout(k)));

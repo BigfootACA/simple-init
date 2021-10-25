@@ -223,7 +223,10 @@ static void add_item(bool parent,char*name){
 	);
 	lv_group_add_obj(gui_grp,ci->chk);
 	lv_checkbox_ext_t*e=lv_obj_get_ext_attr(ci->chk);
-	lv_label_set_long_mode(e->label,LV_LABEL_LONG_SROLL_CIRC);
+	lv_label_set_long_mode(e->label,confd_get_boolean("gui.text_scroll",true)?
+		LV_LABEL_LONG_SROLL_CIRC:
+		LV_LABEL_LONG_DOT
+	);
 
 	lv_coord_t lbl_w=bw-si-gui_font_size*2-lv_obj_get_width(e->bullet);
 	if(lv_obj_get_width(e->label)>lbl_w)lv_obj_set_width(e->label,lbl_w);

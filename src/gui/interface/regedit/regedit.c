@@ -425,7 +425,10 @@ static int regedit_draw(struct gui_activity*act){
 	// current path
 	reg->lbl_path=lv_label_create(reg->scr,NULL);
 	lv_label_set_align(reg->lbl_path,LV_LABEL_ALIGN_CENTER);
-	lv_label_set_long_mode(reg->lbl_path,LV_LABEL_LONG_SROLL_CIRC);
+	lv_label_set_long_mode(reg->lbl_path,confd_get_boolean("gui.text_scroll",true)?
+		LV_LABEL_LONG_SROLL_CIRC:
+		LV_LABEL_LONG_DOT
+	);
 	lv_obj_set_size(reg->lbl_path,gui_sw,gui_dpi/7);
 	lv_obj_align(reg->lbl_path,NULL,LV_ALIGN_IN_BOTTOM_LEFT,0,-bth-btm*3);
 	lv_obj_set_size(reg->view,gui_sw,lv_obj_get_y(reg->lbl_path));

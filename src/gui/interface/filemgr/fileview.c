@@ -17,6 +17,7 @@
 #include"gui.h"
 #include"str.h"
 #include"list.h"
+#include"confd.h"
 #include"logger.h"
 #include"system.h"
 #include"gui/fsext.h"
@@ -228,7 +229,10 @@ static struct fileitem*add_item(struct fileview*view,char*name){
 	lv_obj_set_user_data(fi->chk,fi);
 	lv_obj_align(fi->chk,NULL,LV_ALIGN_IN_LEFT_MID,gui_font_size+si,view->verbose?-gui_font_size:0);
 	lv_checkbox_ext_t*e=lv_obj_get_ext_attr(fi->chk);
-	lv_label_set_long_mode(e->label,LV_LABEL_LONG_SROLL_CIRC);
+	lv_label_set_long_mode(e->label,confd_get_boolean("gui.text_scroll",true)?
+		LV_LABEL_LONG_SROLL_CIRC:
+		LV_LABEL_LONG_DOT
+	);
 
 	// add group
 	if(view->grp){

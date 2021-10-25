@@ -10,6 +10,7 @@
 #include<stdlib.h>
 #include"str.h"
 #include"gui.h"
+#include"confd.h"
 #include"array.h"
 #include"logger.h"
 #include"gui/tools.h"
@@ -292,7 +293,10 @@ static int filemgr_draw(struct gui_activity*act){
 	// current path
 	path=lv_label_create(scr,NULL);
 	lv_label_set_align(path,LV_LABEL_ALIGN_CENTER);
-	lv_label_set_long_mode(path,LV_LABEL_LONG_SROLL_CIRC);
+	lv_label_set_long_mode(path,confd_get_boolean("gui.text_scroll",true)?
+		LV_LABEL_LONG_SROLL_CIRC:
+		LV_LABEL_LONG_DOT
+	);
 	lv_obj_set_size(path,gui_sw,gui_dpi/7);
 	lv_obj_align(path,NULL,LV_ALIGN_IN_BOTTOM_LEFT,0,-bth*2-btm*3);
 	lv_obj_set_size(tabview,gui_sw,lv_obj_get_y(path));

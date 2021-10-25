@@ -11,6 +11,7 @@
 #include<stdlib.h>
 #include<Library/UefiBootManagerLib.h>
 #include"gui.h"
+#include"confd.h"
 #include"logger.h"
 #include"language.h"
 #include"gui/tools.h"
@@ -87,7 +88,10 @@ static void options_add_item(struct option_info*k){
 	// option name and checkbox
 	k->chk=lv_checkbox_create(k->btn,NULL);
 	lv_checkbox_ext_t*e=lv_obj_get_ext_attr(k->chk);
-	lv_label_set_long_mode(e->label,LV_LABEL_LONG_SROLL_CIRC);
+	lv_label_set_long_mode(e->label,confd_get_boolean("gui.text_scroll",true)?
+		LV_LABEL_LONG_SROLL_CIRC:
+		LV_LABEL_LONG_DOT
+	);
 	lv_obj_set_width(e->label,bw-gui_dpi/5*2);
 	lv_checkbox_set_text(k->chk,k->name);
 	lv_obj_set_event_cb(k->chk,option_click);

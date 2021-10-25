@@ -13,6 +13,7 @@
 #include<libfdisk/libfdisk.h>
 #include"gui.h"
 #include"str.h"
+#include"confd.h"
 #include"system.h"
 #include"logger.h"
 #include"gui/activity.h"
@@ -191,9 +192,13 @@ static void partitions_add_item(int i,struct partition_info*p){
 	lv_label_set_align(size,LV_LABEL_ALIGN_RIGHT);
 	lv_obj_align(size,NULL,LV_ALIGN_IN_TOP_RIGHT,-m,lv_obj_get_height(size)+m);
 
+	lv_label_long_mode_t lm=confd_get_boolean("gui.text_scroll",true)?
+		LV_LABEL_LONG_SROLL_CIRC:
+		LV_LABEL_LONG_DOT;
+
 	// partition position
 	lv_obj_t*pos=lv_label_create(line,NULL);
-	lv_label_set_long_mode(pos,LV_LABEL_LONG_SROLL_CIRC);
+	lv_label_set_long_mode(pos,lm);
 	lv_label_set_text_fmt(
 		pos,_("Start: %s(%lu) End %s(%lu)"),
 		p->start_str,p->start_sec,
@@ -211,7 +216,7 @@ static void partitions_add_item(int i,struct partition_info*p){
 
 		// partition name
 		lv_obj_t*name=lv_label_create(line,NULL);
-		lv_label_set_long_mode(name,LV_LABEL_LONG_SROLL_CIRC);
+		lv_label_set_long_mode(name,lm);
 		lv_obj_set_small_text_font(name,LV_LABEL_PART_MAIN);
 		if(!p->name[0])lv_obj_set_gray160_text_color(name,LV_LABEL_PART_MAIN);
 		lv_label_set_text(name,p->name[0]?p->name:_("(none)"));
@@ -226,7 +231,7 @@ static void partitions_add_item(int i,struct partition_info*p){
 
 		// partition name
 		lv_obj_t*type=lv_label_create(line,NULL);
-		lv_label_set_long_mode(type,LV_LABEL_LONG_SROLL_CIRC);
+		lv_label_set_long_mode(type,lm);
 		lv_obj_set_small_text_font(type,LV_LABEL_PART_MAIN);
 		if(!p->type_str[0])lv_obj_set_gray160_text_color(type,LV_LABEL_PART_MAIN);
 		lv_label_set_text(type,p->type_str[0]?p->type_str:_("(unknown)"));

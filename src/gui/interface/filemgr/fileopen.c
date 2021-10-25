@@ -13,6 +13,7 @@
 #include"str.h"
 #include"gui.h"
 #include"list.h"
+#include"confd.h"
 #include"pathnames.h"
 #include"gui/tools.h"
 #include"gui/fileopen.h"
@@ -119,7 +120,10 @@ static void add_app(struct fileopen*fo,struct gui_register*reg){
 		LV_ALIGN_IN_LEFT_MID,
 		gui_font_size+si,0
 	);
-	lv_label_set_long_mode(app->lbl,LV_LABEL_LONG_SROLL_CIRC);
+	lv_label_set_long_mode(app->lbl,confd_get_boolean("gui.text_scroll",true)?
+		LV_LABEL_LONG_SROLL_CIRC:
+		LV_LABEL_LONG_DOT
+	);
 	lv_obj_set_width(app->lbl,lv_obj_get_width(app->btn)-si-gui_font_size*2);
 }
 

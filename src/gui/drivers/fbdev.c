@@ -164,6 +164,7 @@ static int _fbdev_register(){
 	tlog_notice("screen resolution: %dx%d",vinfo.xres,vinfo.yres);
 	disp_drv.buffer=&disp_buf;
 	disp_drv.flush_cb=fbdev_flush;
+	set_active_console(7);
 	vtconsole_all_bind(0);
 	lv_disp_drv_register(&disp_drv);
 	fbdev_refresher_start();

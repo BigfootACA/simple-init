@@ -15,6 +15,7 @@
 #include<drm_fourcc.h>
 #include"gui.h"
 #include"logger.h"
+#include"system.h"
 #include"defines.h"
 #include"hardware.h"
 #include"gui/guidrv.h"
@@ -574,6 +575,7 @@ static int _drm_register(){
 	disp_drv.buffer=&disp_buf;
 	disp_drv.flush_cb=drm_flush;
 	lv_disp_drv_register(&disp_drv);
+	set_active_console(7);
 	return 0;
 }
 

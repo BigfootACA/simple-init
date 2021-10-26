@@ -10,11 +10,13 @@
 #include<errno.h>
 #include<stdio.h>
 #include<stdarg.h>
+#include<stddef.h>
 #include<string.h>
 #include<unistd.h>
 #include<dirent.h>
 #include<sys/ioctl.h>
 #include<sys/resource.h>
+#include<linux/vt.h>
 #include"pathnames.h"
 #include"system.h"
 #include"defines.h"
@@ -95,4 +97,14 @@ int close_all_fd(const int*exclude,int count){
 	}
 	closedir(d);
 	return r;
+}
+
+int set_active_console(int vt){
+	int fd=-1;
+	if((fd=open(_PATH_DEV"/tty0",O_RDWR))<0)goto f;
+	if(ioctl(fd,VT_ACTIVATE,(void*)(ptrdiff_t)vt)<0)goto f;
+	if(ioctl(fd,VT_WAITACTIVE,(void*)(ptrdiff_t)vt)<0)goto f;
+	f:
+	if(fd>0)close(fd);
+	return errno==0?0:-1;
 }

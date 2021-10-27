@@ -23,6 +23,8 @@ mkdir -p "${TESTROOT}"/usr/{bin,lib}
 ln -s usr/lib "${TESTROOT}"/lib64
 ln -s usr/lib "${TESTROOT}"/lib
 add_binary build/init "${TESTROOT}"/usr
+add_library /usr/lib/libnss_dns.so.2 "${TESTROOT}"/usr ||true
+add_library /usr/lib/libnss_files.so.2 "${TESTROOT}"/usr ||true
 ln -s usr/bin/init "${TESTROOT}"/init
 if [ -f /usr/bin/busybox ]
 then	add_binary /usr/bin/busybox "${TESTROOT}"/usr

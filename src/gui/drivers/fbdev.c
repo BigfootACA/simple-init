@@ -220,6 +220,7 @@ static int _fbdev_scan(){
 				swap_abgr=true;
 			}
 		}
+		swap_abgr=confd_get_boolean("runtime.cmdline.abgr",swap_abgr);
 		close(sfd);
 		return dfd;
 	}

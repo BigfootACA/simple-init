@@ -28,6 +28,11 @@ int cmdline_dpi_force(char*k __attribute__((unused)),char*v){
 	return 0;
 }
 
+int cmdline_fbdev_abgr(char*k __attribute__((unused)),char*v __attribute__((unused))){
+	confd_set_boolean("runtime.cmdline.abgr",true);
+	return 0;
+}
+
 int cmdline_backlight(char*k __attribute__((unused)),char*v){
 	confd_set_string("runtime.cmdline.backlight",v);
 	return 0;

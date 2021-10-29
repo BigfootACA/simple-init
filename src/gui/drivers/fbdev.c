@@ -13,6 +13,7 @@
 #include<sys/ioctl.h>
 #include<linux/fb.h>
 #include"gui.h"
+#include"confd.h"
 #include"logger.h"
 #include"system.h"
 #include"defines.h"

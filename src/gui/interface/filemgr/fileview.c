@@ -170,6 +170,9 @@ static struct fileitem*add_item(struct fileview*view,char*name){
 	if(!view->letter)fi->type=TYPE_DISK;
 	else if(strcmp(name,"..")==0)fi->type=TYPE_DIR;
 	else lv_fs_get_type(&fi->type,fi->path);
+	lv_label_long_mode_t lm=confd_get_boolean("gui.text_scroll",true)?
+		LV_LABEL_LONG_SROLL_CIRC:
+		LV_LABEL_LONG_DOT;
 
 	// file item button
 	fi->btn=lv_btn_create(view->view,NULL);
@@ -229,10 +232,7 @@ static struct fileitem*add_item(struct fileview*view,char*name){
 	lv_obj_set_user_data(fi->chk,fi);
 	lv_obj_align(fi->chk,NULL,LV_ALIGN_IN_LEFT_MID,gui_font_size+si,view->verbose?-gui_font_size:0);
 	lv_checkbox_ext_t*e=lv_obj_get_ext_attr(fi->chk);
-	lv_label_set_long_mode(e->label,confd_get_boolean("gui.text_scroll",true)?
-		LV_LABEL_LONG_SROLL_CIRC:
-		LV_LABEL_LONG_DOT
-	);
+	lv_label_set_long_mode(e->label,lm);
 
 	// add group
 	if(view->grp){
@@ -252,7 +252,7 @@ static struct fileitem*add_item(struct fileview*view,char*name){
 					char size[32]={0};
 					fi->size=lv_label_create(line,NULL);
 					lv_label_set_text(fi->size,make_readable_str_buf(size,31,s,1,0));
-					lv_label_set_long_mode(fi->size,LV_LABEL_LONG_CROP);
+					lv_label_set_long_mode(fi->size,lm);
 					lv_coord_t xs=lv_obj_get_width(fi->size),min=view->bw/5;
 					if(xs>min){
 						lv_obj_set_width(fi->size,min);

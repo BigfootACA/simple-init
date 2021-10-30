@@ -23,6 +23,7 @@
 #include"output.h"
 #include"getopt.h"
 #include"array.h"
+#include"confd.h"
 
 #define DEF_PS1 "\\$ "
 
@@ -204,7 +205,8 @@ int register_console_shell(){
 		svc_set_desc(shell,"Init Shell on Console");
 		svc_set_start_function(shell,console_shell_service);
 		shell->auto_restart=true;
-		svc_add_depend(svc_system,shell);
+		if(confd_get_boolean("runtime.cmdline.console_shell",false))
+			svc_add_depend(svc_system,shell);
 	}
 	return 0;
 }

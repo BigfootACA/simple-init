@@ -30,6 +30,7 @@ DEF_HANDLER(dpi);
 DEF_HANDLER(dpi_force);
 DEF_HANDLER(fbdev_abgr);
 DEF_HANDLER(gui_disable);
+DEF_HANDLER(console_shell);
 DEF_HANDLER(backlight);
 DEF_HANDLER(androidboot);
 
@@ -66,6 +67,9 @@ struct cmdline_option*cmdline_options[]={
 	DEF_OPTION(fbdev_abgr, false, NO_VALUE),
 	DEF_OPTION(gui_disable,false, NO_VALUE),
 	#endif
+
+	// console.c; options for gui
+	DEF_OPTION(console_shell, false, NO_VALUE),
 
 	// androidboot.c; android bootloader pass arguments
 	DEF_XOPTION(androidboot.mode,          androidboot,  true, REQUIRED_VALUE),

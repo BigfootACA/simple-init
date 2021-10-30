@@ -6,4 +6,5 @@ add_library(init_cmdline STATIC
 	gui.c
 	androidboot.c
 	conffs.c
+	console.c
 )

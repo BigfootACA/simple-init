@@ -82,6 +82,7 @@ set(SUBDIRS
 	src/gui
 	src/adbd
 	src/confd
+	src/ttyd
 )
 
 target_link_libraries(init -Wl,--start-group)
@@ -115,4 +116,4 @@ else()
 	target_link_libraries(init ${DEPS_LIBRARIES})
 endif()
 
-target_link_libraries(init pthread)
+target_link_libraries(init pthread crypt)

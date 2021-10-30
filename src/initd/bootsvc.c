@@ -14,11 +14,14 @@
 #include"gui.h"
 #endif
 
+extern int register_ttyd();
+
 int(*register_services[])()={
 	#ifdef ENABLE_INITSHELL
 	&register_console_shell,
 	#endif
 	&register_default_boot,
+	&register_ttyd,
 	&register_gadget_service,
 	#ifdef ENABLE_GUI
 	&register_guiapp,

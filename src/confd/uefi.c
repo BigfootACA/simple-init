@@ -121,13 +121,40 @@ ret func##_array(const char*base,int index,const char*path,type arg){\
 	snprintf(xpath,PATH_MAX-1,"%s.%d.%s",base,index,path);\
 	return func(xpath,arg);\
 }
+#define XEXT_BASE(func,ret) \
+ret func##_base(const char*base,const char*path){\
+	char xpath[PATH_MAX]={0};\
+	snprintf(xpath,PATH_MAX-1,"%s.%s",base,path);\
+	return func(xpath);\
+}
+#define XEXT_DICT(func,ret) \
+ret func##_dict(const char*base,const char*key,const char*path){\
+	char xpath[PATH_MAX]={0};\
+	snprintf(xpath,PATH_MAX-1,"%s.%s.%s",base,key,path);\
+	return func(xpath);\
+}
+#define XEXT_ARRAY(func,ret) \
+ret func##_array(const char*base,int index,const char*path){\
+	char xpath[PATH_MAX]={0};\
+	snprintf(xpath,PATH_MAX-1,"%s.%d.%s",base,index,path);\
+	return func(xpath);\
+}
+
 #define EXT(func,arg,type,ret) \
 	EXT_BASE(func,arg,type,ret) \
 	EXT_DICT(func,arg,type,ret) \
 	EXT_ARRAY(func,arg,type,ret)
+#define XEXT(func,ret) \
+	XEXT_BASE(func,ret) \
+	XEXT_DICT(func,ret) \
+	XEXT_ARRAY(func,ret)
+
 EXT(confd_set_integer, data,int64_t,int);
 EXT(confd_set_string,  data,char*,  int);
 EXT(confd_set_boolean, data,bool,   int);
 EXT(confd_get_string,  data,char*,  char*);
 EXT(confd_get_integer, data,int64_t,int64_t);
 EXT(confd_get_boolean, data,bool,   bool);
+XEXT(confd_delete,     int);
+XEXT(confd_ls,         char**);
+XEXT(confd_get_type,   enum conf_type);

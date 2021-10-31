@@ -62,26 +62,20 @@ extern int confd_load_file(const char*file);
 // src/confd/client.c: set default config file path
 extern int confd_set_default_config(const char*file);
 
-// src/confd/client.c: delete a config item
-extern int confd_delete(const char*path);
-
-// src/confd/client.c: list config items
-extern char**confd_ls(const char*path);
-
-// src/confd/client.c: get type of config item
-extern enum conf_type confd_get_type(const char*path);
-
-#define DECLARE_FUNC(func,arg,type,ret) \
-	extern ret func(const char*path,type arg); \
-	extern ret func##_base(const char*base,const char*path,type arg);\
-	extern ret func##_dict(const char*base,const char*key,const char*path,type arg);\
-	extern ret func##_array(const char*base,int index,const char*path,type arg);
-DECLARE_FUNC(confd_set_integer, data,int64_t,int);
-DECLARE_FUNC(confd_set_string,  data,char*,  int);
-DECLARE_FUNC(confd_set_boolean, data,bool,   int);
-DECLARE_FUNC(confd_get_string,  data,char*,  char*);
-DECLARE_FUNC(confd_get_integer, data,int64_t,int64_t);
-DECLARE_FUNC(confd_get_boolean, data,bool,   bool);
+#define DECLARE_FUNC(func,ret,...) \
+	extern ret func(const char*path __VA_ARGS__); \
+	extern ret func##_base(const char*base,const char*path __VA_ARGS__);\
+	extern ret func##_dict(const char*base,const char*key,const char*path __VA_ARGS__);\
+	extern ret func##_array(const char*base,int index,const char*path __VA_ARGS__);
+DECLARE_FUNC(confd_set_integer, int,     ,int64_t data);
+DECLARE_FUNC(confd_set_string,  int,     ,char*   data);
+DECLARE_FUNC(confd_set_boolean, int,     ,bool    data);
+DECLARE_FUNC(confd_get_string,  char*,   ,char*   data);
+DECLARE_FUNC(confd_get_integer, int64_t, ,int64_t data);
+DECLARE_FUNC(confd_get_boolean, bool,    ,bool    data);
+DECLARE_FUNC(confd_delete,      int);
+DECLARE_FUNC(confd_ls,          char**);
+DECLARE_FUNC(confd_get_type,    enum conf_type);
 
 // open default socket
 #define open_default_confd_socket(quiet,tag) open_confd_socket(quiet,tag,DEFAULT_CONFD)

@@ -7,10 +7,12 @@
  */
 
 #define _GNU_SOURCE
+#include<ctype.h>
 #include<errno.h>
 #include<stdio.h>
 #include<stdarg.h>
 #include<stddef.h>
+#include<stdlib.h>
 #include<string.h>
 #include<unistd.h>
 #include<dirent.h>
@@ -107,4 +109,38 @@ int set_active_console(int vt){
 	f:
 	if(fd>0)close(fd);
 	return errno==0?0:-1;
+}
+
+char**get_active_consoles(){
+	void*v=NULL;
+	char**arr,*tty,*p,**r=NULL;
+	size_t arr_len=16,arr_size=sizeof(char*)*arr_len;
+	size_t tty_len=16,tty_size=sizeof(char)*tty_len*arr_len;
+	size_t arr_off=0,tty_off=0,buf_size=tty_size+arr_size;
+	if(!(v=malloc(buf_size)))goto fail;
+	memset(v,0,buf_size);
+	arr=(char**)v,tty=(char*)v+arr_size;
+	if(read_file(
+		tty,tty_size,false,
+		_PATH_SYS_CLASS"/tty/console/active"
+	)<0)goto fail;
+	if(*tty){
+		arr[arr_off++]=tty;
+		while(
+			tty_off<tty_size-1&&
+			arr_off<arr_len-1&&
+			*(p=tty+tty_off)
+		){
+			if(isspace(*p)){
+				*p=0;
+				if(!*(p-1))arr_off--;
+				arr[arr_off++]=p+1;
+			}
+			tty_off++;
+		}
+	}
+	r=arr;
+	fail:
+	if(v&&!r)free(v);
+	return r;
 }

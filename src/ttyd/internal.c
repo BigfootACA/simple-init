@@ -122,6 +122,16 @@ void tty_add(const char*base,const char*name){
 
 void tty_conf_add_all(){
 	char**ttys;
+	if((ttys=get_active_consoles())){
+		for(size_t s=0;ttys[s];s++){
+			if(confd_get_type_base(tty_rt_ttys,ttys[s])==TYPE_KEY)continue;
+			if(confd_get_type_base(tty_conf_ttys,ttys[s])==TYPE_KEY)continue;
+			tlog_notice("add console tty %s",ttys[s]);
+			confd_set_boolean_dict(tty_rt_ttys,ttys[s],"enabled",true);
+			confd_set_boolean_dict(tty_rt_ttys,ttys[s],"start_msg",true);
+		}
+		free(ttys);
+	}
 	if((ttys=confd_ls(tty_conf_ttys))){
 		for(size_t s=0;ttys[s];s++)tty_add(tty_conf_ttys,ttys[s]);
 		if(ttys[0])free(ttys[0]);

@@ -95,6 +95,10 @@ int logger_syslog(){
 	return logger_send_string(LOG_SYSLOG,NULL);
 }
 
+int logger_open_console(){
+	return logger_send_string(LOG_CONSOLE,NULL);
+}
+
 int start_loggerd(pid_t*p){
 	int fds[2],r;
 	if(logfd>=0)ERET(EEXIST);

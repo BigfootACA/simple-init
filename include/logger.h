@@ -66,6 +66,9 @@ extern int logger_klog();
 // src/loggerd/client.c: start syslog forwarder
 extern int logger_syslog();
 
+// src/loggerd/client.c: reopen all active consoles
+extern int logger_open_console();
+
 // src/loggerd/client.c: launch loggerd
 extern int start_loggerd(pid_t*p);
 #else

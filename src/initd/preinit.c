@@ -114,6 +114,9 @@ int preinit(){
 	// create all device nodes
 	devd_call_init();
 
+	// open active consoles
+	logger_open_console();
+
 	// read kmsg to logger
 	logger_klog();
 

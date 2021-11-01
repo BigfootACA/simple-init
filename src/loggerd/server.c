@@ -156,6 +156,24 @@ static int loggerd_add_listen(char*path){
 	return 0;
 }
 
+int init_console(){
+	bool ok=false;
+	char**tty=get_active_consoles();
+	if(tty){
+		char path[PATH_MAX];
+		for(int i=0;tty[i];i++){
+			memset(path,0,PATH_MAX);
+			snprintf(path,PATH_MAX-1,_PATH_DEV"/%s",tty[i]);
+			logger_internal_add(path,LEVEL_DEBUG,&file_logger);
+			logger_internal_set(path,true);
+			ok=true;
+		}
+		free(tty);
+	}
+	if(ok)logger_internal_set("stderr",false);
+	return 0;
+}
+
 static int loggerd_read(int fd){
 	if(fd<0)ERET(EINVAL);
 	errno=0;
@@ -213,6 +231,12 @@ static int loggerd_read(int fd){
 		// start syslog forwarder
 		case LOG_SYSLOG:
 			if(init_syslog()!=0)
+				ret=LOG_FAIL,retdata=errno;
+		break;
+
+		// open active consoles
+		case LOG_CONSOLE:
+			if(init_console()!=0)
 				ret=LOG_FAIL,retdata=errno;
 		break;
 

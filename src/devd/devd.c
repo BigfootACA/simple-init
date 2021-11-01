@@ -6,11 +6,13 @@
  *
  */
 
+#define _GNU_SOURCE
 #include<errno.h>
 #include<unistd.h>
 #include<string.h>
 #include<sys/un.h>
 #include<sys/socket.h>
+#include"confd.h"
 #include"logger.h"
 #include"uevent.h"
 #include"system.h"
@@ -67,9 +69,21 @@ int process_module(uevent*event){
 	return 0;
 }
 
+int process_tty(uevent*event){
+	switch(event->action){
+		case ACTION_ADD:tlog_debug("add tty '%s'",event->devname);break;
+		case ACTION_REMOVE:tlog_debug("remove tty '%s'",event->devname);break;
+		default:return 0;
+	}
+	pid_t daemon=confd_get_integer("runtime.pid.ttyd",0);
+	if(daemon>0)kill(daemon,SIGUSR2);
+	return 0;
+}
+
 int process_uevent(uevent*event){
 	if(!event)return -1;
 	if(event->subsystem){
+		if(strcmp(event->subsystem,"tty")==0)process_tty(event);
 		if(strcmp(event->subsystem,"firmware")==0)process_firmware_load(event);
 		if(strcmp(event->subsystem,"module")==0)process_module(event);
 	}

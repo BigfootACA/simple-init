@@ -21,6 +21,7 @@
 #include"logger.h"
 #include"system.h"
 #include"defines.h"
+#include"confd.h"
 #include"devd.h"
 #include"init.h"
 #include"pool.h"
@@ -139,6 +140,7 @@ static int devd_thread(int cfd){
 	int e=0,r,fd,efd;
 	struct epoll_event*evs;
 	open_socket_logfd_default();
+	open_default_confd_socket(false,TAG);
 	if((fd=listen_devd_socket())<0)return fd;
 	tlog_info("devd start with pid %d",getpid());
 	fork_run("netlink",false,NULL,NULL,_start_uevent_thread);

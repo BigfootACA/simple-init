@@ -44,7 +44,7 @@ int open_log_file(char*path){
 			return -1;
 		}
 		files[i]=f;
-		dprintf(
+		if(!isatty(f->fd))dprintf(
 			f->fd,
 			"-------- file %s opened at %s --------\n",
 			path,time2ndefstr(&t,tc,23)
@@ -60,7 +60,7 @@ static void close_log(struct open_file*f){
 	if(f->fd<=0)return;
 	char tc[24]={0};
 	time_t t=time(NULL);
-	dprintf(
+	if(!isatty(f->fd))dprintf(
 		f->fd,
 		"-------- file %s closed at %s --------\n",
 		f->file,time2ndefstr(&t,tc,23)

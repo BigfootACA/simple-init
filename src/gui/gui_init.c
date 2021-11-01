@@ -22,6 +22,7 @@
 #endif
 #include"gui.h"
 #include"confd.h"
+#include"system.h"
 #include"logger.h"
 #include"defines.h"
 #include"hardware.h"
@@ -298,6 +299,11 @@ int gui_draw(){
 	return 0;
 }
 
+static void gui_quit_handler(int s __attribute((unused))){
+	gui_quit_sleep();
+	gui_run=false;
+}
+
 int gui_main(){
 	#ifdef ENABLE_UEFI
 	REPORT_STATUS_CODE(EFI_PROGRESS_CODE,(EFI_SOFTWARE_DXE_BS_DRIVER|EFI_SW_PC_INPUT_WAIT));
@@ -324,6 +330,7 @@ int gui_main(){
 	while(gui_run&&!EFI_ERROR(gBS->WaitForEvent(1,&e_loop,&wi)));
 	#else
 	sem_init(&gui_wait,0,0);
+	handle_signals((int[]){SIGINT,SIGQUIT,SIGTERM},3,gui_quit_handler);
 	bool cansleep=guidrv_can_sleep();
 	if(!cansleep)tlog_notice("gui driver disabled sleep");
 	while(gui_run){

@@ -24,7 +24,7 @@
 #define TAG data->name
 
 static struct tty_data*data=NULL;
-static char pid_key[64];
+static char*pid_key="runtime.ttyd.client";
 
 static int worker_tty_open(){
 	int tty_fd;
@@ -143,7 +143,7 @@ static void fin_tty_attrs(){
 }
 
 static void worker_exit(){
-	confd_delete(pid_key);
+	confd_delete_base(pid_key,data->name);
 	pid_t daemon=confd_get_integer("runtime.pid.ttyd",0);
 	if(daemon>0)kill(daemon,SIGUSR2);
 	fin_tty_attrs();
@@ -189,7 +189,6 @@ int tty_start_worker(struct tty_data*d){
 		close_all_fd((int[]){tty_dev_fd},1);
 		open_socket_logfd_default();
 		open_default_confd_socket(false,TAG);
-		snprintf(pid_key,63,"runtime.ttyd.client.%s",d->name);
 		setsid();
 		p=fork();
 		if(p<0)_exit(telog_error("fork failed"));
@@ -197,7 +196,7 @@ int tty_start_worker(struct tty_data*d){
 			data=d,d->worker=getpid();
 			exit(tty_worker());
 		}else{
-			confd_set_integer(pid_key,p);
+			confd_set_integer_base(pid_key,d->name,p);
 			d->worker=p;
 			_exit(0);
 		}

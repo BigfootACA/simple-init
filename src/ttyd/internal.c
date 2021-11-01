@@ -151,21 +151,17 @@ void tty_reopen_all(){
 }
 
 bool tty_confd_get_boolean(struct tty_data*data,const char*key,bool def){
-	char k1[PATH_MAX]={0};
-	char k2[PATH_MAX]={0};
-	snprintf(k1,PATH_MAX-1,"%s.%s.%s",tty_rt_ttys,data->name,key);
-	snprintf(k2,PATH_MAX-1,"%s.%s.%s",tty_conf_ttys,data->name,key);
-	if(confd_get_type(k1)==TYPE_BOOLEAN)return confd_get_boolean(k1,def);
-	if(confd_get_type(k2)==TYPE_BOOLEAN)return confd_get_boolean(k2,def);
+	if(confd_get_type_dict(tty_rt_ttys,data->name,key)==TYPE_BOOLEAN)
+		return confd_get_boolean_dict(tty_rt_ttys,data->name,key,def);
+	if(confd_get_type_dict(tty_conf_ttys,data->name,key)==TYPE_BOOLEAN)
+		return confd_get_boolean_dict(tty_conf_ttys,data->name,key,def);
 	return def;
 }
 
 char*tty_confd_get_string(struct tty_data*data,const char*key,char*def){
-	char k1[PATH_MAX]={0};
-	char k2[PATH_MAX]={0};
-	snprintf(k1,PATH_MAX-1,"%s.%s.%s",tty_rt_ttys,data->name,key);
-	snprintf(k2,PATH_MAX-1,"%s.%s.%s",tty_conf_ttys,data->name,key);
-	if(confd_get_type(k1)==TYPE_STRING)return confd_get_string(k1,def);
-	if(confd_get_type(k2)==TYPE_STRING)return confd_get_string(k2,def);
+	if(confd_get_type_dict(tty_rt_ttys,data->name,key)==TYPE_STRING)
+		return confd_get_string_dict(tty_rt_ttys,data->name,key,def);
+	if(confd_get_type_dict(tty_conf_ttys,data->name,key)==TYPE_STRING)
+		return confd_get_string_dict(tty_conf_ttys,data->name,key,def);
 	return def;
 }

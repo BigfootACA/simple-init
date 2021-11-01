@@ -41,7 +41,7 @@ static void init_gadget_conf(){
 
 	confd_set_string_array(base,1,"name","ttyGS0");
 	confd_set_string_array(base,1,"func","acm");
-	confd_set_string_array(base,1,"mode","generic");
+	confd_set_string_array(base,1,"mode","console");
 
 	confd_set_string_array(base,2,"name","adb");
 	confd_set_string_array(base,2,"func","ffs");
@@ -49,6 +49,26 @@ static void init_gadget_conf(){
 	confd_set_string_array(base,2,"mode","adbd");
 
 	free(serial);
+}
+
+static int gadget_init_console(char*item,gadget*g,gadget_func*f){
+	char buf[256]={0},tty[512]={0};
+	if(gadget_add_function(g,f)<0)
+		return trlog_warn(-1,"add gadget console func %s failed",item);
+	if(fd_read_file(
+		g->dir_fd,buf,sizeof(buf),false,
+		"functions/%s.%s/port_num",
+		f->function,f->name
+	)<0)return trlog_warn(-1,"read console func %s port number failed",item);
+	snprintf(tty,511,"ttyGS%s",buf);
+	if(confd_get_type_base("runtime.ttyd.tty",tty)==TYPE_KEY)return 0;
+	if(confd_get_type_base("ttyd.tty",tty)==TYPE_KEY)return 0;
+	tlog_debug("add console %s to ttyd",tty);
+	confd_set_boolean_dict("runtime.ttyd.tty",tty,"enabled",true);
+	confd_set_boolean_dict("runtime.ttyd.tty",tty,"start_msg",true);
+	pid_t daemon=confd_get_integer("runtime.pid.ttyd",0);
+	if(daemon>0)kill(daemon,SIGUSR1);
+	return 0;
 }
 
 static int gadget_startup(struct service*svc __attribute__((unused))){
@@ -94,7 +114,8 @@ static int gadget_startup(struct service*svc __attribute__((unused))){
 			if(gadget_add_function(&g,&f)<0){
 				tlog_warn("add gadget func %s failed",item);
 			}
-		}else if(strcmp(mode,"adbd")==0){
+		}else if(strcmp(mode,"console")==0)gadget_init_console(item,&g,&f);
+		else if(strcmp(mode,"adbd")==0){
 			if(!path){
 				tlog_warn("no path specified for adbd");
 				goto cont;

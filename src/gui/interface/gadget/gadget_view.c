@@ -175,10 +175,8 @@ static int gadget_lost_focus(struct gui_activity*d __attribute__((unused))){
 
 static bool delete_cb(uint16_t id,const char*text __attribute__((unused)),void*user_data __attribute__((unused))){
 	if(id==0&&selected){
-		char key[PATH_MAX]={0};
-		snprintf(key,PATH_MAX-1,"%s.%s",base,selected->id);
-		tlog_info("delete %s",key);
-		confd_delete(key);
+		tlog_info("delete %s",selected->id);
+		confd_delete_base(base,selected->id);
 	}
 	return false;
 }

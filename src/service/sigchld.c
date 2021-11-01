@@ -39,9 +39,7 @@ static int svc_on_exit_main(struct service*svc,bool fail){
 				tlog_warn("service %s does not running %s",name,svc_status_string(svc->status));
 				memset(&svc->process,0,sizeof(struct proc_status));
 			}else{
-				char key[256]={0};
-				snprintf(key,255,"runtime.pid.%s",svc->name);
-				confd_delete(key);
+				confd_delete_base("runtime.pid",svc->name);
 				tlog_notice(fail?"Service %s failed":"Stopped service %s",name);
 				if(svc->auto_restart&&auto_restart&&svc->retry>=0){
 					if(svc->retry++>=svc->restart_max){

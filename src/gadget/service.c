@@ -71,6 +71,23 @@ static int gadget_init_console(char*item,gadget*g,gadget_func*f){
 	return 0;
 }
 
+static int gadget_init_generic(char*item,gadget*g,gadget_func*f){
+	if(gadget_add_function(g,f)<0)tlog_warn("add gadget func %s failed",item);
+	return 0;
+}
+
+static int gadget_init_adbd(char*item,gadget*g,gadget_func*f){
+	char*path=confd_get_string_dict(base,item,"path",NULL);
+	if(!path){
+		tlog_warn("no path specified for adbd");
+		return -1;
+	}
+	if(gadget_add_func_adbd(g,f->name,path)<0)
+		tlog_warn("add gadget adbd func %s failed",item);
+	if(path)free(path);
+	return 0;
+}
+
 static int gadget_startup(struct service*svc __attribute__((unused))){
 	#define XERR(msg...) {tlog_error(msg);goto fail;}
 	struct gadget_string gs={
@@ -101,33 +118,17 @@ static int gadget_startup(struct service*svc __attribute__((unused))){
 	if(!(items=confd_ls(base)))XERR("failed to read functions list")
 	for(int i=0;(item=items[i]);i++){
 		gadget_func f={0};
-		char*path,*mode;
+		char*mode;
 		f.name=confd_get_string_dict(base,item,"name",NULL);
 		f.function=confd_get_string_dict(base,item,"func",NULL);
-		path=confd_get_string_dict(base,item,"path",NULL);
 		mode=confd_get_string_dict(base,item,"mode","generic");
-		if(!f.name||!f.function||!mode){
-			tlog_warn("invalid name or func, skip func %d",i);
-			goto cont;
-		}
-		if(strcmp(mode,"generic")==0){
-			if(gadget_add_function(&g,&f)<0){
-				tlog_warn("add gadget func %s failed",item);
-			}
-		}else if(strcmp(mode,"console")==0)gadget_init_console(item,&g,&f);
-		else if(strcmp(mode,"adbd")==0){
-			if(!path){
-				tlog_warn("no path specified for adbd");
-				goto cont;
-			}
-			if(gadget_add_func_adbd(&g,f.name,path)<0){
-				tlog_warn("add gadget adbd func %s failed",item);
-			}
-		}else tlog_warn("unknown gadget mode %s, skip func %s",mode,item);
-		cont:
+		if(!f.name||!f.function||!mode)tlog_warn("invalid name or func, skip func %d",i);
+		else if(strcmp(mode,"generic")==0)gadget_init_generic(item,&g,&f);
+		else if(strcmp(mode,"console")==0)gadget_init_console(item,&g,&f);
+		else if(strcmp(mode,"adbd")==0)gadget_init_adbd(item,&g,&f);
+		else tlog_warn("unknown gadget mode %s, skip func %s",mode,item);
 		if(f.name)free(f.name);
 		if(f.function)free(f.function);
-		if(path)free(path);
 		if(mode)free(mode);
 	}
 	if(!(udc=confd_get_string("gadget.udc",gadget_find_udc())))return trlog_error(-1,"get gadget udc failed");

@@ -134,20 +134,28 @@ static bool open_read_cb(uint16_t id,const char*name __attribute__((unused)),voi
 		lv_textarea_ext_t*ext=lv_obj_get_ext_attr(text);
 		ext->sel_start=ext->sel_end=0;
 		lv_obj_set_enabled(btn_copy,false);
-		if(od->size==0)goto end;
-		if(!(buf=malloc(od->size))){
-			msgbox_alert("Allocate file buffer failed");
-			free(od->path);
-			cur_path=NULL;
-			goto end;
-		}
-		memset(buf,0,sizeof(od->size));
-		rs=od->size;
-		if((res=lv_fs_read(&od->file,buf,rs,&rs))!=LV_FS_RES_OK){
-			msgbox_alert("Read file failed: %s",lv_fs_res_to_i18n_string(res));
-			free(od->path);
-			cur_path=NULL;
-			goto end;
+		if(od->size==0){
+			size_t bs=BUFSIZ,cs=bs;
+			if(!(buf=malloc(bs)))goto e_buf;
+			char*xb=buf,*x;
+			for(;;){
+				if(cs>0x800000){
+					msgbox_alert("File too large; size limit is 8MiB, file is %d bytes",(int)cs);
+					goto fail;
+				}
+				memset(xb,0,bs);
+				rs=bs;
+				if((res=lv_fs_read(&od->file,xb,rs,&rs))!=LV_FS_RES_OK)goto e_read;
+				if(rs<bs)break;
+				cs+=bs;
+				if(!(x=realloc(buf,cs)))goto e_buf;
+				buf=x,xb=buf+cs-bs;
+			}
+		}else{
+			if(!(buf=malloc(od->size)))goto e_buf;
+			memset(buf,0,sizeof(od->size));
+			rs=od->size;
+			if((res=lv_fs_read(&od->file,buf,rs,&rs))!=LV_FS_RES_OK)goto e_read;
 		}
 		lv_textarea_set_text(text,buf);
 		lv_textarea_set_cursor_pos(text,0);
@@ -159,6 +167,16 @@ static bool open_read_cb(uint16_t id,const char*name __attribute__((unused)),voi
 	lv_fs_close(&od->file);
 	free(od);
 	return false;
+	fail:
+	free(od->path);
+	cur_path=NULL;
+	goto end;
+	e_buf:
+	msgbox_alert("Allocate file buffer failed");
+	goto fail;
+	e_read:
+	msgbox_alert("Read file failed: %s",lv_fs_res_to_i18n_string(res));
+	goto fail;
 }
 
 static void open_start_read(lv_task_t*t){

@@ -58,7 +58,7 @@ int write_file(int dir,char*file,const char*str,size_t len,mode_t mode,bool lf,b
 
 int simple_file_write(char*file,char*content){
 	int fd,i;
-	if((fd=open(file,O_WRONLY|O_SYNC|O_TRUNC))<0)return -1;
+	if((fd=open(file,O_CREAT|O_WRONLY|O_SYNC|O_TRUNC,0644))<0)return -1;
 	errno=0;
 	i=write(fd,content,strlen(content));
 	close(fd);

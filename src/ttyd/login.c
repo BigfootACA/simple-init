@@ -114,7 +114,6 @@ static char*tty_read_pass(char*buf,size_t len){
 	}
 	tcsetattr(STDIN_FILENO,TCSANOW,&oldtio);
 	write(STDOUT_FILENO,"\n",1);
-	tlog_debug("password: %s",buf);
 	return (off==0||off>=len)?NULL:buf;
 }
 

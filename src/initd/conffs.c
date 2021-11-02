@@ -35,6 +35,11 @@ static int _setup_conffs(){
 	char*conffile=confd_get_string_base(base,"conffile",DEFAULT_CONFFS_FILE);
 	if(!conffs)ERET(ENOMEM);
 
+	if(strcasecmp(conffs,"none")==0){
+		tlog_warn("skip mount conffs");
+		return 0;
+	}
+
 	wait_block(conffs,10,TAG);
 
 	if(conffs[0]!='/'){

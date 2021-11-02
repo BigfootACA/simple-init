@@ -27,7 +27,7 @@
 
 static void print_prompt(){
 	struct utsname u;
-	char*h=uname(&u)==0?u.domainname:NAME;
+	char*h=uname(&u)==0?u.nodename:NAME;
 	write(STDOUT_FILENO,h,strlen(h));
 	write(STDOUT_FILENO," login: ",8);
 }

@@ -36,6 +36,11 @@ static int _setup_logfs(){
 	char*logfile=confd_get_string_base(base,"logfile",DEFAULT_LOGFS_FILE);
 	if(!logfs)ERET(ENOMEM);
 
+	if(strcasecmp(logfs,"none")==0){
+		tlog_warn("skip mount logfs");
+		return 0;
+	}
+
 	wait_block(logfs,10,TAG);
 
 	if(logfs[0]!='/'){

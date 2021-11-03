@@ -189,6 +189,11 @@ static int confd_read(int fd){
 			conf_del(msg.path);
 		break;
 
+		// create config key
+		case CONF_ADD_KEY:
+			conf_add_key(msg.path);
+		break;
+
 		// list items in key
 		case CONF_LIST:
 			do_ls(fd,&msg,&ret);

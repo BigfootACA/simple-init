@@ -26,6 +26,7 @@ enum confd_action{
 	CONF_DUMP         =0xAC04,
 	CONF_LIST         =0xAC05,
 	CONF_GET_TYPE     =0xAC06,
+	CONF_ADD_KEY      =0xAC07,
 	CONF_GET_STRING   =0xAC21,
 	CONF_GET_INTEGER  =0xAC22,
 	CONF_GET_BOOLEAN  =0xAC23,
@@ -130,6 +131,9 @@ extern const char**conf_ls(const char*path);
 
 // src/confd/store.c: delete config item and all children
 extern int conf_del(const char*path);
+
+// src/confd/store.c: create a config key
+extern int conf_add_key(const char*path);
 
 // src/confd/file.c: load config file to config store
 extern int conf_load_file(_ROOT_TYPE root,const char*path);

@@ -180,6 +180,10 @@ int conf_del(const char*path){
 	return c?conf_del_obj(c):-(errno);
 }
 
+int conf_add_key(const char*path){
+	return conf_lookup(path,true,TYPE_KEY)!=NULL;
+}
+
 #define FUNCTION_CONF_GET_SET(_tag,_type,_func) \
 	int conf_set_##_func(const char*path,_type data){\
 		struct conf*c=conf_lookup(path,true,TYPE_##_tag);\

@@ -63,6 +63,18 @@ int confd_delete(const char*path){
 	return res.code;
 }
 
+int confd_add_key(const char*path){
+	if(!path||confd<0)ERET(EINVAL);
+	errno=0;
+	struct confd_msg msg,res;
+	confd_internal_init_msg(&msg,CONF_ADD_KEY);
+	strncpy(msg.path,path,sizeof(msg.path)-1);
+	if(confd_internal_send(confd,&msg)<0)return -1;
+	if(confd_internal_read_msg(confd,&res)<0)return -1;
+	if(res.code>0)errno=res.code;
+	return res.code;
+}
+
 int confd_set_integer(const char*path,int64_t data){
 	if(!path||confd<0)ERET(EINVAL);
 	errno=0;
@@ -273,6 +285,7 @@ EXT(confd_set_boolean, data,bool,   int);
 EXT(confd_get_string,  data,char*,  char*);
 EXT(confd_get_integer, data,int64_t,int64_t);
 EXT(confd_get_boolean, data,bool,   bool);
+XEXT(confd_add_key,    int);
 XEXT(confd_delete,     int);
 XEXT(confd_ls,         char**);
 XEXT(confd_get_type,   enum conf_type);

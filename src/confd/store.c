@@ -25,7 +25,7 @@ static pthread_mutex_t store_lock;
 #endif
 
 bool conf_store_changed=false;
-static struct conf conf_store={.type=TYPE_KEY};
+static struct conf conf_store={.type=TYPE_KEY,.save=true};
 
 struct conf*conf_get_store(){return &conf_store;}
 
@@ -54,7 +54,7 @@ static struct conf*conf_create(struct conf*conf,const char*name){
 	if(!n)EPRET(ENOMEM);
 	memset(n,0,sizeof(struct conf));
 	strcpy(n->name,name);
-	n->parent=conf;
+	n->parent=conf,n->save=conf->save;
 	list_obj_add_new_notnull(&conf->keys,n);
 	return n;
 }
@@ -182,6 +182,17 @@ int conf_del(const char*path){
 
 int conf_add_key(const char*path){
 	return conf_lookup(path,true,TYPE_KEY)!=NULL;
+}
+
+int conf_set_save(const char*path,bool save){
+	struct conf*c=conf_lookup(path,false,0);
+	if(c)c->save=save;
+	return c!=NULL;
+}
+
+bool conf_get_save(const char*path){
+	struct conf*c=conf_lookup(path,false,0);
+	return c?c->save:false;
 }
 
 #define FUNCTION_CONF_GET_SET(_tag,_type,_func) \

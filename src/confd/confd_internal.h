@@ -36,6 +36,8 @@ enum confd_action{
 	CONF_SET_DEFAULT  =0xACA1,
 	CONF_SAVE         =0xACA2,
 	CONF_LOAD         =0xACA3,
+	CONF_SET_SAVE     =0xACA4,
+	CONF_GET_SAVE     =0xACA5,
 };
 
 // initconfd message
@@ -60,6 +62,7 @@ struct conf{
 	char name[255];
 	enum conf_type type;
 	struct conf*parent;
+	bool save;
 	union{
 		list*keys;
 		union{
@@ -134,6 +137,12 @@ extern int conf_del(const char*path);
 
 // src/confd/store.c: create a config key
 extern int conf_add_key(const char*path);
+
+// src/confd/store.c: set config should save
+extern int conf_set_save(const char*path,bool save);
+
+// src/confd/store.c: get config should save
+extern bool conf_get_save(const char*path);
 
 // src/confd/file.c: load config file to config store
 extern int conf_load_file(_ROOT_TYPE root,const char*path);

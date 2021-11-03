@@ -194,6 +194,16 @@ static int confd_read(int fd){
 			conf_add_key(msg.path);
 		break;
 
+		// set config should save
+		case CONF_SET_SAVE:
+			conf_set_save(msg.path,msg.data.boolean);
+		break;
+
+		// get config should save
+		case CONF_GET_SAVE:
+			ret.data.boolean=conf_get_save(msg.path);
+		break;
+
 		// list items in key
 		case CONF_LIST:
 			do_ls(fd,&msg,&ret);

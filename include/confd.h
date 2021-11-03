@@ -73,6 +73,8 @@ DECLARE_FUNC(confd_set_boolean, int,     ,bool    data);
 DECLARE_FUNC(confd_get_string,  char*,   ,char*   data);
 DECLARE_FUNC(confd_get_integer, int64_t, ,int64_t data);
 DECLARE_FUNC(confd_get_boolean, bool,    ,bool    data);
+DECLARE_FUNC(confd_set_save,    int,     ,bool    save);
+DECLARE_FUNC(confd_get_save,    bool);
 DECLARE_FUNC(confd_delete,      int);
 DECLARE_FUNC(confd_add_key,     int);
 DECLARE_FUNC(confd_ls,          char**);

@@ -111,6 +111,30 @@ bool confd_get_save(const char*path){
 	return conf_get_save(path,0,0);
 }
 
+int confd_get_own(const char*path,uid_t*own){
+	return conf_get_own(path,own,0,0);
+}
+
+int confd_get_grp(const char*path,uid_t*grp){
+	return conf_get_grp(path,grp,0,0);
+}
+
+int confd_get_mod(const char*path,mode_t*mod){
+	return conf_get_mod(path,mod,0,0);
+}
+
+int confd_set_own(const char*path,uid_t own){
+	return conf_set_own(path,own,0,0);
+}
+
+int confd_set_grp(const char*path,uid_t grp){
+	return conf_set_grp(path,grp,0,0);
+}
+
+int confd_set_mod(const char*path,mode_t mod){
+	return conf_set_mod(path,mod,0,0);
+}
+
 #define _EXT_BASE(ret,func,ret_func,...) \
 ret func##_base(const char*base,const char*path __VA_ARGS__){\
 	char xpath[PATH_MAX]={0};\
@@ -153,6 +177,12 @@ EXT(confd_get_string,  data,char*,  char*);
 EXT(confd_get_integer, data,int64_t,int64_t);
 EXT(confd_get_boolean, data,bool,   bool);
 EXT(confd_set_save,    save,bool,   int);
+EXT(confd_get_own,     own,uid_t*,  int);
+EXT(confd_get_grp,     grp,gid_t*,  int);
+EXT(confd_get_mod,     mod,mode_t*, int);
+EXT(confd_set_own,     own,uid_t,   int);
+EXT(confd_set_grp,     grp,gid_t,   int);
+EXT(confd_set_mod,     mod,mode_t,  int);
 XEXT(confd_get_save,   bool);
 XEXT(confd_add_key,    int);
 XEXT(confd_delete,     int);

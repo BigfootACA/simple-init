@@ -232,6 +232,46 @@ bool conf_get_save(const char*path,uid_t u,gid_t g){
 	return c?c->save:false;
 }
 
+int conf_get_own(const char*path,uid_t*own,uid_t u,gid_t g){
+	struct conf*c=conf_lookup(path,false,0,u,g);
+	if(c&&own)*own=c->user;
+	return c&&own;
+}
+
+int conf_get_grp(const char*path,gid_t*grp,uid_t u,gid_t g){
+	struct conf*c=conf_lookup(path,false,0,u,g);
+	if(c&&grp)*grp=c->group;
+	return c&&grp;
+}
+
+int conf_get_mod(const char*path,mode_t*mod,uid_t u,gid_t g){
+	struct conf*c=conf_lookup(path,false,0,u,g);
+	if(c&&mod)*mod=c->mode;
+	return c&&mod;
+}
+
+int conf_set_own(const char*path,uid_t own,uid_t u,gid_t g){
+	if(u!=0&&g!=0)ERET(EPERM);
+	struct conf*c=conf_lookup(path,false,0,u,g);
+	if(c)c->user=own;
+	return c!=NULL;
+}
+
+int conf_set_grp(const char*path,gid_t grp,uid_t u,gid_t g){
+	if(u!=0&&g!=0)ERET(EPERM);
+	struct conf*c=conf_lookup(path,false,0,u,g);
+	if(c)c->group=grp;
+	return c!=NULL;
+}
+
+int conf_set_mod(const char*path,mode_t mod,uid_t u,gid_t g){
+	struct conf*c=conf_lookup(path,false,0,u,g);
+	if(!c)return -1;
+	if(u!=0&&u!=c->user)ERET(EPERM);
+	c->mode=mod;
+	return 0;
+}
+
 #define FUNCTION_CONF_GET_SET(_tag,_type,_func) \
 	int conf_set_##_func(const char*path,_type data,uid_t u,gid_t g){\
 		struct conf*c=conf_lookup(path,true,TYPE_##_tag,u,g);\

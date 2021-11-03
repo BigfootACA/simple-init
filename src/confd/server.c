@@ -216,6 +216,36 @@ static int confd_read(int fd){
 			ret.data.boolean=conf_get_save(msg.path,cred.uid,cred.gid);
 		break;
 
+		// set owner
+		case CONF_SET_OWNER:
+			conf_set_own(msg.path,msg.data.uid,cred.uid,cred.gid);
+		break;
+
+		// set group
+		case CONF_SET_GROUP:
+			conf_set_grp(msg.path,msg.data.gid,cred.uid,cred.gid);
+		break;
+
+		// set mode
+		case CONF_SET_MODE:
+			conf_set_mod(msg.path,msg.data.mode,cred.uid,cred.gid);
+		break;
+
+		// get owner
+		case CONF_GET_OWNER:
+			conf_get_own(msg.path,&ret.data.uid,cred.uid,cred.gid);
+		break;
+
+		// get group
+		case CONF_GET_GROUP:
+			conf_get_grp(msg.path,&ret.data.gid,cred.uid,cred.gid);
+		break;
+
+		// get mode
+		case CONF_GET_MODE:
+			conf_get_mod(msg.path,&ret.data.mode,cred.uid,cred.gid);
+		break;
+
 		// list items in key
 		case CONF_LIST:
 			do_ls(fd,&msg,&ret,&cred);

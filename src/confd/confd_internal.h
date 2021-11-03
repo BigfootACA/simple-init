@@ -38,6 +38,12 @@ enum confd_action{
 	CONF_LOAD         =0xACA3,
 	CONF_SET_SAVE     =0xACA4,
 	CONF_GET_SAVE     =0xACA5,
+	CONF_SET_OWNER    =0xACB1,
+	CONF_GET_OWNER    =0xACB2,
+	CONF_SET_GROUP    =0xACB3,
+	CONF_GET_GROUP    =0xACB4,
+	CONF_SET_MODE     =0xACB5,
+	CONF_GET_MODE     =0xACB6,
 };
 
 // initconfd message
@@ -45,8 +51,13 @@ struct confd_msg{
 	unsigned char magic0:8,magic1:8;
 	enum confd_action action:16;
 	char path[4084-(MAX(
-		MAX(sizeof(size_t),sizeof(int64_t)),
-		MAX(sizeof(enum conf_type),sizeof(bool))
+		MAX(
+			MAX(sizeof(size_t),sizeof(int64_t)),
+			MAX(sizeof(enum conf_type),sizeof(bool))
+		),MAX(
+			MAX(sizeof(uid_t),sizeof(gid_t)),
+			sizeof(mode_t)
+		)
 	))];
 	int code:32;
 	union{
@@ -54,6 +65,9 @@ struct confd_msg{
 		enum conf_type type;
 		int64_t integer;
 		bool boolean;
+		uid_t uid;
+		gid_t gid;
+		mode_t mode;
 	}data;
 };
 
@@ -146,6 +160,24 @@ extern int conf_set_save(const char*path,bool save,uid_t u,gid_t g);
 
 // src/confd/store.c: get config should save
 extern bool conf_get_save(const char*path,uid_t u,gid_t g);
+
+// src/confd/store.c: get config owner
+extern int conf_get_own(const char*path,uid_t*own,uid_t u,gid_t g);
+
+// src/confd/store.c: get config group
+extern int conf_get_grp(const char*path,gid_t*grp,uid_t u,gid_t g);
+
+// src/confd/store.c: get config mode
+extern int conf_get_mod(const char*path,mode_t*mod,uid_t u,gid_t g);
+
+// src/confd/store.c: set config owner
+extern int conf_set_own(const char*path,uid_t own,uid_t u,gid_t g);
+
+// src/confd/store.c: set config group
+extern int conf_set_grp(const char*path,gid_t grp,uid_t u,gid_t g);
+
+// src/confd/store.c: set config mode
+extern int conf_set_mod(const char*path,mode_t mod,uid_t u,gid_t g);
 
 // src/confd/file.c: load config file to config store
 extern int conf_load_file(_ROOT_TYPE root,const char*path);

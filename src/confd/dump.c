@@ -12,13 +12,19 @@
 #include"str.h"
 #include"list.h"
 #include"logger.h"
+#include"system.h"
 #include"confd_internal.h"
 #define TAG "confd"
 
 static const char*conf_summary(struct conf*key){
 	static char buf[256];
 	memset(buf,0,256);
-	snprintf(buf,255,"SAVE:%s",BOOL2STR(key->save));
+	snprintf(
+		buf,255,
+		"SAVE:%s,UID:%d,GID:%d,MODE:%04o",
+		BOOL2STR(key->save),
+		key->user,key->group,key->mode
+	);
 	return buf;
 }
 

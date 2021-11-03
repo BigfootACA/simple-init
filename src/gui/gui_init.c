@@ -299,10 +299,12 @@ int gui_draw(){
 	return 0;
 }
 
+#ifndef ENABLE_UEFI
 static void gui_quit_handler(int s __attribute((unused))){
 	gui_quit_sleep();
 	gui_run=false;
 }
+#endif
 
 int gui_main(){
 	#ifdef ENABLE_UEFI

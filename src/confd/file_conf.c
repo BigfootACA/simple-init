@@ -96,7 +96,7 @@ static void str_write(_ROOT_TYPE fd,char*str){
 static int print_conf(_ROOT_TYPE fd,struct conf*key,const char*name){
 	size_t size=0;
 	char path[PATH_MAX]={0},*buf,*str;
-	if(strcmp(key->name,"runtime")==0&&!*name)return 0;
+	if(!key->save&&!*name)return 0;
 	if(key->name[0]){
 		if(!name[0])strcpy(path,key->name);
 		else snprintf(path,PATH_MAX-1,"%s.%s",name,key->name);

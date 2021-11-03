@@ -62,6 +62,9 @@ struct conf{
 	char name[255];
 	enum conf_type type;
 	struct conf*parent;
+	uid_t user;
+	gid_t group;
+	mode_t mode;
 	bool save;
 	union{
 		list*keys;
@@ -124,25 +127,25 @@ extern struct conf*conf_get_store();
 extern const char*conf_type2string(enum conf_type type);
 
 // src/confd/store.c: get config item type by path
-extern enum conf_type conf_get_type(const char*path);
+extern enum conf_type conf_get_type(const char*path,uid_t u,gid_t g);
 
 // src/confd/store.c: get config item type string by path
-extern const char*conf_get_type_string(const char*path);
+extern const char*conf_get_type_string(const char*pat,uid_t u,gid_t gh);
 
 // src/confd/store.c: list config item keys
-extern const char**conf_ls(const char*path);
+extern const char**conf_ls(const char*path,uid_t u,gid_t g);
 
 // src/confd/store.c: delete config item and all children
-extern int conf_del(const char*path);
+extern int conf_del(const char*path,uid_t u,gid_t g);
 
 // src/confd/store.c: create a config key
-extern int conf_add_key(const char*path);
+extern int conf_add_key(const char*path,uid_t u,gid_t g);
 
 // src/confd/store.c: set config should save
-extern int conf_set_save(const char*path,bool save);
+extern int conf_set_save(const char*path,bool save,uid_t u,gid_t g);
 
 // src/confd/store.c: get config should save
-extern bool conf_get_save(const char*path);
+extern bool conf_get_save(const char*path,uid_t u,gid_t g);
 
 // src/confd/file.c: load config file to config store
 extern int conf_load_file(_ROOT_TYPE root,const char*path);
@@ -157,8 +160,8 @@ extern int conf_save_file(_ROOT_TYPE root,const char*path);
 
 // src/confd/store.c: get or set config item value
 #define DECLARE_CONF_GET_SET(_tag,_type,_func) \
-	extern int conf_set_##_func(const char*path,_type data);\
-	extern _type conf_get_##_func(const char*path,_type def);
+	extern int conf_set_##_func(const char*path,_type data,uid_t u,gid_t g);\
+	extern _type conf_get_##_func(const char*path,_type def,uid_t u,gid_t g);
 
 DECLARE_CONF_GET_SET(STRING,char*,string)
 DECLARE_CONF_GET_SET(INTEGER,int64_t,integer)

@@ -192,11 +192,11 @@ static bool string_is_false(char*string){
 
 static void line_set_string(char*key,char*value,size_t len){
 	value[len-1]=0,value++;
-	char*old=conf_get_string(key,NULL);
+	char*old=conf_get_string(key,NULL,0,0);
 	char*val=str_unescape(value);
 	if(!val)return;
 	if(old)free(old);
-	conf_set_string(key,val);
+	conf_set_string(key,val,0,0);
 }
 
 static void conf_parse_line(int*err,const char*name,size_t n,char*data){
@@ -207,7 +207,7 @@ static void conf_parse_line(int*err,const char*name,size_t n,char*data){
 		size_t ds=strlen(data);
 		if(ds==0)goto inv_key;
 		if(strncmp(data,"runtime.",MIN(7,ds))==0)goto runtime;
-		conf_del(data);
+		conf_del(data,0,0);
 		return;
 	}
 	*p=0;
@@ -225,14 +225,14 @@ static void conf_parse_line(int*err,const char*name,size_t n,char*data){
 	}else if(value[0]=='"'){
 		if(vs<2||value[vs-1]!='"')goto inv_val;
 		line_set_string(key,value,vs);
-	}else if(string_is_true(value))conf_set_boolean(key,true);
-	else if(string_is_false(value))conf_set_boolean(key,false);
+	}else if(string_is_true(value))conf_set_boolean(key,true,0,0);
+	else if(string_is_false(value))conf_set_boolean(key,false,0,0);
 	else{
 		char*end;
 		errno=0;
 		int64_t i=strtol(value,&end,0);
 		if(errno!=0||end==value)goto inv_val;
-		conf_set_integer(key,i);
+		conf_set_integer(key,i,0,0);
 	}
 	return;
 	runtime:

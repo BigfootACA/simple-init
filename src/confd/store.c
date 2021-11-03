@@ -7,8 +7,11 @@
  */
 
 #define _GNU_SOURCE
+#include<fcntl.h>
+#include<unistd.h>
 #include<string.h>
 #include<stdlib.h>
+#include<sys/stat.h>
 #include"confd_internal.h"
 #include"logger.h"
 #ifdef ENABLE_UEFI
@@ -23,9 +26,17 @@ static pthread_mutex_t store_lock;
 #define LOCK(lock) pthread_mutex_lock(&lock)
 #define UNLOCK(lock) pthread_mutex_unlock(&lock)
 #endif
+#define KEY_MODE 0755
+#define VAL_MODE 0644
 
 bool conf_store_changed=false;
-static struct conf conf_store={.type=TYPE_KEY,.save=true};
+static struct conf conf_store={
+	.type=TYPE_KEY,
+	.save=true,
+	.user=0,
+	.group=0,
+	.mode=0777
+};
 
 struct conf*conf_get_store(){return &conf_store;}
 
@@ -41,28 +52,47 @@ static struct conf*conf_get(struct conf*conf,const char*name){
 	EPRET(ENOENT);
 }
 
-static struct conf*conf_create(struct conf*conf,const char*name){
+static bool check_perm_read(struct conf*conf,uid_t u,gid_t g){
+	if(u==0&&g==0)return true;
+	if(conf->user==u&&(conf->mode&S_IRUSR)!=0)return true;
+	else if(conf->group==g&&(conf->mode&S_IRGRP)!=0)return true;
+	else if((conf->mode&S_IROTH)!=0)return true;
+	else return false;
+}
+
+static bool check_perm_write(struct conf*conf,uid_t u,gid_t g){
+	if(u==0&&g==0)return true;
+	if(conf->user==u&&(conf->mode&S_IWUSR)!=0)return true;
+	else if(conf->group==g&&(conf->mode&S_IWGRP)!=0)return true;
+	else if((conf->mode&S_IWOTH)!=0)return true;
+	else return false;
+}
+
+static struct conf*conf_create(struct conf*conf,const char*name,uid_t u,gid_t g){
 	errno=0;
 	if(!conf)return NULL;
 	if(conf->type!=TYPE_KEY)EPRET(ENOTDIR);
 	list*p=list_first(conf->keys);
+	if(!check_perm_read(conf,u,g))EPRET(EACCES);
 	if(p)do{
 		LIST_DATA_DECLARE(d,p,struct conf*);
 		if(d&&strcmp(d->name,name)==0)EPRET(EEXIST);
 	}while((p=p->next));
+	if(!check_perm_write(conf,u,g))EPRET(EACCES);
 	struct conf*n=malloc(sizeof(struct conf));
 	if(!n)EPRET(ENOMEM);
 	memset(n,0,sizeof(struct conf));
 	strcpy(n->name,name);
-	n->parent=conf,n->save=conf->save;
+	n->parent=conf,n->save=conf->save,n->user=u,n->group=g;
 	list_obj_add_new_notnull(&conf->keys,n);
 	return n;
 }
 
-static struct conf*conf_lookup(const char*path,bool create,enum conf_type type){
+static struct conf*conf_lookup(const char*path,bool create,enum conf_type type,uid_t u,gid_t g){
 	errno=0;
 	struct conf*cur=&conf_store,*x;
 	char xpath[PATH_MAX]={0},*p=xpath,*key=p;
+	if(!check_perm_read(&conf_store,u,g))EPRET(EACCES);
 	if(strcmp(path,"/")==0&&type==0)return &conf_store;
 	else strncpy(xpath,path,PATH_MAX-1);
 	if(!path[0]&&type==0)return &conf_store;
@@ -75,11 +105,16 @@ static struct conf*conf_lookup(const char*path,bool create,enum conf_type type){
 				UNLOCK(store_lock);
 				EPRET(ENOENT);
 			}
-			if(!(x=conf_create(cur,key))){
+			if(!(x=conf_create(cur,key,u,g))){
 				UNLOCK(store_lock);
 				return NULL;
 			}
 			x->type=TYPE_KEY;
+			x->mode=KEY_MODE;
+		}
+		if(!check_perm_read(x,u,g)){
+			UNLOCK(store_lock);
+			EPRET(EACCES);
 		}
 		cur=x,key=++p;
 	}while(*p++);
@@ -92,20 +127,22 @@ static struct conf*conf_lookup(const char*path,bool create,enum conf_type type){
 			UNLOCK(store_lock);
 			EPRET(ENOENT);
 		}
-		if(!(x=conf_create(cur,key))){
+		if(!(x=conf_create(cur,key,u,g))){
 			UNLOCK(store_lock);
 			return NULL;
 		}
 		x->type=type;
+		x->mode=type==TYPE_KEY?KEY_MODE:VAL_MODE;
 	}
 	UNLOCK(store_lock);
+	if(!check_perm_read(x,u,g))EPRET(EACCES);
 	if(x->type==0)EPRET(EBADMSG);
 	if(type!=0&&type!=x->type)EPRET(ENOENT);
 	return x;
 }
 
-enum conf_type conf_get_type(const char*path){
-	struct conf*c=conf_lookup(path,false,0);
+enum conf_type conf_get_type(const char*path,uid_t u,gid_t g){
+	struct conf*c=conf_lookup(path,false,0,u,g);
 	return c?c->type:(enum conf_type)-1;
 }
 
@@ -119,13 +156,13 @@ const char*conf_type2string(enum conf_type type){
 	}
 }
 
-const char*conf_get_type_string(const char*path){
-	enum conf_type t=conf_get_type(path);
+const char*conf_get_type_string(const char*path,uid_t u,gid_t g){
+	enum conf_type t=conf_get_type(path,u,g);
 	return (((int)t)<0)?NULL:conf_type2string(t);
 }
 
-const char**conf_ls(const char*path){
-	struct conf*c=conf_lookup(path,false,0);
+const char**conf_ls(const char*path,uid_t u,gid_t g){
+	struct conf*c=conf_lookup(path,false,0,u,g);
 	if(!c)return NULL;
 	if(c->type!=TYPE_KEY)EPRET(ENOTDIR);
 	LOCK(store_lock);
@@ -175,29 +212,29 @@ static int conf_del_obj(struct conf*c){
 	return 0;
 }
 
-int conf_del(const char*path){
-	struct conf*c=conf_lookup(path,false,0);
+int conf_del(const char*path,uid_t u,gid_t g){
+	struct conf*c=conf_lookup(path,false,0,u,g);
 	return c?conf_del_obj(c):-(errno);
 }
 
-int conf_add_key(const char*path){
-	return conf_lookup(path,true,TYPE_KEY)!=NULL;
+int conf_add_key(const char*path,uid_t u,gid_t g){
+	return conf_lookup(path,true,TYPE_KEY,u,g)!=NULL;
 }
 
-int conf_set_save(const char*path,bool save){
-	struct conf*c=conf_lookup(path,false,0);
+int conf_set_save(const char*path,bool save,uid_t u,gid_t g){
+	struct conf*c=conf_lookup(path,false,0,u,g);
 	if(c)c->save=save;
 	return c!=NULL;
 }
 
-bool conf_get_save(const char*path){
-	struct conf*c=conf_lookup(path,false,0);
+bool conf_get_save(const char*path,uid_t u,gid_t g){
+	struct conf*c=conf_lookup(path,false,0,u,g);
 	return c?c->save:false;
 }
 
 #define FUNCTION_CONF_GET_SET(_tag,_type,_func) \
-	int conf_set_##_func(const char*path,_type data){\
-		struct conf*c=conf_lookup(path,true,TYPE_##_tag);\
+	int conf_set_##_func(const char*path,_type data,uid_t u,gid_t g){\
+		struct conf*c=conf_lookup(path,true,TYPE_##_tag,u,g);\
 		if(!c)return -errno;\
 		LOCK(store_lock);\
 		if(c->type!=TYPE_##_tag){\
@@ -209,8 +246,8 @@ bool conf_get_save(const char*path){
 		UNLOCK(store_lock);\
 		return 0;\
 	}\
-	_type conf_get_##_func(const char*path,_type def){\
-		struct conf*c=conf_lookup(path,false,TYPE_##_tag);\
+	_type conf_get_##_func(const char*path,_type def,uid_t u,gid_t g){\
+		struct conf*c=conf_lookup(path,false,TYPE_##_tag,u,g);\
 		return c?VALUE_##_tag(c):def;\
 	}
 

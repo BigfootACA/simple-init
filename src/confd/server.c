@@ -14,6 +14,7 @@
 #include<unistd.h>
 #include<pthread.h>
 #include<sys/un.h>
+#include<sys/stat.h>
 #include<sys/epoll.h>
 #include<sys/prctl.h>
 #include<sys/socket.h>
@@ -52,10 +53,10 @@ static void signal_handler(int s,siginfo_t*info,void*c __attribute__((unused))){
 	exit(0);
 }
 
-static void do_ls(int fd,struct confd_msg*msg,struct confd_msg*ret){
+static void do_ls(int fd,struct confd_msg*msg,struct confd_msg*ret,struct ucred*cred){
 	size_t s=0,i;
 	char**ls=NULL,*l=NULL,*p=NULL;
-	if(!(ls=(char**)conf_ls(msg->path)))goto fail;
+	if(!(ls=(char**)conf_ls(msg->path,cred->uid,cred->pid)))goto fail;
 	for(i=0;ls[i];i++)s+=strlen(ls[i])+1;
 	if(s<=0||!(p=l=malloc(s)))goto fail;
 	for(i=0;ls[i];i++){
@@ -77,14 +78,14 @@ static void do_ls(int fd,struct confd_msg*msg,struct confd_msg*ret){
 	confd_internal_send(fd,ret);
 }
 
-static void do_get_string(int fd,struct confd_msg*msg,struct confd_msg*ret){
-	char*re=conf_get_string(msg->path,NULL);
+static void do_get_string(int fd,struct confd_msg*msg,struct confd_msg*ret,struct ucred*cred){
+	char*re=conf_get_string(msg->path,NULL,cred->uid,cred->gid);
 	ret->data.data_len=re?strlen(re):0;
 	confd_internal_send(fd,ret);
 	if(re)write(fd,re,ret->data.data_len);
 }
 
-static int do_set_string(int fd,struct confd_msg*msg){
+static int do_set_string(int fd,struct confd_msg*msg,struct ucred*cred){
 	size_t s=msg->data.data_len,r;
 	char*data=malloc(s+1);
 	if(!data){
@@ -97,9 +98,9 @@ static int do_set_string(int fd,struct confd_msg*msg){
 		free(data);
 		return 0;
 	}
-	char*old=conf_get_string(msg->path,NULL);
+	char*old=conf_get_string(msg->path,NULL,cred->uid,cred->gid);
 	if(old)free(old);
-	int retdata=-conf_set_string(msg->path,data);
+	int retdata=-conf_set_string(msg->path,data,cred->uid,cred->gid);
 	if(retdata!=0)free(data);
 	return retdata;
 }
@@ -169,83 +170,98 @@ static int confd_read(int fd){
 	struct confd_msg ret;
 	confd_internal_init_msg(&ret,CONF_OK);
 	int retdata=0;
+	socklen_t len=sizeof(struct ucred);
+	struct ucred cred;
+	if(getsockopt(fd,SOL_SOCKET,SO_PEERCRED,&cred,&len)<0)goto fail;
+	if(len!=sizeof(struct ucred)||cred.pid<=0){
+		errno=EIO;
+		goto fail;
+	}
 	switch(msg.action){
 		// command response
 		case CONF_OK:case CONF_FAIL:break;
 
 		// terminate confd
 		case CONF_QUIT:
-			tlog_notice("receive exit request");
-			e=-4;
+			if(cred.uid!=0||cred.gid!=0)errno=EACCES;
+			else{
+				tlog_notice("receive exit request");
+				e=-4;
+			}
 		break;
 
 		// dump config store
 		case CONF_DUMP:
-			conf_dump_store();
+			if(cred.uid!=0||cred.gid!=0)errno=EACCES;
+			else conf_dump_store();
 		break;
 
 		// delete item
 		case CONF_DELETE:
-			conf_del(msg.path);
+			conf_del(msg.path,cred.uid,cred.gid);
 		break;
 
 		// create config key
 		case CONF_ADD_KEY:
-			conf_add_key(msg.path);
+			conf_add_key(msg.path,cred.uid,cred.gid);
 		break;
 
 		// set config should save
 		case CONF_SET_SAVE:
-			conf_set_save(msg.path,msg.data.boolean);
+			conf_set_save(msg.path,msg.data.boolean,cred.uid,cred.gid);
 		break;
 
 		// get config should save
 		case CONF_GET_SAVE:
-			ret.data.boolean=conf_get_save(msg.path);
+			ret.data.boolean=conf_get_save(msg.path,cred.uid,cred.gid);
 		break;
 
 		// list items in key
 		case CONF_LIST:
-			do_ls(fd,&msg,&ret);
+			do_ls(fd,&msg,&ret,&cred);
 		return e;
 
 		// get item type
 		case CONF_GET_TYPE:
-			ret.data.type=conf_get_type(msg.path);
+			ret.data.type=conf_get_type(msg.path,cred.uid,cred.gid);
 		break;
 
 		// get item as string
 		case CONF_GET_STRING:
-			do_get_string(fd,&msg,&ret);
+			do_get_string(fd,&msg,&ret,&cred);
 		return e;
 
 		// get item as integer
 		case CONF_GET_INTEGER:
-			ret.data.integer=conf_get_integer(msg.path,msg.data.integer);
+			ret.data.integer=conf_get_integer(msg.path,msg.data.integer,cred.uid,cred.gid);
 		break;
 
 		// get item as boolean
 		case CONF_GET_BOOLEAN:
-			ret.data.boolean=conf_get_boolean(msg.path,msg.data.boolean);
+			ret.data.boolean=conf_get_boolean(msg.path,msg.data.boolean,cred.uid,cred.gid);
 		break;
 
 		// put item as string
 		case CONF_SET_STRING:
-			retdata=do_set_string(fd,&msg);
+			retdata=do_set_string(fd,&msg,&cred);
 		break;
 
 		// put item as integer
 		case CONF_SET_INTEGER:
-			retdata=-conf_set_integer(msg.path,msg.data.integer);
+			retdata=-conf_set_integer(msg.path,msg.data.integer,cred.uid,cred.gid);
 		break;
 
 		// put item as boolean
 		case CONF_SET_BOOLEAN:
-			retdata=-conf_set_boolean(msg.path,msg.data.boolean);
+			retdata=-conf_set_boolean(msg.path,msg.data.boolean,cred.uid,cred.gid);
 		break;
 
 		// set default config path
 		case CONF_SET_DEFAULT:
+			if(cred.uid!=0||cred.gid!=0){
+				errno=EACCES;
+				break;
+			}
 			if(!msg.path[0]){
 				errno=EINVAL;
 				break;
@@ -257,12 +273,14 @@ static int confd_read(int fd){
 
 		// load config
 		case CONF_LOAD:
-			if(do_async_load(fd,msg.path)==0)return e;
+			if(cred.uid!=0||cred.gid!=0)errno=EACCES;
+			else if(do_async_load(fd,msg.path)==0)return e;
 		break;
 
 		// save config
 		case CONF_SAVE:
-			if(do_async_save(fd,msg.path)==0)return e;
+			if(cred.uid!=0||cred.gid!=0)errno=EACCES;
+			else if(do_async_save(fd,msg.path)==0)return e;
 		break;
 
 		// unknown
@@ -271,6 +289,7 @@ static int confd_read(int fd){
 			confd_action2name(msg.action),msg.action
 		);
 	}
+	fail:
 	if(retdata==0&&errno!=0)retdata=errno;
 	ret.code=retdata;
 	confd_internal_send(fd,&ret);
@@ -293,6 +312,7 @@ static int listen_confd_socket(){
 		telog_error("cannot listen socket");
 		goto fail;
 	}
+	chmod(un.sun_path,0666);
 	tlog_info("listen socket %s as %d",sock,fd);
 	return fd;
 	fail:
@@ -304,7 +324,7 @@ static int listen_confd_socket(){
 
 static void*confd_save_thread(void*d __attribute__((unused))){
 	for(;;){
-		sleep(conf_get_integer("confd.save_interval",10));
+		sleep(conf_get_integer("confd.save_interval",10,0,0));
 		if(!def_path)continue;
 		if(conf_store_changed){
 			int r=confd_save_file(def_path);

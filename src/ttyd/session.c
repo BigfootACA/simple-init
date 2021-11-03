@@ -7,6 +7,7 @@
  */
 
 #define _GNU_SOURCE
+#include<grp.h>
 #include<string.h>
 #include<stdlib.h>
 #include<unistd.h>
@@ -37,14 +38,26 @@ static int tty_setup_user(struct tty_data*data){
 		chdir("/");
 		return 1;
 	}
-	if(setuid(data->uid)!=0){
-		fprintf(stderr,"setuid %s failed: %m\n",data->user);
-		telog_warn("tty %s setuid %s failed",data->name,data->user);
+	int n=0;
+	gid_t gl[256]={0};
+	getgrouplist(data->user,data->gid,gl,&n);
+	if(n>=256){
+		fprintf(stderr,"too many group\n");
+		telog_warn("tty %s user %s too many group",data->name,data->user);
 		return 1;
 	}
+	setgroups(n,gl);
+	endgrent();
+	close_all_fd((int[]){logfd},1);
+	fcntl(logfd,F_SETFD,FD_CLOEXEC);
 	if(setgid(data->gid)!=0){
 		fprintf(stderr,"setgid %s failed: %m\n",data->group);
 		telog_warn("tty %s setgid %s failed",data->name,data->group);
+		return 1;
+	}
+	if(setuid(data->uid)!=0){
+		fprintf(stderr,"setuid %s failed: %m\n",data->user);
+		telog_warn("tty %s setuid %s failed",data->name,data->user);
 		return 1;
 	}
 	return 0;
@@ -102,7 +115,6 @@ int tty_start_session(struct tty_data*data){
 		return 1;
 	}
 	tty_setup_environ(data);
-	close_all_fd(NULL,0);
 	signal(SIGINT,SIG_DFL);
 	return tty_start_shell(data);
 }

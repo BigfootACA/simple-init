@@ -89,6 +89,10 @@ int preinit(){
 	// start config daemon
 	start_confd(TAG,NULL);
 
+	// create config runtime root key
+	confd_add_key("runtime");
+	confd_set_save("runtime",false);
+
 	// load cmdline
 	load_cmdline();
 

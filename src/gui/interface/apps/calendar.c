@@ -59,6 +59,8 @@ static int calendar_draw(struct gui_activity*act){
 	lv_calendar_set_day_names(cal,get_day_name());
 	lv_calendar_set_today_date(cal,&d);
 	lv_calendar_set_showed_date(cal,&d);
+	if(lv_obj_get_width(cal)>(lv_coord_t)(gui_sw-gui_font_size))
+		lv_obj_set_width(cal,gui_sw-gui_font_size);
 	lv_obj_align(cal,NULL,LV_ALIGN_CENTER,0,0);
 	return 0;
 }

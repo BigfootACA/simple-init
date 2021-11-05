@@ -133,7 +133,7 @@ static lv_obj_t*add_reboot_button(lv_obj_t*last,enum reboot_mode mode){
 	lv_obj_t*btn=lv_btn_create(box,NULL);
 	lv_obj_t*txt=lv_label_create(btn,NULL);
 	lv_label_set_text(txt,_(reboot_str[mode]));
-	lv_obj_set_width(btn,lv_page_get_scrl_width(box)-gui_dpi/10);
+	lv_obj_set_width(btn,lv_page_get_scrl_width(box)-gui_dpi/8);
 	lv_obj_align(btn,last,LV_ALIGN_OUT_BOTTOM_MID,0,gui_font_size/2);
 	lv_obj_set_user_data(btn,memdup(&mode,sizeof(mode)));
 	lv_obj_set_event_cb(btn,reboot_action);
@@ -171,7 +171,9 @@ static int reboot_menu_draw(struct gui_activity*act){
 	btn_rb_bl=add_reboot_button(btn_rb_rec,REBOOT_BOOTLOADER);
 	btn_po=add_reboot_button(btn_rb_bl,POWEROFF);
 	#endif
-	lv_obj_set_height(box,lv_obj_get_y(btn_po)+lv_obj_get_height(btn_po)+(gui_font_size/3*8));
+	lv_coord_t h=lv_obj_get_y(btn_po)+lv_obj_get_height(btn_po)+(gui_font_size/3*8);
+	if(h>(lv_coord_t)gui_sh-gui_font_size)h=gui_sh-gui_font_size;
+	lv_obj_set_height(box,h);
 	lv_obj_align(box,NULL,LV_ALIGN_CENTER,0,0);
 	return 0;
 }

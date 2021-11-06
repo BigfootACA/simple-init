@@ -84,13 +84,11 @@ static void add_page(struct gui_app*ga){
 static void add_button(struct gui_app*ga,struct gui_register*p){
 	if(!p->show_app)return;
 	lv_obj_t*scr=lv_tabview_get_tab(ga->tabview,ga->app_page);
-	lv_coord_t pw=lv_page_get_scrl_width(scr);
-	lv_coord_t ph=lv_page_get_scrl_height(scr);
-	lv_coord_t xnum=pw/gui_dpi*2,ynum=ph/gui_dpi;
+	lv_coord_t xnum=gui_sw/gui_dpi*2,ynum=gui_sh/gui_dpi;
 	lv_coord_t a=ga->app_num%xnum,b=ga->app_num/xnum;
-	lv_coord_t w=(pw-gui_font_size-8)/xnum,h=(ph-gui_font_size-8)/(ynum+1);
+	lv_coord_t w=(gui_sw-gui_font_size-8)/xnum,h=(gui_sh-gui_font_size-8)/(ynum+1);
 	lv_coord_t xx=(w*a)+(gui_font_size/2),yy=(h*b)+(gui_font_size/2);
-	if(yy+h>ph){
+	if(yy+h>(lv_coord_t)gui_sh){
 		add_page(ga);
 		add_button(ga,p);
 		return;

@@ -225,7 +225,7 @@ static int do_clean(struct gui_activity*act __attribute__((unused))){
 }
 
 static int gadget_draw(struct gui_activity*act){
-	lv_coord_t btx=gui_font_size,bts=gui_sw/6-btx,btm=btx/2;
+	lv_coord_t btx=gui_font_size,bts=gui_sw/6-btx,btm=btx/2,bth=btx*2;
 
 	// app title
 	lv_obj_t*title=lv_label_create(act->page,NULL);
@@ -242,10 +242,10 @@ static int gadget_draw(struct gui_activity*act){
 	lv_obj_set_style_local_border_width(view,LV_PAGE_PART_BG,LV_STATE_FOCUSED,0);
 	lv_obj_set_style_local_border_width(view,LV_PAGE_PART_BG,LV_STATE_PRESSED,0);
 	lv_obj_align(view,title,LV_ALIGN_OUT_BOTTOM_MID,0,gui_font_size);
-	lv_obj_set_height(view,gui_sh-gui_sw/6-lv_obj_get_y(view));
+	lv_obj_set_height(view,gui_sh-bth-btx-lv_obj_get_y(view));
 
 	btn_add=lv_btn_create(act->page,NULL);
-	lv_obj_set_size(btn_add,bts,bts);
+	lv_obj_set_size(btn_add,bts,bth);
 	lv_obj_set_event_cb(btn_add,btns_cb);
 	lv_obj_set_user_data(btn_add,"add");
 	lv_obj_align(btn_add,NULL,LV_ALIGN_IN_BOTTOM_LEFT,btm,-btm);
@@ -253,7 +253,7 @@ static int gadget_draw(struct gui_activity*act){
 	lv_label_set_text(lv_label_create(btn_add,NULL),LV_SYMBOL_PLUS);
 
 	btn_edit=lv_btn_create(act->page,NULL);
-	lv_obj_set_size(btn_edit,bts,bts);
+	lv_obj_set_size(btn_edit,bts,bth);
 	lv_obj_set_event_cb(btn_edit,btns_cb);
 	lv_obj_set_user_data(btn_edit,"edit");
 	lv_obj_align(btn_edit,btn_add,LV_ALIGN_OUT_RIGHT_MID,btx,0);
@@ -261,7 +261,7 @@ static int gadget_draw(struct gui_activity*act){
 	lv_label_set_text(lv_label_create(btn_edit,NULL),LV_SYMBOL_EDIT);
 
 	btn_delete=lv_btn_create(act->page,NULL);
-	lv_obj_set_size(btn_delete,bts,bts);
+	lv_obj_set_size(btn_delete,bts,bth);
 	lv_obj_set_event_cb(btn_delete,btns_cb);
 	lv_obj_set_user_data(btn_delete,"delete");
 	lv_obj_align(btn_delete,btn_edit,LV_ALIGN_OUT_RIGHT_MID,btx,0);
@@ -269,7 +269,7 @@ static int gadget_draw(struct gui_activity*act){
 	lv_label_set_text(lv_label_create(btn_delete,NULL),LV_SYMBOL_TRASH);
 
 	btn_restart=lv_btn_create(act->page,NULL);
-	lv_obj_set_size(btn_restart,bts,bts);
+	lv_obj_set_size(btn_restart,bts,bth);
 	lv_obj_set_event_cb(btn_restart,btns_cb);
 	lv_obj_set_user_data(btn_restart,"restart");
 	lv_obj_align(btn_restart,btn_delete,LV_ALIGN_OUT_RIGHT_MID,btx,0);
@@ -277,7 +277,7 @@ static int gadget_draw(struct gui_activity*act){
 	lv_label_set_text(lv_label_create(btn_restart,NULL),LV_SYMBOL_OK);
 
 	btn_reload=lv_btn_create(act->page,NULL);
-	lv_obj_set_size(btn_reload,bts,bts);
+	lv_obj_set_size(btn_reload,bts,bth);
 	lv_obj_set_event_cb(btn_reload,btns_cb);
 	lv_obj_set_user_data(btn_reload,"reload");
 	lv_obj_align(btn_reload,btn_restart,LV_ALIGN_OUT_RIGHT_MID,btx,0);
@@ -285,7 +285,7 @@ static int gadget_draw(struct gui_activity*act){
 	lv_label_set_text(lv_label_create(btn_reload,NULL),LV_SYMBOL_REFRESH);
 
 	btn_base=lv_btn_create(act->page,NULL);
-	lv_obj_set_size(btn_base,bts,bts);
+	lv_obj_set_size(btn_base,bts,bth);
 	lv_obj_set_event_cb(btn_base,btns_cb);
 	lv_obj_set_user_data(btn_base,"settings");
 	lv_obj_align(btn_base,btn_reload,LV_ALIGN_OUT_RIGHT_MID,btx,0);

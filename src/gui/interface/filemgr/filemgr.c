@@ -273,7 +273,7 @@ static void btns_cb(lv_obj_t*obj,lv_event_t e){
 }
 
 static int filemgr_draw(struct gui_activity*act){
-	lv_coord_t btx=gui_font_size,btm=btx/2,btw=(gui_sw-btm)/6-btm,bth=btx*2;
+	lv_coord_t btx=gui_font_size,btm=btx/2,btw=(gui_sw-btm)/(gui_sw>gui_sh?12:6)-btm,bth=btx*2;
 	scr=act->page;
 
 	static lv_style_t s;
@@ -298,7 +298,7 @@ static int filemgr_draw(struct gui_activity*act){
 		LV_LABEL_LONG_DOT
 	);
 	lv_obj_set_size(path,gui_sw,gui_dpi/7);
-	lv_obj_align(path,NULL,LV_ALIGN_IN_BOTTOM_LEFT,0,-bth*2-btm*3);
+	lv_obj_align(path,NULL,LV_ALIGN_IN_BOTTOM_LEFT,0,-bth*(gui_sw>gui_sh?1:2)-btm*3);
 	lv_obj_set_size(tabview,gui_sw,lv_obj_get_y(path));
 
 	lv_obj_t*line=lv_obj_create(act->page,NULL);
@@ -314,7 +314,7 @@ static int filemgr_draw(struct gui_activity*act){
 	lv_obj_set_size(btn_prev,btw,bth);
 	lv_obj_set_event_cb(btn_prev,btns_cb);
 	lv_obj_set_user_data(btn_prev,"prev");
-	lv_obj_align(btn_prev,NULL,LV_ALIGN_IN_BOTTOM_LEFT,btm,-btm*2-bth);
+	lv_obj_align(btn_prev,NULL,LV_ALIGN_IN_BOTTOM_LEFT,btm,-btm*2-(gui_sw>gui_sh?0:bth));
 	lv_obj_set_style_local_radius(btn_prev,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
 	lv_label_set_text(lv_label_create(btn_prev,NULL),LV_SYMBOL_LEFT);
 
@@ -365,7 +365,8 @@ static int filemgr_draw(struct gui_activity*act){
 	lv_obj_set_size(btn_paste,btw,bth);
 	lv_obj_set_event_cb(btn_paste,btns_cb);
 	lv_obj_set_user_data(btn_paste,"paste");
-	lv_obj_align(btn_paste,NULL,LV_ALIGN_IN_BOTTOM_LEFT,btm,-btm);
+	if(gui_sw>gui_sh)lv_obj_align(btn_paste,btn_next,LV_ALIGN_OUT_RIGHT_MID,btm,0);
+	else lv_obj_align(btn_paste,NULL,LV_ALIGN_IN_BOTTOM_LEFT,btm,-btm);
 	lv_obj_set_style_local_radius(btn_paste,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
 	lv_label_set_text(lv_label_create(btn_paste,NULL),LV_SYMBOL_PASTE);
 

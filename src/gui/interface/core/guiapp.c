@@ -166,14 +166,29 @@ static void do_reload(lv_task_t*t){
 	redraw_apps(t->user_data);
 }
 
+static void app_focus(lv_group_t*grp){
+	struct gui_app*ga=guiact_get_last()->data;
+	lv_obj_t*o=lv_group_get_focused(grp);
+	list*l=list_first(ga->apps);
+	if(l)do{
+		LIST_DATA_DECLARE(ai,l,struct app_info*);
+		if(o==ai->app&&ai->page!=lv_tabview_get_tab_act(ga->tabview))
+			lv_tabview_set_tab_act(ga->tabview,ai->page,LV_ANIM_ON);
+	}while((l=l->next));
+}
+
 static int guiapp_get_focus(struct gui_activity*d){
 	struct gui_app*ga=d->data;
+	ga->old_cb=lv_group_get_focus_cb(gui_grp);
+	lv_group_set_focus_cb(gui_grp,app_focus);
 	lv_task_once(lv_task_create(do_reload,100,LV_TASK_PRIO_MID,ga));
 	return 0;
 }
 
 static int guiapp_lost_focus(struct gui_activity*d){
 	struct gui_app*ga=d->data;
+	lv_group_set_focus_cb(gui_grp,ga->old_cb);
+	ga->old_cb=NULL;
 	list*app=list_first(ga->apps);
 	if(app)do{
 		LIST_DATA_DECLARE(ai,app,struct app_info*);
@@ -191,8 +206,11 @@ static int guiapp_init(struct gui_activity*act){
 }
 
 static int guiapp_exit(struct gui_activity*act){
-	if(act->data)free(act->data);
-	act->data=NULL;
+	struct gui_app*ga=act->data;
+	if(!ga)return 0;
+	lv_group_set_focus_cb(gui_grp,ga->old_cb);
+	ga->old_cb=NULL,act->data=NULL;
+	free(ga);
 	return 0;
 }
 

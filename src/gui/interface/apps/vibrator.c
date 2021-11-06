@@ -323,7 +323,7 @@ static int vibrator_draw(struct gui_activity*act){
 	lv_obj_set_width(txt,gui_sw);
 	lv_obj_align(txt,NULL,LV_ALIGN_IN_TOP_MID,0,gui_font_size);
 
-	lv_coord_t btx=gui_font_size,bts=gui_sw/6-btx,btm=btx/2;
+	lv_coord_t btx=gui_font_size,bts=gui_sw/6-btx,btm=btx/2,bth=btx*2;
 
 	view=lv_page_create(act->page,NULL);
 	lv_obj_set_width(view,gui_sw-gui_font_size);
@@ -331,11 +331,11 @@ static int vibrator_draw(struct gui_activity*act){
 	lv_obj_set_style_local_border_width(view,LV_PAGE_PART_BG,LV_STATE_FOCUSED,0);
 	lv_obj_set_style_local_border_width(view,LV_PAGE_PART_BG,LV_STATE_PRESSED,0);
 	lv_obj_align(view,txt,LV_ALIGN_OUT_BOTTOM_MID,0,gui_font_size);
-	lv_obj_set_height(view,gui_sh-gui_sw/6-lv_obj_get_y(view));
+	lv_obj_set_height(view,gui_sh-bth-btx-lv_obj_get_y(view));
 
 	btn_prev=lv_btn_create(act->page,NULL);
 	lv_obj_set_enabled(btn_prev,false);
-	lv_obj_set_size(btn_prev,bts,bts);
+	lv_obj_set_size(btn_prev,bts,bth);
 	lv_obj_set_event_cb(btn_prev,move_cb);
 	lv_obj_set_user_data(btn_prev,"move up");
 	lv_obj_align(btn_prev,NULL,LV_ALIGN_IN_BOTTOM_LEFT,btm,-btm);
@@ -344,7 +344,7 @@ static int vibrator_draw(struct gui_activity*act){
 
 	btn_next=lv_btn_create(act->page,NULL);
 	lv_obj_set_enabled(btn_next,false);
-	lv_obj_set_size(btn_next,bts,bts);
+	lv_obj_set_size(btn_next,bts,bth);
 	lv_obj_set_event_cb(btn_next,move_cb);
 	lv_obj_set_user_data(btn_next,"move down");
 	lv_obj_align(btn_next,btn_prev,LV_ALIGN_OUT_RIGHT_MID,btx,0);
@@ -353,7 +353,7 @@ static int vibrator_draw(struct gui_activity*act){
 
 	btn_delete=lv_btn_create(act->page,NULL);
 	lv_obj_set_enabled(btn_delete,false);
-	lv_obj_set_size(btn_delete,bts,bts);
+	lv_obj_set_size(btn_delete,bts,bth);
 	lv_obj_set_event_cb(btn_delete,delete_cb);
 	lv_obj_set_user_data(btn_delete,"delete");
 	lv_obj_align(btn_delete,btn_next,LV_ALIGN_OUT_RIGHT_MID,btx,0);
@@ -361,7 +361,7 @@ static int vibrator_draw(struct gui_activity*act){
 	lv_label_set_text(lv_label_create(btn_delete,NULL),LV_SYMBOL_CLOSE);
 
 	btn_create=lv_btn_create(act->page,NULL);
-	lv_obj_set_size(btn_create,bts,bts);
+	lv_obj_set_size(btn_create,bts,bth);
 	lv_obj_set_event_cb(btn_create,create_cb);
 	lv_obj_set_user_data(btn_create,"create");
 	lv_obj_align(btn_create,btn_delete,LV_ALIGN_OUT_RIGHT_MID,btx,0);
@@ -369,7 +369,7 @@ static int vibrator_draw(struct gui_activity*act){
 	lv_label_set_text(lv_label_create(btn_create,NULL),LV_SYMBOL_PLUS);
 
 	btn_clean=lv_btn_create(act->page,NULL);
-	lv_obj_set_size(btn_clean,bts,bts);
+	lv_obj_set_size(btn_clean,bts,bth);
 	lv_obj_set_event_cb(btn_clean,clean_cb);
 	lv_obj_set_user_data(btn_clean,"clean");
 	lv_obj_align(btn_clean,btn_create,LV_ALIGN_OUT_RIGHT_MID,btx,0);
@@ -377,7 +377,7 @@ static int vibrator_draw(struct gui_activity*act){
 	lv_label_set_text(lv_label_create(btn_clean,NULL),LV_SYMBOL_TRASH);
 
 	btn_start=lv_btn_create(act->page,NULL);
-	lv_obj_set_size(btn_start,bts,bts);
+	lv_obj_set_size(btn_start,bts,bth);
 	lv_obj_set_event_cb(btn_start,start_cb);
 	lv_obj_set_user_data(btn_start,"start/stop");
 	lv_obj_align(btn_start,btn_clean,LV_ALIGN_OUT_RIGHT_MID,btx,0);

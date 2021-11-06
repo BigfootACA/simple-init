@@ -24,9 +24,22 @@
 static lv_obj_t*screen,*tabview,*author;
 static list*apps=NULL;
 static int app_num=0,app_page=-1,cur_page=0;
+struct app_info{
+	int x,y,page,num;
+	struct gui_register*reg;
+	lv_obj_t*tab,*app;
+};
+
+static int clean_button(void*b){
+	struct app_info*ai=(struct app_info*)b;
+	if(!ai)return 0;
+	lv_obj_del(ai->app);
+	free(ai);
+	return 0;
+}
 
 static void clean_buttons(){
-	list_free_all(apps,(int(*)(void*))lv_obj_del);
+	list_free_all(apps,clean_button);
 	if(tabview)lv_obj_del(tabview);
 	apps=NULL,tabview=NULL;
 	app_num=0,app_page=-1;
@@ -35,9 +48,9 @@ static void clean_buttons(){
 static void click_btn(lv_obj_t*obj,lv_event_t e){
 	if(!obj||e!=LV_EVENT_CLICKED)return;
 	if(!guiact_is_active_page(screen))return;
-	char*f=(char*)lv_obj_get_user_data(obj);
-	if(f)guiact_start_activity_by_name(f,NULL);
-	else msgbox_alert("This function does not implemented");
+	struct app_info*ai=lv_obj_get_user_data(obj);
+	if(guiact_start_activity(ai->reg,NULL)!=0)
+		msgbox_alert("This function does not implemented");
 }
 
 static void tabview_cb(lv_obj_t*obj,lv_event_t e){
@@ -75,23 +88,27 @@ static void add_button(struct gui_register*p){
 		add_button(p);
 		return;
 	}
-	lv_obj_t*app=lv_objmask_create(scr,NULL);
-	lv_obj_set_click(app,true);
-	lv_obj_set_drag_parent(app,true);
-	lv_obj_set_pos(app,xx,yy);
-	lv_obj_set_size(app,w,h);
+	struct app_info*ai=malloc(sizeof(struct app_info));
+	if(!ai)return;
+	memset(ai,0,sizeof(struct app_info));
+	ai->page=app_page,ai->tab=scr,ai->x=a,ai->y=b,ai->num=app_num,ai->reg=p;
+	ai->app=lv_objmask_create(scr,NULL);
+	lv_obj_set_click(ai->app,true);
+	lv_obj_set_drag_parent(ai->app,true);
+	lv_obj_set_pos(ai->app,xx,yy);
+	lv_obj_set_size(ai->app,w,h);
 	lv_color_t c=lv_obj_get_style_text_color(scr,LV_OBJ_PART_MAIN);
-	lv_obj_set_style_local_outline_color(app,LV_OBJMASK_PART_MAIN,LV_STATE_PRESSED,c);
-	lv_obj_set_style_local_outline_color(app,LV_OBJMASK_PART_MAIN,LV_STATE_FOCUSED,c);
-	lv_obj_set_style_local_outline_width(app,LV_OBJMASK_PART_MAIN,LV_STATE_PRESSED,1);
-	lv_obj_set_style_local_outline_width(app,LV_OBJMASK_PART_MAIN,LV_STATE_FOCUSED,1);
-	lv_obj_set_style_local_radius(app,LV_OBJMASK_PART_MAIN,LV_STATE_DEFAULT,10);
-	lv_obj_set_user_data(app,p);
-	lv_obj_set_event_cb(app,click_btn);
-	if(guiact_is_active_page(screen))lv_group_add_obj(gui_grp,app);
+	lv_obj_set_style_local_outline_color(ai->app,LV_OBJMASK_PART_MAIN,LV_STATE_PRESSED,c);
+	lv_obj_set_style_local_outline_color(ai->app,LV_OBJMASK_PART_MAIN,LV_STATE_FOCUSED,c);
+	lv_obj_set_style_local_outline_width(ai->app,LV_OBJMASK_PART_MAIN,LV_STATE_PRESSED,1);
+	lv_obj_set_style_local_outline_width(ai->app,LV_OBJMASK_PART_MAIN,LV_STATE_FOCUSED,1);
+	lv_obj_set_style_local_radius(ai->app,LV_OBJMASK_PART_MAIN,LV_STATE_DEFAULT,10);
+	lv_obj_set_user_data(ai->app,ai);
+	lv_obj_set_event_cb(ai->app,click_btn);
+	if(guiact_is_active_page(screen))lv_group_add_obj(gui_grp,ai->app);
 
 	int ix=w-gui_font_size,im=gui_font_size/2;
-	lv_obj_t*icon_w=lv_objmask_create(app,NULL);
+	lv_obj_t*icon_w=lv_objmask_create(ai->app,NULL);
 	lv_obj_set_style_local_radius(icon_w,LV_OBJMASK_PART_MAIN,LV_STATE_DEFAULT,w/10);
 	lv_obj_set_click(icon_w,false);
 	lv_obj_set_size(icon_w,ix,ix);
@@ -113,7 +130,7 @@ static void add_button(struct gui_register*p){
 	if(x->w>0&&x->h>0)lv_img_set_zoom(icon,(int)(((float)ix/MAX(x->w,x->h))*256));
 	lv_img_set_pivot(icon,0,0);
 
-	lv_obj_t*txt=lv_label_create(app,NULL);
+	lv_obj_t*txt=lv_label_create(ai->app,NULL);
 	lv_label_set_long_mode(txt,LV_LABEL_LONG_BREAK);
 	lv_obj_set_width(txt,w);
 	lv_label_set_align(txt,LV_LABEL_ALIGN_CENTER);
@@ -121,10 +138,10 @@ static void add_button(struct gui_register*p){
 	lv_obj_align(txt,icon_w,LV_ALIGN_OUT_BOTTOM_MID,0,0);
 	lv_obj_set_style_local_text_font(txt,LV_LABEL_PART_MAIN,LV_STATE_DEFAULT,gui_font_small);
 	lv_obj_set_style_local_pad_top(txt,LV_LABEL_PART_MAIN,LV_STATE_DEFAULT,gui_dpi/100);
-	lv_obj_set_height(app,lv_obj_get_y(txt)+lv_obj_get_height(txt)+gui_font_size);
+	lv_obj_set_height(ai->app,lv_obj_get_y(txt)+lv_obj_get_height(txt)+gui_font_size);
 
 	cur_page=confd_get_integer("gui.guiapp.page",0);
-	list_obj_add_new(&apps,app);
+	list_obj_add_new(&apps,ai);
 	app_num++;
 }
 
@@ -148,7 +165,10 @@ static int guiapp_get_focus(struct gui_activity*d __attribute__((unused))){
 
 static int guiapp_lost_focus(struct gui_activity*d __attribute__((unused))){
 	list*app=list_first(apps);
-	if(app)do{lv_group_remove_obj(LIST_DATA(app,lv_obj_t*));}while((app=app->next));
+	if(app)do{
+		LIST_DATA_DECLARE(ai,app,struct app_info*);
+		lv_group_remove_obj(ai->app);
+	}while((app=app->next));
 	return 0;
 }
 

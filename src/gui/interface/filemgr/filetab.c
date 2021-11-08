@@ -84,6 +84,7 @@ void filetab_free(struct filetab*tab){
 	if(!tab)return;
 	if(tab->fv)fileview_free(tab->fv);
 	if(tab->tab)lv_tabview_clean_tab(tab->tab);
+	free(tab);
 }
 
 uint16_t filetab_get_id(struct filetab*tab){

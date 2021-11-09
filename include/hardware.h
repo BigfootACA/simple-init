@@ -49,7 +49,7 @@ extern int led_find(const char*name);
 extern int led_find_class(int sysfs,const char*name);
 
 // src/hardware/led.c: open /sys/class/leds and return fd
-extern int led_open_sysfs_class();
+extern int led_open_sysfs_class(void);
 
 // src/hardware/led.c: check device name is valid
 extern bool led_check_name(const char*name);
@@ -79,7 +79,7 @@ extern int led_set_brightness_percent_by_name(char*name,int percent);
 extern int led_parse_arg(const char*arg,char*def);
 
 // src/hardware/led.c: open /sys/class/backlight and return fd
-extern int backlight_open_sysfs_class();
+extern int backlight_open_sysfs_class(void);
 
 // src/hardware/led.c: find backlight by name and return fd
 extern int backlight_find(const char*name);

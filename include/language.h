@@ -21,7 +21,7 @@ struct language{
 extern struct language languages[];
 
 // src/lib/locale.c: init i18n locale
-extern void lang_init_locale();
+extern void lang_init_locale(void);
 
 // src/lib/locale.c: load new locale
 extern void lang_load_locale(const char*dir,const char*lang,const char*domain);

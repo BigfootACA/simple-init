@@ -63,10 +63,10 @@ struct init_msg{
 	union action_data data;
 };
 
-extern int(*register_services[])();
+extern int(*register_services[])(void);
 
 // src/initd/bootsvc.c: run all register in register_services
-int init_register_all_service();
+int init_register_all_service(void);
 
 #include"init.h"
 
@@ -94,7 +94,7 @@ extern int init_recv_data(int fd,struct init_msg*response);
 extern const char*action2string(enum init_action action);
 
 // src/initd/socket.c: listen init socket
-extern int listen_init_socket();
+extern int listen_init_socket(void);
 
 // src/initd/socket.c: process socket epoll
 extern int init_process_socket(int sfd);

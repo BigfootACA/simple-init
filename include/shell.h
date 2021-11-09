@@ -28,13 +28,13 @@ struct shell_command{
 extern unsigned char exit_code;
 
 // src/shelld/shell.c: run a new shell
-extern void run_shell();
+extern void run_shell(void);
 
 // src/shelld/shell.c: run_shell wrapper
 extern int initshell_main(int argc,char**argv);
 
 // src/shelld/shell.c: register console shell service
-extern int register_console_shell();
+extern int register_console_shell(void);
 
 #endif
 
@@ -54,7 +54,7 @@ extern int invoke_internal_cmd_by_name(char*name,bool background,char**args);
 extern int invoke_internal_cmd_nofork_by_name(char*name,char**args);
 
 // src/shelld/cmd.c: init commands help i18n
-extern int init_commands_locale();
+extern int init_commands_locale(void);
 
 // src/shelld/cmd.c: install commands
 extern int install_cmds(int dfd);

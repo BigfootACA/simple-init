@@ -92,7 +92,7 @@ extern int gadget_unregister(char*gadget_name);
 extern int gadget_unregister_fd(int dfd,char*gadget_name);
 
 // src/gadget/unregister.c: auto init usb_gadget and unregister all gadgets
-extern int gadget_unregister_all();
+extern int gadget_unregister_all(void);
 
 // src/gadget/unregister.c: unregister all gadgets with specified gadget folder fd
 extern int gadget_unregister_all_fd(int dfd);
@@ -119,7 +119,7 @@ extern int gadget_stop(gadget*gadget);
 extern int gadget_start(gadget*gadget,const char*udc);
 
 // src/gadget/general.c: search an available usb gadget controller
-extern char*gadget_find_udc();
+extern char*gadget_find_udc(void);
 
 // src/gadget/general.c: set udc
 extern int gadget_write_udc(int fd,const char*udc);
@@ -157,9 +157,9 @@ extern int gadget_add_function_var_cfg(
 );
 
 // src/gadget/general.c: init usb_gadget and open
-extern int open_usb_gadget();
+extern int open_usb_gadget(void);
 
 // src/gadget/general.c: register gadget service
-extern int register_gadget_service();
+extern int register_gadget_service(void);
 
 #endif

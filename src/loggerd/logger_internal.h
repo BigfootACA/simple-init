@@ -88,10 +88,10 @@ extern int open_log_file(char*path);
 extern void close_log_file(char*path);
 
 // src/loggerd/file_logger.c: close all openned log file
-extern void close_all_file();
+extern void close_all_file(void);
 
 // src/loggerd/internal.c: free loggers
-extern void logger_internal_clean();
+extern void logger_internal_clean(void);
 
 // src/loggerd/internal.c: add new logger
 extern int logger_internal_add(char*name,enum log_level min_level,on_log log);
@@ -142,14 +142,14 @@ extern int logger_internal_buffer_push(struct log_item*log);
 extern int logger_internal_free_buff(void*d);
 
 // src/loggerd/buffer.c: clean log buffers
-extern void clean_log_buffers();
+extern void clean_log_buffers(void);
 
 // src/loggerd/buffer.c: flush buffer to logger
 extern void flush_buffer(struct logger*log);
 
 // src/loggerd/klog.c: read all kmesg to buffer and read new kmsg to logger
-extern int init_kmesg();
+extern int init_kmesg(void);
 
 // src/loggerd/syslog.c: read all kmesg to buffer and read new kmsg to logger
-extern int init_syslog();
+extern int init_syslog(void);
 #endif

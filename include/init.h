@@ -15,7 +15,7 @@
 extern int init_main(int argc,char**argv);
 
 // src/initd/init.c: do init exit cleanup
-extern void init_do_exit();
+extern void init_do_exit(void);
 
 // src/initd/environ.c: dump environment variables to fd
 extern void dump_environ(int fd);
@@ -24,7 +24,7 @@ extern void dump_environ(int fd);
 extern void dump_environ_to_file(char*path);
 
 // src/initd/environ.c: dump environment variables to /tmp/environ.PID.txt
-extern void auto_dump_environ_file();
+extern void auto_dump_environ_file(void);
 
 // src/initd/environ.c: dump environment variables to loggerd
 extern void log_environ(enum log_level level,char*tag);
@@ -51,37 +51,37 @@ extern char*search_init(char*init,char*root);
 extern int wait_cmd(pid_t p);
 
 // src/initd/signal.c: init setup signals to signal_handlers
-extern void setup_signals();
+extern void setup_signals(void);
 
 // src/initd/signal.c: disable init signal handlers
-extern void disable_signals();
+extern void disable_signals(void);
 
-// src/initd/environ.c: 
-extern void init_environ();
+// src/initd/environ.c: add initial environments
+extern void init_environ(void);
 
 // src/initd/umount.c: umount all mountpoints
-extern int umount_all();
+extern int umount_all(void);
 
 // src/initd/preinit.c: simple-init preinit
-extern int preinit();
+extern int preinit(void);
 
 // src/initd/logfs.c: setup logfs
-extern int setup_logfs();
+extern int setup_logfs(void);
 
 // src/initd/logfs.c: wait logfs setup done
-extern int wait_logfs();
+extern int wait_logfs(void);
 
 // src/initd/conffs.c: setup conffs
-extern int setup_conffs();
+extern int setup_conffs(void);
 
 // src/initd/conffs.c: wait conffs setup done
-extern int wait_conffs();
+extern int wait_conffs(void);
 
 // src/initd/reboot.c: init call reboot
 extern int call_reboot(long rb,char*cmd);
 
 // src/initd/reboot.c: init kill all processes
-extern int kill_all();
+extern int kill_all(void);
 
 // src/initd/client.c: init control socket fd
 extern int initfd;
@@ -90,7 +90,7 @@ extern int initfd;
 extern int set_initfd(int fd);
 
 // src/initd/client.c: close initfd
-extern void close_initfd();
+extern void close_initfd(void);
 
 // src/initd/client.c: connect to a init control socket
 extern int open_socket_initfd(char*path,bool quiet);

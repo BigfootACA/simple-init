@@ -175,7 +175,7 @@ extern void fdevent_remove(fdevent*item);
 extern void fdevent_set(fdevent*fde,unsigned events);
 extern void fdevent_add(fdevent*fde,unsigned events);
 extern void fdevent_del(fdevent*fde,unsigned events);
-extern void fdevent_loop();
+extern void fdevent_loop(void);
 extern asocket*find_local_socket(unsigned id);
 extern void install_local_socket(asocket*s);
 extern void remove_socket(asocket*s);
@@ -229,8 +229,8 @@ extern int socket_local_client(const char*name,int namespaceId,int type);
 extern int socket_inaddr_any_server(int port,int type);
 extern int socket_make_sockaddr_un(const char*name,int namespaceId,struct sockaddr_un*p_addr,socklen_t*alen);
 extern int android_get_control_socket(const char*name);
-extern char*adbd_get_shell();
-extern void adbd_send_ok();
+extern char*adbd_get_shell(void);
+extern void adbd_send_ok(void);
 static __inline__ int adb_open_mode(const char*pathname,int options,int mode){return TEMP_FAILURE_RETRY(open(pathname,options,mode));}
 static __inline__ int adb_open(const char*pathname,int options){
 	int fd=TEMP_FAILURE_RETRY(open(pathname,options));

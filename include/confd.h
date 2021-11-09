@@ -29,7 +29,7 @@ enum conf_type{
 extern int open_confd_socket(bool quiet,char*tag,char*path);
 
 // src/confd/client.c: close confd socket
-extern void close_confd_socket();
+extern void close_confd_socket(void);
 
 // src/confd/client.c: set confd socket fd
 extern int set_confd_socket(int fd);
@@ -40,10 +40,10 @@ extern int start_confd(char*tag,pid_t*p);
 #endif
 
 // src/confd/client.c: terminate remote confd
-extern int confd_quit();
+extern int confd_quit(void);
 
 // src/confd/client.c: dump config store to logger
-extern int confd_dump();
+extern int confd_dump(void);
 
 // src/confd/client.c: save config store as a file
 #ifdef ENABLE_UEFI

@@ -236,10 +236,10 @@ extern int svc_add_service(struct service*svc);
 extern int svc_add_depend(struct service*svc,struct service*depend);
 
 // src/service/service.c: stop all services and wait all services stopped
-extern int service_wait_all_stop();
+extern int service_wait_all_stop(void);
 
 // src/service/service.c: init service framework
-extern int service_init();
+extern int service_init(void);
 
 // src/service/service.c: direct restart service
 extern int svc_restart_service(struct service*svc);
@@ -251,16 +251,16 @@ extern int svc_reload_service(struct service*svc);
 extern int svc_run_exec(struct svc_exec*exec);
 
 // src/service/scheduler.c: launch service scheduler
-extern int start_scheduler();
+extern int start_scheduler(void);
 
 // src/service/scheduler.c: stop service scheduler
-extern int stop_scheduler();
+extern int stop_scheduler(void);
 
 // src/service/scheduler.c: service scheduler SIGCHLD handler
 extern int service_sigchld(pid_t p,int st);
 
 // src/service/scheduler.c: stop all services
-extern int service_stop_all();
+extern int service_stop_all(void);
 
 // src/service/scheduler.c: scheduler start service
 extern int service_start(struct service*svc);
@@ -287,7 +287,7 @@ extern int service_reload(struct service*svc);
 extern int service_reload_by_name(char*name);
 
 // src/service/scheduler.c: send terminal output signal to all service
-extern int service_terminal_output();
+extern int service_terminal_output(void);
 
 // src/service/default.c: default stop execute of service
 extern int svc_default_stop(struct service*svc);
@@ -320,6 +320,6 @@ extern int svc_dump(struct service*svc);
 extern int svc_list_dump(list*svcs);
 
 // src/service/dump.c: dump all services from variable services to loggerd
-extern int svc_dump_services();
+extern int svc_dump_services(void);
 
 #endif

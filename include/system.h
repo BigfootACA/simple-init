@@ -24,7 +24,7 @@ struct mount_item{
 extern const char*sigmap[];
 
 // src/lib/mount.c: read all mountpoint from /proc/mounts
-extern struct mount_item**read_proc_mounts();
+extern struct mount_item**read_proc_mounts(void);
 
 // src/lib/mount.c: is 'path' a mountpoint
 extern bool is_mountpoint(char*path);
@@ -136,7 +136,7 @@ extern ssize_t fd_read_file(int fd,char*buff,size_t len,bool lf,char*path,...);
 
 #ifndef ENABLE_UEFI
 // src/lib/signal.c: remove all signal handlers
-extern int reset_signals();
+extern int reset_signals(void);
 
 // src/lib/signal.c: handle a signal list (sa_handler)
 extern void handle_signals(int*sigs,int len,void(*handler)(int));
@@ -154,7 +154,7 @@ extern const char*signame(int sig);
 unsigned int xsleep(unsigned int n);
 
 // src/lib/stdio.c: get the highest possible fd
-extern int get_max_fd();
+extern int get_max_fd(void);
 
 // src/lib/stdio.c: close all fds
 extern int close_all_fd(const int*exclude,int count);
@@ -163,7 +163,7 @@ extern int close_all_fd(const int*exclude,int count);
 extern int set_active_console(int vt);
 
 // src/lib/stdio.c: get active kernel consoles
-extern char**get_active_consoles();
+extern char**get_active_consoles(void);
 
 // file type macros
 #define is_type(fd,err,type,path...) fd_is_type(AT_FDCWD,err,type,path);

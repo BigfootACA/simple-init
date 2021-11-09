@@ -52,7 +52,7 @@ extern int devd_internal_read_msg(int fd,struct devd_msg*buff);
 extern int devd_internal_send_msg_string(int fd,enum devd_oper oper,char*data);
 
 // src/devd/netlink.c: kobject uevent netlink listen thread
-extern int uevent_netlink_thread();
+extern int uevent_netlink_thread(void);
 
 // src/devd/internal.c: send devd command
 extern int devd_command_with_data(enum devd_oper oper,void*data,size_t size);

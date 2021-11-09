@@ -33,22 +33,22 @@ extern int process_uevent(uevent*event);
 extern int open_devd_socket(char*tag,char*path);
 
 // src/devd/devd.c: close current devd fd
-extern void close_devd_socket();
+extern void close_devd_socket(void);
 
 // src/devd/server.c: launch devd
 extern int start_devd(char*tag,pid_t*p);
 
 // src/devd/devd.c: call DEV_INIT to init devtmpfs
-extern int devd_call_init();
+extern int devd_call_init(void);
 
 // src/devd/devd.c: call DEV_MODALIAS to load modalias
-extern int devd_call_modalias();
+extern int devd_call_modalias(void);
 
 // src/devd/devd.c: call DEV_MODLOAD to load modules from list config
-extern int devd_call_modload();
+extern int devd_call_modload(void);
 
 // src/devd/devd.c: call DEV_QUIT to terminate devd
-extern int devd_call_quit();
+extern int devd_call_quit(void);
 
 // open default devd socket
 #define open_default_devd_socket(tag) open_devd_socket(tag,DEFAULT_DEVD)
@@ -62,12 +62,12 @@ extern int mods_conf_parse_file(const char*name,const char*file);
 extern int mods_conf_parse_folder(const char*dir);
 
 // src/devd/modules_load.c: search modules-load.d and call mods_conf_parse_folder
-extern int mods_conf_parse();
+extern int mods_conf_parse(void);
 
 // src/devd/modalias.c: search modalias in /sys/devices to load all modules
-extern int load_modalias();
+extern int load_modalias(void);
 #else
-static inline int load_modalias(){return 0;}
+static inline int load_modalias(void){return 0;}
 #endif
 
 #endif

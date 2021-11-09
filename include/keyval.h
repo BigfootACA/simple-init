@@ -24,13 +24,13 @@ extern void kv_free(keyval*kv);
 extern keyval*kv_init(keyval*kv);
 
 // src/lib/keyval.c: allocate a new keyval struct
-extern keyval*kv_malloc();
+extern keyval*kv_malloc(void);
 
 // src/lib/keyval.c: allocate a new keyval struct (exit when failed)
-extern keyval*kv_xmalloc();
+extern keyval*kv_xmalloc(void);
 
 // src/lib/keyval.c: create and init a keyval (call kv_malloc and kv_init)
-extern keyval*kv_new();
+extern keyval*kv_new(void);
 
 // src/lib/keyval.c: convert keyval to a string (eg: kv_print({"K","V"},buf,32,"=") = "K=V")
 extern char*kv_print(keyval*kv,char*buff,size_t bs,char*del);

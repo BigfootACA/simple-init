@@ -43,13 +43,13 @@ extern struct sysbar sysbar;
 extern int sysbar_draw(lv_obj_t*scr);
 
 // src/gui/interface/core/sysbar.c: toggle keyboard status
-extern void sysbar_keyboard_toggle();
+extern void sysbar_keyboard_toggle(void);
 
 // src/gui/interface/core/sysbar.c: close keyboard
-extern void sysbar_keyboard_close();
+extern void sysbar_keyboard_close(void);
 
 // src/gui/interface/core/sysbar.c: open keyboard
-extern void sysbar_keyboard_open();
+extern void sysbar_keyboard_open(void);
 
 // src/gui/interface/core/sysbar.c: focus textarea
 extern void sysbar_focus_input(lv_obj_t*obj);

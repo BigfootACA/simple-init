@@ -20,7 +20,7 @@ typedef void*lv_img_decoder_user_data_t;
 typedef void*lv_disp_drv_user_data_t;
 typedef void*lv_indev_drv_user_data_t;
 extern int gui_dpi;
-extern uint32_t custom_tick_get();
+extern uint32_t custom_tick_get(void);
 #define LV_COLOR_DEPTH                      32
 #define LV_COLOR_16_SWAP                    0
 #define LV_COLOR_SCREEN_TRANSP              0

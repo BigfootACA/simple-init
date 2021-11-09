@@ -29,12 +29,12 @@ struct tty_data{
 };
 extern int tty_dev_fd;
 extern int tty_epoll_fd;
-extern void tty_reopen_all();
+extern void tty_reopen_all(void);
 extern const char*tty_conf_ttys;
 extern const char*tty_rt_ttys;
 extern const char*tty_rt_tty_clt;
-extern void tty_conf_init();
-extern void tty_conf_add_all();
+extern void tty_conf_init(void);
+extern void tty_conf_add_all(void);
 extern void tty_add(const char*base,const char*name);
 extern void tty_open(struct tty_data*data);
 extern int tty_start_session(struct tty_data*data);

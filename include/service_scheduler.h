@@ -62,9 +62,9 @@ extern int free_scheduler_work(void*d);
 extern int add_queue(struct service*svc,enum scheduler_action act);
 
 // src/service/scheduler.c: execute queue
-extern int run_queue();
+extern int run_queue(void);
 
 // src/service/scheduler.c: add all stop action to queue
-extern int add_all_stop_queue();
+extern int add_all_stop_queue(void);
 
 #endif

@@ -9,8 +9,8 @@
 #ifndef _TOOLS_H
 #define _TOOLS_H
 #include"gui.h"
-extern lv_style_t*lv_style_opa_mask();
-extern lv_style_t*lv_style_btn_item();
+extern lv_style_t*lv_style_opa_mask(void);
+extern lv_style_t*lv_style_btn_item(void);
 extern void lv_style_set_btn_item(lv_obj_t*btn);
 extern void lv_style_set_focus_checkbox(lv_obj_t*checkbox);
 extern void lv_style_set_focus_radiobox(lv_obj_t*checkbox);

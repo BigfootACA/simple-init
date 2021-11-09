@@ -43,7 +43,7 @@ extern int logfd;
 extern int set_logfd(int fd);
 
 // src/loggerd/client.c: close current logfd
-extern void close_logfd();
+extern void close_logfd(void);
 
 // src/loggerd/client.c: open and set logger output fd
 extern int open_file_logfd(char*path);
@@ -58,29 +58,29 @@ extern int logger_listen(char*file);
 extern int logger_open(char*file);
 
 // src/loggerd/client.c: controll loggerd exit
-extern int logger_exit();
+extern int logger_exit(void);
 
 // src/loggerd/client.c: notify loggerd kernel log now available
-extern int logger_klog();
+extern int logger_klog(void);
 
 // src/loggerd/client.c: start syslog forwarder
-extern int logger_syslog();
+extern int logger_syslog(void);
 
 // src/loggerd/client.c: reopen all active consoles
-extern int logger_open_console();
+extern int logger_open_console(void);
 
 // src/loggerd/client.c: launch loggerd
 extern int start_loggerd(pid_t*p);
 #else
 static inline int set_logfd(int fd __attribute__((unused))){return -1;}
-static inline void close_logfd(){};
+static inline void close_logfd(void){};
 static inline int open_file_logfd(char*path __attribute__((unused))){return -1;}
 static inline int open_socket_logfd(char*path __attribute__((unused))){return -1;}
 static inline int logger_listen(char*file __attribute__((unused))){return -1;}
 static inline int logger_open(char*file __attribute__((unused))){return -1;}
-static inline int logger_exit(){return -1;}
-static inline int logger_klog(){return -1;}
-static inline int logger_syslog(){return -1;}
+static inline int logger_exit(void){return -1;}
+static inline int logger_klog(void){return -1;}
+static inline int logger_syslog(void){return -1;}
 static inline int start_loggerd(int*p __attribute__((unused))){return -1;}
 extern void logger_set_console(bool enabled);
 #endif

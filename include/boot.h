@@ -45,6 +45,6 @@ extern char*bootmode2string(enum boot_mode mode);
 extern void dump_boot_config(char*tag,enum log_level level,boot_config*boot);
 
 // src/boot/boot.c: register default boot
-extern int register_default_boot();
+extern int register_default_boot(void);
 
 #endif

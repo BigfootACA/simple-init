@@ -68,5 +68,5 @@ extern void parse_params(keyval**params);
 extern int parse_cmdline(int fd);
 
 // src/cmdline/cmdline.c: auto parse cmdline from /proc/cmdline
-extern int load_cmdline();
+extern int load_cmdline(void);
 #endif

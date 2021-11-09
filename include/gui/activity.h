@@ -41,28 +41,28 @@ struct gui_activity{
 extern struct gui_register*guiact_register[];
 
 // src/gui/activity.c: init activity manager
-extern void guiact_init();
+extern void guiact_init(void);
 
 // src/gui/activity.c: do activity exit
-extern int guiact_do_exit();
+extern int guiact_do_exit(void);
 
 // src/gui/activity.c: get activity list
-extern list*guiact_get_activities();
+extern list*guiact_get_activities(void);
 
 // src/gui/activity.c: only have one activity
-extern bool guiact_is_alone();
+extern bool guiact_is_alone(void);
 
 // src/gui/activity.c: get last activity in activity list
-extern struct gui_activity*guiact_get_last();
+extern struct gui_activity*guiact_get_last(void);
 
 // src/gui/activity.c: remove last activity in activity list
 extern int guiact_remove_last(bool focus);
 
 // src/gui/activity.c: call activity manager go back action
-extern int guiact_do_back();
+extern int guiact_do_back(void);
 
 // src/gui/activity.c: call activity manager go home action
-extern int guiact_do_home();
+extern int guiact_do_home(void);
 
 // src/gui/activity.c: get activity register by name
 extern struct gui_register*guiact_find_register(char*name);

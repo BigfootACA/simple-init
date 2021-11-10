@@ -18,6 +18,7 @@ DECLARE_MAIN(confset);
 DECLARE_MAIN(confdel);
 DECLARE_MAIN(confdump);
 DECLARE_MAIN(chdir);
+DECLARE_MAIN(chvt);
 DECLARE_MAIN(clear);
 DECLARE_MAIN(dmesg);
 DECLARE_MAIN(dumpargv);
@@ -81,6 +82,7 @@ const struct shell_command*shell_cmds[]={
 	DECLARE_CMD(true,  cat,         "Concatenate FILE(s) to standard output.")
 	DECLARE_CMD(false, cd,          "Change directory")
 	DECLARE_CMD(false, chdir,       "Change directory (Direct call)")
+	DECLARE_CMD(false, chvt,        "Change foreground virtual terminal")
 	DECLARE_CMD(false, clear,       "Clear screen")
 	DECLARE_CMD(true,  dmesg,       "Print or control the kernel ring buffer")
 	DECLARE_CMD(true,  dumpargv,    "Dump all arguments to stdout")

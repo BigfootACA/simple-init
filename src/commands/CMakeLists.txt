@@ -30,4 +30,5 @@ add_library(init_commands STATIC
 	halt.c
 	confctl.c
 	conftools.c
+	chvt.c
 )

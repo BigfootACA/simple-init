@@ -1478,3 +1478,27 @@ msgstr "你确定要卸载'%s'吗？"
 
 msgid "Read mount table failed"
 msgstr "读取挂载表失败"
+
+msgid "invalid virtual terminal number\n"
+msgstr "无效的虚拟终端\n"
+
+msgid "change virtual terminal failed"
+msgstr "切换虚拟终端失败"
+
+msgid ""
+"Usage: chvt N\n"
+"Change foreground virtual terminal.\n\n"
+"Arguments:\n"
+"\tN:           /dev/ttyN\n"
+"Options:\n"
+"\t-h, --help   display this help and exit\n"
+msgstr ""
+"用法: chvt N\n"
+"切换前台虚拟终端.\n\n"
+"参数:\n"
+"\tN:           /dev/ttyN\n"
+"选项:\n"
+"\t-h, --help   查看此帮助\n"
+
+msgid "Change foreground virtual terminal"
+msgstr "切换前台虚拟终端"

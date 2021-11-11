@@ -31,6 +31,10 @@ int open_confd_socket(bool quiet,char*tag,char*path){
 	return confd;
 }
 
+int check_open_confd_socket(bool quiet,char*tag,char*path){
+	return confd>=0?confd:open_confd_socket(quiet,tag,path);
+}
+
 int set_confd_socket(int fd){
 	return confd=fd;
 }

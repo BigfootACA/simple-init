@@ -186,6 +186,10 @@ int tty_start_worker(struct tty_data*d){
 	int p=fork();
 	if(p<0)return -1;
 	else if(p==0){
+		close_logfd();
+		close_initfd();
+		close_ttyd_socket();
+		close_confd_socket();
 		close_all_fd((int[]){tty_dev_fd},1);
 		open_socket_logfd_default();
 		open_default_confd_socket(false,TAG);

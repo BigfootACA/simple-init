@@ -144,8 +144,8 @@ static void fin_tty_attrs(){
 
 static void worker_exit(){
 	confd_delete_base(pid_key,data->name);
-	pid_t daemon=confd_get_integer("runtime.pid.ttyd",0);
-	if(daemon>0)kill(daemon,SIGUSR2);
+	check_open_default_ttyd_socket(false,TAG);
+	ttyd_reopen();
 	fin_tty_attrs();
 	tlog_debug("tty worker for %s exited",data->name);
 	_exit(0);

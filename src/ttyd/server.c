@@ -14,7 +14,6 @@
 #include<unistd.h>
 #include<sys/epoll.h>
 #include<sys/prctl.h>
-#include<sys/ioctl.h>
 #include"confd.h"
 #include"getopt.h"
 #include"logger.h"
@@ -30,17 +29,17 @@ static bool protect=false;
 
 static void signal_handler(int s,siginfo_t*info,void*c __attribute__((unused))){
 	if(info->si_pid<=1&&protect)return;
-	switch(s){
-		case SIGUSR1:
-			tlog_notice("receive reload request");
-			tty_conf_add_all();
-			// fallthrough
-		case SIGUSR2:
-			tty_reopen_all();
-		return;
-	}
 	tlog_info("ttyd exiting with signal %d",s);
 	exit(0);
+}
+
+void ttyd_epoll_tty(struct tty_data*data){
+	epoll_ctl(tty_epoll_fd,EPOLL_CTL_DEL,data->fd,&data->ev);
+	tcflush(STDOUT_FILENO,TCIFLUSH);
+	close(data->fd);
+	memset(&data->ev,0,sizeof(data->ev));
+	data->fd=-1;
+	tty_start_worker(data);
 }
 
 int ttyd_thread(){
@@ -66,6 +65,7 @@ int ttyd_thread(){
 		e=-errno;
 		goto ex;
 	}
+	ttyd_listen_socket();
 	tty_conf_init();
 	tty_conf_add_all();
 	memset(evs,0,es*64);
@@ -79,13 +79,11 @@ int ttyd_thread(){
 		}else if(r==0)continue;
 		else for(int i=0;i<r;i++){
 			struct tty_data*data=evs[i].data.ptr;
-			if(!data)continue;
-			epoll_ctl(tty_epoll_fd,EPOLL_CTL_DEL,data->fd,&data->ev);
-			tcflush(STDOUT_FILENO,TCIFLUSH);
-			close(data->fd);
-			memset(&data->ev,0,sizeof(data->ev));
-			data->fd=-1;
-			tty_start_worker(data);
+			if(data)switch(data->type){
+				case FD_TTY:ttyd_epoll_tty(data);break;
+				case FD_SERVER:ttyd_epoll_server(data);break;
+				case FD_CLIENT:ttyd_epoll_client(data);break;
+			}
 		}
 	}
 	ex:

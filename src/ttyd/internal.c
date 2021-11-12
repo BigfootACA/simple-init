@@ -22,6 +22,7 @@
 
 list*tty_store=NULL;
 int tty_dev_fd=-1,tty_epoll_fd=-1;
+const char*tty_sock=DEFAULT_TTYD;
 const char*tty_conf_ttys="ttyd.tty";
 const char*tty_rt_ttys="runtime.ttyd.tty";
 const char*tty_rt_tty_clt="runtime.ttyd.client";
@@ -68,7 +69,9 @@ void tty_open(struct tty_data*data){
 		if(errno==ENOENT)tlog_warn("tty %s not found",data->name);
 		else telog_warn("open tty %s failed",data->name);
 	}else{
-		data->ev.events=EPOLLIN,data->ev.data.ptr=data;
+		data->type=FD_TTY;
+		data->ev.events=EPOLLIN;
+		data->ev.data.ptr=data;
 		fchown(data->fd,0,0);
 		fchmod(data->fd,0600);
 		tcflush(data->fd,TCIOFLUSH);

@@ -6,4 +6,6 @@ add_library(init_ttyd STATIC
 	worker.c
 	session.c
 	internal.c
+	protocol.c
+	client.c
 )

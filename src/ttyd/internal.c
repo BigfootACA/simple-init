@@ -61,9 +61,9 @@ void tty_open(struct tty_data*data){
 	if(!data||data->fd>=0)return;
 	data->worker=(pid_t)confd_get_integer_base(tty_rt_tty_clt,data->name,0);
 	if(data->worker>0){
-		if(is_link(_PATH_PROC"/%d/root"))return;
+		if(is_link(_PATH_PROC"/%d/root",data->worker))return;
 		data->worker=0;
-		confd_set_integer_base(tty_rt_tty_clt,data->name,0);
+		confd_delete_base(tty_rt_tty_clt,data->name);
 	}
 	if((data->fd=openat(tty_dev_fd,data->name,O_RDWR|O_NONBLOCK))<0){
 		if(errno==ENOENT)tlog_warn("tty %s not found",data->name);

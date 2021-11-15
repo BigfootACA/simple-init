@@ -16,6 +16,7 @@
 #include"logger.h"
 #include"confd.h"
 #include"adbd.h"
+#include"ttyd.h"
 #define TAG "gadget"
 
 static char*base="gadget.func";
@@ -66,8 +67,8 @@ static int gadget_init_console(char*item,gadget*g,gadget_func*f){
 	tlog_debug("add console %s to ttyd",tty);
 	confd_set_boolean_dict("runtime.ttyd.tty",tty,"enabled",true);
 	confd_set_boolean_dict("runtime.ttyd.tty",tty,"start_msg",true);
-	pid_t daemon=confd_get_integer("runtime.pid.ttyd",0);
-	if(daemon>0)kill(daemon,SIGUSR1);
+	check_open_default_ttyd_socket(false,TAG);
+	ttyd_reload();
 	return 0;
 }
 

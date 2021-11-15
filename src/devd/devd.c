@@ -12,7 +12,7 @@
 #include<string.h>
 #include<sys/un.h>
 #include<sys/socket.h>
-#include"confd.h"
+#include"ttyd.h"
 #include"logger.h"
 #include"uevent.h"
 #include"system.h"
@@ -75,8 +75,8 @@ int process_tty(uevent*event){
 		case ACTION_REMOVE:tlog_debug("remove tty '%s'",event->devname);break;
 		default:return 0;
 	}
-	pid_t daemon=confd_get_integer("runtime.pid.ttyd",0);
-	if(daemon>0)kill(daemon,SIGUSR2);
+	check_open_default_ttyd_socket(false,TAG);
+	ttyd_reload();
 	return 0;
 }
 

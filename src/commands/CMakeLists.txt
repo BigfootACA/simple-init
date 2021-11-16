@@ -31,4 +31,5 @@ add_library(init_commands STATIC
 	confctl.c
 	conftools.c
 	chvt.c
+	chroot.c
 )

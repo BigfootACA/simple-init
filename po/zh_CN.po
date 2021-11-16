@@ -1502,3 +1502,32 @@ msgstr ""
 
 msgid "Change foreground virtual terminal"
 msgstr "切换前台虚拟终端"
+
+msgid "chroot failed"
+msgstr "切换根目录失败"
+
+msgid "chdir failed"
+msgstr "切换工作目录失败"
+
+msgid "execvp failed"
+msgstr "执行命令失败"
+
+msgid ""
+"Usage: chroot [OPTIONS] <ROOT> [COMMAND [ARGS]...]\n"
+"Change to new root and execute command.\n\n"
+"Options:\n"
+"\t-s, --skip-chdir  do not change working directory to '/'\n"
+"\t-d, --chdir=DIR   change working directory to DIR\n"
+"\t-h, --help        display this help and exit\n"
+"If no command is given, run \"$SHELL -i\"."
+msgstr ""
+"用法: chroot [选项] <新根> [命令 [参数]...]\n"
+"切换到新根并执行命令.\n\n"
+"选项:\n"
+"\t-s, --skip-chdir  不要切换工作目录到'/'\n"
+"\t-d, --chdir=DIR   切换工作目录到DIR\n"
+"\t-h, --help        查看此帮助\n"
+"如果没有指定命令，则执行\"$SHELL -i\"."
+
+msgid "Change to new root and execute command"
+msgstr "切换到新根并执行命令"

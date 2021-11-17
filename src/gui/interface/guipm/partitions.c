@@ -320,7 +320,7 @@ static int init_disk(){
 	}
 	tlog_debug("found disk %s",path);
 	errno=0;
-	if(fdisk_assign_device(ctx,path,true)!=0){
+	if(fdisk_assign_device(ctx,path,false)!=0){
 		telog_error("failed assign block %s to fdisk context",guipm_target_disk);
 		goto fail;
 	}
@@ -338,7 +338,15 @@ static void reload_click(lv_obj_t*obj,lv_event_t e){
 	reload_partitions();
 }
 
+extern void guipm_disk_operation_menu(struct fdisk_context*ctx);
+static void disk_click(lv_obj_t*obj,lv_event_t e){
+	if(e!=LV_EVENT_CLICKED||obj!=btn_disk)return;
+	tlog_debug("request disk submenu");
+	guipm_disk_operation_menu(ctx);
+}
+
 static void do_reload(lv_task_t*t __attribute__((unused))){
+	if(!guiact_is_active_page(selscr))return;
 	errno=0;
 	reload_partitions();
 	lv_group_add_obj(gui_grp,btn_disk);
@@ -419,6 +427,7 @@ static int guipm_draw_partitions(struct gui_activity*act){
 		btn_disk=lv_btn_create(selscr,NULL);
 		lv_obj_set_size(btn_disk,btw,bth);
 		lv_style_set_action_button(btn_disk,true);
+		lv_obj_set_event_cb(btn_disk,disk_click);
 		lv_label_set_text(lv_label_create(btn_disk,NULL),_("Disk..."));
 		lv_obj_align(btn_disk,page,LV_ALIGN_OUT_BOTTOM_LEFT,gui_font_size/2,gui_font_size);
 		lv_group_add_obj(gui_grp,btn_disk);

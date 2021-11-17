@@ -373,21 +373,11 @@ static int guipm_draw_disk_sel(struct gui_activity*act){
 	lv_obj_set_pos(lst,mar,gui_sh/16*2);
 
 	// show all checkbox
-	static lv_style_t chk_style,bul_style;
-	lv_color_t pri=lv_theme_get_color_primary();
-	lv_color_t bul=lv_color_lighten(pri,LV_OPA_80);
-	lv_style_init(&chk_style);
-	lv_style_set_outline_width(&chk_style,LV_STATE_DEFAULT,0);
-	lv_style_set_outline_width(&chk_style,LV_STATE_FOCUSED,0);
-	lv_style_init(&bul_style);
-	lv_style_set_bg_color(&bul_style,LV_STATE_FOCUSED,bul);
-	lv_style_set_bg_color(&bul_style,LV_STATE_FOCUSED|LV_STATE_CHECKED,pri);
 	show_all=lv_checkbox_create(selscr,NULL);
 	lv_obj_set_pos(show_all,xdpi,gui_sh-(bth*2)-(xdpi*2));
 	lv_obj_set_size(show_all,gui_sw/3-(xdpi*2),bth);
-	lv_obj_add_style(show_all,LV_CHECKBOX_PART_BG,&chk_style);
-	lv_obj_add_style(show_all,LV_CHECKBOX_PART_BULLET,&bul_style);
 	lv_obj_set_event_cb(show_all,show_all_click);
+	lv_style_set_focus_checkbox(show_all);
 	lv_checkbox_set_text(show_all,_("Show all blocks"));
 
 	// ok button

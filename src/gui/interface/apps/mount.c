@@ -12,6 +12,7 @@
 #ifdef ENABLE_BLKID
 #include<blkid/blkid.h>
 #endif
+#include"str.h"
 #include"gui.h"
 #include"logger.h"
 #include"system.h"
@@ -24,7 +25,7 @@
 #ifdef ENABLE_BLKID
 blkid_cache cache=NULL;
 #endif
-static lv_obj_t*lst=NULL,*last=NULL;
+static lv_obj_t*lst=NULL,*last=NULL,*show_all;
 static lv_obj_t*info,*btn_mount,*btn_umount,*btn_refresh;
 struct mount_info{
 	bool enable;
@@ -33,6 +34,7 @@ struct mount_info{
 	lv_obj_t*target,*partlabel;
 	struct mount_item*item;
 };
+static bool is_show_all=false;
 static list*mounts=NULL;
 static struct mount_info*selected=NULL;
 
@@ -180,16 +182,15 @@ static void mount_reload(){
 		return;
 	}
 	for(size_t i=0;ms[i];i++){
+		if(strncmp(ms[i]->source,"/dev/",5)!=0&&!is_show_all)continue;
 		struct mount_info*m=malloc(sizeof(struct mount_info));
-		if(!m){
-			free_mount_item(ms[i]);
-			continue;
-		}
+		if(!m)continue;
 		memset(m,0,sizeof(struct mount_info));
 		m->item=ms[i];
 		mount_add_item(m);
 		list_obj_add_new_notnull(&mounts,m);
 	}
+	if(!mounts)mount_set_info(_("No mount points found"));
 	free(ms);
 }
 
@@ -202,6 +203,13 @@ static void refresh_click(lv_obj_t*obj,lv_event_t e){
 static void mount_click(lv_obj_t*obj,lv_event_t e){
 	if(e!=LV_EVENT_CLICKED||obj!=btn_mount)return;
 	msgbox_alert("This function does not implemented");
+}
+
+static void show_all_click(lv_obj_t*obj,lv_event_t e){
+	if(e!=LV_EVENT_VALUE_CHANGED||obj!=show_all)return;
+	is_show_all=lv_checkbox_is_checked(obj);
+	tlog_debug("request show all %s",BOOL2STR(is_show_all));
+	mount_reload();
 }
 
 static bool umount_cb(uint16_t id,const char*btn __attribute__((unused)),void*user_data){
@@ -276,7 +284,15 @@ static int mount_draw(struct gui_activity*act){
 	lst=lv_page_create(act->page,NULL);
 	lv_obj_add_style(lst,LV_PAGE_PART_BG,&lst_style);
 	lv_obj_set_pos(lst,gui_dpi/20,gui_sh/8);
-	lv_obj_set_size(lst,gui_sw-gui_dpi/10,gui_sh-lv_obj_get_y(lst)-bth-btm*2);
+	lv_obj_set_size(lst,gui_sw-gui_dpi/10,gui_sh-lv_obj_get_y(lst)-bth*2-btm*3);
+
+	// show all checkbox
+	show_all=lv_checkbox_create(act->page,NULL);
+	lv_obj_set_size(show_all,bth,bth);
+	lv_obj_align(show_all,lst,LV_ALIGN_OUT_BOTTOM_LEFT,btm,btm);
+	lv_obj_set_event_cb(show_all,show_all_click);
+	lv_style_set_focus_checkbox(show_all);
+	lv_checkbox_set_text(show_all,_("Show all mountpoints"));
 
 	// button style
 	static lv_style_t btn_style;

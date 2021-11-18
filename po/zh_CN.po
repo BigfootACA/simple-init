@@ -1531,3 +1531,9 @@ msgstr ""
 
 msgid "Change to new root and execute command"
 msgstr "切换到新根并执行命令"
+
+msgid "No mount points found"
+msgstr "没有找到任何挂载点"
+
+msgid "Show all mountpoints"
+msgstr "显示所有挂载点"

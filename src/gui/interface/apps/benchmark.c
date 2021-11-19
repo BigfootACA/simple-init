@@ -585,7 +585,13 @@ static void scene_next_task_cb(lv_task_t*task __attribute__((unused))){
 		uint32_t opa_speed_pct=(fps_opa_unweighted*100)/fps_normal_unweighted;
 		lv_obj_clean(screen);
 		scene_bg=NULL;
+		static lv_style_t lst_style;
+		lv_style_init(&lst_style);
+		lv_style_set_border_width(&lst_style,LV_STATE_DEFAULT,0);
+		lv_style_set_border_width(&lst_style,LV_STATE_FOCUSED,0);
+		lv_style_set_border_width(&lst_style,LV_STATE_PRESSED,0);
 		lv_obj_t*page=lv_page_create(screen,NULL);
+		lv_obj_add_style(page,LV_PAGE_PART_BG,&lst_style);
 		lv_obj_set_size(page,gui_sw,gui_sh);
 		title=lv_label_create(page,NULL);
 		lv_label_set_text_fmt(title,"Weighted FPS: %d",fps_weighted);

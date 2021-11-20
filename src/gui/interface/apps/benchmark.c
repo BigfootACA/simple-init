@@ -579,9 +579,16 @@ static void scene_next_task_cb(lv_task_t*task __attribute__((unused))){
 		}
 		fps_sum=fps_normal_sum+fps_opa_sum;
 		weight_sum=weight_normal_sum+weight_opa_sum;
+		if(fps_sum<=0)fps_sum=1;
+		if(weight_sum<=0)weight_sum=1;
+		if(weight_normal_sum<=0)weight_normal_sum=1;
+		if(weight_opa_sum<=0)weight_opa_sum=1;
 		uint32_t fps_weighted=fps_sum/weight_sum;
+		if(fps_weighted<=0)fps_weighted=1;
 		uint32_t fps_normal_unweighted=fps_normal_sum/weight_normal_sum;
+		if(fps_normal_unweighted<=0)fps_normal_unweighted=1;
 		uint32_t fps_opa_unweighted=fps_opa_sum/weight_opa_sum;
+		if(fps_opa_unweighted<=0)fps_opa_unweighted=1;
 		uint32_t opa_speed_pct=(fps_opa_unweighted*100)/fps_normal_unweighted;
 		lv_obj_clean(screen);
 		scene_bg=NULL;

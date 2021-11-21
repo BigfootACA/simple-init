@@ -1537,3 +1537,15 @@ msgstr "没有找到任何挂载点"
 
 msgid "Show all mountpoints"
 msgstr "显示所有挂载点"
+
+msgid "open folder failed"
+msgstr "打开文件夹失败"
+
+msgid "Usage: lsfd\n"
+msgstr "使用方法: lsfd\n"
+
+msgid "readlink %s failed"
+msgstr "读取链接%s失败"
+
+msgid "List shell open file descriptors"
+msgstr "列出Shell已打开的文件"

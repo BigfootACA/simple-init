@@ -40,6 +40,7 @@ DECLARE_MAIN(initshell);
 DECLARE_MAIN(insmod);
 DECLARE_MAIN(loggerctl);
 DECLARE_MAIN(ls);
+DECLARE_MAIN(lsfd);
 DECLARE_MAIN(lsmod);
 DECLARE_MAIN(modprobe);
 DECLARE_MAIN(mountpoint);
@@ -100,6 +101,7 @@ const struct shell_command*shell_cmds[]={
 	DECLARE_CMD(true,  initdevd,    "Init simple device daemon")
 	DECLARE_CMD(true,  initloggerd, "Launch simple init logger daemon")
 	DECLARE_CMD(true,  ls,          "List directory contents")
+	DECLARE_CMD(false, lsfd,        "List shell open file descriptors")
 	DECLARE_CMD(true,  mountpoint,  "Check whether a directory or file is a mountpoint")
 	DECLARE_CMD(true,  uname,       "Print system information")
 	DECLARE_CMD(true,  unlink,      "Remove a directory entry (Direct call)")

@@ -22,6 +22,7 @@ DECLARE_MAIN(chdir);
 DECLARE_MAIN(chvt);
 DECLARE_MAIN(chroot);
 DECLARE_MAIN(clear);
+DECLARE_MAIN(echo);
 DECLARE_MAIN(dmesg);
 DECLARE_MAIN(dumpargv);
 DECLARE_MAIN(logdumpargv);
@@ -90,6 +91,7 @@ const struct shell_command*shell_cmds[]={
 	DECLARE_CMD(true,  chvt,        "Change foreground virtual terminal")
 	DECLARE_CMD(true,  chroot,      "Change to new root and execute command")
 	DECLARE_CMD(false, clear,       "Clear screen")
+	DECLARE_CMD(false, echo,        "Echo string")
 	DECLARE_CMD(true,  dmesg,       "Print or control the kernel ring buffer")
 	DECLARE_CMD(true,  dumpargv,    "Dump all arguments to stdout")
 	DECLARE_CMD(true,  logdumpargv, "Dump all arguments to initloggerd")

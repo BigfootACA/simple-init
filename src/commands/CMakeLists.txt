@@ -35,4 +35,5 @@ add_library(init_commands STATIC
 	lsfd.c
 	close.c
 	write.c
+	echo.c
 )

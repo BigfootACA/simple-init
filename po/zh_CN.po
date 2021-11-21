@@ -1570,3 +1570,6 @@ msgstr "写错误"
 
 msgid "Write data to file descriptor"
 msgstr "将数据写到指定文件描述符"
+
+msgid "Echo string"
+msgstr "打印字符串"

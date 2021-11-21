@@ -1549,3 +1549,15 @@ msgstr "读取链接%s失败"
 
 msgid "List shell open file descriptors"
 msgstr "列出Shell已打开的文件"
+
+msgid "invalid file descriptor\n"
+msgstr "无效的文件描述符\n"
+
+msgid "close failed"
+msgstr "关闭失败"
+
+msgid "Usage: close <FD>\n"
+msgstr "使用方法: close <文件描述符>\n"
+
+msgid "Close a file descriptor"
+msgstr "关闭一个文件描述符"

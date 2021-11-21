@@ -17,6 +17,7 @@ DECLARE_MAIN(confget);
 DECLARE_MAIN(confset);
 DECLARE_MAIN(confdel);
 DECLARE_MAIN(confdump);
+DECLARE_MAIN(close);
 DECLARE_MAIN(chdir);
 DECLARE_MAIN(chvt);
 DECLARE_MAIN(chroot);
@@ -82,6 +83,7 @@ const struct shell_command*shell_cmds[]={
 	DECLARE_CMD(true,  confdel,     "Delete config item")
 	DECLARE_CMD(true,  confdump,    "Dump config store")
 	DECLARE_CMD(true,  cat,         "Concatenate FILE(s) to standard output.")
+	DECLARE_CMD(false, close,       "Close a file descriptor")
 	DECLARE_CMD(false, cd,          "Change directory")
 	DECLARE_CMD(false, chdir,       "Change directory (Direct call)")
 	DECLARE_CMD(true,  chvt,        "Change foreground virtual terminal")

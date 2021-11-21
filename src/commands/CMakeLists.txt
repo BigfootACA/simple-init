@@ -33,4 +33,5 @@ add_library(init_commands STATIC
 	chvt.c
 	chroot.c
 	lsfd.c
+	close.c
 )

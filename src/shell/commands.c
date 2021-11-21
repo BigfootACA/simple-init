@@ -56,6 +56,7 @@ DECLARE_MAIN(true);
 DECLARE_MAIN(false);
 DECLARE_MAIN(halt);
 DECLARE_MAIN(poweroff);
+DECLARE_MAIN(write);
 
 const struct shell_command*shell_cmds[]={
 	#ifdef ENABLE_INITSHELL
@@ -115,5 +116,6 @@ const struct shell_command*shell_cmds[]={
 	DECLARE_CMD(true,  false,       "Always exit with 1 (false)")
 	DECLARE_CMD(true,  halt,        "Halt the system")
 	DECLARE_CMD(true,  poweroff,    "Halt and shut off power")
+	DECLARE_CMD(false, write,       "Write data to file descriptor")
 	NULL
 };

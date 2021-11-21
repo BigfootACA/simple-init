@@ -1561,3 +1561,12 @@ msgstr "使用方法: close <文件描述符>\n"
 
 msgid "Close a file descriptor"
 msgstr "关闭一个文件描述符"
+
+msgid "Usage: write <FD> <DATA>...\n"
+msgstr "使用方法: write <文件描述符> <数据>...\n"
+
+msgid "write failed"
+msgstr "写错误"
+
+msgid "Write data to file descriptor"
+msgstr "将数据写到指定文件描述符"

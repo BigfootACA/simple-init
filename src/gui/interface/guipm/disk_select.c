@@ -14,34 +14,12 @@
 #include"gui.h"
 #include"str.h"
 #include"confd.h"
+#include"guipm.h"
 #include"system.h"
 #include"logger.h"
 #include"gui/tools.h"
 #include"gui/activity.h"
 #define TAG "guipm"
-
-struct disks_info;
-struct disks_disk_info{
-	bool enable;
-	lv_obj_t*btn,*chk;
-	struct fdisk_context*ctx;
-	struct fdisk_label*lbl;
-	long size;
-	char name[256];
-	char model[BUFSIZ];
-	char path[BUFSIZ];
-	char layout[16];
-	int sysfs_fd;
-	struct disks_info*di;
-};
-struct disks_info{
-	bool is_show_all;
-	lv_obj_t*lst,*selscr,*disks_info,*show_all;
-	lv_obj_t*btn_ok,*btn_refresh,*btn_cancel;
-	struct disks_disk_info disks[32],*selected;
-};
-
-extern void guipm_draw_title(lv_obj_t*screen);
 
 static char*get_model(struct disks_disk_info*d){return d->model[0]==0?"Unknown":d->model;}
 static char*get_layout(struct disks_disk_info*d){return d->layout[0]==0?"Unknown":d->layout;}
@@ -238,7 +216,7 @@ static void disks_add_item(int blk,struct disks_disk_info*k){
 	if(!k->lbl)lv_obj_set_gray240_text_color(d_layout,LV_LABEL_PART_MAIN);
 }
 
-extern void guipm_disk_reload(struct disks_info*di){
+static void guipm_disk_reload(struct disks_info*di){
 	guipm_disk_clear(di,true);
 	int i;
 	DIR*d;

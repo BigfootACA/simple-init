@@ -14,40 +14,13 @@
 #include"gui.h"
 #include"str.h"
 #include"confd.h"
+#include"guipm.h"
 #include"system.h"
 #include"logger.h"
 #include"gui/activity.h"
 #include"gui/tools.h"
 #include"gui/msgbox.h"
 #define TAG "guipm"
-
-struct part_partition_info;
-struct part_disk_info{
-	struct fdisk_context*ctx;
-	struct fdisk_label*label;
-	struct fdisk_table*table;
-	fdisk_sector_t secs,lsec_size,psec_size;
-	unsigned long size;
-	char size_str[80],type[128],*target,*path;
-	lv_obj_t*page,*disk_info,*btn_disk,*btn_part,*btn_reload,*btn_new;
-	struct part_partition_info*partitions[1024],*selected;
-};
-struct part_partition_info{
-	bool free;
-	size_t no;
-	char partname[32];
-	char name[320];
-	struct fdisk_partition*part;
-	struct fdisk_parttype*type;
-	fdisk_sector_t start_sec,end_sec,size_sec;
-	unsigned long start,end,size;
-	char start_str[64],end_str[64],size_str[64];
-	char type_str[128];
-	lv_obj_t*btn,*chk;
-	struct part_disk_info*di;
-};
-
-extern void guipm_draw_title(lv_obj_t*screen);
 
 static void partition_clear(struct part_disk_info*di,bool ui){
 	di->selected=NULL;
@@ -342,7 +315,6 @@ static void reload_click(lv_obj_t*obj,lv_event_t e){
 	reload_partitions(di);
 }
 
-extern void guipm_disk_operation_menu(struct fdisk_context*ctx);
 static void disk_click(lv_obj_t*obj,lv_event_t e){
 	if(e!=LV_EVENT_CLICKED)return;
 	struct part_disk_info*di=lv_obj_get_user_data(obj);

@@ -21,20 +21,18 @@
 #include"gui/msgbox.h"
 #define TAG "guipm"
 
-static char*guipm_target_disk=NULL;
-static char*path=NULL;
-static lv_obj_t*selscr,*page,*disk_info=NULL;
-static lv_obj_t*btn_disk,*btn_part,*btn_reload,*btn_new;
-static struct fdisk_context*ctx;
-static struct disk_info{
+struct part_partition_info;
+struct part_disk_info{
+	struct fdisk_context*ctx;
 	struct fdisk_label*label;
 	struct fdisk_table*table;
 	fdisk_sector_t secs,lsec_size,psec_size;
 	unsigned long size;
-	char size_str[80];
-	char type[128];
-}diskinfo;
-static struct partition_info{
+	char size_str[80],type[128],*target,*path;
+	lv_obj_t*page,*disk_info,*btn_disk,*btn_part,*btn_reload,*btn_new;
+	struct part_partition_info*partitions[1024],*selected;
+};
+struct part_partition_info{
 	bool free;
 	size_t no;
 	char partname[32];
@@ -46,59 +44,65 @@ static struct partition_info{
 	char start_str[64],end_str[64],size_str[64];
 	char type_str[128];
 	lv_obj_t*btn,*chk;
-}*partitions[1024],*selected;
+	struct part_disk_info*di;
+};
 
 extern void guipm_draw_title(lv_obj_t*screen);
 
-static void partition_clear(){
-	selected=NULL;
-	lv_obj_set_enabled(btn_part,false);
-	lv_obj_set_enabled(btn_new,false);
-	if(disk_info)lv_obj_del(disk_info);
-	disk_info=NULL;
-	if(diskinfo.table)fdisk_unref_table(diskinfo.table);
-	memset(&diskinfo,0,sizeof(struct disk_info));
+static void partition_clear(struct part_disk_info*di,bool ui){
+	di->selected=NULL;
+	if(ui){
+		lv_obj_set_enabled(di->btn_part,false);
+		lv_obj_set_enabled(di->btn_new,false);
+		if(di->disk_info)lv_obj_del(di->disk_info);
+	}
+	if(di->table)fdisk_unref_table(di->table);
+	memset(di->size_str,0,sizeof(di->size_str));
+	memset(di->type,0,sizeof(di->type));
+	di->size=0,di->secs=0,di->lsec_size=0,di->psec_size=0;
+	di->disk_info=NULL,di->label=NULL,di->table=NULL;
 	for(int i=0;i<1024;i++){
-		struct partition_info*p=partitions[i];
+		struct part_partition_info*p=di->partitions[i];
 		if(!p)continue;
-		if(p->btn)lv_obj_del(p->btn);
+		if(ui&&p->btn)lv_obj_del(p->btn);
 		if(p->type)fdisk_unref_parttype(p->type);
 		free(p);
-		partitions[i]=NULL;
+		di->partitions[i]=NULL;
 	}
-	fdisk_reassign_device(ctx);
+	fdisk_reassign_device(di->ctx);
 }
 
-static void fill_disk_info(){
-	diskinfo.label=fdisk_get_label(ctx,NULL);
-	diskinfo.secs=fdisk_get_nsectors(ctx);
-	diskinfo.lsec_size=fdisk_get_sector_size(ctx);
-	diskinfo.psec_size=fdisk_get_physector_size(ctx);
-	diskinfo.size=diskinfo.secs*diskinfo.lsec_size;
-	make_readable_str_buf(diskinfo.size_str,sizeof(diskinfo.size_str),diskinfo.size,1,0);
-	strcpy(diskinfo.type,fdisk_label_get_name(diskinfo.label));
-	tlog_debug("disk label: %s",diskinfo.type);
+static void fill_disk_info(struct part_disk_info*di){
+	di->label=fdisk_get_label(di->ctx,NULL);
+	di->secs=fdisk_get_nsectors(di->ctx);
+	di->lsec_size=fdisk_get_sector_size(di->ctx);
+	di->psec_size=fdisk_get_physector_size(di->ctx);
+	di->size=di->secs*di->lsec_size;
+	make_readable_str_buf(di->size_str,sizeof(di->size_str),di->size,1,0);
+	strcpy(di->type,fdisk_label_get_name(di->label));
+	tlog_debug("disk label: %s",di->type);
 	tlog_debug(
 		"disk size: %s (%lu bytes, %lu sectors)",
-		diskinfo.size_str,diskinfo.size,diskinfo.secs
+		di->size_str,di->size,di->secs
 	);
 	tlog_debug(
 		"disk sector size: %lu bytes logical, %lu bytes physical",
-		diskinfo.lsec_size,diskinfo.psec_size
+		di->lsec_size,di->psec_size
 	);
 }
 
-static int fill_partition_info(struct partition_info*part,struct fdisk_iter*itr){
-	memset(part,0,sizeof(struct partition_info));
-	if(fdisk_table_next_partition(diskinfo.table,itr,&part->part)!=0)return -1;
+static int fill_partition_info(struct part_disk_info*di,struct part_partition_info*part,struct fdisk_iter*itr){
+	memset(part,0,sizeof(struct part_partition_info));
+	if(fdisk_table_next_partition(di->table,itr,&part->part)!=0)return -1;
 
+	part->di=di;
 	part->start_sec=fdisk_partition_get_start(part->part);
 	part->end_sec=fdisk_partition_get_end(part->part);
 	part->size_sec=fdisk_partition_get_size(part->part);
 
-	part->start=part->start_sec*diskinfo.lsec_size;
-	part->end=part->end_sec*diskinfo.lsec_size;
-	part->size=part->size_sec*diskinfo.lsec_size;
+	part->start=part->start_sec*di->lsec_size;
+	part->end=part->end_sec*di->lsec_size;
+	part->size=part->size_sec*di->lsec_size;
 
 	make_readable_str_buf(part->start_str,sizeof(part->start_str),part->start,1,0);
 	make_readable_str_buf(part->end_str,sizeof(part->end_str),part->end,1,0);
@@ -117,7 +121,7 @@ static int fill_partition_info(struct partition_info*part,struct fdisk_iter*itr)
 		part->type=fdisk_partition_get_type(part->part);
 		char*pname=(char*)fdisk_partition_get_name(part->part);
 		if(pname&&pname[0])strcpy(part->name,pname);
-		strcpy(part->partname,fdisk_partname(guipm_target_disk,part->no+1));
+		strcpy(part->partname,fdisk_partname(di->target,part->no+1));
 		strcpy(part->type_str,fdisk_parttype_get_name(part->type));
 		tlog_debug(
 			"%s start %s(%lu), end %s(%lu), size %s(%lu), name %s, type %s",
@@ -134,38 +138,40 @@ static int fill_partition_info(struct partition_info*part,struct fdisk_iter*itr)
 
 static void partition_click(lv_obj_t*obj,lv_event_t e){
 	if(e!=LV_EVENT_VALUE_CHANGED)return;
-	if(selected){
-		lv_obj_set_checked(selected->btn,false);
-		lv_obj_set_enabled(btn_part,false);
-		lv_obj_set_enabled(btn_new,false);
-		if(obj==selected->chk){
+	struct part_disk_info*di=lv_obj_get_user_data(obj);
+	if(di->selected){
+		lv_obj_set_checked(di->selected->btn,false);
+		lv_obj_set_enabled(di->btn_part,false);
+		lv_obj_set_enabled(di->btn_new,false);
+		if(obj==di->selected->chk){
 			tlog_debug("clear selected");
-			selected=NULL;
+			di->selected=NULL;
 			return;
-		}else lv_checkbox_set_checked(selected->chk,false);
+		}else lv_checkbox_set_checked(di->selected->chk,false);
 	}
-	selected=NULL;
+	di->selected=NULL;
 	int i;
-	for(i=0;i<1024&&!selected;i++)
-		if(partitions[i]&&partitions[i]->chk==obj)
-			selected=partitions[i];
-	if(!selected)return;
-	lv_obj_set_checked(selected->btn,true);
-	if(selected->free){
+	for(i=0;i<1024&&!di->selected;i++)
+		if(di->partitions[i]&&di->partitions[i]->chk==obj)
+			di->selected=di->partitions[i];
+	if(!di->selected)return;
+	lv_obj_set_checked(di->selected->btn,true);
+	if(di->selected->free){
 		tlog_debug("selected free space %d",i);
-		lv_obj_set_enabled(btn_new,true);
+		lv_obj_set_enabled(di->btn_new,true);
 	}else{
-		tlog_debug("selected partition %s",selected->partname);
-		lv_obj_set_enabled(btn_part,true);
+		tlog_debug("selected partition %s",di->selected->partname);
+		lv_obj_set_enabled(di->btn_part,true);
 	}
 }
 
-static void partitions_add_item(int i,struct partition_info*p){
-	lv_coord_t bw=lv_page_get_scrl_width(page),m;
+static void partitions_add_item(int i,struct part_partition_info*p){
+	struct part_disk_info*di=p->di;
+	lv_coord_t bw=lv_page_get_scrl_width(di->page),m;
 
 	// disk select button
-	p->btn=lv_btn_create(page,NULL);
-	if(i>0)lv_obj_align(p->btn,partitions[i-1]->btn,LV_ALIGN_OUT_BOTTOM_LEFT,0,gui_dpi/10);
+	p->btn=lv_btn_create(di->page,NULL);
+	if(i>0)lv_obj_align(p->btn,di->partitions[i-1]->btn,LV_ALIGN_OUT_BOTTOM_LEFT,0,gui_dpi/10);
 	lv_obj_set_size(p->btn,bw,gui_dpi/3*2);
 	lv_style_set_btn_item(p->btn);
 	if(p->free)lv_obj_set_gray240_text_color(p->btn,LV_BTN_PART_MAIN);
@@ -181,6 +187,7 @@ static void partitions_add_item(int i,struct partition_info*p){
 	lv_checkbox_set_text(p->chk,p->free?_("Free Space"):p->partname);
 	if(p->free)lv_obj_set_gray160_text_color(p->chk,LV_LABEL_PART_MAIN);
 	lv_style_set_focus_checkbox(p->chk);
+	lv_obj_set_user_data(p->chk,di);
 	lv_obj_set_event_cb(p->chk,partition_click);
 	lv_group_add_obj(gui_grp,p->chk);
 	lv_obj_align(p->chk,NULL,LV_ALIGN_IN_TOP_LEFT,m,lv_obj_get_height(p->chk)+m);
@@ -210,10 +217,6 @@ static void partitions_add_item(int i,struct partition_info*p){
 	lv_obj_align(pos,NULL,LV_ALIGN_IN_LEFT_MID,gui_dpi/10,gui_dpi/20);
 
 	if(!p->free){
-
-		static lv_style_t xxx;
-		lv_style_init(&xxx);
-
 		// partition name
 		lv_obj_t*name=lv_label_create(line,NULL);
 		lv_label_set_long_mode(name,lm);
@@ -243,141 +246,152 @@ static void partitions_add_item(int i,struct partition_info*p){
 			gui_dpi/10,
 			0
 		);
-
 	}
 }
 
-static void set_disks_info(char*text){
-	if(disk_info)lv_obj_del(disk_info);
-	disk_info=lv_label_create(page,NULL);
-	lv_label_set_long_mode(disk_info,LV_LABEL_LONG_BREAK);
-	lv_obj_set_size(disk_info,lv_page_get_scrl_width(page),gui_sh/16);
-	lv_label_set_align(disk_info,LV_LABEL_ALIGN_CENTER);
-	lv_label_set_text(disk_info,text);
+static void set_disks_info(struct part_disk_info*di,char*text){
+	if(di->disk_info)lv_obj_del(di->disk_info);
+	di->disk_info=lv_label_create(di->page,NULL);
+	lv_label_set_long_mode(di->disk_info,LV_LABEL_LONG_BREAK);
+	lv_obj_set_size(di->disk_info,lv_page_get_scrl_width(di->page),gui_sh/16);
+	lv_label_set_align(di->disk_info,LV_LABEL_ALIGN_CENTER);
+	lv_label_set_text(di->disk_info,text);
 }
 
-static int reload_partitions(){
-	partition_clear();
-	if(!fdisk_has_label(ctx)){
-		set_disks_info(_("This disk has no label"));
+static int reload_partitions(struct part_disk_info*di){
+	partition_clear(di,true);
+	if(!fdisk_has_label(di->ctx)){
+		set_disks_info(di,_("This disk has no label"));
 		return 0;
 	}
-	fill_disk_info();
-	if(fdisk_get_partitions(ctx,&diskinfo.table)!=0)
+	fill_disk_info(di);
+	if(fdisk_get_partitions(di->ctx,&di->table)!=0)
 		return tlog_warn("no any partitions found");
-	if(fdisk_get_freespaces(ctx,&diskinfo.table)!=0)
+	if(fdisk_get_freespaces(di->ctx,&di->table)!=0)
 		return tlog_warn("no any free spaces found");
-	if(fdisk_table_get_nents(diskinfo.table)<=0)return 0;
-	fdisk_list_disklabel(ctx);
+	if(fdisk_table_get_nents(di->table)<=0)return 0;
+	fdisk_list_disklabel(di->ctx);
 	struct fdisk_iter*itr=NULL;
 	if(!(itr=fdisk_new_iter(FDISK_ITER_FORWARD)))
 		return terlog_warn(-1,"create fdisk iterable failed");
 	for(size_t i=0;i<1024;i++){
-		struct partition_info*p=malloc(sizeof(struct partition_info));
-		if(fill_partition_info(p,itr)!=0){
+		struct part_partition_info*p=malloc(sizeof(struct part_partition_info));
+		if(fill_partition_info(di,p,itr)!=0){
 			free(p);
 			break;
 		}
-		partitions[i]=p;
+		di->partitions[i]=p;
 		partitions_add_item(i,p);
 	}
 	fdisk_free_iter(itr);
 	return 0;
 }
 
-static int init_disk(){
+static int init_disk(struct part_disk_info*di){
 	errno=0;
-	if(!(ctx=fdisk_new_context()))
+	if(!(di->ctx=fdisk_new_context()))
 		return terlog_error(-1,"failed to initialize fdisk context");
-	size_t s=strlen(guipm_target_disk)+16;
-	if(path)free(path);
-	if(!(path=malloc(s)))
+	size_t s=strlen(di->target)+16;
+	if(di->path)free(di->path);
+	if(!(di->path=malloc(s)))
 		return terlog_error(-1,"malloc path failed");
-	if(guipm_target_disk[0]=='/'){
-		strcpy(path,guipm_target_disk);
+	if(di->target[0]=='/'){
+		strcpy(di->path,di->target);
 		struct stat st;
-		if(stat(path,&st)!=0){
-			telog_error("cannot stat %s",path);
+		if(stat(di->path,&st)!=0){
+			telog_error("cannot stat %s",di->path);
 			goto fail;
 		}
 		if(!S_ISREG(st.st_mode)&&!S_ISBLK(st.st_mode)){
-			telog_error("unknown type %s",path);
+			telog_error("unknown type %s",di->path);
 			goto fail;
 		}
 		if(S_ISREG(st.st_mode)&&st.st_size==0){
-			telog_error("empty file %s",path);
+			telog_error("empty file %s",di->path);
 			goto fail;
 		}
 	}else{
-		snprintf(path,s-1,_PATH_DEV"/%s",guipm_target_disk);
-		if(!is_block(path)){
-			snprintf(path,s-1,_PATH_DEV"/block/%s",guipm_target_disk);
-			if(!is_block(path)){
-				telog_error("cannot found device %s real path",guipm_target_disk);
+		snprintf(di->path,s-1,_PATH_DEV"/%s",di->target);
+		if(!is_block(di->path)){
+			snprintf(di->path,s-1,_PATH_DEV"/block/%s",di->target);
+			if(!is_block(di->path)){
+				telog_error("cannot found device %s real path",di->target);
 				goto fail;
 			}
 		}
 	}
-	tlog_debug("found disk %s",path);
+	tlog_debug("found disk %s",di->path);
 	errno=0;
-	if(fdisk_assign_device(ctx,path,false)!=0){
-		telog_error("failed assign block %s to fdisk context",guipm_target_disk);
+	if(fdisk_assign_device(di->ctx,di->path,false)!=0){
+		telog_error("failed assign block %s to fdisk context",di->target);
 		goto fail;
 	}
 	return 0;
 	fail:
-	if(ctx)fdisk_unref_context(ctx);
-	if(path)free(path);
-	ctx=NULL,path=NULL;
+	if(di->ctx)fdisk_unref_context(di->ctx);
+	if(di->path)free(di->path);
+	di->ctx=NULL,di->path=NULL;
 	return -1;
 }
 
 static void reload_click(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_CLICKED||obj!=btn_reload)return;
+	if(e!=LV_EVENT_CLICKED)return;
+	struct part_disk_info*di=lv_obj_get_user_data(obj);
+	if(obj!=di->btn_reload)return;
 	tlog_debug("request reload");
-	reload_partitions();
+	reload_partitions(di);
 }
 
 extern void guipm_disk_operation_menu(struct fdisk_context*ctx);
 static void disk_click(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_CLICKED||obj!=btn_disk)return;
+	if(e!=LV_EVENT_CLICKED)return;
+	struct part_disk_info*di=lv_obj_get_user_data(obj);
+	if(obj!=di->btn_disk)return;
 	tlog_debug("request disk submenu");
-	guipm_disk_operation_menu(ctx);
+	guipm_disk_operation_menu(di->ctx);
 }
 
-static void do_reload(lv_task_t*t __attribute__((unused))){
-	if(!guiact_is_active_page(selscr))return;
+static void do_reload(lv_task_t*t){
+	struct gui_activity*d=t->user_data;
+	struct part_disk_info*di=d->data;
+	if(!guiact_is_active_page(d->page)||!di)return;
 	errno=0;
-	reload_partitions();
-	lv_group_add_obj(gui_grp,btn_disk);
-	lv_group_add_obj(gui_grp,btn_part);
-	lv_group_add_obj(gui_grp,btn_reload);
-	lv_group_add_obj(gui_grp,btn_new);
+	reload_partitions(di);
+	lv_group_add_obj(gui_grp,di->btn_disk);
+	lv_group_add_obj(gui_grp,di->btn_part);
+	lv_group_add_obj(gui_grp,di->btn_reload);
+	lv_group_add_obj(gui_grp,di->btn_new);
 }
 
-static int guipm_part_get_focus(struct gui_activity*d __attribute__((unused))){
-	lv_task_once(lv_task_create(do_reload,100,LV_TASK_PRIO_MID,NULL));
+static int guipm_part_get_focus(struct gui_activity*d){
+	lv_task_once(lv_task_create(do_reload,100,LV_TASK_PRIO_MID,d));
 	return 0;
 }
 
-static int guipm_part_lost_focus(struct gui_activity*d __attribute__((unused))){
+static int guipm_part_lost_focus(struct gui_activity*d){
+	struct part_disk_info*di=d->data;
+	if(!di)return 0;
 	for(int i=0;i<1024;i++){
-		if(!partitions[i])continue;
-		lv_group_remove_obj(partitions[i]->chk);
+		if(!di->partitions[i])continue;
+		lv_group_remove_obj(di->partitions[i]->chk);
 	}
-	lv_group_remove_obj(btn_new);
-	lv_group_remove_obj(btn_disk);
-	lv_group_remove_obj(btn_part);
-	lv_group_remove_obj(btn_reload);
+	lv_group_remove_obj(di->btn_new);
+	lv_group_remove_obj(di->btn_disk);
+	lv_group_remove_obj(di->btn_part);
+	lv_group_remove_obj(di->btn_reload);
 	return 0;
 }
 
-static int do_cleanup(struct gui_activity*d __attribute__((unused))){
-	partition_clear();
-	if(guipm_target_disk)free(guipm_target_disk);
-	if(ctx)fdisk_unref_context(ctx);
-	if(path)free(path);
-	guipm_target_disk=NULL,ctx=NULL,path=NULL;
+static int do_cleanup(struct gui_activity*d){
+	struct part_disk_info*di=d->data;
+	if(!di)return 0;
+	partition_clear(di,false);
+	if(di->target)free(di->target);
+	if(di->ctx)fdisk_unref_context(di->ctx);
+	if(di->path)free(di->path);
+	di->target=NULL,di->ctx=NULL,di->path=NULL;
+	free(di);
+	d->data=NULL;
 	return 0;
 }
 
@@ -386,25 +400,33 @@ static int init(struct gui_activity*act){
 		tlog_warn("target disk not set");
 		return -EINVAL;
 	}
+	struct part_disk_info*di=malloc(sizeof(struct part_disk_info));
+	if(!di)return -ENOMEM;
+	memset(di,0,sizeof(struct part_disk_info));
 	char*disk=act->args;
 	if(disk[0]!='/'&&disk[1]==':')disk+=2;
-	if(!(guipm_target_disk=strdup(disk)))return -ENOMEM;
-	act->mask=init_disk()<0;
+	if(!(di->target=strdup(disk))){
+		free(di);
+		return -ENOMEM;
+	}
+	act->data=di;
+	act->mask=init_disk(di)<0;
 	return 0;
 }
 
 static int guipm_draw_partitions(struct gui_activity*act){
-	selscr=act->page;
+	struct part_disk_info*di=act->data;
 	if(act->mask){
 		msgbox_alert("init disk context failed");
+		free(di);
 		return -1;
 	}else{
 		int btw=gui_sw/2-(gui_dpi/5),bth=gui_font_size+(gui_dpi/10);
 
-		guipm_draw_title(selscr);
+		guipm_draw_title(act->page);
 
 		// function title
-		lv_obj_t*title=lv_label_create(selscr,NULL);
+		lv_obj_t*title=lv_label_create(act->page,NULL);
 		lv_label_set_long_mode(title,LV_LABEL_LONG_BREAK);
 		lv_obj_set_y(title,gui_sh/16);
 		lv_obj_set_size(title,gui_sw,gui_sh/16);
@@ -417,45 +439,49 @@ static int guipm_draw_partitions(struct gui_activity*act){
 		lv_style_set_border_width(&lst_style,LV_STATE_DEFAULT,0);
 		lv_style_set_border_width(&lst_style,LV_STATE_FOCUSED,0);
 		lv_style_set_border_width(&lst_style,LV_STATE_PRESSED,0);
-		page=lv_page_create(selscr,NULL);
-		lv_obj_add_style(page,LV_PAGE_PART_BG,&lst_style);
-		lv_obj_set_width(page,gui_sw-gui_dpi/10);
-		lv_obj_align(page,title,LV_ALIGN_OUT_BOTTOM_MID,0,gui_dpi/10);
-		lv_obj_set_height(page,gui_sh-bth*2-gui_font_size*3-gui_sh/16*2);
+		di->page=lv_page_create(act->page,NULL);
+		lv_obj_add_style(di->page,LV_PAGE_PART_BG,&lst_style);
+		lv_obj_set_width(di->page,gui_sw-gui_dpi/10);
+		lv_obj_align(di->page,title,LV_ALIGN_OUT_BOTTOM_MID,0,gui_dpi/10);
+		lv_obj_set_height(di->page,gui_sh-bth*2-gui_font_size*3-gui_sh/16*2);
 
 		// disk operate button
-		btn_disk=lv_btn_create(selscr,NULL);
-		lv_obj_set_size(btn_disk,btw,bth);
-		lv_style_set_action_button(btn_disk,true);
-		lv_obj_set_event_cb(btn_disk,disk_click);
-		lv_label_set_text(lv_label_create(btn_disk,NULL),_("Disk..."));
-		lv_obj_align(btn_disk,page,LV_ALIGN_OUT_BOTTOM_LEFT,gui_font_size/2,gui_font_size);
-		lv_group_add_obj(gui_grp,btn_disk);
+		di->btn_disk=lv_btn_create(act->page,NULL);
+		lv_obj_set_size(di->btn_disk,btw,bth);
+		lv_style_set_action_button(di->btn_disk,true);
+		lv_obj_set_user_data(di->btn_disk,di);
+		lv_obj_set_event_cb(di->btn_disk,disk_click);
+		lv_label_set_text(lv_label_create(di->btn_disk,NULL),_("Disk..."));
+		lv_obj_align(di->btn_disk,di->page,LV_ALIGN_OUT_BOTTOM_LEFT,gui_font_size/2,gui_font_size);
+		lv_group_add_obj(gui_grp,di->btn_disk);
 
 		// partition operate button
-		btn_part=lv_btn_create(selscr,NULL);
-		lv_obj_set_size(btn_part,btw,bth);
-		lv_style_set_action_button(btn_part,false);
-		lv_label_set_text(lv_label_create(btn_part,NULL),_("Partition..."));
-		lv_obj_align(btn_part,page,LV_ALIGN_OUT_BOTTOM_RIGHT,-gui_font_size/2,gui_font_size);
-		lv_group_add_obj(gui_grp,btn_part);
+		di->btn_part=lv_btn_create(act->page,NULL);
+		lv_obj_set_size(di->btn_part,btw,bth);
+		lv_obj_set_user_data(di->btn_part,di);
+		lv_style_set_action_button(di->btn_part,false);
+		lv_label_set_text(lv_label_create(di->btn_part,NULL),_("Partition..."));
+		lv_obj_align(di->btn_part,di->page,LV_ALIGN_OUT_BOTTOM_RIGHT,-gui_font_size/2,gui_font_size);
+		lv_group_add_obj(gui_grp,di->btn_part);
 
 		// reload button
-		btn_reload=lv_btn_create(selscr,NULL);
-		lv_obj_align(btn_reload,btn_disk,LV_ALIGN_OUT_BOTTOM_LEFT,0,gui_font_size);
-		lv_obj_set_size(btn_reload,btw,bth);
-		lv_style_set_action_button(btn_reload,true);
-		lv_obj_set_event_cb(btn_reload,reload_click);
-		lv_label_set_text(lv_label_create(btn_reload,NULL),_("Reload"));
-		lv_group_add_obj(gui_grp,btn_reload);
+		di->btn_reload=lv_btn_create(act->page,NULL);
+		lv_obj_align(di->btn_reload,di->btn_disk,LV_ALIGN_OUT_BOTTOM_LEFT,0,gui_font_size);
+		lv_obj_set_size(di->btn_reload,btw,bth);
+		lv_obj_set_user_data(di->btn_reload,di);
+		lv_style_set_action_button(di->btn_reload,true);
+		lv_obj_set_event_cb(di->btn_reload,reload_click);
+		lv_label_set_text(lv_label_create(di->btn_reload,NULL),_("Reload"));
+		lv_group_add_obj(gui_grp,di->btn_reload);
 
 		// new partition button
-		btn_new=lv_btn_create(selscr,NULL);
-		lv_obj_align(btn_new,btn_part,LV_ALIGN_OUT_BOTTOM_LEFT,0,gui_font_size);
-		lv_obj_set_size(btn_new,btw,bth);
-		lv_style_set_action_button(btn_new,false);
-		lv_label_set_text(lv_label_create(btn_new,NULL),_("New"));
-		lv_group_add_obj(gui_grp,btn_new);
+		di->btn_new=lv_btn_create(act->page,NULL);
+		lv_obj_align(di->btn_new,di->btn_part,LV_ALIGN_OUT_BOTTOM_LEFT,0,gui_font_size);
+		lv_obj_set_size(di->btn_new,btw,bth);
+		lv_obj_set_user_data(di->btn_new,di);
+		lv_style_set_action_button(di->btn_new,false);
+		lv_label_set_text(lv_label_create(di->btn_new,NULL),_("New"));
+		lv_group_add_obj(gui_grp,di->btn_new);
 	}
 	return 0;
 }

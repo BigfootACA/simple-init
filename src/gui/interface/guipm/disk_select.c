@@ -20,12 +20,8 @@
 #include"gui/activity.h"
 #define TAG "guipm"
 
-static int xdpi;
-static bool is_show_all=false;
-static  lv_obj_t*lst=NULL,*selscr=NULL;
-static lv_obj_t*btn_ok,*btn_refresh,*btn_cancel;
-static lv_obj_t*disks_info=NULL,*show_all=NULL;
-static struct disk_info{
+struct disks_info;
+struct disks_disk_info{
 	bool enable;
 	lv_obj_t*btn,*chk;
 	struct fdisk_context*ctx;
@@ -36,58 +32,69 @@ static struct disk_info{
 	char path[BUFSIZ];
 	char layout[16];
 	int sysfs_fd;
-}disks[32]={0};
-static struct disk_info*selected=NULL;
+	struct disks_info*di;
+};
+struct disks_info{
+	bool is_show_all;
+	lv_obj_t*lst,*selscr,*disks_info,*show_all;
+	lv_obj_t*btn_ok,*btn_refresh,*btn_cancel;
+	struct disks_disk_info disks[32],*selected;
+};
 
 extern void guipm_draw_title(lv_obj_t*screen);
 
-static char*get_model(struct disk_info*d){return d->model[0]==0?"Unknown":d->model;}
-static char*get_layout(struct disk_info*d){return d->layout[0]==0?"Unknown":d->layout;}
+static char*get_model(struct disks_disk_info*d){return d->model[0]==0?"Unknown":d->model;}
+static char*get_layout(struct disks_disk_info*d){return d->layout[0]==0?"Unknown":d->layout;}
 
-void disk_click(lv_obj_t*obj,lv_event_t e){
+static void disk_click(lv_obj_t*obj,lv_event_t e){
 	if(e!=LV_EVENT_VALUE_CHANGED)return;
+	struct disks_info*di=lv_obj_get_user_data(obj);
+	if(!di)return;
 	lv_checkbox_set_checked(obj,true);
-	if(selected){
-		if(obj==selected->chk)return;
+	if(di->selected){
+		if(obj==di->selected->chk)return;
 		else{
-			lv_checkbox_set_checked(selected->chk,false);
-			lv_obj_set_checked(selected->btn,false);
+			lv_checkbox_set_checked(di->selected->chk,false);
+			lv_obj_set_checked(di->selected->btn,false);
 		}
 	}
-	selected=NULL;
-	for(int i=0;i<32&&!selected;i++)
-		if(disks[i].enable&&disks[i].chk==obj)
-			selected=&disks[i];
-	if(!selected)return;
-	lv_obj_set_checked(selected->btn,true);
-	tlog_debug("selected disk %s",selected->name);
-	lv_obj_set_enabled(btn_ok,true);
+	di->selected=NULL;
+	for(int i=0;i<32&&!di->selected;i++)
+		if(di->disks[i].enable&&di->disks[i].chk==obj)
+			di->selected=&di->disks[i];
+	if(!di->selected)return;
+	lv_obj_set_checked(di->selected->btn,true);
+	tlog_debug("selected disk %s",di->selected->name);
+	lv_obj_set_enabled(di->btn_ok,true);
 }
 
-void guipm_disk_clear(){
-	selected=NULL;
-	lv_obj_set_enabled(btn_ok,false);
-	if(disks_info)lv_obj_del(disks_info);
-	disks_info=NULL;
+static void guipm_disk_clear(struct disks_info*di,bool ui){
+	if(!di)return;
+	if(ui){
+		lv_obj_set_enabled(di->btn_ok,false);
+		if(di->disks_info)lv_obj_del(di->disks_info);
+	}
+	di->disks_info=NULL,di->selected=NULL;
 	for(int i=0;i<32;i++){
-		if(!disks[i].enable)continue;
-		lv_obj_del(disks[i].btn);
-		if(disks[i].ctx)fdisk_unref_context(disks[i].ctx);
-		close(disks[i].sysfs_fd);
-		memset(&disks[i],0,sizeof(struct disk_info));
+		if(!di->disks[i].enable)continue;
+		if(ui)lv_obj_del(di->disks[i].btn);
+		if(di->disks[i].ctx)fdisk_unref_context(di->disks[i].ctx);
+		close(di->disks[i].sysfs_fd);
+		memset(&di->disks[i],0,sizeof(struct disks_disk_info));
 	}
 }
 
-void guipm_set_disks_info(char*text){
-	guipm_disk_clear();
-	disks_info=lv_label_create(lst,NULL);
-	lv_label_set_long_mode(disks_info,LV_LABEL_LONG_BREAK);
-	lv_obj_set_size(disks_info,lv_page_get_scrl_width(lst),gui_sh/16);
-	lv_label_set_align(disks_info,LV_LABEL_ALIGN_CENTER);
-	lv_label_set_text(disks_info,text);
+static void guipm_set_disks_info(struct disks_info*di,char*text){
+	if(!di)return;
+	guipm_disk_clear(di,true);
+	di->disks_info=lv_label_create(di->lst,NULL);
+	lv_label_set_long_mode(di->disks_info,LV_LABEL_LONG_BREAK);
+	lv_obj_set_size(di->disks_info,lv_page_get_scrl_width(di->lst),gui_sh/16);
+	lv_label_set_align(di->disks_info,LV_LABEL_ALIGN_CENTER);
+	lv_label_set_text(di->disks_info,text);
 }
 
-static long get_block_size(struct disk_info*k){
+static long get_block_size(struct disks_disk_info*k){
 	char xsize[32]={0};
 	errno=0;
 	int xs=openat(k->sysfs_fd,"size",O_RDONLY);
@@ -103,7 +110,7 @@ static long get_block_size(struct disk_info*k){
 	return k->size=parse_long(xsize,0);
 }
 
-static int get_block_path(struct disk_info*k){
+static int get_block_path(struct disks_disk_info*k){
 	char path[BUFSIZ]={0};
 	snprintf(
 		path,sizeof(path)-1,
@@ -125,7 +132,7 @@ static int get_block_path(struct disk_info*k){
 	return 0;
 }
 
-static int get_fdisk_ctx(struct disk_info*k){
+static int get_fdisk_ctx(struct disks_disk_info*k){
 	errno=0;
 	if(!(k->ctx=fdisk_new_context()))
 		return terlog_error(-1,"failed to initialize fdisk context");
@@ -144,7 +151,7 @@ static int get_fdisk_ctx(struct disk_info*k){
 	return 0;
 }
 
-static int get_block_model(struct disk_info*k){
+static int get_block_model(struct disks_disk_info*k){
 	char model[511]={0},vendor[511]={0};
 	int xm;
 	if((xm=openat(k->sysfs_fd,"device/vendor",O_RDONLY))>=0){
@@ -170,14 +177,14 @@ static int get_block_model(struct disk_info*k){
 	return 0;
 }
 
-static void disks_add_item(int blk,struct disk_info*k){
+static void disks_add_item(int blk,struct disks_disk_info*k){
 	lv_coord_t c1w,c2w,c1l,c2l,bw;
-	bw=lv_page_get_scrl_width(lst);
+	bw=lv_page_get_scrl_width(k->di->lst);
 
 	// disk select button
-	k->btn=lv_btn_create(lst,NULL);
-	lv_obj_set_y(k->btn,(xdpi*5+32)*blk);
-	lv_obj_set_size(k->btn,bw,xdpi*5);
+	k->btn=lv_btn_create(k->di->lst,NULL);
+	lv_obj_set_y(k->btn,(gui_dpi/2+32)*blk);
+	lv_obj_set_size(k->btn,bw,gui_dpi/2);
 	lv_style_set_btn_item(k->btn);
 	lv_obj_set_click(k->btn,false);
 
@@ -190,9 +197,10 @@ static void disks_add_item(int blk,struct disk_info*k){
 
 	// disk name and checkbox
 	k->chk=lv_checkbox_create(line,NULL);
-	lv_obj_align(k->chk,NULL,LV_ALIGN_IN_LEFT_MID,c1l,-xdpi);
+	lv_obj_align(k->chk,NULL,LV_ALIGN_IN_LEFT_MID,c1l,-(gui_dpi/10));
 	lv_obj_set_width(k->chk,c1w);
 	lv_checkbox_set_text(k->chk,k->name);
+	lv_obj_set_user_data(k->chk,k->di);
 	lv_obj_set_event_cb(k->chk,disk_click);
 	lv_style_set_focus_checkbox(k->chk);
 	lv_group_add_obj(gui_grp,k->chk);
@@ -203,7 +211,7 @@ static void disks_add_item(int blk,struct disk_info*k){
 
 	// disk model name
 	lv_obj_t*d_model=lv_label_create(line,NULL);
-	lv_obj_align(d_model,NULL,LV_ALIGN_IN_LEFT_MID,c1l,xdpi);
+	lv_obj_align(d_model,NULL,LV_ALIGN_IN_LEFT_MID,c1l,(gui_dpi/10));
 	lv_label_set_long_mode(d_model,lm);
 	lv_obj_set_width(d_model,c1w);
 	lv_label_set_align(d_model,LV_LABEL_ALIGN_LEFT);
@@ -212,15 +220,17 @@ static void disks_add_item(int blk,struct disk_info*k){
 
 	// disk size
 	lv_obj_t*d_size=lv_label_create(line,NULL);
-	lv_obj_align(d_size,NULL,LV_ALIGN_IN_LEFT_MID,c2l,-xdpi);
+	lv_obj_align(d_size,NULL,LV_ALIGN_IN_LEFT_MID,c2l,-(gui_dpi/10));
 	lv_label_set_long_mode(d_size,lm);
 	lv_obj_set_width(d_size,c2w);
 	lv_label_set_align(d_size,LV_LABEL_ALIGN_RIGHT);
-	lv_label_set_text(d_size,make_readable_str(k->size,512,0));
+	const char*ss=make_readable_str(k->size,512,0);
+	lv_label_set_text(d_size,ss);
+	free((char*)ss);
 
 	// disk layout type
 	lv_obj_t*d_layout=lv_label_create(line,NULL);
-	lv_obj_align(d_layout,NULL,LV_ALIGN_IN_LEFT_MID,c2l,xdpi);
+	lv_obj_align(d_layout,NULL,LV_ALIGN_IN_LEFT_MID,c2l,(gui_dpi/10));
 	lv_label_set_long_mode(d_layout,lm);
 	lv_obj_set_width(d_layout,c2w);
 	lv_label_set_align(d_layout,LV_LABEL_ALIGN_RIGHT);
@@ -228,8 +238,8 @@ static void disks_add_item(int blk,struct disk_info*k){
 	if(!k->lbl)lv_obj_set_gray240_text_color(d_layout,LV_LABEL_PART_MAIN);
 }
 
-void guipm_disk_reload(){
-	guipm_disk_clear();
+extern void guipm_disk_reload(struct disks_info*di){
+	guipm_disk_clear(di,true);
 	int i;
 	DIR*d;
 	if(
@@ -238,15 +248,15 @@ void guipm_disk_reload(){
 	){
 		telog_error("open "_PATH_SYS_BLOCK);
 		if(i>=0)close(i);
-		guipm_set_disks_info(_("Initialize disks scanner failed"));
+		guipm_set_disks_info(di,_("Initialize disks scanner failed"));
 		return;
 	}
 	int blk=0;
 	struct dirent*e;
 	while((e=readdir(d))){
-		struct disk_info*k=&disks[blk];
+		struct disks_disk_info*k=&di->disks[blk];
 		if(e->d_type!=DT_LNK)continue;
-		memset(k,0,sizeof(struct disk_info));
+		memset(k,0,sizeof(struct disks_disk_info));
 		strcpy(k->name,e->d_name);
 		errno=0;
 		if((k->sysfs_fd=openat(i,k->name,O_DIR))<0){
@@ -256,7 +266,7 @@ void guipm_disk_reload(){
 		if(
 			get_block_size(k)<0||
 			get_block_path(k)<0||
-			(!is_show_all&&(
+			(!di->is_show_all&&(
 			     strncmp(k->name,"dm",2)==0||
 			     strncmp(k->name,"fd",2)==0||
 			     strncmp(k->name,"nbd",3)==0||
@@ -271,7 +281,7 @@ void guipm_disk_reload(){
 			close(k->sysfs_fd);
 			continue;
 		}
-		k->enable=true;
+		k->enable=true,k->di=di;
 
 		get_fdisk_ctx(k);
 		get_block_model(k);
@@ -290,71 +300,92 @@ void guipm_disk_reload(){
 }
 
 static void refresh_click(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_CLICKED||obj!=btn_refresh)return;
+	if(e!=LV_EVENT_CLICKED)return;
+	struct disks_info*di=lv_obj_get_user_data(obj);
+	if(!di||obj!=di->btn_refresh)return;
 	tlog_debug("request refresh");
-	guipm_disk_reload();
+	guipm_disk_reload(di);
 }
 
 static void ok_click(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_CLICKED||obj!=btn_ok||!selected)return;
+	if(e!=LV_EVENT_CLICKED)return;
+	struct disks_info*di=lv_obj_get_user_data(obj);
+	if(!di||obj!=di->btn_ok||!di->selected)return;
 	tlog_debug("ok clicked");
-	guiact_start_activity_by_name("guipm-partitions",selected->name);
+	guiact_start_activity_by_name("guipm-partitions",di->selected->name);
 }
 
 static void cancel_click(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_CLICKED||obj!=btn_cancel)return;
+	if(e!=LV_EVENT_CLICKED)return;
+	struct disks_info*di=lv_obj_get_user_data(obj);
+	if(!di||obj!=di->btn_cancel)return;
 	tlog_debug("cancel clicked");
 	guiact_do_back();
 }
 
 static void show_all_click(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_VALUE_CHANGED||obj!=show_all)return;
-	is_show_all=lv_checkbox_is_checked(obj);
-	tlog_debug("request show all %s",BOOL2STR(is_show_all));
-	guipm_disk_reload();
+	if(e!=LV_EVENT_VALUE_CHANGED)return;
+	struct disks_info*di=lv_obj_get_user_data(obj);
+	if(!di||obj!=di->show_all)return;
+	di->is_show_all=lv_checkbox_is_checked(obj);
+	tlog_debug("request show all %s",BOOL2STR(di->is_show_all));
+	guipm_disk_reload(di);
 }
 
-static int do_cleanup(struct gui_activity*d __attribute__((unused))){
-	guipm_disk_clear();
-	is_show_all=false;
+static int do_cleanup(struct gui_activity*d){
+	struct disks_info*di=d->data;
+	if(!di)return 0;
+	guipm_disk_clear(di,false);
+	di->is_show_all=false;
+	free(di);
+	d->data=NULL;
 	return 0;
 }
 
-static void do_reload(lv_task_t*t __attribute__((unused))){
-	guipm_disk_reload();
-	lv_group_add_obj(gui_grp,show_all);
-	lv_group_add_obj(gui_grp,btn_ok);
-	lv_group_add_obj(gui_grp,btn_refresh);
-	lv_group_add_obj(gui_grp,btn_cancel);
+static void do_reload(lv_task_t*t){
+	struct disks_info*di=t->user_data;
+	if(!di)return;
+	guipm_disk_reload(di);
+	lv_group_add_obj(gui_grp,di->show_all);
+	lv_group_add_obj(gui_grp,di->btn_ok);
+	lv_group_add_obj(gui_grp,di->btn_refresh);
+	lv_group_add_obj(gui_grp,di->btn_cancel);
 }
 
-static int guipm_disk_get_focus(struct gui_activity*d __attribute__((unused))){
-	lv_task_once(lv_task_create(do_reload,100,LV_TASK_PRIO_MID,NULL));
+static int guipm_disk_get_focus(struct gui_activity*d){
+	lv_task_once(lv_task_create(do_reload,100,LV_TASK_PRIO_MID,d->data));
 	return 0;
 }
 
-static int guipm_disk_lost_focus(struct gui_activity*d __attribute__((unused))){
+static int guipm_disk_lost_focus(struct gui_activity*d){
+	struct disks_info*di=d->data;
+	if(!di)return 0;
 	for(int i=0;i<32;i++){
-		if(!disks[i].enable)continue;
-		lv_group_remove_obj(disks[i].chk);
+		if(!di->disks[i].enable)continue;
+		lv_group_remove_obj(di->disks[i].chk);
 	}
-	lv_group_remove_obj(show_all);
-	lv_group_remove_obj(btn_ok);
-	lv_group_remove_obj(btn_refresh);
-	lv_group_remove_obj(btn_cancel);
+	lv_group_remove_obj(di->show_all);
+	lv_group_remove_obj(di->btn_ok);
+	lv_group_remove_obj(di->btn_refresh);
+	lv_group_remove_obj(di->btn_cancel);
 	return 0;
 }
 
 static int guipm_draw_disk_sel(struct gui_activity*act){
 
-	xdpi=gui_dpi/10;
-	int mar=(xdpi/2),btw=gui_sw/3-(xdpi*2),bth=gui_font_size+xdpi,btt=gui_sh-bth-xdpi;
-	selscr=act->page;
+	lv_coord_t mar=(gui_dpi/20);
+	lv_coord_t btw=gui_sw/3-gui_dpi/5;
+	lv_coord_t bth=gui_font_size+gui_dpi/10;
+	lv_coord_t btt=gui_sh-bth-gui_dpi/10;
+	struct disks_info*di=malloc(sizeof(struct disks_info));
+	if(!di)return -ENOMEM;
+	memset(di,0,sizeof(struct disks_info));
+	act->data=di;
 
-	guipm_draw_title(selscr);
+	guipm_draw_title(act->page);
 
 	// function title
-	lv_obj_t*title=lv_label_create(selscr,NULL);
+	lv_obj_t*title=lv_label_create(act->page,NULL);
 	lv_label_set_long_mode(title,LV_LABEL_LONG_BREAK);
 	lv_obj_set_y(title,gui_sh/16);
 	lv_obj_set_size(title,gui_sw,gui_sh/16);
@@ -367,42 +398,46 @@ static int guipm_draw_disk_sel(struct gui_activity*act){
 	lv_style_set_border_width(&lst_style,LV_STATE_DEFAULT,0);
 	lv_style_set_border_width(&lst_style,LV_STATE_FOCUSED,0);
 	lv_style_set_border_width(&lst_style,LV_STATE_PRESSED,0);
-	lst=lv_page_create(selscr,NULL);
-	lv_obj_add_style(lst,LV_PAGE_PART_BG,&lst_style);
-	lv_obj_set_size(lst,gui_sw-xdpi,gui_sh-(gui_sh/16*2)-(bth*2)-(xdpi*3));
-	lv_obj_set_pos(lst,mar,gui_sh/16*2);
+	di->lst=lv_page_create(act->page,NULL);
+	lv_obj_add_style(di->lst,LV_PAGE_PART_BG,&lst_style);
+	lv_obj_set_size(di->lst,gui_sw-gui_dpi/10,gui_sh-(gui_sh/16*2)-(bth*2)-(gui_dpi/10*3));
+	lv_obj_set_pos(di->lst,mar,gui_sh/16*2);
 
 	// show all checkbox
-	show_all=lv_checkbox_create(selscr,NULL);
-	lv_obj_set_pos(show_all,xdpi,gui_sh-(bth*2)-(xdpi*2));
-	lv_obj_set_size(show_all,gui_sw/3-(xdpi*2),bth);
-	lv_obj_set_event_cb(show_all,show_all_click);
-	lv_style_set_focus_checkbox(show_all);
-	lv_checkbox_set_text(show_all,_("Show all blocks"));
+	di->show_all=lv_checkbox_create(act->page,NULL);
+	lv_obj_set_pos(di->show_all,gui_dpi/10,gui_sh-(bth*2)-(gui_dpi/5));
+	lv_obj_set_size(di->show_all,gui_sw/3-(gui_dpi/5),bth);
+	lv_obj_set_user_data(di->show_all,di);
+	lv_obj_set_event_cb(di->show_all,show_all_click);
+	lv_style_set_focus_checkbox(di->show_all);
+	lv_checkbox_set_text(di->show_all,_("Show all blocks"));
 
 	// ok button
-	btn_ok=lv_btn_create(selscr,NULL);
-	lv_obj_set_pos(btn_ok,xdpi,btt);
-	lv_obj_set_size(btn_ok,btw,bth);
-	lv_style_set_action_button(btn_ok,false);
-	lv_obj_set_event_cb(btn_ok,ok_click);
-	lv_label_set_text(lv_label_create(btn_ok,NULL),_("OK"));
+	di->btn_ok=lv_btn_create(act->page,NULL);
+	lv_obj_set_pos(di->btn_ok,gui_dpi/10,btt);
+	lv_obj_set_size(di->btn_ok,btw,bth);
+	lv_style_set_action_button(di->btn_ok,false);
+	lv_obj_set_user_data(di->btn_ok,di);
+	lv_obj_set_event_cb(di->btn_ok,ok_click);
+	lv_label_set_text(lv_label_create(di->btn_ok,NULL),_("OK"));
 
 	// refresh button
-	btn_refresh=lv_btn_create(selscr,NULL);
-	lv_obj_set_pos(btn_refresh,gui_sw/3+xdpi,btt);
-	lv_obj_set_size(btn_refresh,btw,bth);
-	lv_style_set_action_button(btn_refresh,true);
-	lv_obj_set_event_cb(btn_refresh,refresh_click);
-	lv_label_set_text(lv_label_create(btn_refresh,NULL),_("Refresh"));
+	di->btn_refresh=lv_btn_create(act->page,NULL);
+	lv_obj_set_pos(di->btn_refresh,gui_sw/3+(gui_dpi/10),btt);
+	lv_obj_set_size(di->btn_refresh,btw,bth);
+	lv_style_set_action_button(di->btn_refresh,true);
+	lv_obj_set_user_data(di->btn_refresh,di);
+	lv_obj_set_event_cb(di->btn_refresh,refresh_click);
+	lv_label_set_text(lv_label_create(di->btn_refresh,NULL),_("Refresh"));
 
 	// cancel button
-	btn_cancel=lv_btn_create(selscr,NULL);
-	lv_obj_set_pos(btn_cancel,gui_sw/3*2+xdpi,btt);
-	lv_obj_set_size(btn_cancel,btw,bth);
-	lv_style_set_action_button(btn_cancel,true);
-	lv_obj_set_event_cb(btn_cancel,cancel_click);
-	lv_label_set_text(lv_label_create(btn_cancel,NULL),_("Cancel"));
+	di->btn_cancel=lv_btn_create(act->page,NULL);
+	lv_obj_set_pos(di->btn_cancel,gui_sw/3*2+(gui_dpi/10),btt);
+	lv_obj_set_size(di->btn_cancel,btw,bth);
+	lv_style_set_action_button(di->btn_cancel,true);
+	lv_obj_set_user_data(di->btn_cancel,di);
+	lv_obj_set_event_cb(di->btn_cancel,cancel_click);
+	lv_label_set_text(lv_label_create(di->btn_cancel,NULL),_("Cancel"));
 	return 0;
 }
 

@@ -122,12 +122,12 @@ int guiact_do_back(){
 
 int guiact_do_home(){
 	sysbar_keyboard_close();
-	list*acts=guiact_get_activities(),*d;
-	if(!acts||list_is_alone(acts))return 0;
-	LIST_DATA_DECLARE(c,list_last(acts),struct gui_activity*);
+	list*d;
+	if(guiact_is_alone())return 0;
+	LIST_DATA_DECLARE(c,guiact_get_last_list(),struct gui_activity*);
 	if(c->reg->quiet_exit)c->reg->quiet_exit(c);
 	guiact_remove_last(false);
-	while((d=list_last(acts))&&d->prev){
+	while((d=guiact_get_last_list())&&d->prev){
 		LIST_DATA_DECLARE(z,d,struct gui_activity*);
 		if(z->reg->quiet_exit)z->reg->quiet_exit(c);
 		guiact_remove_last(false);

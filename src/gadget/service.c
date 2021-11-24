@@ -40,6 +40,7 @@ static void init_gadget_conf(){
 	confd_set_string_array(base,0,"func","rndis");
 	confd_set_string_array(base,0,"mode","generic");
 
+	confd_set_boolean_array(base,1,"console",true);
 	confd_set_string_array(base,1,"name","ttyGS0");
 	confd_set_string_array(base,1,"func","acm");
 	confd_set_string_array(base,1,"mode","console");
@@ -56,12 +57,14 @@ static int gadget_init_console(char*item,gadget*g,gadget_func*f){
 	char buf[256]={0},tty[512]={0};
 	if(gadget_add_function(g,f)<0)
 		return trlog_warn(-1,"add gadget console func %s failed",item);
+	if(!confd_get_boolean_dict(base,item,"console",false))return 0;
 	if(fd_read_file(
 		g->dir_fd,buf,sizeof(buf),false,
 		"functions/%s.%s/port_num",
 		f->function,f->name
 	)<0)return trlog_warn(-1,"read console func %s port number failed",item);
 	snprintf(tty,511,"ttyGS%s",buf);
+	confd_set_string_dict(base,item,"tty",tty);
 	if(confd_get_type_base("runtime.ttyd.tty",tty)==TYPE_KEY)return 0;
 	if(confd_get_type_base("ttyd.tty",tty)==TYPE_KEY)return 0;
 	tlog_debug("add console %s to ttyd",tty);

@@ -42,11 +42,11 @@ static void partition_clear(struct part_disk_info*di,bool ui){
 		free(p);
 		di->partitions[i]=NULL;
 	}
-	fdisk_reassign_device(di->ctx);
+	di->label=fdisk_get_label(di->ctx,NULL);
+	if(!fdisk_label_is_changed(di->label))fdisk_reassign_device(di->ctx);
 }
 
 static void fill_disk_info(struct part_disk_info*di){
-	di->label=fdisk_get_label(di->ctx,NULL);
 	di->secs=fdisk_get_nsectors(di->ctx);
 	di->lsec_size=fdisk_get_sector_size(di->ctx);
 	di->psec_size=fdisk_get_physector_size(di->ctx);

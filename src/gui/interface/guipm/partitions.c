@@ -315,6 +315,22 @@ static void reload_click(lv_obj_t*obj,lv_event_t e){
 	reload_partitions(di);
 }
 
+static void save_click(lv_obj_t*obj,lv_event_t e){
+	if(e!=LV_EVENT_CLICKED)return;
+	struct part_disk_info*di=lv_obj_get_user_data(obj);
+	if(obj!=di->btn_save)return;
+	tlog_debug("request save");
+	if((errno=fdisk_write_disklabel(di->ctx))!=0){
+		if(errno<0)errno=-(errno);
+		telog_error("fdisk save disk label failed");
+		msgbox_alert("Save disk label failed: %m");
+		return;
+	}
+	tlog_debug("disk label saved");
+	fdisk_label_set_changed(di->label,false);
+	lv_obj_set_enabled(obj,fdisk_label_is_changed(di->label));
+}
+
 static void disk_click(lv_obj_t*obj,lv_event_t e){
 	if(e!=LV_EVENT_CLICKED)return;
 	struct part_disk_info*di=lv_obj_get_user_data(obj);
@@ -332,7 +348,9 @@ static void do_reload(lv_task_t*t){
 	lv_group_add_obj(gui_grp,di->btn_disk);
 	lv_group_add_obj(gui_grp,di->btn_part);
 	lv_group_add_obj(gui_grp,di->btn_reload);
+	lv_group_add_obj(gui_grp,di->btn_save);
 	lv_group_add_obj(gui_grp,di->btn_new);
+	lv_obj_set_enabled(di->btn_save,fdisk_label_is_changed(di->label));
 }
 
 static int guipm_part_get_focus(struct gui_activity*d){
@@ -350,6 +368,7 @@ static int guipm_part_lost_focus(struct gui_activity*d){
 	lv_group_remove_obj(di->btn_new);
 	lv_group_remove_obj(di->btn_disk);
 	lv_group_remove_obj(di->btn_part);
+	lv_group_remove_obj(di->btn_save);
 	lv_group_remove_obj(di->btn_reload);
 	return 0;
 }
@@ -393,7 +412,9 @@ static int guipm_draw_partitions(struct gui_activity*act){
 		free(di);
 		return -1;
 	}else{
-		int btw=gui_sw/2-(gui_dpi/5),bth=gui_font_size+(gui_dpi/10);
+		lv_coord_t btw1=gui_sw/2-(gui_dpi/5);
+		lv_coord_t btw2=gui_sw/3-(gui_dpi/8);
+		lv_coord_t bth=gui_font_size+(gui_dpi/10);
 
 		guipm_draw_title(act->page);
 
@@ -419,7 +440,7 @@ static int guipm_draw_partitions(struct gui_activity*act){
 
 		// disk operate button
 		di->btn_disk=lv_btn_create(act->page,NULL);
-		lv_obj_set_size(di->btn_disk,btw,bth);
+		lv_obj_set_size(di->btn_disk,btw1,bth);
 		lv_style_set_action_button(di->btn_disk,true);
 		lv_obj_set_user_data(di->btn_disk,di);
 		lv_obj_set_event_cb(di->btn_disk,disk_click);
@@ -429,7 +450,7 @@ static int guipm_draw_partitions(struct gui_activity*act){
 
 		// partition operate button
 		di->btn_part=lv_btn_create(act->page,NULL);
-		lv_obj_set_size(di->btn_part,btw,bth);
+		lv_obj_set_size(di->btn_part,btw1,bth);
 		lv_obj_set_user_data(di->btn_part,di);
 		lv_style_set_action_button(di->btn_part,false);
 		lv_label_set_text(lv_label_create(di->btn_part,NULL),_("Partition..."));
@@ -438,18 +459,28 @@ static int guipm_draw_partitions(struct gui_activity*act){
 
 		// reload button
 		di->btn_reload=lv_btn_create(act->page,NULL);
-		lv_obj_align(di->btn_reload,di->btn_disk,LV_ALIGN_OUT_BOTTOM_LEFT,0,gui_font_size);
-		lv_obj_set_size(di->btn_reload,btw,bth);
+		lv_obj_set_size(di->btn_reload,btw2,bth);
+		lv_obj_align(di->btn_reload,di->page,LV_ALIGN_OUT_BOTTOM_LEFT,gui_font_size/2,gui_font_size*2+bth);
 		lv_obj_set_user_data(di->btn_reload,di);
 		lv_style_set_action_button(di->btn_reload,true);
 		lv_obj_set_event_cb(di->btn_reload,reload_click);
 		lv_label_set_text(lv_label_create(di->btn_reload,NULL),_("Reload"));
 		lv_group_add_obj(gui_grp,di->btn_reload);
 
+		// save button
+		di->btn_save=lv_btn_create(act->page,NULL);
+		lv_obj_set_size(di->btn_save,btw2,bth);
+		lv_obj_align(di->btn_save,di->page,LV_ALIGN_OUT_BOTTOM_MID,0,gui_font_size*2+bth);
+		lv_obj_set_user_data(di->btn_save,di);
+		lv_style_set_action_button(di->btn_save,true);
+		lv_obj_set_event_cb(di->btn_save,save_click);
+		lv_label_set_text(lv_label_create(di->btn_save,NULL),_("Save"));
+		lv_group_add_obj(gui_grp,di->btn_save);
+
 		// new partition button
 		di->btn_new=lv_btn_create(act->page,NULL);
-		lv_obj_align(di->btn_new,di->btn_part,LV_ALIGN_OUT_BOTTOM_LEFT,0,gui_font_size);
-		lv_obj_set_size(di->btn_new,btw,bth);
+		lv_obj_set_size(di->btn_new,btw2,bth);
+		lv_obj_align(di->btn_new,di->page,LV_ALIGN_OUT_BOTTOM_RIGHT,-gui_font_size/2,gui_font_size*2+bth);
 		lv_obj_set_user_data(di->btn_new,di);
 		lv_style_set_action_button(di->btn_new,false);
 		lv_label_set_text(lv_label_create(di->btn_new,NULL),_("New"));

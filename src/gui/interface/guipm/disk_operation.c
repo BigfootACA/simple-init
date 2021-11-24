@@ -28,10 +28,8 @@ static bool mk_label_cb(uint16_t id,const char*btn __attribute__((unused)),void*
 		default:msgbox_alert("Unknown disk label");break;
 	}
 	tlog_debug("make new disk label %s on %s",type,fdisk_get_devname(ctx));
-	if(
-		fdisk_create_disklabel(ctx,type)!=0||
-		fdisk_write_disklabel(ctx)!=0
-	){
+	if((errno=fdisk_create_disklabel(ctx,type))!=0){
+		if(errno<0)errno=-(errno);
 		telog_warn("create disk label failed");
 		msgbox_alert("Create disk label failed: %m");
 	}
@@ -65,7 +63,7 @@ static bool disk_menu_cb(uint16_t id,const char*btn __attribute__((unused)),void
 				"All partitions of the disk will be DELETED and ALL DATA "
 				"IN THE DISK WILL BE LOST. Are you sure you want to continue?"
 			),user_data);
-			break;
+		break;
 	}
 	return false;
 	readonly:msgbox_alert("Disk is read-only mode");

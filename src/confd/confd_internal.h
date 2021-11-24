@@ -149,6 +149,9 @@ extern const char*conf_get_type_string(const char*pat,uid_t u,gid_t gh);
 // src/confd/store.c: list config item keys
 extern const char**conf_ls(const char*path,uid_t u,gid_t g);
 
+// src/confd/store.c: get config item keys count
+extern int conf_count(const char*path,uid_t u,gid_t g);
+
 // src/confd/store.c: delete config item and all children
 extern int conf_del(const char*path,uid_t u,gid_t g);
 

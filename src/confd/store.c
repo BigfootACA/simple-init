@@ -184,6 +184,18 @@ const char**conf_ls(const char*path,uid_t u,gid_t g){
 	return r;
 }
 
+int conf_count(const char*path,uid_t u,gid_t g){
+	struct conf*c=conf_lookup(path,false,0,u,g);
+	if(!c)return -1;
+	if(c->type!=TYPE_KEY)ERET(ENOTDIR);
+	LOCK(store_lock);
+	int i=list_count(c->keys);
+	if(i<0)i=0;
+	log_debug("conf","%s %d",path,i);
+	UNLOCK(store_lock);
+	return i;
+}
+
 static int conf_del_obj(struct conf*c){
 	if(!c)return -1;
 	if(!c->parent)ERET(EINVAL);

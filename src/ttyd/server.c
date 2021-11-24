@@ -30,6 +30,7 @@ static bool protect=false;
 static void signal_handler(int s,siginfo_t*info,void*c __attribute__((unused))){
 	if(info->si_pid<=1&&protect)return;
 	tlog_info("ttyd exiting with signal %d",s);
+	unlink(DEFAULT_TTYD);
 	exit(0);
 }
 

@@ -1585,3 +1585,85 @@ msgstr "将数据写到指定文件描述符"
 
 msgid "Echo string"
 msgstr "打印字符串"
+
+msgid "Unknown disk label"
+msgstr "未知的分区表"
+
+msgid "Create disk label failed: %m"
+msgstr "创建分区表失败: %m"
+
+msgid ""
+"You will recreate the partition table of the disk. "
+"All partitions of the disk will be DELETED and ALL DATA "
+"IN THE DISK WILL BE LOST. Are you sure you want to continue?"
+msgstr ""
+"你正在重新创建该磁盘的分区表，"
+"该磁盘的所有的分区会被删除，"
+"磁盘中的数据将会丢失，"
+"你确定要继续吗？"
+
+msgid "Disk is read-only mode"
+msgstr "磁盘是只读模式"
+
+msgid "Create new disk label"
+msgstr "创建新分区表"
+
+msgid "Erase the disk"
+msgstr "抹掉此磁盘"
+
+msgid "Save disk image"
+msgstr "保存磁盘镜像"
+
+msgid "Restore disk image"
+msgstr "恢复磁盘镜像"
+
+msgid "USB Gadget Mass Storage"
+msgstr "USB大容量存储工具"
+
+msgid "Select disk label"
+msgstr "选择分区表"
+
+msgid "Select operation"
+msgstr "选择操作"
+
+msgid "Invalid partition type"
+msgstr "无效分区类型"
+
+msgid "Allocate partition failed"
+msgstr "分配分区失败"
+
+msgid "Set partition start failed: %m"
+msgstr "设置分区起始位置失败: %m"
+
+msgid "Set partition size failed: %m"
+msgstr "设置分区大小失败: %m"
+
+msgid "Lookup partition type failed"
+msgstr "查找分区类型失败"
+
+msgid "Set partition type failed: %m"
+msgstr "设置分区类型失败: %m"
+
+msgid "Set partition number failed: %m"
+msgstr "设置分区序号失败: %m"
+
+msgid "Add partition failed: %m"
+msgstr "添加分区失败: %m"
+
+msgid "New Partition"
+msgstr "新建分区"
+
+msgid "Start:"
+msgstr "起始:"
+
+msgid "End:"
+msgstr "结束:"
+
+msgid "Size:"
+msgstr "大小:"
+
+msgid "Partition Type:"
+msgstr "分区类型:"
+
+msgid "Partition Number:"
+msgstr "分区序号:"

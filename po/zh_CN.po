@@ -1360,10 +1360,10 @@ msgid "New file"
 msgstr "新建文件"
 
 msgid "Save"
-msgstr "保存文件"
+msgstr "保存"
 
 msgid "Save as"
-msgstr "另存为文件"
+msgstr "另存为"
 
 msgid "Search"
 msgstr "搜索"

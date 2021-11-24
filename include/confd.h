@@ -86,6 +86,7 @@ DECLARE_FUNC(confd_set_save,    int,     ,bool    save);
 DECLARE_FUNC(confd_get_save,    bool);
 DECLARE_FUNC(confd_delete,      int);
 DECLARE_FUNC(confd_add_key,     int);
+DECLARE_FUNC(confd_count,       int64_t);
 DECLARE_FUNC(confd_ls,          char**);
 DECLARE_FUNC(confd_get_type,    enum conf_type);
 

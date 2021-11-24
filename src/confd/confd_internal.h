@@ -27,6 +27,7 @@ enum confd_action{
 	CONF_LIST         =0xAC05,
 	CONF_GET_TYPE     =0xAC06,
 	CONF_ADD_KEY      =0xAC07,
+	CONF_COUNT        =0xAC08,
 	CONF_GET_STRING   =0xAC21,
 	CONF_GET_INTEGER  =0xAC22,
 	CONF_GET_BOOLEAN  =0xAC23,

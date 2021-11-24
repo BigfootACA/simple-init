@@ -286,6 +286,12 @@ static int confd_read(int fd){
 			retdata=-conf_set_boolean(msg.path,msg.data.boolean,cred.uid,cred.gid);
 		break;
 
+		// get config item keys count
+		case CONF_COUNT:
+			ret.data.integer=conf_count(msg.path,cred.uid,cred.gid);
+			if(ret.data.integer<0)retdata=-ret.data.integer,ret.data.integer=0;
+		break;
+
 		// set default config path
 		case CONF_SET_DEFAULT:
 			if(cred.uid!=0||cred.gid!=0){

@@ -9,6 +9,7 @@
 #define _GNU_SOURCE
 #include<string.h>
 #include<stdlib.h>
+#include"init_internal.h"
 #include"service.h"
 #include"version.h"
 #include"system.h"
@@ -176,9 +177,27 @@ static int gadget_startup(struct service*svc __attribute__((unused))){
 }
 
 static int gadget_shutdown(struct service*svc __attribute__((unused))){
+	open_socket_initfd(DEFAULT_INITD,false);
 	open_default_confd_socket(false,TAG);
 	pid_t p=(pid_t)confd_get_integer("runtime.pid.adbd",0);
 	if(p>0)kill(p,SIGTERM);
+	bool changed=false;
+	char**items,*item;
+	if((items=confd_ls(base)))for(int i=0;(item=items[i]);i++){
+		if(!confd_get_boolean_dict(base,item,"console",false))continue;
+		char*tty=confd_get_string_dict(base,item,"tty",NULL);
+		if(!tty)continue;
+		confd_delete_base("runtime.ttyd.tty",tty);
+		pid_t xp=(pid_t)confd_get_integer_base("runtime.ttyd.client",tty,0);
+		if(xp>0)kill(xp,SIGTERM);
+		changed=true;
+	}
+	if(changed){
+		struct init_msg msg,response;
+		init_initialize_msg(&msg,ACTION_SVC_RESTART);
+		strcpy(msg.data.data,"ttyd");
+		init_send(&msg,&response);
+	}
 	char*gadget=confd_get_string("gadget.name",NULL);
 	if(gadget)gadget_unregister(gadget);
 	return 0;

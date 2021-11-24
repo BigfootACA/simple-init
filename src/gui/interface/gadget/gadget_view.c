@@ -181,20 +181,22 @@ static bool delete_cb(uint16_t id,const char*text __attribute__((unused)),void*u
 	return false;
 }
 
-static bool restart_cb(uint16_t id,const char*text __attribute__((unused)),void*user_data __attribute__((unused))){
-	if(id==0){
-		tlog_info("try restart gadget service");
-		struct init_msg msg,response;
-		init_initialize_msg(&msg,ACTION_SVC_RESTART);
-		strcpy(msg.data.data,"usb-gadget");
-		errno=0;
-		init_send(&msg,&response);
-		if(errno!=0||response.data.status.ret!=0){
-			if(errno==0)errno=response.data.status.ret;
-			telog_warn("restart service failed");
-			msgbox_alert("Restart gadget service failed: %m");
-		}
+void gadget_restart_service(){
+	tlog_info("try restart gadget service");
+	struct init_msg msg,response;
+	init_initialize_msg(&msg,ACTION_SVC_RESTART);
+	strcpy(msg.data.data,"usb-gadget");
+	errno=0;
+	init_send(&msg,&response);
+	if(errno!=0||response.data.status.ret!=0){
+		if(errno==0)errno=response.data.status.ret;
+		telog_warn("restart service failed");
+		msgbox_alert("Restart gadget service failed: %m");
 	}
+}
+
+static bool restart_cb(uint16_t id,const char*text __attribute__((unused)),void*user_data __attribute__((unused))){
+	if(id==0)gadget_restart_service();
 	return false;
 }
 

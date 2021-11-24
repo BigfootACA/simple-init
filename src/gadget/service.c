@@ -89,6 +89,29 @@ static int gadget_init_adbd(char*item,gadget*g,gadget_func*f){
 	return 0;
 }
 
+static int gadget_init_mass(char*item,gadget*g,gadget_func*f){
+	struct stat st;
+	bool removable=confd_get_boolean_dict(base,item,"removable",true);
+	bool cdrom=confd_get_boolean_dict(base,item,"cdrom",false);
+	bool ro=confd_get_boolean_dict(base,item,"ro",false);
+	char*path=confd_get_string_dict(base,item,"path",NULL);
+	if(!path)return trlog_warn(-1,"no path specified for mass storage");
+	if(path[0]!='/')return trlog_warn(-1,"block path is not absolute");
+	if(stat(path,&st)!=0)return terlog_warn(-1,"stat path failed");
+	if(!S_ISBLK(st.st_mode)&&!(S_ISREG(st.st_mode)&&st.st_size!=0))
+		return trlog_warn(-1,"block is invalid");
+	f->values=(keyval*[]){
+		&KV("lun.0/removable",removable?"1":"0"),
+		&KV("lun.0/cdrom",cdrom?"1":"0"),
+		&KV("lun.0/ro",ro?"1":"0"),
+		&KV("lun.0/file",path),
+		NULL
+	};
+	if(gadget_add_function(g,f)<0)
+		tlog_warn("add gadget mass storage func %s failed",item);
+	return 0;
+}
+
 static int gadget_startup(struct service*svc __attribute__((unused))){
 	#define XERR(msg...) {tlog_error(msg);goto fail;}
 	struct gadget_string gs={
@@ -127,6 +150,7 @@ static int gadget_startup(struct service*svc __attribute__((unused))){
 		else if(strcmp(mode,"generic")==0)gadget_init_generic(item,&g,&f);
 		else if(strcmp(mode,"console")==0)gadget_init_console(item,&g,&f);
 		else if(strcmp(mode,"adbd")==0)gadget_init_adbd(item,&g,&f);
+		else if(strcmp(mode,"mass")==0)gadget_init_mass(item,&g,&f);
 		else tlog_warn("unknown gadget mode %s, skip func %s",mode,item);
 		if(f.name)free(f.name);
 		if(f.function)free(f.function);

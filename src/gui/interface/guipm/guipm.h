@@ -23,6 +23,7 @@ struct part_disk_info;
 struct part_partition_info;
 
 extern struct gui_register guireg_guipm_disk_select;
+extern struct gui_register guireg_guipm_new_partition;
 extern struct gui_register guireg_guipm_partitions;
 
 extern void guipm_draw_title(lv_obj_t*screen);
@@ -56,7 +57,7 @@ struct part_disk_info{
 	fdisk_sector_t secs,lsec_size,psec_size;
 	unsigned long size;
 	char size_str[80],type[128],*target,*path;
-	lv_obj_t*page,*disk_info,*btn_disk,*btn_part,*btn_reload,*btn_new;
+	lv_obj_t*page,*disk_info,*btn_disk,*btn_part,*btn_save,*btn_reload,*btn_new;
 	struct part_partition_info*partitions[1024],*selected;
 };
 
@@ -73,6 +74,30 @@ struct part_partition_info{
 	char type_str[128];
 	lv_obj_t*btn,*chk;
 	struct part_disk_info*di;
+};
+
+struct part_new_size_block{
+	struct part_new_info*par;
+	lv_obj_t*unit;
+	lv_obj_t*txt;
+	lv_obj_t*txt_sec;
+	fdisk_sector_t sec;
+	fdisk_sector_t min_sec;
+	fdisk_sector_t max_sec;
+	bool txt_changed;
+	bool unit_lock;
+	bool txt_sec_changed;
+	char buf_txt[64];
+	char buf_txt_sec[128];
+};
+
+struct part_new_info{
+	struct fdisk_context*ctx;
+	struct part_partition_info*part;
+	lv_obj_t*box,*ok,*cancel,*part_type,*part_num;
+	struct part_new_size_block start;
+	struct part_new_size_block end;
+	struct part_new_size_block size;
 };
 
 #endif

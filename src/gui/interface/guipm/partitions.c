@@ -331,6 +331,14 @@ static void save_click(lv_obj_t*obj,lv_event_t e){
 	lv_obj_set_enabled(obj,fdisk_label_is_changed(di->label));
 }
 
+static void new_click(lv_obj_t*obj,lv_event_t e){
+	if(e!=LV_EVENT_CLICKED)return;
+	struct part_disk_info*di=lv_obj_get_user_data(obj);
+	if(obj!=di->btn_new||!di->selected||!di->selected->free)return;
+	tlog_debug("request new");
+	guiact_start_activity(&guireg_guipm_new_partition,di->selected);
+}
+
 static void disk_click(lv_obj_t*obj,lv_event_t e){
 	if(e!=LV_EVENT_CLICKED)return;
 	struct part_disk_info*di=lv_obj_get_user_data(obj);
@@ -483,6 +491,7 @@ static int guipm_draw_partitions(struct gui_activity*act){
 		lv_obj_align(di->btn_new,di->page,LV_ALIGN_OUT_BOTTOM_RIGHT,-gui_font_size/2,gui_font_size*2+bth);
 		lv_obj_set_user_data(di->btn_new,di);
 		lv_style_set_action_button(di->btn_new,false);
+		lv_obj_set_event_cb(di->btn_new,new_click);
 		lv_label_set_text(lv_label_create(di->btn_new,NULL),_("New"));
 		lv_group_add_obj(gui_grp,di->btn_new);
 	}

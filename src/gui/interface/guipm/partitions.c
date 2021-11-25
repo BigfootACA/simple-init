@@ -347,6 +347,14 @@ static void disk_click(lv_obj_t*obj,lv_event_t e){
 	guipm_disk_operation_menu(di->ctx);
 }
 
+static void part_click(lv_obj_t*obj,lv_event_t e){
+	if(e!=LV_EVENT_CLICKED)return;
+	struct part_disk_info*di=lv_obj_get_user_data(obj);
+	if(obj!=di->btn_part||!di->selected||di->selected->free)return;
+	tlog_debug("request partition submenu");
+	guipm_part_operation_menu(di->selected);
+}
+
 static void do_reload(lv_task_t*t){
 	struct gui_activity*d=t->user_data;
 	struct part_disk_info*di=d->data;
@@ -460,6 +468,7 @@ static int guipm_draw_partitions(struct gui_activity*act){
 		di->btn_part=lv_btn_create(act->page,NULL);
 		lv_obj_set_size(di->btn_part,btw1,bth);
 		lv_obj_set_user_data(di->btn_part,di);
+		lv_obj_set_event_cb(di->btn_part,part_click);
 		lv_style_set_action_button(di->btn_part,false);
 		lv_label_set_text(lv_label_create(di->btn_part,NULL),_("Partition..."));
 		lv_obj_align(di->btn_part,di->page,LV_ALIGN_OUT_BOTTOM_RIGHT,-gui_font_size/2,gui_font_size);

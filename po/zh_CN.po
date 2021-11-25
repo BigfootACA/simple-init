@@ -1667,3 +1667,78 @@ msgstr "分区类型:"
 
 msgid "Partition Number:"
 msgstr "分区序号:"
+
+msgid "The operation will be applied after restarting USB Gadget service, "
+"do you want to restart USB Gadget service?"
+msgstr "操作将在重启USB工具服务后应用，你是否要重启USB工具服务？"
+
+msgid "Open disk file"
+msgstr "打开磁盘文件"
+
+msgid "Add Mass Storage"
+msgstr "添加大容量存储"
+
+msgid "Add Mass Storage into USB Gadget"
+msgstr "添加大容量存储到USB工具"
+
+msgid "Name:"
+msgstr "名称:"
+
+msgid "Path:"
+msgstr "路径:"
+
+msgid "Disk file path is not absolute"
+msgstr "磁盘文件路径不是绝对路径"
+
+msgid "stat disk file failed: %m"
+msgstr "获取磁盘文件信息失败: %m"
+
+msgid "Invalid disk file"
+msgstr "无效磁盘文件"
+
+msgid "CDROM"
+msgstr "光盘"
+
+msgid "Removable"
+msgstr "可移除"
+
+msgid "Read Only"
+msgstr "只读"
+
+msgid "Partition table has been modified. "
+"Do you want to save it?"
+msgstr "分区表已修改，是否保存？"
+
+msgid "Delete partition failed: %m"
+msgstr "删除分区失败: %m"
+
+msgid "You will delete the partition. "
+"ALL DATA IN THE PARTITION WILL BE LOST. "
+"Are you sure you want to continue?"
+msgstr "你正在删除该分区，"
+"该分区中的数据将会丢失，"
+"你确定要继续吗？"
+
+msgid "Mount partition"
+msgstr "挂载分区"
+
+msgid "Delete partition"
+msgstr "删除分区"
+
+msgid "Resize partition"
+msgstr "调整分区大小"
+
+msgid "Change partition type"
+msgstr "更改分区类型"
+
+msgid "Wipe partition label"
+msgstr "清除分区中的文件系统"
+
+msgid "Erase partition"
+msgstr "抹掉此分区"
+
+msgid "Save partition image"
+msgstr "保存分区镜像"
+
+msgid "Restore partition image"
+msgstr "恢复分区镜像"

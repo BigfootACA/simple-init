@@ -28,6 +28,7 @@ extern struct gui_register guireg_guipm_partitions;
 
 extern void guipm_draw_title(lv_obj_t*screen);
 extern void guipm_disk_operation_menu(struct fdisk_context*ctx);
+extern void guipm_part_operation_menu(struct part_partition_info*pi);
 
 struct disks_disk_info{
 	bool enable;

@@ -31,6 +31,25 @@ static bool delete_cb(uint16_t id,const char*btn __attribute__((unused)),void*us
 	return false;
 }
 
+static bool add_mass_cb(uint16_t id,const char*btn __attribute__((unused)),void*user_data){
+	struct part_partition_info*pi=user_data;
+	struct fdisk_context*ctx=pi->di->ctx;
+	static char dev[PATH_MAX];
+	if(id==0){
+		if(!guipm_save_label(ctx))return false;
+		if(strncmp(fdisk_get_devname(ctx),"/dev/",5)!=0){
+			msgbox_alert("Invalid disk");
+			return false;
+		}
+		size_t pn=fdisk_partition_get_partno(pi->part);
+		char*name=fdisk_partname(pi->di->target,pn+1);
+		memset(dev,0,PATH_MAX);
+		snprintf(dev,PATH_MAX-1,_PATH_DEV"/%s",name);
+		guiact_start_activity_by_name("usb-gadget-add-mass",dev);
+	}
+	return false;
+}
+
 static bool part_menu_cb(uint16_t id,const char*btn __attribute__((unused)),void*user_data){
 	struct part_partition_info*pi=user_data;
 	struct fdisk_context*ctx=pi->di->ctx;
@@ -45,6 +64,9 @@ static bool part_menu_cb(uint16_t id,const char*btn __attribute__((unused)),void
 				"ALL DATA IN THE PARTITION WILL BE LOST. "
 				"Are you sure you want to continue?"
 			),user_data);
+		break;
+		case 9:
+			guipm_ask_save_label(ctx,add_mass_cb,user_data);
 		break;
 	}
 	return false;

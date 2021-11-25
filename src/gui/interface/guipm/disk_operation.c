@@ -12,6 +12,7 @@
 #include<stdbool.h>
 #include<libfdisk/libfdisk.h>
 #include"logger.h"
+#include"guipm.h"
 #include"gui/msgbox.h"
 #include"gui/activity.h"
 #define TAG "guipm"
@@ -53,19 +54,8 @@ static bool ask_label_cb(uint16_t id,const char*btn __attribute__((unused)),void
 
 static bool add_mass_cb(uint16_t id,const char*btn __attribute__((unused)),void*user_data){
 	struct fdisk_context*ctx=user_data;
-	struct fdisk_label*lbl=fdisk_get_label(ctx,NULL);
-	bool changed=fdisk_label_is_changed(lbl);
 	if(id==0){
-		if(changed){
-			if((errno=fdisk_write_disklabel(ctx))!=0){
-				if(errno<0)errno=-(errno);
-				telog_error("fdisk save disk label failed");
-				msgbox_alert("Save disk label failed: %m");
-				return false;
-			}
-			tlog_debug("disk label saved");
-			fdisk_label_set_changed(lbl,false);
-		}
+		if(!guipm_save_label(ctx))return false;
 		guiact_start_activity_by_name(
 			"usb-gadget-add-mass",
 			(void*)fdisk_get_devname(ctx)

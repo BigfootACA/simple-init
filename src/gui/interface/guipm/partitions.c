@@ -320,15 +320,7 @@ static void save_click(lv_obj_t*obj,lv_event_t e){
 	struct part_disk_info*di=lv_obj_get_user_data(obj);
 	if(obj!=di->btn_save)return;
 	tlog_debug("request save");
-	if((errno=fdisk_write_disklabel(di->ctx))!=0){
-		if(errno<0)errno=-(errno);
-		telog_error("fdisk save disk label failed");
-		msgbox_alert("Save disk label failed: %m");
-		return;
-	}
-	tlog_debug("disk label saved");
-	fdisk_label_set_changed(di->label,false);
-	lv_obj_set_enabled(obj,fdisk_label_is_changed(di->label));
+	if(guipm_save_label(di->ctx))lv_obj_set_enabled(obj,false);
 }
 
 static void new_click(lv_obj_t*obj,lv_event_t e){

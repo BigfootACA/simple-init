@@ -66,9 +66,7 @@ static bool add_mass_cb(uint16_t id,const char*btn __attribute__((unused)),void*
 
 static bool disk_menu_cb(uint16_t id,const char*btn __attribute__((unused)),void*user_data){
 	struct fdisk_context*ctx=user_data;
-	struct fdisk_label*lbl=fdisk_get_label(ctx,NULL);
 	bool ro=fdisk_is_readonly(ctx);
-	bool changed=fdisk_label_is_changed(lbl);
 	switch(id){
 		case 0:break;
 		case 1:
@@ -81,12 +79,7 @@ static bool disk_menu_cb(uint16_t id,const char*btn __attribute__((unused)),void
 			),user_data);
 		break;
 		case 5:
-			if(!changed)add_mass_cb(0,NULL,user_data);
-			else msgbox_set_user_data(msgbox_create_yesno(
-				add_mass_cb,
-				"Partition table has been modified. "
-				"Do you want to save it?"
-			),user_data);
+			guipm_ask_save_label(ctx,add_mass_cb,user_data);
 		break;
 	}
 	return false;

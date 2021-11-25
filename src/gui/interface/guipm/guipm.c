@@ -40,5 +40,16 @@ bool guipm_save_label(struct fdisk_context*ctx){
 	return true;
 }
 
+void guipm_ask_save_label(struct fdisk_context*ctx,msgbox_callback cb,void*user_data){
+	if(!ctx)return;
+	struct fdisk_label*lbl=fdisk_get_label(ctx,NULL);
+	if(!lbl)return;
+	if(!fdisk_label_is_changed(lbl))cb(0,NULL,user_data);
+	else msgbox_set_user_data(msgbox_create_yesno(
+		cb,"Partition table has been modified. "
+		"Do you want to save it?"
+	),user_data);
+}
+
 #endif
 #endif

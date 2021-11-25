@@ -15,6 +15,7 @@
 #include<stdbool.h>
 #include<libfdisk/libfdisk.h>
 #include"gui.h"
+#include"gui/msgbox.h"
 #include"gui/activity.h"
 
 struct disks_info;
@@ -28,6 +29,7 @@ extern struct gui_register guireg_guipm_partitions;
 
 extern void guipm_draw_title(lv_obj_t*screen);
 extern bool guipm_save_label(struct fdisk_context*ctx);
+extern void guipm_ask_save_label(struct fdisk_context*ctx,msgbox_callback cb,void*user_data);
 extern void guipm_disk_operation_menu(struct fdisk_context*ctx);
 extern void guipm_part_operation_menu(struct part_partition_info*pi);
 

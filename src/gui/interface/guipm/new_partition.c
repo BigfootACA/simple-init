@@ -108,6 +108,8 @@ static int guipm_part_get_focus(struct gui_activity*d){
 	size_block_get_focus(&pi->start);
 	size_block_get_focus(&pi->end);
 	size_block_get_focus(&pi->size);
+	lv_group_add_obj(gui_grp,pi->part_type);
+	lv_group_add_obj(gui_grp,pi->part_num);
 	lv_group_add_obj(gui_grp,pi->ok);
 	lv_group_add_obj(gui_grp,pi->cancel);
 	return 0;
@@ -119,6 +121,8 @@ static int guipm_part_lost_focus(struct gui_activity*d){
 	size_block_lost_focus(&pi->start);
 	size_block_lost_focus(&pi->end);
 	size_block_lost_focus(&pi->size);
+	lv_group_remove_obj(pi->part_type);
+	lv_group_remove_obj(pi->part_num);
 	lv_group_remove_obj(pi->ok);
 	lv_group_remove_obj(pi->cancel);
 	return 0;

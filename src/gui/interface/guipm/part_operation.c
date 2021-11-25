@@ -31,6 +31,22 @@ static bool delete_cb(uint16_t id,const char*btn __attribute__((unused)),void*us
 	return false;
 }
 
+static bool wipe_cb(uint16_t id,const char*btn __attribute__((unused)),void*user_data){
+	struct part_partition_info*pi=user_data;
+	struct fdisk_context*ctx=pi->di->ctx;
+	struct fdisk_partition*pa=pi->part;
+	size_t pn=fdisk_partition_get_partno(pa);
+	if(id!=0)return false;
+	tlog_debug("wipe partition label %zu on disk %s",pn+1,fdisk_get_devname(ctx));
+	if((errno=fdisk_wipe_partition(ctx,pn,true))!=0){
+		if(errno<0)errno=-(errno);
+		telog_warn("wipe partition label failed");
+		msgbox_alert("Wipe partition label failed: %m");
+	}
+	fdisk_label_set_changed(fdisk_get_label(ctx,NULL),true);
+	return false;
+}
+
 static bool add_mass_cb(uint16_t id,const char*btn __attribute__((unused)),void*user_data){
 	struct part_partition_info*pi=user_data;
 	struct fdisk_context*ctx=pi->di->ctx;
@@ -61,6 +77,15 @@ static bool part_menu_cb(uint16_t id,const char*btn __attribute__((unused)),void
 			msgbox_set_user_data(msgbox_create_yesno(
 				delete_cb,
 				"You will delete the partition. "
+				"ALL DATA IN THE PARTITION WILL BE LOST. "
+				"Are you sure you want to continue?"
+			),user_data);
+		break;
+		case 5:
+			if(ro)goto readonly;
+			msgbox_set_user_data(msgbox_create_yesno(
+				wipe_cb,
+				"You will wipe the partition label. "
 				"ALL DATA IN THE PARTITION WILL BE LOST. "
 				"Are you sure you want to continue?"
 			),user_data);

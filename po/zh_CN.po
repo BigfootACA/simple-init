@@ -1742,3 +1742,16 @@ msgstr "保存分区镜像"
 
 msgid "Restore partition image"
 msgstr "恢复分区镜像"
+
+msgid "You will wipe the partition label. "
+"ALL DATA IN THE PARTITION WILL BE LOST. "
+"Are you sure you want to continue?"
+msgstr "你正在清除分区中的标识，"
+"该分区中的数据将会丢失，"
+"你确定要继续吗？"
+
+msgid "Wipe partition label failed: %m"
+msgstr "清除分区中的标识失败: %m"
+
+msgid "Invalid disk"
+msgstr "无效磁盘"

@@ -164,7 +164,13 @@ static void block_size_cb(lv_obj_t*obj,lv_event_t e){
 	}
 }
 
+static void dropdown_cb(lv_obj_t*obj,lv_event_t e __attribute__((unused))){
+	lv_dropdown_ext_t*ex=lv_obj_get_ext_attr(obj);
+	lv_group_set_editing(gui_grp,ex->page!=NULL);
+}
+
 static void block_unit_cb(lv_obj_t*obj,lv_event_t e){
+	dropdown_cb(obj,e);
 	if(e!=LV_EVENT_VALUE_CHANGED)return;
 	struct part_new_size_block*pi=lv_obj_get_user_data(obj);
 	if(!pi||!pi->par||obj!=pi->unit)return;
@@ -365,6 +371,7 @@ static int guipm_draw_new_partition(struct gui_activity*act){
 
 	h+=(gui_font_size/2);
 	pi->part_type=lv_dropdown_create(pi->box,NULL);
+	lv_obj_set_event_cb(pi->part_type,dropdown_cb);
 	lv_obj_set_width(pi->part_type,w);
 	lv_obj_set_y(pi->part_type,h);
 	h+=lv_obj_get_height(pi->part_type);

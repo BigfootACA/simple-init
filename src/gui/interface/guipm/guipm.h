@@ -26,6 +26,7 @@ struct part_partition_info;
 extern struct gui_register guireg_guipm_disk_select;
 extern struct gui_register guireg_guipm_new_partition;
 extern struct gui_register guireg_guipm_partitions;
+extern struct gui_register guireg_guipm_change_partition_type;
 
 extern void guipm_draw_title(lv_obj_t*screen);
 extern bool guipm_save_label(struct fdisk_context*ctx);
@@ -102,6 +103,11 @@ struct part_new_info{
 	struct part_new_size_block start;
 	struct part_new_size_block end;
 	struct part_new_size_block size;
+};
+
+struct part_type_info{
+	struct part_partition_info*part;
+	lv_obj_t*box,*ok,*cancel,*part_type;
 };
 
 #endif

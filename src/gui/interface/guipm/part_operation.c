@@ -81,6 +81,10 @@ static bool part_menu_cb(uint16_t id,const char*btn __attribute__((unused)),void
 				"Are you sure you want to continue?"
 			),user_data);
 		break;
+		case 4:
+			if(ro)goto readonly;
+			guiact_start_activity(&guireg_guipm_change_partition_type,user_data);
+		break;
 		case 5:
 			if(ro)goto readonly;
 			msgbox_set_user_data(msgbox_create_yesno(

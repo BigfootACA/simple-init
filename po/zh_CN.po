@@ -1755,3 +1755,6 @@ msgstr "清除分区中的标识失败: %m"
 
 msgid "Invalid disk"
 msgstr "无效磁盘"
+
+msgid "Change Partition Type"
+msgstr "更改分区类型"

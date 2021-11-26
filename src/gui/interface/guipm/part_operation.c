@@ -14,6 +14,7 @@
 #include"logger.h"
 #include"guipm.h"
 #include"gui/msgbox.h"
+#include"gui/inputbox.h"
 #define TAG "guipm"
 
 static bool delete_cb(uint16_t id,const char*btn __attribute__((unused)),void*user_data){
@@ -82,6 +83,39 @@ static bool add_mount_cb(uint16_t id,const char*btn __attribute__((unused)),void
 	return false;
 }
 
+static bool change_name_cb(bool ok,const char*content,void*user_data){
+	struct part_partition_info*pi=user_data;
+	if(!ok||!content)return false;
+	size_t pn=fdisk_partition_get_partno(pi->part);
+	struct fdisk_partition*np=fdisk_new_partition();
+	if(!np)return true;
+	if((errno=fdisk_partition_set_name(np,content))!=0){
+		if(errno<0)errno=-(errno);
+		telog_warn("set partition name failed");
+		msgbox_alert("Set partition name failed: %m");
+		fdisk_unref_partition(np);
+		return true;
+	}
+	if((errno=fdisk_set_partition(pi->di->ctx,pn,np))!=0){
+		if(errno<0)errno=-(errno);
+		telog_warn("change partition name failed");
+		msgbox_alert("Change partition name failed: %m");
+		fdisk_unref_partition(np);
+		return true;
+	}
+	tlog_debug("change partition %zu name to %s",pn,content);
+	fdisk_unref_partition(np);
+	return false;
+}
+
+void do_change_name(struct part_partition_info*pi){
+	struct inputbox*in=inputbox_create(change_name_cb,"Input new name");
+	const char*name=fdisk_partition_get_name(pi->part);
+	if(name)inputbox_set_content(in,"%s",name);
+	inputbox_set_one_line(in,true);
+	inputbox_set_user_data(in,pi);
+}
+
 static bool part_menu_cb(uint16_t id,const char*btn __attribute__((unused)),void*user_data){
 	struct part_partition_info*pi=user_data;
 	struct fdisk_context*ctx=pi->di->ctx;
@@ -106,6 +140,10 @@ static bool part_menu_cb(uint16_t id,const char*btn __attribute__((unused)),void
 		break;
 		case 5:
 			if(ro)goto readonly;
+			do_change_name(pi);
+		break;
+		case 6:
+			if(ro)goto readonly;
 			msgbox_set_user_data(msgbox_create_yesno(
 				wipe_cb,
 				"You will wipe the partition label. "
@@ -113,7 +151,7 @@ static bool part_menu_cb(uint16_t id,const char*btn __attribute__((unused)),void
 				"Are you sure you want to continue?"
 			),user_data);
 		break;
-		case 9:
+		case 10:
 			guipm_ask_save_label(ctx,add_mass_cb,user_data);
 		break;
 	}
@@ -129,6 +167,7 @@ void guipm_part_operation_menu(struct part_partition_info*pi){
 		"Delete partition",
 		"Resize partition",
 		"Change partition type",
+		"Change partition name",
 		"Wipe partition label",
 		"Erase partition",
 		"Save partition image",

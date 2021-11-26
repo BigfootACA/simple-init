@@ -1800,3 +1800,15 @@ msgstr "类型:"
 
 msgid "Options:"
 msgstr "选项:"
+
+msgid "Set partition name failed: %m"
+msgstr "设置分区名称失败: %m"
+
+msgid "Change partition name failed: %m"
+msgstr "修改分区名称失败: %m"
+
+msgid "Input new name"
+msgstr "输入新名称"
+
+msgid "Change partition name"
+msgstr "更改分区名称"

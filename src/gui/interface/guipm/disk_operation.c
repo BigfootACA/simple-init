@@ -64,12 +64,27 @@ static bool add_mass_cb(uint16_t id,const char*btn __attribute__((unused)),void*
 	return false;
 }
 
+static bool add_mount_cb(uint16_t id,const char*btn __attribute__((unused)),void*user_data){
+	struct fdisk_context*ctx=user_data;
+	if(id==0){
+		if(!guipm_save_label(ctx))return false;
+		guiact_start_activity_by_name(
+			"add-mount",
+			(void*)fdisk_get_devname(ctx)
+		);
+	}
+	return false;
+}
+
 static bool disk_menu_cb(uint16_t id,const char*btn __attribute__((unused)),void*user_data){
 	struct fdisk_context*ctx=user_data;
 	bool ro=fdisk_is_readonly(ctx);
 	switch(id){
 		case 0:break;
 		case 1:
+			guipm_ask_save_label(ctx,add_mount_cb,user_data);
+		break;
+		case 2:
 			if(ro)goto readonly;
 			msgbox_set_user_data(msgbox_create_yesno(
 				ask_label_cb,
@@ -78,7 +93,7 @@ static bool disk_menu_cb(uint16_t id,const char*btn __attribute__((unused)),void
 				"IN THE DISK WILL BE LOST. Are you sure you want to continue?"
 			),user_data);
 		break;
-		case 5:
+		case 6:
 			guipm_ask_save_label(ctx,add_mass_cb,user_data);
 		break;
 		default:msgbox_alert("This function does not implemented");break;
@@ -91,6 +106,7 @@ static bool disk_menu_cb(uint16_t id,const char*btn __attribute__((unused)),void
 void guipm_disk_operation_menu(struct fdisk_context*ctx){
 	static const char*btns[]={
 		"Cancel",
+		"Mount the whole disk",
 		"Create new disk label",
 		"Erase the disk",
 		"Save disk image",

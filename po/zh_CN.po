@@ -1812,3 +1812,6 @@ msgstr "输入新名称"
 
 msgid "Change partition name"
 msgstr "更改分区名称"
+
+msgid "Mount the whole disk"
+msgstr "挂载整个磁盘"

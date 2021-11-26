@@ -86,7 +86,7 @@ static int msgbox_draw(struct gui_activity*act){
 	if(box->btn_cnt>0){
 		lv_coord_t
 			btn_m=gui_font_size/2,
-			btn_w=lv_page_get_scrl_width(box->box),
+			btn_w=lv_page_get_scrl_width(box->box)-(gui_dpi/16),
 			btn_h=gui_font_size+(gui_dpi/8);
 		box_h+=btn_m;
 		struct msgbox_btn*d=malloc(sizeof(struct msgbox_btn)*box->btn_cnt);
@@ -111,13 +111,13 @@ static int msgbox_draw(struct gui_activity*act){
 				lv_obj_set_pos(box->btn[i],(btn_w*i)+(btn_m/2),box_h);
 				lv_obj_set_width(box->btn[i],btn_w-btn_m);
 			}
-			box_h+=btn_h+btn_m;
+			box_h+=btn_h;
 		}else for(uint16_t i=0;i<box->btn_cnt;i++){
-			lv_obj_set_pos(box->btn[i],0,box_h+btn_m);
+			lv_obj_set_pos(box->btn[i],gui_dpi/16,box_h+btn_m);
 			box_h+=btn_h+btn_m;
 		}
 	}
-	box_h+=gui_dpi/4;
+	box_h+=gui_dpi/3;
 	lv_obj_set_height(box->box,MIN(box_h,xh));
 	lv_obj_align(box->box,NULL,LV_ALIGN_CENTER,0,0);
 

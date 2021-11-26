@@ -154,6 +154,7 @@ static bool part_menu_cb(uint16_t id,const char*btn __attribute__((unused)),void
 		case 10:
 			guipm_ask_save_label(ctx,add_mass_cb,user_data);
 		break;
+		default:msgbox_alert("This function does not implemented");break;
 	}
 	return false;
 	readonly:msgbox_alert("Disk is read-only mode");

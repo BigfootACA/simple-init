@@ -202,7 +202,7 @@ static void refresh_click(lv_obj_t*obj,lv_event_t e){
 
 static void mount_click(lv_obj_t*obj,lv_event_t e){
 	if(e!=LV_EVENT_CLICKED||obj!=btn_mount)return;
-	msgbox_alert("This function does not implemented");
+	guiact_start_activity_by_name("add-mount",NULL);
 }
 
 static void show_all_click(lv_obj_t*obj,lv_event_t e){

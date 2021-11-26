@@ -1758,3 +1758,45 @@ msgstr "无效磁盘"
 
 msgid "Change Partition Type"
 msgstr "更改分区类型"
+
+msgid "Select item"
+msgstr "选择项目"
+
+msgid "Invalid mount source"
+msgstr "无效的挂载设备"
+
+msgid "Invalid mount target"
+msgstr "无效的挂载目标"
+
+msgid "Init libmount context failed"
+msgstr "初始化libmount上下文失败"
+
+msgid "Failed to set mount options"
+msgstr "设置挂载选项失败"
+
+msgid "Failed to set mount filesystem type"
+msgstr "设置挂载文件系统类型失败"
+
+msgid "Failed to set mount source"
+msgstr "设置挂载设备失败"
+
+msgid "Failed to set mount target"
+msgstr "设置挂载目标文件夹失败"
+
+msgid "Mount failed: %s"
+msgstr "挂载失败: %s"
+
+msgid "Add Mount"
+msgstr "添加挂载"
+
+msgid "Device:"
+msgstr "设备:"
+
+msgid "Target:"
+msgstr "目标:"
+
+msgid "Type:"
+msgstr "类型:"
+
+msgid "Options:"
+msgstr "选项:"

@@ -7,7 +7,6 @@
  */
 
 #ifdef ENABLE_GUI
-#ifdef ENABLE_FDISK
 #define _GNU_SOURCE
 #include<stddef.h>
 #include<stdlib.h>
@@ -274,5 +273,4 @@ struct gui_register guireg_add_mass={
 	.back=true,
 	.mask=true,
 };
-#endif
 #endif

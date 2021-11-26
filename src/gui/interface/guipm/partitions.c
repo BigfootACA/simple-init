@@ -38,7 +38,6 @@ static void partition_clear(struct part_disk_info*di,bool ui){
 		struct part_partition_info*p=di->partitions[i];
 		if(!p)continue;
 		if(ui&&p->btn)lv_obj_del(p->btn);
-		if(p->type)fdisk_unref_parttype(p->type);
 		free(p);
 		di->partitions[i]=NULL;
 	}

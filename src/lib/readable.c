@@ -1,13 +1,14 @@
 #define _GNU_SOURCE
 #include<stdio.h>
 #include<stdlib.h>
+#include<string.h>
 #include"defines.h"
 
 const char*make_readable_str_buf(char*buf,size_t len,unsigned long long val,unsigned long block_size,unsigned long display){
 	static const char units[]="\0KMGTPEZY";
 	unsigned frac=0;
 	const char*u=units,*fmt="%llu";
-	if(val==0)return"0";
+	if(val==0)return strncpy(buf,"0",len);
 	if(block_size>1)val*=block_size;
 	if(display)val+=display/2,val/=display;
 	else{

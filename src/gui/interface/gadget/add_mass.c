@@ -22,6 +22,7 @@
 #include"gui/activity.h"
 #include"gui/filepicker.h"
 
+static int mass_id=0;
 struct gadget_add_mass{
 	lv_obj_t*box,*ok,*cancel,*btn_sel;
 	lv_obj_t*txt_id,*txt_path;
@@ -107,6 +108,7 @@ static void ok_cb(lv_obj_t*obj,lv_event_t e){
 	confd_set_boolean_array(base,cnt,"ro",lv_checkbox_is_checked(am->ro));
 	confd_set_boolean_array(base,cnt,"cdrom",lv_checkbox_is_checked(am->cdrom));
 	confd_set_boolean_array(base,cnt,"removable",lv_checkbox_is_checked(am->removable));
+	mass_id++;
 	guiact_do_back();
 	if(!guiact_has_activity_name("usb-gadget"))msgbox_create_yesno(
 		restart_cb,
@@ -193,8 +195,10 @@ static int draw_add_mass(struct gui_activity*act){
 	lv_label_set_text(id,_("Name:"));
 	lv_obj_set_y(id,h);
 
+	char buf[32];
+	snprintf(buf,31,"%d",mass_id);
 	am->txt_id=lv_textarea_create(am->box,NULL);
-	lv_textarea_set_text(am->txt_id,"0");
+	lv_textarea_set_text(am->txt_id,buf);
 	lv_textarea_set_one_line(am->txt_id,true);
 	lv_textarea_set_cursor_hidden(am->txt_id,true);
 	lv_textarea_set_accepted_chars(am->txt_id,VALID);

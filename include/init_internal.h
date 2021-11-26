@@ -31,12 +31,13 @@ enum init_action{
 	ACTION_REBOOT     =0xBE05,
 	ACTION_SWITCHROOT =0xBE06,
 	ACTION_ADDENV     =0xBE07,
-	ACTION_SVC_START  =0xBE08,
-	ACTION_SVC_STOP   =0xBE09,
-	ACTION_SVC_RESTART=0xBE10,
-	ACTION_SVC_RELOAD =0xBE11,
-	ACTION_SVC_DUMP   =0xBE12,
-	ACTION_LANGUAGE   =0xBE13,
+	ACTION_LANGUAGE   =0xBE08,
+	ACTION_SVC_START  =0xBE09,
+	ACTION_SVC_STOP   =0xBE10,
+	ACTION_SVC_RESTART=0xBE11,
+	ACTION_SVC_RELOAD =0xBE12,
+	ACTION_SVC_DUMP   =0xBE13,
+	ACTION_SVC_STATUS =0xBE14,
 };
 extern enum init_action action;
 
@@ -54,6 +55,7 @@ union action_data{
 		char key[64];
 		char value[952];
 	}env;
+	int svc_status;
 };
 extern union action_data actiondata;
 

@@ -162,6 +162,15 @@ int init_process_data(int cfd,struct ucred*u,struct init_msg*msg){
 				res.data.status.ret=errno;
 			}
 		break;
+		case ACTION_SVC_STATUS:{
+			struct service*svc;
+			if((svc=svc_lookup_by_name(msg->data.data))){
+				res.data.svc_status=svc->status;
+				break;
+			}
+			res.action=ACTION_OK;
+			res.data.status.ret=errno;
+		}break;
 		case ACTION_SVC_DUMP:svc_dump_services();break;
 		case ACTION_NONE:case ACTION_OK:case ACTION_FAIL:break;
 		default:res.action=ACTION_FAIL,res.data.status.ret=ENOSYS;
@@ -183,6 +192,7 @@ const char*action2string(enum init_action act){
 		case ACTION_SVC_RESTART:return "ReStart Service";
 		case ACTION_SVC_RELOAD:return "ReLoad Service";
 		case ACTION_SVC_DUMP:return "Dump All Service";
+		case ACTION_SVC_STATUS:return "Get Service Status";
 		default:return "Unknown";
 	}
 }

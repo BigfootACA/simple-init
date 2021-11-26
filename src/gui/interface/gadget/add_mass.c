@@ -128,7 +128,7 @@ static int init(struct gui_activity*act){
 	memset(am,0,sizeof(struct gadget_add_mass));
 	act->data=am;
 	char*p=act->args;
-	if(p[0]!='/'){
+	if(p&&p[0]!='/'){
 		if(p[1]!=':')return -EINVAL;
 		act->args+=2;
 	}
@@ -167,7 +167,7 @@ static int draw_add_mass(struct gui_activity*act){
 	lv_obj_set_y(path,h);
 
 	am->txt_path=lv_textarea_create(am->box,NULL);
-	if(act->args)lv_textarea_set_text(am->txt_path,(char*)act->args);
+	lv_textarea_set_text(am->txt_path,act->args?(char*)act->args:"");
 	lv_textarea_set_one_line(am->txt_path,true);
 	lv_textarea_set_cursor_hidden(am->txt_path,true);
 	lv_obj_set_user_data(am->txt_path,am);

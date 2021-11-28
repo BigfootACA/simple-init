@@ -122,6 +122,7 @@ function init_rootfs(){
 	emkdir "${1}"/usr/{bin,lib,share}
 	emkdir "${1}"/var/{lib,log,cache}
 	eln ../run "${1}"/var/run
+	eln . "${1}"/usr/lib/x86_64-linux-gnu
 	eln usr/lib "${1}"/lib
 	eln usr/lib "${1}"/lib64
 	eln usr/bin "${1}"/bin

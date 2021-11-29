@@ -227,4 +227,9 @@ void lv_obj_set_checked(lv_obj_t*obj,bool checked){
 	else lv_obj_clear_state(obj,LV_STATE_CHECKED);
 }
 
+void lv_default_dropdown_cb(lv_obj_t*obj,lv_event_t e __attribute__((unused))){
+	lv_dropdown_ext_t*ex=lv_obj_get_ext_attr(obj);
+	lv_group_set_editing(gui_grp,ex->page!=NULL);
+}
+
 #endif

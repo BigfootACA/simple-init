@@ -24,15 +24,13 @@
 #include"gui/tools.h"
 #define TAG "guipm"
 
-static const char*units[]={"B","KB","MB","GB","TB","PB","EB","ZB","YB",NULL};
-
 static void update_data_secs(fdisk_sector_t sec,struct part_new_size_block*pi,bool manual){
 	int type=0;
 	struct part_new_info*p=pi->par;
 	if(sec<pi->min_sec&&pi->min_sec>0)sec=pi->min_sec;
 	if(sec>pi->max_sec&&pi->max_sec>0)sec=pi->max_sec;
 	int64_t cnt=sec*pi->par->part->di->lsec_size;
-	if(!pi->unit_lock)while(cnt>=1024&&units[type])cnt/=1024,type++;
+	if(!pi->unit_lock)while(cnt>=1024&&guipm_units[type])cnt/=1024,type++;
 	else for(type=0;type<lv_dropdown_get_selected(pi->unit);type++)cnt/=1024;
 	lv_dropdown_set_selected(pi->unit,type);
 	snprintf(pi->buf_txt,63,"%ld",cnt);
@@ -130,8 +128,8 @@ static int guipm_part_lost_focus(struct gui_activity*d){
 
 static void dropdown_add_units(lv_obj_t*dd){
 	lv_dropdown_clear_options(dd);
-	for(int i=0;units[i];i++)
-		lv_dropdown_add_option(dd,units[i],i);
+	for(int i=0;guipm_units[i];i++)
+		lv_dropdown_add_option(dd,guipm_units[i],i);
 }
 
 static void block_size_cb(lv_obj_t*obj,lv_event_t e){

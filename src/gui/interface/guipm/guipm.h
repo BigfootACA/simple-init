@@ -28,6 +28,8 @@ extern struct gui_register guireg_guipm_new_partition;
 extern struct gui_register guireg_guipm_partitions;
 extern struct gui_register guireg_guipm_change_partition_type;
 
+extern const char*guipm_units[];
+
 extern void guipm_draw_title(lv_obj_t*screen);
 extern bool guipm_save_label(struct fdisk_context*ctx);
 extern void guipm_ask_save_label(struct fdisk_context*ctx,msgbox_callback cb,void*user_data);

@@ -15,6 +15,8 @@
 #include"gui/msgbox.h"
 #define TAG "guipm"
 
+const char*guipm_units[]={"B","KB","MB","GB","TB","PB","EB","ZB","YB",NULL};
+
 void guipm_draw_title(lv_obj_t*screen){
 	lv_obj_t*title=lv_label_create(screen,NULL);
 	lv_label_set_long_mode(title,LV_LABEL_LONG_BREAK);

@@ -11,6 +11,32 @@
 #include"gui.h"
 #include"gui/tools.h"
 
+const char*lv_event_string[]={
+	[LV_EVENT_PRESSED]             = "LV_EVENT_PRESSED",
+	[LV_EVENT_PRESSING]            = "LV_EVENT_PRESSING",
+	[LV_EVENT_PRESS_LOST]          = "LV_EVENT_PRESS_LOST",
+	[LV_EVENT_SHORT_CLICKED]       = "LV_EVENT_SHORT_CLICKED",
+	[LV_EVENT_LONG_PRESSED]        = "LV_EVENT_LONG_PRESSED",
+	[LV_EVENT_LONG_PRESSED_REPEAT] = "LV_EVENT_LONG_PRESSED_REPEAT",
+	[LV_EVENT_CLICKED]             = "LV_EVENT_CLICKED",
+	[LV_EVENT_RELEASED]            = "LV_EVENT_RELEASED",
+	[LV_EVENT_DRAG_BEGIN]          = "LV_EVENT_DRAG_BEGIN",
+	[LV_EVENT_DRAG_END]            = "LV_EVENT_DRAG_END",
+	[LV_EVENT_DRAG_THROW_BEGIN]    = "LV_EVENT_DRAG_THROW_BEGIN",
+	[LV_EVENT_GESTURE]             = "LV_EVENT_GESTURE",
+	[LV_EVENT_KEY]                 = "LV_EVENT_KEY",
+	[LV_EVENT_FOCUSED]             = "LV_EVENT_FOCUSED",
+	[LV_EVENT_DEFOCUSED]           = "LV_EVENT_DEFOCUSED",
+	[LV_EVENT_LEAVE]               = "LV_EVENT_LEAVE",
+	[LV_EVENT_VALUE_CHANGED]       = "LV_EVENT_VALUE_CHANGED",
+	[LV_EVENT_INSERT]              = "LV_EVENT_INSERT",
+	[LV_EVENT_REFRESH]             = "LV_EVENT_REFRESH",
+	[LV_EVENT_APPLY]               = "LV_EVENT_APPLY",
+	[LV_EVENT_CANCEL]              = "LV_EVENT_CANCEL",
+	[LV_EVENT_DELETE]              = "LV_EVENT_DELETE",
+	[_LV_EVENT_LAST]               = "LV_EVENT_LAST"
+};
+
 lv_style_t*lv_style_opa_mask(){
 	static lv_style_t bg;
 	static bool initialized=false;

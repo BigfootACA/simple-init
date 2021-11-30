@@ -245,8 +245,7 @@ static void target_cb(lv_obj_t*obj,lv_event_t e){
 static void type_cb(lv_obj_t*obj,lv_event_t e){
 	struct add_mount*am=lv_obj_get_user_data(obj);
 	if(!am||obj!=am->type)return;
-	lv_dropdown_ext_t*ex=lv_obj_get_ext_attr(obj);
-	lv_group_set_editing(gui_grp,ex->page!=NULL);
+	lv_default_dropdown_cb(obj,e);
 	if(e==LV_EVENT_DEFOCUSED)am->type_lock=true;
 }
 

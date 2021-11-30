@@ -134,11 +134,6 @@ static int base_info_clean(struct gui_activity*act __attribute__((unused))){
 	return 0;
 }
 
-static void dropdown_cb(lv_obj_t*obj,lv_event_t e __attribute__((unused))){
-	lv_dropdown_ext_t*ex=lv_obj_get_ext_attr(obj);
-	lv_group_set_editing(gui_grp,ex->page!=NULL);
-}
-
 static int base_info_draw(struct gui_activity*act){
 	int bth=gui_font_size+(gui_dpi/8),btw=gui_sw/3-(gui_dpi/8);
 
@@ -241,7 +236,7 @@ static int base_info_draw(struct gui_activity*act){
 	sel_udc=lv_dropdown_create(act->page,NULL);
 	lv_obj_set_width(sel_udc,gui_sw-gui_font_size*2);
 	lv_obj_align(sel_udc,txt_product,LV_ALIGN_OUT_BOTTOM_LEFT,0,gui_font_size*2);
-	lv_obj_set_event_cb(sel_udc,dropdown_cb);
+	lv_obj_set_event_cb(sel_udc,lv_default_dropdown_cb);
 	lv_obj_t*lbl_udc=lv_label_create(act->page,NULL);
 	lv_label_set_text(lbl_udc,_("USB Device Controller (UDC):"));
 	lv_obj_align(lbl_udc,sel_udc,LV_ALIGN_OUT_TOP_LEFT,gui_font_size/2,0);

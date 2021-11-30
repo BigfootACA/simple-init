@@ -90,11 +90,6 @@ static void cancel_cb(lv_obj_t*obj,lv_event_t e){
 	guiact_do_back();
 }
 
-static void dropdown_cb(lv_obj_t*obj,lv_event_t e __attribute__((unused))){
-	lv_dropdown_ext_t*ex=lv_obj_get_ext_attr(obj);
-	lv_group_set_editing(gui_grp,ex->page!=NULL);
-}
-
 static int guipm_draw_change_partition_type(struct gui_activity*act){
 	struct part_partition_info*info=act->args;
 	if(!info||info->free||!info->di)return -EINVAL;
@@ -122,7 +117,7 @@ static int guipm_draw_change_partition_type(struct gui_activity*act){
 	// Partition Type
 	h+=(gui_font_size/2);
 	pi->part_type=lv_dropdown_create(pi->box,NULL);
-	lv_obj_set_event_cb(pi->part_type,dropdown_cb);
+	lv_obj_set_event_cb(pi->part_type,lv_default_dropdown_cb);
 	lv_obj_set_width(pi->part_type,w);
 	lv_obj_set_y(pi->part_type,h);
 	h+=lv_obj_get_height(pi->part_type);

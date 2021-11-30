@@ -84,11 +84,6 @@ static int language_lost_focus(struct gui_activity*d __attribute__((unused))){
 	return 0;
 }
 
-static void dropdown_cb(lv_obj_t*obj,lv_event_t e __attribute__((unused))){
-	lv_dropdown_ext_t*ex=lv_obj_get_ext_attr(obj);
-	lv_group_set_editing(gui_grp,ex->page!=NULL);
-}
-
 static int language_menu_draw(struct gui_activity*act){
 	int bts=gui_font_size+(gui_dpi/8);
 	scr=act->page;
@@ -111,7 +106,7 @@ static int language_menu_draw(struct gui_activity*act){
 	sel=lv_dropdown_create(box,NULL);
 	lv_obj_set_width(sel,lv_page_get_scrl_width(box)-gui_dpi/10);
 	lv_obj_align(sel,txt,LV_ALIGN_OUT_BOTTOM_MID,0,gui_dpi/10);
-	lv_obj_set_event_cb(sel,dropdown_cb);
+	lv_obj_set_event_cb(sel,lv_default_dropdown_cb);
 	init_languages();
 
 	btn_ok=lv_btn_create(box,NULL);

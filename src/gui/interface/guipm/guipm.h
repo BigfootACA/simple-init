@@ -96,14 +96,27 @@ struct size_block{
 	fdisk_sector_t lsec;
 	void(*on_get_focus)(struct size_block*);
 	void(*on_lost_focus)(struct size_block*);
-	void(*on_size_changed)(unsigned long,struct size_block*);
-	void(*on_sector_changed)(fdisk_sector_t,struct size_block*);
+	void(*on_change_value)(struct size_block*);
+	void(*on_update_value)(struct size_block*);
 	bool txt_changed;
 	bool unit_lock;
 	bool txt_sec_changed;
 	char buf_txt[64];
 	char buf_txt_sec[128];
 };
+
+#define SB_CALL(_blk,_ev)  (_blk).on_##_ev(&(_blk))
+#define SB_PCALL(_blk,_ev) (_blk)->on_##_ev(_blk)
+#define SB_SET(_blk,_min,_max,_val) \
+	(_blk).min_sec=(_min),\
+	(_blk).max_sec=(_max),\
+	(_blk).sec=(_val),\
+	SB_CALL((_blk),update_value)
+#define SB_PSET(_blk,_min,_max,_val) \
+	(_blk)->min_sec=(_min),\
+	(_blk)->max_sec=(_max),\
+	(_blk)->sec=(_val),\
+	SB_PCALL((_blk),update_value)
 
 struct part_new_info{
 	struct fdisk_context*ctx;

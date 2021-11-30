@@ -23,59 +23,39 @@
 #include"gui/tools.h"
 #define TAG "guipm"
 
-static void update_data_secs(fdisk_sector_t sec,struct size_block*pi,bool manual){
-	int type=0;
+static void update_data_secs(struct size_block*pi){
 	struct part_new_info*p=pi->par;
-	if(sec<pi->min_sec&&pi->min_sec>0)sec=pi->min_sec;
-	if(sec>pi->max_sec&&pi->max_sec>0)sec=pi->max_sec;
-	int64_t cnt=sec*p->part->di->lsec_size;
-	if(!pi->unit_lock)while(cnt>=1024&&guipm_units[type])cnt/=1024,type++;
-	else for(type=0;type<lv_dropdown_get_selected(pi->unit);type++)cnt/=1024;
-	lv_dropdown_set_selected(pi->unit,type);
-	snprintf(pi->buf_txt,63,"%ld",cnt);
-	snprintf(pi->buf_txt_sec,127,"%ld",sec);
-	lv_textarea_set_text(pi->txt,pi->buf_txt);
-	lv_textarea_set_text(pi->txt_sec,pi->buf_txt_sec);
-	pi->sec=sec;
-	if(!manual)return;
 	if(pi==&p->start){
-		if(sec>=p->end.sec)update_data_secs(sec+1,&p->end,false);
-		update_data_secs(p->end.sec-p->start.sec+1,&p->size,false);
+		if(pi->sec>=p->end.sec){
+			p->end.sec=pi->sec+1;
+			SB_CALL(p->end,update_value);
+		}
+		p->size.sec=p->end.sec-p->start.sec+1;
+		SB_CALL(p->size,update_value);
 	}else if(pi==&p->end){
-		if(sec<=p->start.sec)update_data_secs(sec-1,&p->start,false);
-		update_data_secs(p->end.sec-p->start.sec+1,&p->size,false);
+		if(pi->sec<=p->start.sec){
+			p->start.sec=pi->sec-1;
+			SB_CALL(p->start,update_value);
+		}
+		p->size.sec=p->end.sec-p->start.sec+1;
+		SB_CALL(p->size,update_value);
 	}else if(pi==&p->size){
 		p->end.sec=p->start.sec+p->size.sec-1;
 		if(p->end.sec>p->end.max_sec){
 			p->end.sec=p->end.max_sec;
-			p->start.sec=p->end.sec-sec+1;
-			update_data_secs(p->start.sec,&p->start,false);
+			p->start.sec=p->end.sec-pi->sec+1;
+			SB_CALL(p->start,update_value);
 		}
-		update_data_secs(p->end.sec,&p->end,false);
+		SB_CALL(p->end,update_value);
 	}
-}
-
-static void update_data_sec(fdisk_sector_t sec,struct size_block*pi){
-	update_data_secs(sec,pi,true);
-}
-
-static void update_data_size(unsigned long size,struct size_block*pi){
-	struct part_new_info*p=pi->par;
-	for(int type=lv_dropdown_get_selected(pi->unit);type>0;type--)size*=1024;
-	update_data_secs(size/p->part->di->lsec_size,pi,true);
 }
 
 static void reload_info(struct part_new_info*pi){
 	if(!pi)return;
-	pi->start.min_sec=pi->part->start_sec;
-	pi->start.max_sec=pi->part->end_sec-1;
-	pi->end.min_sec=pi->part->start_sec+1;
-	pi->end.max_sec=pi->part->end_sec;
-	pi->size.min_sec=1;
-	pi->size.max_sec=pi->part->size_sec;
-	update_data_secs(pi->part->start_sec,&pi->start,true);
-	update_data_secs(pi->part->end_sec,&pi->end,true);
-	update_data_secs(pi->part->size_sec,&pi->size,true);
+	struct part_partition_info*p=pi->part;
+	SB_SET(pi->start,p->start_sec  ,p->end_sec-1,p->start_sec);
+	SB_SET(pi->end  ,p->start_sec+1,p->end_sec  ,p->end_sec);
+	SB_SET(pi->size ,1             ,p->size_sec ,p->size_sec);
 	lv_dropdown_clear_options(pi->part_type);
 	lv_dropdown_add_option(pi->part_type,_("(none)"),0);
 	struct fdisk_label*lbl=pi->part->di->label;
@@ -95,9 +75,9 @@ static void reload_info(struct part_new_info*pi){
 static int guipm_part_get_focus(struct gui_activity*d){
 	struct part_new_info*pi=d->data;
 	if(!pi)return 0;
-	pi->start.on_get_focus(&pi->start);
-	pi->end.on_get_focus(&pi->end);
-	pi->size.on_get_focus(&pi->size);
+	SB_CALL(pi->start,get_focus);
+	SB_CALL(pi->end,get_focus);
+	SB_CALL(pi->size,get_focus);
 	lv_group_add_obj(gui_grp,pi->part_type);
 	lv_group_add_obj(gui_grp,pi->part_num);
 	lv_group_add_obj(gui_grp,pi->ok);
@@ -108,9 +88,9 @@ static int guipm_part_get_focus(struct gui_activity*d){
 static int guipm_part_lost_focus(struct gui_activity*d){
 	struct part_new_info*pi=d->data;
 	if(!pi)return 0;
-	pi->start.on_lost_focus(&pi->start);
-	pi->end.on_lost_focus(&pi->end);
-	pi->size.on_lost_focus(&pi->size);
+	SB_CALL(pi->start,lost_focus);
+	SB_CALL(pi->end,lost_focus);
+	SB_CALL(pi->size,lost_focus);
 	lv_group_remove_obj(pi->part_type);
 	lv_group_remove_obj(pi->part_num);
 	lv_group_remove_obj(pi->ok);
@@ -201,8 +181,7 @@ static void init_size_block(
 	char*title
 ){
 	guipm_init_size_block(h,w,pi->box,pi,pi->part->di->lsec_size,blk,title);
-	blk->on_sector_changed=update_data_sec;
-	blk->on_size_changed=update_data_size;
+	blk->on_change_value=update_data_secs;
 }
 
 static int guipm_draw_new_partition(struct gui_activity*act){

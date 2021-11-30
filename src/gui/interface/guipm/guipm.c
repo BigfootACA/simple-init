@@ -68,16 +68,35 @@ static void size_block_lost_focus(struct size_block*blk){
 	lv_group_remove_obj(blk->txt_sec);
 }
 
+static void block_size_update(struct size_block*blk){
+	uint16_t type=0;
+	int64_t cnt=blk->sec*blk->lsec;
+	if(blk->unit_lock){
+		uint16_t units=lv_dropdown_get_selected(blk->unit);
+		for(type=0;type<units;type++)cnt/=1024;
+	}else{
+		while(cnt>=1024&&guipm_units[type])cnt/=1024,type++;
+		lv_dropdown_set_selected(blk->unit,type);
+	}
+	snprintf(blk->buf_txt,sizeof(blk->buf_txt)-1,"%ld",cnt);
+	lv_textarea_set_text(blk->txt,blk->buf_txt);
+}
+
+static void block_update(struct size_block*blk){
+	if(blk->sec<blk->min_sec&&blk->min_sec>0)blk->sec=blk->min_sec;
+	if(blk->sec>blk->max_sec&&blk->max_sec>0)blk->sec=blk->max_sec;
+	snprintf(blk->buf_txt_sec,sizeof(blk->buf_txt_sec)-1,"%ld",blk->sec);
+	lv_textarea_set_text(blk->txt_sec,blk->buf_txt_sec);
+	block_size_update(blk);
+}
+
 static void block_unit_cb(lv_obj_t*obj,lv_event_t e){
 	lv_default_dropdown_cb(obj,e);
 	if(e!=LV_EVENT_VALUE_CHANGED)return;
 	struct size_block*pi=lv_obj_get_user_data(obj);
 	if(!pi||!pi->par||obj!=pi->unit)return;
 	pi->unit_lock=true;
-	int64_t cnt=pi->sec*pi->lsec;
-	for(int type=0;type<lv_dropdown_get_selected(obj);type++)cnt/=1024;
-	snprintf(pi->buf_txt,63,"%ld",cnt);
-	lv_textarea_set_text(pi->txt,pi->buf_txt);
+	block_size_update(pi);
 }
 
 static void block_size_cb(lv_obj_t*obj,lv_event_t e){
@@ -98,9 +117,13 @@ static void block_size_cb(lv_obj_t*obj,lv_event_t e){
 				unsigned long l=(unsigned long)strtol(value,&end,10);
 				if(*end||value==end||errno!=0)tlog_warn("invalid size number");
 				else{
-					if(pi->on_size_changed)pi->on_size_changed(l,pi);
 					memset(pi->buf_txt,0,sizeof(pi->buf_txt));
 					strcpy(pi->buf_txt,value);
+					unsigned long size=l;
+					for(int type=lv_dropdown_get_selected(pi->unit);type>0;type--)size*=1024;
+					pi->sec=size/pi->lsec;
+					SB_PCALL(pi,update_value);
+					if(pi->on_change_value)pi->on_change_value(pi);
 				}
 				lv_textarea_set_text(obj,pi->buf_txt);
 			}
@@ -128,9 +151,11 @@ static void block_sector_cb(lv_obj_t*obj,lv_event_t e){
 				fdisk_sector_t l=(fdisk_sector_t)strtol(value,&end,10);
 				if(*end||value==end||errno!=0)tlog_warn("invalid sector number");
 				else{
-					if(pi->on_sector_changed)pi->on_sector_changed(l,pi);
 					memset(pi->buf_txt_sec,0,sizeof(pi->buf_txt_sec));
 					strcpy(pi->buf_txt_sec,value);
+					pi->sec=l;
+					SB_PCALL(pi,update_value);
+					if(pi->on_change_value)pi->on_change_value(pi);
 				}
 				lv_textarea_set_text(obj,pi->buf_txt_sec);
 			}
@@ -153,6 +178,7 @@ void guipm_init_size_block(
 	blk->par=pi,blk->lsec=lsec;
 	blk->on_get_focus=size_block_get_focus;
 	blk->on_lost_focus=size_block_lost_focus;
+	blk->on_update_value=block_update;
 
 	(*h)+=gui_font_size;
 	lv_obj_t*lbl=lv_label_create(box,NULL);

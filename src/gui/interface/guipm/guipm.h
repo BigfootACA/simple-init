@@ -18,6 +18,7 @@
 #include"gui/msgbox.h"
 #include"gui/activity.h"
 
+struct size_block;
 struct disks_info;
 struct disks_disk_info;
 struct part_disk_info;
@@ -35,6 +36,7 @@ extern bool guipm_save_label(struct fdisk_context*ctx);
 extern void guipm_ask_save_label(struct fdisk_context*ctx,msgbox_callback cb,void*user_data);
 extern void guipm_disk_operation_menu(struct fdisk_context*ctx);
 extern void guipm_part_operation_menu(struct part_partition_info*pi);
+extern void guipm_init_size_block(lv_coord_t*h,lv_coord_t w,lv_obj_t*box,void*pi,fdisk_sector_t lsec,struct size_block*blk,char*title);
 
 struct disks_disk_info{
 	bool enable;
@@ -83,14 +85,19 @@ struct part_partition_info{
 	struct part_disk_info*di;
 };
 
-struct part_new_size_block{
-	struct part_new_info*par;
+struct size_block{
+	void*par;
 	lv_obj_t*unit;
 	lv_obj_t*txt;
 	lv_obj_t*txt_sec;
 	fdisk_sector_t sec;
 	fdisk_sector_t min_sec;
 	fdisk_sector_t max_sec;
+	fdisk_sector_t lsec;
+	void(*on_get_focus)(struct size_block*);
+	void(*on_lost_focus)(struct size_block*);
+	void(*on_size_changed)(unsigned long,struct size_block*);
+	void(*on_sector_changed)(fdisk_sector_t,struct size_block*);
 	bool txt_changed;
 	bool unit_lock;
 	bool txt_sec_changed;
@@ -102,9 +109,9 @@ struct part_new_info{
 	struct fdisk_context*ctx;
 	struct part_partition_info*part;
 	lv_obj_t*box,*ok,*cancel,*part_type,*part_num;
-	struct part_new_size_block start;
-	struct part_new_size_block end;
-	struct part_new_size_block size;
+	struct size_block start;
+	struct size_block end;
+	struct size_block size;
 };
 
 struct part_type_info{

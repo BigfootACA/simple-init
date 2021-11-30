@@ -19,17 +19,16 @@
 #include"guipm.h"
 #include"logger.h"
 #include"gui/activity.h"
-#include"gui/sysbar.h"
 #include"gui/msgbox.h"
 #include"gui/tools.h"
 #define TAG "guipm"
 
-static void update_data_secs(fdisk_sector_t sec,struct part_new_size_block*pi,bool manual){
+static void update_data_secs(fdisk_sector_t sec,struct size_block*pi,bool manual){
 	int type=0;
 	struct part_new_info*p=pi->par;
 	if(sec<pi->min_sec&&pi->min_sec>0)sec=pi->min_sec;
 	if(sec>pi->max_sec&&pi->max_sec>0)sec=pi->max_sec;
-	int64_t cnt=sec*pi->par->part->di->lsec_size;
+	int64_t cnt=sec*p->part->di->lsec_size;
 	if(!pi->unit_lock)while(cnt>=1024&&guipm_units[type])cnt/=1024,type++;
 	else for(type=0;type<lv_dropdown_get_selected(pi->unit);type++)cnt/=1024;
 	lv_dropdown_set_selected(pi->unit,type);
@@ -56,9 +55,14 @@ static void update_data_secs(fdisk_sector_t sec,struct part_new_size_block*pi,bo
 	}
 }
 
-static void update_data_size(unsigned long size,struct part_new_size_block*pi){
+static void update_data_sec(fdisk_sector_t sec,struct size_block*pi){
+	update_data_secs(sec,pi,true);
+}
+
+static void update_data_size(unsigned long size,struct size_block*pi){
+	struct part_new_info*p=pi->par;
 	for(int type=lv_dropdown_get_selected(pi->unit);type>0;type--)size*=1024;
-	update_data_secs(size/pi->par->part->di->lsec_size,pi,true);
+	update_data_secs(size/p->part->di->lsec_size,pi,true);
 }
 
 static void reload_info(struct part_new_info*pi){
@@ -88,24 +92,12 @@ static void reload_info(struct part_new_info*pi){
 	}
 }
 
-static void size_block_get_focus(struct part_new_size_block*blk){
-	lv_group_add_obj(gui_grp,blk->txt);
-	lv_group_add_obj(gui_grp,blk->unit);
-	lv_group_add_obj(gui_grp,blk->txt_sec);
-}
-
-static void size_block_lost_focus(struct part_new_size_block*blk){
-	lv_group_remove_obj(blk->txt);
-	lv_group_remove_obj(blk->unit);
-	lv_group_remove_obj(blk->txt_sec);
-}
-
 static int guipm_part_get_focus(struct gui_activity*d){
 	struct part_new_info*pi=d->data;
 	if(!pi)return 0;
-	size_block_get_focus(&pi->start);
-	size_block_get_focus(&pi->end);
-	size_block_get_focus(&pi->size);
+	pi->start.on_get_focus(&pi->start);
+	pi->end.on_get_focus(&pi->end);
+	pi->size.on_get_focus(&pi->size);
 	lv_group_add_obj(gui_grp,pi->part_type);
 	lv_group_add_obj(gui_grp,pi->part_num);
 	lv_group_add_obj(gui_grp,pi->ok);
@@ -116,145 +108,14 @@ static int guipm_part_get_focus(struct gui_activity*d){
 static int guipm_part_lost_focus(struct gui_activity*d){
 	struct part_new_info*pi=d->data;
 	if(!pi)return 0;
-	size_block_lost_focus(&pi->start);
-	size_block_lost_focus(&pi->end);
-	size_block_lost_focus(&pi->size);
+	pi->start.on_lost_focus(&pi->start);
+	pi->end.on_lost_focus(&pi->end);
+	pi->size.on_lost_focus(&pi->size);
 	lv_group_remove_obj(pi->part_type);
 	lv_group_remove_obj(pi->part_num);
 	lv_group_remove_obj(pi->ok);
 	lv_group_remove_obj(pi->cancel);
 	return 0;
-}
-
-static void dropdown_add_units(lv_obj_t*dd){
-	lv_dropdown_clear_options(dd);
-	for(int i=0;guipm_units[i];i++)
-		lv_dropdown_add_option(dd,guipm_units[i],i);
-}
-
-static void block_size_cb(lv_obj_t*obj,lv_event_t e){
-	struct part_new_size_block*pi=lv_obj_get_user_data(obj);
-	if(!pi||!pi->par||obj!=pi->txt)return;
-	const char*value;
-	char*end;
-	switch(e){
-		case LV_EVENT_CLICKED:
-			sysbar_focus_input(obj);
-			sysbar_keyboard_open();
-		break;
-		case LV_EVENT_DEFOCUSED:
-			if(!pi->txt_changed)break;
-			errno=0;
-			value=lv_textarea_get_text(obj);
-			if(strcmp(pi->buf_txt,value)!=0){
-				unsigned long l=(unsigned long)strtol(value,&end,10);
-				if(*end||value==end||errno!=0)tlog_warn("invalid size number");
-				else{
-					update_data_size(l,pi);
-					memset(pi->buf_txt,0,sizeof(pi->buf_txt));
-					strcpy(pi->buf_txt,value);
-				}
-				lv_textarea_set_text(obj,pi->buf_txt);
-			}
-			pi->txt_changed=false;
-		break;
-		case LV_EVENT_VALUE_CHANGED:pi->txt_changed=true;break;
-	}
-}
-
-static void dropdown_cb(lv_obj_t*obj,lv_event_t e __attribute__((unused))){
-	lv_dropdown_ext_t*ex=lv_obj_get_ext_attr(obj);
-	lv_group_set_editing(gui_grp,ex->page!=NULL);
-}
-
-static void block_unit_cb(lv_obj_t*obj,lv_event_t e){
-	dropdown_cb(obj,e);
-	if(e!=LV_EVENT_VALUE_CHANGED)return;
-	struct part_new_size_block*pi=lv_obj_get_user_data(obj);
-	if(!pi||!pi->par||obj!=pi->unit)return;
-	pi->unit_lock=true;
-	int64_t cnt=pi->sec*pi->par->part->di->lsec_size;
-	for(int type=0;type<lv_dropdown_get_selected(obj);type++)cnt/=1024;
-	snprintf(pi->buf_txt,63,"%ld",cnt);
-	lv_textarea_set_text(pi->txt,pi->buf_txt);
-}
-
-static void block_sector_cb(lv_obj_t*obj,lv_event_t e){
-	struct part_new_size_block*pi=lv_obj_get_user_data(obj);
-	if(!pi||!pi->par||obj!=pi->txt_sec)return;
-	const char*value;
-	char*end;
-	switch(e){
-		case LV_EVENT_CLICKED:
-			sysbar_focus_input(obj);
-			sysbar_keyboard_open();
-		break;
-		case LV_EVENT_DEFOCUSED:
-			if(!pi->txt_sec_changed)break;
-			errno=0;
-			value=lv_textarea_get_text(obj);
-			if(strcmp(pi->buf_txt_sec,value)!=0){
-				fdisk_sector_t l=(fdisk_sector_t)strtol(value,&end,10);
-				if(*end||value==end||errno!=0)tlog_warn("invalid sector number");
-				else{
-					update_data_secs(l,pi,true);
-					memset(pi->buf_txt_sec,0,sizeof(pi->buf_txt_sec));
-					strcpy(pi->buf_txt_sec,value);
-				}
-				lv_textarea_set_text(obj,pi->buf_txt_sec);
-			}
-			pi->txt_sec_changed=false;
-		break;
-		case LV_EVENT_VALUE_CHANGED:pi->txt_sec_changed=true;break;
-	}
-}
-
-static void init_size_block(
-	lv_coord_t*h,
-	lv_coord_t w,
-	struct part_new_info*pi,
-	struct part_new_size_block*blk,
-	char*title
-){
-	if(!pi||!blk||!title)return;
-	blk->par=pi;
-
-	(*h)+=gui_font_size;
-	lv_obj_t*lbl=lv_label_create(pi->box,NULL);
-	lv_label_set_text(lbl,_(title));
-	lv_obj_set_y(lbl,*h);
-
-	blk->txt=lv_textarea_create(pi->box,NULL);
-	lv_textarea_set_text(blk->txt,"0");
-	lv_textarea_set_one_line(blk->txt,true);
-	lv_textarea_set_cursor_hidden(blk->txt,true);
-	lv_textarea_set_accepted_chars(blk->txt,NUMBER);
-	lv_obj_set_user_data(blk->txt,blk);
-	lv_obj_set_event_cb(blk->txt,block_size_cb);
-	lv_obj_align(blk->txt,lbl,LV_ALIGN_OUT_RIGHT_MID,gui_font_size/2,0);
-	lv_obj_set_y(blk->txt,*h);
-	lv_obj_align(lbl,blk->txt,LV_ALIGN_OUT_LEFT_MID,-gui_font_size/2,0);
-
-	blk->unit=lv_dropdown_create(pi->box,NULL);
-	lv_obj_set_user_data(blk->unit,blk);
-	lv_obj_set_event_cb(blk->unit,block_unit_cb);
-	lv_obj_set_width(blk->unit,gui_font_size*4);
-	lv_obj_set_width(blk->txt,w-lv_obj_get_width(blk->unit)-lv_obj_get_width(lbl)-gui_font_size);
-	lv_obj_align(blk->unit,blk->txt,LV_ALIGN_OUT_RIGHT_MID,gui_font_size/2,0);
-	dropdown_add_units(blk->unit);
-	(*h)+=lv_obj_get_height(blk->unit);
-
-	(*h)+=(gui_font_size/2);
-	blk->txt_sec=lv_textarea_create(pi->box,NULL);
-	lv_textarea_set_text(blk->txt_sec,"0");
-	lv_textarea_set_one_line(blk->txt_sec,true);
-	lv_textarea_set_cursor_hidden(blk->txt_sec,true);
-	lv_textarea_set_accepted_chars(blk->txt_sec,NUMBER);
-	lv_obj_set_user_data(blk->txt_sec,blk);
-	lv_obj_set_event_cb(blk->txt_sec,block_sector_cb);
-	lv_obj_set_width(blk->txt_sec,lv_page_get_scrl_width(pi->box));
-	lv_obj_set_y(blk->txt_sec,*h);
-	(*h)+=lv_obj_get_height(blk->txt_sec);
 }
 
 static void ok_cb(lv_obj_t*obj,lv_event_t e){
@@ -332,6 +193,18 @@ static void cancel_cb(lv_obj_t*obj,lv_event_t e){
 	guiact_do_back();
 }
 
+static void init_size_block(
+	lv_coord_t*h,
+	lv_coord_t w,
+	struct part_new_info*pi,
+	struct size_block*blk,
+	char*title
+){
+	guipm_init_size_block(h,w,pi->box,pi,pi->part->di->lsec_size,blk,title);
+	blk->on_sector_changed=update_data_sec;
+	blk->on_size_changed=update_data_size;
+}
+
 static int guipm_draw_new_partition(struct gui_activity*act){
 	struct part_partition_info*info=act->args;
 	if(!info||!info->free||!info->di)return -EINVAL;
@@ -369,7 +242,7 @@ static int guipm_draw_new_partition(struct gui_activity*act){
 
 	h+=(gui_font_size/2);
 	pi->part_type=lv_dropdown_create(pi->box,NULL);
-	lv_obj_set_event_cb(pi->part_type,dropdown_cb);
+	lv_obj_set_event_cb(pi->part_type,lv_default_dropdown_cb);
 	lv_obj_set_width(pi->part_type,w);
 	lv_obj_set_y(pi->part_type,h);
 	h+=lv_obj_get_height(pi->part_type);

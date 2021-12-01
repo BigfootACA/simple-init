@@ -90,6 +90,7 @@ struct size_block{
 	lv_obj_t*unit;
 	lv_obj_t*txt;
 	lv_obj_t*txt_sec;
+	lv_obj_t*slider;
 	fdisk_sector_t sec;
 	fdisk_sector_t min_sec;
 	fdisk_sector_t max_sec;

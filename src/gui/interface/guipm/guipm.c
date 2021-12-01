@@ -88,6 +88,14 @@ static void block_update(struct size_block*blk){
 	snprintf(blk->buf_txt_sec,sizeof(blk->buf_txt_sec)-1,"%ld",blk->sec);
 	lv_textarea_set_text(blk->txt_sec,blk->buf_txt_sec);
 	block_size_update(blk);
+	if(blk->max_sec>0){
+		double k=(double)(blk->sec-blk->min_sec)/(double)(blk->max_sec-blk->min_sec);
+		int16_t max=lv_slider_get_max_value(blk->slider);
+		int16_t min=lv_slider_get_min_value(blk->slider);
+		int16_t v=(max-min)*k+min;
+		if(lv_slider_get_value(blk->slider)!=v)
+			lv_slider_set_value(blk->slider,v,LV_ANIM_ON);
+	}
 }
 
 static void block_unit_cb(lv_obj_t*obj,lv_event_t e){
@@ -165,6 +173,22 @@ static void block_sector_cb(lv_obj_t*obj,lv_event_t e){
 	}
 }
 
+static void block_slider_cb(lv_obj_t*obj,lv_event_t e){
+	struct size_block*pi=lv_obj_get_user_data(obj);
+	if(!pi||!pi->par||obj!=pi->slider||e!=LV_EVENT_RELEASED)return;
+	if(pi->max_sec<=0||lv_slider_is_dragged(obj))return;
+	int16_t max=lv_slider_get_max_value(pi->slider);
+	int16_t min=lv_slider_get_min_value(pi->slider);
+	double k=(double)(lv_slider_get_value(obj)-min)/(double)(max-min);
+	fdisk_sector_t sec=(pi->max_sec-pi->min_sec)*k+pi->min_sec;
+	if(sec==pi->sec)return;
+	if(sec<pi->min_sec)sec=pi->min_sec;
+	if(sec>pi->max_sec)sec=pi->max_sec;
+	pi->sec=sec;
+	SB_PCALL(pi,update_value);
+	if(pi->on_change_value)pi->on_change_value(pi);
+}
+
 void guipm_init_size_block(
 	lv_coord_t*h,
 	lv_coord_t w,
@@ -216,9 +240,19 @@ void guipm_init_size_block(
 	lv_textarea_set_accepted_chars(blk->txt_sec,NUMBER);
 	lv_obj_set_user_data(blk->txt_sec,blk);
 	lv_obj_set_event_cb(blk->txt_sec,block_sector_cb);
-	lv_obj_set_width(blk->txt_sec,lv_page_get_scrl_width(box));
+	lv_obj_set_width(blk->txt_sec,w);
 	lv_obj_set_y(blk->txt_sec,*h);
 	(*h)+=lv_obj_get_height(blk->txt_sec);
+
+	(*h)+=gui_font_size;
+	blk->slider=lv_slider_create(box,NULL);
+	lv_slider_set_range(blk->slider,0,MIN(gui_sw/2,32767));
+	lv_obj_set_user_data(blk->slider,blk);
+	lv_obj_set_event_cb(blk->slider,block_slider_cb);
+	lv_obj_set_width(blk->slider,w-(gui_font_size*2));
+	lv_obj_align(blk->slider,NULL,LV_ALIGN_CENTER,0,0);
+	lv_obj_set_y(blk->slider,*h);
+	(*h)+=lv_obj_get_height(blk->slider);
 }
 
 

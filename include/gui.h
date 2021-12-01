@@ -11,6 +11,10 @@
 #include"lvgl.h"
 #include"defines.h"
 #define IMG_RES _PATH_USR"/share/pixmaps/simple-init"
+#ifndef ENABLE_UEFI
+#include<pthread.h>
+extern pthread_mutex_t gui_lock;
+#endif
 typedef void (*draw_func)(lv_obj_t*);
 extern int gui_dpi_def,gui_dpi_force;
 extern int gui_font_size;

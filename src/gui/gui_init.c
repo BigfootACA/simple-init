@@ -19,6 +19,7 @@
 #include<Library/UefiBootServicesTableLib.h>
 #else
 #include<semaphore.h>
+#include<pthread.h>
 #endif
 #include"gui.h"
 #include"confd.h"
@@ -74,8 +75,12 @@ bool gui_dark=DARK_MODE;
 // is sleeping
 bool gui_sleep=false;
 
+// gui process lock
+pthread_mutex_t gui_lock;
+
 // gui sleep lock
 static sem_t gui_wait;
+
 #endif
 
 // usable gui fontsize
@@ -85,6 +90,8 @@ static int font_sizes[]={10,16,24,32,48,64,72,96};
 static runnable_t*run_exit=NULL;
 
 void gui_do_quit(){
+	sem_destroy(&gui_wait);
+	pthread_mutex_destroy(&gui_lock);
 	guidrv_exit();
 }
 
@@ -332,14 +339,17 @@ int gui_main(){
 	while(gui_run&&!EFI_ERROR(gBS->WaitForEvent(1,&e_loop,&wi)));
 	#else
 	sem_init(&gui_wait,0,0);
+	pthread_mutex_init(&gui_lock,NULL);
 	handle_signals((int[]){SIGINT,SIGQUIT,SIGTERM},3,gui_quit_handler);
 	bool cansleep=guidrv_can_sleep();
 	if(!cansleep)tlog_notice("gui driver disabled sleep");
 	while(gui_run){
 		// 10 seconds inactive sleep
 		if(lv_disp_get_inactive_time(NULL)<10000||!cansleep){
+			pthread_mutex_lock(&gui_lock);
 			lv_task_handler();
 			guidrv_taskhandler();
+			pthread_mutex_unlock(&gui_lock);
 		}else gui_enter_sleep();
 		usleep(30000);
 	}

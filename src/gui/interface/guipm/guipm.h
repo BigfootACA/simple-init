@@ -28,6 +28,7 @@ extern struct gui_register guireg_guipm_disk_select;
 extern struct gui_register guireg_guipm_new_partition;
 extern struct gui_register guireg_guipm_partitions;
 extern struct gui_register guireg_guipm_change_partition_type;
+extern struct gui_register guireg_guipm_resize_partition;
 
 extern const char*guipm_units[];
 
@@ -131,6 +132,12 @@ struct part_new_info{
 struct part_type_info{
 	struct part_partition_info*part;
 	lv_obj_t*box,*ok,*cancel,*part_type;
+};
+
+struct part_resize_info{
+	struct part_partition_info*part;
+	lv_obj_t*box,*ok,*cancel,*bar;
+	struct size_block size;
 };
 
 #endif

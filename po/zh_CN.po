@@ -1815,3 +1815,9 @@ msgstr "更改分区名称"
 
 msgid "Mount the whole disk"
 msgstr "挂载整个磁盘"
+
+msgid "Change partition size failed: %m"
+msgstr "修改分区大小失败: %m"
+
+msgid "Resize Partition"
+msgstr "调整分区大小"

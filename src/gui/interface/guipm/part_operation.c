@@ -103,7 +103,7 @@ static bool change_name_cb(bool ok,const char*content,void*user_data){
 		fdisk_unref_partition(np);
 		return true;
 	}
-	tlog_debug("change partition %zu name to %s",pn,content);
+	tlog_debug("change partition %zu name to %s",pn+1,content);
 	fdisk_unref_partition(np);
 	return false;
 }
@@ -133,6 +133,10 @@ static bool part_menu_cb(uint16_t id,const char*btn __attribute__((unused)),void
 				"ALL DATA IN THE PARTITION WILL BE LOST. "
 				"Are you sure you want to continue?"
 			),user_data);
+		break;
+		case 3:
+			if(ro)goto readonly;
+			guiact_start_activity(&guireg_guipm_resize_partition,user_data);
 		break;
 		case 4:
 			if(ro)goto readonly;

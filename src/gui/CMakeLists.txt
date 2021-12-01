@@ -5,6 +5,7 @@ add_library(init_gui STATIC
 	interface/guipm/disk_operation.c
 	interface/guipm/part_operation.c
 	interface/guipm/part_type.c
+	interface/guipm/part_resize.c
 	interface/guipm/new_partition.c
 	interface/guipm/partitions.c
 	interface/filemgr/fileopen.c

@@ -23,6 +23,13 @@
 #include"gui/tools.h"
 #define TAG "guipm"
 
+static void update_bar(struct part_new_info*p){
+	int16_t max=lv_slider_get_max_value(p->bar);
+	fdisk_sector_t range=p->part->end_sec-p->part->start_sec;
+	lv_bar_set_start_value(p->bar,max*((double)p->start.sec/range),LV_ANIM_ON);
+	lv_bar_set_value(p->bar,max*((double)p->end.sec/range),LV_ANIM_ON);
+}
+
 static void update_data_secs(struct size_block*pi){
 	struct part_new_info*p=pi->par;
 	if(pi==&p->start){
@@ -48,6 +55,7 @@ static void update_data_secs(struct size_block*pi){
 		}
 		SB_CALL(p->end,update_value);
 	}
+	update_bar(p);
 }
 
 static void reload_info(struct part_new_info*pi){
@@ -70,6 +78,7 @@ static void reload_info(struct part_new_info*pi){
 		snprintf(buff,5,"%zu",i+1);
 		lv_dropdown_add_option(pi->part_num,buff,z++);
 	}
+	update_bar(pi);
 }
 
 static int guipm_part_get_focus(struct gui_activity*d){
@@ -207,6 +216,15 @@ static int guipm_draw_new_partition(struct gui_activity*act){
 	lv_obj_set_y(title,h);
 	lv_label_set_align(title,LV_LABEL_ALIGN_CENTER);
 	h+=lv_obj_get_height(title);
+
+	// Partition Bar
+	h+=gui_font_size;
+	pi->bar=lv_bar_create(pi->box,NULL);
+	lv_bar_set_type(pi->bar,LV_BAR_TYPE_SYMMETRICAL);
+	lv_bar_set_range(pi->bar,0,MIN(gui_sw/2,32767));
+	lv_obj_set_width(pi->bar,w);
+	lv_obj_set_y(pi->bar,h);
+	h+=lv_obj_get_height(pi->bar);
 
 	init_size_block(&h,w,pi,&pi->start,"Start:");
 	init_size_block(&h,w,pi,&pi->end,"End:");

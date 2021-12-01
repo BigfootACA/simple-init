@@ -122,7 +122,7 @@ struct size_block{
 struct part_new_info{
 	struct fdisk_context*ctx;
 	struct part_partition_info*part;
-	lv_obj_t*box,*ok,*cancel,*part_type,*part_num;
+	lv_obj_t*box,*ok,*cancel,*part_type,*part_num,*bar;
 	struct size_block start;
 	struct size_block end;
 	struct size_block size;

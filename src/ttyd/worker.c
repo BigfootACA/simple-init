@@ -166,7 +166,7 @@ static int tty_worker(){
 	if(tty_confd_get_boolean(data,"issue",true))
 		tty_issue_write(STDOUT_FILENO,data);
 	if(tty_login(data)){
-		pid_t p=vfork();
+		pid_t p=fork();
 		switch(p){
 			case -1:
 				perror("fork failed");

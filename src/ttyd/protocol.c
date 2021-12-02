@@ -52,6 +52,7 @@ int ttyd_listen_socket(){
 	er=errno;
 	close(fd);
 	unlink(un.sun_path);
+	if(new_data)free(new_data);
 	ERET(er);
 }
 

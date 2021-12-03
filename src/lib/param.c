@@ -88,11 +88,15 @@ keyval**read_params(int fd){
 keyval**append_params(keyval**ptr,keyval**new){
 	if(!new)return ptr;
 	if(!ptr)return new;
+	keyval**p;
 	int idx=-1,ridx=0;
 	while(ptr[++idx]);
 	while(new[ridx]){
 		ptr[++idx]=new[++ridx];
-		if(!(ptr=realloc(ptr,sizeof(keyval*)*idx)))return NULL;
+		if(!(p=realloc(ptr,sizeof(keyval*)*idx))){
+			free(ptr);
+			return NULL;
+		}else ptr=p;
 	}
 	ptr[idx]=NULL;
 	return ptr;

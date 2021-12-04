@@ -13,7 +13,9 @@
 #ifndef _LIST_H
 #define _LIST_H
 #include"defines.h"
+#include<stdlib.h>
 #include<stdbool.h>
+#include<string.h>
 
 // bidirectional linked list
 struct list{
@@ -108,32 +110,37 @@ extern int list_obj_del_data(list**lst,void*data,runnable_t*datafree);
 extern int list_default_free(void*data);
 
 // require not null
-static inline list*list_new_notnull(void*data){if(!data)EPRET(EINVAL);return list_new(data);}
-static inline int list_add_new_notnull(list*point,void*data){if(!data)ERET(EINVAL);return list_add_new(point,data);}
-static inline int list_push_new_notnull(list*point,void*data){if(!data)ERET(EINVAL);return list_push_new(point,data);}
-static inline int list_insert_new_notnull(list*point,void*data){if(!data)ERET(EINVAL);return list_insert_new(point,data);}
-static inline int list_unshift_new_notnull(list*point,void*data){if(!data)ERET(EINVAL);return list_unshift_new(point,data);}
-static inline int list_obj_add_new_notnull(list**lst,void*data){if(!data)ERET(EINVAL);return list_obj_add_new(lst,data);}
+extern void*_memdup(void*mem,size_t len);
+#define memdup _memdup
+#define _IN static inline
+#define _NOTNULL(data,ret,rx) {if(!data){rx(EINVAL);}else{return ret;}}
+#define _NF_NOTNULL(data,ret,rx) {if(!data){rx(EINVAL);}else{int i=ret;if(i<00)free(data);return i;}}
+#define _PF_NOTNULL(data,ret,rx) {if(!data){rx(EINVAL);}else{void*i=ret;if(!i)free(data);return i;}}
+#define _N_NOTNULL(data,ret) _NOTNULL(data,ret,ERET)
+#define _P_NOTNULL(data,ret) _NOTNULL(data,ret,EPRET)
+#define _DECLARE_NOT_NULL(_name,_base,_ret,_notnull,...)_IN _ret _name(__VA_ARGS__ void*data)_notnull(data,_base)
+#define _DECLARE_N_NOT_NULL(_name,_base,...)_DECLARE_NOT_NULL(_name,_base,int,_N_NOTNULL,__VA_ARGS__)
+#define _DECLARE_NX_NOT_NULL(_name,_base)_DECLARE_N_NOT_NULL(_name,_base(point,data),list*point,)
+_DECLARE_NX_NOT_NULL(list_add_new_notnull,list_add_new)
+_DECLARE_NX_NOT_NULL(list_push_new_notnull,list_push_new)
+_DECLARE_NX_NOT_NULL(list_insert_new_notnull,list_insert_new)
+_DECLARE_NX_NOT_NULL(list_unshift_new_notnull,list_unshift_new)
+_DECLARE_N_NOT_NULL(list_obj_add_new_notnull,list_obj_add_new(point,data),list**point,)
+_DECLARE_NOT_NULL(list_new_notnull,list_new(data),list*,_P_NOTNULL,)
 
 // duplicate and new
-#define list_new_dup(data,len)                   list_new_notnull(memdup(data,len))
-#define list_new_strdup(data)                    list_new_notnull(strdup(data))
-#define list_new_strndup(data,len)               list_new_notnull(strndup(data,len))
-#define list_add_new_dup(point,data,len)         list_add_new_notnull(point,memdup(data,len))
-#define list_add_new_strdup(point,data)          list_add_new_notnull(point,strdup(data))
-#define list_add_new_strndup(point,data,len)     list_add_new_notnull(point,strndup(data,len))
-#define list_push_new_dup(point,data,len)        list_push_new_notnull(point,memdup(data,len))
-#define list_push_new_strdup(point,data)         list_push_new_notnull(point,strdup(data))
-#define list_push_new_strndup(point,data,len)    list_push_new_notnull(point,strndup(data,len))
-#define list_insert_new_dup(point,data,len)      list_insert_new_notnull(point,memdup(data,len))
-#define list_insert_new_strdup(point,data)       list_insert_new_notnull(point,strdup(data))
-#define list_insert_new_strndup(point,data,len)  list_insert_new_notnull(point,strndup(data,len))
-#define list_unshift_new_dup(point,data,len)     list_unshift_new_notnull(point,memdup(data,len))
-#define list_unshift_new_strdup(point,data)      list_unshift_new_notnull(point,strdup(data))
-#define list_unshift_new_strndup(point,data,len) list_unshift_new_notnull(point,strndup(data,len))
-#define list_obj_add_new_dup(lst,data,len)     list_obj_add_new_notnull(lst,memdup(data,len))
-#define list_obj_add_new_strdup(lst,data)      list_obj_add_new_notnull(lst,strdup(data))
-#define list_obj_add_new_strndup(lst,data,len) list_obj_add_new_notnull(lst,strndup(data,len))
+#define _DECLARE_DUP(_name,_base,_ret,_dups,_arg,_if,...)_IN _ret _name(__VA_ARGS__){void*dup=(void*)_dups;_ret ret=_base _arg;if(_if)free(dup);return ret;}
+#define _DECLARE_X_DUP(_name,_ret,_arg,_ifs,...) \
+	_DECLARE_DUP(_name##_dup,_name##_notnull,_ret,memdup(data,len),_arg,_ifs,__VA_ARGS__ void*data,size_t len)\
+	_DECLARE_DUP(_name##_strdup,_name##_notnull,_ret,strdup(data),_arg,_ifs,__VA_ARGS__ const char*data)\
+	_DECLARE_DUP(_name##_strndup,_name##_notnull,_ret,strndup(data,len),_arg,_ifs,__VA_ARGS__ const char*data,size_t len)
+#define _DECLARE_PX_DUP(_name) _DECLARE_X_DUP(_name,int,(point,dup),ret<0,list*point,)
+_DECLARE_X_DUP(list_new,list*,(dup),!ret)
+_DECLARE_PX_DUP(list_add_new)
+_DECLARE_PX_DUP(list_push_new)
+_DECLARE_PX_DUP(list_insert_new)
+_DECLARE_PX_DUP(list_unshift_new)
+_DECLARE_X_DUP(list_obj_add_new,int,(point,dup),ret<0,list**point,)
 
 // use default free
 #define list_free_item_def(point)list_free_item(point,list_default_free)

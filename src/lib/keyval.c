@@ -107,12 +107,16 @@ keyval*kv_parse(keyval*kv,char*line,char del){
 	kv_init(kv);
 	char*pos=strchr(line,del),*k=NULL,*v=NULL;
 	if(pos){
-		if(!(k=strndup(line,pos-line))||!(v=strdup(pos+1))){
-			free(k);
+		if(
+			!(k=strndup(line,pos-line))||
+			!(v=strdup(pos+1))
+		){
+			if(k)free(k);
+			if(v)free(v);
 			return NULL;
 		}
 		kv_set(kv,k,v);
-	}else kv->key=line;
+	}else kv->key=strdup(line);
 	return kv;
 }
 
@@ -325,8 +329,8 @@ list*kvlst_add(list*kvs,char*key,char*value){
 	return kvlst_add_obj(kvs,kv_new_set(key,value));
 }
 
-list*kvlst_set_obj(list*kvs,keyval*obj,bool free){
-	if(!obj)EPRET(EINVAL);
+list*kvlst_set_obj(list*kvs,keyval*obj,bool _free){
+	if(!obj||!obj->key)EPRET(EINVAL);
 	list*cur,*next;
 	if(kvs&&(next=list_first(kvs)))do{
 		cur=next;
@@ -334,9 +338,12 @@ list*kvlst_set_obj(list*kvs,keyval*obj,bool free){
 		LIST_DATA_DECLARE(s,cur,keyval*);
 		if(!s->key)continue;
 		if(strcmp(s->key,obj->key)==0){
-			s->value=strdup(obj->value);
-			if(free)kv_free(obj);
-			if(!s->value)EPRET(ENOMEM);
+			char*v=obj->value;
+			if(_free){
+				free(obj->key);
+				free(obj);
+			}
+			s->value=v;
 			return kvs;
 		}
 	}while((next=cur->next));
@@ -388,9 +395,12 @@ list*kvlst_parse(list*kvs,size_t s,char*lines,char ldel,char del){
 	if(!lines||!(cur=d=strdup(lines)))return NULL;
 	do{
 		if((next=strchr(cur,ldel)))next[0]=0,next++;
-		if(!(kvs=kvlst_set_obj(
-			kvs,kv_new_parse(cur,del),true
-		)))return NULL;
+		keyval*n=kv_new_parse(cur,del);
+		if(!n||!(kvs=kvlst_set_obj(kvs,n,true))){
+			free(d);
+			if(n)kv_free(n);
+			return NULL;
+		}
 	}while((cur=next)&&(s==0||i<s));
 	free(d);
 	return kvs;

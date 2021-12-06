@@ -26,6 +26,7 @@ struct gadget_add_mass{
 	lv_obj_t*box,*ok,*cancel,*btn_sel;
 	lv_obj_t*txt_id,*txt_path;
 	lv_obj_t*ro,*removable,*cdrom;
+	bool check_changed;
 };
 
 static int add_mass_get_focus(struct gui_activity*d){
@@ -56,11 +57,22 @@ static int add_mass_lost_focus(struct gui_activity*d){
 	return 0;
 }
 
+static void set_disk_file(struct gadget_add_mass*am,const char*path){
+	lv_textarea_set_text(am->txt_path,path);
+	if(am->check_changed)return;
+	char*ext=strrchr(path,'.');
+	if(!ext)return;
+	ext++;
+	bool is_cdrom=strcasecmp(ext,"iso")==0;
+	lv_checkbox_set_checked(am->ro,is_cdrom);
+	lv_checkbox_set_checked(am->cdrom,is_cdrom);
+}
+
 static bool select_cb(bool ok,const char**path,uint16_t cnt,void*user_data){
 	if(!ok)return false;
 	if(!path||!path[0]||path[1]||cnt!=1)return true;
 	struct gadget_add_mass*am=user_data;
-	lv_textarea_set_text(am->txt_path,path[0]+2);
+	set_disk_file(am,path[0]+2);
 	return false;
 }
 
@@ -142,6 +154,12 @@ static void inp_cb(lv_obj_t*obj __attribute__((unused)),lv_event_t e){
 	sysbar_keyboard_open();
 }
 
+static void chk_cb(lv_obj_t*obj,lv_event_t e){
+	if(e!=LV_EVENT_CLICKED)return;
+	struct gadget_add_mass*am=lv_obj_get_user_data(obj);
+	if(am)am->check_changed=true;
+}
+
 static int draw_add_mass(struct gui_activity*act){
 	struct gadget_add_mass*am=act->data;
 
@@ -168,7 +186,7 @@ static int draw_add_mass(struct gui_activity*act){
 	lv_obj_set_y(path,h);
 
 	am->txt_path=lv_textarea_create(am->box,NULL);
-	lv_textarea_set_text(am->txt_path,act->args?(char*)act->args:"");
+	lv_textarea_set_text(am->txt_path,"");
 	lv_textarea_set_one_line(am->txt_path,true);
 	lv_textarea_set_cursor_hidden(am->txt_path,true);
 	lv_obj_set_user_data(am->txt_path,am);
@@ -214,6 +232,8 @@ static int draw_add_mass(struct gui_activity*act){
 	am->cdrom=lv_checkbox_create(am->box,NULL);
 	lv_style_set_focus_checkbox(am->cdrom);
 	lv_checkbox_set_text(am->cdrom,_("CDROM"));
+	lv_obj_set_user_data(am->cdrom,am);
+	lv_obj_set_event_cb(am->cdrom,chk_cb);
 	lv_obj_set_y(am->cdrom,h);
 	h+=lv_obj_get_height(am->cdrom);
 
@@ -223,6 +243,8 @@ static int draw_add_mass(struct gui_activity*act){
 	lv_style_set_focus_checkbox(am->removable);
 	lv_checkbox_set_text(am->removable,_("Removable"));
 	lv_checkbox_set_checked(am->removable,true);
+	lv_obj_set_user_data(am->removable,am);
+	lv_obj_set_event_cb(am->removable,chk_cb);
 	lv_obj_set_y(am->removable,h);
 	h+=lv_obj_get_height(am->removable);
 
@@ -231,6 +253,8 @@ static int draw_add_mass(struct gui_activity*act){
 	am->ro=lv_checkbox_create(am->box,NULL);
 	lv_style_set_focus_checkbox(am->ro);
 	lv_checkbox_set_text(am->ro,_("Read Only"));
+	lv_obj_set_user_data(am->ro,am);
+	lv_obj_set_event_cb(am->ro,chk_cb);
 	lv_obj_set_y(am->ro,h);
 	h+=lv_obj_get_height(am->ro);
 
@@ -257,6 +281,7 @@ static int draw_add_mass(struct gui_activity*act){
 	h+=gui_font_size*3;
 	lv_obj_set_height(am->box,MIN(h,(lv_coord_t)gui_sh/6*5));
 	lv_obj_align(am->box,NULL,LV_ALIGN_CENTER,0,0);
+	if(act->args)set_disk_file(am,act->args);
 	return 0;
 }
 

@@ -23,8 +23,11 @@ struct sysbar{
 			#endif
 		}content;
 	}top;
+	lv_task_t*hide;
 	lv_obj_t*keyboard;
 	lv_obj_t*focus_input;
+	lv_obj_t*bar_btn;
+	bool full_screen;
 	struct{
 		lv_obj_t*bar;
 		lv_style_t btn_style;
@@ -41,6 +44,15 @@ extern struct sysbar sysbar;
 
 // src/gui/interface/core/sysbar.c: init sysbar in screen
 extern int sysbar_draw(lv_obj_t*scr);
+
+// src/gui/interface/core/sysbar.c: set sysbar full screen status
+extern void sysbar_set_full_screen(bool fs);
+
+// src/gui/interface/core/sysbar.c: show top bar and bottom bar in full screen
+extern void sysbar_show_bar(void);
+
+// src/gui/interface/core/sysbar.c: hide full screen sysbar toggle button
+extern void sysbar_hide_full_screen_btn(void);
 
 // src/gui/interface/core/sysbar.c: toggle keyboard status
 extern void sysbar_keyboard_toggle(void);

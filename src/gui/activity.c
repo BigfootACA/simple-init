@@ -100,7 +100,10 @@ int guiact_remove_last(bool focus){
 	sysbar_focus_input(NULL);
 	call_lost_focus_last();
 	if(l->page)lv_obj_del_async(l->page);
+	bool fs=l->reg->full_screen;
 	guiact_remove_last_list();
+	l=guiact_get_last();
+	if(fs&&l&&!l->reg->full_screen)sysbar_set_full_screen(false);
 	if(focus)call_get_focus_last();
 	return 0;
 }
@@ -186,6 +189,7 @@ static void guiact_start_task(lv_task_t*t){
 		free(act);
 		return;
 	}
+	if(reg->full_screen)sysbar_set_full_screen(true);
 	if(act->mask){
 		act->page=lv_objmask_create(sysbar.content,NULL);
 		lv_obj_add_style(act->page,LV_OBJMASK_PART_MAIN,lv_style_opa_mask());

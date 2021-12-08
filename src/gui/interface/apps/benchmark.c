@@ -755,6 +755,7 @@ struct gui_register guireg_benchmark={
 	.name="gui-benchmark",
 	.title="GUI Benchmark",
 	.icon="gui-benchmark.png",
+	.full_screen=true,
 	.show_app=true,
 	.init=benchmark_init,
 	.quiet_exit=benchmark_cleanup,

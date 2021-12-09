@@ -33,4 +33,5 @@ extern char*shell_replace(char*dest,char*src,size_t size);
 
 // declare builtin command info
 #define DECLARE_CMD(fork,name,help) &((struct shell_command){true,fork,#name,help,&name##_main}),
+#define DECLARE_CMD_MAIN(fork,name,help,main) &((struct shell_command){true,fork,#name,help,&main}),
 #endif

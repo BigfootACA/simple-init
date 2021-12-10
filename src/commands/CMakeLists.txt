@@ -36,4 +36,5 @@ add_library(init_commands STATIC
 	close.c
 	write.c
 	echo.c
+	simple-init.c
 )

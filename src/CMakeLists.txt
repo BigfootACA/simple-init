@@ -64,7 +64,7 @@ add_custom_command(
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(DEPS REQUIRED IMPORTED_TARGET ${DEPENDS})
 include_directories(${DEPS_INCLUDE_DIRS} include)
-add_executable(init src/main/main.c)
+add_executable(simple-init src/main/main.c)
 set(SUBDIRS
 	src/assets
 	src/boot
@@ -85,35 +85,35 @@ set(SUBDIRS
 	src/ttyd
 )
 
-target_link_libraries(init -Wl,--start-group)
+target_link_libraries(simple-init -Wl,--start-group)
 
 foreach(SUBDIR ${SUBDIRS})
 	add_subdirectory("${SUBDIR}")
 	string(REPLACE "src/" "init_" SUBLIB "${SUBDIR}")
-	target_link_libraries(init "${SUBLIB}")
+	target_link_libraries(simple-init "${SUBLIB}")
 endforeach()
 
 if("${ENABLE_GUI}" STREQUAL "ON")
-	target_link_libraries(init lvgl)
+	target_link_libraries(simple-init lvgl)
 endif()
 
 if(("${ENABLE_FREETYPE2}" STREQUAL "ON") AND ("${SYSTEM_FREETYPE2}" STREQUAL "OFF"))
-	target_link_libraries(init freetype2)
+	target_link_libraries(simple-init freetype2)
 endif()
 
 add_library(init_rootfs STATIC ${CMAKE_CURRENT_BINARY_DIR}/rootfs.c ${CMAKE_CURRENT_BINARY_DIR}/rootfs_data.o)
-target_link_libraries(init init_rootfs)
+target_link_libraries(simple-init init_rootfs)
 
-target_link_libraries(init -Wl,--end-group)
+target_link_libraries(simple-init -Wl,--end-group)
 
 if("${ENABLE_LODEPNG}" STREQUAL "ON")
-	target_link_libraries(init lodepng)
+	target_link_libraries(simple-init lodepng)
 endif()
 
 if("${ENABLE_STATIC}" STREQUAL "ON")
-	target_link_libraries(init ${DEPS_STATIC_LIBRARIES})
+	target_link_libraries(simple-init ${DEPS_STATIC_LIBRARIES})
 else()
-	target_link_libraries(init ${DEPS_LIBRARIES})
+	target_link_libraries(simple-init ${DEPS_LIBRARIES})
 endif()
 
-target_link_libraries(init pthread crypt)
+target_link_libraries(simple-init pthread crypt)

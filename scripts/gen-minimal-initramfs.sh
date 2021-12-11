@@ -4,8 +4,8 @@ pushd "$(dirname "$0")/.." >/dev/null
 source scripts/functions.sh.inc
 source scripts/environments.sh.inc
 [ -n "${1}" ]&&export INITRAMFS="${1}"
-if ! [ -x build/init ]
-then	echo "init binary not found, please compile first"
+if ! [ -x build/simple-init ]
+then	echo "simple-init binary not found, please compile first"
 	exit 1
 fi
 if ! [ -d "${ORIGROOT}" ]
@@ -22,10 +22,10 @@ cp -r "${ORIGROOT}" "${TESTROOT}"
 mkdir -p "${TESTROOT}"/usr/{bin,lib}
 ln -s usr/lib "${TESTROOT}"/lib64
 ln -s usr/lib "${TESTROOT}"/lib
-add_binary build/init "${TESTROOT}"/usr
+add_binary build/simple-init "${TESTROOT}"/usr
 add_library /usr/lib/libnss_dns.so.2 "${TESTROOT}"/usr ||true
 add_library /usr/lib/libnss_files.so.2 "${TESTROOT}"/usr ||true
-ln -s usr/bin/init "${TESTROOT}"/init
+ln -s usr/bin/simple-init "${TESTROOT}"/init
 if [ -f /usr/bin/busybox ]
 then	add_binary /usr/bin/busybox "${TESTROOT}"/usr
 	init_busybox "${TESTROOT}"

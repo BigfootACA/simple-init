@@ -4,8 +4,8 @@ pushd "$(dirname "$0")/.." >/dev/null
 source scripts/functions.sh.inc
 source scripts/environments.sh.inc
 [ -n "${1}" ]&&export INITRAMFS="${1}"
-if ! [ -x build/init ]
-then	echo "init binary not found, please compile first"
+if ! [ -x build/simple-init ]
+then	echo "simple-init binary not found, please compile first"
 	exit 1
 fi
 if ! [ -d "${ORIGROOT}" ]
@@ -29,13 +29,13 @@ done
 for i in "${DATAS[@]}"
 do add_data "${i}" "${TESTROOT}"||true
 done
-add_binary build/init "${TESTROOT}"/usr
+add_binary build/simple-init "${TESTROOT}"/usr
 cat<<EOF>>"${TESTROOT}"/init
 #!/usr/bin/bash
 mkdir -p /proc /sys
 mount -t proc proc /proc
 mount -t sysfs sysfs /sys
-exec /usr/bin/init
+exec /usr/bin/simple-init init
 EOF
 chmod +x "${TESTROOT}"/init
 init_busybox "${TESTROOT}"

@@ -25,14 +25,14 @@ jobs:
       - name: Build Main
         run: bash scripts/build.sh
       - name: Strip Main
-        run: strip build/init
+        run: strip build/simple-init
       - name: Build Initramfs
         run: bash scripts/gen-initramfs.sh build/initramfs.img
-      - name: Upload Artifact init
+      - name: Upload Artifact simple-init
         uses: actions/upload-artifact@v2
         with:
-          name: init
-          path: build/init
+          name: simple-init
+          path: build/simple-init
       - name: Upload Artifact initramfs.img
         uses: actions/upload-artifact@v2
         with:

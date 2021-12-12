@@ -27,6 +27,13 @@ static lv_obj_t*txt_manufacturer,*txt_product;
 static lv_obj_t*btn_ok,*btn_reset,*btn_cancel;
 static char*base="gadget";
 
+static inline void lv_textarea_set_text_config(lv_obj_t*txt,char*key,char*def){
+	char*v=confd_get_string_base(base,key,def);
+	if(!v)return;
+	lv_textarea_set_text(txt,v);
+	free(v);
+}
+
 static void load_base_info(){
 	char idv[6],idp[6];
 	tlog_debug("loading gadget base info");
@@ -34,11 +41,11 @@ static void load_base_info(){
 	snprintf(idp,5,"%04lX",confd_get_integer_base(base,"id_product",0));
 	lv_textarea_set_text(txt_id_vendor,idv);
 	lv_textarea_set_text(txt_id_product,idp);
-	lv_textarea_set_text(txt_name,confd_get_string_base(base,"name","gadget"));
-	lv_textarea_set_text(txt_config,confd_get_string_base(base,"config","linux-gadget"));
-	lv_textarea_set_text(txt_serial,confd_get_string_base(base,"serial","1234567890"));
-	lv_textarea_set_text(txt_manufacturer,confd_get_string_base(base,"manufacturer","manufacturer"));
-	lv_textarea_set_text(txt_product,confd_get_string_base(base,"product","product"));
+	lv_textarea_set_text_config(txt_name,"name","gadget");
+	lv_textarea_set_text_config(txt_config,"config","linux-gadget");
+	lv_textarea_set_text_config(txt_serial,"serial","1234567890");
+	lv_textarea_set_text_config(txt_manufacturer,"manufacturer","manufacturer");
+	lv_textarea_set_text_config(txt_product,"product","product");
 	lv_dropdown_clear_options(sel_udc);
 	lv_dropdown_add_option(sel_udc,_("(None)"),0);
 	lv_dropdown_set_selected(sel_udc,0);
@@ -53,6 +60,7 @@ static void load_base_info(){
 			lv_dropdown_add_option(sel_udc,ent->d_name,i);
 			if(p&&strcmp(p,ent->d_name)==0)lv_dropdown_set_selected(sel_udc,i);
 		}
+		if(p)free(p);
 		closedir(d);
 	}
 }

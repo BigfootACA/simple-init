@@ -89,11 +89,17 @@ static int fill_partition_info(struct part_disk_info*di,struct part_partition_in
 		);
 	}else{
 		part->no=fdisk_partition_get_partno(part->part);
-
 		part->type=fdisk_partition_get_type(part->part);
 		char*pname=(char*)fdisk_partition_get_name(part->part);
-		if(pname&&pname[0])strcpy(part->name,pname);
-		strcpy(part->partname,fdisk_partname(di->target,part->no+1));
+		if(pname){
+			if(pname[0])strcpy(part->name,pname);
+			free(pname);
+		}
+		char*partname=(char*)fdisk_partname(di->target,part->no+1);
+		if(partname){
+			if(partname[0])strcpy(part->partname,partname);
+			free(partname);
+		}
 		strcpy(part->type_str,fdisk_parttype_get_name(part->type));
 		tlog_debug(
 			"%s start %s(%lu), end %s(%lu), size %s(%lu), name %s, type %s",

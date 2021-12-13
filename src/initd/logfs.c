@@ -32,11 +32,13 @@ static pthread_t t_logfs;
 static int _setup_logfs(){
 	int e=0;
 	static char*base="runtime.cmdline";
-	char*logfs=strdup(confd_get_string_base(base,"logfs",DEFAULT_LOGFS_BLOCK));
+	char*logfs=confd_get_string_base(base,"logfs",DEFAULT_LOGFS_BLOCK);
 	char*logfile=confd_get_string_base(base,"logfile",DEFAULT_LOGFS_FILE);
 	if(!logfs)ERET(ENOMEM);
 
 	if(strcasecmp(logfs,"none")==0){
+		free(logfs);
+		if(logfile)free(logfile);
 		tlog_warn("skip mount logfs");
 		return 0;
 	}
@@ -52,7 +54,10 @@ static int _setup_logfs(){
 		tlog_alert("evaluate tag support is disabled");
 	#endif
 	}
-	if(!logfs)return tlog_warn("logfs not found");
+	if(!logfs){
+		if(logfile)free(logfile);
+		return tlog_warn("logfs not found");
+	}
 
 	char*type=NULL;
 	#ifdef ENABLE_BLKID
@@ -112,6 +117,7 @@ static int _setup_logfs(){
 		blkid_put_cache(cache);
 	}
 	#endif
+	if(logfile)free(logfile);
 	free(logfs);
 	return e;
 }

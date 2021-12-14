@@ -31,11 +31,13 @@ static pthread_t t_conffs;
 static int _setup_conffs(){
 	int e=0;
 	static char*base="runtime.cmdline";
-	char*conffs=strdup(confd_get_string_base(base,"conffs",DEFAULT_CONFFS_BLOCK));
+	char*conffs=confd_get_string_base(base,"conffs",DEFAULT_CONFFS_BLOCK);
 	char*conffile=confd_get_string_base(base,"conffile",DEFAULT_CONFFS_FILE);
 	if(!conffs)ERET(ENOMEM);
 
 	if(strcasecmp(conffs,"none")==0){
+		free(conffs);
+		if(conffile)free(conffile);
 		tlog_warn("skip mount conffs");
 		return 0;
 	}
@@ -51,7 +53,10 @@ static int _setup_conffs(){
 		tlog_alert("evaluate tag support is disabled");
 	#endif
 	}
-	if(!conffs)return tlog_warn("conffs not found");
+	if(!conffs){
+		if(conffile)free(conffile);
+		return tlog_warn("conffs not found");
+	}
 
 	char*type=NULL;
 	#ifdef ENABLE_BLKID
@@ -93,6 +98,7 @@ static int _setup_conffs(){
 		blkid_put_cache(cache);
 	}
 	#endif
+	if(conffile)free(conffile);
 	free(conffs);
 	return e;
 }

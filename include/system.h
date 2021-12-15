@@ -102,6 +102,9 @@ extern int xmount(
 
 // src/lib/mount.c: get a unused mountpoint
 extern char*auto_mountpoint(char*path,size_t len);
+
+// src/lib/mount.c: lock and unlock mountpoint folder
+extern void mountpoint_locker(bool lock);
 #endif
 
 // src/lib/file.c: one line write file

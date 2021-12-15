@@ -152,3 +152,12 @@ char*auto_mountpoint(char*path,size_t len){
 	}
 	EPRET(EMFILE);
 }
+
+void mountpoint_locker(bool lock){
+	static char*base=_PATH_RUN"/mounts/LOCK";
+	if(lock){
+		mkdir(_PATH_RUN"/mounts",0755);
+		while(access(base,F_OK)==0)usleep(500000);
+		close(open(base,O_WRONLY|O_CREAT,0644));
+	}else unlink(base);
+}

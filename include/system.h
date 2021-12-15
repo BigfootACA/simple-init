@@ -105,6 +105,9 @@ extern char*auto_mountpoint(char*path,size_t len);
 
 // src/lib/mount.c: lock and unlock mountpoint folder
 extern void mountpoint_locker(bool lock);
+
+// src/lib/mount.c: auto mount and reuse
+extern int auto_mount(const char*source,const char*type,char*target,size_t len);
 #endif
 
 // src/lib/file.c: one line write file

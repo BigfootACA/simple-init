@@ -161,3 +161,37 @@ void mountpoint_locker(bool lock){
 		close(open(base,O_WRONLY|O_CREAT,0644));
 	}else unlink(base);
 }
+
+int auto_mount(const char*source,const char*type,char*target,size_t len){
+	bool mounted=false;
+	mountpoint_locker(true);
+	memset(target,0,len);
+	struct mount_item**ms=read_proc_mounts();
+	if(ms){
+		for(size_t i=0;ms[i];i++){
+			if(strcmp(type,ms[i]->type)!=0)continue;
+			if(strcmp(source,ms[i]->source)!=0)continue;
+			mounted=true;
+			strncpy(target,ms[i]->target,len-1);
+			tlog_debug("%s already mounted on %s",source,target);
+			break;
+		}
+		free_mounts(ms);
+	}
+	if(!mounted){
+		int e;
+		if(!auto_mountpoint(target,len)){
+			e=-(errno);
+			telog_error("cannot get new mountpoint");
+			mountpoint_locker(false);
+			return e;
+		}
+		if(xmount(false,source,target,type,"rw,noatime",true)!=0){
+			e=-(errno);
+			mountpoint_locker(false);
+			return e;
+		}
+	}
+	mountpoint_locker(false);
+	return 0;
+}

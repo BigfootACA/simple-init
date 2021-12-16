@@ -76,16 +76,8 @@ static int _setup_conffs(){
 	#endif
 	#endif
 
-	char point[256];
-	if(!auto_mountpoint(point,256)){
-		e=terlog_error(-errno,"cannot get new mountpoint");
-		goto ex;
-	}
-
-	if(xmount(false,conffs,point,type,"rw,noatime",true)!=0){
-		e=-errno;
-		goto ex;
-	}
+	char point[PATH_MAX];
+	if((e=auto_mount(conffs,type,point,PATH_MAX))!=0)goto ex;
 
 	char path[PATH_MAX]={0};
 	snprintf(path,PATH_MAX-1,"%s/%s",point,conffile);

@@ -77,16 +77,8 @@ static int _setup_logfs(){
 	#endif
 	#endif
 
-	char point[256];
-	if(!auto_mountpoint(point,256)){
-		e=terlog_error(-errno,"cannot get new mountpoint");
-		goto ex;
-	}
-
-	if(xmount(false,logfs,point,type,"rw,noatime",true)!=0){
-		e=-errno;
-		goto ex;
-	}
+	char point[PATH_MAX];
+	if((e=auto_mount(logfs,type,point,PATH_MAX))!=0)goto ex;
 
 	char cnum[8],path[PATH_MAX];
 	keyval*v[]={

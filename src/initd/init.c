@@ -138,7 +138,10 @@ int init_main(int argc __attribute__((unused)),char**argv __attribute__((unused)
 	#ifdef ENABLE_KMOD
 	insmod("unix",true);// load unix socket for loggerd
 	#endif
-	start_loggerd(NULL);
+	if(start_loggerd(NULL)<0){
+		telog_emerg("start loggerd failed");
+		abort();
+	}
 	atexit(init_do_exit);
 	tlog_info("init started");
 

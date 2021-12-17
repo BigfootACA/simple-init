@@ -158,8 +158,11 @@ int init_main(int argc __attribute__((unused)),char**argv __attribute__((unused)
 	// register all services
 	init_register_all_service();
 
-	// while
-	sfd=listen_init_socket();
+	// listen init control socket
+	if((sfd=listen_init_socket())<0){
+		telog_emerg("listen init control socket failed");
+		abort();
+	}
 
 	// start default service
 	service_start(svc_default);

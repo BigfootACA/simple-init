@@ -87,7 +87,10 @@ int preinit(){
 	chown(DEFAULT_LOGGER,0,0);
 
 	// start config daemon
-	start_confd(TAG,NULL);
+	if(start_confd(TAG,NULL)<0){
+		tlog_emerg("start config daemon failed");
+		abort();
+	}
 
 	// create config runtime root key
 	confd_add_key("runtime");

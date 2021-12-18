@@ -20,7 +20,7 @@
 #include"str.h"
 #include"logger.h"
 #include"confd_internal.h"
-#define TAG "configuration"
+#define TAG "config"
 
 static char*str_escape(char*str){
 	if(!str)EPRET(EINVAL);

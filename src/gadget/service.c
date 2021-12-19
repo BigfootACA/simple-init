@@ -160,11 +160,13 @@ static int gadget_startup(struct service*svc __attribute__((unused))){
 		if(f.function)free(f.function);
 		if(mode)free(mode);
 	}
-	if(!(udc=confd_get_string("gadget.udc",gadget_find_udc())))return trlog_error(-1,"get gadget udc failed");
+	if(items[0])free(items[0]);
+	free(items);
+	if(!(udc=confd_get_string("gadget.udc",gadget_find_udc())))XERR("get gadget udc failed")
 	int r=gadget_start(&g,udc);
 	if(r<0)tlog_error("start gadget failed with %s",udc);
 	free(udc);
-	if(r<0)return -1;
+	if(r<0)goto fail;
 	tlog_info("usb gadget initialized");
 	return 0;
 	fail:

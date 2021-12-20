@@ -6,7 +6,7 @@
 bash scripts/build.sh -DENABLE_SDL2=ON
 ```
 
-输出: `build/init` (ELF可执行文件)
+输出: `build/simple-init` (ELF可执行文件)
 
 ## 2. 生成最小initramfs
 

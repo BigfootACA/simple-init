@@ -5,7 +5,7 @@
 ```bash
 bash scripts/build.sh
 ```
-output: `build/init` (ELF Executable)
+output: `build/simple-init` (ELF Executable)
 
 ## 2. Generate minimal initramfs
 

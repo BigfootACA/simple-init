@@ -156,7 +156,6 @@ diff --git a/src/gui/CMakeLists.txt b/src/gui/CMakeLists.txt
 
 ```diff
 diff --git a/src/gui/SimpleInitGUI.inf b/src/gui/SimpleInitGUI.inf
-index 81b4fcd..aee534a 100644
 --- a/src/gui/SimpleInitGUI.inf
 +++ b/src/gui/SimpleInitGUI.inf
 @@ -62,3 +62,4 @@

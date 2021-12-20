@@ -5,14 +5,14 @@
 ```bash
 bash scripts/build.sh -DENABLE_SDL2=ON
 ```
-output: `build/init` (ELF Executable)
+output: `build/simple-init` (ELF Executable)
 
 `ENABLE_SDL2`: enable SDL2 guidrv for GUI Applications
 
 ## 2. Run GUI Application
 
 ```bash
-INIT_MAIN=guiapp build/init
+build/simple-init guiapp
 ```
 NOTICE: need X11 environment
 

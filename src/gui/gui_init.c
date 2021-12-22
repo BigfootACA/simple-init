@@ -90,8 +90,10 @@ static int font_sizes[]={10,16,24,32,48,64,72,96};
 static runnable_t*run_exit=NULL;
 
 void gui_do_quit(){
+	#ifndef ENABLE_UEFI
 	sem_destroy(&gui_wait);
 	pthread_mutex_destroy(&gui_lock);
+	#endif
 	guidrv_exit();
 }
 

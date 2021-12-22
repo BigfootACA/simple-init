@@ -38,6 +38,7 @@ add_library(init_gui STATIC
 	interface/apps/calendar.c
 	interface/apps/mount.c
 	interface/apps/add_mount.c
+	interface/apps/scr_test.c
 	drivers/drm.c
 	drivers/vnc.c
 	drivers/fbdev.c

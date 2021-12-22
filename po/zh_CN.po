@@ -1821,3 +1821,6 @@ msgstr "修改分区大小失败: %m"
 
 msgid "Resize Partition"
 msgstr "调整分区大小"
+
+msgid "Screen Color Test"
+msgstr "屏幕色彩测试"

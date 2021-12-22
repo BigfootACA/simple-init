@@ -11,6 +11,7 @@
 extern struct gui_register guireg_guipm_disk_select;
 extern struct gui_register guireg_guipm_partitions;
 extern struct gui_register guireg_uefi_bootmenu;
+extern struct gui_register guireg_screen_test;
 extern struct gui_register guireg_uefi_start;
 extern struct gui_register guireg_uefi_shell;
 extern struct gui_register guireg_mouse_menu;
@@ -55,6 +56,7 @@ struct gui_register*guiact_register[]={
 	#ifdef ENABLE_HIVEX
 	&guireg_regedit,
 	#endif
+	&guireg_screen_test,
 	&guireg_theme_menu,
 	&guireg_benchmark,
 	&guireg_text_edit,

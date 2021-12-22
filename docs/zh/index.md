@@ -11,3 +11,7 @@
 ## 源码示例
 
 ### [简单的GUI APP](examples/simple-guiapp.md)
+
+### [msgbox示例](examples/msgbox.md)
+
+### [Logger日志示例](examples/logger.md)

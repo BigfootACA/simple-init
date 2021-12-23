@@ -8,7 +8,6 @@
 
 #ifdef ENABLE_GUI
 #include<time.h>
-#include<stdlib.h>
 #include"gui.h"
 #include"hardware.h"
 #include"gui/tools.h"
@@ -272,6 +271,8 @@ int sysbar_draw(lv_obj_t*scr){
 	lv_obj_set_drag(sysbar.bar_btn,true);
 	lv_obj_set_size(sysbar.bar_btn,bs,bs);
 	lv_obj_set_pos(sysbar.bar_btn,gui_w-bm,gui_h-sysbar.size-bm);
+	lv_obj_set_style_local_shadow_color(sysbar.bar_btn,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,LV_COLOR_GRAY);
+	lv_obj_set_style_local_shadow_width(sysbar.bar_btn,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,gui_font_size);
 	lv_label_set_text(lv_label_create(sysbar.bar_btn,NULL),"\uf066");
 
 	lv_task_create(sysbar_thread_cb,5000,LV_TASK_PRIO_LOW,&sysbar);

@@ -17,11 +17,11 @@
 #include"gui/sysbar.h"
 #include"gui/activity.h"
 #include"gui/inputbox.h"
+#include"gui/clipboard.h"
 #include"gui/filepicker.h"
 #define TAG "editor"
 
 static char*cur_path=NULL;
-static char*clipboard=NULL;
 static char*last_search=NULL;
 static bool changed=false;
 static lv_obj_t*text;
@@ -48,6 +48,7 @@ static int editor_get_focus(struct gui_activity*act __attribute__((unused))){
 	lv_group_add_obj(gui_grp,btn_copy);
 	lv_group_add_obj(gui_grp,btn_paste);
 	lv_group_add_obj(gui_grp,btn_menu);
+	lv_obj_set_enabled(btn_paste,clipboard_get_type()==CLIP_TEXT);
 	return 0;
 }
 
@@ -72,10 +73,7 @@ static void do_copy(){
 	lv_textarea_ext_t*ext=lv_obj_get_ext_attr(text);
 	uint32_t i=ext->sel_end-ext->sel_start;
 	if(i==0)return;
-	if(clipboard)free(clipboard);
-	if(!(clipboard=malloc(i+1)))return;
-	memset(clipboard,0,i+1);
-	strncpy(clipboard,cont+ext->sel_start,i);
+	clipboard_set(CLIP_TEXT,cont+ext->sel_start,i);
 	lv_obj_set_enabled(btn_paste,true);
 }
 
@@ -104,14 +102,14 @@ static void do_cut(){
 }
 
 static void do_paste(){
-	if(!clipboard)return;
+	if(clipboard_get_type()!=CLIP_TEXT)return;
 	lv_textarea_ext_t*ext=lv_obj_get_ext_attr(text);
 	uint32_t ss=ext->sel_start,se=ext->sel_end,sl=se-ss;
 	if(sl>0){
 		remove_text(ss,sl);
 		lv_textarea_set_cursor_pos(text,ss);
 	}
-	lv_textarea_add_text(text,clipboard);
+	lv_textarea_add_text(text,clipboard_get_content());
 }
 
 struct open_data{
@@ -409,10 +407,10 @@ static int do_back(struct gui_activity*act __attribute__((unused))){
 	);
 	return 1;
 }
+
 static int do_clean(struct gui_activity*act __attribute__((unused))){
 	if(cur_path)free(cur_path);
-	if(clipboard)free(clipboard);
-	cur_path=NULL,clipboard=NULL,changed=false;
+	cur_path=NULL,changed=false;
 	return 0;
 }
 
@@ -466,7 +464,7 @@ static int editor_draw(struct gui_activity*act){
 	lv_label_set_text(lv_label_create(btn_copy,NULL),LV_SYMBOL_COPY);
 
 	btn_paste=lv_btn_create(act->page,NULL);
-	lv_obj_set_enabled(btn_paste,false);
+	lv_obj_set_enabled(btn_paste,clipboard_get_type()==CLIP_TEXT);
 	lv_obj_set_size(btn_paste,btw,bth);
 	lv_obj_set_event_cb(btn_paste,btns_cb);
 	lv_obj_set_user_data(btn_paste,"paste");

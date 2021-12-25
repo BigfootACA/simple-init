@@ -31,6 +31,7 @@ add_library(init_gui STATIC
 	interface/core/sysbar.c
 	interface/core/charger.c
 	interface/core/guiapp.c
+	interface/core/clipboard.c
 	interface/apps/text_editor.c
 	interface/apps/logviewer.c
 	interface/apps/benchmark.c

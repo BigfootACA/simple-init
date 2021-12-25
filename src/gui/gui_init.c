@@ -32,6 +32,7 @@
 #include"gui/sysbar.h"
 #include"gui/guidrv.h"
 #include"gui/activity.h"
+#include"gui/clipboard.h"
 #define TAG "gui"
 
 #ifndef ENABLE_UEFI
@@ -300,6 +301,9 @@ int gui_screen_init(){
 int gui_draw(){
 	// draw top and bottom sysbar
 	sysbar_draw(lv_scr_act());
+
+	// restore clipboard
+	clipboard_init();
 
 	// draw callback
 	guiact_start_activity_by_name("guiapp",NULL);

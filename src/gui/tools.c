@@ -232,4 +232,19 @@ void lv_default_dropdown_cb(lv_obj_t*obj,lv_event_t e __attribute__((unused))){
 	lv_group_set_editing(gui_grp,ex->page!=NULL);
 }
 
+void lv_textarea_remove_text(lv_obj_t*ta,uint32_t start,uint32_t len){
+	if(len==0)return;
+	lv_textarea_ext_t*ext=lv_obj_get_ext_attr(ta);
+	char*txt=lv_label_get_text(ext->label);
+	_lv_txt_cut(txt,start,len);
+	lv_label_set_text(ext->label,txt);
+	lv_textarea_clear_selection(ta);
+	ext->sel_start=ext->sel_end=0;
+	if(lv_obj_get_width(ext->label)==0){
+		lv_style_int_t bw=lv_obj_get_style_border_width(ta,LV_TEXTAREA_PART_CURSOR);
+		lv_obj_set_width(ext->label,bw==0?1:bw);
+	}
+	lv_event_send(ta,LV_EVENT_VALUE_CHANGED,NULL);
+}
+
 #endif

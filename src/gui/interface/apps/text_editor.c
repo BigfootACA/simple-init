@@ -77,27 +77,12 @@ static void do_copy(){
 	lv_obj_set_enabled(btn_paste,true);
 }
 
-static void remove_text(uint32_t start,uint32_t len){
-	if(len==0)return;
-	lv_textarea_ext_t*ext=lv_obj_get_ext_attr(text);
-	char*txt=lv_label_get_text(ext->label);
-	_lv_txt_cut(txt,start,len);
-	lv_label_set_text(ext->label,txt);
-	lv_textarea_clear_selection(text);
-	ext->sel_start=ext->sel_end=0;
-	lv_obj_set_enabled(btn_copy,false);
-	if(lv_obj_get_width(ext->label)==0){
-		lv_style_int_t bw=lv_obj_get_style_border_width(text,LV_TEXTAREA_PART_CURSOR);
-		lv_obj_set_width(ext->label,bw==0?1:bw);
-	}
-	lv_event_send(text,LV_EVENT_VALUE_CHANGED,NULL);
-}
-
 static void do_cut(){
 	do_copy();
 	lv_textarea_ext_t*ext=lv_obj_get_ext_attr(text);
 	uint32_t ss=ext->sel_start,sl=ext->sel_end-ss;
-	remove_text(ss,sl);
+	lv_textarea_remove_text(text,ss,sl);
+	lv_obj_set_enabled(btn_copy,false);
 	lv_textarea_set_cursor_pos(text,ss);
 }
 
@@ -106,7 +91,8 @@ static void do_paste(){
 	lv_textarea_ext_t*ext=lv_obj_get_ext_attr(text);
 	uint32_t ss=ext->sel_start,se=ext->sel_end,sl=se-ss;
 	if(sl>0){
-		remove_text(ss,sl);
+		lv_textarea_remove_text(text,ss,sl);
+		lv_obj_set_enabled(btn_copy,false);
 		lv_textarea_set_cursor_pos(text,ss);
 	}
 	lv_textarea_add_text(text,clipboard_get_content());
@@ -381,7 +367,8 @@ static void input_cb(lv_obj_t*obj,lv_event_t e){
 		case LV_EVENT_INSERT:
 			if(*(char*)lv_event_get_data()==127&&sl>0){
 				lv_textarea_set_insert_replace(text,"");
-				remove_text(ss,sl);
+				lv_textarea_remove_text(text,ss,sl);
+				lv_obj_set_enabled(btn_copy,false);
 				lv_textarea_set_cursor_pos(text,ss);
 			}
 		break;

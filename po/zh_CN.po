@@ -1824,3 +1824,24 @@ msgstr "调整分区大小"
 
 msgid "Screen Color Test"
 msgstr "屏幕色彩测试"
+
+msgid "Clipboard"
+msgstr "剪贴板"
+
+msgid "Copy"
+msgstr "复制"
+
+msgid "Cut"
+msgstr "剪切"
+
+msgid "Delete"
+msgstr "删除"
+
+msgid "Select all"
+msgstr "全选"
+
+msgid "Deselect"
+msgstr "取消选择"
+
+msgid "Close"
+msgstr "关闭"

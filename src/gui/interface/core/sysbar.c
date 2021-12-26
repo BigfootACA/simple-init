@@ -9,10 +9,12 @@
 #ifdef ENABLE_GUI
 #include<time.h>
 #include"gui.h"
+#include"array.h"
 #include"hardware.h"
 #include"gui/tools.h"
 #include"gui/sysbar.h"
 #include"gui/activity.h"
+#include"gui/clipboard.h"
 struct sysbar sysbar;
 
 static void sysbar_thread(struct sysbar*b){
@@ -61,9 +63,99 @@ static void set_bar_style(lv_obj_t*obj,uint8_t part){
 	);
 }
 
+static void edit_menu_show(){
+	if(lv_obj_is_visible(sysbar.edit_menu)||!sysbar.focus_input)return;
+	lv_obj_set_hidden(sysbar.edit_menu,false);
+	lv_group_add_obj(gui_grp,sysbar.edit_menu);
+	lv_group_focus_obj(sysbar.edit_menu);
+	if(sysbar.keyboard)lv_group_remove_obj(sysbar.keyboard);
+	lv_group_set_editing(gui_grp,true);
+	lv_textarea_ext_t*ext=lv_obj_get_ext_attr(sysbar.focus_input);
+	bool sel=ext->sel_start-ext->sel_end>0;
+	bool clip=clipboard_get_type()==CLIP_TEXT;
+	lv_obj_set_enabled(sysbar.edit_btns[0],sel);//copy
+	lv_obj_set_enabled(sysbar.edit_btns[1],sel);//cut
+	lv_obj_set_enabled(sysbar.edit_btns[2],clip);//paste
+	lv_obj_set_enabled(sysbar.edit_btns[5],sel);//deselect
+}
+
+static void edit_menu_hide(){
+	if(!lv_obj_is_visible(sysbar.edit_menu))return;
+	lv_obj_set_hidden(sysbar.edit_menu,true);
+	if(sysbar.keyboard){
+		lv_group_add_obj(gui_grp,sysbar.keyboard);
+		lv_group_focus_obj(sysbar.keyboard);
+		lv_group_set_editing(gui_grp,true);
+	}
+	lv_group_remove_obj(sysbar.edit_menu);
+}
+
+static void edit_menu_cb(lv_obj_t*obj,lv_event_t e){
+	if(e!=LV_EVENT_CLICKED)return;
+	if(sysbar.focus_input){
+		lv_obj_t*ta=sysbar.focus_input;
+		char*c=lv_obj_get_user_data(obj);
+		const char*cont=lv_textarea_get_text(ta);
+		lv_textarea_ext_t*ext=lv_obj_get_ext_attr(ta);
+		uint32_t ss=ext->sel_start,se=ext->sel_end,sl=se-ss;
+		bool copy=strcmp(c,"copy")==0;
+		bool cut=strcmp(c,"cut")==0;
+		if((copy||cut)&&sl>0){
+			clipboard_set(CLIP_TEXT,cont+ext->sel_start,sl);
+			if(cut){
+				lv_textarea_remove_text(ta,ss,sl);
+				lv_textarea_set_cursor_pos(ta,ss);
+			}
+		}else if(strcmp(c,"delete")==0){
+			if(sl>0){
+				lv_textarea_remove_text(ta,ss,sl);
+				lv_textarea_set_cursor_pos(ta,ss);
+			}else lv_textarea_del_char(ta);
+		}else if(strcmp(c,"select-all")==0){
+			ext->sel_start=0,ext->sel_end=strlen(cont);
+			lv_label_set_text_sel_start(ext->label,ext->sel_start);
+			lv_label_set_text_sel_end(ext->label,ext->sel_end);
+			lv_textarea_set_cursor_pos(ta,ext->sel_end);
+		}else if(strcmp(c,"deselect")==0){
+			lv_textarea_clear_selection(ta);
+			ext->sel_start=lv_textarea_get_cursor_pos(ta);
+			ext->sel_end=ext->sel_start;
+		}else if(strcmp(c,"paste")==0&&clipboard_get_type()==CLIP_TEXT){
+			if(sl>0){
+				lv_textarea_remove_text(ta,ss,sl);
+				lv_textarea_set_cursor_pos(ta,ss);
+			}
+			lv_textarea_add_text(ta,clipboard_get_content());
+		}
+	}
+	edit_menu_hide();
+}
+
 static void keyboard_toggle(lv_obj_t*obj,lv_event_t e){
 	if(obj==sysbar.bottom.content.keyboard&&e!=LV_EVENT_CLICKED)return;
 	if(obj==sysbar.keyboard&&e!=LV_EVENT_CANCEL){
+		if(
+			e==LV_EVENT_VALUE_CHANGED&&
+			strcmp(lv_btnmatrix_get_active_btn_text(obj),LV_SYMBOL_EDIT)==0
+		){
+			edit_menu_show();
+			return;
+		}
+		if(e==LV_EVENT_FOCUSED||e==LV_EVENT_RELEASED){
+			const char**x=lv_keyboard_get_map_array(sysbar.keyboard);
+			for(size_t i=0;x[i]&&x[i][0];i++){
+				if(strcmp(x[i],LV_SYMBOL_OK)!=0)continue;
+				char**n=NULL;
+				if(!(n=array_dup((char**)x)))break;
+				n[i]=LV_SYMBOL_EDIT;
+				lv_keyboard_set_map(
+					obj,
+					lv_keyboard_get_mode(obj),
+					(const char**)n
+				);
+				break;
+			}
+		}
 		lv_keyboard_def_event_cb(obj,e);
 		return;
 	}
@@ -77,11 +169,14 @@ static void keyboard_toggle(lv_obj_t*obj,lv_event_t e){
 		}
 		lv_group_set_editing(gui_grp,false);
 		sysbar_show_bar();
+		edit_menu_hide();
 		return;
 	}
 	int w=gui_w,h=gui_h/3;
 	sysbar_show_bar();
+	edit_menu_hide();
 	sysbar.keyboard=lv_keyboard_create(sysbar.screen,NULL);
+	lv_obj_move_foreground(sysbar.edit_menu);
 	lv_obj_set_size(sysbar.keyboard,w,h);
 	lv_obj_set_height(sysbar.content,gui_sh-h);
 	lv_obj_set_y(sysbar.keyboard,gui_h-sysbar.size-h);
@@ -274,6 +369,52 @@ int sysbar_draw(lv_obj_t*scr){
 	lv_obj_set_style_local_shadow_color(sysbar.bar_btn,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,LV_COLOR_GRAY);
 	lv_obj_set_style_local_shadow_width(sysbar.bar_btn,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,gui_font_size);
 	lv_label_set_text(lv_label_create(sysbar.bar_btn,NULL),"\uf066");
+
+	struct{
+		bool enabled;
+		char*key,*img,*text;
+	}btns[]={
+		{ true, "copy",       LV_SYMBOL_COPY,  "Copy selected" },
+		{ true, "cut",        LV_SYMBOL_CUT,   "Cut selected"  },
+		{ true, "paste",      LV_SYMBOL_PASTE, "Paste"         },
+		{ true, "delete",     LV_SYMBOL_TRASH, "Delete"        },
+		{ true, "select-all", "\uf065",        "Select all"    },
+		{ true, "deselect",   "\uf066",        "Deselect"      },
+		{ true, "close",      LV_SYMBOL_CLOSE, "Close"         },
+		{ false,NULL,NULL,NULL}
+	};
+	lv_coord_t h=0,w=gui_w/2;
+	sysbar.edit_menu=lv_list_create(scr,NULL);
+	for(size_t i=0;btns[i].enabled;i++){
+		lv_obj_t*o=lv_list_add_btn(
+			sysbar.edit_menu,
+			btns[i].img,
+			_(btns[i].text)
+		);
+		sysbar.edit_btns[i]=o;
+		lv_obj_set_user_data(o,btns[i].key);
+		lv_obj_set_event_cb(o,edit_menu_cb);
+		lv_obj_set_style_local_outline_width(
+			o,LV_BTN_PART_MAIN,
+			LV_STATE_FOCUSED,0
+		);
+		lv_obj_set_style_local_bg_color(
+			o,LV_BTN_PART_MAIN,
+			LV_STATE_FOCUSED,
+			lv_color_darken(
+				LV_COLOR_WHITE,
+				LV_OPA_10
+			)
+		);
+		h+=lv_obj_get_height(o);
+	}
+	lv_obj_set_hidden(sysbar.edit_menu,true);
+	lv_obj_set_size(sysbar.edit_menu,w,h);
+	lv_obj_set_pos(
+		sysbar.edit_menu,
+		gui_w-w-gui_font_size,
+		gui_h-sysbar.size-h-gui_font_size
+	);
 
 	lv_task_create(sysbar_thread_cb,5000,LV_TASK_PRIO_LOW,&sysbar);
 	return 0;

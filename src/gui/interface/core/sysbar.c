@@ -73,10 +73,12 @@ static void edit_menu_show(){
 	lv_textarea_ext_t*ext=lv_obj_get_ext_attr(sysbar.focus_input);
 	bool sel=ext->sel_start-ext->sel_end>0;
 	bool clip=clipboard_get_type()==CLIP_TEXT;
-	lv_obj_set_enabled(sysbar.edit_btns[0],sel);//copy
-	lv_obj_set_enabled(sysbar.edit_btns[1],sel);//cut
+	bool ena=lv_textarea_get_text_sel_en(sysbar.focus_input);
+	lv_obj_set_enabled(sysbar.edit_btns[0],sel&&ena);//copy
+	lv_obj_set_enabled(sysbar.edit_btns[1],sel&&ena);//cut
 	lv_obj_set_enabled(sysbar.edit_btns[2],clip);//paste
-	lv_obj_set_enabled(sysbar.edit_btns[5],sel);//deselect
+	lv_obj_set_enabled(sysbar.edit_btns[4],ena);//select-all
+	lv_obj_set_enabled(sysbar.edit_btns[5],sel&&ena);//deselect
 }
 
 static void edit_menu_hide(){

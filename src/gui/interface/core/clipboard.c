@@ -67,7 +67,7 @@ int clipboard_set(enum clipboard_type type,const char*content,size_t len){
 	time(&t);
 	for(;;){
 		memset(buf,0,sizeof(buf));
-		snprintf(buf,sizeof(buf)-1,"%ld%04d",t,c);
+		snprintf(buf,sizeof(buf)-1,"%ld%04d",(long int)t,c);
 		if(confd_get_type_base(BASE_HIST,buf)!=TYPE_KEY)break;
 		if(++c>=10000)return -EAGAIN;
 	}

@@ -26,7 +26,7 @@ struct sysbar{
 	lv_task_t*hide;
 	lv_obj_t*keyboard;
 	lv_obj_t*edit_menu;
-	lv_obj_t*edit_btns[7];
+	lv_obj_t*edit_btns[10];
 	lv_obj_t*focus_input;
 	lv_obj_t*bar_btn;
 	bool full_screen;

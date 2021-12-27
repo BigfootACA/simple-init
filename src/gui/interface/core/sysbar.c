@@ -75,10 +75,10 @@ static void edit_menu_show(){
 	bool clip=clipboard_get_type()==CLIP_TEXT;
 	bool ena=lv_textarea_get_text_sel_en(sysbar.focus_input);
 	lv_obj_set_enabled(sysbar.edit_btns[0],sel&&ena);//copy
-	lv_obj_set_enabled(sysbar.edit_btns[1],sel&&ena);//cut
-	lv_obj_set_enabled(sysbar.edit_btns[2],clip);//paste
-	lv_obj_set_enabled(sysbar.edit_btns[4],ena);//select-all
-	lv_obj_set_enabled(sysbar.edit_btns[5],sel&&ena);//deselect
+	lv_obj_set_enabled(sysbar.edit_btns[2],sel&&ena);//cut
+	lv_obj_set_enabled(sysbar.edit_btns[4],clip);//paste
+	lv_obj_set_enabled(sysbar.edit_btns[7],ena);//select-all
+	lv_obj_set_enabled(sysbar.edit_btns[8],sel&&ena);//deselect
 }
 
 static void edit_menu_hide(){
@@ -102,17 +102,24 @@ static void edit_menu_cb(lv_obj_t*obj,lv_event_t e){
 		uint32_t ss=ext->sel_start,se=ext->sel_end,sl=se-ss;
 		bool copy=strcmp(c,"copy")==0;
 		bool cut=strcmp(c,"cut")==0;
-		if((copy||cut)&&sl>0){
-			clipboard_set(CLIP_TEXT,cont+ext->sel_start,sl);
-			if(cut){
-				lv_textarea_remove_text(ta,ss,sl);
-				lv_textarea_set_cursor_pos(ta,ss);
+		bool copy_all=strcmp(c,"copy-all")==0;
+		bool cut_all=strcmp(c,"cut-all")==0;
+		if(copy||cut||copy_all||cut_all){
+			if(copy_all||cut_all)ss=0,sl=strlen(cont);
+			if(sl>0){
+				clipboard_set(CLIP_TEXT,cont+ss,sl);
+				if(cut){
+					lv_textarea_remove_text(ta,ss,sl);
+					lv_textarea_set_cursor_pos(ta,ss);
+				}else if(cut_all)lv_textarea_set_text(ta,"");
 			}
 		}else if(strcmp(c,"delete")==0){
 			if(sl>0){
 				lv_textarea_remove_text(ta,ss,sl);
 				lv_textarea_set_cursor_pos(ta,ss);
 			}else lv_textarea_del_char(ta);
+		}else if(strcmp(c,"delete-all")==0){
+			lv_textarea_set_text(ta,"");
 		}else if(strcmp(c,"select-all")==0){
 			ext->sel_start=0,ext->sel_end=strlen(cont);
 			lv_label_set_text_sel_start(ext->label,ext->sel_start);
@@ -377,9 +384,12 @@ int sysbar_draw(lv_obj_t*scr){
 		char*key,*img,*text;
 	}btns[]={
 		{ true, "copy",       LV_SYMBOL_COPY,  "Copy selected" },
+		{ true, "copy-all",   LV_SYMBOL_COPY,  "Copy all"      },
 		{ true, "cut",        LV_SYMBOL_CUT,   "Cut selected"  },
+		{ true, "cut-all",    LV_SYMBOL_CUT,   "Cut all"       },
 		{ true, "paste",      LV_SYMBOL_PASTE, "Paste"         },
 		{ true, "delete",     LV_SYMBOL_TRASH, "Delete"        },
+		{ true, "delete-all", LV_SYMBOL_TRASH, "Delete all"    },
 		{ true, "select-all", "\uf065",        "Select all"    },
 		{ true, "deselect",   "\uf066",        "Deselect"      },
 		{ true, "close",      LV_SYMBOL_CLOSE, "Close"         },

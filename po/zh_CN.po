@@ -1831,11 +1831,20 @@ msgstr "剪贴板"
 msgid "Copy"
 msgstr "复制"
 
+msgid "Copy all"
+msgstr "全部复制"
+
 msgid "Cut"
 msgstr "剪切"
 
+msgid "Cut all"
+msgstr "全部剪切"
+
 msgid "Delete"
 msgstr "删除"
+
+msgid "Delete all"
+msgstr "全部删除"
 
 msgid "Select all"
 msgstr "全选"

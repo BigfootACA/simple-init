@@ -1854,3 +1854,30 @@ msgstr "取消选择"
 
 msgid "Close"
 msgstr "关闭"
+
+msgid "red"
+msgstr "红色"
+
+msgid "green"
+msgstr "绿色"
+
+msgid "blue"
+msgstr "蓝色"
+
+msgid "cyan"
+msgstr "青色"
+
+msgid "yellow"
+msgstr "黄色"
+
+msgid "purple"
+msgstr "紫色"
+
+msgid "black"
+msgstr "黑色"
+
+msgid "white"
+msgstr "白色"
+
+msgid "gray"
+msgstr "灰色"

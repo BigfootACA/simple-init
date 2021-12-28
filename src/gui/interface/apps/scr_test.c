@@ -37,11 +37,14 @@ static void color_swap(struct screen_test*scr){
 	if(!scr->init){
 		scr->init=true;
 		scr->color=0x00FF0000;// RED
-	}else if(scr->color==0x00FF0000)scr->color=0x0000FF00; // RED   -> GREEN
-	else if(scr->color==0x0000FF00)scr->color=0x000000FF;  // GREEN -> BLUE
-	else if(scr->color==0x000000FF)scr->color=0x00000000;  // BLUE  -> BLACK
-	else if(scr->color==0x00000000)scr->color=0x00FFFFFF;  // BLACK -> WHITE
-	else if(scr->color==0x00FFFFFF)scr->color=0x007F7F7F;  // WHITE -> GRAY
+	}else if(scr->color==0x00FF0000)scr->color=0x0000FF00; // RED    -> GREEN
+	else if(scr->color==0x0000FF00)scr->color=0x000000FF;  // GREEN  -> BLUE
+	else if(scr->color==0x000000FF)scr->color=0x0000FFFF;  // BLUE   -> CYAN
+	else if(scr->color==0x0000FFFF)scr->color=0x00FFFF00;  // CYAN   -> YELLOW
+	else if(scr->color==0x00FFFF00)scr->color=0x00FF00FF;  // YELLOW -> PURPLE
+	else if(scr->color==0x00FF00FF)scr->color=0x00000000;  // PURPLE -> BLACK
+	else if(scr->color==0x00000000)scr->color=0x00FFFFFF;  // BLACK  -> WHITE
+	else if(scr->color==0x00FFFFFF)scr->color=0x007F7F7F;  // WHITE  -> GRAY
 	else{
 		guiact_do_back();
 		return;

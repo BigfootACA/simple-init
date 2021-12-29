@@ -31,12 +31,17 @@ void clipboard_clear(void){
 	confd_delete(BASE);
 }
 
+void clipboard_load(const char*key){
+	if(!key)return;
+	clip_type=confd_get_integer_dict(BASE_HIST,key,"type",CLIP_NULL);
+	clip_cont=confd_get_string_dict(BASE_HIST,key,"content",NULL);
+	if(!clip_cont)clip_type=CLIP_NULL;
+}
+
 void clipboard_init(void){
 	char*last=confd_get_string_base(BASE,"last",NULL);
 	if(!last)return;
-	clip_type=confd_get_integer_dict(BASE_HIST,last,"type",CLIP_NULL);
-	clip_cont=confd_get_string_dict(BASE_HIST,last,"content",NULL);
-	if(!clip_cont)clip_type=CLIP_NULL;
+	clipboard_load(last);
 	if(clip_type!=CLIP_NULL)tlog_debug(
 		"restore clipboard type %d, content %s",
 		clip_type,clip_cont

@@ -27,6 +27,7 @@ void clipboard_reset(void){
 }
 
 void clipboard_clear(void){
+	clipboard_reset();
 	confd_delete(BASE);
 }
 

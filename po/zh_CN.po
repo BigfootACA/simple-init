@@ -1881,3 +1881,21 @@ msgstr "白色"
 
 msgid "gray"
 msgstr "灰色"
+
+msgid "Add into clipboard"
+msgstr "添加到剪贴板"
+
+msgid "Edit clipboard item"
+msgstr "编辑剪贴板项目"
+
+msgid "Add"
+msgstr "添加"
+
+msgid "Clear"
+msgstr "清空"
+
+msgid "Use"
+msgstr "使用"
+
+msgid "Edit"
+msgstr "编辑"

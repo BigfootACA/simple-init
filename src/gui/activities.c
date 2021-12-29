@@ -22,6 +22,7 @@ extern struct gui_register guireg_conf_load;
 extern struct gui_register guireg_benchmark;
 extern struct gui_register guireg_backlight;
 extern struct gui_register guireg_logviewer;
+extern struct gui_register guireg_clipboard;
 extern struct gui_register guireg_add_mount;
 extern struct gui_register guireg_add_mass;
 extern struct gui_register guireg_vibrator;
@@ -62,6 +63,7 @@ struct gui_register*guiact_register[]={
 	&guireg_text_edit,
 	&guireg_conf_save,
 	&guireg_conf_load,
+	&guireg_clipboard,
 	&guireg_language,
 	&guireg_calendar,
 	&guireg_conftool,

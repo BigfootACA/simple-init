@@ -276,18 +276,18 @@ keyval*kvarr_get_by_value(keyval**kvs,char*value,keyval*def){
 }
 
 char*kvarr_get_value_by_key(keyval**kvs,char*key,char*def){
-	if(kvs&&key){
-		keyval*kv=kvarr_get_by_key(kvs,key,NULL);
-		if(kv)return kv->value;
-	}
+	keyval*kv=NULL;
+	if(kvs&&key)
+		if((kv=kvarr_get_by_key(kvs,key,NULL)))
+			return kv->value;
 	return def;
 }
 
 char*kvarr_get_key_by_value(keyval**kvs,char*value,char*def){
-	if(kvs&&value){
-		keyval*kv=kvarr_get_by_value(kvs,value,NULL);
-		if(kv)return kv->key;
-	}
+	keyval*kv=NULL;
+	if(kvs&&value)
+		if((kv=kvarr_get_by_value(kvs,value,NULL)))
+			return kv->key;
 	return def;
 }
 

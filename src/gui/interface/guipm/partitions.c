@@ -29,7 +29,6 @@ static void partition_clear(struct part_disk_info*di,bool ui){
 		lv_obj_set_enabled(di->btn_new,false);
 		if(di->disk_info)lv_obj_del(di->disk_info);
 	}
-	if(di->table)fdisk_unref_table(di->table);
 	memset(di->size_str,0,sizeof(di->size_str));
 	memset(di->type,0,sizeof(di->type));
 	di->size=0,di->secs=0,di->lsec_size=0,di->psec_size=0;

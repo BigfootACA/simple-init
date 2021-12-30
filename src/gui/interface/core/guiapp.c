@@ -22,7 +22,7 @@
 #include"gui/activity.h"
 #define TAG "guiapp"
 struct gui_app{
-	lv_obj_t*screen,*tabview,*author;
+	lv_obj_t*screen,*tabview,*indic,*author;
 	list*apps;
 	int app_num,app_page,cur_page;
 	lv_group_focus_cb_t old_cb;
@@ -49,20 +49,42 @@ static void clean_buttons(struct gui_app*ga){
 	ga->app_num=0,ga->app_page=-1;
 }
 
-static void click_btn(lv_obj_t*obj,lv_event_t e){
-	if(!obj||e!=LV_EVENT_CLICKED)return;
-	struct app_info*ai=lv_obj_get_user_data(obj);
-	struct gui_app*ga=ai->data;
-	if(!guiact_is_active_page(ga->screen))return;
-	if(guiact_start_activity(ai->reg,NULL)!=0)
-		msgbox_alert("This function does not implemented");
-}
-
 static void tabview_cb(lv_obj_t*obj,lv_event_t e){
 	if(!obj||e!=LV_EVENT_VALUE_CHANGED)return;
 	struct gui_app*ga=lv_obj_get_user_data(obj);
 	ga->cur_page=lv_tabview_get_tab_act(ga->tabview);
 	confd_set_integer("gui.guiapp.page",ga->cur_page);
+	lv_bar_set_start_value(ga->indic,ga->cur_page*8,LV_ANIM_ON);
+	lv_bar_set_value(ga->indic,(ga->cur_page+1)*8,LV_ANIM_ON);
+	lv_obj_t*o=lv_group_get_focused(gui_grp);
+	if(o){
+		struct app_info*cai=lv_obj_get_user_data(o);
+		if(cai&&cai->page==ga->cur_page)return;
+	}
+	list*l=list_first(ga->apps);
+	if(l)do{
+		LIST_DATA_DECLARE(ai,l,struct app_info*);
+		if(ai->page==ga->cur_page){
+			lv_group_focus_obj(ai->app);
+			break;
+		}
+	}while((l=l->next));
+}
+
+static void click_btn(lv_obj_t*obj,lv_event_t e){
+	if(!obj)return;
+	struct app_info*ai=lv_obj_get_user_data(obj);
+	struct gui_app*ga=ai->data;
+	if(!guiact_is_active_page(ga->screen))return;
+	if(e==LV_EVENT_CLICKED){
+		if(guiact_start_activity(ai->reg,NULL)!=0)
+			msgbox_alert("This function does not implemented");
+	}else if(e==LV_EVENT_FOCUSED){
+		if(ai->page!=ga->cur_page){
+			lv_tabview_set_tab_act(ga->tabview,ai->page,LV_ANIM_ON);
+			tabview_cb(ga->tabview,LV_EVENT_VALUE_CHANGED);
+		}
+	}
 }
 
 static void add_page(struct gui_app*ga){
@@ -72,13 +94,16 @@ static void add_page(struct gui_app*ga){
 	if(!ga->tabview){
 		ga->tabview=lv_tabview_create(ga->screen,NULL);
 		lv_obj_set_pos(ga->tabview,0,0);
-		lv_obj_set_size(ga->tabview,gui_sw,gui_sh-lv_obj_get_height(ga->author)-gui_font_size);
+		lv_obj_set_size(ga->tabview,gui_sw,lv_obj_get_y(ga->indic)-gui_font_size);
 		lv_obj_set_user_data(ga->tabview,ga);
 		lv_obj_set_event_cb(ga->tabview,tabview_cb);
 		lv_tabview_set_btns_pos(ga->tabview,LV_TABVIEW_TAB_POS_NONE);
-	}
+	}else lv_obj_set_hidden(ga->indic,false);
 	lv_obj_t*t=lv_tabview_add_tab(ga->tabview,name);
 	lv_page_set_scrlbar_mode(t,LV_SCROLLBAR_MODE_HIDE);
+	lv_bar_set_range(ga->indic,0,(ga->app_page+1)*8);
+	lv_bar_set_start_value(ga->indic,0,LV_ANIM_OFF);
+	lv_bar_set_value(ga->indic,8,LV_ANIM_OFF);
 }
 
 static void add_button(struct gui_app*ga,struct gui_register*p){
@@ -227,6 +252,11 @@ static int guiapp_draw(struct gui_activity*act){
 	lv_obj_add_style(ga->author,LV_LABEL_PART_MAIN,&txt_style);
 	lv_obj_set_width(ga->author,gui_sw);
 	lv_obj_align(ga->author,NULL,LV_ALIGN_IN_BOTTOM_MID,0,-gui_font_size);
+
+	ga->indic=lv_bar_create(act->page,NULL);
+	lv_obj_set_size(ga->indic,gui_sw/2,gui_font_size/4);
+	lv_obj_set_hidden(ga->indic,true);
+	lv_obj_align(ga->indic,ga->author,LV_ALIGN_OUT_TOP_MID,0,-(gui_font_size*2));
 
 	list_free_all(ga->apps,NULL);
 	ga->apps=NULL,ga->tabview=NULL,ga->app_num=0,ga->app_page=-1;

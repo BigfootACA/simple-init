@@ -264,6 +264,24 @@ keyval*kvarr_get_by_key(keyval**kvs,char*key,keyval*def){
 	return def;
 }
 
+keyval*kvarr_multi_get_by_key(keyval***kvs,char*key,keyval*def){
+	keyval*kv=NULL;
+	if(key&&kvs)
+		for(size_t s=0;kvs[s];s++)
+			if((kv=kvarr_get_by_key(kvs[s],key,NULL)))
+				return kv;
+	return def;
+}
+
+keyval*kvarr_multi_get_by_value(keyval***kvs,char*value,keyval*def){
+	keyval*kv=NULL;
+	if(value&&kvs)
+		for(size_t s=0;kvs[s];s++)
+			if((kv=kvarr_get_by_value(kvs[s],value,NULL)))
+				return kv;
+	return def;
+}
+
 keyval*kvarr_get_by_value(keyval**kvs,char*value,keyval*def){
 	if(value&&kvs){
 		KVARR_FOREACH(kvs,item,i){
@@ -288,6 +306,18 @@ char*kvarr_get_key_by_value(keyval**kvs,char*value,char*def){
 	if(kvs&&value)
 		if((kv=kvarr_get_by_value(kvs,value,NULL)))
 			return kv->key;
+	return def;
+}
+
+char*kvarr_multi_get_value_by_key(keyval***kvs,char*key,char*def){
+	keyval*kv=NULL;
+	if(kvs&&key&&(kv=kvarr_multi_get_by_key(kvs,key,NULL)))return kv->value;
+	return def;
+}
+
+char*kvarr_multi_get_key_by_value(keyval***kvs,char*value,char*def){
+	keyval*kv=NULL;
+	if(kvs&&value&&(kv=kvarr_multi_get_by_value(kvs,value,NULL)))return kv->key;
 	return def;
 }
 

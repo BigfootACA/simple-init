@@ -103,11 +103,23 @@ extern keyval*kvarr_get_by_key(keyval**kvs,char*key,keyval*def);
 // src/lib/keyval.c: find a keyval in keyval array by value, return def if not found
 extern keyval*kvarr_get_by_value(keyval**kvs,char*value,keyval*def);
 
+// src/lib/keyval.c: find a keyval in keyval array group by key, return def if not found
+extern keyval*kvarr_multi_get_by_key(keyval***kvs,char*key,keyval*def);
+
+// src/lib/keyval.c: find a keyval in keyval array group by value, return def if not found
+extern keyval*kvarr_multi_get_by_value(keyval***kvs,char*value,keyval*def);
+
 // src/lib/keyval.c: get a value in keyval array by key, return def if not found
 extern char*kvarr_get_value_by_key(keyval**kvs,char*key,char*def);
 
 // src/lib/keyval.c: get a key in keyval array by value, return def if not found
 extern char*kvarr_get_key_by_value(keyval**kvs,char*value,char*def);
+
+// src/lib/keyval.c: get a value in keyval array group by key, return def if not found
+extern char*kvarr_multi_get_value_by_key(keyval***kvs,char*key,char*def);
+
+// src/lib/keyval.c: get a key in keyval array group by value, return def if not found
+extern char*kvarr_multi_get_key_by_value(keyval***kvs,char*value,char*def);
 
 // keyval list usage
 

@@ -88,7 +88,7 @@ static void add_button(struct gui_app*ga,struct gui_register*p){
 	lv_coord_t a=ga->app_num%xnum,b=ga->app_num/xnum;
 	lv_coord_t w=(gui_sw-gui_font_size-8)/xnum,h=(gui_sh-gui_font_size-8)/(ynum+1);
 	lv_coord_t xx=(w*a)+(gui_font_size/2),yy=(h*b)+(gui_font_size/2);
-	if(yy+h>(lv_coord_t)gui_sh){
+	if(yy+h>lv_obj_get_height(ga->tabview)){
 		add_page(ga);
 		add_button(ga,p);
 		return;

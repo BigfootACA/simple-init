@@ -27,6 +27,7 @@ option(ENABLE_DRM         "Enable DRM"                                        ON
 option(ENABLE_GTK         "Enable GTK"                                        OFF)
 option(ENABLE_SDL2        "Enable SDL2"                                       OFF)
 option(ENABLE_GUI         "Enable LVGL based GUI"                             ON)
+option(ENABLE_UUID        "Enable UUID library"                               ON)
 option(ENABLE_FREETYPE2   "Enable FreeType 2 for GUI fonts"                   ON)
 option(ENABLE_LODEPNG     "Enable lodepng for GUI png decode"                 ON)
 option(ENABLE_FDISK       "Enable libfdisk for GUI partition tools"           ON)

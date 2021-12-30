@@ -28,6 +28,10 @@ if("${ENABLE_HIVEX}" STREQUAL "ON")
 	set(DEPENDS ${DEPENDS} hivex)
 endif()
 
+if("${ENABLE_UUID}" STREQUAL "ON")
+	set(DEPENDS ${DEPENDS} uuid)
+endif()
+
 if("${ENABLE_VNCSERVER}" STREQUAL "ON")
 	set(DEPENDS ${DEPENDS} libvncserver)
 endif()

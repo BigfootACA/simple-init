@@ -9,6 +9,7 @@
 #cmakedefine ENABLE_GTK         1
 #cmakedefine ENABLE_SDL2        1
 #cmakedefine ENABLE_GUI         1
+#cmakedefine ENABLE_UUID        1
 #cmakedefine ENABLE_FREETYPE2   1
 #cmakedefine ENABLE_LODEPNG     1
 #cmakedefine ENABLE_FDISK       1

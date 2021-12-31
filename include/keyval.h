@@ -23,6 +23,9 @@ extern void kv_free(keyval*kv);
 // src/lib/keyval.c: fill keyval struct with zero
 extern keyval*kv_init(keyval*kv);
 
+// src/lib/keyval.c: get a long value
+extern long kv_get_long_value(keyval*kv,long def,int base);
+
 // src/lib/keyval.c: allocate a new keyval struct
 extern keyval*kv_malloc(void);
 
@@ -112,11 +115,17 @@ extern keyval*kvarr_multi_get_by_value(keyval***kvs,char*value,keyval*def);
 // src/lib/keyval.c: get a value in keyval array by key, return def if not found
 extern char*kvarr_get_value_by_key(keyval**kvs,char*key,char*def);
 
+// src/lib/keyval.c: get a long value in keyval array by key, return def if not found
+extern long kvarr_get_long_value_by_key(keyval**kvs,char*key,long def,int base);
+
 // src/lib/keyval.c: get a key in keyval array by value, return def if not found
 extern char*kvarr_get_key_by_value(keyval**kvs,char*value,char*def);
 
 // src/lib/keyval.c: get a value in keyval array group by key, return def if not found
 extern char*kvarr_multi_get_value_by_key(keyval***kvs,char*key,char*def);
+
+// src/lib/keyval.c: get a long value in keyval array group by key, return def if not found
+extern long kvarr_multi_get_long_value_by_key(keyval***kvs,char*key,long def,int base);
 
 // src/lib/keyval.c: get a key in keyval array group by value, return def if not found
 extern char*kvarr_multi_get_key_by_value(keyval***kvs,char*value,char*def);

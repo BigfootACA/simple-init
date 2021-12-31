@@ -29,6 +29,14 @@ keyval*kv_init(keyval*kv){
 	return kv;
 }
 
+long kv_get_long_value(keyval*kv,long def,int base){
+	if(!kv||!kv->value)return def;
+	errno=0;
+	char*end;
+	long l=strtol(kv->value,&end,base);
+	return (*end||kv->value==end||errno!=0)?def:l;
+}
+
 keyval*kv_malloc(){
 	return malloc(sizeof(keyval));
 }
@@ -301,6 +309,14 @@ char*kvarr_get_value_by_key(keyval**kvs,char*key,char*def){
 	return def;
 }
 
+long kvarr_get_long_value_by_key(keyval**kvs,char*key,long def,int base){
+	keyval*kv=NULL;
+	if(kvs&&key)
+		if((kv=kvarr_get_by_key(kvs,key,NULL)))
+			return kv_get_long_value(kv,def,base);
+	return def;
+}
+
 char*kvarr_get_key_by_value(keyval**kvs,char*value,char*def){
 	keyval*kv=NULL;
 	if(kvs&&value)
@@ -312,6 +328,13 @@ char*kvarr_get_key_by_value(keyval**kvs,char*value,char*def){
 char*kvarr_multi_get_value_by_key(keyval***kvs,char*key,char*def){
 	keyval*kv=NULL;
 	if(kvs&&key&&(kv=kvarr_multi_get_by_key(kvs,key,NULL)))return kv->value;
+	return def;
+}
+
+long kvarr_multi_get_long_value_by_key(keyval***kvs,char*key,long def,int base){
+	keyval*kv=NULL;
+	if(kvs&&key&&(kv=kvarr_multi_get_by_key(kvs,key,NULL)))
+		return kv_get_long_value(kv,def,base);
 	return def;
 }
 

@@ -128,6 +128,23 @@ enum bcd_type_boot_ux_display_message{
 extern bcd_store bcd_store_open(const char*path,int flags);
 extern const char*bcd_store_get_path(bcd_store store);
 extern hive_h*bcd_store_get_hive(bcd_store store);
+extern void bcd_store_free(bcd_store store);
+
+extern bcd_object bcd_get_object_by_node(bcd_store bcd,hive_node_h node);
+extern bcd_object bcd_get_object_by_key(bcd_store bcd,const char*key);
+extern bcd_object bcd_get_object_by_name(bcd_store bcd,const char*name);
+extern bcd_object bcd_get_object_by_uuid(bcd_store bcd,uuid_t uuid);
+extern bcd_object*bcd_get_all_objects(bcd_store bcd);
+extern char*bcd_object_get_key(bcd_object obj,char*buf);
+extern char*bcd_object_get_display_name(bcd_object obj,char*buf);
+extern bool bcd_object_get_uuid(bcd_object obj,uuid_t uuid);
+extern int32_t bcd_object_get_type(bcd_object obj);
+extern const char*bcd_object_get_type_name(bcd_object obj);
+extern bool bcd_object_is_type(bcd_object obj,int32_t type);
+extern bool bcd_object_is_type_name(bcd_object obj,char*type);
+extern const char*bcd_object_get_alias(bcd_object obj);
+extern bcd_store bcd_object_get_store(bcd_object obj);
+extern hive_h*bcd_object_get_hive(bcd_object obj);
 #endif
 #endif
 #endif

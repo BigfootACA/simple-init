@@ -41,5 +41,18 @@ hive_h*bcd_store_get_hive(bcd_store store){
 	return store&&store->reg?store->reg:NULL;
 }
 
+void bcd_store_free(bcd_store store){
+	if(!store)return;
+	if(store->reg)hivex_close(store->reg);
+	list*l,*n;
+	if((l=list_first(store->objects)))do{
+		n=l->next;
+		LIST_DATA_DECLARE(v,l,bcd_object);
+		bcd_object_free(v);
+	}while((l=n));
+	list_free_all_def(store->to_free);
+	free(store);
+}
+
 #endif
 #endif

@@ -183,5 +183,38 @@ hive_h*bcd_object_get_hive(bcd_object obj){
 	return obj?bcd_store_get_hive(bcd_object_get_store(obj)):NULL;
 }
 
+void bcd_object_free(bcd_object obj){
+	if(!obj)return;
+	list*l,*n;
+	if(
+		bcd_object_get_store(obj)&&
+		(l=list_first(bcd_object_get_store(obj)->objects))
+	)do{
+		n=l->next;
+		LIST_DATA_DECLARE(v,l,bcd_object);
+		if(!v||v->node!=obj->node)continue;
+		list_obj_del(&obj->bcd->objects,l,NULL);
+	}while((l=n));
+	if((l=list_first(obj->elements)))do{
+		n=l->next;
+		LIST_DATA_DECLARE(v,l,bcd_element);
+		bcd_element_free(v);
+	}while((l=n));
+	list_free_all_def(obj->to_free);
+	free(obj);
+}
+
+void bcd_objects_free(bcd_object*objs){
+	if(!objs||!*objs||!bcd_object_get_store(*objs))return;
+	list*l,*n;
+	if((l=list_first(bcd_object_get_store(*objs)->to_free)))do{
+		n=l->next;
+		LIST_DATA_DECLARE(v,l,bcd_object*);
+		if(objs!=v)continue;
+		list_obj_del(&bcd_object_get_store(*objs)->to_free,l,NULL);
+	}while((l=n));
+	free(objs);
+}
+
 #endif
 #endif

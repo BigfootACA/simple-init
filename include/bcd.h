@@ -145,6 +145,27 @@ extern bool bcd_object_is_type_name(bcd_object obj,char*type);
 extern const char*bcd_object_get_alias(bcd_object obj);
 extern bcd_store bcd_object_get_store(bcd_object obj);
 extern hive_h*bcd_object_get_hive(bcd_object obj);
+extern void bcd_object_free(bcd_object obj);
+extern void bcd_objects_free(bcd_object*objs);
+
+extern bcd_element bcd_get_element_by_node(bcd_object obj,hive_node_h node);
+extern bcd_element bcd_get_element_by_key(bcd_object obj,const char*key);
+extern bcd_element bcd_get_element_by_name(bcd_object obj,const char*name);
+extern bcd_element bcd_get_element_by_id(bcd_object obj,int32_t id);
+extern bcd_element*bcd_get_all_elements(bcd_object obj);
+extern const char*bcd_element_get_key(bcd_element ele);
+extern int32_t bcd_element_get_type(bcd_element ele);
+extern const char*bcd_element_get_type_name(bcd_element ele);
+extern const char*bcd_element_get_display_name(bcd_element ele,char*buf);
+extern bcd_value_type bcd_element_get_format(bcd_element ele);
+extern bool bcd_element_is_format(bcd_element ele,bcd_value_type type);
+extern bcd_value_class bcd_element_get_class(bcd_element ele);
+extern bool bcd_element_is_class(bcd_element ele,bcd_value_class class);
+extern bcd_object bcd_element_get_object(bcd_element ele);
+extern bcd_store bcd_element_get_store(bcd_element ele);
+extern hive_h*bcd_element_get_hive(bcd_element ele);
+extern void bcd_element_free(bcd_element ele);
+extern void bcd_elements_free(bcd_element*eles);
 #endif
 #endif
 #endif

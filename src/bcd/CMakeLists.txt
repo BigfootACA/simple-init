@@ -3,4 +3,5 @@ add_library(init_bcd STATIC
 	lib.c
 	store.c
 	object.c
+	element.c
 )

@@ -157,6 +157,11 @@ const char*bcd_object_get_type_name(bcd_object obj){
 	return obj&&obj->id?obj->id->name:NULL;
 }
 
+char*bcd_object_get_description(bcd_object obj){
+	bcd_element e=bcd_get_element_by_name(obj,"Description");
+	return e?bcd_element_get_value_string(e):NULL;
+}
+
 bool bcd_object_is_type(bcd_object obj,int32_t type){
 	return
 		obj&&type!=0&&

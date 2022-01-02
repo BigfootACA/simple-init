@@ -140,6 +140,7 @@ extern char*bcd_object_get_display_name(bcd_object obj,char*buf);
 extern bool bcd_object_get_uuid(bcd_object obj,uuid_t uuid);
 extern int32_t bcd_object_get_type(bcd_object obj);
 extern const char*bcd_object_get_type_name(bcd_object obj);
+extern char*bcd_object_get_description(bcd_object obj);
 extern bool bcd_object_is_type(bcd_object obj,int32_t type);
 extern bool bcd_object_is_type_name(bcd_object obj,char*type);
 extern const char*bcd_object_get_alias(bcd_object obj);
@@ -166,6 +167,20 @@ extern bcd_store bcd_element_get_store(bcd_element ele);
 extern hive_h*bcd_element_get_hive(bcd_element ele);
 extern void bcd_element_free(bcd_element ele);
 extern void bcd_elements_free(bcd_element*eles);
+extern hive_value_h bcd_element_get_value(bcd_element ele);
+extern void*bcd_element_get_value_data(bcd_element ele);
+extern char*bcd_element_get_value_string(bcd_element ele);
+extern char**bcd_element_get_value_multiple_strings(bcd_element ele);
+extern int64_t bcd_element_get_value_number(bcd_element ele,int64_t def);
+extern const char*bcd_element_get_value_enum(bcd_element ele);
+extern bool bcd_element_get_value_uuid(bcd_element ele,uuid_t out);
+extern bcd_object bcd_element_get_value_object(bcd_element ele);
+extern const char*bcd_element_get_value_uuid_name(bcd_element ele,char*buf);
+extern bcd_device bcd_element_get_value_device(bcd_element ele);
+extern uuid_t*bcd_element_get_value_uuid_list(bcd_element ele,size_t*size);
+extern char*bcd_element_get_value_uuid_name_list(bcd_element ele,bool refer,const char*prefix,const char*suffix);
+extern hive_type bcd_element_get_value_type(bcd_element ele);
+extern size_t bcd_element_get_value_length(bcd_element ele);
 #endif
 #endif
 #endif

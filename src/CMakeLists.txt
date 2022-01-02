@@ -87,6 +87,7 @@ set(SUBDIRS
 	src/adbd
 	src/confd
 	src/ttyd
+	src/bcd
 )
 
 target_link_libraries(simple-init -Wl,--start-group)

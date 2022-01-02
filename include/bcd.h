@@ -125,6 +125,9 @@ enum bcd_type_boot_ux_display_message{
 	BCD_BDM_FveRecovery          = 0x0A,
 	BCD_BDM_MAX,
 };
+extern bcd_store bcd_store_open(const char*path,int flags);
+extern const char*bcd_store_get_path(bcd_store store);
+extern hive_h*bcd_store_get_hive(bcd_store store);
 #endif
 #endif
 #endif

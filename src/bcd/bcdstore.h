@@ -92,6 +92,11 @@ extern struct bcd_guid_table BcdGuidTable[];
 extern struct bcd_spec_type_table BcdSpecTypes[];
 extern struct bcd_object_type_table BcdObjectType[];
 extern struct bcd_element_type_table BcdElementType[];
+
+extern uuid_t*guid2uuid(uuid_t*uuid,guid_t guid);
+extern guid_t*uuid2guid(guid_t*guid,uuid_t uuid);
+extern bool bcd_get_guid_by_name(const char*name,uuid_t uuid);
+extern const char*bcd_get_name_by_guid(uuid_t uuid);
 #endif
 #endif
 #endif

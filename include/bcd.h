@@ -181,6 +181,16 @@ extern uuid_t*bcd_element_get_value_uuid_list(bcd_element ele,size_t*size);
 extern char*bcd_element_get_value_uuid_name_list(bcd_element ele,bool refer,const char*prefix,const char*suffix);
 extern hive_type bcd_element_get_value_type(bcd_element ele);
 extern size_t bcd_element_get_value_length(bcd_element ele);
+
+extern bcd_type_device_type bcd_device_get_type(bcd_device dev);
+extern const char*bcd_device_get_type_name(bcd_device dev);
+extern bcd_type_local_device_type bcd_device_get_local_type(bcd_device dev);
+extern const char*bcd_device_get_local_type_name(bcd_device dev);
+extern bool bcd_device_get_disk_uuid(bcd_device dev,uuid_t*uuid);
+extern char*bcd_device_get_disk_uuid_string(bcd_device dev,char*uuid);
+extern bool bcd_device_get_part_uuid(bcd_device dev,uuid_t*uuid);
+extern char*bcd_device_get_part_uuid_string(bcd_device dev,char*uuid);
+extern void bcd_device_free(bcd_device dev);
 #endif
 #endif
 #endif

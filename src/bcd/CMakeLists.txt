@@ -5,4 +5,5 @@ add_library(init_bcd STATIC
 	object.c
 	element.c
 	element_value.c
+	device.c
 )

@@ -31,7 +31,11 @@ static int version(int e){
 }
 
 int simple_init_main(int argc,char**argv){
-	if(argc<=1)return usage(1);
+	if(argc<=1)return getpid()==1&&
+		getuid()==0&&geteuid()==0&&
+		getgid()==0&&getegid()==0?
+		invoke_internal_cmd_nofork_by_name("init",argv):
+		usage(1);
 	if(strcasecmp(argv[1],"--help")==0)return usage(0);
 	else if(strcasecmp(argv[1],"-h")==0)return usage(0);
 	else if(strcasecmp(argv[1],"--version")==0)return version(0);

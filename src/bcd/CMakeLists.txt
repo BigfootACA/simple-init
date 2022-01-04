@@ -6,4 +6,5 @@ add_library(init_bcd STATIC
 	element.c
 	element_value.c
 	device.c
+	dump.c
 )

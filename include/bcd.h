@@ -130,6 +130,9 @@ extern const char*bcd_store_get_path(bcd_store store);
 extern hive_h*bcd_store_get_hive(bcd_store store);
 extern void bcd_store_free(bcd_store store);
 
+extern void bcd_dump(bcd_store bcd);
+extern void bcd_dump_all(bcd_store bcd);
+
 extern bcd_object bcd_get_object_by_node(bcd_store bcd,hive_node_h node);
 extern bcd_object bcd_get_object_by_key(bcd_store bcd,const char*key);
 extern bcd_object bcd_get_object_by_name(bcd_store bcd,const char*name);

@@ -103,10 +103,9 @@ static void bcd_dump_loader(bcd_store bcd){
 	char buf[40],*name;
 	bcd_object*objs=NULL;
 	bcd_element*eles=NULL;
-	if(!(objs=bcd_get_all_objects(bcd)))return;
+	if(!(objs=bcd_get_boot_menu_objects(bcd)))return;
 	puts("OS Loaders");
 	for(size_t s=0;objs[s];s++){
-		if(!bcd_object_is_type_name(objs[s],"OSLoader"))continue;
 		if(!(eles=bcd_get_all_elements(objs[s])))continue;
 		printf(
 			"\t%s@%s",

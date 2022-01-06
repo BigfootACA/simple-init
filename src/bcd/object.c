@@ -126,6 +126,47 @@ bcd_object*bcd_get_all_objects(bcd_store bcd){
 	return NULL;
 }
 
+bcd_object*bcd_get_boot_menu_objects(bcd_store bcd){
+	size_t cnt,size;
+	bcd_element menu;
+	bcd_object*objs,*buf,mgr;
+	uuid_t*us=NULL;
+	if(!bcd)return NULL;
+
+	if(
+		(mgr=bcd_get_object_by_name(bcd,"BOOTMGR"))&&
+		(menu=bcd_get_element_by_name(mgr,"DisplayOrder"))&&
+		(us=bcd_element_get_value_uuid_list(menu,&cnt))
+	){
+		size=sizeof(bcd_object)*(cnt+1);
+		if(!(objs=malloc(size)))goto fail;
+		memset(objs,0,size);
+		for(size_t i=0;i<cnt;i++)
+			if(!(objs[i]=bcd_get_object_by_uuid(bcd,us[i])))goto fail;
+	}else{
+		if(!(buf=bcd_get_all_objects(bcd)))goto fail;
+		for(size_t i=0;buf[i];i++)
+			if(bcd_object_is_type_name(buf[i],"Boot-OSLoader"))cnt++;
+		size=sizeof(bcd_object)*(cnt+1);
+		if(!(objs=malloc(size)))goto fail;
+		memset(objs,0,size);
+
+		for(size_t i=0,k=0;i<cnt;i++){
+			if(!buf[i])goto fail;
+			objs[k++]=buf[i];
+		}
+		bcd_objects_free(buf);
+	}
+
+	if(us)free(us);
+	list_obj_add_new_notnull(&bcd->to_free,objs);
+	return objs;
+	fail:
+	if(us)free(us);
+	bcd_objects_free(objs);
+	return NULL;
+}
+
 char*bcd_object_get_key(bcd_object obj,char*buf){
 	if(!obj)return NULL;
 	memset(buf,0,40);

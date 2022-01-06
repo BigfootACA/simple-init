@@ -138,6 +138,7 @@ extern bcd_object bcd_get_object_by_key(bcd_store bcd,const char*key);
 extern bcd_object bcd_get_object_by_name(bcd_store bcd,const char*name);
 extern bcd_object bcd_get_object_by_uuid(bcd_store bcd,uuid_t uuid);
 extern bcd_object*bcd_get_all_objects(bcd_store bcd);
+extern bcd_object*bcd_get_boot_menu_objects(bcd_store bcd);
 extern char*bcd_object_get_key(bcd_object obj,char*buf);
 extern char*bcd_object_get_display_name(bcd_object obj,char*buf);
 extern bool bcd_object_get_uuid(bcd_object obj,uuid_t uuid);

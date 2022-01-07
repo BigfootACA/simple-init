@@ -19,6 +19,7 @@
 #include"init_internal.h"
 #include"devd.h"
 #include"confd.h"
+#include"shell.h"
 #include"system.h"
 #include"defines.h"
 #include"cmdline.h"
@@ -123,14 +124,16 @@ static void init_console(){
 	dup2(fd,2);
 }
 
-int init_main(int argc __attribute__((unused)),char**argv __attribute__((unused))){
+int init_main(int argc __attribute__((unused)),char**argv){
 	int r;
-	status=INIT_BOOT;
 
 	// pre check
-	if(getpid()!=1)return trlog_emerg(1,"must be run as PID 1.");
-	if(getuid()!=0||geteuid()!=0)return trlog_emerg(1,"must be run as USER 0(root)");
-	if(getgid()!=0||getegid()!=0)return trlog_emerg(1,"must be run as GROUP 0(root)");
+	if(
+		getpid()!=1||
+		getuid()!=0||geteuid()!=0||
+		getgid()!=0||getegid()!=0
+	)return invoke_internal_cmd_nofork_by_name("simple-init",argv);
+	status=INIT_BOOT;
 
 	init_console();
 

@@ -68,6 +68,7 @@ static void process_switchroot(struct init_msg*msg,struct init_msg*res){
 		action=msg->action;
 		status=INIT_SHUTDOWN;
 	}else{
+		if(errno==0)errno=ENOTDIR;
 		res->data.status.ret=errno;
 		return;
 	}
@@ -75,7 +76,12 @@ static void process_switchroot(struct init_msg*msg,struct init_msg*res){
 	if(!search_init(
 		realinit,
 		msg->data.newroot.root
-	))telog_error("check newroot init");
+	)){
+		if(errno==0)errno=ENOEXEC;
+		telog_error("check newroot init");
+		return;
+	}
+	errno=0;
 }
 
 static void process_setenv(struct init_msg*msg,struct init_msg*res){
@@ -116,7 +122,7 @@ static void process_language(struct init_msg*msg,struct init_msg*res){
 	else tlog_info("set language to %s",msg->data.data);
 }
 
-int init_process_data(int cfd,struct ucred*u,struct init_msg*msg){
+int init_process_data(struct init_client*clt,struct init_msg*msg){
 	char s[BUFSIZ];
 	struct init_msg res;
 	init_initialize_msg(&res,ACTION_OK);
@@ -126,9 +132,9 @@ int init_process_data(int cfd,struct ucred*u,struct init_msg*msg){
 	tlog_debug(
 		"receive %s request from %s",
 		action2string(msg->action),
-		ucred2string(u,s,BUFSIZ,true)
+		ucred2string(&clt->cred,s,BUFSIZ,true)
 	);
-	if(init_check_privilege(msg->action,u))switch(msg->action){
+	if(init_check_privilege(msg->action,&clt->cred))switch(msg->action){
 		case ACTION_POWEROFF:case ACTION_HALT:case ACTION_REBOOT:
 			action=msg->action,status=INIT_SHUTDOWN;
 		break;
@@ -175,7 +181,7 @@ int init_process_data(int cfd,struct ucred*u,struct init_msg*msg){
 		case ACTION_NONE:case ACTION_OK:case ACTION_FAIL:break;
 		default:res.action=ACTION_FAIL,res.data.status.ret=ENOSYS;
 	}
-	init_send_data(cfd,&res);
+	init_send_data(clt->fd,&res);
 	return 0;
 }
 

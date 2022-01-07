@@ -8,6 +8,7 @@
 
 #ifndef INIT_INTERNAL_H
 #define INIT_INTERNAL_H
+#include<stdbool.h>
 #include<sys/socket.h>
 #define DEFAULT_INITD _PATH_RUN"/initd.sock"
 
@@ -65,6 +66,13 @@ struct init_msg{
 	union action_data data;
 };
 
+#ifdef _GNU_SOURCE
+struct init_client{
+	bool server;
+	struct ucred cred;
+	int fd;
+};
+#endif
 extern int(*register_services[])(void);
 
 // src/initd/bootsvc.c: run all register in register_services
@@ -74,7 +82,7 @@ int init_register_all_service(void);
 
 #ifdef _GNU_SOURCE
 // src/initd/protocol.c: process init_msg
-extern int init_process_data(int cfd,struct ucred*u,struct init_msg*msg);
+extern int init_process_data(struct init_client*clt,struct init_msg*msg);
 
 // src/initd/protocol.c: check ucred permission
 extern bool init_check_privilege(enum init_action act,struct ucred*cred);

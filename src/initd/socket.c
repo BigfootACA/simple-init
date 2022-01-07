@@ -16,16 +16,19 @@
 #include<sys/epoll.h>
 #include<sys/socket.h>
 #include"init_internal.h"
+#include"list.h"
 #include"logger.h"
 #include"defines.h"
 #define TAG "init"
 
 struct{
 	int efd,size;
+	list*clients;
 	struct epoll_event*evs;
 }ep={
 	.efd=-1,
 	.size=64,
+	.clients=NULL,
 	.evs=NULL
 };
 
@@ -78,21 +81,38 @@ int listen_init_socket(){
 	ERET(-er);
 }
 
-static inline int ctl_fd(int act,int fd){
+static int free_client(void*p){
+	struct init_client*clt=p;
+	if(clt){
+		close(clt->fd);
+		free(clt);
+	}
+	return 0;
+}
+
+static inline int ctl_fd(int act,struct init_client*clt){
 	static struct epoll_event s={.events=EPOLLIN};
-	s.data.fd=fd;
-	int r=epoll_ctl(
-		ep.efd,act,fd,
-		act==EPOLL_CTL_ADD?&s:NULL
-	);
-	if(act==EPOLL_CTL_DEL)close(fd);
-	return r;
+	struct epoll_event*p=NULL;
+	int fd=clt->fd;
+	switch(act){
+		case EPOLL_CTL_ADD:
+			s.data.ptr=clt,p=&s;
+			list_obj_add_new(&ep.clients,clt);
+		break;
+		case EPOLL_CTL_DEL:
+			close(clt->fd);
+			free(clt);
+			list_obj_del_data(&ep.clients,clt,free_client);
+		break;
+	}
+	return epoll_ctl(ep.efd,act,fd,p);
 }
 
 static int clean_epoll(){
 	if(ep.efd>=0)close(ep.efd);
 	if(ep.evs)free(ep.evs);
-	ep.efd=-1,ep.evs=NULL;
+	list_free_all(ep.clients,free_client);
+	ep.efd=-1,ep.evs=NULL,ep.clients=NULL;
 	return 0;
 }
 
@@ -103,28 +123,59 @@ static int init_epoll(int sfd){
 	if(!(ep.evs=malloc(es*ep.size)))
 		return terlog_error(-errno,"malloc failed");
 	memset(ep.evs,0,es*ep.size);
-	ctl_fd(EPOLL_CTL_ADD,sfd);
+	struct init_client*clt;
+	if(!(clt=malloc(sizeof(struct init_client))))return 0;
+	memset(clt,0,sizeof(struct init_client));
+	clt->fd=sfd,clt->server=true;
+	ctl_fd(EPOLL_CTL_ADD,clt);
 	return 0;
 }
 
-static int recv_init_socket(int cfd){
+static int recv_init_socket(struct init_client*clt){
 	static socklen_t credsize=sizeof(struct ucred);
 	struct init_msg msg;
 	struct ucred cred;
-	int z=init_recv_data(cfd,&msg);
-	if(z<0&&errno==EAGAIN)return 0;
+	int z=init_recv_data(clt->fd,&msg);
+	if(z<0&&errno==EAGAIN){
+		free(clt);
+		return 0;
+	}
 	if(
-		z<0||
-		getsockopt(
-			cfd,
-			SOL_SOCKET,SO_PEERCRED,
+		z<0||getsockopt(
+			clt->fd,SOL_SOCKET,SO_PEERCRED,
 			&cred,&credsize
-		)!=0
+		)!=0||
+		clt->cred.uid!=cred.uid||
+		clt->cred.gid!=cred.gid||
+		clt->cred.pid!=cred.pid
 	){
-		ctl_fd(EPOLL_CTL_DEL,cfd);
+		ctl_fd(EPOLL_CTL_DEL,clt);
 		return -1;
 	}
-	return init_process_data(cfd,&cred,&msg);
+	return init_process_data(clt,&msg);
+}
+
+static int init_accept(int server){
+	static socklen_t credsize=sizeof(struct ucred);
+	struct init_client*clt;
+	if(!(clt=malloc(sizeof(struct init_client))))return 0;
+	memset(clt,0,sizeof(struct init_client));
+	if((clt->fd=accept(server,NULL,NULL))<0){
+		if(errno==EINTR||errno==EAGAIN)return 0;
+		telog_error("accept on %d failed",server);
+		close(server);
+		return -1;
+	}
+	fcntl(clt->fd,F_SETFL,O_RDWR|O_NONBLOCK);
+	if(getsockopt(
+		clt->fd,SOL_SOCKET,SO_PEERCRED,
+		&clt->cred,&credsize
+	)!=0){
+		ctl_fd(EPOLL_CTL_DEL,clt);
+		return 0;
+	}
+	ctl_fd(EPOLL_CTL_ADD,clt);
+	return 0;
 }
 
 int init_process_socket(int sfd){
@@ -136,21 +187,10 @@ int init_process_socket(int sfd){
 		return terlog_error(-1,"epoll failed");
 	}else if(r==0)return 0;
 	else for(int i=0;i<r;i++){
-		int s=ep.evs[i].data.fd;
-		if(s==sfd){
-			int n=accept(s,NULL,NULL);
-			if(n<0){
-				if(
-					errno==EINTR||
-					errno==EAGAIN
-				)continue;
-				telog_error("accept on %d failed",s);
-				close(s);
-				return -1;
-			}
-			fcntl(n,F_SETFL,O_RDWR|O_NONBLOCK);
-			ctl_fd(EPOLL_CTL_ADD,n);
-		}else recv_init_socket(s);
+		struct init_client*clt=ep.evs[i].data.ptr;
+		if(!clt)continue;
+		if(!clt->server)recv_init_socket(clt);
+		else if(init_accept(clt->fd)!=0)return -1;
 	}
 	return 0;
 }

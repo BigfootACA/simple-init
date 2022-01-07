@@ -15,6 +15,9 @@
 #include<libgen.h>
 #include<unistd.h>
 #include<sys/stat.h>
+#include<sys/ioctl.h>
+#include<sys/sysmacros.h>
+#include<linux/loop.h>
 #ifdef ENABLE_BLKID
 #include<blkid/blkid.h>
 #endif
@@ -266,4 +269,32 @@ int fd_write_int(int fd,char*name,int value,bool lf){
 	}
 	close(o);
 	return 0;
+}
+
+int loop_get_free_num(void){
+	int fd,avail=-1;
+	if((fd=open(_PATH_DEV"/loop-control",O_RDWR|O_CLOEXEC))>=0){
+		avail=ioctl(fd,LOOP_CTL_GET_FREE);
+		close(fd);
+	}
+	return avail;
+}
+
+int loop_get_free(char*buf,size_t len){
+	struct stat st;
+	int avail;
+	if(!buf||len<=0)ERET(EINVAL);
+	if((avail=loop_get_free_num())<0)return -1;
+	memset(buf,0,len);
+	snprintf(buf,len-1,_PATH_DEV"/loop%d",avail);
+	mknod(buf,S_IFBLK|S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP,makedev(7,avail));
+	if(stat(buf,&st)!=0)goto fail;
+	if(!S_ISBLK(st.st_mode)){
+		errno=-ENOTBLK;
+		goto fail;
+	}
+	return 0;
+	fail:
+	memset(buf,0,len);
+	return -1;
 }

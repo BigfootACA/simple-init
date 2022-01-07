@@ -86,6 +86,12 @@ extern int fd_read_int(int fd,char*name);
 // src/lib/file.c: write an integer value to a file
 extern int fd_write_int(int fd,char*name,int value,bool lf);
 
+// src/lib/file.c: get a usable loop device
+extern int loop_get_free_num(void);
+
+// src/lib/file.c: get a usable loop device path
+extern int loop_get_free(char*buf,size_t len);
+
 #ifndef ENABLE_UEFI
 // src/lib/reboot.c: advance reboot (with arg)
 extern int adv_reboot(long cmd,char*data);

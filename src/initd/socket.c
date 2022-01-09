@@ -100,8 +100,6 @@ static inline int ctl_fd(int act,struct init_client*clt){
 			list_obj_add_new(&ep.clients,clt);
 		break;
 		case EPOLL_CTL_DEL:
-			close(clt->fd);
-			free(clt);
 			list_obj_del_data(&ep.clients,clt,free_client);
 		break;
 	}
@@ -136,10 +134,7 @@ static int recv_init_socket(struct init_client*clt){
 	struct init_msg msg;
 	struct ucred cred;
 	int z=init_recv_data(clt->fd,&msg);
-	if(z<0&&errno==EAGAIN){
-		free(clt);
-		return 0;
-	}
+	if(z<0&&errno==EAGAIN)return 0;
 	if(
 		z<0||getsockopt(
 			clt->fd,SOL_SOCKET,SO_PEERCRED,

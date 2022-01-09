@@ -62,6 +62,7 @@ static void show_shutdown(int sig,pid_t pid){
 
 static void signal_handlers(int s,siginfo_t*i,void*d __attribute__((unused))){
 	if(getpid()!=1||!handle)return;
+	static bool crash=false;
 	pid_t pid;
 	int st;
 	switch(s){
@@ -82,8 +83,14 @@ static void signal_handlers(int s,siginfo_t*i,void*d __attribute__((unused))){
 		break;
 		case SIGSEGV:case SIGABRT:case SIGILL:case SIGBUS:
 			if(i->si_pid!=0)break;
-			handle=false;
+			if(crash){
+				tlog_emerg("crash again");
+				_exit(s);
+			}
+			crash=true;
 			tlog_emerg("init crashed by %s!",signame(s));
+			init_process_socket(-1);
+			status=INIT_SHUTDOWN;
 			dump();
 			kill_all();
 			xsleep(3);

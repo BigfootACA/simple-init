@@ -55,6 +55,36 @@ int cmdline_rootfstype(char*k,char*v){
 	return _xadd_item(k,"type",v);
 }
 
+int cmdline_loop(char*k,char*v){
+	if(v)tlog_debug("root image file set to %s",v);
+	return _xadd_item(k,"loop",v);
+}
+
+int cmdline_loopflags(char*k,char*v){
+	tlog_debug("root image file flags set to %s",v);
+	return _xadd_item(k,"loop_flags",v);
+}
+
+int cmdline_loopfstype(char*k,char*v){
+	tlog_debug("root image file type set to %s",v);
+	return _xadd_item(k,"loop_fstype",v);
+}
+
+int cmdline_loopsec(char*k,char*v){
+	tlog_debug("root image file sector size set to %s",v);
+	return _xadd_item(k,"loop_sector",v);
+}
+
+int cmdline_loopoff(char*k,char*v){
+	tlog_debug("root image file offset set to %s",v);
+	return _xadd_item(k,"loop_offset",v);
+}
+
+int cmdline_looppart(char*k,char*v){
+	tlog_debug("root image file partition set to %s",v);
+	return _xadd_item(k,"loop_partno",v);
+}
+
 int cmdline_rw(char*k,char*v __attribute__((unused))){
 	tlog_debug("root block set to read-write");
 	return _xadd_item(k,"rw","1");

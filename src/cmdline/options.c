@@ -22,6 +22,12 @@ DEF_HANDLER(root);
 DEF_HANDLER(rootflags);
 DEF_HANDLER(rootfstype);
 DEF_HANDLER(rootwait);
+DEF_HANDLER(loop);
+DEF_HANDLER(loopflags);
+DEF_HANDLER(loopfstype);
+DEF_HANDLER(loopsec);
+DEF_HANDLER(loopoff);
+DEF_HANDLER(looppart);
 DEF_HANDLER(logfs);
 DEF_HANDLER(logfile);
 DEF_HANDLER(conffs);
@@ -45,6 +51,12 @@ struct cmdline_option*cmdline_options[]={
 	DEF_OPTION(rootflags,  false, REQUIRED_VALUE),
 	DEF_OPTION(rootfstype, false, REQUIRED_VALUE),
 	DEF_OPTION(rootwait,   false, OPTIONAL_VALUE),
+	DEF_OPTION(loop,       false, REQUIRED_VALUE),
+	DEF_OPTION(loopflags,  false, REQUIRED_VALUE),
+	DEF_OPTION(loopfstype, false, REQUIRED_VALUE),
+	DEF_OPTION(loopsec,    false, REQUIRED_VALUE),
+	DEF_OPTION(loopoff,    false, REQUIRED_VALUE),
+	DEF_OPTION(looppart,   false, REQUIRED_VALUE),
 
 	// cmdline.c; end parse general options
 	DEF_OPTION(end,        false, OPTIONAL_VALUE),

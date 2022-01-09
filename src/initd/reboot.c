@@ -9,6 +9,7 @@
 #define _GNU_SOURCE
 #include<signal.h>
 #include<unistd.h>
+#include"service.h"
 #include"init_internal.h"
 #include"system.h"
 #include"logger.h"
@@ -22,6 +23,8 @@ int call_reboot(long rb,char*cmd){
 }
 
 int kill_all(){
+	service_wait_all_stop();
+	xsleep(1);
 	kill(-1,SIGTERM);
 	tlog_alert("sending SIGTERM to all proceesses...");
 	sync();

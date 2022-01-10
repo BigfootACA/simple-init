@@ -107,7 +107,6 @@ static char*get_flags(boot_config*boot,char*key,bool ro,char*buf,size_t len){
 }
 
 static int setup_loop(boot_config*boot,bool ro,char*path,size_t len){
-	size_t bs;
 	uint64_t offset=0;
 	struct stat st;
 	struct loop_info64 li;
@@ -119,6 +118,7 @@ static int setup_loop(boot_config*boot,bool ro,char*path,size_t len){
 
 	if(!boot||!path||!*path)return -1;
 	if(!(loop=kvarr_get(boot->data,"loop",NULL))||!*loop)return 0;
+	if(strcasecmp(loop,"none")==0)return 0;
 	if(*loop=='/')loop++;
 	if((sec=kvarr_get(boot->data,"loop_sector",NULL)))
 		if((sector=parse_int(sec,0))<=0)
@@ -130,8 +130,7 @@ static int setup_loop(boot_config*boot,bool ro,char*path,size_t len){
 		if((offset=parse_long(off,0))<=0)
 			EGOTO(trlog_error(ENUM(EINVAL),"invalid loop offset"));
 
-	if((bs=strlen(path))>=255)return -1;
-	if(path[bs-1]!='/')path[bs]='/',path[bs+1]=0;
+	if(!add_right_slash(path,len))return -1;
 
 	snprintf(buf,sizeof(buf)-1,"%s%s",path,loop);
 	if(!realpath(buf,image))EGOTO(terlog_error(-errno,"realpath failed"));
@@ -140,6 +139,7 @@ static int setup_loop(boot_config*boot,bool ro,char*path,size_t len){
 	if(stat(image,&st)!=0)EGOTO(terlog_error(-errno,"stat %s failed",image));
 	if(!S_ISREG(st.st_mode))EGOTO(trlog_error(ENUM(ENOTSUP),"%s is not a file",image));
 	if(st.st_size<=0)EGOTO(trlog_error(ENUM(EINVAL),"%s is an empty file",image));
+	tlog_info("use loop image %s (size %zu)",loop,st.st_size);
 
 	// get a free loop device
 	#ifdef ENABLE_KMOD
@@ -195,6 +195,89 @@ static int setup_loop(boot_config*boot,bool ro,char*path,size_t len){
 	return e;
 }
 
+static int setup_overlay(boot_config*boot,int wait,char*path,size_t len){
+	int e=0;
+	char*data,*data_blk,*size,*prefix;
+	char overlay_point[256],overlay_flags[PATH_MAX];
+	char data_type[64],data_point[256],data_flags[PATH_MAX];
+	char upper_path[PATH_MAX],work_path[PATH_MAX],data_path[PATH_MAX];
+
+	if(!boot||!path||!*path)return -1;
+	if(!(data=kvarr_get(boot->data,"data",NULL))||!*data)return 0;
+	if(strcasecmp(data,"none")==0)return 0;
+	prefix=trim_slash(kvarr_get(boot->data,"data_prefix",NULL));
+	size=kvarr_get(boot->data,"data_size",NULL);
+	if(size&&!*size)size=NULL;
+
+	// generate data flags
+	memset(data_path,0,sizeof(data_path));
+	if(strcmp(data,"tmpfs")==0){
+		strcpy(data_type,"tmpfs");
+		data_blk=data_type;
+	}else{
+		if(!(data_blk=get_block(data,wait)))EGOTO(-errno);
+		if(!(get_fstype(boot,data_blk,"data_fstype",data_type,sizeof(data_type))))
+			EGOTO(terlog_error(-errno,"cannot get fstype"));
+	}
+	size_t fs,fb=sizeof(data_flags);
+	get_flags(boot,"data_flags",false,data_flags,fb);
+	fs=strlen(data_flags);
+	snprintf(data_flags+fs,fb-fs-1,",size=%s,mode=0755",size?size:"50%");
+	tlog_info("use %s(%s) as overlay data block",data_blk,data_type);
+
+	// mount data partition
+	if(!auto_mountpoint(data_point,sizeof(data_point)))
+		EGOTO(terlog_error(-errno,"cannot get new mountpoint"));
+	if(xmount(false,data_blk,data_point,data_type,data_flags,true)!=0)EGOTO(-errno);
+
+	// init overlay data partition
+	memset(data_path,0,sizeof(data_path));
+	if(!prefix)strncpy(data_path,data_point,sizeof(data_path)-1);
+	else{
+		snprintf(data_path,sizeof(data_path)-1,"%s/%s",data_point,prefix);
+		mkdir(data_path,0700);
+		if(!is_folder(data_path))
+			EGOTO(terlog_error(-errno,"data %s is not a folder",data_path));
+	}
+	memset(work_path,0,sizeof(work_path));
+	memset(upper_path,0,sizeof(upper_path));
+	snprintf(work_path,sizeof(work_path)-1,"%s/work",data_path);
+	snprintf(upper_path,sizeof(upper_path)-1,"%s/upper",data_path);
+	mkdir(work_path,0700);
+	mkdir(upper_path,0700);
+	if(!is_folder(work_path))EGOTO(terlog_error(-errno,"work %s is not a folder",work_path));
+	if(!is_folder(upper_path))EGOTO(terlog_error(-errno,"upper %s is not a folder",upper_path));
+
+	// generate overlay flags
+	memset(overlay_flags,0,sizeof(overlay_flags));
+	snprintf(
+		overlay_flags,sizeof(overlay_flags)-1,
+		"rw,lowerdir=%s,upperdir=%s,workdir=%s",
+		path,upper_path,work_path
+	);
+
+	// mount overlay
+	#ifdef ENABLE_KMOD
+	insmod("fs-overlay",false);
+	#endif
+	if(!auto_mountpoint(overlay_point,sizeof(overlay_point)))
+		EGOTO(terlog_error(-errno,"cannot get new mountpoint"));
+	if(xmount(
+		false,kvarr_get(boot->data,"overlay_name","rootfs"),
+		overlay_point,"overlay",overlay_flags,true
+	)!=0)EGOTO(-errno);
+
+	// change root path
+	memset(path,0,len);
+	strncpy(path,overlay_point,len-1);
+
+	return 0;
+	fail:
+	if(errno==0)errno=e==0?ENOTSUP:0;
+	if(e==0)e=-1;
+	return e;
+}
+
 int run_boot_root(boot_config*boot){
 	if(!boot)ERET(EINVAL);
 	if(boot->mode!=BOOT_SWITCHROOT)ERET(ENOTSUP);
@@ -226,6 +309,9 @@ int run_boot_root(boot_config*boot){
 
 	// setup loop root
 	if(setup_loop(boot,ro,point,sizeof(point))!=0)EGOTO(-errno);
+
+	// setup overlay fs
+	if(setup_overlay(boot,wait,point,sizeof(point))!=0)EGOTO(-errno);
 
 	// try to search init
 	if(!(init=search_init(definit,point)))EGOTO(-errno);

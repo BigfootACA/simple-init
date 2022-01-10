@@ -271,3 +271,19 @@ char**path2array(char*path,bool parent){
 	list_free_all(l,NULL);
 	return a;
 }
+
+char*trim_slash(char*path){
+	if(!path||!*path)return NULL;
+	if(*path=='/')path++;
+	size_t ps=strlen(path);
+	if(path[ps-1]=='/')path[ps-1]=0;
+	return *path?path:NULL;
+}
+
+char*add_right_slash(char*path,size_t len){
+	if(!path||!*path)return NULL;
+	size_t bs=strlen(path);
+	if(bs>=len-1)return path;
+	if(path[bs-1]!='/')path[bs]='/',path[bs+1]=0;
+	return path;
+}

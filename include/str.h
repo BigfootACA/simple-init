@@ -149,6 +149,12 @@ extern void strtolower(char*str);
 // src/lib/strings.c: convert path string to an array
 extern char**path2array(char*path,bool parent);
 
+// src/lib/strings.c: remove slash from both sides of the string
+extern char*trim_slash(char*path);
+
+// src/lib/strings.c: append slash to string
+extern char*add_right_slash(char*path,size_t len);
+
 #ifdef _LIST_H
 
 // src/lib/strings.c: convert path string to a list

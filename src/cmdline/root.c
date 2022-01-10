@@ -85,6 +85,36 @@ int cmdline_looppart(char*k,char*v){
 	return _xadd_item(k,"loop_partno",v);
 }
 
+int cmdline_datablk(char*k,char*v){
+	tlog_debug("overlay data block set to %s",v);
+	return _xadd_item(k,"data",v);
+}
+
+int cmdline_datasize(char*k,char*v){
+	tlog_debug("overlay work tmpfs size set to %s",v);
+	return _xadd_item(k,"data_size",v);
+}
+
+int cmdline_dataflags(char*k,char*v){
+	tlog_debug("overlay block flags set to %s",v);
+	return _xadd_item(k,"data_flags",v);
+}
+
+int cmdline_datafstype(char*k,char*v){
+	tlog_debug("overlay block fstype set to %s",v);
+	return _xadd_item(k,"data_fstype",v);
+}
+
+int cmdline_dataname(char*k,char*v){
+	tlog_debug("overlay name set to %s",v);
+	return _xadd_item(k,"overlay_name",v);
+}
+
+int cmdline_dataprefix(char*k,char*v){
+	tlog_debug("overlay data prefix set to %s",v);
+	return _xadd_item(k,"data_prefix",v);
+}
+
 int cmdline_rw(char*k,char*v __attribute__((unused))){
 	tlog_debug("root block set to read-write");
 	return _xadd_item(k,"rw","1");

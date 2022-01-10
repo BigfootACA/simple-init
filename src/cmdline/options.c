@@ -28,6 +28,12 @@ DEF_HANDLER(loopfstype);
 DEF_HANDLER(loopsec);
 DEF_HANDLER(loopoff);
 DEF_HANDLER(looppart);
+DEF_HANDLER(datablk);
+DEF_HANDLER(datasize);
+DEF_HANDLER(dataflags);
+DEF_HANDLER(datafstype);
+DEF_HANDLER(dataname);
+DEF_HANDLER(dataprefix);
 DEF_HANDLER(logfs);
 DEF_HANDLER(logfile);
 DEF_HANDLER(conffs);
@@ -57,6 +63,12 @@ struct cmdline_option*cmdline_options[]={
 	DEF_OPTION(loopsec,    false, REQUIRED_VALUE),
 	DEF_OPTION(loopoff,    false, REQUIRED_VALUE),
 	DEF_OPTION(looppart,   false, REQUIRED_VALUE),
+	DEF_OPTION(datablk,    false, REQUIRED_VALUE),
+	DEF_OPTION(datasize,   false, REQUIRED_VALUE),
+	DEF_OPTION(dataflags,  false, REQUIRED_VALUE),
+	DEF_OPTION(datafstype, false, REQUIRED_VALUE),
+	DEF_OPTION(dataname,   false, REQUIRED_VALUE),
+	DEF_OPTION(dataprefix, false, REQUIRED_VALUE),
 
 	// cmdline.c; end parse general options
 	DEF_OPTION(end,        false, OPTIONAL_VALUE),

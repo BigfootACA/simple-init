@@ -20,6 +20,7 @@
 #endif
 #include"str.h"
 #include"boot.h"
+#include"confd.h"
 #include"logger.h"
 #include"system.h"
 #include"defines.h"
@@ -75,7 +76,7 @@ static char*get_fstype(boot_config*boot,const char*path,char*key,char*buf,size_t
 	char*t1=NULL,*t2=NULL,mod[64];
 	memset(buf,0,len);
 	memset(mod,0,sizeof(mod));
-	if(key&&(t1=kvarr_get(boot->data,key,NULL)))goto success;
+	if(key&&(t1=confd_get_string_base(boot->key,key,NULL)))goto success;
 
 	#ifdef ENABLE_BLKID
 	// fstype not set, auto detect
@@ -100,7 +101,7 @@ static char*get_fstype(boot_config*boot,const char*path,char*key,char*buf,size_t
 
 static char*get_flags(boot_config*boot,char*key,bool ro,char*buf,size_t len){
 	memset(buf,0,len);
-	char*flags=kvarr_get(boot->data,key,NULL);
+	char*flags=confd_get_string_base(boot->key,key,NULL);
 	buf[0]='r',buf[1]=ro?'o':'w';
 	if(flags)snprintf(buf+2,len-3,",%s",flags);
 	return buf;
@@ -117,16 +118,16 @@ static int setup_loop(boot_config*boot,bool ro,char*path,size_t len){
 	char buf[PATH_MAX],image[PATH_MAX],flags[PATH_MAX];
 
 	if(!boot||!path||!*path)return -1;
-	if(!(loop=kvarr_get(boot->data,"loop",NULL))||!*loop)return 0;
+	if(!(loop=confd_get_string_base(boot->key,"loop",NULL))||!*loop)return 0;
 	if(strcasecmp(loop,"none")==0)return 0;
 	if(*loop=='/')loop++;
-	if((sec=kvarr_get(boot->data,"loop_sector",NULL)))
+	if((sec=confd_get_string_base(boot->key,"loop_sector",NULL)))
 		if((sector=parse_int(sec,0))<=0)
 			EGOTO(trlog_error(ENUM(EINVAL),"invalid sector size"));
-	if((part=kvarr_get(boot->data,"loop_partno",NULL)))
+	if((part=confd_get_string_base(boot->key,"loop_partno",NULL)))
 		if((partno=parse_int(part,0))<=0)
 			EGOTO(trlog_error(ENUM(EINVAL),"invalid partition number"));
-	if((off=kvarr_get(boot->data,"loop_offset",NULL)))
+	if((off=confd_get_string_base(boot->key,"loop_offset",NULL)))
 		if((offset=parse_long(off,0))<=0)
 			EGOTO(trlog_error(ENUM(EINVAL),"invalid loop offset"));
 
@@ -203,10 +204,10 @@ static int setup_overlay(boot_config*boot,int wait,char*path,size_t len){
 	char upper_path[PATH_MAX],work_path[PATH_MAX],data_path[PATH_MAX];
 
 	if(!boot||!path||!*path)return -1;
-	if(!(data=kvarr_get(boot->data,"data",NULL))||!*data)return 0;
+	if(!(data=confd_get_string_base(boot->key,"data",NULL))||!*data)return 0;
 	if(strcasecmp(data,"none")==0)return 0;
-	prefix=trim_slash(kvarr_get(boot->data,"data_prefix",NULL));
-	size=kvarr_get(boot->data,"data_size",NULL);
+	prefix=trim_slash(confd_get_string_base(boot->key,"data_prefix",NULL));
+	size=confd_get_string_base(boot->key,"data_size",NULL);
 	if(size&&!*size)size=NULL;
 
 	// generate data flags
@@ -263,7 +264,7 @@ static int setup_overlay(boot_config*boot,int wait,char*path,size_t len){
 	if(!auto_mountpoint(overlay_point,sizeof(overlay_point)))
 		EGOTO(terlog_error(-errno,"cannot get new mountpoint"));
 	if(xmount(
-		false,kvarr_get(boot->data,"overlay_name","rootfs"),
+		false,confd_get_string_base(boot->key,"overlay_name","rootfs"),
 		overlay_point,"overlay",overlay_flags,true
 	)!=0)EGOTO(-errno);
 
@@ -284,15 +285,16 @@ int run_boot_root(boot_config*boot){
 
 	int e,wait;
 	char*definit,*init,*path,flags[PATH_MAX],point[256],type[64];
-	bool ro=parse_int(kvarr_get(boot->data,"rw","0"),0)==0;
+	bool ro=parse_int(confd_get_string_base(boot->key,"rw","0"),0)==0;
 
 	// unimportant variables
-	definit=kvarr_get(boot->data,"init",NULL);
-	wait=parse_int(kvarr_get(boot->data,"wait",NULL),5);
+	definit=confd_get_string_base(boot->key,"init",NULL);
+	wait=parse_int(confd_get_string_base(boot->key,"wait",NULL),5);
 	if(wait<0)wait=5;
 
 	// root block path must set
-	if(!(path=kvarr_get(boot->data,"path",NULL)))
+	tlog_debug("%s",boot->key);
+	if(!(path=confd_get_string_base(boot->key,"path",NULL)))
 		EGOTO(trlog_error(ENUM(EINVAL),"rootfs block path not set"));
 
 	if(!(path=get_block(path,wait)))EGOTO(-errno);

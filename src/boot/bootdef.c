@@ -7,31 +7,75 @@
  */
 
 #include"boot.h"
+#include"confd.h"
+#include"keyval.h"
 
 extern int run_boot_root(boot_config*boot);
+extern int run_boot_reboot(boot_config*boot);
 extern int run_boot_system(boot_config*boot);
 extern int run_boot_charger(boot_config*boot);
 
-boot_config boot_switchroot={
-	.mode=BOOT_SWITCHROOT,
-	.ident="switchroot",
-	.desc="Default SwitchRoot",
-	.data={},
-	.main=&run_boot_root
+boot_main*boot_main_func[]={
+	[BOOT_NONE]       = NULL,
+	[BOOT_SWITCHROOT] = run_boot_root,
+	[BOOT_CHARGER]    = run_boot_charger,
+	[BOOT_KEXEC]      = run_boot_reboot,
+	[BOOT_REBOOT]     = run_boot_reboot,
+	[BOOT_POWEROFF]   = run_boot_reboot,
+	[BOOT_HALT]       = run_boot_reboot,
+	[BOOT_SYSTEM]     = run_boot_system,
 };
 
-boot_config boot_system={
-	.mode=BOOT_NONE,
-	.ident="system",
-	.desc="Default System",
-	.data={},
-	.main=&run_boot_system
-};
-
-boot_config boot_charger={
-	.mode=BOOT_CHARGER,
-	.ident="charger",
-	.desc="Default Charger Screen",
-	.data={},
-	.main=&run_boot_charger
-};
+#define EXTRA_DATA(val)((keyval*[]){&KV("data",(val)),NULL})
+void boot_init_configs(void){
+	boot_create_config(&(struct boot_config){
+		.ident="switchroot",.icon="linux.png",
+		.mode=BOOT_SWITCHROOT,.desc="Default SwitchRoot",
+		.save=false,.replace=false,
+		.show=true,.enabled=false
+	},NULL);
+	boot_create_config(&(struct boot_config){
+		.ident="system",.icon="system.png",
+		.mode=BOOT_SYSTEM,.desc="Enter Simple Init",
+		.save=false,.replace=false,
+		.show=true,.enabled=true
+	},NULL);
+	boot_create_config(&(struct boot_config){
+		.ident="charger",.icon="charger.png",
+		.mode=BOOT_CHARGER,.desc="Charger Screen",
+		.save=false,.replace=false,
+		.show=false,.enabled=false
+	},NULL);
+	boot_create_config(&(struct boot_config){
+		.ident="poweroff",.icon="poweroff.png",
+		.mode=BOOT_POWEROFF,.desc="Power off system",
+		.save=false,.replace=false,
+		.show=true,.enabled=true
+	},NULL);
+	boot_create_config(&(struct boot_config){
+		.ident="reboot",.icon="reboot.png",
+		.mode=BOOT_REBOOT,.desc="Reboot system",
+		.save=false,.replace=false,
+		.show=true,.enabled=true
+	},NULL);
+	boot_create_config(&(struct boot_config){
+		.ident="edl",.icon="download.png",
+		.mode=BOOT_REBOOT,.desc="Reboot into EDL",
+		.save=false,.replace=false,
+		.show=true,.enabled=true
+	},EXTRA_DATA("edl"));
+	boot_create_config(&(struct boot_config){
+		.ident="recovery",.icon="twrp.png",
+		.mode=BOOT_REBOOT,.desc="Reboot into recovery",
+		.save=false,.replace=false,
+		.show=true,.enabled=true
+	},EXTRA_DATA("recovery"));
+	boot_create_config(&(struct boot_config){
+		.ident="bootloader",.icon="fastboot.png",
+		.mode=BOOT_REBOOT,.desc="Reboot into bootloader",
+		.save=false,.replace=false,
+		.show=true,.enabled=true
+	},EXTRA_DATA("bootloader"));
+	if(confd_get_type("boot.default")!=TYPE_STRING)confd_set_string("boot.default","system");
+	if(confd_get_type("boot.second")!=TYPE_STRING)confd_set_string("boot.second","system");
+}

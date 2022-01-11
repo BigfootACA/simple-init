@@ -24,19 +24,40 @@ enum boot_mode{
 	BOOT_KEXEC,
 	BOOT_REBOOT,
 	BOOT_POWEROFF,
-	BOOT_HALT
+	BOOT_HALT,
+	BOOT_SYSTEM,
 };
 
 // boot config
 struct boot_config{
 	boot_mode mode;
-	char ident[32],desc[256];
-	keyval*data[64];
-	boot_main*main;
+	char ident[32];
+	char icon[32];
+	char desc[256];
+	char base[256];
+	char key[256];
+	bool save;
+	bool replace;
+	bool show;
+	bool enabled;
 };
+
+extern boot_main*boot_main_func[];
+
+// src/boot/boot.c: create boot config
+extern char*boot_create_config(struct boot_config*cfg,keyval**data);
+
+// src/boot/bootdef.c: create initial boot configs
+extern void boot_init_configs(void);
+
+// src/boot/bootdef.c: get boot config by name
+extern boot_config*boot_get_config(const char*name);
 
 // src/boot/boot.c: execute boot config
 extern int boot(boot_config*boot);
+
+// src/boot/boot.c: execute boot config by name
+extern int boot_name(const char*name);
 
 // src/boot/boot.c: convert boot_mode to string
 extern char*bootmode2string(enum boot_mode mode);

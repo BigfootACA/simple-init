@@ -9,6 +9,7 @@
 #include<errno.h>
 #include<string.h>
 #include"boot.h"
+#include"confd.h"
 #include"logger.h"
 #include"defines.h"
 #include"init_internal.h"
@@ -22,7 +23,7 @@ int run_boot_reboot(boot_config*boot){
 	init_initialize_msg(&msg,ACTION_REBOOT);
 	switch(boot->mode){
 		case BOOT_REBOOT:
-			data=kvarr_get(boot->data,"arg",NULL);
+			data=confd_get_string_base(boot->key,"arg",NULL);
 			msg.action=ACTION_REBOOT;
 			if(data){
 				if(strlen(data)>=ss)return terlog_error(2,"reboot argument too long");

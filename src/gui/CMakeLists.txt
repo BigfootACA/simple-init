@@ -48,6 +48,7 @@ add_library(init_gui STATIC
 	drivers/sdl2.c
 	decoders/freetype.c
 	decoders/png.c
+	decoders/bmp.c
 	filesystem/lv_fs_string.c
 	filesystem/fsext.c
 	filesystem/unix.c

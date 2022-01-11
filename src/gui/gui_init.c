@@ -174,6 +174,7 @@ int gui_pre_init(){
 	#ifdef ENABLE_LODEPNG
 	png_decoder_init();
 	#endif
+	bmp_decoder_init();
 	#ifdef ENABLE_FREETYPE2
 	lv_freetype_init(64,1,0);
 

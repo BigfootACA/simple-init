@@ -8,28 +8,21 @@
 
 #define _GNU_SOURCE
 #include<errno.h>
-#include<stdlib.h>
-#include<string.h>
 #include"defines.h"
 #include"logger.h"
-#include"keyval.h"
-#include"cmdline.h"
+#include"confd.h"
 #include"boot.h"
 #define TAG "cmdline"
 
 extern boot_config boot_switchroot;
 
 static int _add_item(char*key,char*value){
-	if(!boot_options.config)boot_options.config=&boot_switchroot;
-	keyval**kv=boot_switchroot.data;
-	for(int i=0;i<64;i++){
-		if(!kv[i])ERET((kv[i]=kv_new_set_dup(key,value))?0:ENOMEM);
-		else if(strcmp(key,kv[i]->key)==0){
-			if(kv[i]->value)free(kv[i]->value);
-			ERET((kv[i]->value=strdup(value))?0:ENOMEM);
-		}
-	}
-	ERET(ENOSPC);
+	static const char*k="boot.current";
+	if(confd_get_type(k)!=TYPE_STRING)confd_set_string(k,"switchroot");
+	confd_set_save(k,false);
+	confd_set_boolean("boot.configs.switchroot.enabled",true);
+	confd_set_string_base("boot.configs.switchroot.extra",key,value);
+	return 0;
 }
 
 static int _xadd_item(char*k,char*key,char*value){

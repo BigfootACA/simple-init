@@ -22,9 +22,6 @@ struct boot_options{
 
 	// verbose log
 	bool verbose;
-
-	// boot config
-	boot_config*config;
 };
 
 // option value type

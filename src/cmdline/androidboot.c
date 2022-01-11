@@ -18,7 +18,10 @@ int cmdline_androidboot(char*k,char*v){
 	if(strncmp(k,"androidboot.",12)!=0)return 0;
 	k+=12;
 	if(strcmp(k,"mode")==0){
-		if(strcmp(v,"charger")==0)boot_options.config=&boot_charger;
+		if(strcmp(v,"charger")==0){
+			confd_set_string("boot.current","charger");
+			confd_set_save("boot.current",false);
+		}
 		conf=k;
 	}else if(strcmp(k,"usbcontroller")==0)conf="udc";
 	else if(strcmp(k,"serialno")==0)conf="serial";

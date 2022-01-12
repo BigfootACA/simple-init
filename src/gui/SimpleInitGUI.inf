@@ -59,6 +59,7 @@
   drivers/uefi_touch.c
   decoders/png.c
   decoders/bmp.c
+  decoders/jpeg.c
   decoders/freetype.c
   interface/filemgr/filemgr.c
   interface/filemgr/filetab.c

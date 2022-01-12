@@ -12,6 +12,7 @@
 #cmakedefine ENABLE_UUID        1
 #cmakedefine ENABLE_FREETYPE2   1
 #cmakedefine ENABLE_LODEPNG     1
+#cmakedefine ENABLE_LIBJPEG     1
 #cmakedefine ENABLE_FDISK       1
 #cmakedefine ENABLE_KMOD        1
 #cmakedefine ENABLE_BLKID       1

@@ -177,6 +177,9 @@ int gui_pre_init(){
 	#ifdef ENABLE_LIBJPEG
 	jpeg_decoder_init();
 	#endif
+	#ifdef ENABLE_NANOSVG
+	svg_decoder_init();
+	#endif
 	bmp_decoder_init();
 	#ifdef ENABLE_FREETYPE2
 	lv_freetype_init(64,1,0);

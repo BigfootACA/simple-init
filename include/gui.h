@@ -38,6 +38,7 @@ extern void gui_do_quit(void);
 extern void gui_set_run_exit(runnable_t*run);
 extern void gui_run_and_exit(runnable_t*run);
 extern uint32_t custom_tick_get(void);
+extern void svg_decoder_init(void);
 extern void png_decoder_init(void);
 extern void bmp_decoder_init(void);
 extern void jpeg_decoder_init(void);

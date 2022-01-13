@@ -31,6 +31,7 @@ option(ENABLE_UUID        "Enable UUID library"                               ON
 option(ENABLE_FREETYPE2   "Enable FreeType 2 for GUI fonts"                   ON)
 option(ENABLE_LODEPNG     "Enable lodepng for GUI png decode"                 ON)
 option(ENABLE_LIBJPEG     "Enable LIBJPEG for GUI jpeg decode"                ON)
+option(ENABLE_NANOSVG     "Enable NanoSVG for GUI svg decode"                 ON)
 option(ENABLE_FDISK       "Enable libfdisk for GUI partition tools"           ON)
 option(ENABLE_KMOD        "Enable kmod modules load or remove"                ON)
 option(ENABLE_BLKID       "Enable blkid block detect and evalaute tag"        ON)
@@ -54,6 +55,10 @@ endif()
 
 if("${ENABLE_LODEPNG}" STREQUAL "ON")
 	include(libs/lodepng.cmake)
+endif()
+
+if("${ENABLE_NANOSVG}" STREQUAL "ON")
+	include(libs/nanosvg.cmake)
 endif()
 
 if("${ENABLE_KMOD}" STREQUAL "OFF")

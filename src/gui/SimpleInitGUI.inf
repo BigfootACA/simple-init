@@ -7,7 +7,7 @@
   LIBRARY_CLASS                  = SimpleInitGUI
 
 [BuildOptions]
-  GCC:*_*_*_CC_FLAGS = -DENABLE_GUI=1 -DENABLE_UEFI=1 -DENABLE_LODEPNG=1 -DENABLE_FREETYPE2=1
+  GCC:*_*_*_CC_FLAGS = -DENABLE_GUI=1 -DENABLE_UEFI=1 -DENABLE_LODEPNG=1 -DENABLE_NANOSVG=1 -DENABLE_FREETYPE2=1
 
 [Packages]
   MdePkg/MdePkg.dec
@@ -42,6 +42,8 @@
 [Sources]
   ../../libs/lvgl/lvgl.h
   ../../libs/lodepng/lodepng.h
+  ../../libs/nanosvg/src/nanosvg.h
+  ../../libs/nanosvg/src/nanosvgrast.h
   ../../libs/freetype/include/ft2build.h
   ../../include/gui.h
   ../compatible/include/compatible.h
@@ -59,6 +61,7 @@
   drivers/uefi_touch.c
   decoders/png.c
   decoders/bmp.c
+  decoders/svg.c
   decoders/jpeg.c
   decoders/freetype.c
   interface/filemgr/filemgr.c

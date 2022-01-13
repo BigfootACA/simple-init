@@ -119,6 +119,10 @@ if("${ENABLE_LODEPNG}" STREQUAL "ON")
 	target_link_libraries(simple-init lodepng)
 endif()
 
+if("${ENABLE_NANOSVG}" STREQUAL "ON")
+	target_link_libraries(simple-init m)
+endif()
+
 if("${ENABLE_STATIC}" STREQUAL "ON")
 	target_link_libraries(simple-init ${DEPS_STATIC_LIBRARIES})
 else()

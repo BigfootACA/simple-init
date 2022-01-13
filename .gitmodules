@@ -7,3 +7,6 @@
 [submodule "libs/freetype"]
 	path = libs/freetype
 	url = https://gitlab.freedesktop.org/freetype/freetype.git
+[submodule "libs/nanosvg"]
+	path = libs/nanosvg
+	url = https://github.com/memononen/nanosvg.git

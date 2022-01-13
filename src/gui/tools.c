@@ -247,4 +247,12 @@ void lv_textarea_remove_text(lv_obj_t*ta,uint32_t start,uint32_t len){
 	lv_event_send(ta,LV_EVENT_VALUE_CHANGED,NULL);
 }
 
+void lv_img_fill_image(lv_obj_t*img,lv_coord_t w,lv_coord_t h){
+	lv_img_ext_t*x=lv_obj_get_ext_attr(img);
+	if(x->w<=0||x->h<=0)return;
+	int b=(int)(((float)w/x->w)*256);
+	int a=(int)(((float)h/x->h)*256);
+	lv_img_set_pivot(img,0,0);
+	lv_img_set_zoom(img,MAX(a,b));
+}
 #endif

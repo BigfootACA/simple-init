@@ -32,6 +32,7 @@ extern void lv_obj_set_enabled(lv_obj_t*obj,bool enabled);
 extern void lv_obj_set_checked(lv_obj_t*obj,bool checked);
 extern void lv_default_dropdown_cb(lv_obj_t*obj,lv_event_t e);
 extern void lv_textarea_remove_text(lv_obj_t*ta,uint32_t start,uint32_t len);
+extern void lv_img_fill_image(lv_obj_t*img,lv_coord_t w,lv_coord_t h);
 
 #define lv_obj_set_text_font_def(obj,part,font) lv_obj_set_text_font(obj,LV_STATE_DEFAULT,part,font)
 #define lv_obj_set_bg_color_def(obj,part,color) lv_obj_set_bg_color(obj,LV_STATE_DEFAULT,part,color)

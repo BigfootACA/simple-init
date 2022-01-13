@@ -297,6 +297,8 @@ int guiapp_main(int argc __attribute((unused)),char**argv __attribute((unused)))
 	open_default_confd_socket(false,TAG);
 	open_socket_initfd(DEFAULT_INITD,false);
 	lang_init_locale();
+	pid_t p=confd_get_integer("runtime.pid.bootmenu",0);
+	if(p>0)while(is_link(_PATH_PROC"/%d/exe",p))sleep(1);
 	#endif
 	return gui_init();
 }

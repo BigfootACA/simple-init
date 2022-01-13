@@ -14,6 +14,7 @@
 #include"gui.h"
 #endif
 
+extern int register_bootmenu();
 extern int register_ttyd();
 
 int(*register_services[])()={
@@ -26,6 +27,7 @@ int(*register_services[])()={
 	#ifdef ENABLE_GUI
 	&register_guiapp,
 	#endif
+	&register_bootmenu,
 	NULL
 };
 

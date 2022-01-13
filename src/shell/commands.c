@@ -10,6 +10,7 @@
 DECLARE_MAIN(adbd);
 DECLARE_MAIN(arch);
 DECLARE_MAIN(benchmark);
+DECLARE_MAIN(bootmenu);
 DECLARE_MAIN(cd);
 DECLARE_MAIN(cat);
 DECLARE_MAIN(confctl);
@@ -80,6 +81,7 @@ const struct shell_command*shell_cmds[]={
 	#endif
 	DECLARE_CMD(true,  adbd,        "Android Debug Bridge Daemon")
 	DECLARE_CMD(true,  arch,        "Print system architecture")
+	DECLARE_CMD(true,  bootmenu,    "Boot Menu")
 	DECLARE_CMD(true,  confctl,     "Control config daemon")
 	DECLARE_CMD(true,  confget,     "Get config item")
 	DECLARE_CMD(true,  confset,     "Set config item")

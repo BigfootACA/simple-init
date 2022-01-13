@@ -15,17 +15,20 @@
 #include"gui.h"
 #include"confd.h"
 #include"logger.h"
+#include"system.h"
 #include"defines.h"
 #include"language.h"
 #include"init_internal.h"
+#include"gui/tools.h"
 #include"gui/msgbox.h"
 #include"gui/activity.h"
 #define TAG "guiapp"
 struct gui_app{
-	lv_obj_t*screen,*tabview,*indic,*author;
+	lv_obj_t*screen,*bg,*tabview,*indic,*author;
 	list*apps;
 	int app_num,app_page,cur_page;
 	lv_group_focus_cb_t old_cb;
+	char bg_path[PATH_MAX];
 };
 struct app_info{
 	int x,y,page,num;
@@ -93,6 +96,7 @@ static void add_page(struct gui_app*ga){
 	snprintf(name,15,"%d",ga->app_page);
 	if(!ga->tabview){
 		ga->tabview=lv_tabview_create(ga->screen,NULL);
+		lv_obj_set_style_local_bg_opa(ga->tabview,LV_TABVIEW_PART_BG,LV_STATE_DEFAULT,LV_OPA_0);
 		lv_obj_set_pos(ga->tabview,0,0);
 		lv_obj_set_size(ga->tabview,gui_sw,lv_obj_get_y(ga->indic)-gui_font_size);
 		lv_obj_set_user_data(ga->tabview,ga);
@@ -154,12 +158,8 @@ static void add_button(struct gui_app*ga,struct gui_register*p){
 	}
 	lv_img_set_src(icon,p->icon[0]?path:fail);
 	lv_img_ext_t*x=lv_obj_get_ext_attr(icon);
-	if((x->w<=0||x->h<=0)&&p->icon[0]){
-		lv_img_set_src(icon,fail);
-		x=lv_obj_get_ext_attr(icon);
-	}
-	if(x->w>0&&x->h>0)lv_img_set_zoom(icon,(int)(((float)ix/MAX(x->w,x->h))*256));
-	lv_img_set_pivot(icon,0,0);
+	if((x->w<=0||x->h<=0)&&p->icon[0])lv_img_set_src(icon,fail);
+	lv_img_fill_image(icon,ix,ix);
 
 	lv_obj_t*txt=lv_label_create(ai->app,NULL);
 	lv_label_set_long_mode(txt,LV_LABEL_LONG_BREAK);
@@ -225,6 +225,13 @@ static int guiapp_init(struct gui_activity*act){
 	if(!ga)return -ENOMEM;
 	memset(ga,0,sizeof(struct gui_app));
 	act->data=ga;
+	char*def_bg=IMG_RES"/bg.jpg",*bg,*key="gui.background";
+	if(confd_get_type(key)!=TYPE_STRING)confd_set_string(key,def_bg);
+	else if((bg=confd_get_string(key,NULL))){
+		strncpy(ga->bg_path,bg,sizeof(ga->bg_path)-1);
+		free(bg);
+	}
+	if(!ga->bg_path[0])strncpy(ga->bg_path,def_bg,sizeof(ga->bg_path)-1);
 	return 0;
 }
 
@@ -240,16 +247,24 @@ static int guiapp_exit(struct gui_activity*act){
 static int guiapp_draw(struct gui_activity*act){
 	struct gui_app*ga=act->data;
 	ga->screen=act->page;
-	static lv_style_t txt_style;
-	lv_style_init(&txt_style);
-	lv_style_set_text_font(&txt_style,LV_STATE_DEFAULT,gui_font_small);
-	lv_style_set_text_color(&txt_style,LV_STATE_DEFAULT,lv_color_make(200,200,200));
+
+	ga->bg=lv_img_create(act->page,NULL);
+	lv_obj_set_size(ga->bg,gui_sw,gui_sh);
+	lv_obj_set_pos(ga->bg,0,0);
+	lv_obj_set_hidden(ga->bg,true);
+	if(confd_get_boolean("gui.show_background",true)){
+		lv_img_set_src(ga->bg,ga->bg_path);
+		lv_img_fill_image(ga->bg,gui_sw,gui_sh);
+		lv_img_ext_t*x=lv_obj_get_ext_attr(ga->bg);
+		if(x->w>0&&x->h>0)lv_obj_set_hidden(ga->bg,false);
+	}
 
 	ga->author=lv_label_create(act->page,NULL);
 	lv_label_set_text(ga->author,"Author: BigfootACA");
 	lv_label_set_long_mode(ga->author,LV_LABEL_LONG_BREAK);
 	lv_label_set_align(ga->author,LV_LABEL_ALIGN_CENTER);
-	lv_obj_add_style(ga->author,LV_LABEL_PART_MAIN,&txt_style);
+	lv_obj_set_style_local_text_font(ga->author,LV_LABEL_PART_MAIN,LV_STATE_DEFAULT,gui_font_small);
+	lv_obj_set_style_local_text_color(ga->author,LV_LABEL_PART_MAIN,LV_STATE_DEFAULT,lv_color_make(200,200,200));
 	lv_obj_set_width(ga->author,gui_sw);
 	lv_obj_align(ga->author,NULL,LV_ALIGN_IN_BOTTOM_MID,0,-gui_font_size);
 

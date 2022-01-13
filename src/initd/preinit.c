@@ -96,6 +96,9 @@ int preinit(){
 	confd_add_key("runtime");
 	confd_set_save("runtime",false);
 
+	// create initial boot configs
+	boot_init_configs();
+
 	// load cmdline
 	load_cmdline();
 

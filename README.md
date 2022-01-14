@@ -27,6 +27,8 @@ This project has not been completed and may not work properly.
 | fontawesone | fontawesone | Font Awesome Font for GUI  |
 | freetype2   | freetype    | GUI load turetype fonts    |
 | lodepng     | lodepng     | GUI load png pictures      |
+| nanosvg     | nanosvg     | GUI load svg pictures      |
+| libjpeg     | libjpeg     | GUI load jpeg pictures     |
 | vncserver   | libvnc      | GUI over VNC Server        |
 | hivex       | libguestfs  | Windows Registry/BCD Edit  |
 

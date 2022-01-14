@@ -1899,3 +1899,54 @@ msgstr "使用"
 
 msgid "Edit"
 msgstr "编辑"
+
+msgid "Open picture"
+msgstr "打开图片"
+
+msgid "Picture Viewer"
+msgstr "图片查看器"
+
+msgid "Select background"
+msgstr "选择背景"
+
+msgid "Background"
+msgstr "背景"
+
+msgid "Default SwitchRoot"
+msgstr "默认根目录"
+
+msgid "Enter Simple Init"
+msgstr "进入Simple Init"
+
+msgid "Charger Screen"
+msgstr "充电屏幕"
+
+msgid "Power off system"
+msgstr "关机"
+
+msgid "Reboot system"
+msgstr "重启"
+
+msgid "Reboot into EDL"
+msgstr "重启到紧急下载(EDL)"
+
+msgid "Reboot into recovery"
+msgstr "重启到恢复模式(Recovery)"
+
+msgid "Reboot into bootloader"
+msgstr "重启到线刷模式(Fastboot)"
+
+msgid "Auto boot in %d seconds"
+msgstr "%d 秒后自动启动"
+
+msgid "Boot Menu"
+msgstr "启动菜单"
+
+msgid "Boot"
+msgstr "启动"
+
+msgid "Control"
+msgstr "控制"
+
+msgid "Control Pad"
+msgstr "控制板"

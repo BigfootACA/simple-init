@@ -63,6 +63,7 @@
   decoders/bmp.c
   decoders/svg.c
   decoders/jpeg.c
+  decoders/image.c
   decoders/freetype.c
   interface/filemgr/filemgr.c
   interface/filemgr/filetab.c

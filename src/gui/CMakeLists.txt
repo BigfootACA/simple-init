@@ -52,6 +52,7 @@ add_library(init_gui STATIC
 	decoders/png.c
 	decoders/bmp.c
 	decoders/jpeg.c
+	decoders/image.c
 	filesystem/lv_fs_string.c
 	filesystem/fsext.c
 	filesystem/unix.c

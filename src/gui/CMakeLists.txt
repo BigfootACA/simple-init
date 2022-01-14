@@ -33,6 +33,7 @@ add_library(init_gui STATIC
 	interface/core/charger.c
 	interface/core/guiapp.c
 	interface/core/clipboard.c
+	interface/core/ctrl_pad.c
 	interface/apps/text_editor.c
 	interface/apps/logviewer.c
 	interface/apps/benchmark.c

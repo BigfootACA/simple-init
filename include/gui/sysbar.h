@@ -26,7 +26,7 @@ struct sysbar{
 	lv_task_t*hide;
 	lv_obj_t*keyboard;
 	lv_obj_t*edit_menu;
-	lv_obj_t*edit_btns[10];
+	lv_obj_t*edit_btns[11];
 	lv_obj_t*focus_input;
 	lv_obj_t*bar_btn;
 	bool full_screen;
@@ -73,4 +73,16 @@ extern void sysbar_edit_menu_hide(void);
 
 // src/gui/interface/core/sysbar.c: focus textarea
 extern void sysbar_focus_input(lv_obj_t*obj);
+
+// src/gui/interface/core/ctrl_pad.c: draw control pad body
+extern void ctrl_pad_draw(void);
+
+// src/gui/interface/core/ctrl_pad.c: show control pad
+extern void ctrl_pad_show(void);
+
+// src/gui/interface/core/ctrl_pad.c: hide control pad
+extern void ctrl_pad_hide(void);
+
+// src/gui/interface/core/ctrl_pad.c: set control pad target object
+extern void ctrl_pad_set_target(lv_obj_t*target);
 #endif

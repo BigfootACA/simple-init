@@ -135,6 +135,9 @@ static void edit_menu_cb(lv_obj_t*obj,lv_event_t e){
 				lv_textarea_set_cursor_pos(ta,ss);
 			}
 			lv_textarea_add_text(ta,clipboard_get_content());
+		}else if(strcmp(c,"ctrl-pad")==0){
+			sysbar_keyboard_close();
+			ctrl_pad_show();
 		}
 	}
 	sysbar_edit_menu_hide();
@@ -384,6 +387,7 @@ int sysbar_draw(lv_obj_t*scr){
 		{ true, "delete-all", LV_SYMBOL_TRASH, "Delete all"    },
 		{ true, "select-all", "\uf065",        "Select all"    },
 		{ true, "deselect",   "\uf066",        "Deselect"      },
+		{ true, "ctrl-pad",   "\uf0b2",        "Control Pad"   },
 		{ true, "close",      LV_SYMBOL_CLOSE, "Close"         },
 		{ false,NULL,NULL,NULL}
 	};
@@ -419,6 +423,8 @@ int sysbar_draw(lv_obj_t*scr){
 		gui_w-w-gui_font_size,
 		gui_h-sysbar.size-h-gui_font_size
 	);
+
+	ctrl_pad_draw();
 
 	lv_task_create(sysbar_thread_cb,5000,LV_TASK_PRIO_LOW,&sysbar);
 	return 0;

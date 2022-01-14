@@ -82,6 +82,7 @@
   interface/core/reboot.c
   interface/core/sysbar.c
   interface/core/guiapp.c
+  interface/core/ctrl_pad.c
   interface/core/clipboard.c
   interface/apps/benchmark.c
   interface/apps/uefi_bootmenu.c

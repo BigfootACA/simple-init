@@ -27,3 +27,17 @@
   strdup.c
   strndup.c
   strnlen.c
+  __rem_pio2f.c
+  __rem_pio2_large.c
+  cosf.c
+  tanf.c
+  ceilf.c
+  fabs.c
+  floor.c
+  fmodf.c
+  sinf.c
+  sqrt.c
+  scalbn.c
+  pow.c
+  pow_data.c
+  exp_data.c

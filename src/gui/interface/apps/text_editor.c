@@ -49,6 +49,8 @@ static int editor_get_focus(struct gui_activity*act __attribute__((unused))){
 	lv_group_add_obj(gui_grp,btn_paste);
 	lv_group_add_obj(gui_grp,btn_menu);
 	lv_obj_set_enabled(btn_paste,clipboard_get_type()==CLIP_TEXT);
+	sysbar_focus_input(text);
+	ctrl_pad_set_target(text);
 	return 0;
 }
 
@@ -60,6 +62,8 @@ static int editor_lost_focus(struct gui_activity*act __attribute__((unused))){
 	lv_group_remove_obj(btn_copy);
 	lv_group_remove_obj(btn_paste);
 	lv_group_remove_obj(btn_menu);
+	sysbar_focus_input(NULL);
+	ctrl_pad_set_target(NULL);
 	return 0;
 }
 

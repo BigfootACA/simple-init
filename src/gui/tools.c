@@ -255,4 +255,16 @@ void lv_img_fill_image(lv_obj_t*img,lv_coord_t w,lv_coord_t h){
 	lv_img_set_pivot(img,0,0);
 	lv_img_set_zoom(img,MAX(a,b));
 }
+
+void lv_drag_border(lv_obj_t*obj,lv_coord_t width,lv_coord_t height,lv_coord_t border){
+	lv_coord_t x=lv_obj_get_x(obj);
+	lv_coord_t y=lv_obj_get_y(obj);
+	lv_coord_t w=lv_obj_get_width(obj);
+	lv_coord_t h=lv_obj_get_height(obj);
+	if(x<border)x=border;
+	if(y<border)y=border;
+	if(x+w+border>width)x=width-w-border;
+	if(y+h+border>height)y=height-h-border;
+	lv_obj_set_pos(obj,x,y);
+}
 #endif

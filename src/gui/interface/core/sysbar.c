@@ -263,16 +263,8 @@ static void hide_cb(lv_task_t*t){
 
 static void bar_cb(lv_obj_t*obj,lv_event_t e){
 	if(obj!=sysbar.bar_btn)return;
-	if(e==LV_EVENT_DRAG_END){
-		lv_coord_t x=lv_obj_get_x(obj),y=lv_obj_get_y(obj);
-		lv_coord_t w=lv_obj_get_width(obj),h=lv_obj_get_height(obj);
-		lv_coord_t sx=gui_font_size,sy=gui_font_size;
-		lv_coord_t sw=gui_w-w-gui_font_size,sh=gui_h-h-gui_font_size;
-		if(x<sx)lv_obj_set_x(obj,sx);
-		if(y<sy)lv_obj_set_y(obj,sy);
-		if(x>sw)lv_obj_set_x(obj,sw);
-		if(y>sh)lv_obj_set_y(obj,sh);
-	}else if(e==LV_EVENT_CLICKED)sysbar_show_bar();
+	if(e==LV_EVENT_DRAG_END)lv_drag_border(obj,gui_w,gui_h,gui_font_size);
+	else if(e==LV_EVENT_CLICKED)sysbar_show_bar();
 }
 
 static void sysbar_cb(lv_obj_t*obj __attribute__((unused)),lv_event_t e){

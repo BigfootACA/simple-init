@@ -36,6 +36,16 @@ static img_backend img_backends[]={
 };
 
 image_decoder*img_decoders[]={
+	&image_decoder_bmp,
+	#ifdef ENABLE_NANOSVG
+	&image_decoder_svg,
+	#endif
+	#ifdef ENABLE_LODEPNG
+	&image_decoder_png,
+	#endif
+	#ifdef ENABLE_LIBJPEG
+	&image_decoder_jpeg,
+	#endif
 	NULL
 };
 

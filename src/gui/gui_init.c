@@ -171,16 +171,7 @@ int gui_pre_init(){
 	gui_sx=0,gui_sy=0,gui_sw=gui_w,gui_sh=gui_h;
 	tlog_debug("driver init done");
 	guess_font_size();
-	#ifdef ENABLE_LODEPNG
-	png_decoder_init();
-	#endif
-	#ifdef ENABLE_LIBJPEG
-	jpeg_decoder_init();
-	#endif
-	#ifdef ENABLE_NANOSVG
-	svg_decoder_init();
-	#endif
-	bmp_decoder_init();
+	image_decoder_init();
 	#ifdef ENABLE_FREETYPE2
 	lv_freetype_init(64,1,0);
 

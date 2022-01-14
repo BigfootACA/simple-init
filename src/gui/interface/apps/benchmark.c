@@ -724,7 +724,7 @@ int benchmark_main(int argc __attribute__((unused)),char**argv __attribute__((un
 	open_socket_logfd_default();
 	lv_init();
 	if(guidrv_init(&gui_w,&gui_h,&gui_dpi)<0)return -1;
-	png_decoder_init();
+	image_decoder_init();
 	run=true;
 	benchmark_draw(lv_scr_act());
 	for(;;){

@@ -12,10 +12,12 @@
 #include"logger.h"
 #include"defines.h"
 #include"gui/tools.h"
+#include"gui/sysbar.h"
 #include"gui/activity.h"
+#include"gui/filepicker.h"
 #define TAG "theme"
 
-static lv_obj_t*box,*chk_dark,*btn_ok,*btn_restart,*lbl_tips,*lbl_tip_icon;
+static lv_obj_t*box,*chk_bg,*txt_bg,*btn_bg,*chk_dark,*btn_ok,*btn_restart,*lbl_tips,*lbl_tip_icon;
 
 static void dark_switch(lv_obj_t*obj,lv_event_t e){
 	if(obj!=chk_dark||e!=LV_EVENT_VALUE_CHANGED)return;
@@ -27,8 +29,32 @@ static void dark_switch(lv_obj_t*obj,lv_event_t e){
 	confd_set_boolean("gui.dark",gui_dark);
 }
 
+static void do_save(){
+	confd_set_boolean("gui.show_background",lv_checkbox_is_checked(chk_bg));
+	confd_set_string("gui.background",(char*)lv_textarea_get_text(txt_bg));
+}
+
+static bool select_cb(bool ok,const char**path,uint16_t cnt,void*user_data __attribute__((unused))){
+	if(!ok)return false;
+	if(!path||!path[0]||path[1]||cnt!=1)return true;
+	lv_textarea_set_text(txt_bg,path[0]+2);
+	return false;
+}
+
+static void bg_btn(lv_obj_t*obj,lv_event_t e){
+	if(obj!=btn_bg||e!=LV_EVENT_CLICKED)return;
+	filepicker_set_max_item(filepicker_create(select_cb,"Select background"),1);
+}
+
+static void bg_text(lv_obj_t*obj,lv_event_t e){
+	if(obj!=txt_bg||e!=LV_EVENT_CLICKED)return;
+	sysbar_focus_input(obj);
+	sysbar_keyboard_open();
+}
+
 static void ok_click(lv_obj_t*obj,lv_event_t e){
 	if(obj!=btn_ok||e!=LV_EVENT_CLICKED)return;
+	do_save();
 	guiact_do_back();
 }
 
@@ -39,6 +65,7 @@ static void do_restart(lv_task_t*t __attribute__((unused))){
 
 static void restart_click(lv_obj_t*obj,lv_event_t e){
 	if(obj!=btn_restart||e!=LV_EVENT_CLICKED)return;
+	do_save();
 	lv_task_once(lv_task_create(do_restart,100,LV_TASK_PRIO_LOWEST,NULL));
 }
 
@@ -61,12 +88,37 @@ static int theme_menu_draw(struct gui_activity*act){
 	lv_obj_align(txt,NULL,LV_ALIGN_IN_TOP_MID,0,gui_font_size);
 	lv_label_set_text(txt,_("Select theme"));
 
+	chk_bg=lv_checkbox_create(box,NULL);
+	lv_checkbox_set_checked(chk_bg,confd_get_boolean("gui.show_background",true));
+	lv_checkbox_set_text(chk_bg,_("Background"));
+	lv_obj_set_width(chk_bg,lv_obj_get_width(box)-gui_font_size*2);
+	lv_obj_align(chk_bg,txt,LV_ALIGN_OUT_BOTTOM_LEFT,gui_font_size,gui_font_size);
+
+	txt_bg=lv_textarea_create(box,NULL);
+	char*bg=confd_get_string("gui.background",NULL);
+	lv_textarea_set_text(txt_bg,bg?bg:"");
+	lv_textarea_set_one_line(txt_bg,true);
+	lv_textarea_set_cursor_hidden(txt_bg,true);
+	lv_obj_set_event_cb(txt_bg,bg_text);
+	lv_obj_set_width(txt_bg,lv_obj_get_width(box)-gui_font_size*2);
+	lv_obj_align(txt_bg,chk_bg,LV_ALIGN_OUT_BOTTOM_LEFT,0,gui_font_size);
+	if(bg)free(bg);
+
+	btn_bg=lv_btn_create(box,NULL);
+	lv_style_set_action_button(btn_bg,true);
+	lv_obj_set_event_cb(btn_bg,bg_btn);
+	lv_obj_set_style_local_radius(btn_bg,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,gui_font_size/2);
+	lv_obj_set_size(btn_bg,gui_font_size*3,lv_obj_get_height(txt_bg));
+	lv_obj_set_width(txt_bg,lv_obj_get_width(box)-lv_obj_get_width(btn_bg)-gui_font_size*2);
+	lv_obj_align(btn_bg,txt_bg,LV_ALIGN_OUT_RIGHT_MID,gui_font_size/4,0);
+	lv_label_set_text(lv_label_create(btn_bg,NULL),"...");
+
 	chk_dark=lv_checkbox_create(box,NULL);
 	lv_checkbox_set_checked(chk_dark,gui_dark);
 	lv_checkbox_set_text(chk_dark,_("Dark Mode"));
 	lv_obj_set_event_cb(chk_dark,dark_switch);
 	lv_obj_set_width(chk_dark,lv_obj_get_width(box)-gui_font_size*2);
-	lv_obj_align(chk_dark,txt,LV_ALIGN_OUT_BOTTOM_MID,0,gui_font_size*2);
+	lv_obj_align(chk_dark,txt_bg,LV_ALIGN_OUT_BOTTOM_MID,0,gui_font_size);
 
 	lbl_tip_icon=lv_label_create(box,NULL);
 	lv_label_set_align(lbl_tip_icon,LV_LABEL_ALIGN_CENTER);
@@ -114,6 +166,9 @@ static int theme_menu_draw(struct gui_activity*act){
 }
 
 static int theme_get_focus(struct gui_activity*d __attribute__((unused))){
+	lv_group_add_obj(gui_grp,chk_bg);
+	lv_group_add_obj(gui_grp,txt_bg);
+	lv_group_add_obj(gui_grp,btn_bg);
 	lv_group_add_obj(gui_grp,chk_dark);
 	lv_group_add_obj(gui_grp,btn_ok);
 	lv_group_add_obj(gui_grp,btn_restart);
@@ -122,6 +177,9 @@ static int theme_get_focus(struct gui_activity*d __attribute__((unused))){
 }
 
 static int theme_lost_focus(struct gui_activity*d __attribute__((unused))){
+	lv_group_remove_obj(chk_bg);
+	lv_group_remove_obj(txt_bg);
+	lv_group_remove_obj(btn_bg);
 	lv_group_remove_obj(chk_dark);
 	lv_group_remove_obj(btn_ok);
 	lv_group_remove_obj(btn_restart);

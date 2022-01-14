@@ -155,15 +155,7 @@ static void pad_btn_cb(lv_obj_t*obj,lv_event_t e){
 
 static void drag_cb(lv_obj_t*obj,lv_event_t e){
 	if(e!=LV_EVENT_DRAG_END)return;
-	lv_coord_t x=lv_obj_get_x(obj);
-	lv_coord_t y=lv_obj_get_y(obj);
-	lv_coord_t w=lv_obj_get_width(obj);
-	lv_coord_t h=lv_obj_get_height(obj);
-	if(x<gui_font_size)x=gui_font_size;
-	if(y<gui_font_size)y=gui_font_size;
-	if(x+w+gui_font_size>(lv_coord_t)gui_sw)x=gui_sw-w-gui_font_size;
-	if(y+h+gui_font_size>(lv_coord_t)gui_sh)y=gui_sh-h-gui_font_size;
-	lv_obj_set_pos(obj,x,y);
+	lv_drag_border(obj,gui_sw,gui_sh,gui_font_size);
 }
 
 static lv_obj_t*pad_draw_button(struct picture_viewer*pv,lv_coord_t x,lv_coord_t y,const char*str){

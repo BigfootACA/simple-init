@@ -65,6 +65,12 @@ extern void sysbar_keyboard_close(void);
 // src/gui/interface/core/sysbar.c: open keyboard
 extern void sysbar_keyboard_open(void);
 
+// src/gui/interface/core/sysbar.c: show edit menu
+extern void sysbar_edit_menu_show(void);
+
+// src/gui/interface/core/sysbar.c: hide edit menu
+extern void sysbar_edit_menu_hide(void);
+
 // src/gui/interface/core/sysbar.c: focus textarea
 extern void sysbar_focus_input(lv_obj_t*obj);
 #endif

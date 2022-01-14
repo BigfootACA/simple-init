@@ -63,7 +63,7 @@ static void set_bar_style(lv_obj_t*obj,uint8_t part){
 	);
 }
 
-static void edit_menu_show(){
+void sysbar_edit_menu_show(void){
 	if(lv_obj_is_visible(sysbar.edit_menu)||!sysbar.focus_input)return;
 	lv_obj_set_hidden(sysbar.edit_menu,false);
 	lv_group_add_obj(gui_grp,sysbar.edit_menu);
@@ -81,7 +81,7 @@ static void edit_menu_show(){
 	lv_obj_set_enabled(sysbar.edit_btns[8],sel&&ena);//deselect
 }
 
-static void edit_menu_hide(){
+void sysbar_edit_menu_hide(void){
 	if(!lv_obj_is_visible(sysbar.edit_menu))return;
 	lv_obj_set_hidden(sysbar.edit_menu,true);
 	if(sysbar.keyboard){
@@ -137,7 +137,7 @@ static void edit_menu_cb(lv_obj_t*obj,lv_event_t e){
 			lv_textarea_add_text(ta,clipboard_get_content());
 		}
 	}
-	edit_menu_hide();
+	sysbar_edit_menu_hide();
 }
 
 static void keyboard_toggle(lv_obj_t*obj,lv_event_t e){
@@ -147,7 +147,7 @@ static void keyboard_toggle(lv_obj_t*obj,lv_event_t e){
 			e==LV_EVENT_VALUE_CHANGED&&
 			strcmp(lv_btnmatrix_get_active_btn_text(obj),LV_SYMBOL_EDIT)==0
 		){
-			edit_menu_show();
+			sysbar_edit_menu_show();
 			return;
 		}
 		if(e==LV_EVENT_FOCUSED||e==LV_EVENT_RELEASED){
@@ -178,12 +178,12 @@ static void keyboard_toggle(lv_obj_t*obj,lv_event_t e){
 		}
 		lv_group_set_editing(gui_grp,false);
 		sysbar_show_bar();
-		edit_menu_hide();
+		sysbar_edit_menu_hide();
 		return;
 	}
 	int w=gui_w,h=gui_h/3;
 	sysbar_show_bar();
-	edit_menu_hide();
+	sysbar_edit_menu_hide();
 	sysbar.keyboard=lv_keyboard_create(sysbar.screen,NULL);
 	lv_obj_move_foreground(sysbar.edit_menu);
 	lv_obj_set_size(sysbar.keyboard,w,h);

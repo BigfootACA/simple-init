@@ -39,5 +39,8 @@ extern void gui_set_run_exit(runnable_t*run);
 extern void gui_run_and_exit(runnable_t*run);
 extern uint32_t custom_tick_get(void);
 extern void image_decoder_init(void);
+extern void image_set_cache_time(time_t time);
+extern void image_cache_clean(void);
+extern int image_cache_gc(void);
 extern int register_guiapp(void);
 #endif

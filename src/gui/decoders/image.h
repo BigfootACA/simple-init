@@ -8,11 +8,22 @@
 
 #ifndef _IMAGE_H
 #define _IMAGE_H
+#include<time.h>
+#include<stdint.h>
+#include<stddef.h>
+#include<limits.h>
 #include"gui.h"
-typedef lv_res_t(*image_info_cb)(unsigned char*data,size_t len,uint32_t*w,uint32_t*h,uint32_t*cf);
-typedef lv_res_t(*image_decode_cb)(unsigned char*data,size_t len,uint8_t**img);
+#include"defines.h"
+typedef struct image_data{
+	time_t last;
+	char path[PATH_MAX];
+	uint32_t width;
+	uint32_t height;
+	uint32_t format;
+	uint8_t*pixels;
+}image_data;
+typedef int(*image_decode_cb)(unsigned char*data,size_t len,image_data*img);
 typedef struct image_decoder{
-	image_info_cb info_cb;
 	image_decode_cb decode_cb;
 	char**types;
 }image_decoder;

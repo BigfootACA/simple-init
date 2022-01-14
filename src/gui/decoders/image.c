@@ -12,6 +12,8 @@
 #include<string.h>
 #include<unistd.h>
 #include<sys/stat.h>
+#include"list.h"
+#include"confd.h"
 #include"assets.h"
 #include"image.h"
 #include"logger.h"
@@ -48,6 +50,9 @@ image_decoder*img_decoders[]={
 	#endif
 	NULL
 };
+
+static list*caches=NULL;
+static time_t cache_time=5;
 
 static int image_open_source_lvgl(char*path,unsigned char**data,size_t*len){
 	lv_fs_res_t r;
@@ -130,43 +135,120 @@ static image_decoder*image_get_decoder(char*path){
 	return NULL;
 }
 
-static lv_res_t decoder_info(lv_img_decoder_t*d __attribute__((unused)),const void*src,lv_img_header_t*m){
-	size_t len=0;
-	lv_res_t r=LV_RES_INV;
-	unsigned char*data=NULL;
-	if(lv_img_src_get_type(src)!=LV_IMG_SRC_FILE)return LV_RES_INV;
-	if(image_open_source((char*)src,&data,&len)==-1)return LV_RES_INV;
-	if(!data||len<=0)return LV_RES_INV;
-	image_decoder*c=image_get_decoder((char*)src);
+static int image_free_data(void*d){
+	image_data*c=d;
 	if(c){
-		uint32_t h=0,w=0,cf=0;
-		if(c->info_cb)r=c->info_cb(data,len,&w,&h,&cf);
-		m->h=h,m->w=w,m->cf=cf,m->always_zero=0;
+		if(c->pixels)free(c->pixels);
+		free(c);
 	}
+	return 0;
+}
+
+static image_data*image_get_cache(char*path){
+	if(!path||!caches)return NULL;
+	list*l=list_first(caches);
+	if(l)do{
+		LIST_DATA_DECLARE(c,l,image_data*);
+		if(!c||strcmp(path,c->path)!=0)continue;
+		time(&c->last);
+		return c;
+	}while((l=l->next));
+	return NULL;
+}
+
+int image_cache_gc(void){
+	int cnt=0;
+	time_t t;
+	list*l=list_first(caches),*n;
+	time(&t);
+	if(l)do{
+		n=l->next;
+		LIST_DATA_DECLARE(c,l,image_data*);
+		if(!c)continue;
+		if(t-c->last>5){
+			list_obj_del(&caches,l,image_free_data);
+			cnt++;
+		}
+	}while((l=n));
+	return cnt;
+}
+
+void image_cache_clean(void){
+	list_free_all(caches,image_free_data);
+	caches=NULL;
+}
+
+static void image_add_cache(image_data*img){
+	if(!img||!img->pixels||!img->path[0])return;
+	list*l=list_first(caches),*n;
+	if(l)do{
+		n=l->next;
+		LIST_DATA_DECLARE(c,l,image_data*);
+		if(!c)continue;
+		if(c==img)return;
+		if(strcmp(img->path,c->path)==0)
+			list_obj_del(&caches,l,image_free_data);
+	}while((l=n));
+	time(&img->last);
+	list_obj_add_new_notnull(&caches,img);
+}
+
+static image_data*image_decode(char*path){
+	size_t len=0;
+	image_data*img=NULL;
+	image_decoder*d=NULL;
+	unsigned char*data=NULL;
+	if(!(d=image_get_decoder(path))||!d->decode_cb)return NULL;
+	if(image_open_source(path,&data,&len)==-1||!data||len<=0)goto fail;
+	if(!(img=malloc(sizeof(image_data))))goto fail;
+	memset(img,0,sizeof(image_data));
+	strncpy(img->path,path,sizeof(img->path)-1);
+	if(d->decode_cb(data,len,img)!=0)goto fail;
+	if(img->width<=0||img->height<=0||!img->pixels)goto fail;
 	free(data);
-	return r;
+	return img;
+	fail:
+	image_free_data(img);
+	if(data)free(data);
+	return NULL;
+}
+
+static image_data*image_get(char*path){
+	image_data*img=NULL;
+	if(!path)return NULL;
+	if((img=image_get_cache(path)))return img;
+	if(!(img=image_decode(path)))return NULL;
+	image_add_cache(img);
+	return img;
+}
+
+static lv_res_t decoder_info(lv_img_decoder_t*d __attribute__((unused)),const void*src,lv_img_header_t*m){
+	image_data*img;
+	if(lv_img_src_get_type(src)!=LV_IMG_SRC_FILE)return LV_RES_INV;
+	if(!(img=image_get((char*)src)))return LV_RES_INV;
+	m->h=img->height;
+	m->w=img->width;
+	m->cf=img->format;
+	m->always_zero=0;
+	return LV_RES_OK;
 }
 
 static lv_res_t decoder_open(lv_img_decoder_t*d __attribute__((unused)),lv_img_decoder_dsc_t*dsc){
-	size_t len=0;
-	lv_res_t r=LV_RES_INV;
-	unsigned char*data=NULL;
+	image_data*img;
 	if(dsc->src_type!=LV_IMG_SRC_FILE)return LV_RES_INV;
-	if(image_open_source((char*)dsc->src,&data,&len)==-1)return LV_RES_INV;
-	if(!data||len<=0)return LV_RES_INV;
-	image_decoder*c=image_get_decoder((char*)dsc->src);
-	if(c){
-		uint8_t*img=NULL;
-		if(c->decode_cb)r=c->decode_cb(data,len,&img);
-		dsc->img_data=img;
-	}
-	free(data);
-	return r;
+	if(!(img=image_get((char*)dsc->src)))return LV_RES_INV;
+	dsc->img_data=img->pixels;
+	return LV_RES_OK;
 }
 
 static void decoder_close(lv_img_decoder_t*d __attribute__((unused)),lv_img_decoder_dsc_t*dsc){
-	if(dsc->img_data)free((uint8_t*)dsc->img_data);
+	image_cache_gc();
 	dsc->img_data=NULL;
+}
+
+void image_set_cache_time(time_t time){
+	cache_time=time;
+	confd_set_integer("gui.image_cache_time",time);
 }
 
 void image_decoder_init(){
@@ -174,5 +256,6 @@ void image_decoder_init(){
 	lv_img_decoder_set_info_cb(dec,decoder_info);
 	lv_img_decoder_set_open_cb(dec,decoder_open);
 	lv_img_decoder_set_close_cb(dec,decoder_close);
+	cache_time=confd_get_integer("gui.image_cache_time",5);
 }
 #endif

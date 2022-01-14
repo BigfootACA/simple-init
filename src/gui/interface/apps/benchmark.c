@@ -754,7 +754,7 @@ static int benchmark_wrapper_draw(struct gui_activity*act){
 struct gui_register guireg_benchmark={
 	.name="gui-benchmark",
 	.title="GUI Benchmark",
-	.icon="gui-benchmark.png",
+	.icon="gui-benchmark.svg",
 	.full_screen=true,
 	.show_app=true,
 	.init=benchmark_init,

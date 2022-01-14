@@ -330,7 +330,7 @@ static int mount_draw(struct gui_activity*act){
 struct gui_register guireg_mount={
 	.name="mount-manager",
 	.title="Mount Manager",
-	.icon="mount.png",
+	.icon="mount.svg",
 	.show_app=true,
 	.draw=mount_draw,
 	.quiet_exit=do_cleanup,

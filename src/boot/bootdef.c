@@ -29,37 +29,37 @@ boot_main*boot_main_func[]={
 #define EXTRA_DATA(val)((keyval*[]){&KV("data",(val)),NULL})
 void boot_init_configs(void){
 	boot_create_config(&(struct boot_config){
-		.ident="switchroot",.icon="linux.png",
+		.ident="switchroot",.icon="linux.svg",
 		.mode=BOOT_SWITCHROOT,.desc="Default SwitchRoot",
 		.save=false,.replace=false,
 		.show=true,.enabled=false
 	},NULL);
 	boot_create_config(&(struct boot_config){
-		.ident="system",.icon="system.png",
+		.ident="system",.icon="launcher.svg",
 		.mode=BOOT_SYSTEM,.desc="Enter Simple Init",
 		.save=false,.replace=false,
 		.show=true,.enabled=true
 	},NULL);
 	boot_create_config(&(struct boot_config){
-		.ident="charger",.icon="charger.png",
+		.ident="charger",.icon="battery.svg",
 		.mode=BOOT_CHARGER,.desc="Charger Screen",
 		.save=false,.replace=false,
 		.show=false,.enabled=false
 	},NULL);
 	boot_create_config(&(struct boot_config){
-		.ident="poweroff",.icon="poweroff.png",
+		.ident="poweroff",.icon="poweroff.svg",
 		.mode=BOOT_POWEROFF,.desc="Power off system",
 		.save=false,.replace=false,
 		.show=true,.enabled=true
 	},NULL);
 	boot_create_config(&(struct boot_config){
-		.ident="reboot",.icon="reboot.png",
+		.ident="reboot",.icon="reboot.svg",
 		.mode=BOOT_REBOOT,.desc="Reboot system",
 		.save=false,.replace=false,
 		.show=true,.enabled=true
 	},NULL);
 	boot_create_config(&(struct boot_config){
-		.ident="edl",.icon="download.png",
+		.ident="edl",.icon="download.svg",
 		.mode=BOOT_REBOOT,.desc="Reboot into EDL",
 		.save=false,.replace=false,
 		.show=true,.enabled=true
@@ -71,7 +71,7 @@ void boot_init_configs(void){
 		.show=true,.enabled=true
 	},EXTRA_DATA("recovery"));
 	boot_create_config(&(struct boot_config){
-		.ident="bootloader",.icon="fastboot.png",
+		.ident="bootloader",.icon="fastboot.svg",
 		.mode=BOOT_REBOOT,.desc="Reboot into bootloader",
 		.save=false,.replace=false,
 		.show=true,.enabled=true

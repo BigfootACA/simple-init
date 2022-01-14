@@ -380,7 +380,7 @@ static int clipboard_draw(struct gui_activity*act){
 struct gui_register guireg_clipboard={
 	.name="clipboard",
 	.title="Clipboard",
-	.icon="clipboard.png",
+	.icon="clipboard.svg",
 	.show_app=true,
 	.quiet_exit=clipboard_exit,
 	.get_focus=clipboard_get_focus,

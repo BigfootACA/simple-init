@@ -221,7 +221,7 @@ static int uefi_bootmenu_draw(struct gui_activity*act){
 struct gui_register guireg_uefi_bootmenu={
 	.name="uefi-bootmenu",
 	.title="UEFI Boot Menu",
-	.icon="bootmgr.png",
+	.icon="bootmgr.svg",
 	.show_app=true,
 	.draw=uefi_bootmenu_draw,
 	.quiet_exit=do_cleanup,

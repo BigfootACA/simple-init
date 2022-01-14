@@ -151,7 +151,7 @@ static void add_button(struct gui_app*ga,struct gui_register*p){
 
 	lv_obj_t*icon=lv_img_create(icon_w,NULL);
 	char path[BUFSIZ]={0},fail[BUFSIZ]={0};
-	strcpy(fail,IMG_RES"/apps.png");
+	strcpy(fail,IMG_RES"/apps.svg");
 	if(p->icon[0]){
 		if(contains_of("./",2,p->icon[0]))strncpy(path,p->icon,BUFSIZ-1);
 		else snprintf(path,BUFSIZ-1,IMG_RES"/%s",p->icon);
@@ -281,7 +281,7 @@ static int guiapp_draw(struct gui_activity*act){
 struct gui_register guireg_guiapp={
 	.name="guiapp",
 	.title="GUI Application",
-	.icon="apps.png",
+	.icon="apps.svg",
 	.show_app=false,
 	.init=guiapp_init,
 	.quiet_exit=guiapp_exit,

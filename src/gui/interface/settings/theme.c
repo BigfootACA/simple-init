@@ -131,7 +131,7 @@ static int theme_lost_focus(struct gui_activity*d __attribute__((unused))){
 struct gui_register guireg_theme_menu={
 	.name="theme-select-menu",
 	.title="Themes",
-	.icon="theme.png",
+	.icon="theme.svg",
 	.show_app=true,
 	.draw=theme_menu_draw,
 	.lost_focus=theme_lost_focus,

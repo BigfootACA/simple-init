@@ -181,10 +181,7 @@ static void bootmenu_add(struct bootmenu*bm,char*c){
 		lv_img_set_src(bi->img,ipath);
 	}
 	lv_img_ext_t*ext=lv_obj_get_ext_attr(bi->img);
-	if((ext->w<=0||ext->h<=0)){
-		lv_img_set_src(bi->img,IMG_RES"/apps.png");
-		ext=lv_obj_get_ext_attr(bi->img);
-	}
+	if((ext->w<=0||ext->h<=0))lv_img_set_src(bi->img,IMG_RES"/apps.svg");
 	lv_img_fill_image(bi->img,bm->si,bm->si);
 	lv_group_add_obj(gui_grp,bi->img);
 

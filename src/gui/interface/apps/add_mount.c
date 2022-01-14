@@ -400,7 +400,7 @@ static int draw_add_mount(struct gui_activity*act){
 struct gui_register guireg_add_mount={
 	.name="add-mount",
 	.title="Add Mount",
-	.icon="mount.png",
+	.icon="mount.svg",
 	.show_app=false,
 	.open_file=true,
 	.quiet_exit=do_cleanup,

@@ -281,7 +281,7 @@ static int base_info_draw(struct gui_activity*act){
 struct gui_register guireg_gadget_base_info={
 	.name="usb-gadget-base-info",
 	.title="USB Gadget Base Info",
-	.icon="usb.png",
+	.icon="usb.svg",
 	.show_app=false,
 	.draw=base_info_draw,
 	.quiet_exit=base_info_clean,

@@ -506,7 +506,7 @@ static int guipm_draw_partitions(struct gui_activity*act){
 struct gui_register guireg_guipm_partitions={
 	.name="guipm-partitions",
 	.title="Partition Manager",
-	.icon="guipm.png",
+	.icon="guipm.svg",
 	.show_app=false,
 	.open_file=true,
 	.init=init,

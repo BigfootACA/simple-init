@@ -287,7 +287,7 @@ static int guipm_draw_new_partition(struct gui_activity*act){
 struct gui_register guireg_guipm_new_partition={
 	.name="guipm-new-partition",
 	.title="Partition Manager",
-	.icon="guipm.png",
+	.icon="guipm.svg",
 	.show_app=false,
 	.open_file=false,
 	.get_focus=guipm_part_get_focus,

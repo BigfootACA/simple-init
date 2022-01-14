@@ -134,7 +134,7 @@ static int logviewer_draw(struct gui_activity*act){
 struct gui_register guireg_logviewer={
 	.name="logger-viewer",
 	.title="Loggerd Viewer",
-	.icon="logviewer.png",
+	.icon="logviewer.svg",
 	.show_app=true,
 	.quiet_exit=do_clean,
 	.draw=logviewer_draw,

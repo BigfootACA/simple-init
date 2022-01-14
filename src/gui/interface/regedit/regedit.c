@@ -23,7 +23,7 @@
 #include"gui/filepicker.h"
 #define TAG "regedit"
 #define MIME_DIR _PATH_USR"/share/pixmaps/mime"
-#define MIME_EXT ".png"
+#define MIME_EXT ".svg"
 
 struct reg_item{
 	struct regedit*reg;
@@ -543,7 +543,7 @@ static int do_init(struct gui_activity*d){
 struct gui_register guireg_regedit={
 	.name="regedit",
 	.title="Registry Editor",
-	.icon="regedit.png",
+	.icon="regedit.svg",
 	.show_app=true,
 	.open_file=true,
 	.init=do_init,

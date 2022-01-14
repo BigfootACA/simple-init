@@ -153,7 +153,7 @@ static int guipm_draw_change_partition_type(struct gui_activity*act){
 struct gui_register guireg_guipm_change_partition_type={
 	.name="guipm-change-partition-type",
 	.title="Partition Manager",
-	.icon="guipm.png",
+	.icon="guipm.svg",
 	.show_app=false,
 	.open_file=false,
 	.get_focus=guipm_part_get_focus,

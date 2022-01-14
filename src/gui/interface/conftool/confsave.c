@@ -50,7 +50,7 @@ static int conf_save_draw(struct gui_activity*act){
 struct gui_register guireg_conf_save={
 	.name="config-save",
 	.title="Save Config",
-	.icon="conftool.png",
+	.icon="conftool.svg",
 	.show_app=false,
 	.open_file=true,
 	.draw=conf_save_draw,

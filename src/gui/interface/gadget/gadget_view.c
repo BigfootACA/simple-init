@@ -300,7 +300,7 @@ static int gadget_draw(struct gui_activity*act){
 struct gui_register guireg_gadget={
 	.name="usb-gadget",
 	.title="USB Gadget",
-	.icon="usb.png",
+	.icon="usb.svg",
 	.show_app=true,
 	.quiet_exit=do_clean,
 	.draw=gadget_draw,

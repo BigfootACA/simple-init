@@ -25,7 +25,7 @@
 #include"gui/fileview.h"
 #define TAG "fileview"
 #define MIME_DIR _PATH_USR"/share/pixmaps/mime"
-#define MIME_EXT ".png"
+#define MIME_EXT ".svg"
 
 struct fileview{
 	char letter;

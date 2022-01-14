@@ -181,7 +181,7 @@ static int reboot_menu_draw(struct gui_activity*act){
 struct gui_register guireg_reboot={
 	.name="reboot-menu",
 	.title="Reboot Menu",
-	.icon="reboot.png",
+	.icon="reboot.svg",
 	.show_app=true,
 	.draw=reboot_menu_draw,
 	.lost_focus=reboot_lost_focus,

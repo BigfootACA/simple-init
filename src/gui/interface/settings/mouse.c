@@ -113,7 +113,7 @@ static int mouse_lost_focus(struct gui_activity*d __attribute__((unused))){
 struct gui_register guireg_mouse_menu={
 	.name="mouse-tools-menu",
 	.title="Mouse Tools",
-	.icon="mouse.png",
+	.icon="mouse.svg",
 	.show_app=true,
 	.draw=mouse_menu_draw,
 	.lost_focus=mouse_lost_focus,

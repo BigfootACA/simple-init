@@ -116,7 +116,7 @@ static int backlight_lost_focus(struct gui_activity*d __attribute__((unused))){
 struct gui_register guireg_backlight={
 	.name="backlight-menu",
 	.title="Backlight",
-	.icon="backlight.png",
+	.icon="backlight.svg",
 	.show_app=true,
 	.draw=backlight_menu_draw,
 	.lost_focus=backlight_lost_focus,

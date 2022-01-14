@@ -138,7 +138,7 @@ static int language_menu_draw(struct gui_activity*act){
 struct gui_register guireg_language={
 	.name="language-menu",
 	.title="Language",
-	.icon="language.png",
+	.icon="language.svg",
 	.show_app=true,
 	.get_focus=language_get_focus,
 	.lost_focus=language_lost_focus,

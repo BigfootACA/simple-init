@@ -82,7 +82,7 @@ static int uefi_shell_draw(struct gui_activity*act){
 struct gui_register guireg_uefi_shell={
 	.name="uefi-shell",
 	.title="UEFI Shell",
-	.icon="shell.png",
+	.icon="terminal.svg",
 	.show_app=true,
 	.draw=uefi_shell_draw,
 };

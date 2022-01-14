@@ -49,7 +49,7 @@ static int conf_load_draw(struct gui_activity*act){
 struct gui_register guireg_conf_load={
 	.name="config-load",
 	.title="Load Config",
-	.icon="conftool.png",
+	.icon="conftool.svg",
 	.show_app=false,
 	.open_file=true,
 	.draw=conf_load_draw,

@@ -21,7 +21,7 @@
 #include"gui/filepicker.h"
 #define TAG "conftool"
 #define MIME_DIR _PATH_USR"/share/pixmaps/mime"
-#define MIME_EXT ".png"
+#define MIME_EXT ".svg"
 
 static lv_obj_t*view,*scr,*info,*lbl_path,*last_btn;
 static lv_obj_t*btn_add,*btn_reload,*btn_delete,*btn_edit,*btn_home,*btn_load,*btn_save;
@@ -500,7 +500,7 @@ static int do_back(struct gui_activity*d __attribute__((unused))){
 struct gui_register guireg_conftool={
 	.name="config-manager",
 	.title="Config Manager",
-	.icon="conftool.png",
+	.icon="conftool.svg",
 	.show_app=true,
 	.ask_exit=do_back,
 	.quiet_exit=do_clean,

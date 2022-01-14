@@ -226,9 +226,11 @@ void sysbar_focus_input(lv_obj_t*obj){
 	}
 	sysbar.focus_input=obj;
 	if(!obj)return;
-	lv_group_focus_obj(sysbar.keyboard);
-	lv_group_set_editing(gui_grp,true);
-	if(sysbar.keyboard)lv_keyboard_set_textarea(sysbar.keyboard,sysbar.focus_input);
+	if(sysbar.keyboard){
+		lv_group_focus_obj(sysbar.keyboard);
+		lv_group_set_editing(gui_grp,true);
+		lv_keyboard_set_textarea(sysbar.keyboard,sysbar.focus_input);
+	}
 	lv_event_send(sysbar.focus_input,LV_EVENT_FOCUSED,NULL);
 }
 

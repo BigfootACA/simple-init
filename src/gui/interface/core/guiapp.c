@@ -185,8 +185,31 @@ static void redraw_apps(struct gui_app*ga){
 	lv_tabview_set_tab_act(ga->tabview,ga->cur_page,LV_ANIM_OFF);
 }
 
+static void load_background(struct gui_app*ga,bool changed){
+	lv_obj_set_hidden(ga->bg,true);
+	if(!confd_get_boolean("gui.show_background",true))return;
+	if(changed){
+		lv_img_set_src(ga->bg,ga->bg_path);
+		lv_img_fill_image(ga->bg,gui_sw,gui_sh);
+	}
+	lv_img_ext_t*x=lv_obj_get_ext_attr(ga->bg);
+	if(x->w>0&&x->h>0)lv_obj_set_hidden(ga->bg,false);
+}
+
+static void reload_background(struct gui_app*ga){
+	bool changed=false;
+	char*bg=confd_get_string("gui.background",NULL);
+	if(bg&&strcmp(bg,ga->bg_path)!=0){
+		memset(ga->bg_path,0,sizeof(ga->bg_path));
+		strncpy(ga->bg_path,bg,sizeof(ga->bg_path)-1);
+		changed=true;
+	}
+	load_background(ga,changed);
+}
+
 static void do_reload(lv_task_t*t){
 	redraw_apps(t->user_data);
+	reload_background(t->user_data);
 }
 
 static void app_focus(lv_group_t*grp){
@@ -252,12 +275,7 @@ static int guiapp_draw(struct gui_activity*act){
 	lv_obj_set_size(ga->bg,gui_sw,gui_sh);
 	lv_obj_set_pos(ga->bg,0,0);
 	lv_obj_set_hidden(ga->bg,true);
-	if(confd_get_boolean("gui.show_background",true)){
-		lv_img_set_src(ga->bg,ga->bg_path);
-		lv_img_fill_image(ga->bg,gui_sw,gui_sh);
-		lv_img_ext_t*x=lv_obj_get_ext_attr(ga->bg);
-		if(x->w>0&&x->h>0)lv_obj_set_hidden(ga->bg,false);
-	}
+	load_background(ga,true);
 
 	ga->author=lv_label_create(act->page,NULL);
 	lv_label_set_text(ga->author,"Author: BigfootACA");

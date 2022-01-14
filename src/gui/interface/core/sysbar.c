@@ -439,6 +439,8 @@ void sysbar_set_full_screen(bool fs){
 	lv_obj_set_hidden(sysbar.top.bar,fs);
 	lv_obj_set_hidden(sysbar.bottom.bar,fs);
 	lv_obj_set_pos(sysbar.content,0,fs?0:sysbar.size);
+	if(fs)lv_group_add_obj(gui_grp,sysbar.bar_btn);
+	else lv_group_remove_obj(sysbar.bar_btn);
 	gui_sh=gui_h-(fs?0:sysbar.size*2);
 	lv_obj_set_size(sysbar.content,gui_sw,gui_sh);
 	if(fs){
@@ -456,6 +458,7 @@ void sysbar_set_full_screen(bool fs){
 
 void sysbar_hide_full_screen_btn(){
 	lv_obj_set_hidden(sysbar.bar_btn,true);
+	lv_group_remove_obj(sysbar.bar_btn);
 }
 
 void sysbar_show_bar(){

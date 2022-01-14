@@ -11,11 +11,12 @@
 #include"logger.h"
 #include"defines.h"
 #include"gui/tools.h"
+#include"gui/sysbar.h"
 #include"gui/activity.h"
 #define TAG "logviewer"
 
 static lv_obj_t*view;
-static lv_obj_t*btn_top,*btn_bottom,*btn_reload;
+static lv_obj_t*btn_ctrl,*btn_reload;
 
 static void load_log_task(lv_task_t*t __attribute__((unused))){
 	if(!view)return;
@@ -44,32 +45,27 @@ static void load_log(){
 	lv_task_once(t);
 }
 
-static void go_top_click(lv_obj_t*obj,lv_event_t e){
-	if(obj!=btn_top||e!=LV_EVENT_CLICKED)return;
-	lv_textarea_set_cursor_pos(view,0);
-}
-
 static void reload_click(lv_obj_t*obj,lv_event_t e){
 	if(obj!=btn_reload||e!=LV_EVENT_CLICKED)return;
 	load_log();
 }
 
-static void go_bottom_click(lv_obj_t*obj,lv_event_t e){
-	if(obj!=btn_bottom||e!=LV_EVENT_CLICKED)return;
-	lv_textarea_set_cursor_pos(view,LV_TEXTAREA_CURSOR_LAST);
+static void ctrl_click(lv_obj_t*obj,lv_event_t e){
+	if(obj!=btn_ctrl||e!=LV_EVENT_CLICKED)return;
+	ctrl_pad_show();
 }
 
 static int logviewer_get_focus(struct gui_activity*d __attribute__((unused))){
+	lv_group_add_obj(gui_grp,btn_ctrl);
 	lv_group_add_obj(gui_grp,btn_reload);
-	lv_group_add_obj(gui_grp,btn_bottom);
-	lv_group_add_obj(gui_grp,btn_top);
+	ctrl_pad_set_target(view);
 	return 0;
 }
 
 static int logviewer_lost_focus(struct gui_activity*d __attribute__((unused))){
+	lv_group_remove_obj(btn_ctrl);
 	lv_group_remove_obj(btn_reload);
-	lv_group_remove_obj(btn_bottom);
-	lv_group_remove_obj(btn_top);
+	ctrl_pad_set_target(NULL);
 	return 0;
 }
 
@@ -89,7 +85,7 @@ static int logviewer_draw(struct gui_activity*act){
 	lv_style_init(&style);
 	lv_style_set_text_font(&style,LV_STATE_DEFAULT,gui_font_small);
 
-	int bth=gui_font_size+(gui_dpi/8),btw=gui_sw/3-(gui_dpi/8);
+	int bth=gui_font_size+(gui_dpi/8),btw=gui_sw/2-(gui_dpi/6);
 
 	view=lv_textarea_create(act->page,NULL);
 	lv_obj_set_size(view,gui_sw-(gui_font_size*2),gui_sh-lv_obj_get_height(txt)-gui_font_size*4-bth);
@@ -103,29 +99,21 @@ static int logviewer_draw(struct gui_activity*act){
 	lv_textarea_ext_t*e=lv_obj_get_ext_attr(view);
 	lv_label_set_long_mode(e->label,LV_LABEL_LONG_EXPAND);
 
-	btn_top=lv_btn_create(act->page,NULL);
-	lv_obj_set_size(btn_top,btw,bth);
-	lv_obj_set_event_cb(btn_top,go_top_click);
-	lv_obj_align(btn_top,view,LV_ALIGN_OUT_BOTTOM_LEFT,0,gui_font_size);
-	lv_style_set_action_button(btn_top,true);
-	lv_label_set_text(lv_label_create(btn_top,NULL),_("Go top"));
-	lv_group_add_obj(gui_grp,btn_top);
+	btn_ctrl=lv_btn_create(act->page,NULL);
+	lv_obj_set_size(btn_ctrl,btw,bth);
+	lv_obj_set_event_cb(btn_ctrl,ctrl_click);
+	lv_obj_align(btn_ctrl,view,LV_ALIGN_OUT_BOTTOM_LEFT,0,gui_font_size);
+	lv_style_set_action_button(btn_ctrl,true);
+	lv_label_set_text(lv_label_create(btn_ctrl,NULL),_("Control"));
+	lv_group_add_obj(gui_grp,btn_ctrl);
 
 	btn_reload=lv_btn_create(act->page,NULL);
 	lv_obj_set_size(btn_reload,btw,bth);
 	lv_obj_set_event_cb(btn_reload,reload_click);
-	lv_obj_align(btn_reload,view,LV_ALIGN_OUT_BOTTOM_MID,0,gui_font_size);
+	lv_obj_align(btn_reload,view,LV_ALIGN_OUT_BOTTOM_RIGHT,0,gui_font_size);
 	lv_style_set_action_button(btn_reload,true);
 	lv_label_set_text(lv_label_create(btn_reload,NULL),_("Reload"));
 	lv_group_add_obj(gui_grp,btn_reload);
-
-	btn_bottom=lv_btn_create(act->page,NULL);
-	lv_obj_set_size(btn_bottom,btw,bth);
-	lv_obj_set_event_cb(btn_bottom,go_bottom_click);
-	lv_obj_align(btn_bottom,view,LV_ALIGN_OUT_BOTTOM_RIGHT,0,gui_font_size);
-	lv_style_set_action_button(btn_bottom,true);
-	lv_label_set_text(lv_label_create(btn_bottom,NULL),_("Go bottom"));
-	lv_group_add_obj(gui_grp,btn_bottom);
 
 	load_log();
 	return 0;

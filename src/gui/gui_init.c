@@ -95,6 +95,7 @@ void gui_do_quit(){
 	sem_destroy(&gui_wait);
 	pthread_mutex_destroy(&gui_lock);
 	#endif
+	image_cache_clean();
 	guidrv_exit();
 }
 
@@ -216,6 +217,9 @@ static void gui_enter_sleep(){
 	int o=guidrv_get_brightness();
 	if(o<=0)o=100;
 	if(o>20)guidrv_set_brightness(20);
+
+	// clean image caches
+	image_cache_clean();
 
 	// turn off the screen after 20 seconds
 	alarm(20);

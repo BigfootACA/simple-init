@@ -12,7 +12,6 @@
 #include<float.h>
 #include<stddef.h>
 #include<stdint.h>
-#include<features.h>
 
 /* Support non-nearest rounding mode.  */
 #define WANT_ROUNDING 1

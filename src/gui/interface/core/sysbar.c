@@ -158,7 +158,7 @@ static void keyboard_toggle(lv_obj_t*obj,lv_event_t e){
 			for(size_t i=0;x[i]&&x[i][0];i++){
 				if(strcmp(x[i],LV_SYMBOL_OK)!=0)continue;
 				char**n=NULL;
-				if(!(n=array_dup((char**)x)))break;
+				if(!(n=array_dup_end((char**)x,"")))break;
 				n[i]=LV_SYMBOL_EDIT;
 				lv_keyboard_set_map(
 					obj,

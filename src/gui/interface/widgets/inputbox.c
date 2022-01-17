@@ -146,6 +146,7 @@ static int inputbox_clean(struct gui_activity*d){
 	if(!box)return 0;
 	sysbar_focus_input(NULL);
 	free(box);
+	d->args=NULL;
 	return 0;
 }
 

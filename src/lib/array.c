@@ -106,20 +106,29 @@ char**args2array(char*source,char del){
 	return NULL;
 }
 
-char**array_dup(char**orig){
+char**array_dup_end(char**orig,char*end){
 	if(!orig)return NULL;
-	size_t s=0;
-	while(orig[s++]);
-	s*=sizeof(char*);
+	size_t len=0,s,c;
+	for(;;){
+		char*x=orig[len];
+		if(!x)break;
+		len++;
+		if(end&&strcmp(x,end)==0)break;
+	}
+	s=(len+1)*sizeof(char*);
 	char**buff=malloc(s);
 	if(!buff)return NULL;
 	memset(buff,0,s);
-	for(size_t c=0;orig[c];c++)if(!(buff[c]=strdup(orig[c])))goto fail;
+	for(c=0;c<len;c++)if(!(buff[c]=strdup(orig[c])))goto fail;
 	return buff;
 	fail:
-	for(size_t c=0;buff[c];c++)free(buff[c]);
+	for(c=0;buff[c];c++)free(buff[c]);
 	free(buff);
 	return NULL;
+}
+
+char**array_dup(char**orig){
+	return array_dup_end(orig,NULL);
 }
 
 void array_free(char**arr){

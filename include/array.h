@@ -24,6 +24,9 @@ extern void free_args_array(char**c);
 // src/lib/array.c: parse args string to a string array
 extern char**args2array(char*source,char del);
 
+// src/lib/array.c: duplicate string array with custom end
+extern char**array_dup_end(char**orig,char*end);
+
 // src/lib/array.c: duplicate string array
 extern char**array_dup(char**orig);
 

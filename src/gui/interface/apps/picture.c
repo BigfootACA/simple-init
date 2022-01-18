@@ -22,7 +22,7 @@
 
 struct picture_viewer{
 	char path[PATH_MAX];
-	lv_obj_t*scr,*img,*btn;
+	lv_obj_t*scr,*img,*info,*btn;
 	struct{
 		lv_obj_t*pad;
 		lv_obj_t*zoom_big,*arr_up,*zoom_small,*reload;
@@ -34,10 +34,15 @@ struct picture_viewer{
 
 static void reload_image(struct picture_viewer*pv){
 	lv_obj_set_hidden(pv->img,true);
+	lv_obj_set_hidden(pv->info,true);
 	lv_img_set_src(pv->img,pv->path);
 	lv_img_ext_t*e=lv_obj_get_ext_attr(pv->img);
-	if(e->w<=0||e->h<=0)return;
-	else lv_obj_set_hidden(pv->img,false);
+	if(e->w<=0||e->h<=0){
+		lv_obj_set_hidden(pv->info,false);
+		lv_label_set_text(pv->info,_("Picture load failed"));
+		lv_obj_align(pv->info,NULL,LV_ALIGN_CENTER,0,0);
+		return;
+	}else lv_obj_set_hidden(pv->img,false);
 	lv_obj_set_pos(pv->img,0,0);
 	lv_img_set_angle(pv->img,0);
 	lv_img_set_zoom(pv->img,256);
@@ -242,6 +247,11 @@ static int picture_draw(struct gui_activity*act){
 	pv->img=lv_img_create(pv->scr,NULL);
 	lv_obj_set_drag(pv->img,true);
 	lv_obj_set_hidden(pv->img,true);
+
+	pv->info=lv_label_create(pv->scr,NULL);
+	lv_obj_set_style_local_text_color(pv->info,LV_LABEL_PART_MAIN,LV_STATE_DEFAULT,LV_COLOR_WHITE);
+	lv_label_set_text(pv->info,_("Nothing opens"));
+	lv_obj_align(pv->info,NULL,LV_ALIGN_CENTER,0,0);
 
 	lv_coord_t bts=gui_font_size*3;
 	lv_coord_t btm=bts+gui_font_size;

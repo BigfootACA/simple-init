@@ -1950,3 +1950,9 @@ msgstr "控制"
 
 msgid "Control Pad"
 msgstr "控制板"
+
+msgid "Nothing opens"
+msgstr "什么都没打开"
+
+msgid "Picture load failed"
+msgstr "图片加载失败"

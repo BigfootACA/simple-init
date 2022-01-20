@@ -137,6 +137,15 @@ static void on_item_select(
 	lv_obj_set_enabled(fp->ok,cnt>0&&(cnt<=fp->max||fp->max==0));
 }
 
+static bool on_item_click(struct fileview*fv,char*item,enum item_type type){
+	if(type!=TYPE_DIR){
+		struct filepicker*fp=fileview_get_data(fv);
+		uint16_t cnt=fileview_get_checked_count(fv);
+		if(cnt<fp->max)fileview_check_item(fv,item,true);
+	}
+	return true;
+}
+
 static int filepicker_draw(struct gui_activity*act){
 	lv_coord_t box_h=gui_dpi/8;
 	lv_coord_t max_w=gui_dpi*4,cur_w=gui_sw/4*3,xw=MIN(max_w,cur_w);
@@ -179,6 +188,7 @@ static int filepicker_draw(struct gui_activity*act){
 	fileview_set_verbose(fp->fv,false);
 	fileview_set_item_height(fp->fv,gui_dpi/3);
 	fileview_set_path(fp->fv,fp->path);
+	fileview_set_on_item_click(fp->fv,on_item_click);
 	fileview_set_on_item_select(fp->fv,on_item_select);
 	fileview_set_on_change_dir(fp->fv,on_change_dir);
 	fileview_set_data(fp->fv,fp);

@@ -106,9 +106,7 @@ void fileview_go_back(struct fileview*fv){
 	}
 }
 
-static void item_click(lv_obj_t*obj,lv_event_t e){
-	if(!obj||e!=LV_EVENT_CLICKED)return;
-	struct fileitem*fi=(struct fileitem*)lv_obj_get_user_data(obj);
+static void click_item(struct fileitem*fi){
 	if(!fi)return;
 	struct fileview*fv=fi->view;
 	if(!fv)return;
@@ -129,26 +127,45 @@ static void item_click(lv_obj_t*obj,lv_event_t e){
 	}
 }
 
-static void item_check(lv_obj_t*obj,lv_event_t e){
-	if(!obj||e!=LV_EVENT_VALUE_CHANGED)return;
-	struct fileitem*fi=(struct fileitem*)lv_obj_get_user_data(obj);
-	if(!fi)return;
-	struct fileview*fv=fi->view;
-	if(!fv)return;
+static void item_click(lv_obj_t*obj,lv_event_t e){
+	if(!obj||e!=LV_EVENT_CLICKED)return;
+	click_item((struct fileitem*)lv_obj_get_user_data(obj));
+}
+
+static void check_item(struct fileitem*fi,bool checked){
+	if(!fi||!fi->view||!fi->chk)return;
 	if(strcmp(fi->name,"..")==0){
-		fileview_go_back(fv);
+		fileview_go_back(fi->view);
 		return;
 	}
 	if(fi->letter){
-		lv_checkbox_set_checked(obj,false);
+		lv_checkbox_set_checked(fi->chk,false);
 		return;
 	}
-	bool checked=lv_checkbox_is_checked(fi->chk);
+	lv_checkbox_set_checked(fi->chk,checked);
 	lv_obj_set_checked(fi->btn,checked);
 	call_on_select_item(
 		fi->view,fi->name,fi->type,checked,
 		fileview_get_checked_count(fi->view)
 	);
+}
+
+static void item_check(lv_obj_t*obj,lv_event_t e){
+	if(!obj||e!=LV_EVENT_VALUE_CHANGED)return;
+	struct fileitem*fi=(struct fileitem*)lv_obj_get_user_data(obj);
+	if(!fi||!fi->chk)return;
+	check_item(fi,lv_checkbox_is_checked(fi->chk));
+}
+
+static struct fileitem*get_item(struct fileview*view,const char*name){
+	if(!view||!name)return NULL;
+	list*l=list_first(view->items);
+	if(l)do{
+		LIST_DATA_DECLARE(fi,l,struct fileitem*);
+		if(!fi||fi->view!=view||strcmp(fi->name,name)!=0)continue;
+		return fi;
+	}while((l=l->next));
+	return NULL;
 }
 
 static struct fileitem*add_item(struct fileview*view,char*name){
@@ -503,6 +520,20 @@ bool fileview_is_top(struct fileview*view){
 	if(!view)return true;
 	if(fsext_is_multi&&view->letter)return false;
 	return strcmp(view->path,"/")==0;
+}
+
+bool fileview_click_item(struct fileview*view,const char*name){
+	struct fileitem*fi=get_item(view,name);
+	if(!fi)return false;
+	click_item(fi);
+	return true;
+}
+
+bool fileview_check_item(struct fileview*view,const char*name,bool checked){
+	struct fileitem*fi=get_item(view,name);
+	if(!fi)return false;
+	check_item(fi,checked);
+	return true;
 }
 
 void fileview_add_group(struct fileview*view,lv_group_t*grp){

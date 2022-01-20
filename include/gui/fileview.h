@@ -70,6 +70,12 @@ extern char*fileview_get_lvgl_path(struct fileview*view);
 // src/gui/interface/filemgr/fileview.c: is fileview in folder top
 extern bool fileview_is_top(struct fileview*view);
 
+// src/gui/interface/filemgr/fileview.c: click an item in fileview
+extern bool fileview_click_item(struct fileview*view,const char*name);
+
+// src/gui/interface/filemgr/fileview.c: check an item in fileview
+extern bool fileview_check_item(struct fileview*view,const char*name,bool checked);
+
 // src/gui/interface/filemgr/fileview.c: fileview go back
 extern void fileview_go_back(struct fileview*fv);
 

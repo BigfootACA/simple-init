@@ -140,10 +140,9 @@ static bool open_read_cb(uint16_t id,const char*name __attribute__((unused)),voi
 				buf=x,xb=buf+cs-bs;
 			}
 		}else{
-			if(!(buf=malloc(od->size)))goto e_buf;
-			memset(buf,0,sizeof(od->size));
-			rs=od->size;
-			if((res=lv_fs_read(&od->file,buf,rs,&rs))!=LV_FS_RES_OK)goto e_read;
+			if(!(buf=malloc(od->size+1)))goto e_buf;
+			memset(buf,0,od->size+1);
+			if((res=lv_fs_read(&od->file,buf,od->size,&rs))!=LV_FS_RES_OK)goto e_read;
 		}
 		lv_textarea_set_text(text,buf);
 		lv_textarea_set_cursor_pos(text,0);

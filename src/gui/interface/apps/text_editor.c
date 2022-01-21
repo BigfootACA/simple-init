@@ -348,6 +348,7 @@ static void btns_cb(lv_obj_t*obj,lv_event_t e){
 }
 
 static void input_cb(lv_obj_t*obj,lv_event_t e){
+	if(e==LV_EVENT_DELETE)return;
 	if(obj!=text||strcmp(guiact_get_last()->name,"text-editor")!=0)return;
 	lv_coord_t fh=gui_sh-bth-btm*2,sh=fh;
 	if(sysbar.keyboard)sh=gui_sh-lv_obj_get_height(sysbar.keyboard);
@@ -412,7 +413,6 @@ static int editor_draw(struct gui_activity*act){
 	lv_textarea_set_text(text,"");
 	lv_textarea_set_one_line(text,false);
 	lv_textarea_set_text_sel(text,true);
-	lv_textarea_set_scroll_propagation(text,true);
 	lv_obj_set_size(text,gui_sw,gui_sh-bth-btm*2);
 	lv_obj_set_event_cb(text,input_cb);
 	lv_obj_set_style_local_border_width(text,LV_TEXTAREA_PART_BG,LV_STATE_DEFAULT,0);

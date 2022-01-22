@@ -161,7 +161,10 @@ int remove_folders(int dfd,int flags){
 int has_block(char*block){
 	char*p=block;
 	#ifdef ENABLE_BLKID
-	if(block[0]!='/'&&!(p=blkid_evaluate_tag(block,NULL,NULL)))return false;
+	if(
+		block[0]!='/'&&
+		!(p=blkid_evaluate_tag(block,NULL,NULL))
+	)return false;
 	#endif
 	struct stat st;
 	if(stat(p,&st)<0)return errno==ENOENT?false:-1;
@@ -169,6 +172,9 @@ int has_block(char*block){
 		errno=ENOTBLK;
 		return -1;
 	}
+	#ifdef ENABLE_BLKID
+	free(p);
+	#endif
 	return true;
 }
 

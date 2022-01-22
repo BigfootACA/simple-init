@@ -182,9 +182,15 @@ static void mount_reload(){
 		return;
 	}
 	for(size_t i=0;ms[i];i++){
-		if(strncmp(ms[i]->source,"/dev/",5)!=0&&!is_show_all)continue;
+		if(strncmp(ms[i]->source,"/dev/",5)!=0&&!is_show_all){
+			free_mount_item(ms[i]);
+			continue;
+		}
 		struct mount_info*m=malloc(sizeof(struct mount_info));
-		if(!m)continue;
+		if(!m){
+			free_mount_item(ms[i]);
+			continue;
+		}
 		memset(m,0,sizeof(struct mount_info));
 		m->item=ms[i];
 		mount_add_item(m);

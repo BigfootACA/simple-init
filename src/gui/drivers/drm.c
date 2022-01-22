@@ -204,12 +204,10 @@ static int drm_dmabuf_set_plane(struct drm_buffer*b){
 	drm_add_plane_property("CRTC_Y",0);
 	drm_add_plane_property("CRTC_W",drm_dev.width);
 	drm_add_plane_property("CRTC_H",drm_dev.height);
-	if((ret=drmModeAtomicCommit(drm_dev.fd,drm_dev.req,flags,NULL))){
+	if((ret=drmModeAtomicCommit(drm_dev.fd,drm_dev.req,flags,NULL)))
 		telog_error("drmModeAtomicCommit failed");
-		drmModeAtomicFree(drm_dev.req);
-		return ret;
-	}
-	return 0;
+	drmModeAtomicFree(drm_dev.req);
+	return ret;
 }
 static int find_plane(unsigned int fourcc,uint32_t*plane_id,uint32_t crtc_idx){
 	drmModePlaneResPtr planes;

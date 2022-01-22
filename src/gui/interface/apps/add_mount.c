@@ -243,6 +243,7 @@ static void target_cb(lv_obj_t*obj,lv_event_t e){
 }
 
 static void type_cb(lv_obj_t*obj,lv_event_t e){
+	if(e==LV_EVENT_DELETE)return;
 	struct add_mount*am=lv_obj_get_user_data(obj);
 	if(!am||obj!=am->type)return;
 	lv_default_dropdown_cb(obj,e);

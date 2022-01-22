@@ -97,7 +97,10 @@ void tty_open(struct tty_data*data){
 		tlog_info("add watch tty %s",data->name);
 		if(tty_confd_get_boolean(data,"start_msg",true)){
 			char*start_msg=confd_get_string("ttyd.start_msg",NULL);
-			if(start_msg)write(data->fd,start_msg,strlen(start_msg));
+			if(start_msg){
+				write(data->fd,start_msg,strlen(start_msg));
+				free(start_msg);
+			}
 		}
 	}
 }

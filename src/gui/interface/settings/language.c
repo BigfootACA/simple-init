@@ -65,6 +65,7 @@ static void init_languages(){
 		if(lang_compare(l,lang))s=i;
 	}
 	lv_dropdown_set_selected(sel,s);
+	if(lang)free(lang);
 }
 
 static int language_get_focus(struct gui_activity*d __attribute__((unused))){

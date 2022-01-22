@@ -8,6 +8,7 @@
 
 #ifdef ENABLE_BLKID
 #include<stdio.h>
+#include<stdlib.h>
 #include<blkid/blkid.h>
 #include"getopt.h"
 #include"output.h"
@@ -21,7 +22,6 @@ static int usage(int e){
 }
 
 int findfs_main(int argc,char**argv){
-	char *dev;
 	static const struct option lo[]={
 		{"help",no_argument,NULL,'h'},
 		{NULL,0,NULL,0}
@@ -32,9 +32,10 @@ int findfs_main(int argc,char**argv){
 		case 'h':return usage(0);
 		default:return -1;
 	}
-	dev=blkid_evaluate_tag(argv[1],NULL,NULL);
+	char*dev=blkid_evaluate_tag(argv[1],NULL,NULL);
 	if(!dev)return re_printf(1,"findfs: unable to resolve '%s'\n",argv[1]);
 	puts(dev);
+	free(dev);
 	return 0;
 }
 #endif

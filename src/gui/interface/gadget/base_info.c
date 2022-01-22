@@ -116,6 +116,7 @@ static int base_info_get_focus(struct gui_activity*d __attribute__((unused))){
 	lv_group_add_obj(gui_grp,txt_id_product);
 	lv_group_add_obj(gui_grp,txt_manufacturer);
 	lv_group_add_obj(gui_grp,txt_product);
+	lv_group_add_obj(gui_grp,sel_udc);
 	lv_group_add_obj(gui_grp,btn_ok);
 	lv_group_add_obj(gui_grp,btn_reset);
 	lv_group_add_obj(gui_grp,btn_cancel);
@@ -131,6 +132,7 @@ static int base_info_lost_focus(struct gui_activity*d __attribute__((unused))){
 	lv_group_remove_obj(txt_id_product);
 	lv_group_remove_obj(txt_manufacturer);
 	lv_group_remove_obj(txt_product);
+	lv_group_remove_obj(sel_udc);
 	lv_group_remove_obj(btn_ok);
 	lv_group_remove_obj(btn_reset);
 	lv_group_remove_obj(btn_cancel);

@@ -254,6 +254,7 @@ static int do_cleanup(struct gui_activity*act){
 	struct add_mount*am=act->data;
 	if(!am)return 0;
 	if(am->target_def)rmdir(lv_textarea_get_text(am->target));
+	list_free_all_def(am->types);
 	free(am);
 	act->data=NULL;
 	return 0;

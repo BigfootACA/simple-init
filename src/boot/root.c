@@ -198,7 +198,7 @@ static int setup_loop(boot_config*boot,bool ro,char*path,size_t len){
 
 static int setup_overlay(boot_config*boot,int wait,char*path,size_t len){
 	int e=0;
-	char*data,*data_blk,*size,*prefix;
+	char*data,*data_blk=NULL,*size,*prefix;
 	char overlay_point[256],overlay_flags[PATH_MAX];
 	char data_type[64],data_point[256],data_flags[PATH_MAX];
 	char upper_path[PATH_MAX],work_path[PATH_MAX],data_path[PATH_MAX];
@@ -214,7 +214,7 @@ static int setup_overlay(boot_config*boot,int wait,char*path,size_t len){
 	memset(data_path,0,sizeof(data_path));
 	if(strcmp(data,"tmpfs")==0){
 		strcpy(data_type,"tmpfs");
-		data_blk=data_type;
+		if(!(data_blk=strdup(data_type)))EGOTO(-1);
 	}else{
 		if(!(data_blk=get_block(data,wait)))EGOTO(-errno);
 		if(!(get_fstype(boot,data_blk,"data_fstype",data_type,sizeof(data_type))))
@@ -274,6 +274,7 @@ static int setup_overlay(boot_config*boot,int wait,char*path,size_t len){
 
 	return 0;
 	fail:
+	if(data_blk)free(data_blk);
 	if(errno==0)errno=e==0?ENOTSUP:0;
 	if(e==0)e=-1;
 	return e;
@@ -283,13 +284,21 @@ int run_boot_root(boot_config*boot){
 	if(!boot)ERET(EINVAL);
 	if(boot->mode!=BOOT_SWITCHROOT)ERET(ENOTSUP);
 
-	int e,wait;
-	char*definit,*init,*path,flags[PATH_MAX],point[256],type[64];
-	bool ro=parse_int(confd_get_string_base(boot->key,"rw","0"),0)==0;
+	bool ro=true;
+	int e,wait=5;
+	char*definit,*init,*path=NULL,*b;
+	char flags[PATH_MAX],point[256],type[64];
+	if((b=confd_get_string_base(boot->key,"rw","0"))){
+		ro=parse_int(b,0)==0;
+		free(b);
+	}
 
 	// unimportant variables
 	definit=confd_get_string_base(boot->key,"init",NULL);
-	wait=parse_int(confd_get_string_base(boot->key,"wait",NULL),5);
+	if((confd_get_string_base(boot->key,"wait",NULL))){
+		wait=parse_int(b,5);
+		free(b);
+	}
 	if(wait<0)wait=5;
 
 	// root block path must set
@@ -297,7 +306,9 @@ int run_boot_root(boot_config*boot){
 	if(!(path=confd_get_string_base(boot->key,"path",NULL)))
 		EGOTO(trlog_error(ENUM(EINVAL),"rootfs block path not set"));
 
-	if(!(path=get_block(path,wait)))EGOTO(-errno);
+	if(!(b=get_block(path,wait)))EGOTO(-errno);
+	free(path);
+	path=b;
 	if(!(get_fstype(boot,path,"fstype",type,sizeof(type))))
 		EGOTO(terlog_error(-errno,"cannot get fstype"));
 	get_flags(boot,"flags",ro,flags,sizeof(flags));

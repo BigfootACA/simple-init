@@ -37,7 +37,20 @@ int free_scheduler_work(void*d){
 
 void*scheduler_worker(void*data){
 	if(!data)return NULL;
+	bool found=false;
+	list*cur,*next;
 	struct scheduler_work*w=(struct scheduler_work*)data;
+	pthread_mutex_lock(&queue_lock);
+	if((next=list_first(queue)))do{
+		cur=next,next=cur->next;
+		LIST_DATA_DECLARE(s,cur,struct scheduler_work*);
+		if(s==w){
+			list_obj_del(&queue,cur,NULL);
+			found=true;
+		}
+	}while(next);
+	pthread_mutex_unlock(&queue_lock);
+	if(!found)return NULL;
 	switch(w->action){
 		case SCHED_START:switch(w->service->status){
 			case STATUS_STARTING:
@@ -55,18 +68,9 @@ void*scheduler_worker(void*data){
 		}break;
 		case SCHED_RELOAD:svc_reload_service(w->service);break;
 		case SCHED_RESTART:svc_restart_service(w->service);break;
-		default:return NULL;
+		default:;
 	}
-	list*cur,*next;
-	pthread_mutex_lock(&queue_lock);
-	if((next=list_first(queue)))do{
-		cur=next,next=cur->next;
-		LIST_DATA_DECLARE(s,cur,struct scheduler_work*);
-		if(s!=w)continue;
-		list_remove_free(cur,free_scheduler_work);
-		break;
-	}while(next);
-	pthread_mutex_unlock(&queue_lock);
+	free_scheduler_work(w);
 	return NULL;
 }
 

@@ -60,7 +60,8 @@ int add_queue(struct service*svc,enum scheduler_action act){
 		goto unlock;
 	}
 	work->service=svc,work->action=act;
-	if(list_push_new(queue,work)<0){
+	if(list_obj_add_new_notnull(&queue,work)<0){
+		free(work);
 		telog_error("add work to queue failed");
 		goto unlock;
 	}
@@ -163,7 +164,7 @@ int add_all_stop_queue(){
 		cur=next,next=cur->next;
 		LIST_DATA_DECLARE(w,cur,struct scheduler_work*);
 		if(!w)continue;
-		if(w->action!=SCHED_STOP)list_remove_free(cur,free_scheduler_work);
+		if(w->action!=SCHED_STOP)list_obj_del(&queue,cur,free_scheduler_work);
 	}while(next);
 	pthread_mutex_unlock(&queue_lock);
 	if((next=list_first(services)))do{

@@ -76,6 +76,7 @@ static void item_click(lv_obj_t*obj,lv_event_t e){
 }
 
 static void view_add_item(struct func_item*k){
+	char*b;
 	lv_coord_t bw=lv_page_get_scrl_width(view),m=gui_dpi/20;
 
 	// option select button
@@ -103,26 +104,32 @@ static void view_add_item(struct func_item*k){
 	lv_checkbox_ext_t*e=lv_obj_get_ext_attr(k->chk);
 	lv_label_set_long_mode(e->label,lm);
 	lv_obj_set_width(e->label,bw-gui_dpi/5*2);
-	lv_checkbox_set_text(k->chk,confd_get_string_dict(base,k->id,"name",_("(unknown)")));
+	b=confd_get_string_dict(base,k->id,"name",NULL);
+	lv_checkbox_set_text(k->chk,b?_("(unknown)"):"");
 	lv_obj_set_event_cb(k->chk,item_click);
 	lv_style_set_focus_checkbox(k->chk);
 	lv_obj_align(k->chk,k->btn,LV_ALIGN_IN_TOP_LEFT,m,m);
 	lv_group_add_obj(gui_grp,k->chk);
+	if(b)free(b);
 
 	// function type
 	lv_obj_t*type=lv_label_create(line,NULL);
 	lv_label_set_long_mode(type,lm);
 	lv_obj_set_width(type,bw/2-m*2);
-	lv_label_set_text(type,confd_get_string_dict(base,k->id,"func",_("(unknown)")));
+	b=confd_get_string_dict(base,k->id,"func",NULL);
+	lv_label_set_text(type,b?_("(unknown)"):"");
 	lv_obj_align(type,k->btn,LV_ALIGN_IN_BOTTOM_LEFT,m,-m);
+	if(b)free(b);
 
 	// function mode
 	lv_obj_t*mode=lv_label_create(line,NULL);
 	lv_label_set_long_mode(mode,lm);
 	lv_obj_set_width(mode,bw/2-m*2);
 	lv_label_set_align(mode,LV_LABEL_ALIGN_RIGHT);
-	lv_label_set_text(mode,confd_get_string_dict(base,k->id,"mode","(unknown)"));
+	b=confd_get_string_dict(base,k->id,"mode",NULL);
+	lv_label_set_text(mode,b?_("(unknown)"):"");
 	lv_obj_align(mode,k->btn,LV_ALIGN_IN_BOTTOM_RIGHT,-m,-m);
+	if(b)free(b);
 }
 
 static void view_reload(){

@@ -29,6 +29,9 @@ extern struct mount_item**read_proc_mounts(void);
 // src/lib/mount.c: is 'path' a mountpoint
 extern bool is_mountpoint(char*path);
 
+// src/lib/mount.c: free single mount_item
+extern void free_mount_item(struct mount_item*m);
+
 // src/lib/mount.c: free mount_item array
 extern void free_mounts(struct mount_item**c);
 

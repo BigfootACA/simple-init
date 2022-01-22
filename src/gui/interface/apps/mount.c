@@ -50,17 +50,6 @@ static void item_check(lv_obj_t*obj,lv_event_t e){
 	lv_obj_set_enabled(btn_umount,true);
 }
 
-static void free_mount_item(struct mount_item*m){
-	if(!m)return;
-	if(m->source)free(m->source);
-	if(m->options){
-		if(m->options[0])free(m->options[0]);
-		free(m->options);
-	}
-	memset(m,0,sizeof(struct mount_item));
-	free(m);
-}
-
 static void free_mount_info(struct mount_info*m){
 	if(!m)return;
 	if(m->item)free_mount_item(m->item);

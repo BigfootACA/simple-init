@@ -113,20 +113,22 @@ struct mount_item**read_proc_mounts(){
 	return array;
 }
 
+void free_mount_item(struct mount_item*m){
+	if(!m)return;
+	if(m->source)free(m->source);
+	if(m->options){
+		if(m->options[0])free(m->options[0]);
+		free(m->options);
+	}
+	memset(m,0,sizeof(struct mount_item));
+	free(m);
+}
+
 void free_mounts(struct mount_item**c){
 	if(!c)return;
 	struct mount_item*s;
 	size_t l=0;
-	while((s=c[l++])){
-		if(s->options[0])free(s->options[0]);
-		if(s->options)free(s->options);
-		if(s->source)free(s->source);
-		s->source=NULL;
-		s->target=NULL;
-		s->options=NULL;
-		s->type=NULL;
-		free(s);
-	}
+	while((s=c[l++]))free_mount_item(s);
 	free(c);
 }
 

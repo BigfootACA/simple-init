@@ -51,6 +51,7 @@ static void init_gadget_conf(){
 	confd_set_string_array(base,2,"path",_PATH_RUN"/adb");
 	confd_set_string_array(base,2,"mode","adbd");
 
+	if(udc)free(udc);
 	free(serial);
 }
 
@@ -113,6 +114,7 @@ static int gadget_init_mass(char*item,gadget*g,gadget_func*f){
 	};
 	if(gadget_add_function(g,f)<0)
 		tlog_warn("add gadget mass storage func %s failed",item);
+	if(path)free(path);
 	return 0;
 }
 
@@ -193,6 +195,7 @@ static int gadget_shutdown(struct service*svc __attribute__((unused))){
 		pid_t xp=(pid_t)confd_get_integer_base("runtime.ttyd.client",tty,0);
 		if(xp>0)kill(xp,SIGTERM);
 		changed=true;
+		free(tty);
 	}
 	if(changed){
 		struct init_msg msg,response;
@@ -201,7 +204,10 @@ static int gadget_shutdown(struct service*svc __attribute__((unused))){
 		init_send(&msg,&response);
 	}
 	char*gadget=confd_get_string("gadget.name",NULL);
-	if(gadget)gadget_unregister(gadget);
+	if(gadget){
+		gadget_unregister(gadget);
+		free(gadget);
+	}
 	return 0;
 }
 

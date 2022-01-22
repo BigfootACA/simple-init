@@ -16,7 +16,6 @@
 #include<stdint.h>
 #include<stdlib.h>
 #ifndef ENABLE_UEFI
-#include<libintl.h>
 #include<sys/mman.h>
 #include<sys/stat.h>
 #endif
@@ -114,9 +113,9 @@ char*lang_get_locale(char*def){
 	return cur_lang;
 	#else
 	char*l;
-	if((l=getenv("LC_ALL")))return l;
-	if((l=getenv("LANG")))return l;
-	if((l=getenv("LANGUAGE")))return l;
+	if((l=getenv("LC_ALL")))return strdup(l);
+	if((l=getenv("LANG")))return strdup(l);
+	if((l=getenv("LANGUAGE")))return strdup(l);
 	if((l=confd_get_string("language","C")))return l;
 	return NULL;
 	#endif
@@ -129,6 +128,7 @@ void lang_load_locale(const char*dir,const char*lang,const char*domain){
 	char*l=lang_get_locale((char*)lang);
 	if(!l)return;
 	strncpy(rl,l,63);
+	free(l);
 	char*d=dir?(char*)dir:DEFAULT_LOCALE;
 	for(;;){
 		memset(path,0,PATH_MAX);

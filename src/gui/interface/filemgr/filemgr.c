@@ -79,11 +79,11 @@ static void update_active(){
 }
 
 int do_cleanup(struct gui_activity*d __attribute__((unused))){
+	active=NULL;
 	for(size_t i=0;i<ARRLEN(tabs);i++){
 		if(tabs[i])filetab_free(tabs[i]);
 		tabs[i]=NULL;
 	}
-	active=NULL;
 	return 0;
 }
 
@@ -108,13 +108,14 @@ static bool on_item_click(struct filetab*fv,char*item,enum item_type type){
 }
 
 static void on_item_select(
-	struct filetab*fv __attribute__((unused)),
+	struct filetab*fv,
 	char*name __attribute__((unused)),
 	enum item_type type __attribute__((unused)),
 	bool checked __attribute__((unused)),
 	uint16_t cnt
 ){
-	if(fsext_is_multi&&filetab_is_top(active))return;
+	if(fv!=active)return;
+	if(fsext_is_multi&&filetab_is_top(fv))return;
 	if(cnt==1){
 		lv_obj_set_enabled(btn_edit,true);
 		lv_obj_set_enabled(btn_info,true);

@@ -270,6 +270,7 @@ static int filepicker_draw(struct gui_activity*act){
 static int filepicker_clean(struct gui_activity*d){
 	struct filepicker*box=d->args;
 	if(!box)return 0;
+	fileview_free(box->fv);
 	free(box);
 	d->args=NULL;
 	return 0;

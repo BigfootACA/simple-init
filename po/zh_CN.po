@@ -1053,6 +1053,12 @@ msgstr "配置项'%s'不是一个值\n"
 msgid "Exit GUI Application and enter UEFI Shell?"
 msgstr "退出GUI启动器并进入UEFI Shell?"
 
+msgid "Exit GUI Application and enter Linux Simple Mass Storage?"
+msgstr "退出GUI启动器并进入Linux大容量存储?"
+
+msgid "Mass Storage"
+msgstr "大容量存储"
+
 msgid "%s: unrecognized option: %s\n"
 msgstr "%s: 未知的选项: %s\n"
 

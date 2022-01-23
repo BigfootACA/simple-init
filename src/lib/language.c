@@ -70,12 +70,10 @@ static int lang_open_locale(char*path){
 	#ifndef ENABLE_UEFI
 	int fd=-1;
 	struct stat st;
-	if(locale_map){
-		if(mmap_map)munmap(locale_map,map_size);
-		locale_map=NULL;
-		map_size=-1;
-	}
+	if(locale_map&&mmap_map)munmap(locale_map,map_size);
 	#endif
+	locale_map=NULL;
+	map_size=-1;
 	struct entry_file*file=rootfs_get_assets_file(path);
 	if(file
 		&&S_ISREG(file->info.mode)

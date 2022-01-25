@@ -29,6 +29,7 @@
 #include"hardware.h"
 #include"gui/font.h"
 #include"gui/tools.h"
+#include"gui/image.h"
 #include"gui/sysbar.h"
 #include"gui/guidrv.h"
 #include"gui/activity.h"

@@ -10,7 +10,7 @@
 #include<stdint.h>
 #include<stdlib.h>
 #include<string.h>
-#include"image.h"
+#include"gui/image.h"
 
 static int image_decode(unsigned char*data,size_t len,image_data*img){
 	int row;

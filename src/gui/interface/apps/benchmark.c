@@ -5,6 +5,7 @@
 #include"gui.h"
 #include"logger.h"
 #include"pathnames.h"
+#include"gui/image.h"
 #include"gui/guidrv.h"
 #include"gui/activity.h"
 #define TAG "benchmark"

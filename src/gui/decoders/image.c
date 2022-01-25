@@ -15,8 +15,8 @@
 #include"list.h"
 #include"confd.h"
 #include"assets.h"
-#include"image.h"
 #include"logger.h"
+#include"gui/image.h"
 #include"gui/fsext.h"
 #define TAG "image"
 #define EGOTO(e) {e;goto fail;}

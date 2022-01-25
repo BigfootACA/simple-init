@@ -12,7 +12,7 @@
 #include<stddef.h>
 #include<setjmp.h>
 #include<jpeglib.h>
-#include"image.h"
+#include"gui/image.h"
 #include"logger.h"
 #define TAG "jpeg"
 

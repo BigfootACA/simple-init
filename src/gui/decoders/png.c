@@ -9,7 +9,7 @@
 #ifdef ENABLE_GUI
 #ifdef ENABLE_LODEPNG
 #include<lodepng.h>
-#include"image.h"
+#include"gui/image.h"
 #include"logger.h"
 #define TAG "png"
 

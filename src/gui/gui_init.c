@@ -322,7 +322,13 @@ static void gui_quit_handler(int s __attribute((unused))){
 }
 #endif
 
+static void image_cache_cb(lv_task_t*t __attribute__((unused))){
+	image_print_stat();
+}
+
 int gui_main(){
+	int64_t i=confd_get_integer("gui.image_cache_statistics",0);
+	if(i>0)lv_task_create(image_cache_cb,i,LV_TASK_PRIO_LOWEST,NULL);
 	#ifdef ENABLE_UEFI
 	REPORT_STATUS_CODE(EFI_PROGRESS_CODE,(EFI_SOFTWARE_DXE_BS_DRIVER|EFI_SW_PC_INPUT_WAIT));
 

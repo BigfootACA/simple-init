@@ -32,4 +32,12 @@ extern void image_decoder_init(void);
 extern void image_set_cache_time(time_t time);
 extern void image_cache_clean(void);
 extern int image_cache_gc(void);
+extern long image_get_cache_hits();
+extern long image_get_cache_misses();
+extern long image_get_load_fails();
+static inline long image_get_process_count(){return image_get_cache_hits()+image_get_cache_misses()+image_get_load_fails();}
+static inline float image_get_cache_hit_percent(){return (float)image_get_cache_hits()/image_get_process_count()*100;}
+static inline float image_get_cache_miss_percent(){return (float)image_get_cache_misses()/image_get_process_count()*100;}
+static inline float image_get_load_fail_percent(){return (float)image_get_load_fails()/image_get_process_count()*100;}
+extern void image_print_stat();
 #endif

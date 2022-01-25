@@ -53,6 +53,7 @@ image_decoder*img_decoders[]={
 
 static list*caches=NULL;
 static time_t cache_time=5;
+static long cache_hit=0,cache_miss=0,load_fail=0;
 
 static int image_open_source_lvgl(char*path,unsigned char**data,size_t*len){
 	lv_fs_res_t r;
@@ -216,8 +217,15 @@ static image_data*image_decode(char*path){
 static image_data*image_get(char*path){
 	image_data*img=NULL;
 	if(!path)return NULL;
-	if((img=image_get_cache(path)))return img;
-	if(!(img=image_decode(path)))return NULL;
+	if((img=image_get_cache(path))){
+		cache_hit++;
+		return img;
+	}
+	if(!(img=image_decode(path))){
+		load_fail++;
+		return NULL;
+	}
+	cache_miss++;
 	image_add_cache(img);
 	return img;
 }
@@ -257,5 +265,18 @@ void image_decoder_init(){
 	lv_img_decoder_set_open_cb(dec,decoder_open);
 	lv_img_decoder_set_close_cb(dec,decoder_close);
 	cache_time=confd_get_integer("gui.image_cache_time",5);
+}
+
+long image_get_cache_hits(){return cache_hit;}
+long image_get_cache_misses(){return cache_miss;}
+long image_get_load_fails(){return load_fail;}
+
+void image_print_stat(){
+	tlog_debug(
+		"cache hit: %ld (%0.2f%%), miss: %ld(%0.2f%%), fail: %ld(%0.2f%%)",
+		image_get_cache_hits(),image_get_cache_hit_percent(),
+		image_get_cache_misses(),image_get_cache_miss_percent(),
+		image_get_load_fails(),image_get_load_fail_percent()
+	);
 }
 #endif

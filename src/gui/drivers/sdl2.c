@@ -158,7 +158,7 @@ static int quit_filter(void*userdata __attribute__((unused)),SDL_Event*e){
 	return 1;
 }
 static int monitor_init(){
-	if(!getenv("DISPLAY")||!getenv("WAYLAND_DISPLAY"))return -1;
+	if(!getenv("DISPLAY")&&!getenv("WAYLAND_DISPLAY"))return -1;
 	SDL_Init(SDL_INIT_VIDEO);
 	SDL_SetEventFilter(quit_filter,NULL);
 	monitor.window=SDL_CreateWindow(

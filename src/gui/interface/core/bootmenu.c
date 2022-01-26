@@ -305,23 +305,28 @@ static int bootmenu_draw(){
 	return 0;
 }
 
+static int start_default(){
+	struct init_msg msg,response;
+	init_initialize_msg(&msg,ACTION_SVC_START);
+	strcpy(msg.data.data,"default-boot");
+	init_send(&msg,&response);
+	return 0;
+}
+
 int bootmenu_main(int argc __attribute((unused)),char**argv __attribute((unused))){
 	open_socket_logfd_default();
 	open_default_confd_socket(false,TAG);
 	open_socket_initfd(DEFAULT_INITD,false);
 	lang_init_locale();
-	if(!confd_get_boolean("runtime.cmdline.gui_disable",false)){
-		gui_pre_init();
-		gui_screen_init();
-		bootmenu_draw();
-		gui_main();
-	}else{
-		struct init_msg msg,response;
-		init_initialize_msg(&msg,ACTION_SVC_START);
-		strcpy(msg.data.data,"default-boot");
-		init_send(&msg,&response);
-	}
-	return 0;
+	if(confd_get_boolean("runtime.cmdline.gui_disable",false))return start_default();
+	if(
+		gui_pre_init()==0&&
+		gui_screen_init()==0&&
+		bootmenu_draw()==0&&
+		gui_main()==0
+	)return 0;
+	tlog_error("gui initialize failed");
+	return start_default();
 }
 
 static int bootmenu_startup(struct service*svc __attribute__((unused))){

@@ -77,13 +77,13 @@ bool gui_dark=DARK_MODE;
 // is sleeping
 bool gui_sleep=false;
 
-// gui process lock
-pthread_mutex_t gui_lock;
-
 // gui sleep lock
 static sem_t gui_wait;
 
 #endif
+
+// gui process lock
+mutex_t gui_lock;
 
 // usable gui fontsize
 static int font_sizes[]={10,16,24,32,48,64,72,96};
@@ -94,7 +94,7 @@ static runnable_t*run_exit=NULL;
 void gui_do_quit(){
 	#ifndef ENABLE_UEFI
 	sem_destroy(&gui_wait);
-	pthread_mutex_destroy(&gui_lock);
+	MUTEX_DESTROY(gui_lock);
 	#endif
 	image_cache_clean();
 	guidrv_exit();
@@ -256,9 +256,11 @@ static EFI_EVENT e_timer,e_loop;
 static VOID EFIAPI efi_loop(IN EFI_EVENT e,IN VOID*ctx){}
 
 static VOID EFIAPI efi_timer(IN EFI_EVENT e,IN VOID*ctx){
+	MUTEX_LOCK(gui_lock);
 	lv_tick_inc(10);
 	lv_task_handler();
 	guidrv_taskhandler();
+	MUTEX_UNLOCK(gui_lock);
 	if(!gui_run){
 		tlog_notice("exiting");
 		gBS->CloseEvent(e_timer);
@@ -329,6 +331,7 @@ static void image_cache_cb(lv_task_t*t __attribute__((unused))){
 int gui_main(){
 	int64_t i=confd_get_integer("gui.image_cache_statistics",0);
 	if(i>0)lv_task_create(image_cache_cb,i,LV_TASK_PRIO_LOWEST,NULL);
+	MUTEX_INIT(gui_lock);
 	#ifdef ENABLE_UEFI
 	REPORT_STATUS_CODE(EFI_PROGRESS_CODE,(EFI_SOFTWARE_DXE_BS_DRIVER|EFI_SW_PC_INPUT_WAIT));
 
@@ -354,17 +357,16 @@ int gui_main(){
 	while(gui_run&&!EFI_ERROR(gBS->WaitForEvent(1,&e_loop,&wi)));
 	#else
 	sem_init(&gui_wait,0,0);
-	pthread_mutex_init(&gui_lock,NULL);
 	handle_signals((int[]){SIGINT,SIGQUIT,SIGTERM},3,gui_quit_handler);
 	bool cansleep=guidrv_can_sleep();
 	if(!cansleep)tlog_notice("gui driver disabled sleep");
 	while(gui_run){
 		// 10 seconds inactive sleep
 		if(lv_disp_get_inactive_time(NULL)<10000||!cansleep){
-			pthread_mutex_lock(&gui_lock);
+			MUTEX_LOCK(gui_lock);
 			lv_task_handler();
 			guidrv_taskhandler();
-			pthread_mutex_unlock(&gui_lock);
+			MUTEX_UNLOCK(gui_lock);
 		}else gui_enter_sleep();
 		usleep(30000);
 	}

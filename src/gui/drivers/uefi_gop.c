@@ -99,6 +99,7 @@ static bool uefigop_can_sleep(){
 }
 static void uefigop_exit(){
 	logger_set_console(true);
+	gST->ConOut->ClearScreen(gST->ConOut);
 }
 struct gui_driver guidrv_uefigop={
 	.name="uefigop",

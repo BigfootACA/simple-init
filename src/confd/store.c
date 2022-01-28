@@ -14,20 +14,10 @@
 #include<sys/stat.h>
 #include"confd_internal.h"
 #include"logger.h"
-#ifdef ENABLE_UEFI
-static void*store_lock;
-#define LOCK_INIT(lock) (void)lock
-#define LOCK(lock) (void)lock
-#define UNLOCK(lock) (void)lock
-#else
-#include<pthread.h>
-static pthread_mutex_t store_lock;
-#define LOCK_INIT(lock) pthread_mutex_init(&lock,NULL)
-#define LOCK(lock) pthread_mutex_lock(&lock)
-#define UNLOCK(lock) pthread_mutex_unlock(&lock)
-#endif
+#include"lock.h"
 #define KEY_MODE 0755
 #define VAL_MODE 0644
+static mutex_t store_lock;
 
 bool conf_store_changed=false;
 static struct conf conf_store={
@@ -96,45 +86,45 @@ static struct conf*conf_lookup(const char*path,bool create,enum conf_type type,u
 	if(strcmp(path,"/")==0&&type==0)return &conf_store;
 	else strncpy(xpath,path,PATH_MAX-1);
 	if(!path[0]&&type==0)return &conf_store;
-	LOCK(store_lock);
+	MUTEX_LOCK(store_lock);
 	if(p)do{
 		if(*p!='.')continue;
 		*p=0;
 		if(!(x=conf_get(cur,key))){
 			if(!create){
-				UNLOCK(store_lock);
+				MUTEX_UNLOCK(store_lock);
 				EPRET(ENOENT);
 			}
 			if(!(x=conf_create(cur,key,u,g))){
-				UNLOCK(store_lock);
+				MUTEX_UNLOCK(store_lock);
 				return NULL;
 			}
 			x->type=TYPE_KEY;
 			x->mode=KEY_MODE;
 		}
 		if(!check_perm_read(x,u,g)){
-			UNLOCK(store_lock);
+			MUTEX_UNLOCK(store_lock);
 			EPRET(EACCES);
 		}
 		cur=x,key=++p;
 	}while(*p++);
 	if(!key[0]){
-		UNLOCK(store_lock);
+		MUTEX_UNLOCK(store_lock);
 		EPRET(EINVAL);
 	}
 	if(!(x=conf_get(cur,key))){
 		if(!create){
-			UNLOCK(store_lock);
+			MUTEX_UNLOCK(store_lock);
 			EPRET(ENOENT);
 		}
 		if(!(x=conf_create(cur,key,u,g))){
-			UNLOCK(store_lock);
+			MUTEX_UNLOCK(store_lock);
 			return NULL;
 		}
 		x->type=type;
 		x->mode=type==TYPE_KEY?KEY_MODE:VAL_MODE;
 	}
-	UNLOCK(store_lock);
+	MUTEX_UNLOCK(store_lock);
 	if(!check_perm_read(x,u,g))EPRET(EACCES);
 	if(x->type==0)EPRET(EBADMSG);
 	if(type!=0&&type!=x->type)EPRET(ENOENT);
@@ -165,13 +155,13 @@ const char**conf_ls(const char*path,uid_t u,gid_t g){
 	struct conf*c=conf_lookup(path,false,0,u,g);
 	if(!c)return NULL;
 	if(c->type!=TYPE_KEY)EPRET(ENOTDIR);
-	LOCK(store_lock);
+	MUTEX_LOCK(store_lock);
 	int i=list_count(c->keys),x=0;
 	if(i<0)i=0;
 	size_t s=sizeof(char*)*(i+1);
 	const char**r=malloc(s);
 	if(!r){
-		UNLOCK(store_lock);
+		MUTEX_UNLOCK(store_lock);
 		EPRET(ENOMEM);
 	}
 	memset(r,0,s);
@@ -180,7 +170,7 @@ const char**conf_ls(const char*path,uid_t u,gid_t g){
 		LIST_DATA_DECLARE(d,p,struct conf*);
 		r[x++]=d->name;
 	}while((p=p->next));
-	UNLOCK(store_lock);
+	MUTEX_UNLOCK(store_lock);
 	return r;
 }
 
@@ -188,26 +178,26 @@ int conf_count(const char*path,uid_t u,gid_t g){
 	struct conf*c=conf_lookup(path,false,0,u,g);
 	if(!c)return -1;
 	if(c->type!=TYPE_KEY)ERET(ENOTDIR);
-	LOCK(store_lock);
+	MUTEX_LOCK(store_lock);
 	int i=list_count(c->keys);
 	if(i<0)i=0;
 	log_debug("conf","%s %d",path,i);
-	UNLOCK(store_lock);
+	MUTEX_UNLOCK(store_lock);
 	return i;
 }
 
 static int conf_del_obj(struct conf*c){
 	if(!c)return -1;
 	if(!c->parent)ERET(EINVAL);
-	LOCK(store_lock);
+	MUTEX_LOCK(store_lock);
 	list*p;
 	if(c->type==TYPE_KEY){
 		list*x;
 		if((p=list_first(c->keys)))do{
 			x=p->next;
-			UNLOCK(store_lock);
+			MUTEX_UNLOCK(store_lock);
 			conf_del_obj(LIST_DATA(p,struct conf*));
-			LOCK(store_lock);
+			MUTEX_LOCK(store_lock);
 		}while((p=x));
 		if(c->keys)free(c->keys);
 		c->keys=NULL;
@@ -220,7 +210,7 @@ static int conf_del_obj(struct conf*c){
 	}while((p=p->next));
 	free(c);
 	conf_store_changed=true;
-	UNLOCK(store_lock);
+	MUTEX_UNLOCK(store_lock);
 	return 0;
 }
 
@@ -288,14 +278,14 @@ int conf_set_mod(const char*path,mode_t mod,uid_t u,gid_t g){
 	int conf_set_##_func(const char*path,_type data,uid_t u,gid_t g){\
 		struct conf*c=conf_lookup(path,true,TYPE_##_tag,u,g);\
 		if(!c)return -errno;\
-		LOCK(store_lock);\
+		MUTEX_LOCK(store_lock);\
 		if(c->type!=TYPE_##_tag){\
-			UNLOCK(store_lock);\
+			MUTEX_UNLOCK(store_lock);\
 			ERET(EBADMSG);\
 		}\
 		VALUE_##_tag(c)=data;\
 		conf_store_changed=true;\
-		UNLOCK(store_lock);\
+		MUTEX_UNLOCK(store_lock);\
 		return 0;\
 	}\
 	_type conf_get_##_func(const char*path,_type def,uid_t u,gid_t g){\

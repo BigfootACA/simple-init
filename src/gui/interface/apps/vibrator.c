@@ -38,16 +38,16 @@ struct vibrate_step{
 
 static struct vibrate_step*selected;
 static list*steps=NULL;
-static pthread_mutex_t lock;
+static mutex_t lock;
 
 static int vibrator_get_focus(struct gui_activity*d __attribute__((unused))){
-	pthread_mutex_lock(&lock);
+	MUTEX_LOCK(lock);
 	list*o=list_first(steps);
 	if(o)do{
 		LIST_DATA_DECLARE(vs,o,struct vibrate_step*);
 		if(vs->chk)lv_group_add_obj(gui_grp,vs->chk);
 	}while((o=o->next));
-	pthread_mutex_unlock(&lock);
+	MUTEX_UNLOCK(lock);
 	lv_group_add_obj(gui_grp,btn_prev);
 	lv_group_add_obj(gui_grp,btn_next);
 	lv_group_add_obj(gui_grp,btn_delete);
@@ -58,13 +58,13 @@ static int vibrator_get_focus(struct gui_activity*d __attribute__((unused))){
 }
 
 static int vibrator_lost_focus(struct gui_activity*d __attribute__((unused))){
-	pthread_mutex_lock(&lock);
+	MUTEX_LOCK(lock);
 	list*o=list_first(steps);
 	if(o)do{
 		LIST_DATA_DECLARE(vs,o,struct vibrate_step*);
 		if(vs->chk)lv_group_add_obj(gui_grp,vs->chk);
 	}while((o=o->next));
-	pthread_mutex_unlock(&lock);
+	MUTEX_UNLOCK(lock);
 	lv_group_remove_obj(btn_prev);
 	lv_group_remove_obj(btn_next);
 	lv_group_remove_obj(btn_delete);
@@ -89,7 +89,7 @@ static void chk_click(lv_obj_t*obj,lv_event_t e){
 }
 
 static void clean_view(){
-	pthread_mutex_lock(&lock);
+	MUTEX_LOCK(lock);
 	list*o=list_first(steps);
 	if(o)do{
 		LIST_DATA_DECLARE(vs,o,struct vibrate_step*);
@@ -97,14 +97,14 @@ static void clean_view(){
 		lv_obj_del(vs->btn);
 		vs->btn=NULL,vs->chk=NULL;
 	}while((o=o->next));
-	pthread_mutex_unlock(&lock);
+	MUTEX_UNLOCK(lock);
 }
 
 static void redraw_view(){
 	char string[256]={0};
 	lv_obj_t*last=NULL;
 	lv_coord_t bw=lv_page_get_scrl_width(view);
-	pthread_mutex_lock(&lock);
+	MUTEX_LOCK(lock);
 	list*o=list_first(steps);
 	if(o)do{
 		LIST_DATA_DECLARE(vs,o,struct vibrate_step*);
@@ -147,7 +147,7 @@ static void redraw_view(){
 			lv_obj_set_width(e->label,lbl_w);
 		}
 	}while((o=o->next));
-	pthread_mutex_unlock(&lock);
+	MUTEX_UNLOCK(lock);
 }
 
 static bool create_time_cb(bool ok,const char*text __attribute__((unused)),void*user_data){
@@ -160,9 +160,9 @@ static bool create_time_cb(bool ok,const char*text __attribute__((unused)),void*
 		vs->time=0;
 		return true;
 	}
-	pthread_mutex_lock(&lock);
+	MUTEX_LOCK(lock);
 	list_obj_add_new(&steps,vs);
-	pthread_mutex_unlock(&lock);
+	MUTEX_UNLOCK(lock);
 	clean_view();
 	redraw_view();
 	return false;
@@ -205,10 +205,10 @@ static void clean_steps(){
 	lv_obj_set_enabled(btn_prev,false);
 	lv_obj_set_enabled(btn_next,false);
 	lv_obj_set_enabled(btn_delete,false);
-	pthread_mutex_lock(&lock);
+	MUTEX_LOCK(lock);
 	list_free_all(steps,_datafree);
 	steps=NULL,selected=NULL;
-	pthread_mutex_unlock(&lock);
+	MUTEX_UNLOCK(lock);
 }
 
 static bool clean_confirm_cb(
@@ -229,16 +229,16 @@ static void clean_cb(lv_obj_t*obj,lv_event_t e){
 static int do_clean(struct gui_activity*act __attribute__((unused))){
 	clean_steps();
 	view=NULL;
-	pthread_mutex_destroy(&lock);
+	MUTEX_DESTROY(lock);
 	return 0;
 }
 
 static void delete_cb(lv_obj_t*obj,lv_event_t e){
 	if(obj!=btn_delete||e!=LV_EVENT_CLICKED||!selected)return;
 	clean_view();
-	pthread_mutex_lock(&lock);
+	MUTEX_LOCK(lock);
 	list_obj_del_data(&steps,selected,_datafree);
-	pthread_mutex_unlock(&lock);
+	MUTEX_UNLOCK(lock);
 	selected=NULL;
 	lv_obj_set_enabled(btn_prev,false);
 	lv_obj_set_enabled(btn_next,false);
@@ -249,15 +249,15 @@ static void delete_cb(lv_obj_t*obj,lv_event_t e){
 static void move_cb(lv_obj_t*obj,lv_event_t e){
 	if(!obj||e!=LV_EVENT_CLICKED||!selected)return;
 	int r;
-	pthread_mutex_lock(&lock);
+	MUTEX_LOCK(lock);
 	list*l=list_lookup_data(steps,selected);
-	pthread_mutex_unlock(&lock);
+	MUTEX_UNLOCK(lock);
 	if(!l)return;
-	pthread_mutex_lock(&lock);
+	MUTEX_LOCK(lock);
 	if(obj==btn_prev)r=list_swap_prev(l);
 	else if(obj==btn_next)r=list_swap_next(l);
 	else r=-1;
-	pthread_mutex_unlock(&lock);
+	MUTEX_UNLOCK(lock);
 	if(r!=0)return;
 	lv_obj_t*scrl=lv_page_get_scrl(view);
 	lv_coord_t y=lv_obj_get_y(scrl);
@@ -270,7 +270,7 @@ static void move_cb(lv_obj_t*obj,lv_event_t e){
 
 static void*worker_thread(void*data  __attribute__((unused))){
 	for(;;){
-		pthread_mutex_lock(&lock);
+		MUTEX_LOCK(lock);
 		int i=0;
 		list*o=list_first(steps),*n;
 		if(o)do{
@@ -279,16 +279,16 @@ static void*worker_thread(void*data  __attribute__((unused))){
 			if(!d)continue;
 			enum vibrate_type type=d->type;
 			int time=d->time;
-			pthread_mutex_unlock(&lock);
+			MUTEX_UNLOCK(lock);
 			i++;
 			if(!thread_run)return NULL;
 			switch(type){
 				case TYPE_VIBRATE:vibrate(time);break;
 				case TYPE_IDLE:usleep(time*1000);break;
 			}
-			pthread_mutex_lock(&lock);
+			MUTEX_UNLOCK(lock);
 		}while((o=n));
-		pthread_mutex_unlock(&lock);
+		MUTEX_UNLOCK(lock);
 		if(i<=0)break;
 	}
 	thread_run=false;
@@ -384,7 +384,7 @@ static int vibrator_draw(struct gui_activity*act){
 	lv_obj_set_style_local_radius(btn_start,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
 	lv_label_set_text(lv_label_create(btn_start,NULL),LV_SYMBOL_OK);
 
-	pthread_mutex_init(&lock,NULL);
+	MUTEX_INIT(lock);
 	return 0;
 }
 

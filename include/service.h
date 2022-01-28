@@ -11,6 +11,7 @@
 #include<time.h>
 #include<stdbool.h>
 #include<sys/types.h>
+#include"lock.h"
 #include"list.h"
 
 enum svc_status{
@@ -74,7 +75,7 @@ struct svc_exec{
 			char*symbol;
 		}lib;
 	}exec;
-	pthread_mutex_t lock;
+	mutex_t lock;
 };
 
 struct service{
@@ -97,7 +98,7 @@ struct service{
 	struct svc_exec*stop;
 	struct svc_exec*restart;
 	struct svc_exec*reload;
-	pthread_mutex_t lock;
+	mutex_t lock;
 };
 
 // src/service/data.c: list of all services
@@ -110,7 +111,7 @@ extern bool auto_restart;
 extern struct service*svc_default,*svc_system,*svc_network;
 
 // src/service/data.c: lock for variable services
-extern pthread_mutex_t services_lock;
+extern mutex_t services_lock;
 
 // src/service/struct.c: set service execute name
 extern int svc_exec_set_name(struct svc_exec*exec,char*name);

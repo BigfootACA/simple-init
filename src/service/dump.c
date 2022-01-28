@@ -6,7 +6,6 @@
  *
  */
 
-#include<pthread.h>
 #include"str.h"
 #include"system.h"
 #include"logger.h"
@@ -39,7 +38,7 @@ static int _svc_exec_dump(int ident,struct svc_exec*exec){
 	char prefix[BUFSIZ];
 	for(i=0;i<ident&&i<BUFSIZ-1;i++)prefix[i]=' ';
 	prefix[i+1]=0;
-	pthread_mutex_lock(&exec->lock);
+	MUTEX_LOCK(exec->lock);
 	tlog_debug("%sservice execute %p:",prefix,exec);
 	tlog_debug("%s    prop:",prefix);
 	tlog_debug("%s        name:         %s",     prefix,exec->prop.name);
@@ -65,7 +64,7 @@ static int _svc_exec_dump(int ident,struct svc_exec*exec){
 			tlog_debug("%s        symbol:                   %s",prefix,exec->exec.lib.symbol);
 			break;
 	}
-	pthread_mutex_unlock(&exec->lock);
+	MUTEX_UNLOCK(exec->lock);
 	return 0;
 }
 
@@ -89,7 +88,7 @@ static int _svc_dump(int ident,struct service*svc){
 	int i;
 	for(i=0;i<ident&&i<BUFSIZ-1;i++)prefix[i]=' ';
 	prefix[i+1]=0;
-	pthread_mutex_lock(&svc->lock);
+	MUTEX_LOCK(svc->lock);
 	tlog_debug("%sservice %p:",prefix,svc);
 	tlog_debug("%s    name:             %s",     prefix,svc->name);
 	if(svc->description)tlog_debug("%s    description:      %s",     prefix,svc->description);
@@ -136,7 +135,7 @@ static int _svc_dump(int ident,struct service*svc){
 
 	_svc_proc_status_dump(i+4,&svc->process);
 
-	pthread_mutex_unlock(&svc->lock);
+	MUTEX_UNLOCK(svc->lock);
 	return 0;
 }
 

@@ -10,8 +10,8 @@
 #include<errno.h>
 #include<string.h>
 #include<stddef.h>
-#include<pthread.h>
 #include"str.h"
+#include"lock.h"
 #include"confd.h"
 #include"logger.h"
 #include"system.h"
@@ -82,7 +82,7 @@ int svc_start_service_nodep(struct service*svc){
 	char*name=svc_get_desc(svc);
 	if(check_start_service(svc)!=0)
 		return terlog_warn(errno,"start service %s",name);
-	pthread_mutex_lock(&svc->lock);
+	MUTEX_LOCK(svc->lock);
 	svc->status=STATUS_STARTING;
 	tlog_notice("Starting service %s",name);
 	if(svc->mode==WORK_FAKE)goto started;
@@ -128,7 +128,7 @@ int svc_start_service_nodep(struct service*svc){
 	telog_warn("Start service %s failed",name);
 	svc->status=STATUS_FAILED;
 	done:
-	pthread_mutex_unlock(&svc->lock);
+	MUTEX_UNLOCK(svc->lock);
 	return errno;
 }
 

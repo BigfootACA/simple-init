@@ -15,6 +15,7 @@
 #include<sys/socket.h>
 #include<sys/select.h>
 #include"pool.h"
+#include"lock.h"
 #include"list.h"
 #include"init.h"
 #include"service.h"
@@ -24,10 +25,10 @@
 #define NAME "Service Scheduler"
 
 struct pool*service_workers=NULL;
-pthread_mutex_t queue_lock;
+mutex_t queue_lock;
 list*queue=NULL;
 static pthread_t scheduler;
-static pthread_mutex_t lock;
+static mutex_t lock;
 static int fds[2];
 
 int free_scheduler_work(void*d){
@@ -40,7 +41,7 @@ void*scheduler_worker(void*data){
 	bool found=false;
 	list*cur,*next;
 	struct scheduler_work*w=(struct scheduler_work*)data;
-	pthread_mutex_lock(&queue_lock);
+	MUTEX_LOCK(queue_lock);
 	if((next=list_first(queue)))do{
 		cur=next,next=cur->next;
 		LIST_DATA_DECLARE(s,cur,struct scheduler_work*);
@@ -49,7 +50,7 @@ void*scheduler_worker(void*data){
 			found=true;
 		}
 	}while(next);
-	pthread_mutex_unlock(&queue_lock);
+	MUTEX_UNLOCK(queue_lock);
 	if(!found)return NULL;
 	switch(w->action){
 		case SCHED_START:switch(w->service->status){
@@ -121,7 +122,7 @@ static int scheduler_main(){
 		service_workers=NULL;
 		return -1;
 	}
-	pthread_mutex_init(&queue_lock,NULL);
+	MUTEX_INIT(queue_lock);
 	fd_set fs;
 	struct timeval tv={.tv_sec=1,.tv_usec=0};
 	struct scheduler_msg msg;
@@ -169,7 +170,7 @@ static int scheduler_main(){
 		close(fds[1]);
 	}
 	tlog_info("scheduler exit");
-	pthread_mutex_destroy(&queue_lock);
+	MUTEX_DESTROY(queue_lock);
 	return run?0:1;
 }
 
@@ -185,16 +186,16 @@ int start_scheduler(){
 	start=true;
 	if(getpid()!=1)ERET(EACCES);
 	if(socketpair(AF_UNIX,SOCK_STREAM|SOCK_NONBLOCK,0,fds)<0)return -errno;
-	pthread_mutex_init(&lock,NULL);
+	MUTEX_INIT(lock);
 	if(pthread_create(&scheduler,NULL,scheduler_thread,NULL)!=0)return -errno;
 	pthread_setname_np(scheduler,NAME);
 	return 0;
 }
 
 int oper_scheduler(struct scheduler_msg*data){
-	pthread_mutex_lock(&lock);
+	MUTEX_LOCK(lock);
 	write(fds[1],data,sizeof(struct scheduler_msg));
-	pthread_mutex_unlock(&lock);
+	MUTEX_UNLOCK(lock);
 	return 0;
 }
 

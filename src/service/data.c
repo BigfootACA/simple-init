@@ -16,7 +16,7 @@
 #include"defines.h"
 
 list*services=NULL;
-pthread_mutex_t services_lock;
+mutex_t services_lock;
 
 struct service*svc_lookup_by_name(char*name){
 	if(!name)EPRET(EINVAL);

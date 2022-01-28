@@ -9,7 +9,7 @@
 #define _GNU_SOURCE
 #include<string.h>
 #include<stdlib.h>
-#include<pthread.h>
+#include"lock.h"
 #include"system.h"
 #include"logger.h"
 #include"service.h"
@@ -25,8 +25,8 @@ int svc_add_depend(struct service*svc,struct service*dep){
 		!dep||!dep->name||
 		svc==dep
 	)ERET(EINVAL);
-	pthread_mutex_lock(&svc->lock);
-	pthread_mutex_lock(&dep->lock);
+	MUTEX_LOCK(svc->lock);
+	MUTEX_LOCK(dep->lock);
 	list*l=list_new(dep),*v=list_new(svc);
 	int er;
 	if(!l||!v)goto fail;
@@ -34,8 +34,8 @@ int svc_add_depend(struct service*svc,struct service*dep){
 	else if(list_push(svc->depends_on,l)!=0)goto fail;
 	if(!dep->depends_of)dep->depends_of=v;
 	else if(list_push(dep->depends_of,v)!=0)goto fail;
-	pthread_mutex_unlock(&svc->lock);
-	pthread_mutex_unlock(&dep->lock);
+	MUTEX_UNLOCK(svc->lock);
+	MUTEX_UNLOCK(dep->lock);
 	time(&svc->last_update);
 	return 0;
 	fail:
@@ -45,8 +45,8 @@ int svc_add_depend(struct service*svc,struct service*dep){
 	list_remove(v);
 	if(l)free(l);
 	if(v)free(v);
-	pthread_mutex_unlock(&svc->lock);
-	pthread_mutex_unlock(&dep->lock);
+	MUTEX_UNLOCK(svc->lock);
+	MUTEX_UNLOCK(dep->lock);
 	ERET(er);
 }
 
@@ -63,9 +63,9 @@ int svc_add_service(struct service*svc){
 		errno=EEXIST;
 		goto fail;
 	}else if(errno!=ENOENT)goto fail;
-	pthread_mutex_lock(&services_lock);
+	MUTEX_LOCK(services_lock);
 	e=list_push(services,l);
-	pthread_mutex_unlock(&services_lock);
+	MUTEX_UNLOCK(services_lock);
 	time(&svc->last_update);
 	if(e==0)return 0;
 	fail:
@@ -77,10 +77,10 @@ int svc_add_service(struct service*svc){
 int svc_set_desc(struct service*svc,char*desc){
 	if(!svc)ERET(EINVAL);
 	if(desc&&strlen(desc)>1024)ERET(ENAMETOOLONG);
-	pthread_mutex_lock(&svc->lock);
+	MUTEX_LOCK(svc->lock);
 	if(svc->description)free(svc->description);
 	svc->description=strdup(desc);
-	pthread_mutex_unlock(&svc->lock);
+	MUTEX_UNLOCK(svc->lock);
 	time(&svc->last_update);
 	if(!svc->description&&desc)ERET(ENOMEM);
 	else return 0;
@@ -89,10 +89,10 @@ int svc_set_desc(struct service*svc,char*desc){
 int svc_set_name(struct service*svc,char*name){
 	if(!svc)ERET(EINVAL);
 	if(strlen(name)>64)ERET(ENAMETOOLONG);
-	pthread_mutex_lock(&svc->lock);
+	MUTEX_LOCK(svc->lock);
 	if(svc->name)free(svc->name);
 	svc->name=strdup(name);
-	pthread_mutex_unlock(&svc->lock);
+	MUTEX_UNLOCK(svc->lock);
 	time(&svc->last_update);
 	if(!svc->name)ERET(ENOMEM);
 	else return 0;
@@ -130,7 +130,7 @@ int service_wait_all_stop(){
 }
 
 int service_init(){
-	pthread_mutex_init(&services_lock,NULL);
+	MUTEX_INIT(services_lock);
 	svc_default=svc_create_service("default",WORK_FAKE);
 	svc_system=svc_create_service("system",WORK_FAKE);
 	svc_network=svc_create_service("network",WORK_FAKE);

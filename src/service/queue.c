@@ -9,7 +9,7 @@
 #include<errno.h>
 #include<stdlib.h>
 #include<stdbool.h>
-#include<pthread.h>
+#include"lock.h"
 #include"pool.h"
 #include"list.h"
 #include"init.h"
@@ -43,14 +43,14 @@ int add_queue(struct service*svc,enum scheduler_action act){
 		}break;
 		default:;
 	}
-	pthread_mutex_lock(&queue_lock);
+	MUTEX_LOCK(queue_lock);
 	if(!(next=list_first(queue)))goto unlock;
 	else do{
 		cur=next;
 		LIST_DATA_DECLARE(s,cur,struct scheduler_work*);
 		if(!s)continue;
 		if(s->service==svc){
-			pthread_mutex_unlock(&queue_lock);
+			MUTEX_UNLOCK(queue_lock);
 			ERET(EINPROGRESS);
 		}
 	}while((next=cur->next));
@@ -65,7 +65,7 @@ int add_queue(struct service*svc,enum scheduler_action act){
 		telog_error("add work to queue failed");
 		goto unlock;
 	}
-	pthread_mutex_unlock(&queue_lock);
+	MUTEX_UNLOCK(queue_lock);
 	int e=0;
 	switch(work->action){
 		case SCHED_START:
@@ -90,7 +90,7 @@ int add_queue(struct service*svc,enum scheduler_action act){
 	}
 	return e;
 	unlock:
-	pthread_mutex_unlock(&queue_lock);
+	MUTEX_UNLOCK(queue_lock);
 	return -1;
 }
 
@@ -141,24 +141,24 @@ static bool task_can_run(struct scheduler_work*w){
 
 int run_queue(){
 	list*cur,*next;
-	pthread_mutex_lock(&queue_lock);
+	MUTEX_LOCK(queue_lock);
 	if(!(next=list_first(queue))){
-		pthread_mutex_unlock(&queue_lock);
+		MUTEX_UNLOCK(queue_lock);
 		return -1;
 	}else do{
 		cur=next;
 		LIST_DATA_DECLARE(w,cur,struct scheduler_work*);
 		if(task_can_run(w))pool_add(service_workers,scheduler_worker,w);
 	}while((next=cur->next));
-	pthread_mutex_unlock(&queue_lock);
+	MUTEX_UNLOCK(queue_lock);
 	return 0;
 }
 
 int add_all_stop_queue(){
 	list*cur,*next;
-	pthread_mutex_lock(&queue_lock);
+	MUTEX_LOCK(queue_lock);
 	if(!(next=list_first(queue))){
-		pthread_mutex_unlock(&queue_lock);
+		MUTEX_UNLOCK(queue_lock);
 		return -1;
 	}else do{
 		cur=next,next=cur->next;
@@ -166,7 +166,7 @@ int add_all_stop_queue(){
 		if(!w)continue;
 		if(w->action!=SCHED_STOP)list_obj_del(&queue,cur,free_scheduler_work);
 	}while(next);
-	pthread_mutex_unlock(&queue_lock);
+	MUTEX_UNLOCK(queue_lock);
 	if((next=list_first(services)))do{
 		cur=next,next=cur->next;
 		LIST_DATA_DECLARE(s,cur,struct service*);

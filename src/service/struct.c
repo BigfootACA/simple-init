@@ -11,9 +11,9 @@
 #include<stdlib.h>
 #include<string.h>
 #include<libgen.h>
-#include<pthread.h>
 #include<stdbool.h>
 #include"list.h"
+#include"lock.h"
 #include"array.h"
 #include"service.h"
 #include"defines.h"
@@ -22,10 +22,10 @@
 int svc_exec_set_name(struct svc_exec*exec,char*name){
 	if(!exec||!name)ERET(EINVAL);
 	if(strlen(name)>64)ERET(ENAMETOOLONG);
-	pthread_mutex_lock(&exec->lock);
+	MUTEX_LOCK(exec->lock);
 	if(exec->prop.name)free(exec->prop.name);
 	exec->prop.name=strdup(name);
-	pthread_mutex_unlock(&exec->lock);
+	MUTEX_UNLOCK(exec->lock);
 	if(!exec->prop.name)ERET(ENOMEM);
 	else return 0;
 }
@@ -39,7 +39,7 @@ struct service*svc_new_service(char*name,enum svc_work mode){
 	if(svc_set_stop_function(svc,svc_default_stop)<0)goto fail;
 	if(svc_set_reload_function(svc,svc_default_reload)<0)goto fail;
 	if(svc_set_restart_function(svc,svc_default_restart)<0)goto fail;
-	pthread_mutex_init(&svc->lock,NULL);
+	MUTEX_INIT(svc->lock);
 	svc->mode=mode;
 	svc->retry=0;
 	svc->restart_max=5;
@@ -60,7 +60,7 @@ struct svc_exec*svc_new_exec(char*name){
 		free(exec);
 		return NULL;
 	}
-	pthread_mutex_init(&exec->lock,NULL);
+	MUTEX_INIT(exec->lock);
 	exec->prop.timeout=30;
 	return exec;
 }
@@ -83,7 +83,7 @@ static void _free_exec_cont(struct svc_exec*exec){
 
 void svc_free_exec(struct svc_exec*exec){
 	if(!exec)return;
-	pthread_mutex_destroy(&exec->lock);
+	MUTEX_DESTROY(exec->lock);
 	_xfree(exec->prop.name);
 	_free_exec_cont(exec);
 	free(exec);
@@ -91,7 +91,7 @@ void svc_free_exec(struct svc_exec*exec){
 
 void svc_free_service(struct service*svc){
 	if(!svc)return;
-	pthread_mutex_destroy(&svc->lock);
+	MUTEX_DESTROY(svc->lock);
 	_xfree(svc->name);
 	_xfree(svc->description);
 	list_free_all(svc->depends_on,NULL);
@@ -120,13 +120,13 @@ int svc_exec_set_command(struct svc_exec*exec,char*path,char**args,char**envs){
 		array_free(_envs);
 		ERET(ENOMEM);
 	}
-	pthread_mutex_lock(&exec->lock);
+	MUTEX_LOCK(exec->lock);
 	_free_exec_cont(exec);
 	exec->prop.type=TYPE_COMMAND;
 	exec->exec.cmd.path=_path;
 	exec->exec.cmd.args=_args;
 	exec->exec.cmd.environ=_envs;
-	pthread_mutex_unlock(&exec->lock);
+	MUTEX_UNLOCK(exec->lock);
 	return 0;
 }
 
@@ -141,22 +141,22 @@ int svc_exec_set_library(struct svc_exec*exec,char*library,char*symbol){
 		_xfree(_symbol);
 		ERET(ENOMEM);
 	}
-	pthread_mutex_lock(&exec->lock);
+	MUTEX_LOCK(exec->lock);
 	_free_exec_cont(exec);
 	exec->prop.type=TYPE_LIBRARY;
 	exec->exec.lib.library=_library;
 	exec->exec.lib.symbol=_symbol;
-	pthread_mutex_unlock(&exec->lock);
+	MUTEX_UNLOCK(exec->lock);
 	return 0;
 }
 
 int svc_exec_set_function(struct svc_exec*exec,svc_main*main){
 	if(!exec||!main)ERET(EINVAL);
 	_free_exec_cont(exec);
-	pthread_mutex_lock(&exec->lock);
+	MUTEX_LOCK(exec->lock);
 	exec->prop.type=TYPE_FUNCTION;
 	exec->exec.func=main;
-	pthread_mutex_unlock(&exec->lock);
+	MUTEX_UNLOCK(exec->lock);
 	return 0;
 }
 

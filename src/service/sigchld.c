@@ -13,8 +13,8 @@
 #include<stdlib.h>
 #include<string.h>
 #include<stdbool.h>
-#include<pthread.h>
 #include"list.h"
+#include"lock.h"
 #include"confd.h"
 #include"logger.h"
 #include"defines.h"
@@ -120,8 +120,8 @@ static int svc_exec_on_exit(pid_t p,struct svc_exec*exec,struct service*svc,int 
 		ERET(EALREADY);
 	}
 	int c;
-	pthread_mutex_lock(&svc->lock);
-	if(exec)pthread_mutex_lock(&exec->lock);
+	MUTEX_LOCK(svc->lock);
+	if(exec)MUTEX_LOCK(exec->lock);
 	bool fail=false;
 	if(WIFEXITED(st)){
 		c=WEXITSTATUS(st);
@@ -143,14 +143,14 @@ static int svc_exec_on_exit(pid_t p,struct svc_exec*exec,struct service*svc,int 
 	else if(svc->start==exec)svc_on_exit_start(exec,svc,fail);
 	else if(svc->stop==exec)svc_on_exit_stop(exec,svc);
 	finish:
-	pthread_mutex_unlock(&svc->lock);
-	if(exec)pthread_mutex_unlock(&exec->lock);
+	MUTEX_UNLOCK(svc->lock);
+	if(exec)MUTEX_UNLOCK(exec->lock);
 	return 0;
 }
 
 int svc_on_sigchld(pid_t pid,int st){
 	if(!services)return 0;
-	pthread_mutex_lock(&services_lock);
+	MUTEX_LOCK(services_lock);
 	list*cur,*next=list_first(services);
 	if(next)do{
 		cur=next,next=cur->next;
@@ -165,6 +165,6 @@ int svc_on_sigchld(pid_t pid,int st){
 		if(e>0)e=svc_exec_on_exit(pid,s->restart,s,st);
 		if(e<=0)break;
 	}while(next);
-	pthread_mutex_unlock(&services_lock);
+	MUTEX_UNLOCK(services_lock);
 	return 0;
 }

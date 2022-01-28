@@ -53,7 +53,7 @@ static void _run_exec_child(struct svc_exec*exec,int fd){
 			set_confd_socket(-1);
 			open_socket_logfd_default();
 			r=exec->exec.func(exec->prop.svc);
-			pthread_mutex_destroy(&services_lock);
+			MUTEX_DESTROY(services_lock);
 			svc_free_all_services(services);
 			exit(r);
 		case TYPE_COMMAND:

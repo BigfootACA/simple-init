@@ -38,7 +38,7 @@ static int check_stop_service(struct service*svc){
 
 int svc_stop_service_nodep(struct service*svc){
 	char*name=svc_get_desc(svc);
-	pthread_mutex_lock(&svc->lock);
+	MUTEX_LOCK(svc->lock);
 	if(check_stop_service(svc)!=0){
 		if(errno!=EBUSY)telog_warn("stop service %s",name);
 		goto done;
@@ -67,7 +67,7 @@ int svc_stop_service_nodep(struct service*svc){
 	telog_warn("Stop service %s failed",name);
 	svc->status=old;
 	done:
-	pthread_mutex_unlock(&svc->lock);
+	MUTEX_UNLOCK(svc->lock);
 	return errno;
 }
 

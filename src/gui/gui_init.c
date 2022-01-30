@@ -215,15 +215,19 @@ static void off_screen(int s __attribute__((unused))){
 static void gui_enter_sleep(){
 
 	// brightness level min 20
+	int s=confd_get_integer("gui.sleep_brightness",20);
 	int o=guidrv_get_brightness();
+	if(s<0)s=0;
+	if(s>100)s=100;
 	if(o<=0)o=100;
-	if(o>20)guidrv_set_brightness(20);
+	if(o>s)guidrv_set_brightness(s);
 
 	// clean image caches
 	image_cache_clean();
 
 	// turn off the screen after 20 seconds
-	alarm(20);
+	int d=confd_get_integer("gui.screen_off_delay",20);
+	if(d>0)alarm(d);
 	signal(SIGALRM,off_screen);
 	tlog_debug("enter sleep");
 	gui_sleep=true;
@@ -291,13 +295,18 @@ int gui_screen_init(){
 	memset(&sysbar,0,sizeof(struct sysbar));
 
 	// add lvgl mouse pointer
+	char*cursor=confd_get_string("gui.cursor_image",NULL);
 	gui_cursor=lv_img_create(screen,NULL);
-	lv_img_set_src(gui_cursor,"\xef\x89\x85"); // mouse-pointer
+	lv_img_set_src(gui_cursor,cursor?cursor:"\xef\x89\x85"); // mouse-pointer
 	lv_obj_set_pos(gui_cursor,-gui_w,-gui_h);
-	lv_obj_set_style_local_image_recolor(
+
+	char*k="gui.cursor_color";
+	bool color=confd_get_type(k)==TYPE_INTEGER;
+	if(color||!cursor)lv_obj_set_style_local_image_recolor(
 		gui_cursor,
 		LV_IMG_PART_MAIN,
 		LV_STATE_DEFAULT,
+		color?lv_color_hex((uint32_t)confd_get_integer(k,0)):
 		lv_obj_get_style_text_color(screen,LV_OBJ_PART_MAIN)
 	);
 	return 0;
@@ -360,6 +369,10 @@ int gui_main(){
 	handle_signals((int[]){SIGINT,SIGQUIT,SIGTERM},3,gui_quit_handler);
 	bool cansleep=guidrv_can_sleep();
 	if(!cansleep)tlog_notice("gui driver disabled sleep");
+	if(!confd_get_boolean("gui.can_sleep",true)){
+		tlog_notice("config disabled sleep");
+		cansleep=false;
+	}
 	while(gui_run){
 		// 10 seconds inactive sleep
 		if(lv_disp_get_inactive_time(NULL)<10000||!cansleep){

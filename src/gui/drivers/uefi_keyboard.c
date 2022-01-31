@@ -22,6 +22,7 @@
 #include"logger.h"
 #include"defines.h"
 #include"gui/guidrv.h"
+static bool has_lr=false;
 static bool keyboard_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
 	EFI_SIMPLE_TEXT_INPUT_PROTOCOL*keyboard=indev_drv->user_data;
 	EFI_INPUT_KEY p;
@@ -32,11 +33,11 @@ static bool keyboard_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
 			if(lv_group_get_editing(gui_grp))switch(p.ScanCode){
 				// why UP and DOWN map to LEFT and RIGHT?
 				// because volume keys only have UP and DOWN.
-				case SCAN_UP:
-				case SCAN_LEFT:data->key=LV_KEY_LEFT;break;
+				case SCAN_UP:data->key=has_lr?LV_KEY_UP:LV_KEY_LEFT;break;
+				case SCAN_LEFT:data->key=LV_KEY_LEFT;has_lr=true;break;
 				case SCAN_PAGE_UP:data->key=LV_KEY_UP;break;
-				case SCAN_DOWN:
-				case SCAN_RIGHT:data->key=LV_KEY_RIGHT;break;
+				case SCAN_DOWN:data->key=has_lr?LV_KEY_DOWN:LV_KEY_RIGHT;break;
+				case SCAN_RIGHT:data->key=LV_KEY_RIGHT;has_lr=true;break;
 				case SCAN_PAGE_DOWN:data->key=LV_KEY_DOWN;break;
 			}else switch(p.ScanCode){
 				case SCAN_UP:

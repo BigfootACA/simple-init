@@ -304,8 +304,8 @@ static int conf_load(_ROOT_TYPE dir,const char*path){
 	char xpath[PATH_MAX]={0};
 	strncpy(xpath,path,PATH_MAX-1);
 	#ifdef ENABLE_UEFI
-	EFI_FILE_PROTOCOL*fd;
-	EFI_FILE_INFO*info;
+	EFI_FILE_PROTOCOL*fd=NULL;
+	EFI_FILE_INFO*info=NULL;
 	UINTN infos=sizeof(EFI_FILE_INFO)+256;
 	char *cp=xpath;
 	CHAR16 xp[PATH_MAX]={0};

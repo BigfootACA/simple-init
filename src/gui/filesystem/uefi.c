@@ -559,9 +559,9 @@ static lv_res_t fs_creat_cb(
 }
 
 int init_lvgl_uefi_fs(char letter,EFI_HANDLE hand,EFI_FILE_PROTOCOL*proto,bool debug){
-	lv_fs_drv_t*drv;
-	struct fs_root*fs;
-	struct fsext*fse;
+	lv_fs_drv_t*drv=NULL;
+	struct fs_root*fs=NULL;
+	struct fsext*fse=NULL;
 	if(!proto)return -1;
 	if(
 		!(fs=AllocateZeroPool(sizeof(struct fs_root)))||

@@ -101,7 +101,7 @@ static void options_add_item(struct option_info*k){
 
 static void bootmenu_option_reload(){
 	bootmenu_option_clear();
-	UINTN cnt,i;
+	UINTN cnt=0,i=0;
 	EFI_BOOT_MANAGER_LOAD_OPTION*bo;
 	EfiBootManagerRefreshAllBootOption();
 	if(!(bo=EfiBootManagerGetLoadOptions(&cnt,LoadOptionTypeBoot)))

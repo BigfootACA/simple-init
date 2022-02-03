@@ -9,11 +9,13 @@
 #ifdef ENABLE_GUI
 #ifndef ENABLE_UEFI
 #include<signal.h>
+#include<sys/prctl.h>
 #include"gui.h"
 #include"boot.h"
 #include"confd.h"
 #include"logger.h"
 #include"service.h"
+#include"proctitle.h"
 #include"language.h"
 #include"init_internal.h"
 #include"gui/tools.h"
@@ -318,6 +320,8 @@ int bootmenu_main(int argc __attribute((unused)),char**argv __attribute((unused)
 	open_default_confd_socket(false,TAG);
 	open_socket_initfd(DEFAULT_INITD,false);
 	lang_init_locale();
+	prctl(PR_SET_NAME,"GUI Boot Menu");
+	setproctitle("bootmenu");
 	if(confd_get_boolean("runtime.cmdline.gui_disable",false))return start_default();
 	if(
 		gui_pre_init()==0&&

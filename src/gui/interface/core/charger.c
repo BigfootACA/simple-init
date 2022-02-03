@@ -9,9 +9,11 @@
 #ifdef ENABLE_GUI
 #include<pthread.h>
 #include<sys/time.h>
+#include<sys/prctl.h>
 #include"gui.h"
 #include"logger.h"
 #include"hardware.h"
+#include"proctitle.h"
 #include"init_internal.h"
 #define TAG "charger"
 
@@ -121,6 +123,8 @@ static _Noreturn void*battery_thread(void*d __attribute__((unused))){
 }
 
 int charger_main(){
+	prctl(PR_SET_NAME,"GUI Charger");
+	setproctitle("charger");
 	gui_pre_init();
 	gui_screen_init();
 	draw_charger();

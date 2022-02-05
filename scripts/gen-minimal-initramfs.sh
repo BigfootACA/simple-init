@@ -23,6 +23,7 @@ mkdir -p "${TESTROOT}"/usr/{bin,lib}
 ln -s usr/lib "${TESTROOT}"/lib64
 ln -s usr/lib "${TESTROOT}"/lib
 add_binary build/simple-init "${TESTROOT}"/usr
+add_binary /usr/bin/strace "${TESTROOT}"/usr
 add_library /usr/lib/libnss_dns.so.2 "${TESTROOT}"/usr ||true
 add_library /usr/lib/libnss_files.so.2 "${TESTROOT}"/usr ||true
 ln -s usr/bin/simple-init "${TESTROOT}"/init

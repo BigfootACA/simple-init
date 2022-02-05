@@ -23,18 +23,35 @@ static struct kmod_ctx*_new_context(){
 	return kmod_new(modsdir[0]?modsdir:NULL,NULL);
 }
 
+static bool try_modules_dir(char*dir){
+	struct utsname u;
+	static int r=-1;
+	if(r<0&&(r=uname(&u))<0)return false;
+	memset(modsdir,0,sizeof(modsdir));
+	snprintf(modsdir,sizeof(modsdir),"%s/%s",dir,u.release);
+	return access(modsdir,F_OK)==0;
+}
+
+static bool try_modules_dirs(char**dirs){
+	for(int i=0;dirs[i];i++)
+		if(try_modules_dir(dirs[i]))
+			return true;
+	return false;
+}
+
 static struct kmod_ctx*_new_context_mods(bool log){
 	if(!modsdir[0]){
-		struct utsname u;
-		if(uname(&u)<0)return NULL;
-		char*mods=_PATH_LIB_MODULES;
-		if(access(mods,F_OK)!=0)mods=_PATH_LIB64"/modules";
-		if(access(mods,F_OK)!=0)mods=_PATH_LIB32"/modules";
-		if(access(mods,F_OK)!=0)mods=_PATH_USR_LIB"/modules";
-		if(access(mods,F_OK)!=0)mods=_PATH_USR_LIB64"/modules";
-		if(access(mods,F_OK)!=0)mods=_PATH_USR_LIB32"/modules";
-		if(access(mods,F_OK)==0)snprintf(modsdir,sizeof(modsdir),"%s/%s",mods,u.release);
-		else if(log)tlog_error("failed to find modules tree");
+		bool ret=try_modules_dirs((char*[]){
+			_PATH_LIB_MODULES,
+			_PATH_USR_LIB"/modules",
+			_PATH_LIB64"/modules",
+			_PATH_USR_LIB64"/modules",
+			_PATH_LIB32"/modules",
+			_PATH_USR_LIB32"/modules",
+			"/modules",
+			NULL
+		});
+		if(!ret&&log)tlog_error("failed to find modules tree");
 	}
 	struct kmod_ctx*ctx=_new_context();
 	if(!ctx)return NULL;

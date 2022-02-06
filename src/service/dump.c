@@ -58,11 +58,11 @@ static int _svc_exec_dump(int ident,struct svc_exec*exec){
 			for(i=0;exec->exec.cmd.args[i];i++)tlog_debug("%s            %d =          %s",prefix,i,exec->exec.cmd.args[i]);
 			tlog_debug("%s        environ:",prefix);
 			for(i=0;exec->exec.cmd.environ[i];i++)tlog_debug("%s            %d =          %s",prefix,i,exec->exec.cmd.environ[i]);
-			break;
+		break;
 		case TYPE_LIBRARY:
 			tlog_debug("%s        library:                  %s",prefix,exec->exec.lib.library);
 			tlog_debug("%s        symbol:                   %s",prefix,exec->exec.lib.symbol);
-			break;
+		break;
 	}
 	MUTEX_UNLOCK(exec->lock);
 	return 0;

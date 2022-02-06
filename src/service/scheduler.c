@@ -146,20 +146,12 @@ static int scheduler_main(){
 		switch(msg.action){
 			case SCHED_EXIT:run=false;
 			case SCHED_UNKNOWN:break;
-			case SCHED_CHILD:
-				svc_on_sigchld(
-					msg.data.exit.pid,
-					msg.data.exit.stat
-				);
-			break;
+			case SCHED_CHILD:svc_on_sigchld(msg.data.exit.pid,msg.data.exit.stat);break;
 			case SCHED_START:
 			case SCHED_STOP:
 			case SCHED_RELOAD:
-			case SCHED_RESTART:
-				add_queue(msg.data.service,msg.action);
-			break;
-			case SCHED_STOP_ALL:
-				add_all_stop_queue();
+			case SCHED_RESTART:add_queue(msg.data.service,msg.action);break;
+			case SCHED_STOP_ALL:add_all_stop_queue();
 			default:;
 		}
 		run_queue();

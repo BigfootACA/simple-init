@@ -29,16 +29,12 @@ int add_queue(struct service*svc,enum scheduler_action act){
 	switch(act){
 		case SCHED_START:switch(svc->status){
 			case STATUS_STARTED:
-			case STATUS_RUNNING:
-				return 0;
+			case STATUS_RUNNING:return 0;
 			default:;
 		}break;
 		case SCHED_STOP:switch(svc->status){
-			case STATUS_FAILED:
-				if(svc->mode==WORK_ONCE)break;
-				// fallthrough
-			case STATUS_STOPPED:
-				return 0;
+			case STATUS_FAILED:if(svc->mode==WORK_ONCE)break;//fallthrough
+			case STATUS_STOPPED:return 0;
 			default:;
 		}break;
 		default:;
@@ -113,8 +109,7 @@ static bool task_can_run(struct scheduler_work*w){
 					case STATUS_STOPPED:
 					case STATUS_FAILED:
 					case STATUS_STOPPING:
-					case STATUS_STARTING:
-						return false;
+					case STATUS_STARTING:return false;
 					default:;
 				}
 			}while((next=cur->next));
@@ -129,8 +124,7 @@ static bool task_can_run(struct scheduler_work*w){
 					case STATUS_STARTED:
 					case STATUS_RUNNING:
 					case STATUS_STOPPING:
-					case STATUS_STARTING:
-						return false;
+					case STATUS_STARTING:return false;
 					default:;
 				}
 			}while((next=cur->next));

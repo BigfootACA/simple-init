@@ -32,7 +32,9 @@ static int image_open_source_assets(char*,unsigned char**,size_t*);
 
 static img_backend img_backends[]={
 	image_open_source_lvgl,
+	#ifndef ENABLE_UEFI
 	image_open_source_native,
+	#endif
 	image_open_source_assets,
 	NULL
 };
@@ -79,6 +81,7 @@ static int image_open_source_lvgl(char*path,unsigned char**data,size_t*len){
 	return -1;
 }
 
+#ifndef ENABLE_UEFI
 static int image_open_source_native(char*path,unsigned char**data,size_t*len){
 	int fd=-1;
 	struct stat st;
@@ -100,6 +103,7 @@ static int image_open_source_native(char*path,unsigned char**data,size_t*len){
 	*data=NULL,*len=0;
 	return -1;
 }
+#endif
 
 static int image_open_source_assets(char*path,unsigned char**data,size_t*len){
 	struct entry_file*f=rootfs_get_assets_file(path);

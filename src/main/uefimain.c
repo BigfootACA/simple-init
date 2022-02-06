@@ -26,7 +26,7 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ih,IN EFI_SYSTEM_TABLE*st){
 	// init uefi boot manager
 	EfiBootManagerConnectAll();
 	EfiBootManagerRefreshAllBootOption();
-	DebugPrint(EFI_D_INFO,"Initialize SimpleInit GUI...\n");
+	DEBUG((EFI_D_INFO,"Initialize SimpleInit GUI...\n"));
 
 	// call uefi shell app main to init edk2-libc
 	static UINTN argc=1;

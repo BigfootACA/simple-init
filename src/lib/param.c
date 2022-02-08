@@ -7,97 +7,82 @@
  */
 
 #define _GNU_SOURCE
-#include<stdlib.h>
 #include<string.h>
 #include<unistd.h>
 #include<stdbool.h>
 #include"defines.h"
 #include"keyval.h"
 #include"param.h"
-#include"str.h"
 
-static keyval**configs_add_entry(keyval**entrys,char*key,char*value,int idx){
-	keyval**e;
-	size_t size=sizeof(struct config_entry*)*(idx+1);
-	if(!entrys){
-		if(!(entrys=malloc(size)))return NULL;
-		memset(entrys,0,size);
-	}else if(!(e=realloc(entrys,size))){
-		free(entrys);
-		return NULL;
-	}else entrys=e;
-	if(!key)entrys[idx]=NULL;
-	else{
-		keyval*ent=kv_new_set(key,value);
-		if(!ent){
-			free(entrys);
-			return NULL;
-		}
-		entrys[idx]=ent;
+keyval**param_s_parse_items(char*cmdline,size_t len,size_t*length){
+	static keyval items[256];
+	static keyval*pointers[256];
+	static char buffer[BUFSIZ];
+	size_t i,pos=0,item=0;
+	char quote,*buff = buffer;
+	bool onkey=true;
+	if(!cmdline||len<=0)return NULL;
+	memset(items,0,sizeof(items));
+	memset(buffer,0,sizeof(buffer));
+	memset(pointers,0,sizeof(pointers));
+	for(i=0;i<len;i++)switch(cmdline[i]){
+		/* Quote */
+		case '"':case '\'':
+			quote=cmdline[i];
+			while(true){
+				i++;
+				if(i>=len)break;// Unexpected end
+				if(cmdline[i]==quote)break;// Found close quote
+				if(pos>=sizeof(buffer)-1)break;// Out of buffer
+				buffer[pos]=cmdline[i];
+				pos++;
+			}
+		break;
+		/* Terminator */
+		case ' ':case '\t':case '\n':case '\r':case '#':
+			if(*buff){
+				if(onkey)items[item].key=buff;
+				else items[item].value=buff;
+				pos++;
+				buff=buffer+pos;
+			}
+			if(items[item].key||items[item].value)item++;
+			onkey=true;
+		break;
+		/* Argument */
+		case '=':
+			if(onkey){
+				onkey=false;
+				items[item].key=buff;
+				pos++,buff=buffer+pos;
+				break;
+			}
+			// fallthrough
+		/* Standard chars */
+		default:
+			if(pos>=sizeof(buffer))break;
+			buffer[pos++]=cmdline[i];
 	}
-	return entrys;
+	if(*buff){
+		if(onkey)items[item].key=buff;
+		else items[item].value=buff;
+	}
+	if(items[item].key||items[item].value)item++;
+	if(length)*length=item;
+	for(i=0;i<item;i++)pointers[i]=&items[i];
+	return pointers;
+}
+
+keyval**param_parse_items(char*cmdline,size_t*length){
+	return param_s_parse_items(cmdline,strlen(cmdline),length);
 }
 
 keyval**read_params(int fd){
-	int eid=0;
-	size_t idx=0;
-	bool read_key=true;
-	keyval**entrys=NULL;
-	char*key=NULL,*value=NULL,*buff;
-	char bit[2]={0,0},b,c;
-	if(!(buff=malloc(PATH_MAX+1)))return NULL;
-	memset(buff,0,PATH_MAX+1);
-	while(read(fd,&bit,1)==1&&idx<PATH_MAX){
-		b=bit[0];
-		if(b=='"'||b=='\''){
-			c=b;
-			while(read(fd,&bit,1)==1&&idx<PATH_MAX){
-				if(bit[0]==c)break;
-				if(bit[0]=='\\'&&read(fd,&bit,1)!=1)continue;
-				buff[idx++]=bit[0];
-			}
-		}else if(b=='='&&read_key){
-			if(!(key=strndup(buff,idx)))goto e1;
-			idx=0,read_key=false;
-			memset(buff,0,PATH_MAX);
-		}else if(b==' '||b=='\t'||b=='\n'||b=='\r'||b=='#'){
-			if(idx==0)continue;
-			if(!(value=strndup(buff,idx)))goto e1;
-			if(read_key)key=value,value=NULL;
-			idx=0,read_key=true;
-			memset(buff,0,PATH_MAX);
-			if(!(entrys=configs_add_entry(entrys,key,value,eid++)))goto e1;
-			key=NULL,value=NULL;
-			if(b=='#')skips(fd,"\r\n");
-		}else buff[idx++]=b;
-	}
-	if(idx>0){
-		if(!read_key&&!(value=strndup(buff,idx)))goto e1;
-		if(!(entrys=configs_add_entry(entrys,key,value,eid++)))goto e1;
-	}else if(key)free(key);
-	free(buff);
-	return configs_add_entry(entrys,NULL,NULL,eid);
-	e1:
-	if(key)free(key);
-	if(value)free(value);
-	free(buff);
-	free(entrys);
-	return NULL;
-}
-
-keyval**append_params(keyval**ptr,keyval**new){
-	if(!new)return ptr;
-	if(!ptr)return new;
-	keyval**p;
-	int idx=-1,ridx=0;
-	while(ptr[++idx]);
-	while(new[ridx]){
-		ptr[++idx]=new[++ridx];
-		if(!(p=realloc(ptr,sizeof(keyval*)*idx))){
-			free(ptr);
-			return NULL;
-		}else ptr=p;
-	}
-	ptr[idx]=NULL;
-	return ptr;
+	static char buffer[BUFSIZ];
+	if(fd<0)EPRET(EBADF);
+	memset(buffer,0,sizeof(buffer));
+	ssize_t len=read(fd,buffer,sizeof(buffer)-1);
+	if(len<=0)return NULL;
+	if(buffer[sizeof(buffer)-1]!=0)EPRET(EFAULT);
+	return param_s_parse_items(buffer,(size_t)len,NULL);
 }

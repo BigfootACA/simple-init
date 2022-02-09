@@ -32,6 +32,7 @@
 [Guids]
   gUefiShellFileGuid
   gEfiFileSystemVolumeLabelInfoIdGuid
+  gLinuxSimpleMassStorageGuid
 
 [Protocols]
   gEfiAbsolutePointerProtocolGuid

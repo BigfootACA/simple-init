@@ -11,6 +11,45 @@ extern "C" {
 #define __NEED_wchar_t
 
 #include <bits/alltypes.h>
+#define atoi comp_atoi
+#define atol comp_atol
+#define atoll comp_atoll
+#define atof comp_atof
+#define strtof comp_strtof
+#define strtod comp_strtod
+#define strtold comp_strtold
+#define strtol comp_strtol
+#define strtoul comp_strtoul
+#define strtoll comp_strtoll
+#define strtoull comp_strtoull
+#define rand comp_rand
+#define srand comp_srand
+#define malloc comp_malloc
+#define calloc comp_calloc
+#define realloc comp_realloc
+#define free comp_free
+#define aligned_alloc comp_aligned_alloc
+#define abort comp_abort
+#define atexit comp_atexit
+#define exit comp_exit
+#define _Exit comp__Exit
+#define at_quick_exit comp_at_quick_exit
+#define quick_exit comp_quick_exit
+#define getenv comp_getenv
+#define system comp_system
+#define bsearch comp_bsearch
+#define qsort comp_qsort
+#define abs comp_abs
+#define labs comp_labs
+#define llabs comp_llabs
+#define div comp_div
+#define ldiv comp_ldiv
+#define lldiv comp_lldiv
+#define mblen comp_mblen
+#define mbtowc comp_mbtowc
+#define wctomb comp_wctomb
+#define mbstowcs comp_mbstowcs
+#define wcstombs comp_wcstombs
 
 int atoi (const char *);
 long atol (const char *);
@@ -70,10 +109,7 @@ size_t wcstombs (char *__restrict, const wchar_t *__restrict, size_t);
 #define EXIT_FAILURE 1
 #define EXIT_SUCCESS 0
 
-size_t __ctype_get_mb_cur_max(void);
 #define MB_CUR_MAX 4
-//(__ctype_get_mb_cur_max())
-
 #define RAND_MAX (0x7fffffff)
 
 #ifdef __cplusplus

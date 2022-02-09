@@ -138,7 +138,7 @@ static char *twoway_strstr(const unsigned char *h,const unsigned char *n){
 			else k++;
 		}else if(n[ip+k] < n[jp+k])jp +=k,k=1,p=jp - ip;
 		else ip=jp++,k=p=1;
-		
+
 	}
 	if(ip+1 > ms+1)ms=ip;
 	else p=p0;

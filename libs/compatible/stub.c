@@ -1,6 +1,7 @@
 #include <Library/DebugLib.h>
 #include "stdio.h"
 #include "errno.h"
+#include "stdlib.h"
 FILE *fopen(const char * file __attribute__((unused)), const char * mode __attribute__((unused))){
 	DEBUG((EFI_D_ERROR,"try to call unsupported fopen\n"));
 	errno=ENOSYS;

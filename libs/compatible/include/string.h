@@ -11,6 +11,52 @@ extern "C" {
 
 #include <bits/alltypes.h>
 
+#define memcpy comp_memcpy
+#define memmove comp_memmove
+#define memset comp_memset
+#define memcmp comp_memcmp
+#define memchr comp_memchr
+#define strcpy comp_strcpy
+#define strncpy comp_strncpy
+#define strncpyX comp_strncpyX
+#define strcat comp_strcat
+#define strncat comp_strncat
+#define strcmp comp_strcmp
+#define strncmp comp_strncmp
+#define strcoll comp_strcoll
+#define strxfrm comp_strxfrm
+#define strchr comp_strchr
+#define strrchr comp_strrchr
+#define strcspn comp_strcspn
+#define strspn comp_strspn
+#define strpbrk comp_strpbrk
+#define strstr comp_strstr
+#define strtok comp_strtok
+#define strlen comp_strlen
+#define strerror comp_strerror
+#define strtok_r comp_strtok_r
+#define strerror_r comp_strerror_r
+#define stpcpy comp_stpcpy
+#define stpncpy comp_stpncpy
+#define strnlen comp_strnlen
+#define strdup comp_strdup
+#define strndup comp_strndup
+#define strsignal comp_strsignal
+#define strerror_l comp_strerror_l
+#define strcoll_l comp_strcoll_l
+#define strxfrm_l comp_strxfrm_l
+#define memccpy comp_memccpy
+#define strsep comp_strsep
+#define strlcat comp_strlcat
+#define strlcpy comp_strlcpy
+#define explicit_bzero comp_explicit_bzero
+#define strverscmp comp_strverscmp
+#define strchrnul comp_strchrnul
+#define strcasestr comp_strcasestr
+#define memmem comp_memmem
+#define memrchr comp_memrchr
+#define mempcpy comp_mempcpy
+
 void *memcpy (void *__restrict, const void *__restrict, size_t);
 void *memmove (void *, const void *, size_t);
 void *memset (void *, int, size_t);

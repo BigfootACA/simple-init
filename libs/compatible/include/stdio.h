@@ -103,13 +103,57 @@ typedef struct __sFILE {
 	int             _blksize;   /**< stat.st_blksize (may be != _bf._size) */
 	fpos_t          _offset;    /**< current lseek offset */
 } FILE;
+#define fopen comp_fopen
+#define freopen comp_freopen
+#define fclose comp_fclose
+#define remove comp_remove
+#define rename comp_rename
+#define feof comp_feof
+#define ferror comp_ferror
+#define fflush comp_fflush
+#define clearerr comp_clearerr
+#define fseek comp_fseek
+#define ftell comp_ftell
+#define rewind comp_rewind
+#define fgetpos comp_fgetpos
+#define fsetpos comp_fsetpos
+#define fread comp_fread
+#define fwrite comp_fwrite
+#define fgetc comp_fgetc
+#define getc comp_getc
+#define getchar comp_getchar
+#define ungetc comp_ungetc
+#define fputc comp_fputc
+#define putc comp_putc
+#define putchar comp_putchar
+#define fgets comp_fgets
+#define gets comp_gets
+#define fputs comp_fputs
+#define puts comp_puts
+#define fprintf comp_fprintf
+#define sprintf comp_sprintf
+#define snprintf comp_snprintf
+#define vprintf comp_vprintf
+#define vfprintf comp_vfprintf
+#define vsprintf comp_vsprintf
+#define vsnprintf comp_vsnprintf
+#define scanf comp_scanf
+#define fscanf comp_fscanf
+#define sscanf comp_sscanf
+#define vscanf comp_vscanf
+#define vfscanf comp_vfscanf
+#define vsscanf comp_vsscanf
+#define perror comp_perror
+#define setvbuf comp_setvbuf
+#define setbuf comp_setbuf
+#define tmpnam comp_tmpnam
+#define tmpfile comp_tmpfile
+#define stdin comp_stdin
+#define stdout comp_stdout
+#define stderr comp_stderr
 extern FILE *const stdin;
 extern FILE *const stdout;
 extern FILE *const stderr;
-
-#define stdin  (stdin)
-#define stdout (stdout)
-#define stderr (stderr)
 
 FILE *fopen(const char *__restrict, const char *__restrict);
 FILE *freopen(const char *__restrict, const char *__restrict, FILE *__restrict);

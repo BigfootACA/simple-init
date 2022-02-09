@@ -21,6 +21,27 @@ extern "C" {
 #define __tm_gmtoff tm_gmtoff
 #define __tm_zone tm_zone
 
+#define clock comp_clock
+#define difftime comp_difftime
+#define mktime comp_mktime
+#define strftime comp_strftime
+#define gmtime comp_gmtime
+#define localtime comp_localtime
+#define asctime comp_asctime
+#define ctime comp_ctime
+#define timespec_get comp_timespec_get
+#define strftime_l comp_strftime_l
+#define gmtime_r comp_gmtime_r
+#define localtime_r comp_localtime_r
+#define asctime_r comp_asctime_r
+#define ctime_r comp_ctime_r
+#define tzset comp_tzset
+#define nanosleep comp_nanosleep
+#define strptime comp_strptime
+#define getdate comp_getdate
+#define stime comp_stime
+#define timegm comp_timegm
+
 struct tm {
 	int     tm_year;      // years since 1900
 	int     tm_mon;       // months since January  [0, 11]

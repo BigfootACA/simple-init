@@ -4,6 +4,7 @@
 #include <Library/BaseMemoryLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include "sys/types.h"
+#include "string.h"
 void*memcpy(void*dest,const void*src,size_t size){
 	return (void*)CopyMem((VOID*)dest,(VOID*)src,(UINTN)size);
 }

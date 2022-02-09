@@ -13,6 +13,7 @@
 #include<stdlib.h>
 #include<string.h>
 #ifdef ENABLE_UEFI
+#include<Library/UefiLib.h>
 #include<Library/DebugLib.h>
 #else
 #include<sys/un.h>
@@ -145,21 +146,8 @@ int logger_write(struct log_item*log){
 	errno=msg.data.code;
 	return xs;
 	#else
-	wchar_t*mt,*mc;
-	size_t st,sc;
-	st=(strlen(log->tag)+1)*sizeof(wchar_t);
-	sc=(strlen(log->content)+1)*sizeof(wchar_t);
-	if(!(mt=malloc(st))||!(mc=malloc(sc))){
-		if(mt)free(mt);
-		if(mc)free(mc);
-		return -1;
-	}
-	mbstowcs(mt,log->tag,st);
-	mbstowcs(mc,log->content,sc);
-	DebugPrint(EFI_D_INFO,"%s: %s\n",mt,mc);
-	free(mt);
-	free(mc);
-	if(console_output)printf("%s: %s\n",log->tag,log->content);
+	DebugPrint(EFI_D_INFO,"%a: %a\n",log->tag,log->content);
+	if(console_output)Print(L"%a: %a\n",log->tag,log->content);
 	return 0;
 	#endif
 }

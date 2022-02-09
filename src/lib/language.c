@@ -9,15 +9,14 @@
 #define _GNU_SOURCE
 #include<fcntl.h>
 #include<stdio.h>
-#include<locale.h>
 #include<limits.h>
 #include<unistd.h>
 #include<string.h>
 #include<stdint.h>
 #include<stdlib.h>
+#include<sys/stat.h>
 #ifndef ENABLE_UEFI
 #include<sys/mman.h>
-#include<sys/stat.h>
 #endif
 #include"str.h"
 #include"shell.h"

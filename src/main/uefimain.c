@@ -10,14 +10,12 @@
 #include<Library/DebugLib.h>
 #include<Library/UefiBootManagerLib.h>
 #include<Library/ReportStatusCodeLib.h>
+#include"errno.h"
+#include"setjmp.h"
 
+int main_retval=0;
+jmp_buf main_exit;
 extern int guiapp_main(int argc,char**argv);
-extern INTN EFIAPI ShellAppMain(UINTN argc,CHAR16**argv);
-
-// main for uefi shell app
-int main(int argc,char**argv){
-	return guiapp_main(argc,argv);
-}
 
 // simple-init uefi entry point
 EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ih,IN EFI_SYSTEM_TABLE*st){
@@ -27,10 +25,10 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ih,IN EFI_SYSTEM_TABLE*st){
 	EfiBootManagerConnectAll();
 	EfiBootManagerRefreshAllBootOption();
 	DEBUG((EFI_D_INFO,"Initialize SimpleInit GUI...\n"));
-
-	// call uefi shell app main to init edk2-libc
-	static UINTN argc=1;
-	static CHAR16*argv[]={L"guiapp",NULL};
-	return ShellAppMain(argc,argv);
+	errno=0;
+	main_retval=0;
+	if(setjmp(main_exit)==0)
+		main_retval=guiapp_main(1,(char*[]){"guiapp",NULL});
+	return main_retval;
 }
 #endif

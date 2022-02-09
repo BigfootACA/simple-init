@@ -254,16 +254,15 @@ static void power_click(lv_obj_t*obj,lv_event_t e){
 	guiact_start_activity_by_name("reboot-menu",NULL);
 }
 
-static void hide_cb(lv_task_t*t){
-	if(t!=sysbar.hide||!sysbar.full_screen)return;
+static void hide_cb(lv_task_t*t __attribute__((unused))){
+	sysbar.hide=NULL;
+	if(!sysbar.full_screen)return;
 	lv_obj_set_hidden(sysbar.top.bar,true);
 	lv_obj_set_hidden(sysbar.bottom.bar,true);
 	lv_group_remove_obj(sysbar.bottom.content.back);
 	lv_group_remove_obj(sysbar.bottom.content.home);
 	lv_group_remove_obj(sysbar.bottom.content.keyboard);
 	lv_group_remove_obj(sysbar.bottom.content.power);
-	lv_task_del(sysbar.hide);
-	sysbar.hide=NULL;
 }
 
 static void bar_cb(lv_obj_t*obj,lv_event_t e){

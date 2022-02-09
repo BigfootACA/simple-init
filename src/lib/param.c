@@ -88,3 +88,32 @@ keyval**read_params(int fd){
 	return param_s_parse_items(buffer,(size_t)len,NULL);
 }
 #endif
+
+char*param_get_android_boot_mode(keyval**items){
+	return kvarr_get_value_by_key(items,"androidboot.mode",NULL);
+}
+
+char*param_get_android_hardware(keyval**items){
+	return kvarr_get_value_by_key(items,"androidboot.hardware",NULL);
+}
+
+char*param_get_android_boot_device(keyval**items){
+	return kvarr_get_value_by_key(items,"androidboot.bootdevice",NULL);
+}
+
+char*param_get_android_serial_number(keyval**items){
+	return kvarr_get_value_by_key(items,"androidboot.serialno",NULL);
+}
+
+char*param_get_android_slot_suffix(keyval**items){
+	return kvarr_get_value_by_key(items,"androidboot.slot_suffix",NULL);
+}
+
+bool param_is_android_charger_mode(keyval**items){
+	char*mode=param_get_android_boot_mode(items);
+	return mode?strcmp(mode,"charger")==0:false;
+}
+
+bool param_is_android_recovery_mode(keyval**Items){
+	return kvarr_get_by_key(Items,"skip_initramfs",NULL)!=NULL;
+}

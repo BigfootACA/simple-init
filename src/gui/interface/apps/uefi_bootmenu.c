@@ -9,6 +9,7 @@
 #ifdef ENABLE_GUI
 #ifdef ENABLE_UEFI
 #include<stdlib.h>
+#include<Library/BaseLib.h>
 #include<Library/UefiBootManagerLib.h>
 #include"gui.h"
 #include"confd.h"
@@ -111,7 +112,7 @@ static void bootmenu_option_reload(){
 	else for(i=0;i<cnt;i++){
 		struct option_info*k=&options[i];
 		EFI_BOOT_MANAGER_LOAD_OPTION*b=&bo[i];
-		wcstombs(k->name,b->Description,sizeof(k->name)-1);
+		UnicodeStrToAsciiStrS(b->Description,k->name,sizeof(k->name));
 		tlog_debug("option %lld: %s",i+1,k->name);
 		k->enable=true,k->option=b;
 		options_add_item(k);

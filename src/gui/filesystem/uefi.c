@@ -134,7 +134,7 @@ static lv_res_t fs_get_volume_label(struct _lv_fs_drv_t*drv,char*label,size_t le
 		fi->VolumeLabel[0]
 	){
 		memset(label,0,len);
-		wcstombs(label,fi->VolumeLabel,len-1);
+		UnicodeStrToAsciiStrS(fi->VolumeLabel,label,len);
 	}
 	return LV_FS_RES_OK;
 }
@@ -169,7 +169,7 @@ static lv_res_t fs_open_cb(
 	CHAR16 xpath[4096]={0};
 	strcpy(ep,path);
 	do{if(*cp=='/')*cp='\\';}while(*cp++);
-	mbstowcs(xpath,ep,sizeof(xpath)-1);
+	AsciiStrToUnicodeStrS(ep,xpath,sizeof(xpath));
 	EFI_STATUS st=fs->proto->Open(fs->proto,&fh,xpath,flags,0);
 	if(!fh)XWARN(
 		"open %c:%s mode %d failed: %llx",
@@ -209,7 +209,7 @@ static lv_res_t fs_remove_cb(
 	CHAR16 xpath[4096]={0};
 	strcpy(ep,fn);
 	do{if(*cp=='/')*cp='\\';}while(*cp++);
-	mbstowcs(xpath,ep,sizeof(xpath)-1);
+	AsciiStrToUnicodeStrS(ep,xpath,sizeof(xpath));
 	EFI_STATUS st=fs->proto->Open(fs->proto,&fh,xpath,EFI_FILE_MODE_READ|EFI_FILE_MODE_WRITE,0);
 	if(EFI_ERROR(st))XWARN(
 		"open %c:%s failed: %llx",
@@ -240,7 +240,7 @@ static lv_res_t fs_get_type_cb(
 	CHAR16 xpath[4096]={0};
 	strcpy(ep,fn);
 	do{if(*cp=='/')*cp='\\';}while(*cp++);
-	mbstowcs(xpath,ep,sizeof(xpath)-1);
+	AsciiStrToUnicodeStrS(ep,xpath,sizeof(xpath));
 	st=fs->proto->Open(fs->proto,&fh,xpath,EFI_FILE_MODE_READ,0);
 	if(EFI_ERROR(st))XWARN(
 		"get type open %c:%s failed: %llx",
@@ -275,7 +275,7 @@ static bool fs_is_dir_cb(
 	CHAR16 xpath[4096]={0};
 	strcpy(ep,fn);
 	do{if(*cp=='/')*cp='\\';}while(*cp++);
-	mbstowcs(xpath,ep,sizeof(xpath)-1);
+	AsciiStrToUnicodeStrS(ep,xpath,sizeof(xpath));
 	st=fs->proto->Open(fs->proto,&fh,xpath,EFI_FILE_MODE_READ,0);
 	if(EFI_ERROR(st))XWARN(
 		"is dir open %c:%s failed: %llx",
@@ -436,7 +436,7 @@ static lv_res_t fs_dir_open_cb(
 		CHAR16 xpath[4096]={0};
 		strcpy(ep,path);
 		do{if(*cp=='/')*cp='\\';}while(*cp++);
-		mbstowcs(xpath,ep,sizeof(xpath)-1);
+		AsciiStrToUnicodeStrS(ep,xpath,sizeof(xpath));
 		st=fs->proto->Open(fs->proto,&fh,xpath,EFI_FILE_READ_ONLY,0);
 		if(EFI_ERROR(st))XWARN(
 			"open dir %c:%s failed: %llx",
@@ -476,7 +476,7 @@ static lv_res_t fs_dir_read_cb(
 		int i=255;
 		char*name=fn;
 		if(fileinfo_is_dir(info))*(name++)='/',i--;
-		wcstombs(name,info->FileName,i);
+		UnicodeStrToAsciiStrS(info->FileName,name,i);
 	}
 	FreePool(info);
 	return efi_status_to_lv_res(st);
@@ -514,7 +514,7 @@ static lv_res_t fs_mkdir_cb(
 	CHAR16 xpath[4096]={0};
 	strcpy(ep,name);
 	do{if(*cp=='/')*cp='\\';}while(*cp++);
-	mbstowcs(xpath,ep,sizeof(xpath)-1);
+	AsciiStrToUnicodeStrS(ep,xpath,sizeof(xpath));
 	if(EFI_ERROR((st=fs->proto->Open(
 		fs->proto,&fh,xpath,
 		EFI_FILE_MODE_READ|
@@ -543,7 +543,7 @@ static lv_res_t fs_creat_cb(
 	CHAR16 xpath[4096]={0};
 	strcpy(ep,name);
 	do{if(*cp=='/')*cp='\\';}while(*cp++);
-	mbstowcs(xpath,ep,sizeof(xpath)-1);
+	AsciiStrToUnicodeStrS(ep,xpath,sizeof(xpath));
 	if(EFI_ERROR((st=fs->proto->Open(
 		fs->proto,&fh,xpath,
 		EFI_FILE_MODE_READ|
@@ -646,7 +646,7 @@ EFI_DEVICE_PATH_PROTOCOL*fs_get_device_path(const char*path){
 	strcpy(ep,path+2);
 	do{if(*cp=='/')*cp='\\';}while(*cp++);
 	tlog_debug("PATH: %s",ep);
-	mbstowcs(xp,ep,PATH_MAX-1);
+	AsciiStrToUnicodeStrS(ep,xp,sizeof(xp));
 	return FileDevicePath(fs->hand,xp);
 }
 

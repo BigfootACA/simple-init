@@ -13,6 +13,7 @@
 #ifdef ENABLE_UEFI
 #include<Guid/FileInfo.h>
 #include<Protocol/SimpleFileSystem.h>
+#include<Library/BaseLib.h>
 #include<Library/MemoryAllocationLib.h>
 #else
 #include<sys/mman.h>
@@ -144,7 +145,7 @@ static int conf_save(_ROOT_TYPE dir,const char*path){
 	char*cp=xpath;
 	CHAR16 xp[PATH_MAX]={0};
 	do{if(*cp=='/')*cp='\\';}while(*cp++);
-	mbstowcs(xp,xpath,sizeof(xp)-1);
+	AsciiStrToUnicodeStrS(xpath,xp,sizeof(xp));
 	EFI_STATUS st=dir->Open(dir,&fd,xp,EFI_FILE_MODE_READ|EFI_FILE_MODE_WRITE,0);
 	if(!EFI_ERROR(st))fd->Delete(fd);
 	fd=NULL,st=dir->Open(dir,&fd,xp,EFI_FILE_MODE_READ|EFI_FILE_MODE_WRITE|EFI_FILE_MODE_CREATE,0);
@@ -310,7 +311,7 @@ static int conf_load(_ROOT_TYPE dir,const char*path){
 	char *cp=xpath;
 	CHAR16 xp[PATH_MAX]={0};
 	do{if(*cp=='/')*cp='\\';}while(*cp++);
-	mbstowcs(xp,xpath,sizeof(xp)-1);
+	AsciiStrToUnicodeStrS(xpath,xp,sizeof(xp));
 	EFI_STATUS st=dir->Open(dir,&fd,xp,EFI_FILE_MODE_READ,0);
 	if(EFI_ERROR(st)){
 		tlog_debug("open config '%s' failed: %llx",path,st);

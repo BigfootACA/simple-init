@@ -14,6 +14,7 @@
 #include<signal.h>
 #include<sys/time.h>
 #ifdef ENABLE_UEFI
+#include<Library/PcdLib.h>
 #include<Library/UefiLib.h>
 #include<Library/ReportStatusCodeLib.h>
 #include<Library/UefiBootServicesTableLib.h>
@@ -26,6 +27,7 @@
 #include"system.h"
 #include"logger.h"
 #include"defines.h"
+#include"language.h"
 #include"hardware.h"
 #include"gui/font.h"
 #include"gui/tools.h"
@@ -152,6 +154,14 @@ int gui_pre_init(){
 	// initialize lvgl
 	lv_init();
 
+	#ifdef ENABLE_UEFI
+	// load config in uefi
+	confd_load_file(NULL,NULL);
+	gui_dpi_def=(int)PcdGet16(PcdGuiDefaultDPI);
+	char*lang=confd_get_string("language",NULL);
+	if(lang)lang_set(lang);
+	#endif
+
 	// redirect lvgl log to loggerd
 	lv_log_register_print_cb(lvgl_logger);
 
@@ -164,7 +174,7 @@ int gui_pre_init(){
 	char*x=confd_get_string("runtime.cmdline.backlight",NULL);
 	if(x)default_backlight=led_parse_arg(x,"backlight");
 	#endif
-	gui_dpi=confd_get_integer("runtime.cmdline.dpi",200);
+	gui_dpi=confd_get_integer("runtime.cmdline.dpi",gui_dpi_def);
 	gui_dpi_force=confd_get_integer("runtime.cmdline.dpi_force",0);
 	gui_dark=confd_get_boolean("gui.dark",DARK_MODE);
 
@@ -371,7 +381,6 @@ int gui_main(){
 		EFI_TIMER_PERIOD_MILLISECONDS(10)
 	)))return trlog_error(-1,"create timer failed");
 
-	confd_load_file(NULL,NULL);
 	lv_task_create(
 		conf_save_cb,
 		confd_get_integer("confd.save_interval",10)*1000,

@@ -15,6 +15,7 @@
 #include<stddef.h>
 #include<stdlib.h>
 #include<stdbool.h>
+#include<Library/PcdLib.h>
 #include<Library/UefiBootServicesTableLib.h>
 #include<Protocol/SimplePointer.h>
 #define TAG "uefipointer"
@@ -23,12 +24,6 @@
 #include"logger.h"
 #include"defines.h"
 #include"gui/guidrv.h"
-#ifndef MOUSE_SCALE
-#define MOUSE_SCALE 1
-#endif
-#ifndef DISPLAY_DPI
-#define DISPLAY_DPI 200
-#endif
 int gui_mouse_scale=0;
 struct input_data{
 	bool lp;
@@ -58,7 +53,7 @@ int pointer_register(){
 	bool found=false;
 	UINTN cnt=0;
 	EFI_HANDLE*hands=NULL;
-	gui_mouse_scale=confd_get_integer("gui.mouse_scale",(DISPLAY_DPI/200)*MOUSE_SCALE);
+	gui_mouse_scale=confd_get_integer("gui.mouse_scale",(int)PcdGet8(PcdGuiDefaultMouseScale));
 	EFI_STATUS st=gBS->LocateHandleBuffer(
 		ByProtocol,
 		&gEfiSimplePointerProtocolGuid,
@@ -83,7 +78,10 @@ int pointer_register(){
 		data->ry=data->mouse->Mode->ResolutionY;
 		tlog_debug("found uefi pointer %p",data->mouse);
 		found=true;
-		if(confd_get_boolean("gui.driver.pointer.use_first",true))break;
+		if(confd_get_boolean(
+			"gui.driver.pointer.use_first",
+			(bool)PcdGetBool(PcdGuiDefaultMouseOnlyFirst)
+		))break;
 	}
 	return found?0:trlog_warn(-1,"no uefi pointer found");
 }

@@ -16,6 +16,7 @@
   SimpleInit.dec
 
 [LibraryClasses]
+  PcdLib
   UefiLib
   LittleVgl
   FreeType
@@ -38,6 +39,11 @@
   gEfiSimplePointerProtocolGuid
   gEfiSimpleTextInProtocolGuid
   gEfiGraphicsOutputProtocolGuid
+
+[Pcd]
+  gSimpleInitTokenSpaceGuid.PcdGuiDefaultDPI
+  gSimpleInitTokenSpaceGuid.PcdGuiDefaultMouseScale
+  gSimpleInitTokenSpaceGuid.PcdGuiDefaultMouseOnlyFirst
 
 [Sources]
   # Simple-Init GUI interface

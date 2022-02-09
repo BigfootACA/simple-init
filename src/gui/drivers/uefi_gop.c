@@ -18,9 +18,6 @@
 #include"version.h"
 #include"gui/guidrv.h"
 #define TAG "uefigop"
-#ifndef DISPLAY_DPI
-#define DISPLAY_DPI 200
-#endif
 
 static int ww=-1,hh=-1;
 static EFI_GRAPHICS_OUTPUT_PROTOCOL*gop;
@@ -91,9 +88,6 @@ static void uefigop_get_sizes(uint32_t*width,uint32_t*height){
 	if(width)*width=ww;
 	if(height)*height=hh;
 }
-static void uefigop_get_dpi(int*dpi){
-	if(dpi)*dpi=(int)(DISPLAY_DPI);
-}
 static bool uefigop_can_sleep(){
 	return false;
 }
@@ -105,7 +99,6 @@ struct gui_driver guidrv_uefigop={
 	.name="uefigop",
 	.drv_register=uefigop_register,
 	.drv_getsize=uefigop_get_sizes,
-	.drv_getdpi=uefigop_get_dpi,
 	.drv_cansleep=uefigop_can_sleep,
 	.drv_exit=uefigop_exit
 };

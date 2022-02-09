@@ -30,7 +30,8 @@ static void on_change_dir(struct fileview*fv,char*old,char*new){
 	struct filetab*ft=fileview_get_data(fv);
 	char path[PATH_MAX]={0};
 	strcpy(path,new);
-	lv_tabview_set_tab_name(ft->view,ft->tab_id,basename(path));
+	basename(path);
+	lv_tabview_set_tab_name(ft->view,ft->tab_id,path);
 	if(ft->on_change_dir)ft->on_change_dir(ft,old,new);
 }
 

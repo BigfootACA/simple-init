@@ -20,4 +20,5 @@ add_library(init_lib STATIC
 	switchroot.c
 	base64.c
 	language.c
+	fdtparser.c
 )

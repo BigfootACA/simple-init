@@ -1,17 +1,16 @@
 # UEFI目标GUI Application(实验性)
 
-## 1. 下载edk2和edk2-libc
+## 1. 下载edk2
 
 ``` bash
 git clone --recursive https://github.com/BigfootACA/simple-init.git
 git clone --recursive https://github.com/tianocore/edk2.git
-git clone https://github.com/tianocore/edk2-libc
 ```
 
 ## 2. 初始化环境
 
 ```bash
-export PACKAGES_PATH=$PWD/edk2:$PWD/edk2-libc:$PWD/simple-init
+export PACKAGES_PATH=$PWD/edk2:$PWD/simple-init
 cd edk2
 source edksetup.sh
 ```

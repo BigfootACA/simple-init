@@ -1,17 +1,16 @@
 # UEFI Target GUI Applications (EXPERIMENTAL)
 
-## 1. Download edk2 and edk2-libc
+## 1. Download edk2
 
 ``` bash
 git clone --recursive https://github.com/BigfootACA/simple-init.git
 git clone --recursive https://github.com/tianocore/edk2.git
-git clone https://github.com/tianocore/edk2-libc
 ```
 
 ## 2. Setup Environments
 
 ```bash
-export PACKAGES_PATH=$PWD/edk2:$PWD/edk2-libc:$PWD/simple-init
+export PACKAGES_PATH=$PWD/edk2:$PWD/simple-init
 cd edk2
 source edksetup.sh
 ```

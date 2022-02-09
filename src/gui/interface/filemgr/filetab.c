@@ -7,7 +7,7 @@
  */
 
 #ifdef ENABLE_GUI
-#include<libgen.h>
+#define _GNU_SOURCE
 #include<stdlib.h>
 #include<string.h>
 #include"gui.h"

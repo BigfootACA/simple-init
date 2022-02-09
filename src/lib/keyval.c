@@ -416,14 +416,14 @@ list*kvlst_del(list*kvs,char*key){
 		LIST_DATA_DECLARE(s,cur,keyval*);
 		if(strcmp(s->key,key)!=0)continue;
 		if(list_is_alone(cur)){
-			if(cur!=kvs)raise(SIGABRT);
+			if(cur!=kvs)abort();
 			kvlst_free(kvs);
 			kvs=NULL;
 		}else{
 			if(cur==kvs){
 				if(cur->prev)kvs=cur->prev;
 				else if(cur->next)kvs=cur->next;
-				else raise(SIGABRT);
+				else abort();
 			}
 			list_remove_free(cur,_kv_free);
 		}

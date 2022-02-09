@@ -16,7 +16,6 @@
 
 [LibraryClasses]
   FdtLib
-  UefiLib
   SimpleInitCompatible
 
 [Sources]

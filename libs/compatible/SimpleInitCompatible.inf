@@ -13,9 +13,6 @@
   MdePkg/MdePkg.dec
   SimpleInit.dec
 
-[LibraryClasses]
-  UefiLib
-
 [Sources]
   # Simple-Init UEFI compatible library
   errno.c

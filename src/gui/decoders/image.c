@@ -27,7 +27,9 @@ extern image_decoder image_decoder_svg;
 extern image_decoder image_decoder_jpeg;
 typedef int(*img_backend)(char*,unsigned char**,size_t*);
 static int image_open_source_lvgl(char*,unsigned char**,size_t*);
+#ifndef ENABLE_UEFI
 static int image_open_source_native(char*,unsigned char**,size_t*);
+#endif
 static int image_open_source_assets(char*,unsigned char**,size_t*);
 
 static img_backend img_backends[]={

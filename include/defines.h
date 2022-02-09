@@ -49,7 +49,6 @@
 #define _ lang_gettext
 #ifdef ENABLE_UEFI
 #include"compatible.h"
-#include"stat-compatible.h"
 #endif
 #ifndef MIN
 #define MIN(a,b)((b)>(a)?(a):(b))

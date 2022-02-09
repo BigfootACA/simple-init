@@ -9,6 +9,7 @@
   SimpleInitLoggerd|src/loggerd/SimpleInitLoggerd.inf
   SimpleInitConfd|src/confd/SimpleInitConfd.inf
   SimpleInitRootFS|src/SimpleInitRootFS.inf
+  FdtLib|EmbeddedPkg/Library/FdtLib/FdtLib.inf
 
 [Components]
   libs/LodePNG.inf

@@ -49,7 +49,6 @@ int parse_cmdline(int fd){
 	if(!kvs)return trlog_error(-1,"failed to parse kernel cmdline.");
 	parse_params(kvs);
 	tlog_info("load kernel cmdline done");
-	kvarr_free(kvs);
 	return 0;
 }
 

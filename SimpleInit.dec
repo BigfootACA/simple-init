@@ -24,6 +24,10 @@
 [Includes.AARCH64]
   libs/compatible/include/arch/aarch64
 
+[PcdsFixedAtBuild.common]
+  gSimpleInitTokenSpaceGuid.PcdConfDefaultPath|"\\simpleinit.uefi.cfg"|VOID*|0x0001b001
+  gSimpleInitTokenSpaceGuid.PcdConfGptPartition|"logfs"|VOID*|0x0001b002
+
 [Guids.common]
   gSimpleInitTokenSpaceGuid    = { 0xabb5da8d, 0x994a, 0x425a, { 0x89, 0x05, 0xde, 0xcb, 0x4d, 0xcc, 0x73, 0x2f } }
   gSimpleInitFileGuid          = { 0x6d77b2bb, 0x69eb, 0x42ab, { 0xbe, 0xcf, 0x4f, 0x40, 0xc8, 0x95, 0x68, 0xc3 } }

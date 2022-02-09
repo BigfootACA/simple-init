@@ -272,6 +272,15 @@ static VOID EFIAPI efi_timer(IN EFI_EVENT e,IN VOID*ctx){
 	}
 }
 
+extern bool conf_store_changed;
+static void conf_save_cb(lv_task_t*t __attribute__((unused))){
+	if(!conf_store_changed)return;
+	int r=confd_save_file(NULL,NULL);
+	if(r!=0||errno!=0)return;
+	tlog_debug("config changed");
+	conf_store_changed=false;
+}
+
 #endif
 
 int gui_screen_init(){
@@ -362,6 +371,14 @@ int gui_main(){
 		EFI_TIMER_PERIOD_MILLISECONDS(10)
 	)))return trlog_error(-1,"create timer failed");
 
+	confd_load_file(NULL,NULL);
+	lv_task_create(
+		conf_save_cb,
+		confd_get_integer("confd.save_interval",10)*1000,
+		LV_TASK_PRIO_LOWEST,
+		NULL
+	);
+
 	UINTN wi;
 	while(gui_run&&!EFI_ERROR(gBS->WaitForEvent(1,&e_loop,&wi)));
 	#else
@@ -385,6 +402,9 @@ int gui_main(){
 	}
 	#endif
 	gui_do_quit();
+	#ifdef ENABLE_UEFI
+	conf_save_cb(NULL);
+	#endif
 	return run_exit?run_exit(NULL):0;
 }
 

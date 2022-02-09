@@ -14,7 +14,10 @@
   SimpleInit.dec
 
 [LibraryClasses]
+  PcdLib
+  BaseLib
   UefiLib
+  SimpleInitLib
   SimpleInitCompatible
 
 [Sources]
@@ -24,3 +27,11 @@
   store.c
   file.c
   file_conf.c
+
+[Protocols]
+  gEfiSimpleFileSystemProtocolGuid
+  gEfiPartitionInfoProtocolGuid
+
+[FixedPcd]
+  gSimpleInitTokenSpaceGuid.PcdConfDefaultPath
+  gSimpleInitTokenSpaceGuid.PcdConfGptPartition

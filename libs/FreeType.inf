@@ -11,11 +11,11 @@
 
 [Packages]
   MdePkg/MdePkg.dec
-  StdLib/StdLib.dec
+  SimpleInit.dec
 
 [LibraryClasses]
   UefiLib
-  LibC
+  SimpleInitCompatible
 
 [Sources]
   freetype-uefi/ftconfig.h

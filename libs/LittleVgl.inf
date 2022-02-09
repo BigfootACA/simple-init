@@ -11,14 +11,12 @@
 
 [Packages]
   MdePkg/MdePkg.dec
-  StdLib/StdLib.dec
+  SimpleInit.dec
 
 [LibraryClasses]
   UefiLib
-  LibC
 
 [Sources]
-  ../include/lv_conf.h
   lvgl/lvgl.h
   lvgl/src/lv_core/lv_disp.c
   lvgl/src/lv_core/lv_group.c

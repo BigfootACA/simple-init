@@ -6,13 +6,15 @@
   VERSION_STRING                 = 1.0
   LIBRARY_CLASS                  = LodePNG
 
+[BuildOptions]
+  GCC:*_*_*_CC_FLAGS = -DLODEPNG_NO_COMPILE_DISK
+
 [Packages]
   MdePkg/MdePkg.dec
-  StdLib/StdLib.dec
+  SimpleInit.dec
 
 [LibraryClasses]
   UefiLib
-  LibC
 
 [Sources]
   lodepng/lodepng.h

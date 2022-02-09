@@ -44,6 +44,8 @@ This project has not been completed and may not work properly.
 | lv_demos           | gui benchmark                                   | https://github.com/lvgl/lv_demos                             |
 | lv_lib_freetype    | freetype2 true type fonts load                  | https://github.com/lvgl/lv_lib_freetype                      |
 | lv_lib_png         | png image load                                  | https://github.com/lvgl/lv_lib_png                           |
+| edk2-libc          | builtin libc implement                          | https://github.com/tianocore/edk2-libc                       |
+| musl               | builtin libc implement                          | https://musl.libc.org/                                       |
 | kmod               | some builtin commands and modules load / unload | https://git.kernel.org/pub/scm/utils/kernel/kmod/kmod.git    |
 | papirus            | GUI icons                                       | https://github.com/PapirusDevelopmentTeam/papirus-icon-theme |
 

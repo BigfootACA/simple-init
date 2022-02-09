@@ -1,0 +1,77 @@
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = SimpleInitCompatible
+  FILE_GUID                      = 732370B3-6518-4366-8644-94B809B0332C
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = SimpleInitCompatible
+
+[BuildOptions]
+  GCC:*_*_*_CC_FLAGS = -DENABLE_GUI=1 -DENABLE_UEFI=1 -DENABLE_LODEPNG=1 -DENABLE_FREETYPE2=1
+
+[Packages]
+  MdePkg/MdePkg.dec
+  SimpleInit.dec
+
+[LibraryClasses]
+  UefiLib
+
+[Sources]
+  # Simple-Init UEFI compatible library
+  errno.c
+  str.c
+  mem.c
+  __rem_pio2f.c
+  __rem_pio2_large.c
+  cosf.c
+  tanf.c
+  ceilf.c
+  fabs.c
+  floor.c
+  fmodf.c
+  sinf.c
+  sqrt.c
+  scalbn.c
+  pow.c
+  pow_data.c
+  exp_data.c
+  malloc.c
+  exit.c
+  strtol.c
+  stub.c
+  qsort.c
+  ctype.c
+  fvwrite.c
+  vfprintf.c
+  #vfwprintf.c
+  vsnprintf.c
+  snprintf.c
+  sprintf.c
+  fflush.c
+  gdtoa.c
+  dtoa.c
+  misc.c
+  dmisc.c
+  gmisc.c
+  strerror.c
+  wsetup.c
+  vfscanf.c
+  sscanf.c
+  strtoimax.c
+  strtoumax.c
+  strtof.c
+  strtod.c
+  strtopx.c
+  strtodg.c
+  strtold_subr.c
+  refill.c
+  findfp.c
+  ulp.c
+  smisc.c
+  ungetc.c
+  makebuf.c
+  fread.c
+  time.c
+  strftime.c
+  zone.c
+  sum.c

@@ -11,4 +11,14 @@
   SimpleInitRootFS|src/SimpleInitRootFS.inf
 
 [Components]
+  libs/LodePNG.inf
+  libs/FreeType.inf
+  libs/LittleVgl.inf
+  libs/compatible/SimpleInitCompatible.inf
+  src/gui/SimpleInitGUI.inf
+  src/lib/SimpleInitLib.inf
+  src/assets/SimpleInitAssets.inf
+  src/loggerd/SimpleInitLoggerd.inf
+  src/confd/SimpleInitConfd.inf
+  src/SimpleInitRootFS.inf
   src/main/SimpleInitMain.inf

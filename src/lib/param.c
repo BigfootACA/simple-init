@@ -77,6 +77,7 @@ keyval**param_parse_items(char*cmdline,size_t*length){
 	return param_s_parse_items(cmdline,strlen(cmdline),length);
 }
 
+#ifndef ENABLE_UEFI
 keyval**read_params(int fd){
 	static char buffer[BUFSIZ];
 	if(fd<0)EPRET(EBADF);
@@ -86,3 +87,4 @@ keyval**read_params(int fd){
 	if(buffer[sizeof(buffer)-1]!=0)EPRET(EFAULT);
 	return param_s_parse_items(buffer,(size_t)len,NULL);
 }
+#endif

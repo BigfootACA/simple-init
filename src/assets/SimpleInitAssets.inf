@@ -11,18 +11,14 @@
 
 [Packages]
   MdePkg/MdePkg.dec
-  StdLib/StdLib.dec
+  SimpleInit.dec
 
 [LibraryClasses]
   UefiLib
-  LibC
   SimpleInitLib
   SimpleInitRootFS
+  SimpleInitCompatible
 
 [Sources]
-  ../../include/assets.h
-  ../../include/defines.h
-  ../compatible/include/compatible.h
-
   # Simple-Init builtin assets library
   assets.c

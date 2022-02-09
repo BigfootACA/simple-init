@@ -11,13 +11,12 @@
 
 [Packages]
   MdePkg/MdePkg.dec
-  StdLib/StdLib.dec
   ShellPkg/ShellPkg.dec
   MdeModulePkg/MdeModulePkg.dec
+  SimpleInit.dec
 
 [LibraryClasses]
   UefiLib
-  LibC
   LittleVgl
   FreeType
   LodePNG
@@ -41,14 +40,6 @@
   gEfiGraphicsOutputProtocolGuid
 
 [Sources]
-  ../../libs/lvgl/lvgl.h
-  ../../libs/lodepng/lodepng.h
-  ../../libs/nanosvg/src/nanosvg.h
-  ../../libs/nanosvg/src/nanosvgrast.h
-  ../../libs/freetype/include/ft2build.h
-  ../../include/gui.h
-  ../compatible/include/compatible.h
-
   # Simple-Init GUI interface
   tools.c
   activity.c

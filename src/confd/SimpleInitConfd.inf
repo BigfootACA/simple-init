@@ -11,17 +11,13 @@
 
 [Packages]
   MdePkg/MdePkg.dec
-  StdLib/StdLib.dec
+  SimpleInit.dec
 
 [LibraryClasses]
   UefiLib
-  LibC
   SimpleInitCompatible
 
 [Sources]
-  ../../include/confd.h
-  ../compatible/include/compatible.h
-
   # Simple-Init confd
   dump.c
   uefi.c

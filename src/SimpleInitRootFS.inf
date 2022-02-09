@@ -11,16 +11,13 @@
 
 [Packages]
   MdePkg/MdePkg.dec
-  StdLib/StdLib.dec
+  SimpleInit.dec
 
 [LibraryClasses]
   UefiLib
-  LibC
+  SimpleInitCompatible
 
 [Sources]
-  ../include/defines.h
-  ../include/assets.h
-
   # Simple-Init builtin rootfs generate from ./root (RUN BEFORE BUILD)
   # bash scripts/gen-rootfs-source.sh ./ ./build ./root
   ../build/rootfs.c

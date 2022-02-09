@@ -11,17 +11,12 @@
 
 [Packages]
   MdePkg/MdePkg.dec
-  StdLib/StdLib.dec
+  SimpleInit.dec
 
 [LibraryClasses]
   UefiLib
-  LibC
   DebugLib
 
 [Sources]
-  ../../include/defines.h
-  ../../include/logger.h
-  ../compatible/include/compatible.h
-
   # Simple-Init loggerd UEFI wrapper
   src/loggerd/client.c

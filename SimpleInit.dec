@@ -1,0 +1,25 @@
+[Defines]
+  DEC_SPECIFICATION              = 0x00010005
+  PACKAGE_NAME                   = SimpleInit
+  PACKAGE_VERSION                = 0.01
+
+[Includes]
+  include
+  libs/freetype/include
+  libs/lvgl
+  libs/lodepng
+  libs/nanosvg/src
+  libs/compatible/include
+  libs/compatible/include/arch/generic
+
+[Includes.Ia32]
+  libs/compatible/include/arch/i386
+
+[Includes.X64]
+  libs/compatible/include/arch/x86_64
+
+[Includes.ARM]
+  libs/compatible/include/arch/arm
+
+[Includes.AARCH64]
+  libs/compatible/include/arch/aarch64

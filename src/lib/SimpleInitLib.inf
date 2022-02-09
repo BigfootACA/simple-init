@@ -11,23 +11,13 @@
 
 [Packages]
   MdePkg/MdePkg.dec
-  StdLib/StdLib.dec
+  SimpleInit.dec
 
 [LibraryClasses]
   UefiLib
-  LibC
   SimpleInitCompatible
 
 [Sources]
-  ../../include/str.h
-  ../../include/list.h
-  ../../include/array.h
-  ../../include/keyval.h
-  ../../include/system.h
-  ../../include/defines.h
-  ../../include/language.h
-  ../compatible/include/compatible.h
-
   # Simple-Init library
   list.c
   replace.c

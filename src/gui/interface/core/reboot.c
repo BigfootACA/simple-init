@@ -14,6 +14,7 @@
 #endif
 #include"gui.h"
 #include"str.h"
+#include"confd.h"
 #include"logger.h"
 #include"defines.h"
 #include"gui/msgbox.h"
@@ -94,6 +95,7 @@ static void reboot_action(lv_obj_t*obj,lv_event_t e){
 		case POWEROFF:          t=EfiResetShutdown;break;
 		default:return;
 	}
+	confd_save_file(NULL,NULL);
 	gRT->ResetSystem(t,EFI_SUCCESS,s,x);
 	#endif
 	guiact_do_back();

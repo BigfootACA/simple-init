@@ -61,6 +61,7 @@ bool fdt_get_memory(fdt*fdt,int index,uint64_t*base,uint64_t*size){
 
 	// in range
 	if(index>=len/item)return false;
+	prop+=(ac+sc)*index;
 
 	// calc memory base
 	*base=fdt32_to_cpu(prop[0]);

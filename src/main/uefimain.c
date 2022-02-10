@@ -10,8 +10,10 @@
 #include<Library/DebugLib.h>
 #include<Library/UefiBootManagerLib.h>
 #include<Library/ReportStatusCodeLib.h>
+#include"confd.h"
 #include"errno.h"
 #include"setjmp.h"
+#include"language.h"
 
 int main_retval=0;
 jmp_buf main_exit;
@@ -25,6 +27,12 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ih,IN EFI_SYSTEM_TABLE*st){
 	EfiBootManagerConnectAll();
 	EfiBootManagerRefreshAllBootOption();
 	DEBUG((EFI_D_INFO,"Initialize SimpleInit GUI...\n"));
+
+	confd_load_file(NULL,NULL);
+	char*lang=confd_get_string("language",NULL);
+	if(lang)lang_set(lang);
+	lang_init_locale();
+
 	errno=0;
 	main_retval=0;
 	if(setjmp(main_exit)==0)

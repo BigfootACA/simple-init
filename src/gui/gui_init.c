@@ -155,11 +155,8 @@ int gui_pre_init(){
 	lv_init();
 
 	#ifdef ENABLE_UEFI
-	// load config in uefi
-	confd_load_file(NULL,NULL);
+	// load dpi
 	gui_dpi_def=(int)PcdGet16(PcdGuiDefaultDPI);
-	char*lang=confd_get_string("language",NULL);
-	if(lang)lang_set(lang);
 	#endif
 
 	// redirect lvgl log to loggerd

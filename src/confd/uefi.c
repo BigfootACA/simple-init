@@ -222,6 +222,10 @@ int confd_set_mod(const char*path,mode_t mod){
 	return conf_set_mod(path,mod,0,0);
 }
 
+int confd_add_key(const char*path){
+	return conf_add_key(path,0,0);
+}
+
 #define _EXT_BASE(ret,func,ret_func,...) \
 ret func##_base(const char*base,const char*path __VA_ARGS__){\
 	char xpath[PATH_MAX]={0};\

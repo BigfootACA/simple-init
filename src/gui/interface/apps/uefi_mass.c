@@ -31,7 +31,7 @@ static int after_exit(void*d __attribute__((unused))){
 	UINTN size;
 	int r=0;
 	if(EFI_ERROR(gBS->StartImage(ih,&size,NULL))){
-		tlog_error("StartImage failed");
+		tlog_error("start image failed");
 		r=1;
 	}
 	if(ih)gBS->UnloadImage(ih);
@@ -51,23 +51,23 @@ static bool msg_click(uint16_t id,const char*text,void*user_data __attribute__((
 			(VOID**)&li
 		);
 		if(EFI_ERROR(st)){
-			tlog_error("HandleProtocol failed: %llx",st);
-			msgbox_alert("HandleProtocol failed: %llx",st);
+			tlog_error("handle protocol failed: %s",efi_status_to_string(st));
+			msgbox_alert("handle protocol failed: %s",_(efi_status_to_string(st)));
 			return false;
 		}
 		if(!(dp=AppendDevicePathNode(
 			DevicePathFromHandle(li->DeviceHandle),
 			(EFI_DEVICE_PATH_PROTOCOL*)&fn
 		))){
-			tlog_error("AppendDevicePathNode failed");
-			msgbox_alert("AppendDevicePathNode failed");
+			tlog_error("append device path node failed");
+			msgbox_alert("append device path node failed");
 			return false;
 		}
 		st=gBS->LoadImage(FALSE,gImageHandle,dp,NULL,0,&ih);
 		if(EFI_ERROR(st)){
 			if(ih)gBS->UnloadImage(ih);
-			tlog_error("LoadImage failed: %llx",st);
-			msgbox_alert("LoadImage failed: %llx",st);
+			tlog_error("load image failed: %s",efi_status_to_string(st));
+			msgbox_alert("load image failed: %s",_(efi_status_to_string(st)));
 			return false;
 		}
 		gui_run_and_exit(after_exit);

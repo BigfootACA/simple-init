@@ -59,7 +59,7 @@ int pointer_register(){
 		&gEfiSimplePointerProtocolGuid,
 		NULL,&cnt,&hands
 	);
-	if(EFI_ERROR(st))return trlog_warn(-1,"locate pointer failed: %lld",st);
+	if(EFI_ERROR(st))return trlog_warn(-1,"locate pointer failed: %s",efi_status_to_string(st));
 	for(UINTN i=0;i<cnt;i++){
 		struct input_data*data=malloc(sizeof(struct input_data));
 		if(!data)break;

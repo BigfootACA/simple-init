@@ -28,7 +28,7 @@ static int after_exit(void*d __attribute__((unused))){
 	UINTN size;
 	int r=0;
 	if(EFI_ERROR(gBS->StartImage(ih,&size,NULL))){
-		tlog_error("StartImage failed");
+		tlog_error("start image failed");
 		r=1;
 	}
 	if(ih)gBS->UnloadImage(ih);
@@ -42,15 +42,15 @@ static void start_cb(lv_task_t*t){
 	EFI_LOADED_IMAGE_PROTOCOL*li;
 	EFI_DEVICE_PATH_PROTOCOL*p=fs_get_device_path(full_path);
 	if(!p){
-		msgbox_alert("get DevicePath failed");
-		tlog_warn("get DevicePath failed");
+		msgbox_alert("get device path failed");
+		tlog_warn("get device path failed");
 		return;
 	}
 	st=gBS->LoadImage(FALSE,gImageHandle,p,NULL,0,&ih);
 	if(EFI_ERROR(st)){
 		if(ih)gBS->UnloadImage(ih);
-		msgbox_alert("LoadImage failed: %llx",st);
-		tlog_warn("LoadImage failed: %llx",st);
+		msgbox_alert("load image failed: %s",efi_status_to_string(st));
+		tlog_warn("load image failed: %s",efi_status_to_string(st));
 		return;
 	}
 	st=gBS->OpenProtocol(
@@ -59,12 +59,11 @@ static void start_cb(lv_task_t*t){
 		EFI_OPEN_PROTOCOL_GET_PROTOCOL
 	);
 	if(EFI_ERROR(st)){
-		msgbox_alert("OpenProtocol failed: %llx",st);
-		tlog_warn("OpenProtocol failed: %llx",st);
+		msgbox_alert("open protocol failed: %s",_(efi_status_to_string(st)));
+		tlog_warn("open protocol failed: %s",efi_status_to_string(st));
 		return;
 	}
 	if(li->ImageCodeType!=EfiLoaderCode){
-
 		if(ih)gBS->UnloadImage(ih);
 		msgbox_alert("not a UEFI Application");
 		tlog_warn("not a UEFI Application");
@@ -81,8 +80,8 @@ static bool confirm_click(uint16_t id,const char*text __attribute__((unused)),vo
 static int uefi_start_draw(struct gui_activity*d){
 	if(!d)return -1;
 	static char full_path[PATH_MAX];
-	memset(full_path,0,PATH_MAX-1);
-	strncpy(full_path,(char*)d->args,PATH_MAX-1);
+	memset(full_path,0,sizeof(full_path));
+	strncpy(full_path,(char*)d->args,sizeof(full_path)-1);
 	msgbox_set_user_data(msgbox_create_yesno(
 		confirm_click,
 		"Start UEFI Application '%s'?",

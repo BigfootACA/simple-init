@@ -81,7 +81,7 @@ int keyboard_register(){
 		&gEfiSimpleTextInProtocolGuid,
 		NULL,&cnt,&hands
 	);
-	if(EFI_ERROR(st))return trlog_warn(-1,"locate keyboard failed: %lld",st);
+	if(EFI_ERROR(st))return trlog_warn(-1,"locate keyboard failed: %s",efi_status_to_string(st));
 	for(UINTN i=0;i<cnt;i++){
 		EFI_SIMPLE_TEXT_INPUT_PROTOCOL*keyboard=NULL;
 		if(EFI_ERROR(gBS->HandleProtocol(

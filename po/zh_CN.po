@@ -2070,3 +2070,18 @@ msgstr "无效的语言"
 
 msgid "Compromised Data"
 msgstr "数据受损"
+
+msgid "get device path failed"
+msgstr "获取设备路径失败"
+
+msgid "load image failed: %s"
+msgstr "加载镜像失败: %s"
+
+msgid "open protocol failed: %s"
+msgstr "打开协议失败: %s"
+
+msgid "handle protocol failed: %s"
+msgstr "处理协议失败: %s"
+
+msgid "append device path node failed"
+msgstr "追加设备节点失败"

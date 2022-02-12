@@ -145,12 +145,12 @@ static int conf_save(_ROOT_TYPE dir,const char*path){
 	char*cp=xpath;
 	CHAR16 xp[PATH_MAX]={0};
 	do{if(*cp=='/')*cp='\\';}while(*cp++);
-	AsciiStrToUnicodeStrS(xpath,xp,sizeof(xp));
+	AsciiStrToUnicodeStrS(xpath,xp,sizeof(xp)/sizeof(CHAR16));
 	EFI_STATUS st=dir->Open(dir,&fd,xp,EFI_FILE_MODE_READ|EFI_FILE_MODE_WRITE,0);
 	if(!EFI_ERROR(st))fd->Delete(fd);
 	fd=NULL,st=dir->Open(dir,&fd,xp,EFI_FILE_MODE_READ|EFI_FILE_MODE_WRITE|EFI_FILE_MODE_CREATE,0);
 	if(EFI_ERROR(st)){
-		tlog_warn("open config '%s' failed: %llx",path,st);
+		tlog_warn("open config '%s' failed: %s",path,efi_status_to_string(st));
 		return -efi_status_to_errno(st);
 	}
 	#else
@@ -311,10 +311,10 @@ static int conf_load(_ROOT_TYPE dir,const char*path){
 	char *cp=xpath;
 	CHAR16 xp[PATH_MAX]={0};
 	do{if(*cp=='/')*cp='\\';}while(*cp++);
-	AsciiStrToUnicodeStrS(xpath,xp,sizeof(xp));
+	AsciiStrToUnicodeStrS(xpath,xp,sizeof(xp)/sizeof(CHAR16));
 	EFI_STATUS st=dir->Open(dir,&fd,xp,EFI_FILE_MODE_READ,0);
 	if(EFI_ERROR(st)){
-		tlog_debug("open config '%s' failed: %llx",path,st);
+		tlog_debug("open config '%s' failed: %s",path,efi_status_to_string(st));
 		r=-efi_status_to_errno(st);
 		goto fail;
 	}
@@ -325,7 +325,7 @@ static int conf_load(_ROOT_TYPE dir,const char*path){
 	}
 	st=fd->GetInfo(fd,&gEfiFileInfoGuid,&infos,info);
 	if(EFI_ERROR(st)){
-		tlog_debug("get config '%s' file info failed: %llx",path,st);
+		tlog_debug("get config '%s' file info failed: %s",path,efi_status_to_string(st));
 		r=-efi_status_to_errno(st);
 		goto fail;
 	}
@@ -336,14 +336,14 @@ static int conf_load(_ROOT_TYPE dir,const char*path){
 		goto fail;
 	}
 	if(size>0){
-		if(!(data=AllocateZeroPool(size))){
+		if(!(data=AllocateZeroPool(size+1))){
 			tlog_debug("allocate file content failed");
 			r=ENOMEM;
 			goto fail;
 		}
 		st=fd->Read(fd,&size,data);
 		if(EFI_ERROR(st)){
-			tlog_debug("read '%s' failed: %llx",path,st);
+			tlog_debug("read '%s' failed: %s",path,efi_status_to_string(st));
 			FreePool(data);
 			r=-efi_status_to_errno(st);
 			goto fail;

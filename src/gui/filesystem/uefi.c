@@ -94,13 +94,13 @@ static EFI_HANDLE get_fs_proto(UINTN*bs){
 	EFI_STATUS st=gBS->LocateHandle(ByProtocol,&gEfiSimpleFileSystemProtocolGuid,NULL,bs,hb);
 	if(st==EFI_BUFFER_TOO_SMALL){
 		if(!(hb=AllocateZeroPool(*bs))){
-			tlog_warn("allocate buffer for SimpleFileSystem failed");
+			tlog_warn("allocate buffer for simple file system failed");
 			return NULL;
 		}
 		st=gBS->LocateHandle(ByProtocol,&gEfiSimpleFileSystemProtocolGuid,NULL,bs,hb);
 	}
 	if(EFI_ERROR(st)){
-		tlog_warn("location SimpleFileSystem failed: %llx",st);
+		tlog_warn("location simple file system failed: %s",efi_status_to_string(st));
 		return NULL;
 	}
 	return hb;
@@ -118,7 +118,7 @@ static lv_res_t fs_get_volume_label(struct _lv_fs_drv_t*drv,char*label,size_t le
 	);
 	if(st==EFI_BUFFER_TOO_SMALL){
 		if(!(fi=AllocatePool(bs))){
-			tlog_warn("allocate buffer for FileSystemVolumeLabelInfo failed");
+			tlog_warn("allocate buffer for file system volume label info failed");
 			return LV_FS_RES_OUT_OF_MEM;
 		}
 		st=fs->proto->GetInfo(
@@ -169,11 +169,11 @@ static lv_res_t fs_open_cb(
 	CHAR16 xpath[4096]={0};
 	strcpy(ep,path);
 	do{if(*cp=='/')*cp='\\';}while(*cp++);
-	AsciiStrToUnicodeStrS(ep,xpath,sizeof(xpath));
+	AsciiStrToUnicodeStrS(ep,xpath,sizeof(xpath)/sizeof(CHAR16));
 	EFI_STATUS st=fs->proto->Open(fs->proto,&fh,xpath,flags,0);
-	if(!fh)XWARN(
-		"open %c:%s mode %d failed: %llx",
-		drv->letter,path,mode,st
+	if(EFI_ERROR(st))XWARN(
+		"open %c:%s mode %d failed: %s",
+		drv->letter,path,mode,efi_status_to_string(st)
 	);
 	if(fh)*(EFI_FILE_PROTOCOL**)((lv_fs_file_t*)file_p)=fh;
 	return efi_status_to_lv_res(st);
@@ -190,8 +190,8 @@ static lv_res_t fs_close_cb(
 	if(!fs)return LV_FS_RES_INV_PARAM;
 	EFI_STATUS st=fh->Close(fh);
 	if(EFI_ERROR(st))XWARN(
-		"close %c:#%p: %llx",
-		drv->letter,fh,st
+		"close %c:#%p failed: %s",
+		drv->letter,fh,efi_status_to_string(st)
 	);
 	return efi_status_to_lv_res(st);
 }
@@ -209,15 +209,20 @@ static lv_res_t fs_remove_cb(
 	CHAR16 xpath[4096]={0};
 	strcpy(ep,fn);
 	do{if(*cp=='/')*cp='\\';}while(*cp++);
-	AsciiStrToUnicodeStrS(ep,xpath,sizeof(xpath));
+	AsciiStrToUnicodeStrS(ep,xpath,sizeof(xpath)/sizeof(CHAR16));
 	EFI_STATUS st=fs->proto->Open(fs->proto,&fh,xpath,EFI_FILE_MODE_READ|EFI_FILE_MODE_WRITE,0);
-	if(EFI_ERROR(st))XWARN(
-		"open %c:%s failed: %llx",
-		drv->letter,fn,st
-	)else if(EFI_ERROR((st=fh->Delete(fh))))XWARN(
-		"delete %c:%s: %llx",
-		drv->letter,fn,st
-	);
+	if(EFI_ERROR(st)){
+		XWARN(
+			"open %c:%s failed: %s",
+			drv->letter,fn,efi_status_to_string(st)
+		);
+	}else{
+		st=fh->Delete(fh);
+		if(EFI_ERROR(st))XWARN(
+			"delete %c:%s failed: %s",
+			drv->letter,fn,efi_status_to_string(st)
+		);
+	}
 	return efi_status_to_lv_res(st);
 }
 
@@ -240,17 +245,21 @@ static lv_res_t fs_get_type_cb(
 	CHAR16 xpath[4096]={0};
 	strcpy(ep,fn);
 	do{if(*cp=='/')*cp='\\';}while(*cp++);
-	AsciiStrToUnicodeStrS(ep,xpath,sizeof(xpath));
+	AsciiStrToUnicodeStrS(ep,xpath,sizeof(xpath)/sizeof(CHAR16));
 	st=fs->proto->Open(fs->proto,&fh,xpath,EFI_FILE_MODE_READ,0);
-	if(EFI_ERROR(st))XWARN(
-		"get type open %c:%s failed: %llx",
-		drv->letter,fn,st
-	)else{
+	if(EFI_ERROR(st)){
+		XWARN(
+			"get type open %c:%s failed: %s",
+			drv->letter,fn,efi_status_to_string(st)
+		);
+	}else{
 		st=fh->GetInfo(fh,&gEfiFileInfoGuid,&infos,info);
-		if(EFI_ERROR(st))XWARN(
-			" get type %c:#%p failed: %llx",
-			drv->letter,fh,st
-		)else if(infos!=0)*type=fileinfo_is_dir(info)?TYPE_DIR:TYPE_FILE;
+		if(EFI_ERROR(st)){
+			XWARN(
+				"get type %c:#%p failed: %s",
+				drv->letter,fh,efi_status_to_string(st)
+			);
+		}else if(infos!=0)*type=fileinfo_is_dir(info)?TYPE_DIR:TYPE_FILE;
 		fh->Close(fh);
 	}
 	FreePool(info);
@@ -275,17 +284,21 @@ static bool fs_is_dir_cb(
 	CHAR16 xpath[4096]={0};
 	strcpy(ep,fn);
 	do{if(*cp=='/')*cp='\\';}while(*cp++);
-	AsciiStrToUnicodeStrS(ep,xpath,sizeof(xpath));
+	AsciiStrToUnicodeStrS(ep,xpath,sizeof(xpath)/sizeof(CHAR16));
 	st=fs->proto->Open(fs->proto,&fh,xpath,EFI_FILE_MODE_READ,0);
-	if(EFI_ERROR(st))XWARN(
-		"is dir open %c:%s failed: %llx",
-		drv->letter,fn,st
-	)else{
+	if(EFI_ERROR(st)){
+		XWARN(
+			"is dir open %c:%s failed: %s",
+			drv->letter,fn,efi_status_to_string(st)
+		);
+	}else{
 		st=fh->GetInfo(fh,&gEfiFileInfoGuid,&infos,info);
-		if(EFI_ERROR(st))XWARN(
-			"is dir %c:#%p failed: %llx",
-			drv->letter,fh,st
-		)else if(infos!=0)isdir=fileinfo_is_dir(info);
+		if(EFI_ERROR(st)){
+			XWARN(
+				"is dir %c:#%p failed: %s",
+				drv->letter,fh,efi_status_to_string(st)
+			);
+		}else if(infos!=0)isdir=fileinfo_is_dir(info);
 		fh->Close(fh);
 	}
 	FreePool(info);
@@ -307,9 +320,9 @@ static lv_res_t fs_read_cb(
 	*br=btr;
 	EFI_STATUS st=fh->Read(fh,(UINTN*)br,buf);
 	if(EFI_ERROR(st))XWARN(
-		"read %c:#%p: %llx",
-		drv->letter,fh,st
-	)
+		"read %c:#%p failed: %s",
+		drv->letter,fh,efi_status_to_string(st)
+	);
 	return efi_status_to_lv_res(st);
 }
 
@@ -329,8 +342,8 @@ static lv_res_t fs_write_cb(
 	EFI_STATUS st=fh->Write(fh,&w,(void*)buf);
 	*bw=(uint32_t)w;
 	if(EFI_ERROR(st))XWARN(
-		"write %c:#%p: %llx",
-		drv->letter,fh,st
+		"write %c:#%p: %s",
+		drv->letter,fh,efi_status_to_string(st)
 	)
 	return efi_status_to_lv_res(st);
 }
@@ -347,9 +360,9 @@ static lv_res_t fs_seek_cb(
 	if(!fs||!fs->proto)return LV_FS_RES_INV_PARAM;
 	EFI_STATUS st=fh->SetPosition(fh,(UINTN)pos);
 	if(EFI_ERROR(st))XWARN(
-		"set position %c:#%p: %llx",
-		drv->letter,fh,st
-	)
+		"set position %c:#%p failed: %s",
+		drv->letter,fh,efi_status_to_string(st)
+	);
 	return efi_status_to_lv_res(st);
 }
 
@@ -365,9 +378,9 @@ static lv_res_t fs_tell_cb(
 	if(!fs||!fs->proto)return LV_FS_RES_INV_PARAM;
 	EFI_STATUS st=fh->GetPosition(fh,(UINTN*)pos_p);
 	if(EFI_ERROR(st))XWARN(
-		"get position %c:#%p: %llx",
-		drv->letter,fh,st
-	)
+		"get position %c:#%p failed: %s",
+		drv->letter,fh,efi_status_to_string(st)
+	);
 	return efi_status_to_lv_res(st);
 }
 
@@ -392,10 +405,12 @@ static lv_res_t fs_size_cb(
 	EFI_FILE_INFO*info=AllocateZeroPool(infos);
 	if(!info)return LV_FS_RES_OUT_OF_MEM;
 	EFI_STATUS st=fh->GetInfo(fh,&gEfiFileInfoGuid,&infos,info);
-	if(EFI_ERROR(st))XWARN(
-		"size %c:#%p failed: %llx",
-		drv->letter,fh,st
-	)else if(infos!=0)*size_p=(uint32_t)info->FileSize;
+	if(EFI_ERROR(st)){
+		XWARN(
+			"size %c:#%p failed: %s",
+			drv->letter,fh,efi_status_to_string(st)
+		);
+	}else if(infos!=0)*size_p=(uint32_t)info->FileSize;
 	else st=EFI_LOAD_ERROR;
 	FreePool(info);
 	return efi_status_to_lv_res(st);
@@ -436,12 +451,12 @@ static lv_res_t fs_dir_open_cb(
 		CHAR16 xpath[4096]={0};
 		strcpy(ep,path);
 		do{if(*cp=='/')*cp='\\';}while(*cp++);
-		AsciiStrToUnicodeStrS(ep,xpath,sizeof(xpath));
+		AsciiStrToUnicodeStrS(ep,xpath,sizeof(xpath)/sizeof(CHAR16));
 		st=fs->proto->Open(fs->proto,&fh,xpath,EFI_FILE_READ_ONLY,0);
 		if(EFI_ERROR(st))XWARN(
-			"open dir %c:%s failed: %llx",
-			drv->letter,path,st
-		)
+			"open dir %c:%s failed: %s",
+			drv->letter,path,efi_status_to_string(st)
+		);
 	}
 	if(fh)((lv_fs_dir_t*)rddir_p)->dir_d=fh;
 	return efi_status_to_lv_res(st);
@@ -469,10 +484,12 @@ static lv_res_t fs_dir_read_cb(
 		break;
 	}
 	*fn=0;
-	if(EFI_ERROR(st))XWARN(
-		"read dir %c:%s failed: %llx",
-		drv->letter,fn,st
-	)else if(si!=0){
+	if(EFI_ERROR(st)){
+		XWARN(
+			"read dir %c:%s failed: %s",
+			drv->letter,fn,efi_status_to_string(st)
+		);
+	}else if(si!=0){
 		int i=255;
 		char*name=fn;
 		if(fileinfo_is_dir(info))*(name++)='/',i--;
@@ -494,9 +511,9 @@ static lv_res_t fs_dir_close_cb(
 	if(dh==fs->proto)return LV_FS_RES_OK;
 	EFI_STATUS st=dh->Close(dh);
 	if(EFI_ERROR(st))XWARN(
-		"close dir %c:#%p: %llx",
-		drv->letter,dh,st
-	)
+		"close dir %c:#%p failed: %s",
+		drv->letter,dh,efi_status_to_string(st)
+	);
 	return efi_status_to_lv_res(st);
 }
 
@@ -509,22 +526,23 @@ static lv_res_t fs_mkdir_cb(
 	struct fs_root*fs=fse->user_data;
 	if(!fs||!fs->proto)return LV_FS_RES_INV_PARAM;
 	EFI_STATUS st;
-	EFI_FILE_PROTOCOL*fh;
+	EFI_FILE_PROTOCOL*fh=NULL;
 	char ep[4096]={0},*cp=ep;
 	CHAR16 xpath[4096]={0};
 	strcpy(ep,name);
 	do{if(*cp=='/')*cp='\\';}while(*cp++);
-	AsciiStrToUnicodeStrS(ep,xpath,sizeof(xpath));
-	if(EFI_ERROR((st=fs->proto->Open(
+	AsciiStrToUnicodeStrS(ep,xpath,sizeof(xpath)/sizeof(CHAR16));
+	st=fs->proto->Open(
 		fs->proto,&fh,xpath,
 		EFI_FILE_MODE_READ|
 		EFI_FILE_MODE_WRITE|
 		EFI_FILE_MODE_CREATE,
 		EFI_FILE_DIRECTORY
-	))))XWARN(
-		"create dir %c:%s failed: %llx",
-		drv->letter,name,st
-	)
+	);
+	if(EFI_ERROR(st))XWARN(
+		"create dir %c:%s failed: %s",
+		drv->letter,name,efi_status_to_string(st)
+	);
 	if(fh)fh->Close(fh);
 	return efi_status_to_lv_res(st);
 }
@@ -538,22 +556,23 @@ static lv_res_t fs_creat_cb(
 	struct fs_root*fs=fse->user_data;
 	if(!fs||!fs->proto)return LV_FS_RES_INV_PARAM;
 	EFI_STATUS st;
-	EFI_FILE_PROTOCOL*fh;
+	EFI_FILE_PROTOCOL*fh=NULL;
 	char ep[4096]={0},*cp=ep;
 	CHAR16 xpath[4096]={0};
 	strcpy(ep,name);
 	do{if(*cp=='/')*cp='\\';}while(*cp++);
-	AsciiStrToUnicodeStrS(ep,xpath,sizeof(xpath));
-	if(EFI_ERROR((st=fs->proto->Open(
+	AsciiStrToUnicodeStrS(ep,xpath,sizeof(xpath)/sizeof(CHAR16));
+	st=fs->proto->Open(
 		fs->proto,&fh,xpath,
 		EFI_FILE_MODE_READ|
 		EFI_FILE_MODE_WRITE|
 		EFI_FILE_MODE_CREATE,
 		0
-	))))XWARN(
-		"create file %c:%s failed: %llx",
-		drv->letter,name,st
-	)
+	);
+	if(EFI_ERROR(st))XWARN(
+		"create file %c:%s failed: %s",
+		drv->letter,name,efi_status_to_string(st)
+	);
 	if(fh)fh->Close(fh);
 	return efi_status_to_lv_res(st);
 }
@@ -612,24 +631,24 @@ void lvgl_init_all_fs_uefi(bool debug){
 	EFI_HANDLE*hb=get_fs_proto(&bs);
 	if(!hb)return;
 	for(i=0,letter='A';i<bs/sizeof(hb)&&letter<='Z';i++,letter++){
-		EFI_FILE_PROTOCOL*fh;
-		EFI_SIMPLE_FILE_SYSTEM_PROTOCOL*v;
+		EFI_FILE_PROTOCOL*fh=NULL;
+		EFI_SIMPLE_FILE_SYSTEM_PROTOCOL*v=NULL;
 		if(lv_fs_get_drv(letter))continue;
 		st=gBS->HandleProtocol(hb[i],&gEfiSimpleFileSystemProtocolGuid,(VOID*)&v);
 		if(EFI_ERROR(st)){
-			tlog_warn("handle protocol failed: %llx",st);
+			tlog_warn("handle protocol failed: %s",efi_status_to_string(st));
 			continue;
 		}
 		st=v->OpenVolume(v,&fh);
 		if(EFI_ERROR(st)){
-			tlog_warn("open volume failed: %llx",st);
+			tlog_warn("open volume failed: %s",efi_status_to_string(st));
 			continue;
 		}
 		if(init_lvgl_uefi_fs(letter,hb[i],fh,debug)!=0){
-			tlog_warn("init fs failed");
+			tlog_warn("init file system failed");
 			continue;
 		}
-		if(debug)tlog_debug("add drive %c",letter);
+		if(debug)tlog_debug("add lvgl drive %c",letter);
 	}
 }
 
@@ -645,8 +664,7 @@ EFI_DEVICE_PATH_PROTOCOL*fs_get_device_path(const char*path){
 	CHAR16 xp[PATH_MAX]={0};
 	strcpy(ep,path+2);
 	do{if(*cp=='/')*cp='\\';}while(*cp++);
-	tlog_debug("PATH: %s",ep);
-	AsciiStrToUnicodeStrS(ep,xp,sizeof(xp));
+	AsciiStrToUnicodeStrS(ep,xp,sizeof(xp)/sizeof(CHAR16));
 	return FileDevicePath(fs->hand,xp);
 }
 

@@ -15,6 +15,7 @@
 #include<Protocol/PartitionInfo.h>
 #include<Protocol/SimpleFileSystem.h>
 #include"logger.h"
+#include"compatible.h"
 #include"confd_internal.h"
 #define TAG "conf"
 
@@ -30,7 +31,7 @@ static EFI_HANDLE get_usable_pi(){
 		NULL,&cnt,&hands
 	);
 	if(EFI_ERROR(st)){
-		tlog_error("locate Partition Info Protocol failed: 0x%llx",st);
+		tlog_error("locate Partition Info Protocol failed: %s",efi_status_to_string(st));
 		return NULL;
 	}
 	char*match[]={
@@ -62,7 +63,7 @@ static EFI_HANDLE get_usable_fs(){
 		NULL,&cnt,&hands
 	);
 	if(EFI_ERROR(st)){
-		tlog_error("locate Simple File System Protocol failed: 0x%llx",st);
+		tlog_error("locate Simple File System Protocol failed: %s",efi_status_to_string(st));
 		return NULL;
 	}
 	for(UINTN i=0;i<cnt;i++){
@@ -85,12 +86,12 @@ static EFI_FILE_PROTOCOL*get_usable_fp(){
 	if(!hand)return NULL;
 	st=gBS->HandleProtocol(hand,&gEfiSimpleFileSystemProtocolGuid,(VOID**)&proto);
 	if(EFI_ERROR(st)){
-		tlog_error("handle Simple File System Protocol failed: 0x%llx",st);
+		tlog_error("handle Simple File System Protocol failed: %s",efi_status_to_string(st));
 		return NULL;
 	}
 	st=proto->OpenVolume(proto,&fp);
 	if(EFI_ERROR(st)){
-		tlog_error("OpenVolume failed: 0x%llx",st);
+		tlog_error("open volume failed: 0x%s",efi_status_to_string(st));
 		fp=NULL;
 		return NULL;
 	}

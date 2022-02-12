@@ -8,6 +8,7 @@ const char*make_readable_str_buf(char*buf,size_t len,unsigned long long val,unsi
 	static const char units[]="\0KMGTPEZY";
 	unsigned frac=0;
 	const char*u=units,*fmt="%llu";
+	memset(buf,0,len);
 	if(val==0)return strncpy(buf,"0",len);
 	if(block_size>1)val*=block_size;
 	if(display)val+=display/2,val/=display;

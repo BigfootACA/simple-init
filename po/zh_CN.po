@@ -1962,3 +1962,111 @@ msgstr "什么都没打开"
 
 msgid "Picture load failed"
 msgstr "图片加载失败"
+
+msgid "Success"
+msgstr "成功"
+
+msgid "Unknown Glyph"
+msgstr "未知字形"
+
+msgid "Delete Failure"
+msgstr "删除失败"
+
+msgid "Write Failure"
+msgstr "写入失败"
+
+msgid "Buffer Too Small"
+msgstr "缓冲区过小"
+
+msgid "Stale Data"
+msgstr "过时数据"
+
+msgid "Load Error"
+msgstr "加载错误"
+
+msgid "Invalid Parameter"
+msgstr "无效参数"
+
+msgid "Unsupported"
+msgstr "不支持的操作"
+
+msgid "Bad Buffer Size"
+msgstr "无效的缓冲区大小"
+
+msgid "Not Ready"
+msgstr "未就绪"
+
+msgid "Device Error"
+msgstr "设备错误"
+
+msgid "Write Protected"
+msgstr "设备写保护"
+
+msgid "Out of Resources"
+msgstr "资源不足"
+
+msgid "Volume Corrupt"
+msgstr "卷损坏"
+
+msgid "Volume Full"
+msgstr "卷已满"
+
+msgid "No Media"
+msgstr "无媒体"
+
+msgid "Media changed"
+msgstr "媒体已更改"
+
+msgid "Not Found"
+msgstr "未找到"
+
+msgid "Access Denied"
+msgstr "访问被禁止"
+
+msgid "No Response"
+msgstr "无响应"
+
+msgid "No mapping"
+msgstr "无映射"
+
+msgid "Time out"
+msgstr "操作超时"
+
+msgid "Not started"
+msgstr "操作未开始"
+
+msgid "Already started"
+msgstr "操作已开始"
+
+msgid "Aborted"
+msgstr "操作已取消"
+
+msgid "ICMP Error"
+msgstr "ICMP错误"
+
+msgid "TFTP Error"
+msgstr "TFTP错误"
+
+msgid "Protocol Error"
+msgstr "协议错误"
+
+msgid "Incompatible Version"
+msgstr "版本不兼容"
+
+msgid "Security Violation"
+msgstr "安全违规"
+
+msgid "CRC Error"
+msgstr "CRC验证错误"
+
+msgid "End of Media"
+msgstr "已到媒体末尾"
+
+msgid "End of File"
+msgstr "已到文件结尾"
+
+msgid "Invalid Language"
+msgstr "无效的语言"
+
+msgid "Compromised Data"
+msgstr "数据受损"

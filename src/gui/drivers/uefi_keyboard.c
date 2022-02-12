@@ -22,6 +22,14 @@
 #include"logger.h"
 #include"defines.h"
 #include"gui/guidrv.h"
+
+// Qualcomm specified
+#define SCAN_VOLUME_UP            0x0080
+#define SCAN_VOLUME_DOWN          0x0081
+#define SCAN_BRIGHTNESS_UP        0x0100
+#define SCAN_BRIGHTNESS_DOWN      0x0101
+#define SCAN_SUSPEND              0x0102
+
 static bool has_lr=false;
 static bool keyboard_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
 	EFI_SIMPLE_TEXT_INPUT_PROTOCOL*keyboard=indev_drv->user_data;
@@ -33,19 +41,29 @@ static bool keyboard_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
 			if(lv_group_get_editing(gui_grp))switch(p.ScanCode){
 				// why UP and DOWN map to LEFT and RIGHT?
 				// because volume keys only have UP and DOWN.
+				case SCAN_VOLUME_UP:
 				case SCAN_UP:data->key=has_lr?LV_KEY_UP:LV_KEY_LEFT;break;
+				case SCAN_BRIGHTNESS_UP:
 				case SCAN_LEFT:data->key=LV_KEY_LEFT;has_lr=true;break;
 				case SCAN_PAGE_UP:data->key=LV_KEY_UP;break;
+				case SCAN_VOLUME_DOWN:
 				case SCAN_DOWN:data->key=has_lr?LV_KEY_DOWN:LV_KEY_RIGHT;break;
+				case SCAN_BRIGHTNESS_DOWN:
 				case SCAN_RIGHT:data->key=LV_KEY_RIGHT;has_lr=true;break;
 				case SCAN_PAGE_DOWN:data->key=LV_KEY_DOWN;break;
+				case SCAN_SUSPEND:data->key=LV_KEY_ENTER;break;
 			}else switch(p.ScanCode){
 				case SCAN_UP:
 				case SCAN_LEFT:
+				case SCAN_VOLUME_UP:
+				case SCAN_BRIGHTNESS_UP:
 				case SCAN_PAGE_UP:data->key=LV_KEY_PREV;break;
 				case SCAN_DOWN:
 				case SCAN_RIGHT:
+				case SCAN_VOLUME_DOWN:
+				case SCAN_BRIGHTNESS_DOWN:
 				case SCAN_PAGE_DOWN:data->key=LV_KEY_NEXT;break;
+				case SCAN_SUSPEND:data->key=LV_KEY_ENTER;break;
 			}
 		}else if(p.UnicodeChar!=0)switch(p.UnicodeChar){
 			case ' ':case '\n':case '\r':data->key=LV_KEY_ENTER;break;

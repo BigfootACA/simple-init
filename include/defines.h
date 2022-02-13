@@ -56,6 +56,8 @@
 #ifndef MAX
 #define MAX(a,b)((b)<(a)?(a):(b))
 #endif
+#define EGO(expr,tag){expr;goto tag;}
+#define EDONE(expr) EGO(expr,done)
 #define ENUM(err) -(errno=(err))
 #define ERET(err) return ENUM(err)
 #define EPRET(err) {errno=(err);return NULL;}

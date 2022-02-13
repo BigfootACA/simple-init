@@ -17,6 +17,8 @@
 #include"param.h"
 #include"fdtparser.h"
 
+const uint32_t fdt_magic=0xedfe0dd0;
+
 fdt get_fdt_from_pointer(void*fdt){
 	if(!fdt)return NULL;
 	int r=fdt_check_header(fdt);

@@ -14,6 +14,9 @@
 // fdt type
 typedef void* fdt;
 
+// fdt magic
+extern const uint32_t fdt_magic;
+
 // src/lib/fdtparser.c: check and convert a pointer to fdt
 extern fdt get_fdt_from_pointer(void*fdt);
 

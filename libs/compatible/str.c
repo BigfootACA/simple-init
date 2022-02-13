@@ -38,13 +38,17 @@ int strncmp(const char*buff1,const char*buff2,size_t size){
 int strcasecmp(const char*buff1,const char*buff2){
 	return(int)AsciiStriCmp((CONST CHAR8*)buff1,(CONST CHAR8*)buff2);
 }
-char*strcpy(char*buff1,const char*buff2){
-	AsciiStrCpyS((CHAR8*)buff1,UNICODE_STRING_MAX,(CONST CHAR8*)buff2);
-	return buff1;
+char*strcpy(char *dest,const char*src){
+	size_t i;
+	for(i=0;src[i];i++)dest[i]=src[i];
+	dest[i]=0;
+	return dest;
 }
-char*strncpy(char*buff1,const char*buff2,size_t size){
-	AsciiStrnCpyS((CHAR8*)buff1,UNICODE_STRING_MAX,(CONST CHAR8*)buff2,(UINTN)size);
-	return buff1;
+char*strncpy(char*dest,const char*src,size_t n){
+	size_t i;
+	for(i=0;i<n&&src[i];i++)dest[i]=src[i];
+	for(;i<n;i++)dest[i]=0;
+	return dest;
 }
 int strncpyX(char*__restrict s1,const char*__restrict s2,size_t n){
 	int NumLeft;

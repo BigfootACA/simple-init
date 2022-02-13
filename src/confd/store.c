@@ -81,11 +81,12 @@ static struct conf*conf_create(struct conf*conf,const char*name,uid_t u,gid_t g)
 static struct conf*conf_lookup(const char*path,bool create,enum conf_type type,uid_t u,gid_t g){
 	errno=0;
 	struct conf*cur=&conf_store,*x;
-	char xpath[PATH_MAX]={0},*p=xpath,*key=p;
+	char*xpath,*p,*key;
 	if(!check_perm_read(&conf_store,u,g))EPRET(EACCES);
 	if(strcmp(path,"/")==0&&type==0)return &conf_store;
-	else strncpy(xpath,path,PATH_MAX-1);
 	if(!path[0]&&type==0)return &conf_store;
+	if(!(xpath=strdup(path)))EPRET(ENOMEM);
+	p=xpath,key=xpath;
 	MUTEX_LOCK(store_lock);
 	if(p)do{
 		if(*p!='.')continue;
@@ -93,10 +94,12 @@ static struct conf*conf_lookup(const char*path,bool create,enum conf_type type,u
 		if(!(x=conf_get(cur,key))){
 			if(!create){
 				MUTEX_UNLOCK(store_lock);
+				free(xpath);
 				EPRET(ENOENT);
 			}
 			if(!(x=conf_create(cur,key,u,g))){
 				MUTEX_UNLOCK(store_lock);
+				free(xpath);
 				return NULL;
 			}
 			x->type=TYPE_KEY;
@@ -104,27 +107,32 @@ static struct conf*conf_lookup(const char*path,bool create,enum conf_type type,u
 		}
 		if(!check_perm_read(x,u,g)){
 			MUTEX_UNLOCK(store_lock);
+			free(xpath);
 			EPRET(EACCES);
 		}
 		cur=x,key=++p;
 	}while(*p++);
 	if(!key[0]){
 		MUTEX_UNLOCK(store_lock);
+		free(xpath);
 		EPRET(EINVAL);
 	}
 	if(!(x=conf_get(cur,key))){
 		if(!create){
 			MUTEX_UNLOCK(store_lock);
+			free(xpath);
 			EPRET(ENOENT);
 		}
 		if(!(x=conf_create(cur,key,u,g))){
 			MUTEX_UNLOCK(store_lock);
+			free(xpath);
 			return NULL;
 		}
 		x->type=type;
 		x->mode=type==TYPE_KEY?KEY_MODE:VAL_MODE;
 	}
 	MUTEX_UNLOCK(store_lock);
+	free(xpath);
 	if(!check_perm_read(x,u,g))EPRET(EACCES);
 	if(x->type==0)EPRET(EBADMSG);
 	if(type!=0&&type!=x->type)EPRET(ENOENT);

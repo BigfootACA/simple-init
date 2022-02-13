@@ -6,6 +6,7 @@
 [Includes]
   include
   libs/freetype/include
+  libs/zlib
   libs/lvgl
   libs/lodepng
   libs/nanosvg/src

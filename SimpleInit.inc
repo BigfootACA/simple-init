@@ -1,4 +1,5 @@
 [LibraryClasses]
+  Zlib|libs/Zlib.inf
   LodePNG|libs/LodePNG.inf
   FreeType|libs/FreeType.inf
   LittleVgl|libs/LittleVgl.inf
@@ -12,6 +13,7 @@
   FdtLib|EmbeddedPkg/Library/FdtLib/FdtLib.inf
 
 [Components]
+  libs/Zlib.inf
   libs/LodePNG.inf
   libs/FreeType.inf
   libs/LittleVgl.inf

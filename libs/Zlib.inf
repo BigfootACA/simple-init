@@ -1,0 +1,27 @@
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = Zlib
+  FILE_GUID                      = C387C149-50D8-432F-8B01-0FB573440377
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = Zlib
+
+[BuildOptions]
+  GCC:*_*_*_CC_FLAGS = -DLV_CONF_PATH=lv_conf.h -DENABLE_UEFI=1
+
+[Packages]
+  MdePkg/MdePkg.dec
+  SimpleInit.dec
+
+[LibraryClasses]
+  UefiLib
+
+[Sources]
+  zlib/zutil.c
+  zlib/adler32.c
+  zlib/inftrees.c
+  zlib/inflate.c
+  zlib/inffast.c
+  zlib/deflate.c
+  zlib/compress.c
+  zlib/crc32.c

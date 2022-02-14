@@ -9,7 +9,7 @@ const char*make_readable_str_buf(char*buf,size_t len,unsigned long long val,unsi
 	unsigned frac=0;
 	const char*u=units,*fmt="%llu";
 	memset(buf,0,len);
-	if(val==0)return strncpy(buf,"0",len);
+	if(val==0)return strncpy(buf,"0",len-1);
 	if(block_size>1)val*=block_size;
 	if(display)val+=display/2,val/=display;
 	else{
@@ -20,7 +20,7 @@ const char*make_readable_str_buf(char*buf,size_t len,unsigned long long val,unsi
 			fmt="%llu%*c",frac=1;
 		}
 	}
-	snprintf(buf,len,fmt,val,frac,*u);
+	snprintf(buf,len-1,fmt,val,frac,*u);
 	return buf;
 }
 
@@ -28,6 +28,5 @@ const char*make_readable_str(unsigned long long val,unsigned long block_size,uns
 	static size_t s=1024;
 	char*c=malloc(s);
 	if(!c)EPRET(ENOMEM);
-	return make_readable_str_buf(c,s-1,val,block_size,display);
-
+	return make_readable_str_buf(c,s,val,block_size,display);
 }

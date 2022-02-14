@@ -30,3 +30,4 @@
   readable.c
   array.c
   fdtparser.c
+  aboot.c

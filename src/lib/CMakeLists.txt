@@ -21,4 +21,5 @@ add_library(init_lib STATIC
 	base64.c
 	language.c
 	fdtparser.c
+	aboot.c
 )

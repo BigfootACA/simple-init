@@ -7,6 +7,7 @@
  */
 
 #include"shell_internal.h"
+DECLARE_MAIN(abootimg);
 DECLARE_MAIN(adbd);
 DECLARE_MAIN(arch);
 DECLARE_MAIN(benchmark);
@@ -79,6 +80,7 @@ const struct shell_command*shell_cmds[]={
 	DECLARE_CMD(true,  benchmark,   "GUI Benchmark")
 	DECLARE_CMD(true,  guiapp,      "GUI Application")
 	#endif
+	DECLARE_CMD(true,  abootimg,    "Android Boot Image Tools")
 	DECLARE_CMD(true,  adbd,        "Android Debug Bridge Daemon")
 	DECLARE_CMD(true,  arch,        "Print system architecture")
 	DECLARE_CMD(true,  bootmenu,    "Boot Menu")

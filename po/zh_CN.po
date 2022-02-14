@@ -2085,3 +2085,142 @@ msgstr "处理协议失败: %s"
 
 msgid "append device path node failed"
 msgstr "追加设备节点失败"
+
+msgid ""
+"Usage: abootimg [OPTIONS]...\n"
+"Android boot image tools.\n\n"
+"Options: \n"
+"\t-c, --create <IMG>      create new image\n"
+"\t-x, --extract <IMG>     extract image\n"
+"\t-u, --update <IMG>      update image\n"
+"\t-k, --kernel <KERNEL>   kernel path\n"
+"\t-r, --ramdisk <RAMDISK> ramdisk path (initramfs)\n"
+"\t-s, --second <SECOND>   second stage bootloader path\n"
+"\t-b, --cmdline <CMDLINE> set boot cmdline (bootargs max 511 chars)\n"
+"\t-n, --name <NAME>       set image name (max 15 chars)\n"
+"\t-p, --page <PAGE>       set page size (default 4096)\n"
+"\t-f, --force             force use stdin or stdout when tty\n"
+"\t-o, --overwrite         do not backup anything\n"
+"\t-h, --help              show this help\n"
+
+msgstr ""
+"使用方法: abootimg [选项]...\n"
+"安卓启动镜像工具.\n\n"
+"选项: \n"
+"\t-c, --create <镜像>     创建新镜像\n"
+"\t-x, --extract <镜像>    解包镜像\n"
+"\t-u, --update <镜像>     更新镜像\n"
+"\t-k, --kernel <内核>     内核镜像路径\n"
+"\t-r, --ramdisk <内存盘>  内存盘路径 (initramfs)\n"
+"\t-s, --second <第二引导> 第二阶段引导器路径\n"
+"\t-b, --cmdline <CMDLINE> 设置启动命令行 (bootargs 最多511字符)\n"
+"\t-n, --name <名称>       设置镜像名称 (最多15字符)\n"
+"\t-p, --page <PAGE>       设置页大小\n"
+"\t-f, --force             强制使用标准输入或标准输出\n"
+"\t-o, --overwrite         不要备份任何文件\n"
+"\t-h, --help              查看此帮助\n"
+
+msgid "Android Boot Image Tools"
+msgstr "安卓启动镜像工具"
+
+msgid "read image from stdin...\n"
+msgstr "从标准输入读取镜像...\n"
+
+msgid "load image from '%s'...\n"
+msgstr "从'%s'加载镜像...\n"
+
+msgid "load image failed"
+msgstr "加载镜像失败"
+
+msgid "write image to stdout...\n"
+msgstr "写入镜像到标准输出...\n"
+
+msgid "backup '%s' to '%s'\n"
+msgstr "备份'%s'为'%s'\n"
+
+msgid "save image to '%s'...\n"
+msgstr "保存镜像到'%s'...\n"
+
+msgid "save image failed"
+msgstr "保存镜像失败"
+
+msgid "warning: looks like an empty image\n"
+msgstr "警告: 看着是一个空镜像\n"
+
+msgid "warning: looks like an invalid image\n"
+msgstr "警告: 看着是一个无效镜像\n"
+
+msgid "write kernel to stdout...\n"
+msgstr "写入内核到标准输出...\n"
+
+msgid "write ramdisk to stdout...\n"
+msgstr "写入内存盘到标准输出...\n"
+
+msgid "write second to stdout...\n"
+msgstr "写入第二阶段引导器到标准输出...\n"
+
+msgid "save kernel to '%s'...\n"
+msgstr "保存内核到'%s'...\n"
+
+msgid "save ramdisk to '%s'...\n"
+msgstr "保存内存盘到'%s'...\n"
+
+msgid "save second to '%s'...\n"
+msgstr "保存第二阶段引导器到'%s'...\n"
+
+msgid "save kernel failed"
+msgstr "保存内核失败"
+
+msgid "save ramdisk failed"
+msgstr "保存内存盘失败"
+
+msgid "save second failed"
+msgstr "保存第二阶段引导器失败"
+
+msgid "read kernel from stdin...\n"
+msgstr "从标准输入读取内核...\n"
+
+msgid "read ramdisk from stdin...\n"
+msgstr "从标准输入读取内存盘...\n"
+
+msgid "read second from stdin...\n"
+msgstr "从标准输入读取第二阶段引导器...\n"
+
+msgid "load kernel from '%s'...\n"
+msgstr "从'%s'加载内核...\n"
+
+msgid "load ramdisk from '%s'...\n"
+msgstr "从'%s'加载内存盘...\n"
+
+msgid "load second from '%s'...\n"
+msgstr "从'%s'加载第二阶段引导器...\n"
+
+msgid "load kernel failed"
+msgstr "加载内核失败"
+
+msgid "load ramdisk failed"
+msgstr "加载内存盘失败"
+
+msgid "load second failed"
+msgstr "加载第二阶段引导器失败"
+
+msgid "create new image...\n"
+msgstr "创建新镜像...\n"
+
+msgid "create image failed"
+msgstr "创建镜像失败"
+
+msgid "no kernel specified\n"
+msgstr "没有指定内核\n"
+
+msgid "stdout is a tty, use -f to force output\n"
+msgstr "标准输出是一个终端，使用-f强制输出\n"
+
+msgid "reuse of stdin is not allowed\n"
+msgstr "不允许重复使用标准输入\n"
+
+msgid "reuse of stdout is not allowed\n"
+msgstr "不允许重复使用标准输出\n"
+
+msgid "invalid argument\n"
+msgstr "无效参数\n"

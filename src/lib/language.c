@@ -107,7 +107,7 @@ char*lang_get_locale(char*def){
 	if(def)return def;
 	#ifdef ENABLE_UEFI
 	if(!cur_lang[0])strcpy(cur_lang,confd_get_string("language","C"));
-	return cur_lang;
+	return strdup(cur_lang);
 	#else
 	char*l;
 	if((l=getenv("LC_ALL")))return strdup(l);

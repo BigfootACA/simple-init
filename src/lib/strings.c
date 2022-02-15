@@ -287,3 +287,9 @@ char*add_right_slash(char*path,size_t len){
 	if(path[bs-1]!='/')path[bs]='/',path[bs+1]=0;
 	return path;
 }
+
+char*buff2hex(char*hex,void*buff,size_t len){
+	for(size_t i=0;i<len;i++)
+		snprintf(hex+(i*2),3,"%02x",((unsigned char*)buff)[i]);
+	return hex;
+}

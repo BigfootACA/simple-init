@@ -155,6 +155,9 @@ extern char*trim_slash(char*path);
 // src/lib/strings.c: append slash to string
 extern char*add_right_slash(char*path,size_t len);
 
+// src/lib/strings.c: convert buffer to hex string
+extern char*buff2hex(char*hex,void*buff,size_t len);
+
 #ifdef _LIST_H
 
 // src/lib/strings.c: convert path string to a list

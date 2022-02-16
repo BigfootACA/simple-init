@@ -38,11 +38,6 @@
 #include"gui/clipboard.h"
 #define TAG "gui"
 
-#ifndef ENABLE_UEFI
-// default backlight device fd
-int default_backlight=-1;
-#endif
-
 // gui dpi
 int gui_dpi_def=200,gui_dpi_force=0,gui_dpi=200;
 
@@ -54,6 +49,9 @@ uint32_t gui_w=-1,gui_h=-1;
 
 // gui usable size
 uint32_t gui_sw,gui_sh,gui_sx,gui_sy;
+
+// gui rotate
+uint16_t gui_rotate;
 
 // gui fonts
 lv_font_t*gui_font=&lv_font_montserrat_24,*gui_font_small=&lv_font_montserrat_24,*symbol_font=NULL;
@@ -75,13 +73,19 @@ bool gui_run=true;
 #endif
 bool gui_dark=DARK_MODE;
 
-#ifndef ENABLE_UEFI
+#ifdef ENABLE_UEFI
+#define DEF_ROTATE PcdGet16(PcdGuiDefaultRotate)
+#else
+#define DEF_ROTATE confd_get_integer("runtime.cmdline.rotate",0)
+
 // is sleeping
 bool gui_sleep=false;
 
 // gui sleep lock
 static sem_t gui_wait;
 
+// default backlight device fd
+int default_backlight=-1;
 #endif
 
 // gui process lock
@@ -174,6 +178,15 @@ int gui_pre_init(){
 	gui_dpi=confd_get_integer("runtime.cmdline.dpi",gui_dpi_def);
 	gui_dpi_force=confd_get_integer("runtime.cmdline.dpi_force",0);
 	gui_dark=confd_get_boolean("gui.dark",DARK_MODE);
+	gui_rotate=(uint16_t)confd_get_integer("gui.rotate",DEF_ROTATE);
+	if(gui_rotate>=360)gui_rotate%=360;
+	switch(gui_rotate){
+		case 0:case 90:case 180:case 270:break;
+		default:
+			tlog_warn("invalid rotate %d",gui_rotate);
+			gui_rotate=0;
+		break;
+	}
 
 	// init gui
 	if(guidrv_init(&gui_w,&gui_h,&gui_dpi)<0)return -1;

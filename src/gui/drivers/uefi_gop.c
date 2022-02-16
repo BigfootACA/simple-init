@@ -77,6 +77,12 @@ static int uefigop_register(){
 	disp_drv.flush_cb=uefigop_flush;
 	disp_drv.hor_res=ww;
 	disp_drv.ver_res=hh;
+	switch(gui_rotate){
+		case 0:break;
+		case 90:disp_drv.sw_rotate=1,disp_drv.rotated=LV_DISP_ROT_90;break;
+		case 180:disp_drv.sw_rotate=1,disp_drv.rotated=LV_DISP_ROT_180;break;
+		case 270:disp_drv.sw_rotate=1,disp_drv.rotated=LV_DISP_ROT_270;break;
+	}
 	lv_disp_drv_register(&disp_drv);
 	logger_set_console(false);
 	keyboard_register();
@@ -85,8 +91,13 @@ static int uefigop_register(){
 	return 0;
 }
 static void uefigop_get_sizes(uint32_t*width,uint32_t*height){
-	if(width)*width=ww;
-	if(height)*height=hh;
+	uint32_t w=0,h=0;
+	switch(gui_rotate){
+		case 0:case 180:w=ww,h=hh;break;
+		case 90:case 270:w=hh,h=ww;break;
+	}
+	if(width)*width=w;
+	if(height)*height=h;
 }
 static bool uefigop_can_sleep(){
 	return false;

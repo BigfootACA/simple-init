@@ -162,6 +162,12 @@ static int _fbdev_register(){
 	lv_disp_drv_init(&disp_drv);
 	disp_drv.hor_res=vinfo.xres;
 	disp_drv.ver_res=vinfo.yres;
+	switch(gui_rotate){
+		case 0:break;
+		case 90:disp_drv.sw_rotate=1,disp_drv.rotated=LV_DISP_ROT_90;break;
+		case 180:disp_drv.sw_rotate=1,disp_drv.rotated=LV_DISP_ROT_180;break;
+		case 270:disp_drv.sw_rotate=1,disp_drv.rotated=LV_DISP_ROT_270;break;
+	}
 	tlog_notice("screen resolution: %dx%d",vinfo.xres,vinfo.yres);
 	disp_drv.buffer=&disp_buf;
 	disp_drv.flush_cb=fbdev_flush;
@@ -242,8 +248,13 @@ static int fbdev_scan_init_register(){
 	return 0;
 }
 static void fbdev_get_sizes(uint32_t*width,uint32_t*height){
-	if(width)*width=vinfo.xres;
-	if(height)*height=vinfo.yres;
+	uint32_t w=0,h=0;
+	switch(gui_rotate){
+		case 0:case 180:w=vinfo.xres,h=vinfo.yres;break;
+		case 90:case 270:w=vinfo.yres,h=vinfo.xres;break;
+	}
+	if(width)*width=w;
+	if(height)*height=h;
 }
 static int fbdev_get_brightness(){
 	if(default_backlight<0)ERET(ENOTSUP);

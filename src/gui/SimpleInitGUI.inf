@@ -42,6 +42,7 @@
 
 [Pcd]
   gSimpleInitTokenSpaceGuid.PcdGuiDefaultDPI
+  gSimpleInitTokenSpaceGuid.PcdGuiDefaultRotate
   gSimpleInitTokenSpaceGuid.PcdGuiDefaultMouseScale
   gSimpleInitTokenSpaceGuid.PcdGuiDefaultMouseOnlyFirst
 

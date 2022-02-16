@@ -219,6 +219,12 @@ static int gtkdrv_scan_init_register(){
 	disp.flush_cb=gtkdrv_flush_cb;
 	disp.hor_res=GTK_W;
 	disp.ver_res=GTK_H;
+	switch(gui_rotate){
+		case 0:break;
+		case 90:disp.sw_rotate=1,disp.rotated=LV_DISP_ROT_90;break;
+		case 180:disp.sw_rotate=1,disp.rotated=LV_DISP_ROT_180;break;
+		case 270:disp.sw_rotate=1,disp.rotated=LV_DISP_ROT_270;break;
+	}
 	lv_disp_drv_register(&disp);
 	lv_indev_drv_t mouse;
 	lv_indev_drv_init(&mouse);
@@ -233,9 +239,14 @@ static int gtkdrv_scan_init_register(){
 	lv_indev_drv_register(&kbd);
 	return 0;
 }
-static void gtkdrv_get_sizes(uint32_t*w,uint32_t*h){
-	if(w)*w=GTK_W;
-	if(h)*h=GTK_H;
+static void gtkdrv_get_sizes(uint32_t*width,uint32_t*height){
+	uint32_t w=0,h=0;
+	switch(gui_rotate){
+		case 0:case 180:w=GTK_W,h=GTK_H;break;
+		case 90:case 270:w=GTK_H,h=GTK_W;break;
+	}
+	if(width)*width=w;
+	if(height)*height=h;
 }
 static void gtkdrv_get_dpi(int*dpi){
 	if(dpi)*dpi=200;

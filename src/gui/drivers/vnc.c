@@ -134,6 +134,12 @@ static int vnc_register(){
 	disp_drv.ver_res=HEIGHT;
 	disp_drv.buffer=&disp_buf;
 	disp_drv.flush_cb=fbdev_flush;
+	switch(gui_rotate){
+		case 0:break;
+		case 90:disp_drv.sw_rotate=1,disp_drv.rotated=LV_DISP_ROT_90;break;
+		case 180:disp_drv.sw_rotate=1,disp_drv.rotated=LV_DISP_ROT_180;break;
+		case 270:disp_drv.sw_rotate=1,disp_drv.rotated=LV_DISP_ROT_270;break;
+	}
 
 	kbd_in.type=LV_INDEV_TYPE_KEYPAD;
 	ptr_in.type=LV_INDEV_TYPE_POINTER;
@@ -154,8 +160,13 @@ static int vnc_register(){
 }
 
 static void vnc_get_sizes(uint32_t*width,uint32_t*height){
-	if(width)*width=WIDTH;
-	if(height)*height=HEIGHT;
+	uint32_t w=0,h=0;
+	switch(gui_rotate){
+		case 0:case 180:w=WIDTH,h=HEIGHT;break;
+		case 90:case 270:w=HEIGHT,h=WIDTH;break;
+	}
+	if(width)*width=w;
+	if(height)*height=h;
 }
 
 static bool vnc_cansleep(){

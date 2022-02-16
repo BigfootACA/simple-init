@@ -19,6 +19,7 @@ extern int gui_font_size;
 extern int default_backlight;
 extern uint32_t gui_w,gui_h;
 extern uint32_t gui_sw,gui_sh,gui_sx,gui_sy;
+extern uint16_t gui_rotate;
 extern lv_font_t*gui_font;
 extern lv_font_t*gui_font_small;
 extern lv_group_t*gui_grp;

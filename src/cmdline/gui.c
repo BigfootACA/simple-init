@@ -12,6 +12,17 @@
 #include"logger.h"
 #define TAG "cmdline"
 
+int cmdline_rotate(char*k __attribute__((unused)),char*v){
+	int r=parse_int(v,0);
+	if(r>=360)r%=360;
+	switch(r){
+		case 0:case 90:case 180:case 270:break;
+		default:return trlog_warn(0,"invalid dpi '%s'",v);
+	}
+	confd_set_integer("runtime.cmdline.rotate",r);
+	return 0;
+}
+
 int cmdline_dpi(char*k __attribute__((unused)),char*v){
 	int r=parse_int(v,0);
 	if(r<0||r>1000)

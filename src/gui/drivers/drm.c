@@ -544,8 +544,13 @@ static void drm_flush(lv_disp_drv_t*disp_drv,const lv_area_t*area,lv_color_t*col
 	lv_disp_flush_ready(disp_drv);
 }
 static void drm_get_sizes(uint32_t*width,uint32_t*height){
-	if(width)*width=drm_dev.width;
-	if(height)*height=drm_dev.height;
+	uint32_t w=0,h=0;
+	switch(gui_rotate){
+		case 0:case 180:w=drm_dev.width,h=drm_dev.height;break;
+		case 90:case 270:w=drm_dev.height,h=drm_dev.width;break;
+	}
+	if(width)*width=w;
+	if(height)*height=h;
 }
 static int _drm_register(){
 	if(drm_dev.width<=0||drm_dev.height<=0){
@@ -572,6 +577,12 @@ static int _drm_register(){
 	);
 	disp_drv.buffer=&disp_buf;
 	disp_drv.flush_cb=drm_flush;
+	switch(gui_rotate){
+		case 0:break;
+		case 90:disp_drv.sw_rotate=1,disp_drv.rotated=LV_DISP_ROT_90;break;
+		case 180:disp_drv.sw_rotate=1,disp_drv.rotated=LV_DISP_ROT_180;break;
+		case 270:disp_drv.sw_rotate=1,disp_drv.rotated=LV_DISP_ROT_270;break;
+	}
 	lv_disp_drv_register(&disp_drv);
 	set_active_console(7);
 	return 0;

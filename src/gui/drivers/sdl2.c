@@ -85,7 +85,7 @@ static void sdl2_flush(lv_disp_drv_t*disp_drv,const lv_area_t*area,lv_color_t*co
 	}
 	uint32_t w=lv_area_get_width(area);
 	for(int32_t y=area->y1;y<=area->y2&&y<disp_drv->ver_res;y++){
-		memcpy(&monitor.tft_fb[y*SDL2_W+area->x1],color_p,w*sizeof(lv_color_t));
+		memcpy(&monitor.tft_fb[y*hres+area->x1],color_p,w*sizeof(lv_color_t));
 		color_p+=w;
 	}
 	monitor.sdl_refr_qry=true;
@@ -204,6 +204,12 @@ static int monitor_init(){
 	disp_drv.flush_cb=sdl2_flush;
 	disp_drv.hor_res=SDL2_W;
 	disp_drv.ver_res=SDL2_H;
+	switch(gui_rotate){
+		case 0:break;
+		case 90:disp_drv.sw_rotate=1,disp_drv.rotated=LV_DISP_ROT_90;break;
+		case 180:disp_drv.sw_rotate=1,disp_drv.rotated=LV_DISP_ROT_180;break;
+		case 270:disp_drv.sw_rotate=1,disp_drv.rotated=LV_DISP_ROT_270;break;
+	}
 	lv_disp_drv_register(&disp_drv);
 
 	// Mouse input device
@@ -230,8 +236,13 @@ static int monitor_init(){
 	return 0;
 }
 static void sdl2_get_sizes(uint32_t*width,uint32_t*height){
-	if(width)*width=SDL2_W;
-	if(height)*height=SDL2_H;
+	uint32_t w=0,h=0;
+	switch(gui_rotate){
+		case 0:case 180:w=SDL2_W,h=SDL2_H;break;
+		case 90:case 270:w=SDL2_H,h=SDL2_W;break;
+	}
+	if(width)*width=w;
+	if(height)*height=h;
 }
 static void sdl2_get_dpi(int*dpi){
 	if(dpi)*dpi=200/SDL2_Z;

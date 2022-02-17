@@ -2230,3 +2230,57 @@ msgstr "返回"
 
 msgid "Continue Boot"
 msgstr "继续启动"
+
+msgid "Create"
+msgstr "创建"
+
+msgid "Extract"
+msgstr "解包"
+
+msgid "Update"
+msgstr "更新"
+
+msgid "Android Boot Image"
+msgstr "安卓启动镜像"
+
+msgid "Linux Kernel"
+msgstr "Linux内核"
+
+msgid "Ramdisk (initramfs)"
+msgstr "内存盘 (initramfs)"
+
+msgid "Second Stage Bootloader"
+msgstr "第二阶段引导器"
+
+msgid "Kernel Commandline"
+msgstr "内核命令行"
+
+msgid "Save image failed"
+msgstr "保存镜像失败"
+
+msgid "Save kernel failed"
+msgstr "保存内核失败"
+
+msgid "Save ramdisk failed"
+msgstr "保存内存盘失败"
+
+msgid "Save second failed"
+msgstr "保存第二阶段引导器失败"
+
+msgid "Load image failed"
+msgstr "加载镜像失败"
+
+msgid "Load kernel failed"
+msgstr "加载内核失败"
+
+msgid "Load ramdisk failed"
+msgstr "加载内存盘失败"
+
+msgid "Load second failed"
+msgstr "加载第二阶段引导器失败"
+
+msgid "Create new image failed"
+msgstr "创建新镜像失败"
+
+msgid "Operation done"
+msgstr "操作完成"

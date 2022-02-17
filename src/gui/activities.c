@@ -31,6 +31,7 @@ extern struct gui_register guireg_vibrator;
 extern struct gui_register guireg_language;
 extern struct gui_register guireg_conftool;
 extern struct gui_register guireg_calendar;
+extern struct gui_register guireg_abootimg;
 extern struct gui_register guireg_filemgr;
 extern struct gui_register guireg_regedit;
 extern struct gui_register guireg_gadget;
@@ -72,6 +73,7 @@ struct gui_register*guiact_register[]={
 	&guireg_clipboard,
 	&guireg_language,
 	&guireg_calendar,
+	&guireg_abootimg,
 	&guireg_conftool,
 	&guireg_filemgr,
 	&guireg_reboot,

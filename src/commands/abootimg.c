@@ -9,6 +9,7 @@
 #define _GNU_SOURCE
 #include<unistd.h>
 #include<strings.h>
+#include<sys/stat.h>
 #include"str.h"
 #include"aboot.h"
 #include"output.h"
@@ -66,8 +67,10 @@ static void check_tty(){
 }
 
 static void check_backup(char*path){
+	struct stat st;
 	if(overwrite)return;
-	if(access(path,F_OK)!=0)return;
+	if(stat(path,&st)!=0)return;
+	if(!S_ISREG(st.st_mode))return;
 	char new_name[PATH_MAX]={0};
 	snprintf(new_name,sizeof(new_name)-1,"%s.bak",path);
 	if(rename(path,new_name)==0)fprintf(
@@ -82,6 +85,7 @@ static aboot_image*load_image(){
 		check_use_stdin();
 		fprintf(stderr,_("read image from stdin...\n"));
 	}else fprintf(stderr,_("load image from '%s'...\n"),image);
+	errno=0;
 	aboot_image*img=use_pipe?
 		abootimg_load_from_fd(STDIN_FILENO):
 		abootimg_load_from_file(AT_FDCWD,image);
@@ -98,11 +102,12 @@ static void save_image(aboot_image*img){
 		check_backup(image);
 		fprintf(stderr,_("save image to '%s'...\n"),image);
 	}
+	errno=0;
 	if(!(use_pipe?
 		abootimg_save_to_fd(img,STDOUT_FILENO):
 		abootimg_save_to_file(img,AT_FDCWD,image)
 	)){
-		perror(_("save image failed"));
+		stderr_perror(_("save image failed"));
 		abootimg_free(img);
 		exit(1);
 	}
@@ -122,11 +127,12 @@ static void check_image(aboot_image*img){
                 check_backup(type);\
                 fprintf(stderr,_("save "#type" to '%s'...\n"),type);\
         }\
+	errno=0;\
 	if(!(use_pipe?\
 		abootimg_save_##type##_to_fd(img,STDOUT_FILENO):\
 		abootimg_save_##type##_to_file(img,AT_FDCWD,type)\
 	)){\
-		perror(_("save "#type" failed"));\
+		stderr_perror(_("save "#type" failed"));\
 		abootimg_free(img);\
 		exit(1);\
 	}\
@@ -138,11 +144,12 @@ static void check_image(aboot_image*img){
                 check_use_stdin();\
                 fprintf(stderr,_("read "#type" from stdin...\n"));\
         }else fprintf(stderr,_("load "#type" from '%s'...\n"),type);\
+	errno=0;\
 	if(!(use_pipe?\
 		abootimg_load_##type##_from_fd(img,STDIN_FILENO):\
 		abootimg_load_##type##_from_file(img,AT_FDCWD,type)\
 	)){\
-		perror(_("load "#type" failed"));\
+		stderr_perror(_("load "#type" failed"));\
 		abootimg_free(img);\
 		exit(1);\
 	}\
@@ -169,6 +176,7 @@ static void do_save(aboot_image*img){
 
 static void do_create(){
 	fprintf(stderr,_("create new image...\n"));
+	errno=0;
 	aboot_image*img=abootimg_new_image();
 	if(!img)exit_perror(1,"create image failed");
 	if(!kernel)ee_printf(1,"no kernel specified\n");

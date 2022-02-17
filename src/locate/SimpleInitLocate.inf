@@ -1,0 +1,43 @@
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = SimpleInitLocate
+  FILE_GUID                      = B540183F-CB34-4C7B-AE86-6FD3095D9DFF
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = SimpleInitLocate
+
+[BuildOptions]
+  GCC:*_*_*_CC_FLAGS = -DENABLE_UEFI=1
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  SimpleInit.dec
+
+[LibraryClasses]
+  UefiLib
+  BaseMemoryLib
+  DevicePathLib
+  MemoryAllocationLib
+  UefiBootServicesTableLib
+  SimpleInitLib
+  SimpleInitConfd
+  SimpleInitLoggerd
+
+[Guids]
+  gEfiFileInfoGuid
+  gEfiFileSystemVolumeLabelInfoIdGuid
+
+[Protocols]
+  gEfiLoadedImageProtocolGuid
+  gEfiBlockIoProtocolGuid
+  gEfiPartitionInfoProtocolGuid
+  gEfiSimpleFileSystemProtocolGuid
+
+[Sources]
+  locate.c
+  locates.c
+  disk.c
+  mbr.c
+  gpt.c
+  fs.c

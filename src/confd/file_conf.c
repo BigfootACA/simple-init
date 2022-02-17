@@ -19,6 +19,7 @@
 #include<sys/mman.h>
 #endif
 #include"str.h"
+#include"list.h"
 #include"logger.h"
 #include"confd_internal.h"
 #define TAG "config"
@@ -97,7 +98,7 @@ static void str_write(_ROOT_TYPE fd,char*str){
 static int print_conf(_ROOT_TYPE fd,struct conf*key,const char*name){
 	size_t size=0;
 	char path[PATH_MAX]={0},*buf,*str;
-	if(!key->save&&!*name)return 0;
+	if(!key->save)return 0;
 	if(key->name[0]){
 		if(!name[0])strcpy(path,key->name);
 		else snprintf(path,PATH_MAX-1,"%s.%s",name,key->name);
@@ -201,23 +202,51 @@ static void line_set_string(char*key,char*value,size_t len){
 }
 
 static void conf_parse_line(int*err,const char*name,size_t n,char*data){
-	if(!data)return;
-	char*p=strchr(data,'=');
-	if(!p){
-		if(!check_valid(data,CONF_KEY_CHARS))goto inv_key;
-		size_t ds=strlen(data);
-		if(ds==0)goto inv_key;
-		if(strncmp(data,"runtime.",MIN(7,ds))==0)goto runtime;
-		conf_del(data,0,0);
+	list*f;
+	size_t ks,vs,ds;
+	static list*path=NULL;
+	char*tk,*value,key[PATH_MAX],*p;
+	if(!data){
+		if(path){
+			tlog_warn("%s: unexpected file end",name);
+			list_free_all_def(path);
+			path=NULL,(*err)++;
+		}
 		return;
 	}
-	*p=0;
-	char*key=data,*value=p+1;
-	trim(key);
+	if(!(p=strchr(data,'='))){
+		if((p=strchr(data,'{'))){
+			if(*(p+1))goto inv_key;
+			*p=0;
+			trim(data);
+			if(!*data||!check_valid(data,CONF_KEY_CHARS))goto inv_key;
+			list_obj_add_new_strdup(&path,data);
+		}else if(strcmp(data,"}")==0){
+			if(!path)goto inv_key;
+			list_obj_del(&path,list_last(path),list_default_free);
+		}else{
+			if(!check_valid(data,CONF_KEY_CHARS))goto inv_key;
+			if((ds=strlen(data))==0)goto inv_key;
+			if(strncmp(data,"runtime.",MIN(7,ds))==0)goto runtime;
+			conf_del(data,0,0);
+		}
+		return;
+	}
+	*p=0,tk=data,value=p+1;
+	trim(tk);
 	trim(value);
-	size_t ks=strlen(key),vs=strlen(value);
-	if(ks==0)goto inv_key;
-	if(vs==0)goto inv_val;
+	memset(key,0,sizeof(key));
+	if((f=list_first(path)))do{
+		LIST_DATA_DECLARE(k,f,char*);
+		if(strlen(k)+strlen(key)+1>=sizeof(key))goto inv_key;
+		if(key[0])strcat(key,".");
+		strcat(key,k);
+	}while((f=f->next));
+	if(strlen(tk)+strlen(key)+1>=sizeof(key))goto inv_key;
+	if(key[0])strcat(key,".");
+	strcat(key,tk);
+	if((ks=strlen(key))==0)goto inv_key;
+	if((vs=strlen(value))==0)goto inv_val;
 	if(!check_valid(key,CONF_KEY_CHARS))goto inv_key;
 	if(strncmp(key,"runtime.",MIN(7,ks))==0)goto runtime;
 	if(value[0]=='\''){
@@ -229,10 +258,9 @@ static void conf_parse_line(int*err,const char*name,size_t n,char*data){
 	}else if(string_is_true(value))conf_set_boolean(key,true,0,0);
 	else if(string_is_false(value))conf_set_boolean(key,false,0,0);
 	else{
-		char*end;
 		errno=0;
-		int64_t i=strtol(value,&end,0);
-		if(errno!=0||end==value)goto inv_val;
+		int64_t i=strtol(value,&p,0);
+		if(errno!=0||p==value)goto inv_val;
 		conf_set_integer(key,i,0,0);
 	}
 	return;
@@ -292,6 +320,7 @@ static int conf_parse(const char*path,char*data,size_t len){
 		}
 		last=cur,dx++;
 	}
+	conf_parse_line(&err,name,0,NULL);
 	free(buff);
 	return 0;
 }

@@ -207,6 +207,7 @@ static void reload_background(struct gui_app*ga){
 		changed=true;
 	}
 	load_background(ga,changed);
+	if(bg)free(bg);
 }
 
 static void do_reload(lv_task_t*t){

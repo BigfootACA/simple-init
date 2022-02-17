@@ -8,6 +8,7 @@
 #include"gui/image.h"
 #include"gui/guidrv.h"
 #include"gui/activity.h"
+#undef time
 #define TAG "benchmark"
 #define RND_NUM              64
 #define SCENE_TIME           1000

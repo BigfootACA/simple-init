@@ -14,7 +14,7 @@
 #ifndef EUCLEAN
 #define EUCLEAN EIO
 #endif
-int errno=0;
+int comp_errno=0;
 RETURN_STATUS EFIerrno = RETURN_SUCCESS;
 int efi_status_to_errno(EFI_STATUS st){
 	switch(st){

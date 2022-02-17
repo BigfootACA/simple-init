@@ -21,6 +21,7 @@ extern "C" {
 #define __tm_gmtoff tm_gmtoff
 #define __tm_zone tm_zone
 
+#define time comp_time
 #define clock comp_clock
 #define difftime comp_difftime
 #define mktime comp_mktime

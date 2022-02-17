@@ -5,7 +5,8 @@
 #ifndef SIMPLE_INIT_ERRNO_H
 #define SIMPLE_INIT_ERRNO_H
 #include<Uefi.h>
-extern int errno;
+extern int comp_errno;
+#define errno comp_errno
 extern  RETURN_STATUS   EFIerrno;
 #define	EPERM		 1	/* Operation not permitted */
 #define	ENOENT		 2	/* No such file or directory */

@@ -207,6 +207,13 @@ char*confd_get_string(const char*path,char*def){
 	return ret;
 }
 
+char*confd_get_sstring(const char*path,char*def,char*buf,size_t len){
+	char*r=confd_get_string(path,def);
+	memset(buf,0,len);
+	if(r||def)strncpy(buf,r?r:def,len);
+	return buf;
+}
+
 int64_t confd_get_integer(const char*path,int64_t def){
 	if(!path)ERET(EINVAL);
 	if(confd<0)return def;
@@ -398,6 +405,9 @@ ret func##_array(const char*base,int index,const char*path __VA_ARGS__){\
 	XEXT_DICT(func,ret) \
 	XEXT_ARRAY(func,ret)
 
+_EXT_BASE(char*,confd_get_sstring,confd_get_sstring(xpath,def,buf,len),,char*def,char*buf,size_t len)
+_EXT_DICT(char*,confd_get_sstring,confd_get_sstring(xpath,def,buf,len),,char*def,char*buf,size_t len)
+_EXT_ARRAY(char*,confd_get_sstring,confd_get_sstring(xpath,def,buf,len),,char*def,char*buf,size_t len)
 EXT(confd_set_integer, data,int64_t,int);
 EXT(confd_set_string,  data,char*,  int);
 EXT(confd_set_boolean, data,bool,   int);

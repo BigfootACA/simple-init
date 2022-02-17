@@ -73,6 +73,7 @@ extern int confd_set_default_config(const char*file);
 DECLARE_FUNC(confd_set_integer, int,     ,int64_t data);
 DECLARE_FUNC(confd_set_string,  int,     ,char*   data);
 DECLARE_FUNC(confd_set_boolean, int,     ,bool    data);
+DECLARE_FUNC(confd_get_sstring, char*,   ,char*   def, char*buf, size_t size);
 DECLARE_FUNC(confd_get_string,  char*,   ,char*   data);
 DECLARE_FUNC(confd_get_integer, int64_t, ,int64_t data);
 DECLARE_FUNC(confd_get_boolean, bool,    ,bool    data);

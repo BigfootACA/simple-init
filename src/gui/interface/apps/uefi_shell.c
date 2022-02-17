@@ -10,10 +10,8 @@
 #ifdef ENABLE_UEFI
 #include<stdlib.h>
 #include<Uefi.h>
-#include<Pi/PiFirmwareFile.h>
 #include<Library/UefiLib.h>
 #include<Library/DevicePathLib.h>
-#include<Library/DxeServicesLib.h>
 #include<Library/UefiBootServicesTableLib.h>
 #include<Protocol/LoadedImage.h>
 #include"gui.h"

@@ -233,6 +233,10 @@ static bool fs_is_dir_cb(
 	return S_ISDIR(st.st_mode);
 }
 
+int lv_fs_file_to_fd(lv_fs_file_t*fp){
+	return fp?*(int*)((lv_fs_file_t*)fp->file_d):-1;
+}
+
 static lv_res_t fs_read_cb(
 	struct _lv_fs_drv_t*drv,
 	void*file_p,

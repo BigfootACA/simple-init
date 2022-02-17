@@ -35,4 +35,10 @@ extern lv_res_t lv_fs_creat(const char*name);
 extern bool lv_fs_is_dir(const char*path);
 extern const char*lv_fs_res_to_string(lv_fs_res_t res);
 extern const char*lv_fs_res_to_i18n_string(lv_fs_res_t res);
+#ifdef ENABLE_UEFI
+#include<Protocol/SimpleFileSystem.h>
+extern EFI_FILE_PROTOCOL*lv_fs_file_to_fp(lv_fs_file_t*fp);
+#else
+extern int lv_fs_file_to_fd(lv_fs_file_t*fp);
+#endif
 #endif

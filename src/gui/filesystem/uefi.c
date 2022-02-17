@@ -305,6 +305,10 @@ static bool fs_is_dir_cb(
 	return isdir;
 }
 
+EFI_FILE_PROTOCOL*lv_fs_file_to_fp(lv_fs_file_t*fp){
+	return fp?*(EFI_FILE_PROTOCOL**)((lv_fs_file_t*)fp->file_d):NULL;
+}
+
 static lv_res_t fs_read_cb(
 	struct _lv_fs_drv_t*drv,
 	void*file_p,

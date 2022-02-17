@@ -45,10 +45,10 @@ int gui_dpi_def=200,gui_dpi_force=0,gui_dpi=200;
 int gui_font_size=24,gui_font_size_small=16;
 
 // gui size
-uint32_t gui_w=-1,gui_h=-1;
+lv_coord_t gui_w=-1,gui_h=-1;
 
 // gui usable size
-uint32_t gui_sw,gui_sh,gui_sx,gui_sy;
+lv_coord_t gui_sw,gui_sh,gui_sx,gui_sy;
 
 // gui rotate
 uint16_t gui_rotate;

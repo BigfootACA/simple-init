@@ -235,8 +235,8 @@ static int monitor_init(){
 
 	return 0;
 }
-static void sdl2_get_sizes(uint32_t*width,uint32_t*height){
-	uint32_t w=0,h=0;
+static void sdl2_get_sizes(lv_coord_t*width,lv_coord_t*height){
+	lv_coord_t w=0,h=0;
 	switch(gui_rotate){
 		case 0:case 180:w=SDL2_W,h=SDL2_H;break;
 		case 90:case 270:w=SDL2_H,h=SDL2_W;break;

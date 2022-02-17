@@ -159,8 +159,8 @@ static int vnc_register(){
 	return 0;
 }
 
-static void vnc_get_sizes(uint32_t*width,uint32_t*height){
-	uint32_t w=0,h=0;
+static void vnc_get_sizes(lv_coord_t*width,lv_coord_t*height){
+	lv_coord_t w=0,h=0;
 	switch(gui_rotate){
 		case 0:case 180:w=WIDTH,h=HEIGHT;break;
 		case 90:case 270:w=HEIGHT,h=WIDTH;break;

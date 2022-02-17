@@ -17,7 +17,7 @@
 
 static struct gui_driver*drv;
 
-int guidrv_getsize(uint32_t*w,uint32_t*h){
+int guidrv_getsize(lv_coord_t*w,lv_coord_t*h){
 	errno=ENOENT;
 	if(!drv)errno=ENOENT;
 	else if(!drv->drv_getsize)errno=ENOSYS;
@@ -38,14 +38,14 @@ int guidrv_getdpi(int*dpi){
 	return errno==0?0:-1;
 }
 
-uint32_t guidrv_get_width(){
-	uint32_t w=0;
+lv_coord_t guidrv_get_width(){
+	lv_coord_t w=0;
 	guidrv_getsize(&w,NULL);
 	return w;
 }
 
-uint32_t guidrv_get_height(){
-	uint32_t h=0;
+lv_coord_t guidrv_get_height(){
+	lv_coord_t h=0;
 	guidrv_getsize(NULL,&h);
 	return h;
 }
@@ -109,7 +109,7 @@ int guidrv_register(){
 	return drv->drv_register();
 }
 
-static int guidrv_try_init(uint32_t*w,uint32_t*h,int*dpi){
+static int guidrv_try_init(lv_coord_t*w,lv_coord_t*h,int*dpi){
 	if(!drv->drv_getsize)return -1;
 	const char*name=guidrv_getname();
 	tlog_debug("try to init gui driver %s",name);
@@ -134,7 +134,7 @@ struct gui_driver*guidrv_get_by_name(const char*name){
 	EPRET(ENOENT);
 }
 
-int guidrv_init(uint32_t*w,uint32_t*h,int*dpi){
+int guidrv_init(lv_coord_t*w,lv_coord_t*h,int*dpi){
 	errno=0;
 	if(drv){
 		guidrv_getsize(w,h);

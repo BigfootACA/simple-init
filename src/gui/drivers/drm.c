@@ -543,8 +543,8 @@ static void drm_flush(lv_disp_drv_t*disp_drv,const lv_area_t*area,lv_color_t*col
 	drm_dev.cur_bufs[0]=fbuf;
 	lv_disp_flush_ready(disp_drv);
 }
-static void drm_get_sizes(uint32_t*width,uint32_t*height){
-	uint32_t w=0,h=0;
+static void drm_get_sizes(lv_coord_t*width,lv_coord_t*height){
+	lv_coord_t w=0,h=0;
 	switch(gui_rotate){
 		case 0:case 180:w=drm_dev.width,h=drm_dev.height;break;
 		case 90:case 270:w=drm_dev.height,h=drm_dev.width;break;

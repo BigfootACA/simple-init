@@ -239,8 +239,8 @@ static int gtkdrv_scan_init_register(){
 	lv_indev_drv_register(&kbd);
 	return 0;
 }
-static void gtkdrv_get_sizes(uint32_t*width,uint32_t*height){
-	uint32_t w=0,h=0;
+static void gtkdrv_get_sizes(lv_coord_t*width,lv_coord_t*height){
+	lv_coord_t w=0,h=0;
 	switch(gui_rotate){
 		case 0:case 180:w=GTK_W,h=GTK_H;break;
 		case 90:case 270:w=GTK_H,h=GTK_W;break;

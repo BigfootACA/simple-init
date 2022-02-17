@@ -10,10 +10,11 @@
 #define _GUIDRV_H
 #include<stdint.h>
 #include<stdbool.h>
+#include"gui.h"
 struct gui_driver{
 	char name[32];
 	int(*drv_register)(void);
-	void(*drv_getsize)(uint32_t*w,uint32_t*h);
+	void(*drv_getsize)(lv_coord_t*w,lv_coord_t*h);
 	void(*drv_getdpi)(int*dpi);
 	void(*drv_taskhandler)(void);
 	void(*drv_exit)(void);
@@ -27,16 +28,16 @@ struct gui_driver{
 extern struct gui_driver*gui_drvs[];
 
 // src/gui/guidrv.c: get screen width and height from driver
-extern int guidrv_getsize(uint32_t*w,uint32_t*h);
+extern int guidrv_getsize(lv_coord_t*w,lv_coord_t*h);
 
 // src/gui/guidrv.c: get screen dpi from driver
 extern int guidrv_getdpi(int*dpi);
 
 // src/gui/guidrv.c: get screen width from driver
-extern uint32_t guidrv_get_width(void);
+extern lv_coord_t guidrv_get_width(void);
 
 // src/gui/guidrv.c: get screen height from driver
-extern uint32_t guidrv_get_height(void);
+extern lv_coord_t guidrv_get_height(void);
 
 // src/gui/guidrv.c: get screen dpi from driver
 extern int guidrv_get_dpi(void);
@@ -63,7 +64,7 @@ extern int guidrv_get_brightness(void);
 extern bool guidrv_can_sleep(void);
 
 // src/gui/guidrv.c: try init all drivers and return screen width height dpi
-extern int guidrv_init(uint32_t*w,uint32_t*h,int*dpi);
+extern int guidrv_init(lv_coord_t*w,lv_coord_t*h,int*dpi);
 
 // src/gui/guidrv.c: get gui driver by name
 extern struct gui_driver*guidrv_get_by_name(const char*name);

@@ -247,8 +247,8 @@ static int fbdev_scan_init_register(){
 	input_scan_register();
 	return 0;
 }
-static void fbdev_get_sizes(uint32_t*width,uint32_t*height){
-	uint32_t w=0,h=0;
+static void fbdev_get_sizes(lv_coord_t*width,lv_coord_t*height){
+	lv_coord_t w=0,h=0;
 	switch(gui_rotate){
 		case 0:case 180:w=vinfo.xres,h=vinfo.yres;break;
 		case 90:case 270:w=vinfo.yres,h=vinfo.xres;break;

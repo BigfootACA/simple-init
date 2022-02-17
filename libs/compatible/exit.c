@@ -15,6 +15,7 @@ void abort(void){
 	// FUCK YOU
 	Print(L"FATAL ERROR\n");
 	DEBUG((EFI_D_ERROR,"FATAL ERROR\n"));
+	*((volatile int*)0)=0;
 	ASSERT(FALSE);
 	CpuDeadLoop();
 #ifdef __GNUC__

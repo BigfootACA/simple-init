@@ -16,20 +16,26 @@
   SimpleInit.dec
 
 [LibraryClasses]
+  BaseLib
+  DevicePathLib
+  MemoryAllocationLib
   PcdLib
   UefiLib
   LittleVgl
   FreeType
   LodePNG
   SimpleInitLib
+  SimpleInitBoot
   SimpleInitConfd
   SimpleInitLoggerd
   SimpleInitAssets
   ReportStatusCodeLib
   UefiBootManagerLib
+  UefiBootServicesTableLib
   UefiRuntimeServicesTableLib
 
 [Guids]
+  gEfiFileInfoGuid
   gUefiShellFileGuid
   gEfiFileSystemVolumeLabelInfoIdGuid
   gLinuxSimpleMassStorageGuid
@@ -39,6 +45,8 @@
   gEfiSimplePointerProtocolGuid
   gEfiSimpleTextInProtocolGuid
   gEfiGraphicsOutputProtocolGuid
+  gEfiLoadedImageProtocolGuid
+  gEfiSimpleFileSystemProtocolGuid
 
 [Pcd]
   gSimpleInitTokenSpaceGuid.PcdGuiDefaultDPI
@@ -81,6 +89,7 @@
   interface/core/reboot.c
   interface/core/sysbar.c
   interface/core/guiapp.c
+  interface/core/bootmenu.c
   interface/core/ctrl_pad.c
   interface/core/clipboard.c
   interface/apps/abootimg.c

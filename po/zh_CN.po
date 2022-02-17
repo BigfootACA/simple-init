@@ -2224,3 +2224,9 @@ msgstr "不允许重复使用标准输出\n"
 
 msgid "invalid argument\n"
 msgstr "无效参数\n"
+
+msgid "Go back"
+msgstr "返回"
+
+msgid "Continue Boot"
+msgstr "继续启动"

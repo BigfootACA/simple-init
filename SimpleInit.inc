@@ -6,6 +6,7 @@
   SimpleInitCompatible|libs/compatible/SimpleInitCompatible.inf
   SimpleInitGUI|src/gui/SimpleInitGUI.inf
   SimpleInitLib|src/lib/SimpleInitLib.inf
+  SimpleInitBoot|src/boot/SimpleInitBoot.inf
   SimpleInitLocate|src/locate/SimpleInitLocate.inf
   SimpleInitAssets|src/assets/SimpleInitAssets.inf
   SimpleInitLoggerd|src/loggerd/SimpleInitLoggerd.inf
@@ -21,6 +22,7 @@
   libs/compatible/SimpleInitCompatible.inf
   src/gui/SimpleInitGUI.inf
   src/lib/SimpleInitLib.inf
+  src/boot/SimpleInitBoot.inf
   src/locate/SimpleInitLocate.inf
   src/assets/SimpleInitAssets.inf
   src/loggerd/SimpleInitLoggerd.inf

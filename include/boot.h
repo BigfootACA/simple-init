@@ -18,21 +18,28 @@ typedef int boot_main(boot_config*);
 
 // boot mode
 enum boot_mode{
-	BOOT_NONE=0,
-	BOOT_SWITCHROOT,
-	BOOT_CHARGER,
-	BOOT_KEXEC,
-	BOOT_REBOOT,
-	BOOT_POWEROFF,
-	BOOT_HALT,
-	BOOT_SYSTEM,
+	BOOT_NONE        = 0x00,
+	BOOT_SWITCHROOT  = 0x01,
+	BOOT_CHARGER     = 0x02,
+	BOOT_KEXEC       = 0x03,
+	BOOT_REBOOT      = 0x04,
+	BOOT_POWEROFF    = 0x05,
+	BOOT_HALT        = 0x06,
+	BOOT_SYSTEM      = 0x07,
+	BOOT_LINUX       = 0x08,
+	BOOT_EFI         = 0x09,
+	BOOT_EXIT        = 0x0A,
+	BOOT_SIMPLE_INIT = 0x0B,
+	BOOT_UEFI_OPTION = 0x0C,
+	BOOT_FOLDER      = 0xFF,
 };
 
 // boot config
 struct boot_config{
 	boot_mode mode;
-	char ident[32];
-	char icon[32];
+	char ident[64];
+	char parent[64];
+	char icon[64];
 	char desc[256];
 	char base[256];
 	char key[256];
@@ -45,7 +52,7 @@ struct boot_config{
 extern boot_main*boot_main_func[];
 
 // src/boot/boot.c: create boot config
-extern char*boot_create_config(struct boot_config*cfg,keyval**data);
+extern int boot_create_config(struct boot_config*cfg,keyval**data);
 
 // src/boot/bootdef.c: create initial boot configs
 extern void boot_init_configs(void);
@@ -65,7 +72,19 @@ extern char*bootmode2string(enum boot_mode mode);
 // src/boot/boot.c: dump boot config to logger
 extern void dump_boot_config(char*tag,enum log_level level,boot_config*boot);
 
+#ifdef ENABLE_UEFI
+
+// src/boot/boot.c: set efi var
+extern EFI_STATUS boot_setvar(CHAR16*key,VOID*buf,UINTN size);
+
+// src/boot/boot.c: set efi string var
+extern EFI_STATUS boot_setvar_str(CHAR16*key,CHAR16*str,...);
+
+// src/boot/boot.c: set efi integer var
+extern EFI_STATUS boot_setvar_int(CHAR16 *name,UINTN num);
+#else
 // src/boot/boot.c: register default boot
 extern int register_default_boot(void);
+#endif
 
 #endif

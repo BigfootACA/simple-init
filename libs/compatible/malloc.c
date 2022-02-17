@@ -180,6 +180,7 @@ free(void *Ptr)
 			errno = EFAULT;
 			DEBUG((DEBUG_ERROR, "ERROR free(0x%p): Signature is 0x%8X, expected 0x%8X\n",
 				Ptr, Head->Signature, CPOOL_HEAD_SIGNATURE));
+			abort();
 		}
 	}
 	DEBUG((DEBUG_POOL, "free Done\n"));

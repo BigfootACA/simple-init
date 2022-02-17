@@ -18,6 +18,7 @@
 #include"nanosvgrast.h"
 #include"gui/image.h"
 #define TAG "svg"
+#define SCALE 2
 
 static int image_decode(unsigned char*data,size_t len __attribute__((unused)),struct image_data*img){
 	int s=-1;
@@ -25,14 +26,14 @@ static int image_decode(unsigned char*data,size_t len __attribute__((unused)),st
 	NSVGrasterizer*rast=NULL;
 	if(!(m=nsvgParse((char*)data,"px",(float)gui_dpi)))goto fail;
 	if(!(rast=nsvgCreateRasterizer()))goto fail;
-	if(!(img->pixels=malloc(m->width*m->height*4)))goto fail;
-	nsvgRasterize(rast,m,0,0,1,img->pixels,m->width,m->height,m->width*4);
-	for(size_t i=0;i<m->width*m->height;i++){
+	if(!(img->pixels=malloc((m->width*SCALE)*(m->height*SCALE)*4)))goto fail;
+	nsvgRasterize(rast,m,0,0,SCALE,img->pixels,m->width*SCALE,m->height*SCALE,m->width*SCALE*4);
+	for(size_t i=0;i<(m->width*SCALE)*(m->height*SCALE);i++){
 		uint8_t*b=img->pixels+(i*4),k;
 		k=b[0],b[0]=b[2],b[2]=k;
 	}
-	img->width=m->width;
-	img->height=m->height;
+	img->width=m->width*SCALE;
+	img->height=m->height*SCALE;
 	img->format=LV_IMG_CF_RAW_ALPHA;
 	s=0;
 	done:

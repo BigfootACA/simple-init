@@ -281,3 +281,22 @@ int list_obj_del_data(list**lst,void*data,runnable_t*datafree){
 	list*item=list_lookup_data(*lst,data);
 	return item?list_obj_del(lst,item,datafree):-errno;
 }
+
+int list_sort(list*lst,list_sorter sorter){
+	if(!lst||!sorter)ERET(EINVAL);
+	int r=0;
+	list*f;
+	bool changed=false;
+	do{
+		changed=false;
+		if(!(f=list_first(lst)))continue;
+		do{
+			if(!f->next)continue;
+			if(!sorter(f,f->next))continue;
+			list_swap_neighbor(f,f->next);
+			changed=true;
+		}while((f=f->next));
+		r++;
+	}while(changed);
+	return r;
+}

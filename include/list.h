@@ -25,6 +25,8 @@ struct list{
 };
 typedef struct list list;
 
+typedef bool(*list_sorter)(list*f1,list*f2);
+
 // src/lib/list.c: add new after point
 extern int list_add(list*point,list*new);
 
@@ -105,6 +107,9 @@ extern int list_obj_del(list**lst,list*item,runnable_t*datafree);
 
 // src/lib/list.c: lookup item and delete from a list
 extern int list_obj_del_data(list**lst,void*data,runnable_t*datafree);
+
+// src/lib/list.c: sort a list
+extern int list_sort(list*lst,list_sorter sorter);
 
 // src/lib/list.c: default free runnable
 extern int list_default_free(void*data);

@@ -26,6 +26,7 @@ static int after_exit(void*d __attribute__((unused))){
 	if(!ih)return -1;
 	UINTN size;
 	int r=0;
+	gST->ConOut->ClearScreen(gST->ConOut);
 	if(EFI_ERROR(gBS->StartImage(ih,&size,NULL))){
 		tlog_error("start image failed");
 		r=1;

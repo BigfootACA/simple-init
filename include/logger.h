@@ -15,6 +15,7 @@
 
 // logger level
 enum log_level{
+	LEVEL_VERBOSE=0xAE00,
 	LEVEL_DEBUG  =0xAE01,
 	LEVEL_INFO   =0xAE02,
 	LEVEL_NOTICE =0xAE04,

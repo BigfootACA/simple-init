@@ -14,8 +14,12 @@
   SimpleInit.dec
 
 [LibraryClasses]
+  PcdLib
   UefiLib
   DebugLib
+
+[Pcd]
+  gSimpleInitTokenSpaceGuid.PcdLoggerdMinLevel
 
 [Sources]
   # Simple-Init loggerd UEFI wrapper

@@ -88,6 +88,7 @@ void close_all_file(){
 
 static char*level2color(enum log_level level){
 	switch(level){
+		case LEVEL_VERBOSE: return "\033[37;1m";
 		case LEVEL_DEBUG:   return "\033[37;2m";
 		case LEVEL_INFO:    return "\033[32;1m";
 		case LEVEL_NOTICE:  return "\033[34;1m";

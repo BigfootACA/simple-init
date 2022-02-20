@@ -21,6 +21,7 @@ char*logger_level2string(enum log_level level){
 		case LEVEL_CRIT:return    "CRIT";
 		case LEVEL_ALERT:return   "ALERT";
 		case LEVEL_EMERG:return   "EMERG";
+		case LEVEL_VERBOSE:return "VERB";
 		default:return            "?????";
 	}
 }
@@ -28,7 +29,8 @@ char*logger_level2string(enum log_level level){
 enum log_level logger_parse_level(const char*v){
 	#define CS (const char*[])
 	if(!v)return 0;
-	if(     fuzzy_cmps(v,CS{"7","debug","dbg"      ,NULL}))return LEVEL_DEBUG;
+	if(     fuzzy_cmps(v,CS{"8","verbose","verb"   ,NULL}))return LEVEL_VERBOSE;
+	else if(fuzzy_cmps(v,CS{"7","debug","dbg"      ,NULL}))return LEVEL_DEBUG;
 	else if(fuzzy_cmps(v,CS{"6","info","inf"       ,NULL}))return LEVEL_INFO;
 	else if(fuzzy_cmps(v,CS{"5","notice"           ,NULL}))return LEVEL_NOTICE;
 	else if(fuzzy_cmps(v,CS{"4","warning"          ,NULL}))return LEVEL_WARNING;
@@ -41,6 +43,7 @@ enum log_level logger_parse_level(const char*v){
 
 int logger_level2klevel(enum log_level level){
 	switch(level){
+		case LEVEL_VERBOSE:return KERN_DEBUG;
 		case LEVEL_DEBUG:return   KERN_DEBUG;
 		case LEVEL_INFO:return    KERN_INFO;
 		case LEVEL_NOTICE:return  KERN_NOTICE;

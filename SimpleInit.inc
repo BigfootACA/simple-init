@@ -12,6 +12,7 @@
   SimpleInitLoggerd|src/loggerd/SimpleInitLoggerd.inf
   SimpleInitConfd|src/confd/SimpleInitConfd.inf
   SimpleInitRootFS|src/SimpleInitRootFS.inf
+  KernelFdtDxe|src/kernelfdt/KernelFdtDxe.inf
   FdtLib|EmbeddedPkg/Library/FdtLib/FdtLib.inf
 
 [Components]
@@ -29,3 +30,4 @@
   src/confd/SimpleInitConfd.inf
   src/SimpleInitRootFS.inf
   src/main/SimpleInitMain.inf
+  src/kernelfdt/KernelFdtDxe.inf

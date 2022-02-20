@@ -1,0 +1,29 @@
+[Defines]
+  INF_VERSION                    = 0x0010005
+  BASE_NAME                      = KernelFdtDxe
+  FILE_GUID                      = F1249C4E-8995-4BB6-9D44-E0CD4FF709FC
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = KernelFdtMain
+
+[Packages]
+  MdePkg/MdePkg.dec
+  SimpleInit.dec
+
+[LibraryClasses]
+  UefiLib
+  DebugLib
+  UefiDriverEntryPoint
+  SimpleInitLib
+
+[Sources]
+  KernelFdtDxe.c
+
+[Pcd]
+  gSimpleInitTokenSpaceGuid.PcdDeviceTreeStore
+
+[Protocols]
+  gKernelFdtProtocolGuid
+
+[Depex]
+  TRUE

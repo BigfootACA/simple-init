@@ -26,12 +26,13 @@
   libs/compatible/include/arch/aarch64
 
 [PcdsFixedAtBuild.common]
-  gSimpleInitTokenSpaceGuid.PcdConfDefaultPath|"\\simpleinit.uefi.cfg"|VOID*|0x0001b001
-  gSimpleInitTokenSpaceGuid.PcdConfGptPartition|"logfs"|VOID*|0x0001b002
-  gSimpleInitTokenSpaceGuid.PcdGuiDefaultDPI|200|UINT16|0x0001b003
-  gSimpleInitTokenSpaceGuid.PcdGuiDefaultMouseScale|1|UINT8|0x0001b004
-  gSimpleInitTokenSpaceGuid.PcdGuiDefaultMouseOnlyFirst|TRUE|BOOLEAN|0x0001b005
-  gSimpleInitTokenSpaceGuid.PcdGuiDefaultRotate|0|UINT16|0x0001b006
+  gSimpleInitTokenSpaceGuid.PcdDeviceTreeStore          | 0                       | UINT64  | 0x0001b101
+  gSimpleInitTokenSpaceGuid.PcdConfDefaultPath          | "\\simpleinit.uefi.cfg" | VOID*   | 0x0001b201
+  gSimpleInitTokenSpaceGuid.PcdConfGptPartition         | "logfs"                 | VOID*   | 0x0001b202
+  gSimpleInitTokenSpaceGuid.PcdGuiDefaultDPI            | 200                     | UINT16  | 0x0001b301
+  gSimpleInitTokenSpaceGuid.PcdGuiDefaultRotate         | 0                       | UINT16  | 0x0001b302
+  gSimpleInitTokenSpaceGuid.PcdGuiDefaultMouseScale     | 1                       | UINT8   | 0x0001b303
+  gSimpleInitTokenSpaceGuid.PcdGuiDefaultMouseOnlyFirst | TRUE                    | BOOLEAN | 0x0001b304
 
 [Guids.common]
   gSimpleInitTokenSpaceGuid    = { 0xabb5da8d, 0x994a, 0x425a, { 0x89, 0x05, 0xde, 0xcb, 0x4d, 0xcc, 0x73, 0x2f } }
@@ -39,5 +40,6 @@
   gLinuxSimpleMassStorageGuid  = { 0x2a24787e, 0xe09c, 0x43ce, { 0xb5, 0xcf, 0xd0, 0x30, 0x66, 0xf6, 0x09, 0x2f } }
 
 [Protocols.common]
+  gKernelFdtProtocolGuid       = { 0x8557a993, 0xea5d, 0x40fd, { 0x91, 0xb1, 0xf9, 0xba, 0x45, 0x67, 0xba, 0x8d } }
   gEfiChipInfoProtocolGuid     = { 0xb0760469, 0x970c, 0x487a, { 0xa4, 0xb5, 0x28, 0xdb, 0x7b, 0x45, 0xce, 0xf1 } }
   gEfiPlatformInfoProtocolGuid = { 0x157a5c45, 0x21b2, 0x43c5, { 0xba, 0x7c, 0x82, 0x2f, 0xee, 0x5f, 0xe5, 0x99 } }

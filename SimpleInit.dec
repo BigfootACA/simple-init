@@ -26,13 +26,24 @@
   libs/compatible/include/arch/aarch64
 
 [PcdsFixedAtBuild.common]
-  gSimpleInitTokenSpaceGuid.PcdDeviceTreeStore          | 0                       | UINT64  | 0x0001b101
-  gSimpleInitTokenSpaceGuid.PcdConfDefaultPath          | "\\simpleinit.uefi.cfg" | VOID*   | 0x0001b201
-  gSimpleInitTokenSpaceGuid.PcdConfGptPartition         | "logfs"                 | VOID*   | 0x0001b202
-  gSimpleInitTokenSpaceGuid.PcdGuiDefaultDPI            | 200                     | UINT16  | 0x0001b301
-  gSimpleInitTokenSpaceGuid.PcdGuiDefaultRotate         | 0                       | UINT16  | 0x0001b302
-  gSimpleInitTokenSpaceGuid.PcdGuiDefaultMouseScale     | 1                       | UINT8   | 0x0001b303
-  gSimpleInitTokenSpaceGuid.PcdGuiDefaultMouseOnlyFirst | TRUE                    | BOOLEAN | 0x0001b304
+  gSimpleInitTokenSpaceGuid.PcdDeviceTreeStore          | 0                              | UINT64  | 0x0001b101
+  gSimpleInitTokenSpaceGuid.PcdLoggerdMinLevel          | 0xAE01                         | UINT32  | 0x0001b201
+  gSimpleInitTokenSpaceGuid.PcdConfDefaultPath          | "\\simpleinit.uefi.cfg"        | VOID*   | 0x0001b301
+  gSimpleInitTokenSpaceGuid.PcdConfDefaultStaticPath    | "\\simpleinit.static.uefi.cfg" | VOID*   | 0x0001b302
+  gSimpleInitTokenSpaceGuid.PcdConfGptPartition         | "logfs"                        | VOID*   | 0x0001b303
+  gSimpleInitTokenSpaceGuid.PcdGuiDefaultDPI            | 200                            | UINT16  | 0x0001b401
+  gSimpleInitTokenSpaceGuid.PcdGuiDefaultRotate         | 0                              | UINT16  | 0x0001b402
+  gSimpleInitTokenSpaceGuid.PcdGuiDefaultMouseScale     | 1                              | UINT8   | 0x0001b403
+  gSimpleInitTokenSpaceGuid.PcdGuiDefaultMouseOnlyFirst | TRUE                           | BOOLEAN | 0x0001b404
+  gSimpleInitTokenSpaceGuid.PcdBootCustomLoadAddress    | FALSE                          | BOOLEAN | 0x0001b501
+  gSimpleInitTokenSpaceGuid.PcdBootLoadAddressStart     | 0x0                            | UINT64  | 0x0001b502
+  gSimpleInitTokenSpaceGuid.PcdBootLoadAddressEnd       | 0x0                            | UINT64  | 0x0001b503
+  gSimpleInitTokenSpaceGuid.PcdBootKernelAddressStart   | 0x0                            | UINT64  | 0x0001b504
+  gSimpleInitTokenSpaceGuid.PcdBootKernelAddressEnd     | 0x0                            | UINT64  | 0x0001b505
+  gSimpleInitTokenSpaceGuid.PcdBootRamdiskAddressStart  | 0x0                            | UINT64  | 0x0001b506
+  gSimpleInitTokenSpaceGuid.PcdBootRamdiskAddressEnd    | 0x0                            | UINT64  | 0x0001b507
+  gSimpleInitTokenSpaceGuid.PcdBootFdtAddressStart      | 0x0                            | UINT64  | 0x0001b508
+  gSimpleInitTokenSpaceGuid.PcdBootFdtAddressEnd        | 0x0                            | UINT64  | 0x0001b509
 
 [Guids.common]
   gSimpleInitTokenSpaceGuid    = { 0xabb5da8d, 0x994a, 0x425a, { 0x89, 0x05, 0xde, 0xcb, 0x4d, 0xcc, 0x73, 0x2f } }

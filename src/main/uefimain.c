@@ -17,7 +17,7 @@
 
 int main_retval=0;
 jmp_buf main_exit;
-extern int guiapp_main(int argc,char**argv);
+extern int bootmenu_main(int argc,char**argv);
 
 // simple-init uefi entry point
 EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ih,IN EFI_SYSTEM_TABLE*st){
@@ -36,7 +36,7 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ih,IN EFI_SYSTEM_TABLE*st){
 	errno=0;
 	main_retval=0;
 	if(setjmp(main_exit)==0)
-		main_retval=guiapp_main(1,(char*[]){"guiapp",NULL});
+		main_retval=bootmenu_main(1,(char*[]){"bootmenu",NULL});
 	return main_retval;
 }
 #endif

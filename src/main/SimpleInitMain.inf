@@ -15,12 +15,14 @@
   SimpleInit.dec
 
 [LibraryClasses]
+  DebugLib
   UefiBootManagerLib
-  UefiLib
-  SimpleInitGUI
   ReportStatusCodeLib
-  UefiRuntimeServicesTableLib
+  SimpleInitGUI
   UefiApplicationEntryPoint
+
+[Guids]
+  gSimpleInitFileGuid
 
 [Sources]
   # UEFI entry point

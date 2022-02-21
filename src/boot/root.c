@@ -113,7 +113,7 @@ static int setup_loop(boot_config*boot,bool ro,char*path,size_t len){
 	struct loop_info64 li;
 	int loop_fd=-1,img_fd=-1;
 	int e=-1,partno=0,sector=0;
-	char*loop,*part,*sec,*off;
+	char*loop;
 	char blk[256],point[256],pblk[256],fstype[64];
 	char buf[PATH_MAX],image[PATH_MAX],flags[PATH_MAX];
 
@@ -121,15 +121,12 @@ static int setup_loop(boot_config*boot,bool ro,char*path,size_t len){
 	if(!(loop=confd_get_string_base(boot->key,"loop",NULL))||!*loop)return 0;
 	if(strcasecmp(loop,"none")==0)return 0;
 	if(*loop=='/')loop++;
-	if((sec=confd_get_string_base(boot->key,"loop_sector",NULL)))
-		if((sector=parse_int(sec,0))<=0)
-			EGOTO(trlog_error(ENUM(EINVAL),"invalid sector size"));
-	if((part=confd_get_string_base(boot->key,"loop_partno",NULL)))
-		if((partno=parse_int(part,0))<=0)
-			EGOTO(trlog_error(ENUM(EINVAL),"invalid partition number"));
-	if((off=confd_get_string_base(boot->key,"loop_offset",NULL)))
-		if((offset=parse_long(off,0))<=0)
-			EGOTO(trlog_error(ENUM(EINVAL),"invalid loop offset"));
+	if((sector=confd_get_integer_base(boot->key,"loop_sector",0))<=0)
+		EGOTO(trlog_error(ENUM(EINVAL),"invalid sector size"));
+	if((partno=confd_get_integer_base(boot->key,"loop_partno",0))<=0)
+		EGOTO(trlog_error(ENUM(EINVAL),"invalid partition number"));
+	if((offset=confd_get_integer_base(boot->key,"loop_offset",0))<=0)
+		EGOTO(trlog_error(ENUM(EINVAL),"invalid loop offset"));
 
 	if(!add_right_slash(path,len))return -1;
 
@@ -212,18 +209,18 @@ static int setup_overlay(boot_config*boot,int wait,char*path,size_t len){
 
 	// generate data flags
 	memset(data_path,0,sizeof(data_path));
+	size_t fs,fb=sizeof(data_flags);
+	get_flags(boot,"data_flags",false,data_flags,fb);
 	if(strcmp(data,"tmpfs")==0){
 		strcpy(data_type,"tmpfs");
 		if(!(data_blk=strdup(data_type)))EGOTO(-1);
+		fs=strlen(data_flags);
+		snprintf(data_flags+fs,fb-fs-1,",size=%s,mode=0755",size?size:"50%");
 	}else{
 		if(!(data_blk=get_block(data,wait)))EGOTO(-errno);
 		if(!(get_fstype(boot,data_blk,"data_fstype",data_type,sizeof(data_type))))
 			EGOTO(terlog_error(-errno,"cannot get fstype"));
 	}
-	size_t fs,fb=sizeof(data_flags);
-	get_flags(boot,"data_flags",false,data_flags,fb);
-	fs=strlen(data_flags);
-	snprintf(data_flags+fs,fb-fs-1,",size=%s,mode=0755",size?size:"50%");
 	tlog_info("use %s(%s) as overlay data block",data_blk,data_type);
 
 	// mount data partition
@@ -288,21 +285,14 @@ int run_boot_root(boot_config*boot){
 	int e,wait=5;
 	char*definit,*init,*path=NULL,*b;
 	char flags[PATH_MAX],point[256],type[64];
-	if((b=confd_get_string_base(boot->key,"rw","0"))){
-		ro=parse_int(b,0)==0;
-		free(b);
-	}
+	ro=confd_get_integer_base(boot->key,"rw",0)==0;
 
 	// unimportant variables
 	definit=confd_get_string_base(boot->key,"init",NULL);
-	if((confd_get_string_base(boot->key,"wait",NULL))){
-		wait=parse_int(b,5);
-		free(b);
-	}
+	wait=confd_get_integer_base(boot->key,"wait",5);
 	if(wait<0)wait=5;
 
 	// root block path must set
-	tlog_debug("%s",boot->key);
 	if(!(path=confd_get_string_base(boot->key,"path",NULL)))
 		EGOTO(trlog_error(ENUM(EINVAL),"rootfs block path not set"));
 

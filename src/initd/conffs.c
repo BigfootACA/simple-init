@@ -15,7 +15,6 @@
 #ifdef ENABLE_BLKID
 #include<blkid/blkid.h>
 #endif
-#include"str.h"
 #include"init.h"
 #include"confd.h"
 #include"logger.h"
@@ -80,7 +79,10 @@ static int _setup_conffs(){
 	if((e=auto_mount(conffs,type,point,PATH_MAX))!=0)goto ex;
 
 	char path[PATH_MAX]={0};
-	snprintf(path,PATH_MAX-1,"%s/%s",point,conffile);
+	snprintf(path,sizeof(path)-1,"%s/simple-init.static.linux.conf",point);
+	confd_include_file(path);
+	memset(path,0,sizeof(path));
+	snprintf(path,sizeof(path)-1,"%s/%s",point,conffile);
 	e=confd_set_default_config(path);
 	confd_load_file(path);
 	ex:

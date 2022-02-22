@@ -158,6 +158,18 @@ extern char*add_right_slash(char*path,size_t len);
 // src/lib/strings.c: convert buffer to hex string
 extern char*buff2hex(char*hex,void*buff,size_t len);
 
+// src/lib/strings.c: string is true
+extern bool string_is_true(char*string);
+
+// src/lib/strings.c: string is false
+extern bool string_is_false(char*string);
+
+// src/lib/strings.c: escape string
+extern char*str_escape(char*str);
+
+// src/lib/strings.c: unescape string
+extern char*str_unescape(char*str);
+
 #ifdef _LIST_H
 
 // src/lib/strings.c: convert path string to a list

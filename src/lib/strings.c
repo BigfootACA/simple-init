@@ -293,3 +293,71 @@ char*buff2hex(char*hex,void*buff,size_t len){
 		snprintf(hex+(i*2),3,"%02x",((unsigned char*)buff)[i]);
 	return hex;
 }
+
+bool string_is_true(char*string){
+	return
+		strcasecmp(string,"1")==0||
+		strcasecmp(string,"ok")==0||
+		strcasecmp(string,"on")==0||
+		strcasecmp(string,"yes")==0||
+		strcasecmp(string,"true")==0||
+		strcasecmp(string,"always")==0||
+		strcasecmp(string,"enable")==0||
+		strcasecmp(string,"enabled")==0;
+}
+
+bool string_is_false(char*string){
+	return
+		strcasecmp(string,"0")==0||
+		strcasecmp(string,"no")==0||
+		strcasecmp(string,"off")==0||
+		strcasecmp(string,"false")==0||
+		strcasecmp(string,"never")==0||
+		strcasecmp(string,"disable")==0||
+		strcasecmp(string,"disabled")==0;
+}
+
+char*str_escape(char*str){
+	if(!str)EPRET(EINVAL);
+	size_t xs=strlen(str)*2+1;
+	char*dup=malloc(xs);
+	if(!dup)EPRET(ENOMEM);
+	memset(dup,0,xs);
+	char*ptr_dup=dup,*ptr_str=str;
+	while(*ptr_str){
+		switch(*ptr_str){
+			case '"':*ptr_dup++='\\',*ptr_dup++='\"';break;
+			case '\\':*ptr_dup++='\\',*ptr_dup++='\\';break;
+			case '\t':*ptr_dup++='\\',*ptr_dup++='t';break;
+			case '\n':*ptr_dup++='\\',*ptr_dup++='n';break;
+			case '\r':*ptr_dup++='\\',*ptr_dup++='r';break;
+			default:*ptr_dup++=*ptr_str;
+		}
+		ptr_str++;
+	}
+	return dup;
+}
+
+char*str_unescape(char*str){
+	if(!str)EPRET(EINVAL);
+	size_t xs=strlen(str)+1;
+	char*dup=malloc(xs);
+	if(!dup)EPRET(ENOMEM);
+	memset(dup,0,xs);
+	char*ptr_dup=dup,*ptr_str=str;
+	while(*ptr_str){
+		switch(*ptr_str){
+			case '\\':
+				switch(*(++ptr_str)){
+					case 't':*ptr_dup++='\t';break;
+					case 'n':*ptr_dup++='\n';break;
+					case 'r':*ptr_dup++='\r';break;
+					default:*ptr_dup++=*ptr_str;break;
+				}
+			break;
+			default:*ptr_dup++=*ptr_str;
+		}
+		ptr_str++;
+	}
+	return dup;
+}

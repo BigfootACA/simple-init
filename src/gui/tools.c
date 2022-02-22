@@ -10,6 +10,8 @@
 #include<stdlib.h>
 #include"gui.h"
 #include"gui/tools.h"
+#include"gui/sysbar.h"
+#include"gui/filepicker.h"
 
 const char*lv_event_string[]={
 	[LV_EVENT_PRESSED]             = "LV_EVENT_PRESSED",
@@ -266,5 +268,97 @@ void lv_drag_border(lv_obj_t*obj,lv_coord_t width,lv_coord_t height,lv_coord_t b
 	if(x+w+border>width)x=width-w-border;
 	if(y+h+border>height)y=height-h-border;
 	lv_obj_set_pos(obj,x,y);
+}
+
+void lv_input_cb(lv_obj_t*obj,lv_event_t e){
+	if(e!=LV_EVENT_CLICKED)return;
+	sysbar_focus_input(obj);
+	sysbar_keyboard_open();
+}
+
+static bool select_cb(bool ok,const char**path,uint16_t cnt,void*user_data){
+	if(!ok)return false;
+	if(!path||!path[0]||path[1]||cnt!=1)return true;
+	#ifdef ENABLE_UEFI
+	lv_textarea_set_text(user_data,path[0]);
+	#else
+	lv_textarea_set_text(user_data,path[0]+2);
+	#endif
+	lv_event_send(user_data,LV_EVENT_DEFOCUSED,NULL);
+	return false;
+}
+
+static void sel_cb(lv_obj_t*obj,lv_event_t e){
+	if(e!=LV_EVENT_CLICKED)return;
+	struct filepicker*fp=filepicker_create(select_cb,"Select item");
+	filepicker_set_user_data(fp,lv_obj_get_user_data(obj));
+	filepicker_set_max_item(fp,1);
+}
+
+static void clr_cb(lv_obj_t*obj,lv_event_t e){
+	if(e!=LV_EVENT_CLICKED)return;
+	lv_textarea_set_text(lv_obj_get_user_data(obj),"");
+}
+
+static void inp_cb(lv_obj_t*obj,lv_event_t e){
+	lv_event_cb_t cb=lv_obj_get_user_data(obj);
+	if(cb)cb(obj,e);
+	lv_input_cb(obj,e);
+}
+
+lv_obj_t*lv_draw_title(lv_obj_t*box,char*title,lv_coord_t*h){
+	(*h)+=gui_font_size;
+	lv_obj_t*label=lv_label_create(box,NULL);
+	lv_label_set_text(label,_(title));
+	lv_obj_set_y(label,(*h));
+	return label;
+}
+
+lv_obj_t*lv_draw_side_clear_btn(lv_obj_t*box,lv_coord_t*h,lv_coord_t size){
+	lv_obj_t*clr=lv_btn_create(box,NULL);
+	lv_style_set_action_button(clr,true);
+	lv_obj_set_event_cb(clr,clr_cb);
+	lv_obj_set_style_local_radius(clr,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,LV_RADIUS_CIRCLE);
+	lv_obj_set_size(clr,size,size);
+	lv_obj_align(clr,NULL,LV_ALIGN_IN_TOP_RIGHT,-gui_font_size/2,0);
+	lv_obj_set_y(clr,(*h));
+	lv_label_set_text(lv_label_create(clr,NULL),LV_SYMBOL_CLOSE);
+	(*h)+=lv_obj_get_height(clr);
+	return clr;
+}
+
+void lv_draw_file_input(
+	lv_obj_t*box,
+	char*title,
+	lv_coord_t*h,
+	lv_obj_t**clr,
+	lv_obj_t**txt,
+	lv_obj_t**btn
+){
+	lv_obj_t*label=lv_draw_title(box,title,h);
+	lv_obj_t*c=lv_draw_side_clear_btn(box,h,lv_obj_get_height(label));
+
+	(*h)+=gui_font_size/2;
+	lv_obj_t*t=lv_textarea_create(box,NULL);
+	lv_obj_set_user_data(c,t);
+	lv_textarea_set_text(t,"");
+	lv_textarea_set_one_line(t,true);
+	lv_textarea_set_cursor_hidden(t,true);
+	lv_obj_set_event_cb(t,inp_cb);
+	lv_obj_set_y(t,(*h));
+
+	lv_obj_t*b=lv_btn_create(box,NULL);
+	lv_style_set_action_button(b,true);
+	lv_obj_set_user_data(b,t);
+	lv_obj_set_event_cb(b,sel_cb);
+	lv_obj_set_style_local_radius(b,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,gui_font_size/2);
+	lv_obj_set_size(b,gui_font_size*3,lv_obj_get_height(t));
+	lv_obj_set_width(t,lv_page_get_scrl_width(box)-lv_obj_get_width(b)-gui_font_size/2);
+	lv_obj_align(b,t,LV_ALIGN_OUT_RIGHT_MID,gui_font_size/4,0);
+	lv_label_set_text(lv_label_create(b,NULL),"...");
+	(*h)+=lv_obj_get_height(b);
+	if(clr)*clr=c;
+	if(txt)*txt=t;
+	if(btn)*btn=b;
 }
 #endif

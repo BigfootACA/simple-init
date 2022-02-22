@@ -69,9 +69,23 @@ const char*confd_action2name(enum confd_action action){
 		case CONF_GET_STRING:  return "Get String";
 		case CONF_GET_INTEGER: return "Get Integer";
 		case CONF_GET_BOOLEAN: return "Get Boolean";
+		case CONF_GET_OWNER:   return "Get Owner";
+		case CONF_GET_GROUP:   return "Get Group";
+		case CONF_GET_MODE:    return "Get Mode";
+		case CONF_GET_SAVE:    return "Get Can Save";
 		case CONF_SET_STRING:  return "Set String";
 		case CONF_SET_INTEGER: return "Set Integer";
 		case CONF_SET_BOOLEAN: return "Set Boolean";
+		case CONF_SET_OWNER:   return "Set Owner";
+		case CONF_SET_GROUP:   return "Set Group";
+		case CONF_SET_MODE:    return "Set Mode";
+		case CONF_SET_SAVE:    return "Set Can Save";
+		case CONF_SET_DEFAULT: return "Set Default Config";
+		case CONF_ADD_KEY:     return "Add Key";
+		case CONF_INCLUDE:     return "Include Config";
+		case CONF_LOAD:        return "Load Config";
+		case CONF_SAVE:        return "Save Config";
+		case CONF_COUNT:       return "Count Values";
 		default:               return "Unknown";
 	}
 }

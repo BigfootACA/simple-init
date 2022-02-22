@@ -28,12 +28,14 @@ struct gui_register{
 	guiact_base*lost_focus;
 	guiact_base*init;
 	guiact_base*draw;
+	guiact_base*resize;
 };
 struct gui_activity{
 	char name[256];
 	void*args;
 	void*data;
 	bool mask;
+	lv_coord_t w,h;
 	lv_obj_t*page;
 	struct gui_register*reg;
 };

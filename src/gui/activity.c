@@ -77,6 +77,10 @@ static int call_lost_focus_last(){
 
 static int call_get_focus(struct gui_activity*act){
 	if(!act)return -1;
+	if(act->w!=gui_sw||act->h!=gui_sh){
+		act->w=gui_sw,act->h=gui_sh;
+		if(act->reg->resize)act->reg->resize(act);
+	}
 	tlog_debug("%s get focus",act->name);
 	return act->reg->get_focus?act->reg->get_focus(act):-1;
 }
@@ -183,6 +187,7 @@ static void guiact_start_task(lv_task_t*t){
 	if(!act)return;
 	memset(act,0,sizeof(struct gui_activity));
 	act->reg=reg,act->args=args,act->mask=reg->mask;
+	act->w=gui_sw,act->h=gui_sh;
 	strcpy(act->name,reg->name);
 	if(reg->init&&(r=reg->init(act))<0){
 		tlog_warn("activity %s init failed: %d",act->name,r);
@@ -197,7 +202,7 @@ static void guiact_start_task(lv_task_t*t){
 		act->page=lv_obj_create(sysbar.content,NULL);
 		lv_theme_apply(act->page,LV_THEME_SCR);
 	}
-	lv_obj_set_size(act->page,gui_sw,gui_sh);
+	lv_obj_set_size(act->page,act->w,act->h);
 	lv_obj_set_pos(act->page,gui_sx,gui_sy);
 	if((r=reg->draw(act))<0){
 		if(r!=-10)tlog_warn("activity %s draw failed: %d",act->name,r);
@@ -205,6 +210,7 @@ static void guiact_start_task(lv_task_t*t){
 		free(act);
 		return;
 	}
+	if(reg->resize)reg->resize(act);
 	guiact_add_activity(act);
 }
 

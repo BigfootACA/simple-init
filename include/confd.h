@@ -62,6 +62,13 @@ extern int confd_load_file(EFI_FILE_PROTOCOL*fd,const char*file);
 extern int confd_load_file(const char*file);
 #endif
 
+// src/confd/client.c: include config store from a file
+#ifdef ENABLE_UEFI
+extern int confd_include_file(EFI_FILE_PROTOCOL*fd,const char*file);
+#else
+extern int confd_include_file(const char*file);
+#endif
+
 // src/confd/client.c: set default config file path
 extern int confd_set_default_config(const char*file);
 

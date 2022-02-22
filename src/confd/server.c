@@ -109,6 +109,7 @@ struct async_load_save_data{
 	int fd;
 	char path[PATH_MAX];
 	pthread_t tid;
+	bool include;
 };
 
 static void*_async_load_thread(void*d){
@@ -116,7 +117,10 @@ static void*_async_load_thread(void*d){
 	struct async_load_save_data*data=d;
 	struct confd_msg ret;
 	confd_internal_init_msg(&ret,CONF_OK);
-	ret.code=-conf_load_file(AT_FDCWD,data->path[0]?data->path:def_path);
+	ret.code=-(data->include?
+		conf_include_file(AT_FDCWD,data->path[0]?data->path:def_path):
+		conf_load_file(AT_FDCWD,data->path[0]?data->path:def_path)
+	);
 	if(ret.code==0&&errno!=0)ret.code=errno;
 	confd_internal_send(data->fd,&ret);
 	free(data);
@@ -138,11 +142,12 @@ static void*_async_save_thread(void*d){
 	return NULL;
 }
 
-static int do_async_load(int fd,const char*path){
+static int do_async_load(int fd,const char*path,bool inc){
 	if(!path)return -1;
 	struct async_load_save_data*d=malloc(sizeof(struct async_load_save_data));
 	if(!d)return -1;
 	d->fd=fd;
+	d->include=inc;
 	strcpy(d->path,path);
 	int r=pthread_create(&d->tid,NULL,_async_load_thread,d);
 	if(r!=0)free(d);
@@ -310,7 +315,13 @@ static int confd_read(int fd){
 		// load config
 		case CONF_LOAD:
 			if(cred.uid!=0||cred.gid!=0)errno=EACCES;
-			else if(do_async_load(fd,msg.path)==0)return e;
+			else if(do_async_load(fd,msg.path,false)==0)return e;
+			break;
+
+		// load config
+		case CONF_INCLUDE:
+			if(cred.uid!=0||cred.gid!=0)errno=EACCES;
+			else if(do_async_load(fd,msg.path,true)==0)return e;
 		break;
 
 		// save config

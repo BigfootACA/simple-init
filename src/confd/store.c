@@ -283,7 +283,7 @@ int conf_set_mod(const char*path,mode_t mod,uid_t u,gid_t g){
 }
 
 #define FUNCTION_CONF_GET_SET(_tag,_type,_func) \
-	int conf_set_##_func(const char*path,_type data,uid_t u,gid_t g){\
+	int conf_set_##_func##_inc(const char*path,_type data,uid_t u,gid_t g,bool inc){\
 		struct conf*c=conf_lookup(path,true,TYPE_##_tag,u,g);\
 		if(!c)return -errno;\
 		MUTEX_LOCK(store_lock);\
@@ -291,10 +291,14 @@ int conf_set_mod(const char*path,mode_t mod,uid_t u,gid_t g){
 			MUTEX_UNLOCK(store_lock);\
 			ERET(EBADMSG);\
 		}\
+                c->include=inc;\
 		VALUE_##_tag(c)=data;\
 		conf_store_changed=true;\
 		MUTEX_UNLOCK(store_lock);\
 		return 0;\
+	}\
+	int conf_set_##_func(const char*path,_type data,uid_t u,gid_t g){\
+		return conf_set_##_func##_inc(path,data,u,g,false);\
 	}\
 	_type conf_get_##_func(const char*path,_type def,uid_t u,gid_t g){\
 		struct conf*c=conf_lookup(path,false,TYPE_##_tag,u,g);\

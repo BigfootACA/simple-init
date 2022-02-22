@@ -10,6 +10,7 @@
 #define CONFD_INTERNAL_H
 #include<inttypes.h>
 #include"str.h"
+#include"lock.h"
 #include"list.h"
 #include"confd.h"
 
@@ -39,6 +40,7 @@ enum confd_action{
 	CONF_LOAD         =0xACA3,
 	CONF_SET_SAVE     =0xACA4,
 	CONF_GET_SAVE     =0xACA5,
+	CONF_INCLUDE      =0xACA6,
 	CONF_SET_OWNER    =0xACB1,
 	CONF_GET_OWNER    =0xACB2,
 	CONF_SET_GROUP    =0xACB3,
@@ -49,18 +51,10 @@ enum confd_action{
 
 // initconfd message
 struct confd_msg{
-	unsigned char magic0:8,magic1:8;
-	enum confd_action action:16;
-	char path[4084-(MAX(
-		MAX(
-			MAX(sizeof(size_t),sizeof(int64_t)),
-			MAX(sizeof(enum conf_type),sizeof(bool))
-		),MAX(
-			MAX(sizeof(uid_t),sizeof(gid_t)),
-			sizeof(mode_t)
-		)
-	))];
-	int code:32;
+	unsigned char magic0,magic1;
+	enum confd_action action;
+	char path[4096-(sizeof(void*)*3)];
+	uint64_t code;
 	union{
 		size_t data_len;
 		enum conf_type type;
@@ -74,13 +68,14 @@ struct confd_msg{
 
 // config struct
 struct conf{
-	char name[255];
-	enum conf_type type;
+	char name[256];
 	struct conf*parent;
+	enum conf_type type;
 	uid_t user;
 	gid_t group;
 	mode_t mode;
 	bool save;
+	bool include;
 	union{
 		list*keys;
 		union{
@@ -98,13 +93,26 @@ struct conf{
 #define _ROOT_TYPE int
 #endif
 
-typedef int(*conf_file_hand_func)(_ROOT_TYPE root,const char*path);
+struct conf_file_hand;
+typedef int(*file_process_func)(struct conf_file_hand*hand);
+typedef ssize_t(*file_io_func)(struct conf_file_hand*hand,char*buff,size_t len);
 
 // config file handler
 struct conf_file_hand{
 	char**ext;
-	conf_file_hand_func load;
-	conf_file_hand_func save;
+	mutex_t lock;
+	bool initialized;
+	bool include;
+	char*path;
+	char*buff;
+	size_t len;
+	size_t off;
+	_ROOT_TYPE dir;
+	_ROOT_TYPE fd;
+	file_process_func load;
+	file_process_func save;
+	file_io_func read;
+	file_io_func write;
 };
 
 extern bool conf_store_changed;
@@ -186,6 +194,9 @@ extern int conf_set_mod(const char*path,mode_t mod,uid_t u,gid_t g);
 // src/confd/file.c: load config file to config store
 extern int conf_load_file(_ROOT_TYPE root,const char*path);
 
+// src/confd/file.c: include config file to config store
+extern int conf_include_file(_ROOT_TYPE root,const char*path);
+
 // src/confd/file.c: save config store to config file
 extern int conf_save_file(_ROOT_TYPE root,const char*path);
 
@@ -197,6 +208,7 @@ extern int conf_save_file(_ROOT_TYPE root,const char*path);
 // src/confd/store.c: get or set config item value
 #define DECLARE_CONF_GET_SET(_tag,_type,_func) \
 	extern int conf_set_##_func(const char*path,_type data,uid_t u,gid_t g);\
+	extern int conf_set_##_func##_inc(const char*path,_type data,uid_t u,gid_t g,bool inc);\
 	extern _type conf_get_##_func(const char*path,_type def,uid_t u,gid_t g);
 
 DECLARE_CONF_GET_SET(STRING,char*,string)

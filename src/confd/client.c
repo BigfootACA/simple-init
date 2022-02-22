@@ -259,6 +259,10 @@ int confd_load_file(const char*file){
 	return _confd_file(file,CONF_LOAD);
 }
 
+int confd_include_file(const char*file){
+	return _confd_file(file,CONF_INCLUDE);
+}
+
 int confd_save_file(const char*file){
 	return _confd_file(file,CONF_SAVE);
 }

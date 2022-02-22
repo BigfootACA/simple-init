@@ -16,7 +16,8 @@
 [LibraryClasses]
   PcdLib
   BaseLib
-  UefiLib
+  BaseMemoryLib
+  MemoryAllocationLib
   SimpleInitLib
   SimpleInitCompatible
 
@@ -28,10 +29,14 @@
   file.c
   file_conf.c
 
+[Guids]
+  gEfiFileInfoGuid
+
 [Protocols]
   gEfiSimpleFileSystemProtocolGuid
   gEfiPartitionInfoProtocolGuid
 
 [FixedPcd]
   gSimpleInitTokenSpaceGuid.PcdConfDefaultPath
+  gSimpleInitTokenSpaceGuid.PcdConfDefaultStaticPath
   gSimpleInitTokenSpaceGuid.PcdConfGptPartition

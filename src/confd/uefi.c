@@ -167,6 +167,12 @@ int confd_load_file(EFI_FILE_PROTOCOL*fd,const char*file){
 	return conf_load_file(fp,fn);
 }
 
+int confd_include_file(EFI_FILE_PROTOCOL*fd,const char*file){
+	const char*fn=file?file:(const char*)PcdGetPtr(PcdConfDefaultStaticPath);
+	EFI_FILE_PROTOCOL*fp=fd?fd:get_usable_fp();
+	return conf_include_file(fp,fn);
+}
+
 int confd_save_file(EFI_FILE_PROTOCOL*fd,const char*file){
 	const char*fn=file?file:(const char*)PcdGetPtr(PcdConfDefaultPath);
 	EFI_FILE_PROTOCOL*fp=fd?fd:get_usable_fp();

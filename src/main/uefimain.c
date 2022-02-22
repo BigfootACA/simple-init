@@ -28,6 +28,7 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ih,IN EFI_SYSTEM_TABLE*st){
 	EfiBootManagerRefreshAllBootOption();
 	DEBUG((EFI_D_INFO,"Initialize SimpleInit GUI...\n"));
 
+	confd_include_file(NULL,NULL);
 	confd_load_file(NULL,NULL);
 	char*lang=confd_get_string("language",NULL);
 	if(lang)lang_set(lang);

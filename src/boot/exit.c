@@ -7,9 +7,10 @@
  */
 
 #include<stdlib.h>
+#include<Library/UefiBootServicesTableLib.h>
 #include"boot.h"
 
 int run_boot_exit(boot_config*boot){
-	exit(0);
+	gBS->Exit(gImageHandle,EFI_ABORTED,0,NULL);
 	return -1;
 }

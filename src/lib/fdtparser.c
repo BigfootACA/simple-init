@@ -42,19 +42,17 @@ int32_t fdt_get_size_cells(fdt*fdt){
 	return ret;
 }
 
-bool fdt_get_memory(fdt*fdt,int index,uint64_t*base,uint64_t*size){
+bool fdt_get_reg(fdt*fdt,int off,int index,uint64_t*base,uint64_t*size){
 	const int32_t*prop;
 	int32_t ac,sc,node,item,len=0;
-	if(!fdt||!base||!size)return false;
+	if(!fdt||off<0||index<0||!base||!size)return false;
 
 	// load address cells and size cells
 	ac=fdt_get_address_cells(fdt);
 	sc=fdt_get_size_cells(fdt);
 	*base=0,*size=0;
 
-	// fetch memory node
-	node=fdt_path_offset(fdt,"/memory");
-	prop=fdt_getprop(fdt,node,"reg",&len);
+	prop=fdt_getprop(fdt,off,"reg",&len);
 	item=(ac+sc)*sizeof(int32_t);
 	if(len<item){
 		node=-1;
@@ -76,6 +74,10 @@ bool fdt_get_memory(fdt*fdt,int index,uint64_t*base,uint64_t*size){
 	prop+=sc;
 
 	return true;
+}
+
+bool fdt_get_memory(fdt*fdt,int index,uint64_t*base,uint64_t*size){
+	return fdt?fdt_get_reg(fdt,fdt_path_offset(fdt,"/memory"),index,base,size):false;
 }
 
 int fdt_get_cmdline(fdt*fdt,char**cmdline,int*length){

@@ -26,6 +26,9 @@ extern int32_t fdt_get_address_cells(fdt*fdt);
 // src/lib/fdtparser.c: get size cells from fdt (/#size-cells)
 extern int32_t fdt_get_size_cells(fdt*fdt);
 
+// src/lib/fdtparser.c: get a reg from fdt
+extern bool fdt_get_reg(fdt*fdt,int off,int index,uint64_t*base,uint64_t*size);
+
 // src/lib/fdtparser.c: get a memory from fdt (/memory reg, pass from bootloader)
 extern bool fdt_get_memory(fdt*fdt,int index,uint64_t*base,uint64_t*size);
 

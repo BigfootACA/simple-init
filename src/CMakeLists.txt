@@ -92,6 +92,7 @@ set(SUBDIRS
 	src/confd
 	src/ttyd
 	src/bcd
+	src/compress
 )
 
 target_link_libraries(simple-init -Wl,--start-group)

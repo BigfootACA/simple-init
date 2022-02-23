@@ -153,43 +153,14 @@ static int auto_open_image(struct abootimg*am){
 	return r;
 }
 
-static bool select_cb(bool ok,const char**path,uint16_t cnt,void*user_data){
-	if(!ok)return false;
-	if(!path||!path[0]||path[1]||cnt!=1)return true;
-	#ifdef ENABLE_UEFI
-	lv_textarea_set_text(user_data,path[0]);
-	#else
-	lv_textarea_set_text(user_data,path[0]+2);
-	#endif
-	lv_event_send(user_data,LV_EVENT_DEFOCUSED,NULL);
-	return false;
-}
-
-static void sel_cb(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_CLICKED)return;
-	struct filepicker*fp=filepicker_create(select_cb,"Select item");
-	filepicker_set_user_data(fp,lv_obj_get_user_data(obj));
-	filepicker_set_max_item(fp,1);
-}
-
-static void clr_cb(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_CLICKED)return;
-	lv_textarea_set_text(lv_obj_get_user_data(obj),"");
-}
-
-static void inp_cb(lv_obj_t*obj,lv_event_t e){
+static void abootimg_cb(lv_obj_t*obj,lv_event_t e){
 	struct abootimg*am=lv_obj_get_user_data(obj);
-	switch(e){
-		case LV_EVENT_CLICKED:
-			sysbar_focus_input(obj);
-			sysbar_keyboard_open();
-		break;
-		case LV_EVENT_DEFOCUSED:
-			if(!am||obj!=am->image)break;
-			auto_open_image(am);
-		break;
-	}
+	lv_input_cb(obj,e);
+	if(e!=LV_EVENT_DEFOCUSED)return;
+	if(!am||obj!=am->image)return;
+	auto_open_image(am);
 }
+
 #define DO_SAVE_FILE(tag,type)\
 	static bool do_save_##tag(struct abootimg*am){\
 		if(!am||!am->img)return false;\
@@ -323,61 +294,6 @@ static int do_cleanup(struct gui_activity*act){
 	return 0;
 }
 
-static lv_obj_t*draw_title(struct abootimg*am,char*title,lv_coord_t*h){
-	(*h)+=gui_font_size;
-	lv_obj_t*label=lv_label_create(am->box,NULL);
-	lv_label_set_text(label,_(title));
-	lv_obj_set_y(label,(*h));
-	return label;
-}
-
-static lv_obj_t*draw_clr(struct abootimg*am,lv_coord_t*h,lv_coord_t s){
-	lv_obj_t*clr=lv_btn_create(am->box,NULL);
-	lv_style_set_action_button(clr,true);
-	lv_obj_set_event_cb(clr,clr_cb);
-	lv_obj_set_style_local_radius(clr,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,LV_RADIUS_CIRCLE);
-	lv_obj_set_size(clr,s,s);
-	lv_obj_align(clr,NULL,LV_ALIGN_IN_TOP_RIGHT,-gui_font_size/2,0);
-	lv_obj_set_y(clr,(*h));
-	lv_label_set_text(lv_label_create(clr,NULL),LV_SYMBOL_CLOSE);
-	(*h)+=lv_obj_get_height(clr);
-	return clr;
-}
-
-static void draw_file(
-	struct abootimg*am,
-	char*title,
-	lv_coord_t*h,
-	lv_obj_t**clr,
-	lv_obj_t**txt,
-	lv_obj_t**btn
-){
-	lv_obj_t*label=draw_title(am,title,h);
-	*clr=draw_clr(am,h,lv_obj_get_height(label));
-
-	(*h)+=gui_font_size/2;
-	*txt=lv_textarea_create(am->box,NULL);
-	lv_obj_set_user_data(*clr,*txt);
-	lv_textarea_set_text(*txt,"");
-	lv_textarea_set_one_line(*txt,true);
-	lv_textarea_set_cursor_hidden(*txt,true);
-	lv_obj_set_user_data(*txt,am);
-	lv_obj_set_event_cb(*txt,inp_cb);
-	lv_obj_set_y(*txt,(*h));
-
-	*btn=lv_btn_create(am->box,NULL);
-	lv_style_set_action_button(*btn,true);
-	lv_obj_set_user_data(*btn,*txt);
-	lv_obj_set_event_cb(*btn,sel_cb);
-	lv_obj_set_style_local_radius(*btn,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,gui_font_size/2);
-	lv_obj_set_size(*btn,gui_font_size*3,lv_obj_get_height(*txt));
-	lv_obj_set_width(*txt,lv_page_get_scrl_width(am->box)-lv_obj_get_width(*btn)-gui_font_size/2);
-	lv_obj_align(*btn,*txt,LV_ALIGN_OUT_RIGHT_MID,gui_font_size/4,0);
-	lv_label_set_text(lv_label_create(*btn,NULL),"...");
-	(*h)+=lv_obj_get_height(*btn);
-
-}
-
 static int draw_abootimg(struct gui_activity*act){
 	struct abootimg*am=act->data;
 
@@ -429,28 +345,31 @@ static int draw_abootimg(struct gui_activity*act){
 	h+=lv_obj_get_height(am->opt_extract);
 
 	// Image name
-	lv_obj_t*name=draw_title(am,"Name:",&h);
+	lv_obj_t*name=lv_draw_title(am->box,"Name:",&h);
 
 	am->name=lv_textarea_create(am->box,NULL);
 	lv_textarea_set_text(am->name,"");
 	lv_textarea_set_one_line(am->name,true);
 	lv_textarea_set_cursor_hidden(am->name,true);
 	lv_obj_set_user_data(am->name,am);
-	lv_obj_set_event_cb(am->name,inp_cb);
+	lv_obj_set_event_cb(am->name,lv_input_cb);
 	lv_obj_set_width(am->name,w-lv_obj_get_width(name)-gui_font_size);
 	lv_obj_align(am->name,name,LV_ALIGN_OUT_RIGHT_MID,gui_font_size/2,0);
 	lv_obj_set_y(am->name,h);
 	lv_obj_align(name,am->name,LV_ALIGN_OUT_LEFT_MID,-gui_font_size/2,0);
 	h+=lv_obj_get_height(am->name);
 
-	draw_file(am,"Android Boot Image",     &h,&am->clr_image, &am->image, &am->btn_image);
-	draw_file(am,"Linux Kernel",           &h,&am->clr_kernel,&am->kernel,&am->btn_kernel);
-	draw_file(am,"Ramdisk (initramfs)",    &h,&am->clr_initrd,&am->initrd,&am->btn_initrd);
-	draw_file(am,"Second Stage Bootloader",&h,&am->clr_second,&am->second,&am->btn_second);
+	lv_draw_file_input(am->box,"Android Boot Image",     &h,&am->clr_image, &am->image, &am->btn_image);
+	lv_draw_file_input(am->box,"Linux Kernel",           &h,&am->clr_kernel,&am->kernel,&am->btn_kernel);
+	lv_draw_file_input(am->box,"Ramdisk (initramfs)",    &h,&am->clr_initrd,&am->initrd,&am->btn_initrd);
+	lv_draw_file_input(am->box,"Second Stage Bootloader",&h,&am->clr_second,&am->second,&am->btn_second);
+
+	lv_obj_set_user_data(am->image,am);
+	lv_obj_set_event_cb(am->image,abootimg_cb);
 
 	// Commandline
-	lv_obj_t*cmdline=draw_title(am,"Kernel Commandline",&h);
-	am->clr_cmdline=draw_clr(am,&h,lv_obj_get_height(cmdline));
+	lv_obj_t*cmdline=lv_draw_title(am->box,"Kernel Commandline",&h);
+	am->clr_cmdline=lv_draw_side_clear_btn(am->box,&h,lv_obj_get_height(cmdline));
 
 	h+=gui_font_size/2;
 	am->cmdline=lv_textarea_create(am->box,NULL);
@@ -458,7 +377,7 @@ static int draw_abootimg(struct gui_activity*act){
 	lv_textarea_set_text(am->cmdline,"");
 	lv_textarea_set_cursor_hidden(am->cmdline,true);
 	lv_obj_set_user_data(am->cmdline,am);
-	lv_obj_set_event_cb(am->cmdline,inp_cb);
+	lv_obj_set_event_cb(am->cmdline,lv_input_cb);
 	lv_obj_set_width(am->cmdline,w);
 	lv_obj_set_pos(am->cmdline,0,h);
 	h+=lv_obj_get_height(am->cmdline);

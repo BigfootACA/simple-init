@@ -1,0 +1,96 @@
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = SimpleInitBootLinux
+  FILE_GUID                      = 87042C63-21D1-4A68-8C46-3AA49874B93A
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = SimpleInitBootLinux
+
+[BuildOptions]
+  GCC:*_*_*_CC_FLAGS = -DENABLE_UEFI=1 -DENABLE_CHECKSUM=1
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  EmbeddedPkg/EmbeddedPkg.dec
+  CryptoPkg/CryptoPkg.dec
+  SimpleInit.dec
+
+[Packages.ARM, Packages.AARCH64]
+  ArmPkg/ArmPkg.dec
+
+[LibraryClasses.ARM, LibraryClasses.AARCH64]
+  ArmLib
+  ArmGicLib
+  CacheMaintenanceLib
+
+[LibraryClasses]
+  PcdLib
+  UefiLib
+  BaseLib
+  DebugLib
+  BaseMemoryLib
+  DevicePathLib
+  MemoryAllocationLib
+  UefiBootManagerLib
+  UefiBootServicesTableLib
+  UefiRuntimeServicesTableLib
+  ReportStatusCodeLib
+  SimpleInitLib
+  SimpleInitCompress
+  SimpleInitConfd
+  SimpleInitLoggerd
+  Zlib
+
+[Pcd]
+  gSimpleInitTokenSpaceGuid.PcdBootCustomLoadAddress
+  gSimpleInitTokenSpaceGuid.PcdBootLoadAddressStart
+  gSimpleInitTokenSpaceGuid.PcdBootLoadAddressEnd
+  gSimpleInitTokenSpaceGuid.PcdBootKernelAddressStart
+  gSimpleInitTokenSpaceGuid.PcdBootKernelAddressEnd
+  gSimpleInitTokenSpaceGuid.PcdBootRamdiskAddressStart
+  gSimpleInitTokenSpaceGuid.PcdBootRamdiskAddressEnd
+  gSimpleInitTokenSpaceGuid.PcdBootFdtAddressStart
+  gSimpleInitTokenSpaceGuid.PcdBootFdtAddressEnd
+
+[Pcd.AARCH64]
+  gArmTokenSpaceGuid.PcdGicDistributorBase
+  gArmTokenSpaceGuid.PcdGicSgiIntId
+
+[Guids]
+  gFdtTableGuid
+  gEfiFileInfoGuid
+  gEfiFileSystemVolumeLabelInfoIdGuid
+  gLinuxEfiRandomSeedTableGuid
+
+[Protocols]
+  gEfiChipInfoProtocolGuid
+  gEfiPlatformInfoProtocolGuid
+  gEfiRamPartitionProtocolGuid
+  gEfiDDRGetInfoProtocolGuid
+  gEfiLoadedImageProtocolGuid
+  gEfiPartitionInfoProtocolGuid
+  gEfiSimpleFileSystemProtocolGuid
+  gEfiRngProtocolGuid
+  gKernelFdtProtocolGuid
+
+[Sources]
+  arm.c
+  fdt.c
+  mem.c
+  conf.c
+  dtbo.c
+  dump.c
+  info.c
+  move.c
+  qcom.c
+  uefi.c
+  aboot.c
+  linux.c
+  loader.c
+  random.c
+  splash.c
+  cmdline.c
+  dtb_sel.c
+  ramdisk.c
+  compress.c

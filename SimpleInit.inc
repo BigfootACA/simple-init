@@ -7,6 +7,7 @@
   SimpleInitGUI|src/gui/SimpleInitGUI.inf
   SimpleInitLib|src/lib/SimpleInitLib.inf
   SimpleInitBoot|src/boot/SimpleInitBoot.inf
+  SimpleInitBootLinux|src/linux-boot/SimpleInitBootLinux.inf
   SimpleInitCompress|src/compress/SimpleInitCompress.inf
   SimpleInitLocate|src/locate/SimpleInitLocate.inf
   SimpleInitAssets|src/assets/SimpleInitAssets.inf
@@ -25,6 +26,7 @@
   src/gui/SimpleInitGUI.inf
   src/lib/SimpleInitLib.inf
   src/boot/SimpleInitBoot.inf
+  src/linux-boot/SimpleInitBootLinux.inf
   src/compress/SimpleInitCompress.inf
   src/locate/SimpleInitLocate.inf
   src/assets/SimpleInitAssets.inf

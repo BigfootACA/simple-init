@@ -48,6 +48,7 @@ DECLARE_BOOT_LINUX(system);
 DECLARE_BOOT_LINUX(charger);
 DECLARE_BOOT_UEFI(exit);
 DECLARE_BOOT_UEFI(efi);
+DECLARE_BOOT_UEFI(linux);
 DECLARE_BOOT_UEFI(uefi_option);
 
 boot_main*boot_main_func[]={
@@ -60,7 +61,7 @@ boot_main*boot_main_func[]={
 	[BOOT_HALT]           = CFG_LINUX(reboot),
 	[BOOT_SYSTEM]         = CFG_LINUX(system),
 	[BOOT_EXIT]           = CFG_UEFI(exit),
-	[BOOT_LINUX]          = NULL,
+	[BOOT_LINUX]          = CFG_UEFI(linux),
 	[BOOT_EFI]            = CFG_UEFI(efi),
 	[BOOT_SIMPLE_INIT]    = NULL,
 	[BOOT_UEFI_OPTION]    = CFG_UEFI(uefi_option),

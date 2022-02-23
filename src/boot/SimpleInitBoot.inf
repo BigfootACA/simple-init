@@ -24,6 +24,7 @@
   UefiBootServicesTableLib
   UefiRuntimeServicesTableLib
   SimpleInitLib
+  SimpleInitBootLinux
   SimpleInitLocate
   SimpleInitConfd
   SimpleInitLoggerd
@@ -41,6 +42,7 @@
   efi.c
   exit.c
   boot.c
+  linux.c
   bootdef.c
   reboot_uefi.c
   uefi_option.c

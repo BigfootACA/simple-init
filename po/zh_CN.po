@@ -2284,3 +2284,21 @@ msgstr "创建新镜像失败"
 
 msgid "Operation done"
 msgstr "操作完成"
+
+msgid "Load file '%s' failed: %s"
+msgstr "加载文件'%s'失败: %s"
+
+msgid "No kernel specified"
+msgstr "未指定内核"
+
+msgid "Conflict options"
+msgstr "冲突的选项"
+
+msgid "Boot Linux"
+msgstr "启动Linux"
+
+msgid "Device Tree Blob (dtb)"
+msgstr "设备树 (dtb)"
+
+msgid "Boot with UEFI runtime"
+msgstr "使用UEFI运行环境启动"

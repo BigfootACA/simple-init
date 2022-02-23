@@ -26,6 +26,7 @@
   LodePNG
   SimpleInitLib
   SimpleInitBoot
+  SimpleInitBootLinux
   SimpleInitConfd
   SimpleInitLoggerd
   SimpleInitAssets
@@ -93,6 +94,7 @@
   interface/core/ctrl_pad.c
   interface/core/clipboard.c
   interface/apps/abootimg.c
+  interface/apps/boot_linux.c
   interface/apps/benchmark.c
   interface/apps/uefi_bootmenu.c
   interface/apps/uefi_start.c

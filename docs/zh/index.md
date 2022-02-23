@@ -15,3 +15,7 @@
 ### [msgbox示例](examples/msgbox.md)
 
 ### [Logger日志示例](examples/logger.md)
+
+## 配置指南
+
+### [config](config/index.md)

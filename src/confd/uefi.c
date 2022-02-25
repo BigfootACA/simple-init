@@ -179,6 +179,10 @@ int confd_save_file(EFI_FILE_PROTOCOL*fd,const char*file){
 	return conf_save_file(fp,fn);
 }
 
+int64_t confd_count(const char*path){
+	return conf_count(path,0,0);
+}
+
 enum conf_type confd_get_type(const char*path){
 	return conf_get_type(path,0,0);
 }
@@ -294,5 +298,6 @@ EXT(confd_set_mod,     mod,mode_t,  int);
 XEXT(confd_get_save,   bool);
 XEXT(confd_add_key,    int);
 XEXT(confd_delete,     int);
+XEXT(confd_count,      int64_t);
 XEXT(confd_ls,         char**);
 XEXT(confd_get_type,   enum conf_type);

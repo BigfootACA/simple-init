@@ -19,6 +19,7 @@ static void load_kernel_fdt_cmdline(linux_boot*lb){
 	char*cmdline=NULL;
 	EFI_STATUS st;
 	KERNEL_FDT_PROTOCOL*fdt;
+	if(lb->config->skip_kfdt_cmdline)return;
 	st=gBS->LocateProtocol(
 		&gKernelFdtProtocolGuid,
 		NULL,

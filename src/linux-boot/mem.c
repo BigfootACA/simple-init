@@ -153,6 +153,7 @@ static int update_from_kernel_fdt(linux_boot*lb){
 	EFI_STATUS st;
 	uint64_t base=0,size=0;
 	KERNEL_FDT_PROTOCOL*fdt;
+	if(lb->config->skip_kfdt_memory)return r;
 	st=gBS->LocateProtocol(
 		&gKernelFdtProtocolGuid,
 		NULL,
@@ -225,7 +226,7 @@ static int update_ddr_info(linux_boot*lb){
 		"get ddr details failed: %s",
 		efi_status_to_string(st)
 	));
-	tlog_debug("ddr device type: %d\n",ddr->device_type);
+	tlog_debug("ddr device type: %d",ddr->device_type);
 	ret=fdt_appendprop_u32(lb->dtb.address,off,"ddr_device_type",(UINT32)ddr->device_type);
 	if(ret!=0)EDONE(tlog_warn(
 		"set ddr_device_type failed: %s",

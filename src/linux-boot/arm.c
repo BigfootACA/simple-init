@@ -24,6 +24,7 @@
 typedef VOID (*AARCH64_CACHE_OPERATION)(UINTN);
 extern VOID AArch64DataCacheOperation(IN AARCH64_CACHE_OPERATION DataCacheOperation);
 extern VOID EFIAPI ArmInvalidateDataCacheEntryBySetWay(IN UINTN SetWayFormat);
+extern VOID EFIAPI ArmCleanDataCacheEntryBySetWay(IN UINTN SetWayFormat);
 
 static VOID EFIAPI ArmInvalidateDataCacheInternal(VOID){
 	// FUCK ASSERT
@@ -31,21 +32,23 @@ static VOID EFIAPI ArmInvalidateDataCacheInternal(VOID){
 	AArch64DataCacheOperation(ArmInvalidateDataCacheEntryBySetWay);
 }
 
+static VOID EFIAPI ArmCleanDataCacheInternal(VOID){
+	// FUCK ASSERT
+	ArmDataSynchronizationBarrier();
+	AArch64DataCacheOperation(ArmCleanDataCacheEntryBySetWay);
+}
+
 static void platform_cleanup(linux_boot*lb){
 	DEBUG((EFI_D_INFO,"boot: cleanup platform...\n"));
 
-	ArmDisableBranchPrediction();
-	ArmDisableInterrupts();
-	ArmDisableAsynchronousAbort();
-
-	ArmInvalidateInstructionCache();
-	ArmDisableInstructionCache();
-
-	ArmInvalidateDataCacheInternal();
+	ArmCleanDataCacheInternal();
 	ArmDisableDataCache();
+	ArmInvalidateDataCacheInternal();
+
+	ArmDisableInstructionCache();
+	ArmInvalidateInstructionCache();
 
 	ArmDisableMmu();
-	ArmInvalidateTlb();
 }
 
 static void exit_boot_services(void){
@@ -104,6 +107,8 @@ int boot_linux_arm(linux_boot*boot){
 		);
 		return -1;
 	}
+
+	tlog_notice("kernel main at 0x%llx",(UINTN)boot->kernel.address);
 
 	switch(ArmReadCurrentEL()){
 		case AARCH64_EL1:tlog_info("in arm64 EL1");break;

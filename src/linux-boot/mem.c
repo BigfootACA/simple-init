@@ -30,26 +30,24 @@ static int fdt_append_reg(void*fdt,int off,bool use32,UINTN val){
 }
 
 static int fdt_add_memory(linux_boot*lb,UINTN addr,UINTN size){
-	int32_t ac;
 	int ret=0;
 	char buf[64];
 	static int off=-1;
-	static bool init=false;
+	static void*dtb=NULL;
 	static bool use32=false;
-	if(!init){
+	if(dtb!=lb->dtb.address){
 		off=fdt_path_offset(lb->dtb.address,"/memory");
-		if(off<0)return trlog_warn(
-			-1,
-			"get memory node failed: %s",
-			fdt_strerror(off)
-		);
-		ac=fdt_get_size_cells(lb->dtb.address);
-		if(ac<0)return trlog_warn(
-			-1,
-			"get address cells failed: %s",
-			fdt_strerror(ac)
-		);
+		if(off<0){
+			off=fdt_add_subnode(lb->dtb.address,0,"/memory");
+			if(off<0)return trlog_warn(
+				-1,
+				"get memory node failed: %s",
+				fdt_strerror(off)
+			);
+			fdt_setprop_string(lb->dtb.address,off,"device_type","memory");
+		}
 		fdt_delprop(lb->dtb.address,off,"reg");
+		dtb=lb->dtb.address;
 	}
 	tlog_info(
 		"memory: 0x%016llx - 0x%016llx (%llu bytes / %s)",

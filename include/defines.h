@@ -8,9 +8,6 @@
 
 #ifndef _DEFINES_H
 #define _DEFINES_H
-#ifndef __linux__
-#error "This program only run on Linux"
-#endif
 #include<time.h>
 #include<errno.h>
 #include<fcntl.h>

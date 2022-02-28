@@ -70,9 +70,10 @@ static bool check_boot_load_info(linux_boot_addresses*bli,linux_boot*lb){
 	return true;
 }
 
-static int do_move(linux_mem_region*tgt,linux_file_info*src){
+static int do_move(linux_mem_region*tgt,linux_file_info*src,size_t offset){
 	char buf[64];
 	if(!tgt||!src||!src->address)return -1;
+	tgt->start=ALIGN_VALUE(tgt->start,MEM_ALIGN)+offset;
 	if(tgt->end-tgt->start<src->size)
 		return trlog_warn(-1,"memory too small for load");
 	tlog_debug(
@@ -83,12 +84,13 @@ static int do_move(linux_mem_region*tgt,linux_file_info*src){
 		make_readable_str_buf(buf,sizeof(buf),src->size,1,0)
 	);
 	CopyMem((VOID*)tgt->start,src->address,src->size);
-	if(src->allocated)FreePages(src->address,src->mem_pages);
+	if(src->allocated)FreePages(src->address-src->offset,src->mem_pages);
 	src->address=(void*)tgt->start;
 	src->mem_pages=EFI_SIZE_TO_PAGES(MIN(
 		ALIGN_VALUE(src->size,MEM_ALIGN),
 		tgt->end-tgt->start
 	));
+	src->offset=offset;
 	src->mem_size=EFI_PAGES_TO_SIZE(src->mem_pages);
 	src->allocated=false;
 	tgt->start+=ALIGN_VALUE(src->mem_size,MEM_ALIGN);
@@ -112,9 +114,15 @@ int linux_boot_move(linux_boot*lb){
 	do_erase_load(&info->initrd);
 	do_erase_load(&info->fdt);
 	tlog_debug("erase memory done, try move");
-	do_move((info->kernel.start?&info->kernel:&info->load),&lb->kernel);
-	do_move((info->initrd.start?&info->initrd:&info->load),&lb->initrd);
-	do_move((info->fdt.start?&info->fdt:&info->load),&lb->dtb);
+	size_t koff=0;
+	switch(lb->arch){
+		case ARCH_ARM32:koff=LINUX_ARM32_OFFSET;break;
+		case ARCH_ARM64:koff=LINUX_ARM64_OFFSET;break;
+		default:;
+	}
+	do_move((info->kernel.start?&info->kernel:&info->load),&lb->kernel,koff);
+	do_move((info->initrd.start?&info->initrd:&info->load),&lb->initrd,0);
+	do_move((info->fdt.start?&info->fdt:&info->load),&lb->dtb,0);
 	tlog_debug("move done");
 	return 0;
 }

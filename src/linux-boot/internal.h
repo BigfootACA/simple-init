@@ -54,6 +54,7 @@ typedef struct linux_file_info{
 	size_t size;
 	size_t mem_size;
 	size_t mem_pages;
+	size_t offset;
 }linux_file_info;
 
 // linux boot status
@@ -69,7 +70,8 @@ typedef struct linux_boot{
 	linux_file_info kernel;
 	linux_file_info initrd;
 	linux_file_info dtb;
-	linux_file_info dtbo;
+	list*initrd_buf;
+	list*dtbo;
 	linux_config*config;
 	linux_boot_status status;
 	linux_boot_arch arch;
@@ -180,6 +182,8 @@ extern int boot_linux_uefi(linux_boot*boot);
 // src/linux-boot/arm.c: boot arm mode kernel (without uefi)
 extern int boot_linux_arm(linux_boot*boot);
 
+#define LINUX_ARM32_OFFSET 0x00008000
+#define LINUX_ARM64_OFFSET 0x00080000
 #define MEM_ALIGN          0x00200000
 #define MAX_DTB_SIZE       0x00200000
 #define MAX_DTBO_SIZE      0x01800000

@@ -46,7 +46,6 @@ int linux_boot_dump(linux_boot*lb){
 	linux_file_dump("kernel",&lb->kernel);
 	linux_file_dump("initramfs",&lb->initrd);
 	linux_file_dump("devicetree",&lb->dtb);
-	linux_file_dump("devicetree overlay",&lb->dtbo);
 	tlog_info("kernel cmdline: %s",lb->cmdline);
 	return 0;
 }

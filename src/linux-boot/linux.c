@@ -48,7 +48,7 @@ bool is_kernel_magic(linux_file_info*fi,UINTN off,UINT32 require){
 
 int linux_file_clean(linux_file_info*fi){
 	if(!fi)return -1;
-	if(fi->allocated)FreePages(fi->address,fi->mem_pages);
+	if(fi->allocated)FreePages(fi->address-fi->offset,fi->mem_pages);
 	ZeroMem(fi,sizeof(linux_file_info));
 	return 0;
 }

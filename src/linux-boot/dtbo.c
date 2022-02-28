@@ -100,7 +100,7 @@ static void process_dtbo(linux_boot*lb,qcom_chip_info*chip_info,dtbo_info*dtbo){
 	list_obj_add_new_dup(&dtbos,dtbo,sizeof(dtbo_info));
 }
 
-static int read_qcom_dtbo(linux_boot*lb){
+static int read_qcom_dtbo(linux_boot*lb,linux_file_info*fi){
 	int r=-1;
 	list*f=NULL;
 	dtbo_info dtbo;
@@ -108,7 +108,7 @@ static int read_qcom_dtbo(linux_boot*lb){
 	qcom_chip_info chip_info;
 	dtbo_table_header hdr;
 	uint32_t ens_cnt,ens_off,en_size,total_size,header_size;
-	CopyMem(&hdr,lb->dtbo.address,sizeof(dtbo_table_header));
+	CopyMem(&hdr,fi->address,sizeof(dtbo_table_header));
 	en_size=fdt32_to_cpu(hdr.dt_entry_size);
 	ens_cnt=fdt32_to_cpu(hdr.dt_entry_count);
 	ens_off=fdt32_to_cpu(hdr.dt_entry_offset);
@@ -117,7 +117,7 @@ static int read_qcom_dtbo(linux_boot*lb){
 	if(
 		total_size<=0||
 		total_size>MAX_DTBO_SIZE||
-		total_size>=lb->dtbo.size||
+		total_size>=fi->size||
 		header_size!=sizeof(dtbo_table_header)||
 		en_size!=sizeof(dtbo_table_entry)
 	)EDONE(tlog_error("invalid dtbo header"));
@@ -127,9 +127,9 @@ static int read_qcom_dtbo(linux_boot*lb){
 		ZeroMem(&dtbo,sizeof(dtbo_info));
 		dtbo.id=s;
 		dtbo.en_offset=ens_off+(en_size*s);
-		CopyMem(&dtbo.en,lb->dtbo.address+dtbo.en_offset,en_size);
+		CopyMem(&dtbo.en,fi->address+dtbo.en_offset,en_size);
 		dtbo.offset=fdt32_to_cpu(dtbo.en.dt_offset);
-		dtbo.address=lb->dtbo.address+dtbo.offset;
+		dtbo.address=fi->address+dtbo.offset;
 		dtbo.size=fdt32_to_cpu(dtbo.en.dt_size);
 		process_dtbo(lb,&chip_info,&dtbo);
 	}
@@ -154,33 +154,52 @@ static int read_qcom_dtbo(linux_boot*lb){
 	return r;
 }
 
+static int fi_free(void*data){
+	if(!data)return 0;
+	linux_file_clean((linux_file_info*)data);
+	free(data);
+	return 0;
+}
+
 int linux_boot_apply_dtbo(linux_boot*lb){
+	list*f;
+	size_t i=0;
 	int r=-1;
 	static const uint32_t dtbo_magic=MAGIC_DTBO;
-	if(!lb->dtbo.address||!lb->dtb.address)return 0;
+	if(!lb->dtbo||!lb->dtb.address)return 0;
 	if(lb->config&&lb->config->skip_dtbo){
 		tlog_debug("skip load dtbo");
-		linux_file_clean(&lb->dtbo);
-		return 0;
-	}
-	if(lb->dtbo.size<=4||lb->dtbo.size>MAX_DTBO_SIZE)
-		EDONE(tlog_error("invalid dtbo size"));
-
-	if(CompareMem(&fdt_magic,lb->dtbo.address,4)==0){
-		tlog_debug("found generic dtbo");
-		lb->status.dtbo_id=0;
-		r=fdt_overlay_apply(lb->dtb.address,lb->dtbo.address);
-		if(r!=0)tlog_error("apply overlay failed: %s",fdt_strerror(r));
-	}else if(CompareMem(&dtbo_magic,lb->dtbo.address,4)==0){
-		tlog_debug("found qualcomm dtbo");
-		if(lb->dtbo.size<=sizeof(dtbo_table_header))
-			EDONE(tlog_error("invalid dtbo size"));
-		r=read_qcom_dtbo(lb);
-	}else{
-		tlog_warn("unknown dtbo, skip");
 		r=0;
+		goto done;
 	}
+	if((f=list_first(lb->dtbo)))do{
+		i++;
+		LIST_DATA_DECLARE(fi,f,linux_file_info*);
+		int xr=-1;
+		if(fi->size<=4||fi->size>MAX_DTBO_SIZE){
+			tlog_error("invalid dtbo #%zu size",i);
+			continue;
+		}
+		if(CompareMem(&fdt_magic,fi->address,4)==0){
+			tlog_debug("found generic dtbo #%zu",i);
+			lb->status.dtbo_id=0;
+			xr=fdt_overlay_apply(lb->dtb.address,fi->address);
+			if(xr!=0)tlog_error("apply overlay failed: %s",fdt_strerror(r));
+		}else if(CompareMem(&dtbo_magic,fi->address,4)==0){
+			tlog_debug("found qualcomm dtbo #%zu",i);
+			if(fi->size<=sizeof(dtbo_table_header)){
+				tlog_error("invalid dtbo #%zu size",i);
+				continue;
+			}
+			xr=read_qcom_dtbo(lb,fi);
+		}else{
+			tlog_warn("unknown dtbo #%zu, skip",i);
+			continue;
+		}
+		if(xr!=0)r=xr;
+	}while((f=f->next));
 	done:
-	linux_file_clean(&lb->dtbo);
+	list_free_all(lb->dtbo,fi_free);
+	lb->dtbo=NULL;
 	return r;
 }

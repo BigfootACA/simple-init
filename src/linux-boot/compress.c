@@ -40,7 +40,9 @@ int linux_boot_uncompress_kernel(linux_boot*lb){
 	if(compressor_decompress(
 		comp,
 		inp,lb->kernel.size,
-		out,mem_size,&pos,&len
+		out+lb->kernel.offset,
+		mem_size-lb->kernel.offset,
+		&pos,&len
 	)!=0)EDONE(tlog_error("decompress kernel failed at %zu",pos));
 	tlog_info(
 		"decompressed kernel size %zu (%s %d%%)",len,
@@ -64,9 +66,11 @@ int linux_boot_uncompress_kernel(linux_boot*lb){
 		}else tlog_debug("skip dtb after compressed kernel");
 	}
 
-	if(lb->kernel.allocated)
-		FreePages(lb->kernel.address,lb->kernel.mem_pages);
-	lb->kernel.address=out;
+	if(lb->kernel.allocated)FreePages(
+		lb->kernel.address-lb->kernel.offset,
+		lb->kernel.mem_pages
+	);
+	lb->kernel.address=out+lb->kernel.offset;
 	lb->kernel.allocated=true;
 	lb->kernel.decompressed=true;
 	lb->kernel.mem_pages=mem_pages;

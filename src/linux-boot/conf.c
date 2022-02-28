@@ -13,6 +13,7 @@
 #include<Library/BaseMemoryLib.h>
 #include<Library/MemoryAllocationLib.h>
 #include"str.h"
+#include"list.h"
 #include"confd.h"
 #include"logger.h"
 #include"internal.h"
@@ -25,6 +26,49 @@ static inline void get_from_confd(linux_load_from*from,const char*key,const char
 	from->enabled=true;
 	from->type=FROM_LOCATE;
 	free(s);
+}
+
+static inline void get_multi_from_confd(list**from,const char*key,const char*sub){
+	char*s=NULL;
+	bool multi=false;
+	linux_load_from*f=NULL;
+	switch((int)confd_get_type_base(key,sub)){
+		case -1:return;
+		case TYPE_KEY:multi=true;break;
+		case TYPE_STRING:multi=false;break;
+		default:tlog_warn("invalid config %s.%s",key,sub);return;
+	}
+	if(multi){
+		char**b=confd_ls_base(key,sub);
+		if(!b)return;
+		for(size_t i=0;b[i];i++){
+			if(
+				!(s=confd_get_string_dict(key,sub,b[i],NULL))||
+				!(f=malloc(sizeof(linux_load_from)))
+			){
+				if(s)free(s);
+				if(f)free(f);
+				s=NULL,f=NULL;
+				continue;
+			}
+			ZeroMem(f,sizeof(linux_load_from));
+			AsciiStrCpyS(f->locate,sizeof(f->locate)-1,s);
+			f->enabled=true;
+			f->type=FROM_LOCATE;
+			list_obj_add_new(from,f);
+			free(s);
+		}
+		if(b[0])free(b[0]);
+		free(b);
+	}else{
+		if(!(f=malloc(sizeof(linux_load_from)))){
+			tlog_warn("allocate load from failed");
+			return;
+		}
+		ZeroMem(f,sizeof(linux_load_from));
+		get_from_confd(f,key,sub);
+		list_obj_add_new(from,f);
+	}
 }
 
 static inline void get_region_confd(linux_mem_region*reg,const char*key,const char*sub){
@@ -77,6 +121,7 @@ linux_config*linux_config_new(){
 		cfg->use_uefi=true;
 		cfg->dtb_id=-1;
 		cfg->dtbo_id=-1;
+		cfg->screen.update_splash=true;
 		get_boot_addresses_pcd(cfg);
 	}
 	return cfg;
@@ -88,10 +133,10 @@ linux_config*linux_config_new_from_confd(const char*key){
 	confd_get_sstring_base(key,"cmdline",NULL,cfg->cmdline,sizeof(cfg->cmdline));
 	get_from_confd(&cfg->abootimg,key,"abootimg");
 	get_from_confd(&cfg->kernel,key,"kernel");
-	get_from_confd(&cfg->initrd,key,"initrd");
-	get_from_confd(&cfg->dtbo,key,"dtbo");
+	get_multi_from_confd(&cfg->initrd,key,"initrd");
+	get_multi_from_confd(&cfg->dtbo,key,"dtbo");
 	get_from_confd(&cfg->dtb,key,"dtb");
-	get_region_confd(&cfg->splash,key,"splash");
+	get_region_confd(&cfg->screen.splash,key,"splash");
 	get_memory_confd(cfg,key);
 	load_boolean(key,"use_uefi",&cfg->use_uefi);
 	load_boolean(key,"skip_dtb",&cfg->skip_dtb);
@@ -101,6 +146,8 @@ linux_config*linux_config_new_from_confd(const char*key){
 	load_boolean(key,"skip_kernel_fdt_memory",&cfg->skip_kfdt_memory);
 	load_boolean(key,"skip_kernel_fdt_cmdline",&cfg->skip_kfdt_cmdline);
 	load_boolean(key,"load_custom_address",&cfg->load_custom_address);
+	load_boolean(key,"add_simplefb",&cfg->screen.add_simplefb);
+	load_boolean(key,"update_splash",&cfg->screen.update_splash);
 	cfg->dtb_id=confd_get_integer_base(key,"dtb_id",-1);
 	cfg->dtbo_id=confd_get_integer_base(key,"dtbo_id",-1);
 	cfg->info.soc_id=confd_get_integer_base(key,"soc_id",0);
@@ -111,6 +158,9 @@ linux_config*linux_config_new_from_confd(const char*key){
 	cfg->info.variant_id=confd_get_integer_base(key,"variant_id",0);
 	cfg->info.subtype_id=confd_get_integer_base(key,"subtype_id",0);
 	cfg->info.subtype_ddr=confd_get_integer_base(key,"subtype_ddr",0);
+	cfg->screen.width=confd_get_integer_base(key,"screen_width",0);
+	cfg->screen.height=confd_get_integer_base(key,"screen_height",0);
+	cfg->screen.stride=confd_get_integer_base(key,"screen_stride",0);
 	if(cfg->load_custom_address){
 		get_region_confd(&cfg->load_address.load,key,"address.load");
 		get_region_confd(&cfg->load_address.kernel,key,"address.kernel");

@@ -17,6 +17,7 @@
 #include<Protocol/SimpleFileSystem.h>
 #include<Guid/FileInfo.h>
 #include"str.h"
+#include"list.h"
 #include"aboot.h"
 #include"logger.h"
 #include"locate.h"
@@ -24,13 +25,14 @@
 #define TAG "loader"
 
 bool linux_file_allocate(linux_file_info*fi,size_t size){
-	fi->mem_pages=EFI_SIZE_TO_PAGES(ALIGN_VALUE(size,MEM_ALIGN));
+	fi->mem_pages=EFI_SIZE_TO_PAGES(ALIGN_VALUE(size,MEM_ALIGN)+fi->offset);
 	fi->mem_size=EFI_PAGES_TO_SIZE(fi->mem_pages);
 	if(!(fi->address=AllocateAlignedPages(fi->mem_pages,MEM_ALIGN))){
 		tlog_warn("allocate pages for file failed");
 		return false;
 	}
 	ZeroMem(fi->address,fi->mem_size);
+	fi->address+=fi->offset;
 	fi->allocated=true;
 	return true;
 }
@@ -162,6 +164,59 @@ int linux_file_load(linux_file_info*fi,linux_load_from*from){
 	return -1;
 }
 
+static int load_merged_initrd(linux_boot*lb){
+	list*f;
+	size_t off=0,cnt=0;
+	char buff[64];
+	linux_file_clean(&lb->initrd);
+	if((f=list_first(lb->initrd_buf)))do{
+		LIST_DATA_DECLARE(d,f,linux_file_info*);
+		lb->initrd.size+=d->size,cnt++;
+	}while((f=f->next));
+	if(lb->initrd.size<=0)
+		return trlog_warn(-1,"no any initramfs loaded, skip");
+	tlog_info(
+		"merge %zu initramfs %zu bytes (%s)",cnt,lb->initrd.size,
+		make_readable_str_buf(buff,sizeof(buff),lb->initrd.size,1,0)
+	);
+	linux_file_allocate(&lb->initrd,lb->initrd.size);
+	if(lb->initrd.address&&(f=list_first(lb->initrd_buf)))do{
+		LIST_DATA_DECLARE(d,f,linux_file_info*);
+		CopyMem(lb->initrd.address,d->address+off,d->size);
+		off+=d->size;
+	}while((f=f->next));
+	list_free_all_def(lb->initrd_buf);
+	lb->initrd_buf=NULL;
+	return 0;
+}
+
+static void single_load(linux_load_from*from,linux_file_info*fi,const char*tag){
+	if(!from->enabled)return;
+	if(fi->address)linux_file_clean(fi);
+	tlog_info("loading %s",tag);
+	linux_file_load(fi,from);
+}
+
+static void multiple_load(list**from,list**fi,const char*tag){
+	list*f;
+	size_t cnt=0;
+	if(!from)return;
+	if((f=list_first(*from)))do{
+		cnt++;
+		LIST_DATA_DECLARE(d,f,linux_load_from*);
+		if(!d->enabled)continue;
+		linux_file_info*c=malloc(sizeof(linux_file_info));
+		if(!c)continue;
+		tlog_info("loading %s #%zu as #%d",tag,cnt,list_count(*from));
+		linux_file_load(c,d);
+		if(!c->address){
+			tlog_warn("load failed");
+			linux_file_clean(c);
+			FreePool(c);
+		}else list_obj_add_new(fi,c);
+	}while((f=f->next));
+}
+
 int linux_load_from_config(linux_boot*lb){
 	if(!boot||!lb)return -1;
 	if(lb->config->use_uefi){
@@ -173,30 +228,16 @@ int linux_load_from_config(linux_boot*lb){
 	}
 	if(lb->config->abootimg.enabled)
 		linux_boot_load_abootimg_config(lb);
-	if(lb->config->kernel.enabled){
-		if(lb->kernel.address)
-			linux_file_clean(&lb->kernel);
-		tlog_info("loading kernel");
-		linux_file_load(&lb->kernel,&lb->config->kernel);
+	switch(lb->arch){
+		case ARCH_ARM32:lb->kernel.offset=LINUX_ARM32_OFFSET;break;
+		case ARCH_ARM64:lb->kernel.offset=LINUX_ARM64_OFFSET;break;
+		default:;
 	}
-	if(lb->config->initrd.enabled){
-		if(lb->initrd.address)
-			linux_file_clean(&lb->initrd);
-		tlog_info("loading initramfs");
-		linux_file_load(&lb->initrd,&lb->config->initrd);
-	}
-	if(lb->config->dtb.enabled){
-		if(lb->dtb.address)
-			linux_file_clean(&lb->dtb);
-		tlog_info("loading dtb");
-		linux_file_load(&lb->dtb,&lb->config->dtb);
-	}
-	if(lb->config->dtbo.enabled){
-		if(lb->dtbo.address)
-			linux_file_clean(&lb->dtb);
-		tlog_info("loading dtbo");
-		linux_file_load(&lb->dtbo,&lb->config->dtbo);
-	}
+	single_load(&lb->config->kernel,&lb->kernel,"kernel");
+	single_load(&lb->config->dtb,&lb->dtb,"dtb");
+	multiple_load(&lb->initrd_buf,&lb->config->initrd,"initrd");
+	multiple_load(&lb->dtbo,&lb->config->dtbo,"dtbo");
+	load_merged_initrd(lb);
 	if(lb->config->cmdline[0])
 		linux_boot_append_cmdline(lb,lb->config->cmdline);
 	if(!lb->kernel.address){

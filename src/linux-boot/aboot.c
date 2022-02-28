@@ -9,24 +9,52 @@
 #include<Uefi.h>
 #include<Library/BaseLib.h>
 #include<Library/BaseMemoryLib.h>
+#include"list.h"
 #include"aboot.h"
 #include"logger.h"
 #include"internal.h"
 #define TAG "abootimg"
 
-#define LOAD(type,tag)\
-	if(abootimg_have_##type(img)){\
-		linux_file_clean(&lb->tag);\
-		lb->tag.size=abootimg_get_##type##_size(img);\
-		if(linux_file_allocate(&lb->tag,lb->tag.size)){\
-			abootimg_copy_##type(img,lb->tag.address,lb->tag.mem_size);\
-			tlog_info("loaded "#tag" image from abootimg");\
-			linux_file_dump("abootimg "#type,&lb->tag);\
-		}else{\
-			ZeroMem(&lb->tag,sizeof(linux_file_info));\
-			tlog_warn("allocate pages for "#tag" failed");\
-		}\
+static void load_kernel(linux_boot*lb,aboot_image*img){
+	if(!abootimg_have_kernel(img))return;
+	linux_file_clean(&lb->kernel);
+	switch(lb->arch){
+		case ARCH_ARM32:lb->kernel.offset=LINUX_ARM32_OFFSET;break;
+		case ARCH_ARM64:lb->kernel.offset=LINUX_ARM64_OFFSET;break;
+		default:;
 	}
+	lb->kernel.size=abootimg_get_kernel_size(img);
+	if(linux_file_allocate(&lb->kernel,lb->kernel.size)){
+		abootimg_copy_kernel(img,lb->kernel.address,lb->kernel.mem_size);
+		tlog_info("loaded kernel image from abootimg");
+		linux_file_dump("abootimg kernel",&lb->kernel);
+	}else{
+		ZeroMem(&lb->kernel,sizeof(linux_file_info));
+		tlog_warn("allocate pages for kernel failed");
+	}
+}
+
+static void load_ramdisk(linux_boot*lb,aboot_image*img){
+	if(!abootimg_have_ramdisk(img))return;
+	linux_file_info*f=malloc(sizeof(linux_file_info));
+	int cur=list_count(lb->initrd_buf);
+	if(cur<0)cur=0;
+	if(!f){
+		tlog_warn("failed to allocate memory for initrd file info");
+		return;
+	}
+	ZeroMem(f,sizeof(linux_file_info));
+	f->size=abootimg_get_ramdisk_size(img);
+	if(linux_file_allocate(f,f->size)){
+		abootimg_copy_ramdisk(img,f->address,f->mem_size);
+		tlog_info("loaded initramfs #%d image from abootimg",cur);
+		linux_file_dump("abootimg initramfs",f);
+		list_obj_add_new(&lb->initrd_buf,f);
+	}else{
+		tlog_warn("allocate pages for initramfs failed");
+		free(f);
+	}
+}
 
 int linux_boot_load_abootimg(linux_boot*lb,aboot_image*img){
 	const char*name,*cmdline;
@@ -38,8 +66,8 @@ int linux_boot_load_abootimg(linux_boot*lb,aboot_image*img){
 	cmdline=abootimg_get_cmdline(img);
 	if(name&&*name)tlog_info("image name '%s'",name);
 
-	LOAD(kernel,kernel)
-	LOAD(ramdisk,initrd)
+	load_kernel(lb,img);
+	load_ramdisk(lb,img);
 
 	if(abootimg_have_second(img))
 		tlog_warn("second stage bootloader is not supported");

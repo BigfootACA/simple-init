@@ -76,6 +76,16 @@ typedef struct qcom_chip_info{
 	uint32_t subtype_ddr;
 }qcom_chip_info;
 
+// linux screen info
+typedef struct linux_screen_info{
+	linux_mem_region splash;
+	uint32_t width;
+	uint32_t height;
+	uint32_t stride;
+	bool update_splash;
+	bool add_simplefb;
+}linux_screen_info;
+
 // linux boot config
 typedef struct linux_config{
 	linux_boot_arch arch;
@@ -88,24 +98,24 @@ typedef struct linux_config{
 	bool skip_kfdt_cmdline;
 	bool load_custom_address;
 	linux_load_from kernel;
-	linux_load_from initrd;
 	linux_load_from dtb;
-	linux_load_from dtbo;
 	linux_load_from abootimg;
+	list*initrd;
+	list*dtbo;
 	linux_mem_region memory[8];
-	linux_mem_region splash;
+	linux_screen_info screen;
 	linux_boot_addresses load_address;
 	qcom_chip_info info;
 	int64_t dtb_id;
 	int64_t dtbo_id;
 	char tag[256];
 	char cmdline[
-		4096-
-		(sizeof(void*)*2)-
+		PATH_MAX-
+		(sizeof(void*)*12)-
 		(sizeof(int64_t)*2)-
 		(sizeof(char)*256)-
-		(sizeof(linux_mem_region)*9)-
-		(sizeof(linux_boot_addresses))-
+		(sizeof(linux_screen_info))-
+		(sizeof(linux_mem_region)*8)-
 		(sizeof(qcom_chip_info))
 	];
 }linux_config;

@@ -13,8 +13,10 @@
 #include<stdlib.h>
 #include<stdbool.h>
 #include<Library/BaseLib.h>
+#include<Library/MemoryAllocationLib.h>
 #include<Library/UefiBootServicesTableLib.h>
 #include"gui.h"
+#include"list.h"
 #include"confd.h"
 #include"logger.h"
 #include"linux_boot.h"
@@ -140,13 +142,20 @@ static void ok_cb(lv_obj_t*obj,lv_event_t e){
 	if(e!=LV_EVENT_CLICKED)return;
 	struct boot_linux*am=lv_obj_get_user_data(obj);
 	if(!am||obj!=am->ok)return;
+	linux_load_from*f=malloc(sizeof(linux_load_from));
 	linux_config*cfg=linux_config_new();
-	if(!cfg)return;
+	if(!cfg||!f){
+		if(f)free(f);
+		if(cfg)linux_config_free(cfg);
+		return;
+	}
+	memset(f,0,sizeof(linux_load_from));
 	AsciiStrCpyS(cfg->tag,sizeof(cfg->tag)-1,"<FROM_GUI>");
 	set_path(am->abootimg,&cfg->abootimg,"abootimg");
 	set_path(am->kernel,&cfg->kernel,"kernel");
-	set_path(am->initrd,&cfg->initrd,"initrd");
+	set_path(am->initrd,f,"initrd");
 	set_path(am->dtb,&cfg->dtb,"dtb");
+	list_obj_add_new(&cfg->initrd,f);
 	const char*cmdline=lv_textarea_get_text(am->cmdline);
 	if(cmdline&&cmdline[0]){
 		confd_set_string_base(base,"cmdline",(char*)cmdline);

@@ -49,7 +49,10 @@ int linux_boot_set_fdt(linux_boot*lb,void*data,size_t size){
 	linux_file_dump("new dtb",&lb->dtb);
 	return 0;
 	done:
-	if(lb->dtb.allocated)FreePages(lb->dtb.address,lb->dtb.mem_pages);
+	if(lb->dtb.allocated)FreePages(
+		lb->dtb.address-lb->dtb.offset,
+		lb->dtb.mem_pages
+	);
 	ZeroMem(&lb->dtb,sizeof(linux_file_info));
 	return -1;
 }

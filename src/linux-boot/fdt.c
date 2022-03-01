@@ -43,7 +43,7 @@ int linux_boot_set_fdt(linux_boot*lb,void*data,size_t size){
 		EDONE(tlog_error("invalid dtb"));
 
 	tlog_info(
-		"loaded new dtb %ld bytes (%s)",size,
+		"loaded new dtb %zu bytes (%s)",size,
 		make_readable_str_buf(buff,sizeof(buff),size,1,0)
 	);
 	linux_file_dump("new dtb",&lb->dtb);
@@ -116,7 +116,7 @@ int linux_boot_update_fdt(linux_boot*lb){
 	);
 	tlog_info(
 		"install fdt configuration table 0x%llx",
-		(unsigned long long)lb->dtb.address
+		(unsigned long long)(UINTN)lb->dtb.address
 	);
 	st=gBS->InstallConfigurationTable(
 		&gFdtTableGuid,

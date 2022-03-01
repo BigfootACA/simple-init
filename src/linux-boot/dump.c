@@ -21,7 +21,7 @@ int linux_file_dump(char*name,linux_file_info*fi){
 	if(name)tlog_verbose("%s:",name);
 	tlog_verbose(
 		"    address  : 0x%016llx",
-		(unsigned long long)fi->address
+		(unsigned long long)(UINTN)fi->address
 	);
 	tlog_verbose(
 		"    size     : 0x%08llx (%s)",

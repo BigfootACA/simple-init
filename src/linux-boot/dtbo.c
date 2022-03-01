@@ -47,7 +47,7 @@ static int select_dtbo(linux_boot*lb,dtbo_info*sel){
 	int r;
 	size_t fdt;
 	char buf[64];
-	tlog_info("select dtbo id %ld (%s)",sel->id,sel->model);
+	tlog_info("select dtbo id %zu (%s)",sel->id,sel->model);
 	fdt=MIN(lb->dtb.mem_size,lb->dtb.size+sel->size);
 	if(fdt>lb->dtb.size){
 		fdt_set_totalsize(lb->dtb.address,fdt);

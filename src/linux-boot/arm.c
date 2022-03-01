@@ -21,21 +21,28 @@
 #include"internal.h"
 #define TAG "linux-arm"
 
+typedef VOID (*ARM_V7_CACHE_OPERATION)(UINTN);
 typedef VOID (*AARCH64_CACHE_OPERATION)(UINTN);
+extern VOID ArmV7DataCacheOperation(IN ARM_V7_CACHE_OPERATION DataCacheOperation);
 extern VOID AArch64DataCacheOperation(IN AARCH64_CACHE_OPERATION DataCacheOperation);
 extern VOID EFIAPI ArmInvalidateDataCacheEntryBySetWay(IN UINTN SetWayFormat);
 extern VOID EFIAPI ArmCleanDataCacheEntryBySetWay(IN UINTN SetWayFormat);
+#if defined(__arm__)
+#define DataCacheOperation ArmV7DataCacheOperation
+#elif defined(__aarch64__)
+#define DataCacheOperation AArch64DataCacheOperation
+#endif
 
 static VOID EFIAPI ArmInvalidateDataCacheInternal(VOID){
 	// FUCK ASSERT
 	ArmDataSynchronizationBarrier();
-	AArch64DataCacheOperation(ArmInvalidateDataCacheEntryBySetWay);
+	DataCacheOperation(ArmInvalidateDataCacheEntryBySetWay);
 }
 
 static VOID EFIAPI ArmCleanDataCacheInternal(VOID){
 	// FUCK ASSERT
 	ArmDataSynchronizationBarrier();
-	AArch64DataCacheOperation(ArmCleanDataCacheEntryBySetWay);
+	DataCacheOperation(ArmCleanDataCacheEntryBySetWay);
 }
 
 static void platform_cleanup(linux_boot*lb){
@@ -108,14 +115,16 @@ int boot_linux_arm(linux_boot*boot){
 		return -1;
 	}
 
-	tlog_notice("kernel main at 0x%llx",(UINTN)boot->kernel.address);
+	tlog_notice("kernel main at 0x%llx",(unsigned long long)(UINTN)boot->kernel.address);
 
+	#ifdef __aarch64__
 	switch(ArmReadCurrentEL()){
 		case AARCH64_EL1:tlog_info("in arm64 EL1");break;
 		case AARCH64_EL2:tlog_info("in arm64 EL2");break;
 		case AARCH64_EL3:tlog_info("in arm64 EL3");break;
 		default:tlog_warn("unknown EL");break;
 	}
+	#endif
 
 	EfiSignalEventReadyToBoot();
 	REPORT_STATUS_CODE(

@@ -23,7 +23,7 @@
 #define IN_SIZE(addr,start,size) IN_RANGE((UINT64)(addr),(UINT64)(start),(UINT64)((start)+(size)))
 #define IN_RANGE_LI(addr,li) IN_RANGE(addr,li->start,li->end)
 #define IN_RANGE_TLI(li1,li2) (IN_RANGE_LI(li1->start,li2)||IN_RANGE_LI(li1->end,li2))
-#define IN_SIZE_FI(addr,fi) IN_RANGE(addr,fi->address,fi->size)
+#define IN_SIZE_FI(addr,fi) IN_RANGE(addr,(UINTN)fi->address,(UINTN)fi->size)
 #define IN_SIZE_TLI(li,fi) (IN_SIZE_FI(li->start,fi)||IN_SIZE_FI(li->end,fi))
 
 static bool check_load_info(linux_mem_region*li){
@@ -45,7 +45,7 @@ static bool check_load_info_other(linux_mem_region*li,linux_mem_region*sec){
 static bool check_load_info_file(linux_mem_region*li,linux_file_info*fi){
 	if(!li||!fi)return false;
 	if(li->start==0||fi->address==0)return true;
-	if(IN_RANGE_LI(fi->address,li))return false;
+	if(IN_RANGE_LI((UINTN)fi->address,li))return false;
 	if(IN_SIZE_TLI(li,fi))return false;
 	return true;
 }
@@ -78,14 +78,14 @@ static int do_move(linux_mem_region*tgt,linux_file_info*src,size_t offset){
 		return trlog_warn(-1,"memory too small for load");
 	tlog_debug(
 		"move from 0x%llx to 0x%llx size %zu bytes (%s)",
-		(unsigned long long)src->address,
+		(unsigned long long)(UINTN)src->address,
 		(unsigned long long)tgt->start,
 		src->size,
 		make_readable_str_buf(buf,sizeof(buf),src->size,1,0)
 	);
-	CopyMem((VOID*)tgt->start,src->address,src->size);
+	CopyMem((VOID*)(UINTN)tgt->start,src->address,src->size);
 	if(src->allocated)FreePages(src->address-src->offset,src->mem_pages);
-	src->address=(void*)tgt->start;
+	src->address=(void*)(UINTN)tgt->start;
 	src->mem_pages=EFI_SIZE_TO_PAGES(MIN(
 		ALIGN_VALUE(src->size,MEM_ALIGN),
 		tgt->end-tgt->start
@@ -99,7 +99,7 @@ static int do_move(linux_mem_region*tgt,linux_file_info*src,size_t offset){
 
 static void do_erase_load(linux_mem_region*load){
 	if(!load||!load->start)return;
-	ZeroMem((VOID*)load->start,load->end-load->start);
+	ZeroMem((VOID*)(UINTN)load->start,load->end-load->start);
 }
 
 int linux_boot_move(linux_boot*lb){

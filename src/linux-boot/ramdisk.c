@@ -31,7 +31,7 @@ int linux_boot_update_initrd(linux_boot*lb){
 		return 0;
 	}
 
-	start=(uint64_t)lb->initrd.address;
+	start=(uint64_t)(UINTN)lb->initrd.address;
 	end=(uint64_t)(start+lb->initrd.size);
 
 	r=fdt_setprop_u64(

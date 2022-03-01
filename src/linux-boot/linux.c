@@ -22,8 +22,8 @@ int fill_kernel_device_path(linux_file_info*fi){
 	fi->mem_device.dp.Header.SubType=HW_MEMMAP_DP;
 	fi->mem_device.dp.Header.Length[0]=(UINT8)(sizeof(MEMMAP_DEVICE_PATH));
 	fi->mem_device.dp.Header.Length[1]=(UINT8)(sizeof(MEMMAP_DEVICE_PATH)>>8);
-	fi->mem_device.dp.StartingAddress=(EFI_PHYSICAL_ADDRESS)fi->address;
-	fi->mem_device.dp.EndingAddress=(EFI_PHYSICAL_ADDRESS)fi->address+fi->size;
+	fi->mem_device.dp.StartingAddress=(EFI_PHYSICAL_ADDRESS)(UINTN)fi->address;
+	fi->mem_device.dp.EndingAddress=(EFI_PHYSICAL_ADDRESS)(UINTN)fi->address+fi->size;
 	fi->mem_device.proto.Type=END_DEVICE_PATH_TYPE;
 	fi->mem_device.proto.SubType=END_ENTIRE_DEVICE_PATH_SUBTYPE;
 	fi->mem_device.proto.Length[0]=sizeof(EFI_DEVICE_PATH_PROTOCOL);

@@ -8,7 +8,9 @@
 
 #ifdef ENABLE_GUI
 #include<signal.h>
+#ifndef ENABLE_UEFI
 #include<sys/prctl.h>
+#endif
 #include"gui.h"
 #include"boot.h"
 #include"confd.h"

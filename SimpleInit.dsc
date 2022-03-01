@@ -52,6 +52,12 @@
   UefiRuntimeServicesTableLib|MdePkg/Library/UefiRuntimeServicesTableLib/UefiRuntimeServicesTableLib.inf
 
 [LibraryClasses.AARCH64, LibraryClasses.ARM]
+  ArmLib|ArmPkg/Library/ArmLib/ArmBaseLib.inf
+  ArmGicLib|ArmPkg/Drivers/ArmGic/ArmGicLib.inf
+  ArmGicArchLib|ArmPkg/Library/ArmGicArchLib/ArmGicArchLib.inf
+  ArmGenericTimerCounterLib|ArmPkg/Library/ArmGenericTimerPhyCounterLib/ArmGenericTimerPhyCounterLib.inf
+  CacheMaintenanceLib|ArmPkg/Library/ArmCacheMaintenanceLib/ArmCacheMaintenanceLib.inf
+  IoLib|MdePkg/Library/BaseIoLibIntrinsic/BaseIoLibIntrinsic.inf
   TimerLib|ArmPkg/Library/ArmArchTimerLib/ArmArchTimerLib.inf
 
 [LibraryClasses.X64, LibraryClasses.Ia32]
@@ -59,3 +65,7 @@
 
 [BuildOptions.X64, BuildOptions.Ia32]
   *_*_*_CC_FLAGS = -DNO_TIMER
+
+[BuildOptions]
+  GCC:*_*_*_CC_FLAGS = -nostdlib -nostdinc -nolibc
+  GCC:*_*_IA32_CC_FLAGS = -static-libgcc -lgcc

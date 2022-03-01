@@ -98,6 +98,7 @@
   interface/apps/benchmark.c
   interface/apps/uefi_bootmenu.c
   interface/apps/uefi_start.c
+  interface/apps/uefi_dxe_load.c
   interface/apps/uefi_shell.c
   interface/apps/uefi_mass.c
   interface/apps/text_editor.c

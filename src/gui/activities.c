@@ -13,6 +13,7 @@ extern struct gui_register guireg_guipm_disk_select;
 extern struct gui_register guireg_guipm_partitions;
 extern struct gui_register guireg_picture_viewer;
 extern struct gui_register guireg_uefi_bootmenu;
+extern struct gui_register guireg_uefi_dxe_load;
 extern struct gui_register guireg_screen_test;
 extern struct gui_register guireg_boot_linux;
 extern struct gui_register guireg_uefi_start;
@@ -45,6 +46,7 @@ struct gui_register*guiact_register[]={
 	&guireg_linux_simple_mass_storage,
 	#endif
 	&guireg_uefi_bootmenu,
+	&guireg_uefi_dxe_load,
 	&guireg_uefi_start,
 	&guireg_uefi_shell,
 	&guireg_mouse_menu,

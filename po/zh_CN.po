@@ -2302,3 +2302,15 @@ msgstr "设备树 (dtb)"
 
 msgid "Boot with UEFI runtime"
 msgstr "使用UEFI运行环境启动"
+
+msgid "not a UEFI Driver"
+msgstr "不是一个UEFI驱动"
+
+msgid "start dxe failed: %s"
+msgstr "启动驱动失败: %s"
+
+msgid "Load UEFI Driver (DXE) '%s'?"
+msgstr "加载UEFI驱动 (DXE) '%s'?"
+
+msgid "UEFI Driver (DXE) Load"
+msgstr "加载UEFI驱动 (DXE)"

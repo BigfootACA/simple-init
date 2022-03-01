@@ -16,8 +16,10 @@
 #ifdef ENABLE_UEFI
 #include<Library/PcdLib.h>
 #include<Library/UefiLib.h>
+#include<Library/TimerLib.h>
 #include<Library/ReportStatusCodeLib.h>
 #include<Library/UefiBootServicesTableLib.h>
+#include<Protocol/Timestamp.h>
 #else
 #include<semaphore.h>
 #include<pthread.h>
@@ -75,6 +77,8 @@ bool gui_dark=DARK_MODE;
 
 #ifdef ENABLE_UEFI
 #define DEF_ROTATE PcdGet16(PcdGuiDefaultRotate)
+
+static uint64_t tick_ms=0;
 #else
 #define DEF_ROTATE confd_get_integer("runtime.cmdline.rotate",0)
 
@@ -257,31 +261,14 @@ static void gui_enter_sleep(){
 	guidrv_set_brightness(o);
 	tlog_debug("quit sleep");
 }
-
-uint32_t custom_tick_get(void){
-	errno=0;
-	if(guidrv_get_driver()){
-		uint32_t u=guidrv_tickget();
-		if(errno==0)return u;
-	}
-	static uint64_t start_ms=0;
-	if(start_ms==0){
-		struct timeval tv_start;
-		gettimeofday(&tv_start,NULL);
-		start_ms=(tv_start.tv_sec*1000000+tv_start.tv_usec)/1000;
-	}
-	struct timeval tv_now;
-	gettimeofday(&tv_now,NULL);
-	return (uint64_t)((tv_now.tv_sec*1000000+tv_now.tv_usec)/1000)-start_ms;
-}
 #else
 static EFI_EVENT e_timer,e_loop;
 
 static VOID EFIAPI efi_loop(IN EFI_EVENT e,IN VOID*ctx){}
 
 static VOID EFIAPI efi_timer(IN EFI_EVENT e,IN VOID*ctx){
+	tick_ms+=10;
 	MUTEX_LOCK(gui_lock);
-	lv_tick_inc(10);
 	lv_task_handler();
 	guidrv_taskhandler();
 	MUTEX_UNLOCK(gui_lock);
@@ -302,6 +289,50 @@ static void conf_save_cb(lv_task_t*t __attribute__((unused))){
 }
 
 #endif
+
+uint32_t custom_tick_get(void){
+	static uint64_t start_ms=0;
+	uint64_t cur_ms;
+	errno=0;
+	if(guidrv_get_driver()){
+		uint32_t u=guidrv_tickget();
+		if(errno==0)return u;
+	}
+	#ifdef ENABLE_UEFI
+	static EFI_TIMESTAMP_PROTOCOL*tp=NULL;
+	static EFI_TIMESTAMP_PROPERTIES ps;
+	if(start_ms==0&&!tp){
+		EFI_STATUS st;
+		if(!tp){
+			st=gBS->LocateProtocol(
+				&gEfiTimestampProtocolGuid,
+				NULL,(VOID**)&tp
+			);
+			if(EFI_ERROR(st))tp=NULL;
+			if(tp)st=tp->GetProperties(&ps);
+			if(EFI_ERROR(st))tp=NULL;
+		}
+		#ifdef NO_TIMER
+		if(!tp)tlog_warn("unable to get stable timer, time may be inaccurate");
+		#endif
+	}
+	if(tp){
+		UINT64 t=tp->GetTimestamp(),f=ps.Frequency;
+		cur_ms=((t/f)*1000000000u+((t%f)*1000000000u)/f)/1000/1000;
+	}else
+	#ifdef NO_TIMER
+		cur_ms=tick_ms;
+	#else
+		cur_ms=GetTimeInNanoSecond(GetPerformanceCounter())/1000/1000;
+	#endif
+	#else
+	struct timeval tv_start;
+	gettimeofday(&tv_start,NULL);
+	cur_ms=(tv_start.tv_sec*1000000+tv_start.tv_usec)/1000;
+	#endif
+	if(start_ms==0)start_ms=cur_ms;
+	return cur_ms-start_ms;
+}
 
 int gui_screen_init(){
 	lv_obj_t*screen;

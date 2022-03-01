@@ -65,13 +65,9 @@ extern uint32_t custom_tick_get(void);
 #define LV_ATTRIBUTE_LARGE_CONST
 #define LV_ATTRIBUTE_FAST_MEM
 #define LV_EXPORT_CONST_INT(int_value)      struct _silence_gcc_warning
-#ifdef ENABLE_UEFI
-#define LV_TICK_CUSTOM                      0
-#else
 #define LV_TICK_CUSTOM                      1
 #define LV_TICK_CUSTOM_INCLUDE              <stdint.h>
 #define LV_TICK_CUSTOM_SYS_TIME_EXPR        (custom_tick_get())
-#endif
 #define LV_DEBUG_ASSERT(expr,msg,value) {if(!(expr)){\
 	LV_LOG_ERROR(__func__);\
 	lv_debug_log_error(msg,(uint64_t)((uintptr_t)value));\

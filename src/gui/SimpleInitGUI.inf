@@ -21,6 +21,7 @@
   MemoryAllocationLib
   PcdLib
   UefiLib
+  TimerLib
   LittleVgl
   FreeType
   LodePNG
@@ -48,6 +49,7 @@
   gEfiGraphicsOutputProtocolGuid
   gEfiLoadedImageProtocolGuid
   gEfiSimpleFileSystemProtocolGuid
+  gEfiTimestampProtocolGuid
 
 [Pcd]
   gSimpleInitTokenSpaceGuid.PcdGuiDefaultDPI

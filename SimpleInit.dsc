@@ -50,3 +50,12 @@
   UefiDriverEntryPoint|MdePkg/Library/UefiDriverEntryPoint/UefiDriverEntryPoint.inf
   UefiHiiServicesLib|MdeModulePkg/Library/UefiHiiServicesLib/UefiHiiServicesLib.inf
   UefiRuntimeServicesTableLib|MdePkg/Library/UefiRuntimeServicesTableLib/UefiRuntimeServicesTableLib.inf
+
+[LibraryClasses.AARCH64, LibraryClasses.ARM]
+  TimerLib|ArmPkg/Library/ArmArchTimerLib/ArmArchTimerLib.inf
+
+[LibraryClasses.X64, LibraryClasses.Ia32]
+  TimerLib|MdePkg/Library/BaseTimerLibNullTemplate/BaseTimerLibNullTemplate.inf
+
+[BuildOptions.X64, BuildOptions.Ia32]
+  *_*_*_CC_FLAGS = -DNO_TIMER

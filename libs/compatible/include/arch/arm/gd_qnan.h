@@ -1,7 +1,5 @@
 /* $NetBSD: gd_qnan.h,v 1.1 2006/01/25 15:33:28 kleink Exp $ */
 
-#include <machine/endian.h>
-
 #define f_QNAN 0x7fc00000
 #ifdef __ARMEB__
 #define d_QNAN0 0x7ff80000

@@ -25,5 +25,5 @@ int run_boot_uefi_option(boot_config*boot){
 		EfiBootManagerBoot(&bo[i]);
 		return 0;
 	}
-	return ENUM(trlog_warn(ENOENT,"no match option (%04llu) found",opt));
+	return ENUM(trlog_warn(ENOENT,"no match option (%04llu) found",(unsigned long long)opt));
 }

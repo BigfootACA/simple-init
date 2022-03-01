@@ -113,7 +113,7 @@ static void bootmenu_option_reload(){
 		struct option_info*k=&options[i];
 		EFI_BOOT_MANAGER_LOAD_OPTION*b=&bo[i];
 		UnicodeStrToAsciiStrS(b->Description,k->name,sizeof(k->name));
-		tlog_debug("option %lld: %s",i+1,k->name);
+		tlog_debug("option %llu: %s",(unsigned long long)i+1,k->name);
 		k->enable=true,k->option=b;
 		options_add_item(k);
 		if(i>=256){
@@ -121,7 +121,7 @@ static void bootmenu_option_reload(){
 			break;
 		}
 	}
-	tlog_info("found %lld options",i);
+	tlog_info("found %llu options",(unsigned long long)i);
 }
 
 static void refresh_click(lv_obj_t*obj,lv_event_t e){

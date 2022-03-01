@@ -128,7 +128,7 @@ static void print_file(int cfd,char*name,size_t size,int depth){
 		ssize_t x=write(bfd,v,size);
 		munmap(v,size);
 		if((size_t)x!=size){
-			fprintf(stderr,"write binary size mismatch %ld != %ld: %m\n",x,size);
+			fprintf(stderr,"write binary size mismatch %zu != %zu: %m\n",x,size);
 			on_failure();
 			return;
 		}

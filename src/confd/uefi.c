@@ -246,19 +246,22 @@ int confd_add_key(const char*path){
 
 #define _EXT_BASE(ret,func,ret_func,...) \
 ret func##_base(const char*base,const char*path __VA_ARGS__){\
-	char xpath[PATH_MAX]={0};\
+	char xpath[PATH_MAX];\
+	memset(xpath,0,sizeof(xpath));\
 	snprintf(xpath,PATH_MAX-1,"%s.%s",base,path);\
 	return ret_func;\
 }
 #define _EXT_DICT(ret,func,ret_func,...) \
 ret func##_dict(const char*base,const char*key,const char*path __VA_ARGS__){\
-	char xpath[PATH_MAX]={0};\
+	char xpath[PATH_MAX];\
+	memset(xpath,0,sizeof(xpath));\
 	snprintf(xpath,PATH_MAX-1,"%s.%s.%s",base,key,path);\
 	return ret_func;\
 }
 #define _EXT_ARRAY(ret,func,ret_func,...) \
 ret func##_array(const char*base,int index,const char*path __VA_ARGS__){\
-	char xpath[PATH_MAX]={0};\
+	char xpath[PATH_MAX];\
+	memset(xpath,0,sizeof(xpath));\
 	snprintf(xpath,PATH_MAX-1,"%s.%d.%s",base,index,path);\
 	return ret_func;\
 }

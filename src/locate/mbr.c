@@ -14,7 +14,7 @@ locate_match_state locate_match_mbr_type(locate_dest*loc){
 	int64_t type=GINT("by_mbr_type",0);
 	if(type==0)return MATCH_SKIP;
 	if(type<=0||type>0xFF){
-		tlog_warn("invalid mbr type %02lx",type);
+		tlog_warn("invalid mbr type %02llx",(long long)type);
 		return MATCH_INVALID;
 	}
 	if(!loc||!loc->part_proto)

@@ -195,7 +195,7 @@ lv_font_t*lv_ft_init_assets(entry_dir*assets,char*path,int weight,lv_ft_style st
 		telog_error("load invalid assets font from %s",path);
 		return NULL;
 	}
-	telog_info("assets font %s size %ld bytes",path,f->length);
+	telog_info("assets font %s size %zu bytes",path,f->length);
 	return lv_ft_init_data((unsigned char*)f->content,f->length,weight,style);
 }
 

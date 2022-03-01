@@ -380,7 +380,9 @@ static lv_res_t fs_tell_cb(
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
 	if(!fs||!fs->proto)return LV_FS_RES_INV_PARAM;
-	EFI_STATUS st=fh->GetPosition(fh,(UINTN*)pos_p);
+	UINT64 pos=(UINT64)*pos_p;
+	EFI_STATUS st=fh->GetPosition(fh,&pos);
+	*pos_p=(uint32_t)pos;
 	if(EFI_ERROR(st))XWARN(
 		"get position %c:#%p failed: %s",
 		drv->letter,fh,efi_status_to_string(st)

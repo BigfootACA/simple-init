@@ -34,13 +34,13 @@ KernelFdtMain (
     return EFI_NOT_FOUND;
   }
 
-  FdtAddress = *(EFI_PHYSICAL_ADDRESS*)FdtStore;
+  FdtAddress = *(EFI_PHYSICAL_ADDRESS*)(UINTN)FdtStore;
   if (FdtAddress == 0) {
     DEBUG ((EFI_D_ERROR, "Device Tree Store is NULL\n"));
     return EFI_NOT_FOUND;
   }
 
-  Fdt = get_fdt_from_pointer ((VOID*)FdtAddress);
+  Fdt = get_fdt_from_pointer ((VOID*)(UINTN)FdtAddress);
   if (Fdt == NULL) {
     DEBUG ((EFI_D_ERROR, "Invalid Device Tree\n"));
     return EFI_NOT_FOUND;

@@ -33,8 +33,9 @@ static char*get_buffer(size_t size){
 
 static int print_conf(struct conf_file_hand*hand,struct conf*key,const char*name){
 	size_t size=0;
-	char path[PATH_MAX]={0},*buf,*str;
+	char path[PATH_MAX],*buf,*str;
 	if(!key->save)return 0;
+	memset(path,0,sizeof(path));
 	if(key->name[0]){
 		if(!name[0])strcpy(path,key->name);
 		else snprintf(path,PATH_MAX-1,"%s.%s",name,key->name);

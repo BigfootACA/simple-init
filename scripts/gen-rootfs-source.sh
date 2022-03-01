@@ -9,7 +9,6 @@ set -e
 "${HOSTCC:-gcc}" \
 	-Wall -Wextra -Werror -g \
 	-I"${WORKSPACE}/include" \
-	${CFLAGS} ${LDFLAGS} \
 	"${WORKSPACE}/src/host/rootfs.c" \
 	-o "${BUILD}/assets"
 "${BUILD}/assets" \
@@ -18,6 +17,7 @@ set -e
 	assets_rootfs
 pushd "${BUILD}" >/dev/null
 "${CC:-${CROSS_COMPILE}gcc}" \
+	${CFLAGS} \
 	-r -Wl,-b,binary \
 	-o rootfs_data.o \
 	rootfs.bin

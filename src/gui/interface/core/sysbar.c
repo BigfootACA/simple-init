@@ -8,6 +8,12 @@
 
 #ifdef ENABLE_GUI
 #include<time.h>
+#include<string.h>
+#include<strings.h>
+#include<stddef.h>
+#include<stdlib.h>
+#include<stdint.h>
+#include<stdbool.h>
 #include"gui.h"
 #include"array.h"
 #include"hardware.h"
@@ -16,6 +22,24 @@
 #include"gui/activity.h"
 #include"gui/clipboard.h"
 struct sysbar sysbar;
+
+static struct{
+	bool enabled;
+	char*key,*img,*text;
+}btns[]={
+	{ true, "copy",       LV_SYMBOL_COPY,  "Copy selected" },
+	{ true, "copy-all",   LV_SYMBOL_COPY,  "Copy all"      },
+	{ true, "cut",        LV_SYMBOL_CUT,   "Cut selected"  },
+	{ true, "cut-all",    LV_SYMBOL_CUT,   "Cut all"       },
+	{ true, "paste",      LV_SYMBOL_PASTE, "Paste"         },
+	{ true, "delete",     LV_SYMBOL_TRASH, "Delete"        },
+	{ true, "delete-all", LV_SYMBOL_TRASH, "Delete all"    },
+	{ true, "select-all", "\uf065",        "Select all"    },
+	{ true, "deselect",   "\uf066",        "Deselect"      },
+	{ true, "ctrl-pad",   "\uf0b2",        "Control Pad"   },
+	{ true, "close",      LV_SYMBOL_CLOSE, "Close"         },
+	{ false,NULL,NULL,NULL}
+};
 
 static void sysbar_thread(struct sysbar*b){
 	#ifndef ENABLE_UEFI
@@ -375,23 +399,6 @@ int sysbar_draw(lv_obj_t*scr){
 	lv_obj_set_style_local_shadow_width(sysbar.bar_btn,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,gui_font_size);
 	lv_label_set_text(lv_label_create(sysbar.bar_btn,NULL),"\uf066");
 
-	struct{
-		bool enabled;
-		char*key,*img,*text;
-	}btns[]={
-		{ true, "copy",       LV_SYMBOL_COPY,  "Copy selected" },
-		{ true, "copy-all",   LV_SYMBOL_COPY,  "Copy all"      },
-		{ true, "cut",        LV_SYMBOL_CUT,   "Cut selected"  },
-		{ true, "cut-all",    LV_SYMBOL_CUT,   "Cut all"       },
-		{ true, "paste",      LV_SYMBOL_PASTE, "Paste"         },
-		{ true, "delete",     LV_SYMBOL_TRASH, "Delete"        },
-		{ true, "delete-all", LV_SYMBOL_TRASH, "Delete all"    },
-		{ true, "select-all", "\uf065",        "Select all"    },
-		{ true, "deselect",   "\uf066",        "Deselect"      },
-		{ true, "ctrl-pad",   "\uf0b2",        "Control Pad"   },
-		{ true, "close",      LV_SYMBOL_CLOSE, "Close"         },
-		{ false,NULL,NULL,NULL}
-	};
 	lv_coord_t h=0,w=gui_w/2;
 	sysbar.edit_menu=lv_list_create(scr,NULL);
 	for(size_t i=0;btns[i].enabled;i++){

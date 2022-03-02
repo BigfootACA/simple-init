@@ -28,6 +28,8 @@
 #define MONTH       "JanFebMarAprMayJunJulAugSepOctNovDec"
 #define WEEK        "MonTueWedThuFriSatSun"
 
+extern const char*size_units[];
+
 struct possibility{
 	char*data;
 	size_t data_len;

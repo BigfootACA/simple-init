@@ -18,8 +18,6 @@
 #include"gui/msgbox.h"
 #define TAG "guipm"
 
-const char*guipm_units[]={"B","KB","MB","GB","TB","PB","EB","ZB","YB",NULL};
-
 void guipm_draw_title(lv_obj_t*screen){
 	lv_obj_t*title=lv_label_create(screen,NULL);
 	lv_label_set_long_mode(title,LV_LABEL_LONG_BREAK);
@@ -75,7 +73,7 @@ static void block_size_update(struct size_block*blk){
 		uint16_t units=lv_dropdown_get_selected(blk->unit);
 		for(type=0;type<units;type++)cnt/=1024;
 	}else{
-		while(cnt>=1024&&guipm_units[type])cnt/=1024,type++;
+		while(cnt>=1024&&size_units[type])cnt/=1024,type++;
 		lv_dropdown_set_selected(blk->unit,type);
 	}
 	snprintf(blk->buf_txt,sizeof(blk->buf_txt)-1,"%ld",cnt);
@@ -227,8 +225,8 @@ void guipm_init_size_block(
 	lv_obj_set_width(blk->txt,w-lv_obj_get_width(blk->unit)-lv_obj_get_width(lbl)-gui_font_size);
 	lv_obj_align(blk->unit,blk->txt,LV_ALIGN_OUT_RIGHT_MID,gui_font_size/2,0);
 	lv_dropdown_clear_options(blk->unit);
-	for(int i=0;guipm_units[i];i++)
-		lv_dropdown_add_option(blk->unit,guipm_units[i],i);
+	for(int i=0;size_units[i];i++)
+		lv_dropdown_add_option(blk->unit,size_units[i],i);
 
 	(*h)+=lv_obj_get_height(blk->unit);
 

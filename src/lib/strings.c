@@ -21,6 +21,8 @@
 #include"array.h"
 #include"str.h"
 
+const char*size_units[]={"B","KiB","MiB","GiB","TiB","PiB","EiB","ZiB","YiB",NULL};
+
 char*time2nstr(time_t*time,char*format,char*buff,size_t len){
 	struct tm*timeinfo;
 	timeinfo=localtime(time);

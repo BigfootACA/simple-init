@@ -100,12 +100,13 @@ static int read_kmsg_thread(void*data __attribute__((unused))){
 
 	fd_set fs;
 	struct log_item item;
-	struct timeval timeout={1,0};
+	struct timeval timeout;
 	int m=MAX(klogfd,logfd)+1;
 	while(run){
 		FD_ZERO(&fs);
 		FD_SET(klogfd,&fs);
 		FD_SET(logfd,&fs);
+		timeout.tv_sec=1,timeout.tv_usec=0;
 		int r=select(m,&fs,NULL,NULL,&timeout);
 		if(r==-1){
 			if(errno==EINTR)continue;

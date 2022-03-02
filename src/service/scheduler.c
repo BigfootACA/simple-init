@@ -124,12 +124,13 @@ static int scheduler_main(){
 	}
 	MUTEX_INIT(queue_lock);
 	fd_set fs;
-	struct timeval tv={.tv_sec=1,.tv_usec=0};
+	struct timeval tv;
 	struct scheduler_msg msg;
 	bool run=true;
 	while(run){
 		FD_ZERO(&fs);
 		FD_SET(fds[0],&fs);
+		tv.tv_sec=1,tv.tv_usec=0;
 		if(select(FD_SETSIZE,&fs,NULL,NULL,&tv)<0){
 			if(errno==EINTR)continue;
 			perror("select");

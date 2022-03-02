@@ -69,13 +69,14 @@ static bool _read_username_char(struct tty_data*data,size_t*s,char*buf){
 static void _read_username(struct tty_data*data,char*buf){
 	fd_set fs;
 	size_t s=0;
-	struct timeval timeout={1,0};
+	struct timeval timeout;
 	print_prompt();
 	memset(buf,0,USER_LENGTH+1);
 	data->eol=0;
 	do{
 		FD_ZERO(&fs);
 		FD_SET(STDIN_FILENO,&fs);
+		timeout.tv_sec=1,timeout.tv_usec=0;
 		int r=select(STDIN_FILENO+1,&fs,NULL,NULL,&timeout);
 		if(r<0)exit(0);
 		if(r==0)continue;

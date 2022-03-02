@@ -215,11 +215,12 @@ static int read_kmsg_thread(void*data __attribute__((unused))){
 		return terlog_error(-errno,"listen %s failed",SOCKET_SYSLOG);
 
 	fd_set fs;
-	struct timeval timeout={1,0};
+	struct timeval timeout;
 	while(run){
 		FD_ZERO(&fs);
 		FD_SET(sfd,&fs);
 		FD_SET(logfd,&fs);
+		timeout.tv_sec=1,timeout.tv_usec=0;
 		r=select(MAX(sfd,logfd)+1,&fs,NULL,NULL,&timeout);
 		if(r==-1){
 			if(errno==EINTR)continue;

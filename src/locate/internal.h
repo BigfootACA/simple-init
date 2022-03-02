@@ -20,8 +20,10 @@
 #include<Protocol/PartitionInfo.h>
 #include<Protocol/SimpleFileSystem.h>
 #include<Guid/FileInfo.h>
+#include<Guid/FileSystemInfo.h>
 #include<Guid/FileSystemVolumeLabelInfo.h>
 #include<stdlib.h>
+#include"str.h"
 #include"boot.h"
 #include"list.h"
 #include"confd.h"

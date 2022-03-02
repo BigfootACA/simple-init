@@ -134,6 +134,52 @@ locate_dest*get_locate(const char*tag){
 	return loc;
 }
 
+static void dump_block_info(char*tag,EFI_BLOCK_IO_PROTOCOL*bi){
+	char buf[64];
+	if(!tag||!bi||!bi->Media)return;
+	EFI_BLOCK_IO_MEDIA*m=bi->Media;
+	UINT64 size=m->BlockSize*(m->LastBlock+1);
+	tlog_verbose("locate %s block media id: %d",tag,m->MediaId);
+	tlog_verbose("locate %s block read only: %s",tag,BOOL2STR(m->ReadOnly));
+	tlog_verbose("locate %s block sector size: %d",tag,m->BlockSize);
+	tlog_verbose("locate %s block total sectors: %lld",tag,m->LastBlock+1);
+	tlog_verbose(
+		"locate %s block total size: %lld (%s)",tag,size,
+		make_readable_str_buf(buf,sizeof(buf),size,1,0)
+	);
+}
+
+static void dump_fs_info(char*tag,EFI_FILE_PROTOCOL*root){
+	UINTN bs=0;
+	EFI_STATUS st;
+	EFI_FILE_SYSTEM_INFO*fi=NULL;
+	char buf[64],xn[PATH_MAX];
+	if(!tag||!root)return;
+	st=root->GetInfo(root,&gEfiFileSystemInfoGuid,&bs,fi);
+	if(st==EFI_BUFFER_TOO_SMALL&&(fi=AllocateZeroPool(bs)))
+		st=root->GetInfo(root,&gEfiFileSystemInfoGuid,&bs,fi);
+	if(EFI_ERROR(st))return;
+	ZeroMem(xn,sizeof(xn));
+	UnicodeStrToAsciiStrS(fi->VolumeLabel,xn,sizeof(xn));
+	tlog_verbose("locate %s file system sector size: %d",tag,fi->BlockSize);
+	tlog_verbose("locate %s file system read only: %s",tag,BOOL2STR(fi->ReadOnly));
+	tlog_verbose("locate %s file system volume label: %s",tag,xn);
+	tlog_verbose(
+		"locate %s file system total size: %lld (%s)",tag,fi->VolumeSize,
+		make_readable_str_buf(buf,sizeof(buf),fi->VolumeSize,1,0)
+	);
+	tlog_verbose(
+		"locate %s file system free space: %lld (%s)",tag,fi->FreeSpace,
+		make_readable_str_buf(buf,sizeof(buf),fi->FreeSpace,1,0)
+	);
+}
+
+static void dump_locate(locate_dest*loc){
+	if(!loc)return;
+	if(loc->root)dump_fs_info(loc->tag,loc->root);
+	if(loc->block_proto)dump_block_info(loc->tag,loc->block_proto);
+}
+
 static locate_dest*init_locate_ret(locate_ret*ret,const char*file){
 	locate_dest*loc;
 	char buf[PATH_MAX],*tag=NULL,*path=NULL;
@@ -162,6 +208,7 @@ static locate_dest*init_locate_ret(locate_ret*ret,const char*file){
 		path
 	);
 	if(!(loc=get_locate(tag)))return NULL;
+	dump_locate(loc);
 	switch(ret->type){
 		case LOCATE_FILE:
 			ret->hand=loc->file_hand;

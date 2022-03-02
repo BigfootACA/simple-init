@@ -26,6 +26,7 @@
 
 [Guids]
   gEfiFileInfoGuid
+  gEfiFileSystemInfoGuid
   gEfiFileSystemVolumeLabelInfoIdGuid
 
 [Protocols]

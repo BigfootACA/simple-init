@@ -310,6 +310,7 @@ struct gui_register guireg_filepicker={
 	.lost_focus=filepicker_lost_focus,
 	.back=true,
 	.mask=true,
+	.allow_exclusive=true,
 };
 
 static void filepicker_cb(lv_task_t*t){

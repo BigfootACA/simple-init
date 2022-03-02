@@ -22,6 +22,7 @@ struct gui_register{
 	bool mask;
 	bool open_file;
 	bool full_screen;
+	bool allow_exclusive;
 	guiact_base*ask_exit;
 	guiact_base*quiet_exit;
 	guiact_base*get_focus;

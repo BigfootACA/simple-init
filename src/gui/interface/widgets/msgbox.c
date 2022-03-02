@@ -150,6 +150,7 @@ struct gui_register guireg_msgbox={
 	.lost_focus=msgbox_lost_focus,
 	.back=true,
 	.mask=true,
+	.allow_exclusive=true,
 };
 
 static void msgbox_cb(lv_task_t*t){

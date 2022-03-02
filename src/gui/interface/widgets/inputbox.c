@@ -178,6 +178,7 @@ struct gui_register guireg_inputbox={
 	.lost_focus=inputbox_lost_focus,
 	.back=true,
 	.mask=true,
+	.allow_exclusive=true,
 };
 
 static void inputbox_cb(lv_task_t*t){

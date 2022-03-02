@@ -17,6 +17,7 @@
 #define TAG "activity"
 
 static list*activities=NULL;
+static struct gui_activity*exclusive=NULL;
 
 int guiact_do_exit(){
 	gui_run=false;
@@ -34,6 +35,7 @@ static int guiact_force_free(void*data){
 void guiact_init(){
 	list_free_all(activities,guiact_force_free);
 	activities=NULL;
+	exclusive=NULL;
 }
 
 list*guiact_get_activities(){
@@ -100,6 +102,7 @@ static void guiact_remove_last_list(){
 int guiact_remove_last(bool focus){
 	struct gui_activity*l=guiact_get_last();
 	if(guiact_is_alone()||!l)return 0;
+	if(l==exclusive)ERET(EPERM);
 	tlog_debug("end activity %s",l->name);
 	sysbar_focus_input(NULL);
 	call_lost_focus_last();
@@ -119,6 +122,7 @@ int guiact_do_back(){
 	}
 	struct gui_activity*c=guiact_get_last();
 	if(!c)return guiact_do_exit();
+	if(c==exclusive)ERET(EPERM);
 	if(!c->reg->back)return 0;
 	if(guiact_is_alone())return 0;
 	tlog_debug("do back");
@@ -130,13 +134,41 @@ int guiact_do_back(){
 int guiact_do_home(){
 	sysbar_keyboard_close();
 	list*d;
+	bool proc=false;
 	if(guiact_is_alone())return 0;
 	while((d=guiact_get_last_list())&&d->prev){
 		LIST_DATA_DECLARE(z,d,struct gui_activity*);
+		if(z==exclusive)break;
 		if(z->reg->quiet_exit)z->reg->quiet_exit(z);
 		guiact_remove_last(false);
+		proc=true;
 	}
-	call_get_focus_last();
+	if(proc){
+		call_get_focus_last();
+		return 0;
+	}else ERET(EPERM);
+}
+
+int guiact_set_exclusive(struct gui_activity*target){
+	bool found=false;
+	struct list*acts=guiact_get_activities(),*next,*cur;
+	if(!target){
+		if(exclusive)tlog_notice("exit exclusive mode from %s",exclusive->name);
+		exclusive=NULL;
+		return 0;
+	}
+	if(exclusive){
+		tlog_warn("alrerady have exclusive mode activity");
+		ERET(EEXIST);
+	}
+	if((next=acts))do{
+		cur=next;
+		LIST_DATA_DECLARE(d,cur,struct gui_activity*);
+		if(d==target)found=true;
+	}while((next=cur->next));
+	if(!found)ERET(ENOENT);
+	tlog_notice("enter exclusive mode with %s",target->name);
+	exclusive=target;
 	return 0;
 }
 
@@ -187,6 +219,7 @@ static void guiact_start_task(lv_task_t*t){
 	if(!act)return;
 	memset(act,0,sizeof(struct gui_activity));
 	act->reg=reg,act->args=args,act->mask=reg->mask;
+	if(reg->full_screen)sysbar_set_full_screen(true);
 	act->w=gui_sw,act->h=gui_sh;
 	strcpy(act->name,reg->name);
 	if(reg->init&&(r=reg->init(act))<0){
@@ -194,7 +227,6 @@ static void guiact_start_task(lv_task_t*t){
 		free(act);
 		return;
 	}
-	if(reg->full_screen)sysbar_set_full_screen(true);
 	if(act->mask){
 		act->page=lv_objmask_create(sysbar.content,NULL);
 		lv_obj_add_style(act->page,LV_OBJMASK_PART_MAIN,lv_style_opa_mask());
@@ -219,6 +251,10 @@ int guiact_start_activity(struct gui_register*reg,void*args){
 	if(!reg->draw){
 		tlog_warn("invalid activity %s",reg->name);
 		ERET(EINVAL);
+	}
+	if(exclusive&&!reg->allow_exclusive){
+		tlog_warn("target activity not allow in exclusive mode");
+		ERET(EPERM);
 	}
 	struct guiact_data*d=malloc(sizeof(struct guiact_data));
 	if(!d)ERET(ENOMEM);

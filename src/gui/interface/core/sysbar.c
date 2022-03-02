@@ -449,6 +449,13 @@ void sysbar_set_full_screen(bool fs){
 	else lv_group_remove_obj(sysbar.bar_btn);
 	gui_sh=gui_h-(fs?0:sysbar.size*2);
 	lv_obj_set_size(sysbar.content,gui_sw,gui_sh);
+	struct gui_activity*act=guiact_get_last();
+	if(act){
+		act->w=gui_sw;
+		act->h=gui_sh;
+		lv_obj_set_size(act->page,act->w,act->h);
+		if(act->reg->resize)act->reg->resize(act);
+	}
 	if(fs){
 		lv_group_remove_obj(sysbar.bottom.content.back);
 		lv_group_remove_obj(sysbar.bottom.content.home);

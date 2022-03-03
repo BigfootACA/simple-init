@@ -300,3 +300,30 @@ int list_sort(list*lst,list_sorter sorter){
 	}while(changed);
 	return r;
 }
+
+list*list_search_one(list*lst,list_comparator comparator,void*data){
+	if(!lst||!comparator)EPRET(EINVAL);
+	list*f;
+	if((f=list_first(lst)))do{
+		if(f&&comparator(f,data))return f;
+	}while((f=f->next));
+	return NULL;
+}
+
+static bool list_string_comparator(list*f,void*v){
+	LIST_DATA_DECLARE(str,f,char*);
+	return str&&v&&strcmp(str,(char*)v)==0;
+}
+
+static bool list_string_case_comparator(list*f,void*v){
+	LIST_DATA_DECLARE(str,f,char*);
+	return str&&v&&strcasecmp(str,(char*)v)==0;
+}
+
+list*list_search_string(list*lst,const char*str){
+	return list_search_one(lst,list_string_comparator,(void*)str);
+}
+
+list*list_search_case_string(list*lst,const char*str){
+	return list_search_one(lst,list_string_case_comparator,(void*)str);
+}

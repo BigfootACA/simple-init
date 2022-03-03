@@ -26,6 +26,7 @@ struct list{
 typedef struct list list;
 
 typedef bool(*list_sorter)(list*f1,list*f2);
+typedef bool(*list_comparator)(list*f,void*data);
 
 // src/lib/list.c: add new after point
 extern int list_add(list*point,list*new);
@@ -110,6 +111,15 @@ extern int list_obj_del_data(list**lst,void*data,runnable_t*datafree);
 
 // src/lib/list.c: sort a list
 extern int list_sort(list*lst,list_sorter sorter);
+
+// src/lib/list.c: search a list object
+extern list*list_search_one(list*lst,list_comparator comparator,void*data);
+
+// src/lib/list.c: search a string
+extern list*list_search_string(list*lst,const char*str);
+
+// src/lib/list.c: search a string ignore case
+extern list*list_search_case_string(list*lst,const char*str);
 
 // src/lib/list.c: default free runnable
 extern int list_default_free(void*data);

@@ -31,3 +31,4 @@
   array.c
   fdtparser.c
   aboot.c
+  reboot.c

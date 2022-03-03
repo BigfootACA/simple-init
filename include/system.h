@@ -95,10 +95,25 @@ extern int loop_get_free_num(void);
 // src/lib/file.c: get a usable loop device path
 extern int loop_get_free(char*buf,size_t len);
 
-#ifndef ENABLE_UEFI
-// src/lib/reboot.c: advance reboot (with arg)
-extern int adv_reboot(long cmd,char*data);
+enum reboot_cmd{
+	REBOOT_NONE=0,
+	REBOOT_HALT,
+	REBOOT_KEXEC,
+	REBOOT_POWEROFF,
+	REBOOT_RESTART,
+	REBOOT_SUSPEND,
+	REBOOT_WARM,
+	REBOOT_COLD,
+	REBOOT_DATA,
+	REBOOT_RECOVERY,
+	REBOOT_FASTBOOT,
+	REBOOT_EDL,
+};
 
+// src/lib/reboot.c: advance reboot (with arg)
+extern int adv_reboot(enum reboot_cmd cmd,char*data);
+
+#ifndef ENABLE_UEFI
 // src/lib/mount.c: call libmount to mount
 extern int xmount(
 	bool ex,

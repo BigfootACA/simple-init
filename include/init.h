@@ -10,6 +10,7 @@
 #define INIT_H
 #include"logger.h"
 #include"defines.h"
+#include"system.h"
 
 // src/initd/init.c: simple-init daemon main
 extern int init_main(int argc,char**argv);
@@ -78,7 +79,7 @@ extern int setup_conffs(void);
 extern int wait_conffs(void);
 
 // src/initd/reboot.c: init call reboot
-extern int call_reboot(long rb,char*cmd);
+extern int call_reboot(enum reboot_cmd rb,char*cmd);
 
 // src/initd/reboot.c: init kill all processes
 extern int kill_all(void);

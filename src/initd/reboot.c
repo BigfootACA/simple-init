@@ -15,7 +15,7 @@
 #include"logger.h"
 #define TAG "reboot"
 
-int call_reboot(long rb,char*cmd){
+int call_reboot(enum reboot_cmd rb,char*cmd){
 	tlog_emerg("call kernel reboot.");
 	kill_all();
 	adv_reboot(rb,cmd);

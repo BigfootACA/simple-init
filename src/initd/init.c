@@ -66,17 +66,17 @@ int system_down(){
 	}
 	confd_save_file(NULL);
 	tlog_alert("system is going down...");
-	long cmd=RB_AUTOBOOT;
+	enum reboot_cmd cmd=REBOOT_RESTART;
 	char*data=NULL;
 	switch(action){
 		case ACTION_REBOOT:
 			if(actiondata.data[0]!=0){
-				cmd=LINUX_REBOOT_CMD_RESTART2,data=actiondata.data;
+				cmd=REBOOT_DATA,data=actiondata.data;
 				tlog_notice("reboot with '%s'...",data);
 			}
 		break;
-		case ACTION_HALT:cmd=RB_HALT_SYSTEM;break;
-		case ACTION_POWEROFF:cmd=RB_POWER_OFF;break;
+		case ACTION_HALT:cmd=REBOOT_HALT;break;
+		case ACTION_POWEROFF:cmd=REBOOT_POWEROFF;break;
 		default:;
 	}
 	call_reboot(cmd,data);

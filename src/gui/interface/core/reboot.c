@@ -7,15 +7,14 @@
  */
 
 #ifdef ENABLE_GUI
-#ifdef ENABLE_UEFI
-#include<Library/UefiRuntimeServicesTableLib.h>
-#else
+#ifndef ENABLE_UEFI
 #include"init_internal.h"
 #endif
 #include"gui.h"
 #include"str.h"
 #include"confd.h"
 #include"logger.h"
+#include"system.h"
 #include"defines.h"
 #include"gui/msgbox.h"
 #include"gui/activity.h"
@@ -30,46 +29,33 @@ static lv_obj_t*btn_rb_cold,*btn_rb_warm;
 static lv_obj_t*btn_rb;
 #endif
 
-enum reboot_mode{
-	#ifndef ENABLE_UEFI
-	REBOOT,
-	#else
-	REBOOT_COLD,
-	REBOOT_WARM,
-	#endif
-	REBOOT_EDL,
-	REBOOT_RECOVERY,
-	REBOOT_BOOTLOADER,
-	POWEROFF,
-};
-
 static const char*reboot_str[]={
 	#ifndef ENABLE_UEFI
-	[REBOOT]            = "Reboot",
+	[REBOOT_RESTART]    = "Reboot",
 	#else
 	[REBOOT_WARM]       = "Warm Reboot",
 	[REBOOT_COLD]       = "Cold Reboot",
 	#endif
 	[REBOOT_EDL]        = "Reboot into EDL (9008)",
 	[REBOOT_RECOVERY]   = "Reboot into Recovery",
-	[REBOOT_BOOTLOADER] = "Reboot into Bootloader",
-	[POWEROFF]          = "Power Off",
+	[REBOOT_FASTBOOT]   = "Reboot into Bootloader",
+	[REBOOT_POWEROFF]   = "Power Off",
 };
 
 static void reboot_action(lv_obj_t*obj,lv_event_t e){
 	if(!obj||e!=LV_EVENT_CLICKED)return;
 	void*d=lv_obj_get_user_data(obj);
 	if(!d)return;
-	enum reboot_mode m=*(enum reboot_mode*)d;
+	enum reboot_cmd m=*(enum reboot_cmd*)d;
 	#ifndef ENABLE_UEFI
 	struct init_msg msg;
 	init_initialize_msg(&msg,ACTION_REBOOT);
 	switch(m){
-		case REBOOT:break;
+		case REBOOT_RESTART:break;
 		case REBOOT_EDL:strcpy(msg.data.data,"edl");break;
 		case REBOOT_RECOVERY:strcpy(msg.data.data,"recovery");break;
-		case REBOOT_BOOTLOADER:strcpy(msg.data.data,"bootloader");break;
-		case POWEROFF:msg.action=ACTION_POWEROFF;break;
+		case REBOOT_FASTBOOT:strcpy(msg.data.data,"bootloader");break;
+		case REBOOT_POWEROFF:msg.action=ACTION_POWEROFF;break;
 		default:return;
 	}
 	struct init_msg response;
@@ -83,20 +69,8 @@ static void reboot_action(lv_obj_t*obj,lv_event_t e){
 		return;
 	}
 	#else
-	UINTN s=0;
-	VOID*x=NULL;
-	EFI_RESET_TYPE t;
-	switch(m){
-		case REBOOT_BOOTLOADER: t=EfiResetPlatformSpecific,s=10,x="bootloader";break;
-		case REBOOT_RECOVERY:   t=EfiResetPlatformSpecific,s=9, x="recovery";break;
-		case REBOOT_EDL:        t=EfiResetPlatformSpecific,s=4, x="edl";break;
-		case REBOOT_WARM:       t=EfiResetWarm;break;
-		case REBOOT_COLD:       t=EfiResetCold;break;
-		case POWEROFF:          t=EfiResetShutdown;break;
-		default:return;
-	}
+	adv_reboot(m,NULL);
 	confd_save_file(NULL,NULL);
-	gRT->ResetSystem(t,EFI_SUCCESS,s,x);
 	#endif
 	guiact_do_back();
 }
@@ -131,7 +105,7 @@ static int reboot_lost_focus(struct gui_activity*d __attribute__((unused))){
 	return 0;
 }
 
-static lv_obj_t*add_reboot_button(lv_obj_t*last,enum reboot_mode mode){
+static lv_obj_t*add_reboot_button(lv_obj_t*last,enum reboot_cmd mode){
 	lv_obj_t*btn=lv_btn_create(box,NULL);
 	lv_obj_t*txt=lv_label_create(btn,NULL);
 	lv_label_set_text(txt,_(reboot_str[mode]));
@@ -160,18 +134,18 @@ static int reboot_menu_draw(struct gui_activity*act){
 	lv_label_set_text(txt,_("Select an action you want to do"));
 
 	#ifndef ENABLE_UEFI
-	btn_rb=add_reboot_button(txt,REBOOT);
+	btn_rb=add_reboot_button(txt,REBOOT_RESTART);
 	btn_rb_edl=add_reboot_button(btn_rb,REBOOT_EDL);
 	btn_rb_rec=add_reboot_button(btn_rb_edl,REBOOT_RECOVERY);
-	btn_rb_bl=add_reboot_button(btn_rb_rec,REBOOT_BOOTLOADER);
-	btn_po=add_reboot_button(btn_rb_bl,POWEROFF);
+	btn_rb_bl=add_reboot_button(btn_rb_rec,REBOOT_FASTBOOT);
+	btn_po=add_reboot_button(btn_rb_bl,REBOOT_POWEROFF);
 	#else
 	btn_rb_cold=add_reboot_button(txt,REBOOT_COLD);
 	btn_rb_warm=add_reboot_button(btn_rb_cold,REBOOT_WARM);
 	btn_rb_edl=add_reboot_button(btn_rb_warm,REBOOT_EDL);
 	btn_rb_rec=add_reboot_button(btn_rb_edl,REBOOT_RECOVERY);
-	btn_rb_bl=add_reboot_button(btn_rb_rec,REBOOT_BOOTLOADER);
-	btn_po=add_reboot_button(btn_rb_bl,POWEROFF);
+	btn_rb_bl=add_reboot_button(btn_rb_rec,REBOOT_FASTBOOT);
+	btn_po=add_reboot_button(btn_rb_bl,REBOOT_POWEROFF);
 	#endif
 	lv_coord_t h=lv_obj_get_y(btn_po)+lv_obj_get_height(btn_po)+(gui_font_size/3*8);
 	if(h>(lv_coord_t)gui_sh-gui_font_size)h=gui_sh-gui_font_size;

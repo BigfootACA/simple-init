@@ -28,8 +28,9 @@ int run_boot_reboot(boot_config*boot){
 			if(data){
 				if(strlen(data)>=ss)return terlog_error(2,"reboot argument too long");
 				strncpy(msg.data.data,data,ss-1);
-			}
-			tlog_alert(data?"rebooting":"rebooting with argument '%s'",data);
+				tlog_alert("rebooting with argument '%s'",data);
+				free(data);
+			}else tlog_alert("rebooting");
 		break;
 		case BOOT_HALT:
 			msg.action=ACTION_HALT;
@@ -43,7 +44,7 @@ int run_boot_reboot(boot_config*boot){
 		default:ERET(EINVAL);
 	}
 	init_send(&msg,&response);
-	if(errno!=0)telog_warn("send command");
+	if(errno!=0)telog_warn("send command failed");
 	if(response.data.status.ret!=0)tlog_warn(
 		"reboot failed: %s",
 		strerror(response.data.status.ret)

@@ -8,34 +8,28 @@
 
 #include<errno.h>
 #include<string.h>
-#include<Library/UefiRuntimeServicesTableLib.h>
 #include"boot.h"
 #include"confd.h"
 #include"logger.h"
 #include"defines.h"
+#include"system.h"
 #define TAG "reboot"
 
 int run_boot_reboot(boot_config*boot){
 	if(!boot)ERET(EINVAL);
 	char*data=NULL;
-	UINTN s=0;
-	VOID*x=NULL;
-	EFI_RESET_TYPE t=EfiResetCold;
+	enum reboot_cmd cmd;
 	switch(boot->mode){
 		case BOOT_REBOOT:
 			data=confd_get_string_base(boot->key,"arg",NULL);
-			if(data){
-				t=EfiResetPlatformSpecific;
-				x=data;
-				s=strlen(data);
-			}
+			cmd=data?REBOOT_DATA:REBOOT_COLD;
 		break;
 		case BOOT_HALT:
-		case BOOT_POWEROFF:t=EfiResetShutdown;break;
+		case BOOT_POWEROFF:cmd=REBOOT_POWEROFF;break;
 		default:ERET(EINVAL);
 	}
 	confd_save_file(NULL,NULL);
-	gRT->ResetSystem(t,EFI_SUCCESS,s,x);
+	adv_reboot(cmd,data);
 	tlog_warn("reset system failed");
 	return -1;
 }

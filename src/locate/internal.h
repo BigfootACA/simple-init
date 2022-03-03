@@ -10,6 +10,7 @@
 #define _BOOT_LOCATE_H
 #include<Uefi.h>
 #include<Library/UefiLib.h>
+#include<Library/PrintLib.h>
 #include<Library/BaseMemoryLib.h>
 #include<Library/DevicePathLib.h>
 #include<Library/MemoryAllocationLib.h>

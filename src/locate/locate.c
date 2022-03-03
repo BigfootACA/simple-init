@@ -291,3 +291,17 @@ bool boot_locate(locate_ret*ret,const char*file){
 	}
 	return false;
 }
+
+char*locate_find_name(char*buf,size_t len){
+	CHAR8 name[255];
+	ZeroMem(buf,len);
+	for(int i=0;i<4096;i++){
+		ZeroMem(name,sizeof(name));
+		AsciiSPrint(name,sizeof(name),"auto-%d",i);
+		if(confd_get_type_base("locates",name)==TYPE_KEY)continue;
+		AsciiStrCpyS(buf,len-1,name);
+		return buf;
+	}
+	tlog_warn("no available locate name found");
+	return NULL;
+}

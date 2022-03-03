@@ -100,7 +100,7 @@ void setproctitle(const char*fmt,...){
 	len=min_int(len,min_int((int)sizeof(buf),(int)(SPT.end-SPT.base)-1));
 	memcpy(SPT.base,buf,len);
 	nul=&SPT.base[len];
-	if(nul<SPT.nul)*SPT.nul='.';
+	if(nul<SPT.nul)*SPT.nul=0;
 	else if(nul==SPT.nul&&&nul[1]<SPT.end){
 		*SPT.nul=' ';
 		*++nul='\0';

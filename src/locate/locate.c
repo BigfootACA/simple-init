@@ -307,3 +307,21 @@ char*locate_find_name(char*buf,size_t len){
 	tlog_warn("no available locate name found");
 	return NULL;
 }
+
+bool locate_add_by_device_path(char*tag,bool save,EFI_DEVICE_PATH_PROTOCOL*dp){
+	CHAR16*dpt=NULL;
+	CHAR8 xpt[PATH_MAX];
+	if(!tag||!dp||get_locate(tag))return false;
+	if(!(dpt=ConvertDevicePathToText(dp,FALSE,FALSE)))return false;
+	confd_add_key_base(BASE,tag);
+	confd_set_save_base(BASE,tag,save);
+	ZeroMem(xpt,sizeof(xpt));
+	UnicodeStrToAsciiStrS(dpt,xpt,sizeof(xpt));
+	confd_set_string_dict(BASE,tag,"by_device_path",xpt);
+	FreePool(dpt);
+	return true;
+}
+
+bool locate_auto_add_by_device_path(char*buf,size_t len,EFI_DEVICE_PATH_PROTOCOL*dp){
+	return locate_add_by_device_path(locate_find_name(buf,len),false,dp);
+}

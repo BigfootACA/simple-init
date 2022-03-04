@@ -45,4 +45,13 @@ typedef struct locate_ret{
 // src/locate/locate.c: parse path for get target block or file
 extern bool boot_locate(locate_ret*ret,const char*pattern);
 
+// src/locate/locate.c: find a available locate name
+extern char*locate_find_name(char*buf,size_t len);
+
+// src/locate/locate.c: add new locate by device path
+bool locate_add_by_device_path(char*tag,bool save,EFI_DEVICE_PATH_PROTOCOL*dp);
+
+// src/locate/locate.c: auto add new locate by device path
+bool locate_auto_add_by_device_path(char*buf,size_t len,EFI_DEVICE_PATH_PROTOCOL*dp);
+
 #endif

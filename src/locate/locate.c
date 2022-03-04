@@ -118,15 +118,17 @@ static locate_dest*load_locate(const char*tag){
 
 }
 
-locate_dest*get_locate(const char*tag){
+static bool locate_cmp(list*l,void*d){
+	LIST_DATA_DECLARE(x,l,locate_dest*);
+	return d&&x&&AsciiStrCmp(x->tag,(char*)d)==0;
+}
+
+static locate_dest*get_locate(const char*tag){
 	list*l;
 	if(!tag||!*tag)return NULL;
 	if(!locate_cache)init_default();
-	if((l=list_first(locate_cache)))do{
-		LIST_DATA_DECLARE(d,l,locate_dest*);
-		if(!d)continue;
-		if(AsciiStrCmp(d->tag,tag)==0)return d;
-	}while((l=l->next));
+	if((l=list_search_one(locate_cache,locate_cmp,(void*)tag)))
+		return LIST_DATA(l,locate_dest*);
 	if(confd_get_type_base(BASE,tag)!=TYPE_KEY)
 		return NULL;
 	locate_dest*loc=load_locate(tag);

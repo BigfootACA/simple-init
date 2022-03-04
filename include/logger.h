@@ -84,6 +84,7 @@ static inline int logger_klog(void){return -1;}
 static inline int logger_syslog(void){return -1;}
 static inline int start_loggerd(int*p __attribute__((unused))){return -1;}
 extern void logger_set_console(bool enabled);
+extern void logger_init(void);
 #endif
 
 // src/loggerd/client.c: send raw log

@@ -28,6 +28,7 @@
 [PcdsFixedAtBuild.common]
   gSimpleInitTokenSpaceGuid.PcdDeviceTreeStore          | 0                              | UINT64  | 0x0001b101
   gSimpleInitTokenSpaceGuid.PcdLoggerdMinLevel          | 0xAE01                         | UINT32  | 0x0001b201
+  gSimpleInitTokenSpaceGuid.PcdLoggerdUseConsole        | TRUE                           | BOOLEAN | 0x0001b202
   gSimpleInitTokenSpaceGuid.PcdConfDefaultPath          | "\\simpleinit.uefi.cfg"        | VOID*   | 0x0001b301
   gSimpleInitTokenSpaceGuid.PcdConfDefaultStaticPath    | "\\simpleinit.static.uefi.cfg" | VOID*   | 0x0001b302
   gSimpleInitTokenSpaceGuid.PcdConfGptPartition         | "logfs"                        | VOID*   | 0x0001b303

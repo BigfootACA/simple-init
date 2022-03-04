@@ -14,16 +14,27 @@
 #include<string.h>
 #ifdef ENABLE_UEFI
 #include<Library/PcdLib.h>
+#include<Library/BaseLib.h>
 #include<Library/UefiLib.h>
 #include<Library/DebugLib.h>
+#include<Library/PrintLib.h>
+#include<Library/BaseMemoryLib.h>
+#include<Library/MemoryAllocationLib.h>
+#include<Protocol/SimpleFileSystem.h>
+#include<Guid/FileInfo.h>
+#include"str.h"
+#include"locate.h"
+#include"compatible.h"
 #else
 #include<sys/un.h>
 #include<sys/socket.h>
 #endif
-#include"defines.h"
+#include"confd.h"
 #include"output.h"
 #include"system.h"
+#include"defines.h"
 #include"logger_internal.h"
+#define TAG "logger"
 
 #ifndef LOG_MIN_LEVEL
 #ifdef ENABLE_UEFI
@@ -130,9 +141,68 @@ int start_loggerd(pid_t*p){
 }
 #else
 bool console_output=true;
+EFI_FILE_PROTOCOL*logger_output=NULL;
 
 void logger_set_console(bool enabled){
 	console_output=enabled;
+}
+
+static int logger_init_out(){
+	UINTN s=0;
+	locate_ret l;
+	EFI_STATUS st;
+	EFI_FILE_INFO*info=NULL;
+	char*log=confd_get_string("logger.file_output",NULL);
+	if(!log)return 0;
+	if(!boot_locate_create_file(&l,log))
+		EDONE(tlog_warn("resolve logger file output locate failed"));
+	if(l.type!=LOCATE_FILE)
+		EDONE(tlog_warn("unsupported locate type for logger file output"));
+	l.file->SetPosition(l.file,0);
+	st=l.file->GetInfo(l.file,&gEfiFileInfoGuid,&s,info);
+	if(st==EFI_BUFFER_TOO_SMALL){
+		if(!(info=AllocateZeroPool(s)))
+			EDONE(tlog_warn("allocate file info failed"));
+		st=l.file->GetInfo(l.file,&gEfiFileInfoGuid,&s,info);
+	}
+	if(EFI_ERROR(st))EDONE(tlog_warn(
+		"get file info failed: %s",
+		efi_status_to_string(st)
+	));
+	info->FileSize=0;
+	st=l.file->SetInfo(l.file,&gEfiFileInfoGuid,s,info);
+	if(EFI_ERROR(st)){
+		l.file->Delete(l.file);
+		st=l.root->Open(
+			l.root,&l.file,l.path16,
+			EFI_FILE_MODE_READ|
+			EFI_FILE_MODE_WRITE|
+			EFI_FILE_MODE_CREATE,0
+		);
+		if(EFI_ERROR(st))EDONE(tlog_warn(
+			"open %s failed: %s",
+			log,efi_status_to_string(st)
+		));
+	}
+	logger_output=l.file;
+	tlog_debug("opened logger file output %s",log);
+	free(log);
+	FreePool(info);
+	return 0;
+	done:
+	if(log)free(log);
+	if(info)FreePool(info);
+	return -1;
+}
+
+void logger_init(){
+	// PcdLoggerdUseConsole is in uefimain.c
+
+	logger_init_out();
+	console_output=confd_set_boolean(
+		"logger.use_console",
+		console_output
+	);
 }
 #endif
 
@@ -156,8 +226,20 @@ int logger_write(struct log_item*log){
 	errno=msg.data.code;
 	return xs;
 	#else
-	DebugPrint(EFI_D_INFO,"%a: %a\n",log->tag,log->content);
-	if(console_output)Print(L"%a: %a\n",log->tag,log->content);
+	char buff[BUFSIZ];
+	ZeroMem(buff,sizeof(buff));
+	AsciiSPrint(buff,sizeof(buff),"%a: %a\n",log->tag,log->content);
+	DEBUG((EFI_D_INFO,buff));
+	if(console_output)AsciiPrint(buff);
+	if(logger_output){
+		UINTN cnt,x,pos=0;
+		cnt=AsciiStrLen(buff),x=cnt;
+		do{
+			logger_output->Write(logger_output,&x,buff+pos);
+			pos+=x,x=cnt-pos;
+		}while(pos<cnt);
+		logger_output->Flush(logger_output);
+	}
 	return 0;
 	#endif
 }

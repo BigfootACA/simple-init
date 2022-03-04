@@ -24,6 +24,9 @@
 [Guids]
   gSimpleInitFileGuid
 
+[Pcd]
+  gSimpleInitTokenSpaceGuid.PcdLoggerdUseConsole
+
 [Sources]
   # UEFI entry point
   uefimain.c

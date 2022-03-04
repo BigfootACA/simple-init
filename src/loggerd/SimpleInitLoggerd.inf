@@ -15,8 +15,16 @@
 
 [LibraryClasses]
   PcdLib
+  BaseLib
   UefiLib
   DebugLib
+  PrintLib
+  BaseMemoryLib
+  MemoryAllocationLib
+  SimpleInitLocate
+
+[Guids]
+  gEfiFileInfoGuid
 
 [Pcd]
   gSimpleInitTokenSpaceGuid.PcdLoggerdMinLevel

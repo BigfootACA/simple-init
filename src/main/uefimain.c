@@ -7,11 +7,13 @@
  */
 
 #ifdef ENABLE_UEFI
+#include<Library/PcdLib.h>
 #include<Library/DebugLib.h>
 #include<Library/UefiBootManagerLib.h>
 #include<Library/ReportStatusCodeLib.h>
 #include"confd.h"
 #include"errno.h"
+#include"logger.h"
 #include"setjmp.h"
 #include"language.h"
 
@@ -28,8 +30,10 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ih,IN EFI_SYSTEM_TABLE*st){
 	EfiBootManagerRefreshAllBootOption();
 	DEBUG((EFI_D_INFO,"Initialize SimpleInit GUI...\n"));
 
+	logger_set_console(PcdGetBool(PcdLoggerdUseConsole));
 	confd_include_file(NULL,NULL);
 	confd_load_file(NULL,NULL);
+	logger_init();
 	char*lang=confd_get_string("language",NULL);
 	if(lang)lang_set(lang);
 	lang_init_locale();

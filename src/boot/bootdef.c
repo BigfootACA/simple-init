@@ -68,7 +68,7 @@ boot_main*boot_main_func[]={
 	[BOOT_FOLDER]         = NULL,
 };
 
-#define EXTRA_DATA(val)((keyval*[]){&KV("data",(val)),NULL})
+#define EXTRA_ARG(val)((keyval*[]){&KV("arg",(val)),NULL})
 
 #ifdef ENABLE_UEFI
 static void load_uefi_boot(){
@@ -184,7 +184,7 @@ void boot_init_configs(void){
 		.parent="reboots",
 		.save=false,.replace=false,
 		.show=true,.enabled=true
-	},EXTRA_DATA("edl"));
+	},EXTRA_ARG("edl"));
 	boot_create_config(&(struct boot_config){
 		.mode=BOOT_REBOOT,
 		.ident="recovery",.icon="twrp.png",
@@ -192,7 +192,7 @@ void boot_init_configs(void){
 		.parent="reboots",
 		.save=false,.replace=false,
 		.show=true,.enabled=true
-	},EXTRA_DATA("recovery"));
+	},EXTRA_ARG("recovery"));
 	boot_create_config(&(struct boot_config){
 		.mode=BOOT_REBOOT,
 		.ident="bootloader",.icon="fastboot.svg",
@@ -200,7 +200,7 @@ void boot_init_configs(void){
 		.parent="reboots",
 		.save=false,.replace=false,
 		.show=true,.enabled=true
-	},EXTRA_DATA("bootloader"));
+	},EXTRA_ARG("bootloader"));
 
 	if(confd_get_type("boot.default")!=TYPE_STRING)
 		confd_set_string("boot.default",BOOT_DEFAULT);

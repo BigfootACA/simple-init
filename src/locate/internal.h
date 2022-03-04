@@ -38,7 +38,7 @@
 #define GBOOL(key,def) confd_get_boolean_dict(BASE,loc->tag,key,def)
 
 typedef struct locate_dest{
-	char tag[255];
+	char tag[256];
 	EFI_HANDLE*file_hand;
 	EFI_FILE_PROTOCOL*root;
 	EFI_BLOCK_IO_PROTOCOL*block_proto;

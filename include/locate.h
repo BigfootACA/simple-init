@@ -26,6 +26,7 @@ typedef enum locate_type{
 typedef struct locate_ret{
 	char tag[256];
 	char path[PATH_MAX-256-sizeof(void*)*7];
+	CHAR16 path16[PATH_MAX*sizeof(CHAR16)];
 	locate_type type;
 	EFI_HANDLE*hand;
 	union{

@@ -228,7 +228,6 @@ static locate_dest*init_locate_ret(locate_ret*ret,const char*file){
 
 static bool locate_open_file(locate_dest*loc,locate_ret*ret){
 	EFI_STATUS st;
-	CHAR16 xp[PATH_MAX];
 	if(!ret->path[0]){
 		tlog_warn("no path specified");
 		return false;
@@ -240,13 +239,13 @@ static bool locate_open_file(locate_dest*loc,locate_ret*ret){
 		);
 		return false;
 	}
-	ZeroMem(xp,sizeof(xp));
+	ZeroMem(ret->path16,sizeof(ret->path16));
 	AsciiStrToUnicodeStrS(
-		ret->path,xp,
-		sizeof(xp)/sizeof(CHAR16)
+		ret->path,ret->path16,
+		sizeof(ret->path16)/sizeof(CHAR16)
 	);
 	st=loc->root->Open(
-		loc->root,&ret->file,xp,
+		loc->root,&ret->file,ret->path16,
 		EFI_FILE_MODE_READ,0
 	);
 	if(EFI_ERROR(st)){
@@ -263,7 +262,7 @@ static bool locate_open_file(locate_dest*loc,locate_ret*ret){
 		);
 		return false;
 	}
-	if(!(ret->device=FileDevicePath(loc->file_hand,xp))){
+	if(!(ret->device=FileDevicePath(loc->file_hand,ret->path16))){
 		tlog_error(
 			"get file '%s' device path failed",
 			ret->path

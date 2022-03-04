@@ -31,3 +31,17 @@ locate_match_state locate_match_esp(locate_dest*loc){
 	if(!loc||!loc->part_proto)return MATCH_FAILED;
 	return loc->part_proto->System==1?MATCH_SUCCESS:MATCH_FAILED;
 }
+
+locate_match_state locate_match_device_path(locate_dest*loc){
+	CHAR16*dpt;
+	char xpx[PATH_MAX],*xpt;
+	EFI_DEVICE_PATH_PROTOCOL*dp;
+	locate_match_state st=MATCH_FAILED;
+	if(!(dp=DevicePathFromHandle(loc->file_hand)))return MATCH_SKIP;
+	if(!(xpt=GSTR("by_device_path",NULL)))return MATCH_SKIP;
+	if(!(dpt=ConvertDevicePathToText(dp,FALSE,FALSE)))return MATCH_INVALID;
+	ZeroMem(xpx,sizeof(xpx));
+	UnicodeStrToAsciiStrS(dpt,xpx,sizeof(xpx));
+	if(AsciiStriCmp(xpx,xpt)==0)st=MATCH_SUCCESS;
+	return st;
+}

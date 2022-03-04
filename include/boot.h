@@ -104,6 +104,12 @@ extern void dump_boot_config(char*tag,enum log_level level,boot_config*boot);
 // src/boot/bootdef.c: probe efi os loaders
 extern void boot_scan_efi();
 
+// src/boot/drivers.c: load uefi dxe driver
+extern bool boot_load_driver(EFI_DEVICE_PATH_PROTOCOL*p);
+
+// src/boot/drivers.c: load uefi dxe drivers from confd
+extern void boot_load_drivers();
+
 // src/boot/boot.c: set efi var
 extern EFI_STATUS boot_setvar(CHAR16*key,VOID*buf,UINTN size);
 

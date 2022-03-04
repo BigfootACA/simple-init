@@ -46,6 +46,7 @@
   linux.c
   prober.c
   bootdef.c
+  drivers.c
   efi_path.c
   reboot_uefi.c
   uefi_option.c

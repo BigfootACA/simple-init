@@ -11,6 +11,7 @@
 #include<Library/DebugLib.h>
 #include<Library/UefiBootManagerLib.h>
 #include<Library/ReportStatusCodeLib.h>
+#include"boot.h"
 #include"confd.h"
 #include"errno.h"
 #include"logger.h"
@@ -34,6 +35,7 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ih,IN EFI_SYSTEM_TABLE*st){
 	confd_include_file(NULL,NULL);
 	confd_load_file(NULL,NULL);
 	logger_init();
+	boot_load_drivers();
 	char*lang=confd_get_string("language",NULL);
 	if(lang)lang_set(lang);
 	lang_init_locale();

@@ -17,7 +17,7 @@
 #include"gui/filepicker.h"
 #define TAG "theme"
 
-static lv_obj_t*box,*chk_bg,*txt_bg,*btn_bg,*chk_dark,*btn_ok,*btn_restart,*lbl_tips,*lbl_tip_icon;
+static lv_obj_t*box,*chk_bg,*chk_scroll,*txt_bg,*btn_bg,*chk_dark,*btn_ok,*btn_restart,*lbl_tips,*lbl_tip_icon;
 
 static void dark_switch(lv_obj_t*obj,lv_event_t e){
 	if(obj!=chk_dark||e!=LV_EVENT_VALUE_CHANGED)return;
@@ -27,6 +27,11 @@ static void dark_switch(lv_obj_t*obj,lv_event_t e){
 	lv_obj_set_x(lbl_tips,gui_font_size+lv_obj_get_width(lbl_tip_icon));
 	gui_dark=val;
 	confd_set_boolean("gui.dark",gui_dark);
+}
+
+static void text_scroll(lv_obj_t*obj,lv_event_t e){
+	if(obj!=chk_scroll||e!=LV_EVENT_VALUE_CHANGED)return;
+	confd_set_boolean("gui.text_scroll",lv_checkbox_is_checked(obj));
 }
 
 static void do_save(){
@@ -113,12 +118,20 @@ static int theme_menu_draw(struct gui_activity*act){
 	lv_obj_align(btn_bg,txt_bg,LV_ALIGN_OUT_RIGHT_MID,gui_font_size/4,0);
 	lv_label_set_text(lv_label_create(btn_bg,NULL),"...");
 
+	chk_scroll=lv_checkbox_create(box,NULL);
+	lv_checkbox_set_checked(chk_scroll,confd_get_boolean("gui.text_scroll",true));
+	lv_checkbox_set_text(chk_scroll,_("Scroll text when overflow"));
+	lv_obj_set_event_cb(chk_scroll,text_scroll);
+	lv_obj_set_width(chk_scroll,lv_obj_get_width(box)-gui_font_size*2);
+	lv_obj_align(chk_scroll,txt_bg,LV_ALIGN_OUT_BOTTOM_MID,0,gui_font_size);
+	lv_obj_set_x(chk_scroll,(lv_obj_get_width(box)-lv_obj_get_width(chk_scroll))/2);
+
 	chk_dark=lv_checkbox_create(box,NULL);
 	lv_checkbox_set_checked(chk_dark,gui_dark);
 	lv_checkbox_set_text(chk_dark,_("Dark Mode"));
 	lv_obj_set_event_cb(chk_dark,dark_switch);
 	lv_obj_set_width(chk_dark,lv_obj_get_width(box)-gui_font_size*2);
-	lv_obj_align(chk_dark,txt_bg,LV_ALIGN_OUT_BOTTOM_MID,0,gui_font_size);
+	lv_obj_align(chk_dark,chk_scroll,LV_ALIGN_OUT_BOTTOM_MID,0,gui_font_size);
 
 	lbl_tip_icon=lv_label_create(box,NULL);
 	lv_label_set_align(lbl_tip_icon,LV_LABEL_ALIGN_CENTER);

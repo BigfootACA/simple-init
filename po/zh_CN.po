@@ -2314,3 +2314,6 @@ msgstr "加载UEFI驱动 (DXE) '%s'?"
 
 msgid "UEFI Driver (DXE) Load"
 msgstr "加载UEFI驱动 (DXE)"
+
+msgid "Scroll text when overflow"
+msgstr "文本过长的时候滚动显示"

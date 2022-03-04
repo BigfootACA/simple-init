@@ -39,10 +39,13 @@
   gEfiSimpleFileSystemProtocolGuid
 
 [Sources]
+  cpu.c
   efi.c
   exit.c
   boot.c
   linux.c
+  prober.c
   bootdef.c
+  efi_path.c
   reboot_uefi.c
   uefi_option.c

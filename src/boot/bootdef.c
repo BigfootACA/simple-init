@@ -116,6 +116,7 @@ static void load_uefi_boot(){
 
 void boot_init_configs(void){
 	#ifdef ENABLE_UEFI
+	boot_scan_efi();
 	boot_create_config(&(struct boot_config){
 		.mode=BOOT_EXIT,
 		.ident="continue",.icon="exit.svg",

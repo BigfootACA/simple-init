@@ -34,6 +34,31 @@ enum boot_mode{
 	BOOT_FOLDER      = 0xFF,
 };
 
+// cpu architecture type
+enum cpu_type{
+	CPU_NONE=0,
+	CPU_ANY,
+	CPU_IA32,
+	CPU_IA64,
+	CPU_X64,
+	CPU_ARM,
+	CPU_AARCH64,
+	CPU_RISCV32,
+	CPU_RISCV64,
+};
+
+// efi prober declare
+struct efi_path{
+	bool enable;
+	enum cpu_type cpu;
+	char*icon;
+	char*title;
+	char**dir;
+	char**name;
+	char*load_opt;
+	bool unicode;
+};
+
 // boot config
 struct boot_config{
 	boot_mode mode;
@@ -49,6 +74,8 @@ struct boot_config{
 	bool enabled;
 };
 
+extern const enum cpu_type current_cpu;
+extern struct efi_path boot_efi_paths[];
 extern boot_main*boot_main_func[];
 
 // src/boot/boot.c: create boot config
@@ -73,6 +100,9 @@ extern char*bootmode2string(enum boot_mode mode);
 extern void dump_boot_config(char*tag,enum log_level level,boot_config*boot);
 
 #ifdef ENABLE_UEFI
+
+// src/boot/bootdef.c: probe efi os loaders
+extern void boot_scan_efi();
 
 // src/boot/boot.c: set efi var
 extern EFI_STATUS boot_setvar(CHAR16*key,VOID*buf,UINTN size);

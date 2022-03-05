@@ -70,10 +70,9 @@ static void update_active(){
 		active=tabs[i];
 		filetab_add_group(active,gui_grp);
 		lv_label_set_text(path,filetab_get_path(active));
-		if(old!=active)tlog_debug(
-			"switch to tab %d",
-			filetab_get_id(active)
-		);
+		uint16_t id=filetab_get_id(active);
+		confd_set_integer("gui.filemgr.active",id);
+		if(old!=active)tlog_debug("switch to tab %d",id);
 		break;
 	}
 }
@@ -93,7 +92,11 @@ static void tabview_cb(lv_obj_t*obj,lv_event_t e){
 }
 
 static void on_change_dir(struct filetab*fv,char*old __attribute__((unused)),char*new){
-	if(filetab_is_active(fv))lv_label_set_text(path,new);
+	if(!filetab_is_active(fv))return;
+	lv_label_set_text(path,new);
+	size_t tab=0;
+	for(tab=0;tab<ARRLEN(tabs);tab++)if(tabs[tab]==fv)break;
+	confd_set_string_array("gui.filemgr.tab",(int)tab,"dir",new);
 }
 
 static bool on_item_click(struct filetab*fv,char*item,enum item_type type){
@@ -145,9 +148,16 @@ static void tabview_create(){
 		filetab_set_on_item_click(tabs[i],on_item_click);
 		filetab_set_on_change_dir(tabs[i],on_change_dir);
 		filetab_set_show_parent(tabs[i],false);
-		filetab_set_path(tabs[i],"/");
-		update_active();
+		char*p=confd_get_string_array("gui.filemgr.tab",(int)i,"dir",NULL);
+		filetab_set_path(tabs[i],p?p:"/");
+		if(p)free(p);
 	}
+	lv_tabview_set_tab_act(
+		tabview,
+		confd_get_integer("gui.filemgr.active",0),
+		LV_ANIM_OFF
+	);
+	update_active();
 }
 
 static int do_back(struct gui_activity*d __attribute__((unused))){

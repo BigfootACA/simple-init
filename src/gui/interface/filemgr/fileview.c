@@ -94,9 +94,13 @@ static void call_on_select_item(struct fileview*view,char*item,enum item_type ty
 }
 
 void fileview_go_back(struct fileview*fv){
-	if(strcmp(fv->path,"/")!=0){
-		char path[PATH_MAX]={0};
-		get_parent(path,PATH_MAX,fv->path);
+	char*p=fv->path;
+	if(p[1]==':')p+=2;
+	if(strcmp(p,"/")!=0){
+		char path[PATH_MAX];
+		path[0]=fv->letter;
+		path[1]=':';
+		get_parent(path+2,sizeof(path)-2,p);
 		fileview_set_path(fv,path);
 		return;
 	}
@@ -112,7 +116,7 @@ static void click_item(struct fileitem*fi){
 	if(!fv)return;
 	if(fi->letter){
 		fv->letter=fi->letter;
-		fileview_set_path(fv,"/");
+		fileview_set_path(fv,(char[]){fi->letter,':','/',0});
 		return;
 	}
 	if(strcmp(fi->name,"..")==0)fileview_go_back(fv);
@@ -181,8 +185,9 @@ static struct fileitem*add_item(struct fileview*view,char*name){
 	fi->view=view;
 	strncpy(fi->name,name,sizeof(fi->name)-1);
 	snprintf(
-		fi->path,sizeof(fi->path)-1,"%c:%s/%s",
-		view->letter,view->path,fi->name
+		fi->path,sizeof(fi->path)-1,"%s%s/%s",
+		view->path[1]==':'?"":(char[]){view->letter,':',0},
+		view->path,fi->name
 	);
 	if(!view->letter)fi->type=TYPE_DISK;
 	else if(strcmp(name,"..")==0)fi->type=TYPE_DIR;
@@ -383,16 +388,38 @@ static void scan_items(struct fileview*view){
 		}
 		return;
 	}
-	if(view->parent&&!fileview_is_top(view))add_item(view,"..");
+	if(view->parent&&!fileview_is_top(view))
+		add_item(view,"..");
 	lv_fs_dir_t dir;
 	int i;
 	char fn[256],*fp;
 	char path[PATH_MAX+4]={0};
-	snprintf(path,PATH_MAX+3,"%c:%s",view->letter,view->path);
+	if(view->path[1]==':'){
+		view->letter=view->path[0];
+		strncpy(
+			path,
+			view->path,
+			sizeof(path)-1
+		);
+	}else snprintf(
+		path,
+		sizeof(path)-1,
+		"%c:%s",
+		view->letter,
+		view->path
+	);
 	lv_fs_res_t res=lv_fs_dir_open(&dir,path);
 	if(res!=LV_FS_RES_OK){
-		telog_warn("open folder %s failed (%s)",view->path,lv_fs_res_to_string(res));
-		set_info(view,_("open dir failed: %s"),lv_fs_res_to_i18n_string(res));
+		telog_warn(
+			"open folder %s failed (%s)",
+			view->path,
+			lv_fs_res_to_string(res)
+		);
+		set_info(
+			view,
+			_("open dir failed: %s"),
+			lv_fs_res_to_i18n_string(res)
+		);
 		return;
 	}
 	for(i=0;i<1024;i++){
@@ -415,8 +442,26 @@ void fileview_set_path(struct fileview*view,char*path){
 		char oldpath[sizeof(view->path)]={0};
 		strncpy(oldpath,view->full_path,sizeof(oldpath)-1);
 		strncpy(view->path,path,sizeof(view->path)-1);
-		if(!view->letter||!fsext_is_multi)strcpy(view->full_path,view->path);
-		else snprintf(view->full_path,PATH_MAX-1,"%c:%s",view->letter,view->path);
+		if(strcmp(view->path,"/")==0)view->letter=0;
+		if((!view->letter&&!view->path[1])||!fsext_is_multi){
+			strcpy(
+				view->full_path,
+				view->path
+			);
+		}else if(view->path[1]==':'){
+			view->letter=view->path[0];
+			strncpy(
+				view->full_path,
+				view->path,
+				sizeof(view->full_path)-1
+			);
+		}else snprintf(
+			view->full_path,
+			sizeof(view->full_path)-1,
+			"%c:%s",
+			view->letter,
+			view->path
+		);
 		call_on_change_dir(view,oldpath);
 	}
 	scan_items(view);
@@ -507,8 +552,9 @@ char*fileview_get_lvgl_path(struct fileview*view){
 	if(!view)return NULL;
 	if(!view->letter)return "/";
 	static char path[PATH_MAX];
-	memset(path,0,PATH_MAX);
-	snprintf(path,PATH_MAX-1,"%c:%s",view->letter,view->path);
+	memset(path,0,sizeof(path));
+	if(view->path[1]==':')strncpy(path,view->path,sizeof(path)-1);
+	else snprintf(path,sizeof(path)-1,"%c:%s",view->letter,view->path);
 	return path;
 }
 

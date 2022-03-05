@@ -10,10 +10,17 @@
 #ifdef ENABLE_UEFI
 #include<stdlib.h>
 #include<Uefi.h>
+#include<Library/BaseLib.h>
 #include<Library/UefiLib.h>
+#include<Library/PrintLib.h>
+#include<Library/BaseMemoryLib.h>
+#include<Library/DevicePathLib.h>
 #include<Library/UefiBootServicesTableLib.h>
+#include<Protocol/DevicePath.h>
 #include<Protocol/LoadedImage.h>
 #include"gui.h"
+#include"confd.h"
+#include"locate.h"
 #include"logger.h"
 #include"language.h"
 #include"gui/tools.h"
@@ -21,6 +28,30 @@
 #include"gui/msgbox.h"
 #include"gui/activity.h"
 #define TAG "dxe-load"
+
+static bool auto_cb(uint16_t id,const char*btn __attribute__((unused)),void*user_data){
+	EFI_DEVICE_PATH_PROTOCOL*dp;
+	char path[PATH_MAX],buff[PATH_MAX],loc[256],drv[256];
+	char*p=user_data,*cp=path;
+	int did=0;
+	if(id==0){
+		if(!p||p[1]!=':'||(p[2]!='/'&&p[2]!='\\'))return true;
+		if(!(dp=fs_drv_get_device_path(p[0])))return true;
+		if(!locate_auto_add_by_device_path(loc,sizeof(loc),dp))return true;
+		ZeroMem(path,sizeof(path));
+		AsciiStrCpyS(path,sizeof(path),p);
+		do{if(*cp=='/')*cp='\\';}while(*cp++);
+		ZeroMem(buff,sizeof(buff));
+		AsciiSPrint(buff,sizeof(buff),"@%a:%a",loc,p+2);
+		do{
+			ZeroMem(drv,sizeof(drv));
+			AsciiSPrint(drv,sizeof(drv),"driver-%d",did);
+			did++;
+		}while(confd_get_type_base("uefi.drivers",drv)==TYPE_STRING);
+		confd_set_string_base("uefi.drivers",drv,buff);
+	}
+	return false;
+}
 
 static void load_cb(lv_task_t*t){
 	char*full_path=t->user_data;
@@ -64,7 +95,10 @@ static void load_cb(lv_task_t*t){
 		if(ih)gBS->UnloadImage(ih);
 		msgbox_alert("start dxe failed: %s",_(efi_status_to_string(st)));
 		tlog_error("start dxe failed: %s",efi_status_to_string(st));
-	}
+	}else msgbox_set_user_data(msgbox_create_yesno(
+		auto_cb,
+		"auto load this dxe driver on next boot?"
+	),full_path);
 }
 
 static bool confirm_click(uint16_t id,const char*text __attribute__((unused)),void*user_data){

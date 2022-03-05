@@ -2317,3 +2317,6 @@ msgstr "加载UEFI驱动 (DXE)"
 
 msgid "Scroll text when overflow"
 msgstr "文本过长的时候滚动显示"
+
+msgid "auto load this dxe driver on next boot?"
+msgstr "下次启动时自动加载此UEFI驱动 (DXE)？"

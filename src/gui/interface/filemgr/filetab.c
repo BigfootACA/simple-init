@@ -28,10 +28,15 @@ struct filetab{
 
 static void on_change_dir(struct fileview*fv,char*old,char*new){
 	struct filetab*ft=fileview_get_data(fv);
-	char path[PATH_MAX]={0};
-	strcpy(path,new);
-	basename(path);
-	lv_tabview_set_tab_name(ft->view,ft->tab_id,path);
+	size_t cnt=strlen(new);
+	char path[PATH_MAX]={0},*p;
+	strncpy(path,new,cnt);
+	if(cnt>1&&(path[cnt-1]=='/'||path[cnt-1]=='\\'))path[cnt-1]=0;
+	p=strrchr(path,'/');
+	if(!p)p=strrchr(path,'\\');
+	if(!p)p=path;
+	else if(cnt>1)p++;
+	lv_tabview_set_tab_name(ft->view,ft->tab_id,p);
 	if(ft->on_change_dir)ft->on_change_dir(ft,old,new);
 }
 

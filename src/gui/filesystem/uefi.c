@@ -658,6 +658,15 @@ void lvgl_init_all_fs_uefi(bool debug){
 	}
 }
 
+EFI_DEVICE_PATH_PROTOCOL*fs_drv_get_device_path(char letter){
+	lv_fs_drv_t*drv=lv_fs_get_drv(letter);
+	if(!drv)return NULL;
+	if(drv->ready_cb&&!drv->ready_cb(drv))return NULL;
+	struct fsext*fse=drv->user_data;
+	struct fs_root*fs=fse->user_data;
+	return DevicePathFromHandle(fs->hand);
+}
+
 EFI_DEVICE_PATH_PROTOCOL*fs_get_device_path(const char*path){
 	if(!path)return NULL;
 	char letter=path[0];

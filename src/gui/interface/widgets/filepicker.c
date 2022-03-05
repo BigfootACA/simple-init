@@ -9,6 +9,7 @@
 #ifdef ENABLE_GUI
 #include<stdlib.h>
 #include"gui.h"
+#include"confd.h"
 #include"gui/tools.h"
 #include"gui/msgbox.h"
 #include"gui/fileview.h"
@@ -102,7 +103,7 @@ static void btn_click(lv_obj_t*obj,lv_event_t e){
 	if(!(fp=lv_obj_get_user_data(obj)))return;
 	if(guiact_get_last()->args!=fp)return;
 	if(obj==fp->reload)fileview_set_path(fp->fv,NULL);
-	else if(obj==fp->home)fileview_set_path(fp->fv,fp->path);
+	else if(obj==fp->home)fileview_set_path(fp->fv,"/");
 	else if(obj==fp->new){
 		static const char*types[]={
 			LV_SYMBOL_FILE,
@@ -120,6 +121,7 @@ static void btn_click(lv_obj_t*obj,lv_event_t e){
 static void on_change_dir(struct fileview*fv,char*old __attribute__((unused)),char*new){
 	struct filepicker*fp=fileview_get_data(fv);
 	if(!fp)return;
+	confd_set_string("gui.filepicker.dir",new);
 	lv_label_set_text(fp->cur_path,new);
 	lv_obj_set_enabled(fp->new,!fsext_is_multi||!fileview_is_top(fv));
 }
@@ -327,7 +329,9 @@ struct filepicker*filepicker_create(filepicker_callback callback,const char*titl
 		vsnprintf(fp->text,sizeof(fp->text)-1,_(title),va);
 		va_end(va);
 	}
-	strcpy(fp->path,"/");
+	char*p=confd_get_string("gui.filepicker.dir",NULL);
+	strcpy(fp->path,p?p:"/");
+	if(p)free(p);
 	fp->callback=callback;
 	lv_task_once(lv_task_create(filepicker_cb,0,LV_TASK_PRIO_LOWEST,fp));
 	return fp;

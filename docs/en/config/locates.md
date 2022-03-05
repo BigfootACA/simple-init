@@ -63,6 +63,17 @@ Supported environments: `UEFI`
 Reference:
  - [src/locate/disk.c](../../../src/locate/disk.c)
 
+### locates.?.by_device_path
+
+Matches UEFI Device Path(`EFI_DEVICE_PATH_PROTOCOL`)
+
+Type: `STRING`
+
+Supported environments: `UEFI`
+
+Reference:
+ - [src/locate/disk.c](../../../src/locate/disk.c)
+
 ### locates.?.by_fs_label
 
 Target file system volume label matching (LABEL)

@@ -37,8 +37,7 @@ Type: `STRING`
 
 Supported environments: `LINUX`
 
-Default:
- - On `Linux`: `"system"`
+Default: `"system"`
 
 Reference:
  - [src/boot/boot.c](../../../src/boot/boot.c)
@@ -115,7 +114,7 @@ Reference:
 
 Specifies whether to get boot items from the UEFI boot manager and add them to the boot menu.
 
-Enumerated startup items are not saved.
+Enumerated boot items are not saved.
 
 The enumerated boot items are named `uefi_bootXXXX`
 
@@ -125,11 +124,29 @@ Type: `BOOLEAN`
 
 Supported environments: `UEFI`
 
-Default:
- - On `UEFI`: `true`
+Default: `true`
 
 Reference:
  - [src/boot/bootdef.c](../../../src/boot/bootdef.c)
+
+## boot.uefi_probe
+
+Specifies whether to automatically search all partitions for possible installed operating systems and add them to the boot menu.
+
+Found boot items are not saved.
+
+The found boot item is named `prober-X`
+
+Values: `true` or `false`
+
+Type: `BOOLEAN`
+
+Supported environments: `UEFI`
+
+Default: `true`
+
+Reference:
+ - [src/boot/prober.c](../../../src/boot/prober.c)
 
 ## boot.console_log
 
@@ -140,6 +157,8 @@ Values: `true` or `false`
 Type: `BOOLEAN`
 
 Supported environments: `UEFI`
+
+Default: `true`
 
 Reference:
  - [src/boot/boot.c](../../../src/boot/boot.c)

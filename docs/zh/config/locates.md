@@ -63,6 +63,17 @@
 引用:
  - [src/locate/disk.c](../../../src/locate/disk.c)
 
+### locates.?.by_device_path
+
+匹配UEFI的设备路径(`EFI_DEVICE_PATH_PROTOCOL`)
+
+类型: `STRING` (字符串)
+
+支持的环境: `UEFI`
+
+引用:
+ - [src/locate/disk.c](../../../src/locate/disk.c)
+
 ### locates.?.by_fs_label
 
 目标文件系统卷标匹配(LABEL)

@@ -37,8 +37,7 @@
 
 支持的环境: `LINUX`
 
-默认:
- - 在`Linux`环境: `"system"`
+默认: `"system"`
 
 引用:
  - [src/boot/boot.c](../../../src/boot/boot.c)
@@ -125,11 +124,29 @@
 
 支持的环境: `UEFI`
 
-默认:
- - 在`UEFI`环境: `true`
+默认: `true`
 
 引用:
  - [src/boot/bootdef.c](../../../src/boot/bootdef.c)
+
+## boot.uefi_probe
+
+指定是否自动搜索所有的分区以寻找可能安装的操作系统并加入启动菜单。
+
+启用后找到的启动项不会保存。
+
+找到出的启动项以`prober-X`命名
+
+取值: `true` 或 `false`
+
+类型: `BOOLEAN` (布尔值)
+
+支持的环境: `UEFI`
+
+默认: `true`
+
+引用:
+ - [src/boot/prober.c](../../../src/boot/prober.c)
 
 ## boot.console_log
 
@@ -140,6 +157,8 @@
 类型: `BOOLEAN` (布尔值)
 
 支持的环境: `UEFI`
+
+默认: `true`
 
 引用:
  - [src/boot/boot.c](../../../src/boot/boot.c)

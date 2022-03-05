@@ -17,11 +17,11 @@
 #include"logger.h"
 #include"language.h"
 #include"gui/tools.h"
+#include"gui/fsext.h"
 #include"gui/msgbox.h"
 #include"gui/activity.h"
 #define TAG "dxe-load"
 
-extern EFI_DEVICE_PATH_PROTOCOL*fs_get_device_path(const char*path);
 static void load_cb(lv_task_t*t){
 	char*full_path=t->user_data;
 	EFI_STATUS st;
@@ -63,7 +63,7 @@ static void load_cb(lv_task_t*t){
 	if(EFI_ERROR(st)){
 		if(ih)gBS->UnloadImage(ih);
 		msgbox_alert("start dxe failed: %s",_(efi_status_to_string(st)));
-		tlog_error("start dxe failed");
+		tlog_error("start dxe failed: %s",efi_status_to_string(st));
 	}
 }
 

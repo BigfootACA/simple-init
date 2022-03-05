@@ -17,6 +17,7 @@
 #include"logger.h"
 #include"language.h"
 #include"gui/tools.h"
+#include"gui/fsext.h"
 #include"gui/msgbox.h"
 #include"gui/activity.h"
 #define TAG "start"
@@ -35,7 +36,6 @@ static int after_exit(void*d __attribute__((unused))){
 	return r;
 }
 
-extern EFI_DEVICE_PATH_PROTOCOL*fs_get_device_path(const char*path);
 static void start_cb(lv_task_t*t){
 	char*full_path=t->user_data;
 	EFI_STATUS st;

@@ -179,8 +179,8 @@ int gui_pre_init(){
 	char*x=confd_get_string("runtime.cmdline.backlight",NULL);
 	if(x)default_backlight=led_parse_arg(x,"backlight");
 	#endif
-	gui_dpi=confd_get_integer("runtime.cmdline.dpi",gui_dpi_def);
-	gui_dpi_force=confd_get_integer("runtime.cmdline.dpi_force",0);
+	gui_dpi=confd_get_integer("runtime.cmdline.dpi",confd_get_integer("gui.dpi",gui_dpi_def));
+	gui_dpi_force=confd_get_integer("runtime.cmdline.dpi_force",confd_get_integer("gui.dpi_force",0));
 	gui_dark=confd_get_boolean("gui.dark",DARK_MODE);
 	gui_rotate=(uint16_t)confd_get_integer("gui.rotate",DEF_ROTATE);
 	if(gui_rotate>=360)gui_rotate%=360;

@@ -185,9 +185,10 @@ static void dump_fs_info(char*tag,EFI_FILE_PROTOCOL*root){
 }
 
 static void dump_locate(locate_dest*loc){
-	if(!loc)return;
+	if(!loc||loc->dump)return;
 	if(loc->root)dump_fs_info(loc->tag,loc->root);
 	if(loc->block_proto)dump_block_info(loc->tag,loc->block_proto);
+	loc->dump=true;
 }
 
 static locate_dest*init_locate_ret(locate_ret*ret,const char*file){

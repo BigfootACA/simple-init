@@ -25,10 +25,11 @@
 #define TAG "loader"
 
 bool linux_file_allocate(linux_file_info*fi,size_t size){
+	tlog_debug("size %zu %zu %zu",size,ALIGN_VALUE(size,MEM_ALIGN),ALIGN_VALUE(size,MEM_ALIGN)+fi->offset);
 	fi->mem_pages=EFI_SIZE_TO_PAGES(ALIGN_VALUE(size,MEM_ALIGN)+fi->offset);
 	fi->mem_size=EFI_PAGES_TO_SIZE(fi->mem_pages);
 	if(!(fi->address=AllocateAlignedPages(fi->mem_pages,MEM_ALIGN))){
-		tlog_warn("allocate pages for file failed");
+		tlog_warn("allocate %zu pages for file failed",fi->mem_pages);
 		return false;
 	}
 	ZeroMem(fi->address,fi->mem_size);
@@ -69,6 +70,7 @@ static int load_fp(linux_file_info*fi,EFI_FILE_PROTOCOL*fp){
 	if(info->Attribute&EFI_FILE_DIRECTORY)
 		EDONE(tlog_warn("file is a directory"));
 	fi->size=info->FileSize;
+	tlog_debug("file size %zu",fi->size);
 	FreePool(info);
 	info=NULL;
 
@@ -207,12 +209,13 @@ static void multiple_load(list**from,list**fi,const char*tag){
 		if(!d->enabled)continue;
 		linux_file_info*c=malloc(sizeof(linux_file_info));
 		if(!c)continue;
+		ZeroMem(c,sizeof(linux_file_info));
 		tlog_info("loading %s #%zu as #%d",tag,cnt,list_count(*from));
 		linux_file_load(c,d);
 		if(!c->address){
 			tlog_warn("load failed");
 			linux_file_clean(c);
-			FreePool(c);
+			free(c);
 		}else list_obj_add_new(fi,c);
 	}while((f=f->next));
 }
@@ -235,8 +238,8 @@ int linux_load_from_config(linux_boot*lb){
 	}
 	single_load(&lb->config->kernel,&lb->kernel,"kernel");
 	single_load(&lb->config->dtb,&lb->dtb,"dtb");
-	multiple_load(&lb->initrd_buf,&lb->config->initrd,"initrd");
-	multiple_load(&lb->dtbo,&lb->config->dtbo,"dtbo");
+	multiple_load(&lb->config->initrd,&lb->initrd_buf,"initrd");
+	multiple_load(&lb->config->dtbo,&lb->dtbo,"dtbo");
 	load_merged_initrd(lb);
 	if(lb->config->cmdline[0])
 		linux_boot_append_cmdline(lb,lb->config->cmdline);

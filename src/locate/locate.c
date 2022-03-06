@@ -6,6 +6,7 @@
  *
  */
 
+#include "Library/PrintLib.h"
 #include"internal.h"
 static list*locate_cache=NULL;
 
@@ -67,26 +68,25 @@ static int init_default(){
 	return 0;
 }
 
-static locate_dest*load_locate(const char*tag){
+static bool try_protocol(const char*tag,locate_dest*loc,EFI_GUID*protocol){
 	UINTN cnt=0;
 	EFI_STATUS st;
 	EFI_HANDLE*hands=NULL;
 	CHAR16*dpt=NULL;
-	char dpx[PATH_MAX];
+	char dpx[PATH_MAX],guid[64];
 	EFI_DEVICE_PATH_PROTOCOL*dp=NULL;
-	locate_dest*loc=AllocatePool(sizeof(locate_dest));
-	if(!loc)return NULL;
 	st=gBS->LocateHandleBuffer(
 		ByProtocol,
-		&gEfiPartitionInfoProtocolGuid,
+		protocol,
 		NULL,&cnt,&hands
 	);
 	if(EFI_ERROR(st)){
-		tlog_error(
-			"locate partition info protocol failed: %s",
-			efi_status_to_string(st)
+		AsciiSPrint(guid,sizeof(guid),"%g",protocol);
+		tlog_warn(
+			"locate protocol %s failed: %s",
+			guid,efi_status_to_string(st)
 		);
-		goto done;
+		return false;
 	}
 	for(UINTN i=0;i<cnt;i++){
 		init_locate(loc,tag,hands[i]);
@@ -95,7 +95,7 @@ static locate_dest*load_locate(const char*tag){
 				case MATCH_NONE:
 				case MATCH_SKIP:
 				case MATCH_SUCCESS:continue;
-				case MATCH_INVALID:goto done;
+				case MATCH_INVALID:return false;
 				case MATCH_FAILED:goto match_fail;
 			}
 		}
@@ -109,10 +109,18 @@ static locate_dest*load_locate(const char*tag){
 		}
 		if(!dpx[0])AsciiStrCpyS(dpx,sizeof(dpx)-1,"(Unknown)");
 		tlog_info("found locate %s",dpx);
-		return loc;
+		return true;
 		match_fail:;
 	}
-	done:
+	return false;
+}
+
+static locate_dest*load_locate(const char*tag){
+	locate_dest*loc=AllocatePool(sizeof(locate_dest));
+	if(!loc)return NULL;
+	if(try_protocol(tag,loc,&gEfiPartitionInfoProtocolGuid))return loc;
+	if(try_protocol(tag,loc,&gEfiSimpleFileSystemProtocolGuid))return loc;
+	if(try_protocol(tag,loc,&gEfiBlockIoProtocolGuid))return loc;
 	if(loc)FreePool(loc);
 	return NULL;
 

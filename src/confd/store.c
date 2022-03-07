@@ -231,10 +231,24 @@ int conf_add_key(const char*path,uid_t u,gid_t g){
 	return conf_lookup(path,true,TYPE_KEY,u,g)!=NULL;
 }
 
+static int _conf_set_save(bool lock,struct conf*c,bool save,uid_t u,gid_t g){
+	list*p;
+	int r=0;
+	if(!c)ERET(EINVAL);
+	if(lock)MUTEX_LOCK(store_lock);
+	if(c->type==TYPE_KEY&&(p=list_first(c->keys)))do{
+		LIST_DATA_DECLARE(d,p,struct conf*);
+		if(!check_perm_write(d,u,g))r=EPERM;
+		else if(_conf_set_save(false,d,save,u,g)!=0)r=-errno;
+	}while((p=p->next));
+	if(!check_perm_write(c,u,g))r=EPERM;
+	else c->save=save;
+	if(lock)MUTEX_UNLOCK(store_lock);
+	return r;
+}
+
 int conf_set_save(const char*path,bool save,uid_t u,gid_t g){
-	struct conf*c=conf_lookup(path,false,0,u,g);
-	if(c)c->save=save;
-	return c!=NULL;
+	return _conf_set_save(true,conf_lookup(path,false,0,u,g),save,u,g);
 }
 
 bool conf_get_save(const char*path,uid_t u,gid_t g){

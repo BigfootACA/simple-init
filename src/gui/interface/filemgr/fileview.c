@@ -101,7 +101,7 @@ void fileview_go_back(struct fileview*fv){
 		path[0]=fv->letter;
 		path[1]=':';
 		get_parent(path+2,sizeof(path)-2,p);
-		fileview_set_path(fv,path);
+		fileview_set_path(fv,fsext_is_multi?path:path+2);
 		return;
 	}
 	if(fsext_is_multi&&fv->letter){
@@ -442,7 +442,7 @@ void fileview_set_path(struct fileview*view,char*path){
 		char oldpath[sizeof(view->path)]={0};
 		strncpy(oldpath,view->full_path,sizeof(oldpath)-1);
 		strncpy(view->path,path,sizeof(view->path)-1);
-		if(strcmp(view->path,"/")==0)view->letter=0;
+		if(strcmp(view->path,"/")==0&&fsext_is_multi)view->letter=0;
 		if((!view->letter&&!view->path[1])||!fsext_is_multi){
 			strcpy(
 				view->full_path,

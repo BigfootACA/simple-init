@@ -34,6 +34,7 @@ enum ctl_oper{
 	OPER_GETOWN,
 	OPER_GETGRP,
 	OPER_GETMOD,
+	OPER_RENAME,
 };
 
 static int usage(int e){
@@ -54,6 +55,7 @@ static int usage(int e){
 		"\t-L, --load <PATH>      Load config from a file\n"
 		"\t-S, --save <PATH>      Save config to a file\n"
 		"\t-x, --path <PATH>      Set default config path\n"
+		"\t-r, --rename           Rename config item\n"
 		"\t-q, --quit             Terminate confd\n"
 		"\t-D, --dump             Dump config store\n"
 		"\t-h, --help             Display this help and exit\n",
@@ -197,12 +199,13 @@ int confctl_main(int argc,char**argv){
 		{"getown",  no_argument,       NULL,'o'},
 		{"getgrp",  no_argument,       NULL,'g'},
 		{"getmod",  no_argument,       NULL,'m'},
+		{"rename",  no_argument,       NULL,'r'},
 		{NULL,0,NULL,0}
 	};
 	char*socket=NULL,*key=NULL;
 	enum ctl_oper op=OPER_NONE;
 	int o;
-	while((o=b_getlopt(argc,argv,"hqDS:L:p:d:l:s:OGMogm",lo,NULL))>0)switch(o){
+	while((o=b_getlopt(argc,argv,"hqDS:L:p:d:l:s:OGMogmr",lo,NULL))>0)switch(o){
 		case 'h':return usage(0);
 		case 'q':
 			if(op!=OPER_NONE)goto conflict;
@@ -252,10 +255,13 @@ int confctl_main(int argc,char**argv){
 			if(op!=OPER_NONE)goto conflict;
 			op=OPER_GETGRP;
 		break;
-
 		case 'm':
 			if(op!=OPER_NONE)goto conflict;
 			op=OPER_GETMOD;
+		break;
+		case 'r':
+			if(op!=OPER_NONE)goto conflict;
+			op=OPER_RENAME;
 		break;
 		case 's':
 			if(socket)goto conflict;
@@ -310,6 +316,12 @@ int confctl_main(int argc,char**argv){
 			if(ac<1)return re_printf(2,"missing arguments\n");
 			if(ac>1)return re_printf(2,"too many arguments\n");
 			r=do_get_perm(op,av[0]);
+		break;
+		case OPER_RENAME:
+			if(ac<2)return re_printf(2,"missing arguments\n");
+			if(ac>2)return re_printf(2,"too many arguments\n");
+			r=confd_rename(av[0],av[1]);
+			if(errno>0)perror(_("rename config item failed"));
 		break;
 		case OPER_NONE:{
 			if(ac<=0)return usage(1);

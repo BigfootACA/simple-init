@@ -304,6 +304,20 @@ static void load_view(){
 }
 
 static int do_load(struct gui_activity*d){
+	if(d->args){
+		char buff[PATH_MAX],*cur=buff,*next=NULL;
+		memset(buff,0,sizeof(buff));
+		strncpy(buff,d->args,sizeof(buff)-1);
+		list_free_all_def(path);
+		path=NULL;
+		do{
+			if((next=strchr(cur,'.')))*next++=0;
+			if(!next&&(next=strchr(cur,'/')))*next++=0;
+			if(!next&&(next=strchr(cur,'\\')))*next++=0;
+			if(*cur)list_obj_add_new_strdup(&path,cur);
+		}while((cur=next));
+		d->args=NULL;
+	}
 	load_view();
 	return 0;
 }

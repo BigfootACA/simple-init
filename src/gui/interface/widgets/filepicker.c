@@ -302,11 +302,21 @@ static int filepicker_lost_focus(struct gui_activity*d){
 	return 0;
 }
 
+static int do_back(struct gui_activity*d __attribute__((unused))){
+	struct filepicker*box=d->args;
+	if(!fileview_is_top(box->fv)){
+		fileview_go_back(box->fv);
+		return 1;
+	}
+	return 0;
+}
+
 struct gui_register guireg_filepicker={
 	.name="filepicker",
 	.title="File Picker",
 	.show_app=false,
 	.draw=filepicker_draw,
+	.ask_exit=do_back,
 	.quiet_exit=filepicker_clean,
 	.get_focus=filepicker_get_focus,
 	.lost_focus=filepicker_lost_focus,

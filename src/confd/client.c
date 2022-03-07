@@ -271,6 +271,19 @@ int confd_set_default_config(const char*file){
 	return _confd_file(file,CONF_SET_DEFAULT);
 }
 
+int confd_rename(const char*path,const char*name){
+	if(!path||!name||!*path||!*name||confd<0)ERET(EINVAL);
+	if(strchr(path,':')||strchr(name,':'))ERET(EINVAL);
+	errno=0;
+	struct confd_msg msg,res;
+	confd_internal_init_msg(&msg,CONF_RENAME);
+	snprintf(msg.path,sizeof(msg.path)-1,"%s:%s",path,name);
+	if(confd_internal_send(confd,&msg)<0)return -1;
+	if(confd_internal_read_msg(confd,&res)<0)return -1;
+	if(res.code>0)errno=res.code;
+	return res.code;
+}
+
 int confd_set_save(const char*path,bool save){
 	if(!path||confd<0)ERET(EINVAL);
 	errno=0;
@@ -425,6 +438,7 @@ EXT(confd_get_mod,     mod,mode_t*, int);
 EXT(confd_set_own,     own,uid_t,   int);
 EXT(confd_set_grp,     grp,gid_t,   int);
 EXT(confd_set_mod,     mod,mode_t,  int);
+EXT(confd_rename,      name,const char*, int);
 XEXT(confd_get_save,   bool);
 XEXT(confd_add_key,    int);
 XEXT(confd_delete,     int);

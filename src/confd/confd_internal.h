@@ -29,6 +29,7 @@ enum confd_action{
 	CONF_GET_TYPE     =0xAC06,
 	CONF_ADD_KEY      =0xAC07,
 	CONF_COUNT        =0xAC08,
+	CONF_RENAME       =0xAC09,
 	CONF_GET_STRING   =0xAC21,
 	CONF_GET_INTEGER  =0xAC22,
 	CONF_GET_BOOLEAN  =0xAC23,
@@ -163,6 +164,9 @@ extern int conf_count(const char*path,uid_t u,gid_t g);
 
 // src/confd/store.c: delete config item and all children
 extern int conf_del(const char*path,uid_t u,gid_t g);
+
+// src/confd/store.c: rename config item
+extern int conf_rename(const char*path,const char*name,uid_t u,gid_t g);
 
 // src/confd/store.c: create a config key
 extern int conf_add_key(const char*path,uid_t u,gid_t g);

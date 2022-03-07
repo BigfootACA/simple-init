@@ -105,6 +105,14 @@ static int do_set_string(int fd,struct confd_msg*msg,struct ucred*cred){
 	return retdata;
 }
 
+static int do_rename(int fd,struct confd_msg*msg,struct ucred*cred){
+	char*n=strchr(msg->path,':');
+	if(!n)ERET(EINVAL);
+	*n++=0;
+	if(!msg->path[0]||!*n)ERET(EINVAL);
+	return conf_rename(msg->path,n,cred->uid,cred->gid);
+}
+
 struct async_load_save_data{
 	int fd;
 	char path[PATH_MAX];
@@ -209,6 +217,11 @@ static int confd_read(int fd){
 		// create config key
 		case CONF_ADD_KEY:
 			conf_add_key(msg.path,cred.uid,cred.gid);
+		break;
+
+		// rename config item
+		case CONF_RENAME:
+			retdata=-do_rename(fd,&msg,&cred);
 		break;
 
 		// set config should save

@@ -90,6 +90,7 @@ DECLARE_FUNC(confd_get_mod,     int,     ,mode_t* mod);
 DECLARE_FUNC(confd_set_own,     int,     ,uid_t   own);
 DECLARE_FUNC(confd_set_grp,     int,     ,gid_t   grp);
 DECLARE_FUNC(confd_set_mod,     int,     ,mode_t  mod);
+DECLARE_FUNC(confd_rename,      int,     ,const char*name);
 DECLARE_FUNC(confd_set_save,    int,     ,bool    save);
 DECLARE_FUNC(confd_get_save,    bool);
 DECLARE_FUNC(confd_delete,      int);

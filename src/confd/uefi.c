@@ -208,6 +208,10 @@ bool confd_get_boolean(const char*path,bool def){
 	return conf_get_boolean(path,def,0,0);
 }
 
+int confd_rename(const char*path,const char*name){
+	return conf_rename(path,name,0,0);
+}
+
 int confd_set_save(const char*path,bool save){
 	return conf_set_save(path,save,0,0);
 }
@@ -298,6 +302,7 @@ EXT(confd_get_mod,     mod,mode_t*, int);
 EXT(confd_set_own,     own,uid_t,   int);
 EXT(confd_set_grp,     grp,gid_t,   int);
 EXT(confd_set_mod,     mod,mode_t,  int);
+EXT(confd_rename,      name,const char*,int);
 XEXT(confd_get_save,   bool);
 XEXT(confd_add_key,    int);
 XEXT(confd_delete,     int);

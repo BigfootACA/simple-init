@@ -224,6 +224,21 @@ int conf_del(const char*path,uid_t u,gid_t g){
 	return c?conf_del_obj(c):-(errno);
 }
 
+int conf_rename(const char*path,const char*name,uid_t u,gid_t g){
+	struct conf*c=conf_lookup(path,false,0,u,g);
+	if(!c)return -(errno);
+	if(!name||!*name||strchr(name,'.'))ERET(EINVAL);
+	if(strlen(name)>=sizeof(c->name)-1)ERET(EINVAL);
+	if(!c->parent||!c->name[0])ERET(EACCES);
+	if(strcmp(c->name,name)==0)return 0;
+	if(!check_perm_read(c->parent,u,g))ERET(EACCES);
+	if(list_search_one(c->parent->keys,conf_cmp,(char*)name))ERET(EEXIST);
+	if(!check_perm_write(c,u,g))ERET(EACCES);
+	memset(c->name,0,sizeof(c->name));
+	strncpy(c->name,name,sizeof(c->name)-1);
+	return 0;
+}
+
 int conf_add_key(const char*path,uid_t u,gid_t g){
 	return conf_lookup(path,true,TYPE_KEY,u,g)!=NULL;
 }

@@ -148,14 +148,14 @@ static int do_cleanup(struct gui_activity*d __attribute__((unused))){
 	return 0;
 }
 
-static void do_reload(lv_task_t*t __attribute__((unused))){
+static int do_load(struct gui_activity*d __attribute__((unused))){
 	bootmenu_option_reload();
-	lv_group_add_obj(gui_grp,btn_ok);
-	lv_group_add_obj(gui_grp,btn_refresh);
+	return 0;
 }
 
 static int bootmenu_option_get_focus(struct gui_activity*d __attribute__((unused))){
-	lv_task_once(lv_task_create(do_reload,100,LV_TASK_PRIO_MID,NULL));
+	lv_group_add_obj(gui_grp,btn_ok);
+	lv_group_add_obj(gui_grp,btn_refresh);
 	return 0;
 }
 
@@ -228,6 +228,7 @@ struct gui_register guireg_uefi_bootmenu={
 	.quiet_exit=do_cleanup,
 	.get_focus=bootmenu_option_get_focus,
 	.lost_focus=bootmenu_option_lost_focus,
+	.data_load=do_load,
 	.back=true,
 };
 #endif

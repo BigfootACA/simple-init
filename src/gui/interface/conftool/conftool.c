@@ -303,8 +303,12 @@ static void load_view(){
 	free(xs);
 }
 
-static int conftool_get_focus(struct gui_activity*d __attribute__((unused))){
+static int do_load(struct gui_activity*d){
 	load_view();
+	return 0;
+}
+
+static int conftool_get_focus(struct gui_activity*d __attribute__((unused))){
 	lv_group_add_obj(gui_grp,btn_add);
 	lv_group_add_obj(gui_grp,btn_reload);
 	lv_group_add_obj(gui_grp,btn_delete);
@@ -507,6 +511,7 @@ struct gui_register guireg_conftool={
 	.get_focus=conftool_get_focus,
 	.lost_focus=conftool_lost_focus,
 	.draw=conftool_draw,
+	.data_load=do_load,
 	.back=true
 };
 #endif

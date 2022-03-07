@@ -185,6 +185,8 @@ static void redraw_apps(struct gui_app*ga){
 		add_button(ga,guiact_register[i]);
 	if(ga->cur_page>=lv_tabview_get_tab_count(ga->tabview))ga->cur_page=0;
 	lv_tabview_set_tab_act(ga->tabview,ga->cur_page,LV_ANIM_OFF);
+	lv_bar_set_start_value(ga->indic,ga->cur_page*8,LV_ANIM_OFF);
+	lv_bar_set_value(ga->indic,(ga->cur_page+1)*8,LV_ANIM_OFF);
 }
 
 static void load_background(struct gui_app*ga,bool changed){
@@ -210,9 +212,11 @@ static void reload_background(struct gui_app*ga){
 	if(bg)free(bg);
 }
 
-static void do_reload(lv_task_t*t){
-	redraw_apps(t->user_data);
-	reload_background(t->user_data);
+static int do_load(struct gui_activity*d){
+	struct gui_app*ga=d->data;
+	redraw_apps(ga);
+	reload_background(ga);
+	return 0;
 }
 
 static void app_focus(lv_group_t*grp){
@@ -230,7 +234,6 @@ static int guiapp_get_focus(struct gui_activity*d){
 	struct gui_app*ga=d->data;
 	ga->old_cb=lv_group_get_focus_cb(gui_grp);
 	lv_group_set_focus_cb(gui_grp,app_focus);
-	lv_task_once(lv_task_create(do_reload,100,LV_TASK_PRIO_MID,ga));
 	return 0;
 }
 
@@ -309,6 +312,7 @@ struct gui_register guireg_guiapp={
 	.get_focus=guiapp_get_focus,
 	.lost_focus=guiapp_lost_focus,
 	.draw=guiapp_draw,
+	.data_load=do_load,
 	.back=false
 };
 

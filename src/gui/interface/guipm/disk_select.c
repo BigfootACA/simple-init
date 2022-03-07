@@ -320,18 +320,19 @@ static int do_cleanup(struct gui_activity*d){
 	return 0;
 }
 
-static void do_reload(lv_task_t*t){
-	struct disks_info*di=t->user_data;
-	if(!di)return;
-	guipm_disk_reload(di);
+static int do_reload(struct gui_activity*d){
+	struct disks_info*di=d->data;
+	if(di)guipm_disk_reload(di);
+	return 0;
+}
+
+static int guipm_disk_get_focus(struct gui_activity*d){
+	struct disks_info*di=d->data;
+	if(!di)return -1;
 	lv_group_add_obj(gui_grp,di->show_all);
 	lv_group_add_obj(gui_grp,di->btn_ok);
 	lv_group_add_obj(gui_grp,di->btn_refresh);
 	lv_group_add_obj(gui_grp,di->btn_cancel);
-}
-
-static int guipm_disk_get_focus(struct gui_activity*d){
-	lv_task_once(lv_task_create(do_reload,100,LV_TASK_PRIO_MID,d->data));
 	return 0;
 }
 
@@ -428,6 +429,7 @@ struct gui_register guireg_guipm_disk_select={
 	.get_focus=guipm_disk_get_focus,
 	.lost_focus=guipm_disk_lost_focus,
 	.draw=guipm_draw_disk_sel,
+	.data_load=do_reload,
 	.back=true
 };
 #endif

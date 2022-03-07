@@ -232,15 +232,15 @@ static int do_cleanup(struct gui_activity*d __attribute__((unused))){
 	return 0;
 }
 
-static void do_reload(lv_task_t*t __attribute__((unused))){
+static int do_load(struct gui_activity*d __attribute__((unused))){
 	mount_reload();
-	lv_group_add_obj(gui_grp,btn_mount);
-	lv_group_add_obj(gui_grp,btn_umount);
-	lv_group_add_obj(gui_grp,btn_refresh);
+	return 0;
 }
 
 static int mount_get_focus(struct gui_activity*d __attribute__((unused))){
-	lv_task_once(lv_task_create(do_reload,100,LV_TASK_PRIO_MID,NULL));
+	lv_group_add_obj(gui_grp,btn_mount);
+	lv_group_add_obj(gui_grp,btn_umount);
+	lv_group_add_obj(gui_grp,btn_refresh);
 	return 0;
 }
 
@@ -331,6 +331,7 @@ struct gui_register guireg_mount={
 	.quiet_exit=do_cleanup,
 	.get_focus=mount_get_focus,
 	.lost_focus=mount_lost_focus,
+	.data_load=do_load,
 	.back=true,
 };
 #endif

@@ -351,22 +351,23 @@ static void part_click(lv_obj_t*obj,lv_event_t e){
 	guipm_part_operation_menu(di->selected);
 }
 
-static void do_reload(lv_task_t*t){
-	struct gui_activity*d=t->user_data;
+static int do_reload(struct gui_activity*d){
 	struct part_disk_info*di=d->data;
-	if(!guiact_is_active_page(d->page)||!di)return;
+	if(!guiact_is_active_page(d->page)||!di)return -1;
 	errno=0;
 	reload_partitions(di);
+	return 0;
+}
+
+static int guipm_part_get_focus(struct gui_activity*d){
+	struct part_disk_info*di=d->data;
+	if(!guiact_is_active_page(d->page)||!di)return -1;
 	lv_group_add_obj(gui_grp,di->btn_disk);
 	lv_group_add_obj(gui_grp,di->btn_part);
 	lv_group_add_obj(gui_grp,di->btn_reload);
 	lv_group_add_obj(gui_grp,di->btn_save);
 	lv_group_add_obj(gui_grp,di->btn_new);
 	lv_obj_set_enabled(di->btn_save,fdisk_label_is_changed(di->label));
-}
-
-static int guipm_part_get_focus(struct gui_activity*d){
-	lv_task_once(lv_task_create(do_reload,100,LV_TASK_PRIO_MID,d));
 	return 0;
 }
 
@@ -514,6 +515,7 @@ struct gui_register guireg_guipm_partitions={
 	.get_focus=guipm_part_get_focus,
 	.lost_focus=guipm_part_lost_focus,
 	.draw=guipm_draw_partitions,
+	.data_load=do_reload,
 	.back=true
 };
 #endif

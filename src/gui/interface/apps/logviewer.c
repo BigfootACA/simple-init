@@ -114,7 +114,10 @@ static int logviewer_draw(struct gui_activity*act){
 	lv_style_set_action_button(btn_reload,true);
 	lv_label_set_text(lv_label_create(btn_reload,NULL),_("Reload"));
 	lv_group_add_obj(gui_grp,btn_reload);
+	return 0;
+}
 
+static int do_load(struct gui_activity*act __attribute__((unused))){
 	load_log();
 	return 0;
 }
@@ -128,6 +131,7 @@ struct gui_register guireg_logviewer={
 	.draw=logviewer_draw,
 	.lost_focus=logviewer_lost_focus,
 	.get_focus=logviewer_get_focus,
+	.data_load=do_load,
 	.back=true,
 };
 #endif

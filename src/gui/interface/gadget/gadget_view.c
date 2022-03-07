@@ -151,18 +151,18 @@ static void view_reload(){
 	tlog_info("found %d functions",i);
 }
 
-static void do_reload(lv_task_t*t __attribute__((unused))){
+static int do_reload(struct gui_activity*d __attribute__((unused))){
 	view_reload();
+	return 0;
+}
+
+static int gadget_get_focus(struct gui_activity*d __attribute__((unused))){
 	lv_group_add_obj(gui_grp,btn_add);
 	lv_group_add_obj(gui_grp,btn_edit);
 	lv_group_add_obj(gui_grp,btn_delete);
 	lv_group_add_obj(gui_grp,btn_restart);
 	lv_group_add_obj(gui_grp,btn_reload);
 	lv_group_add_obj(gui_grp,btn_base);
-}
-
-static int gadget_get_focus(struct gui_activity*d __attribute__((unused))){
-	lv_task_once(lv_task_create(do_reload,100,LV_TASK_PRIO_MID,NULL));
 	return 0;
 }
 
@@ -313,6 +313,7 @@ struct gui_register guireg_gadget={
 	.draw=gadget_draw,
 	.get_focus=gadget_get_focus,
 	.lost_focus=gadget_lost_focus,
+	.data_load=do_reload,
 	.back=true
 };
 #endif

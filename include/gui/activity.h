@@ -30,6 +30,8 @@ struct gui_register{
 	guiact_base*init;
 	guiact_base*draw;
 	guiact_base*resize;
+	guiact_base*data_load;
+	guiact_base*data_unload;
 };
 struct gui_activity{
 	char name[256];

@@ -77,6 +77,30 @@ static int call_lost_focus_last(){
 	return call_lost_focus_list(guiact_get_last_list());
 }
 
+static int call_load_data(struct gui_activity*act){
+	return act&&act->reg&&act->reg->data_load?act->reg->data_load(act):-1;
+}
+
+static int call_load_data_list(list*lst){
+	return lst?call_load_data(lst->data):-1;
+}
+
+static int call_load_data_last(){
+	return call_load_data_list(guiact_get_last_list());
+}
+
+static int call_unload_data(struct gui_activity*act){
+	return act&&act->reg&&act->reg->data_unload?act->reg->data_unload(act):-1;
+}
+
+static int call_unload_data_list(list*lst){
+	return lst?call_unload_data(lst->data):-1;
+}
+
+static int call_unload_data_last(){
+	return call_unload_data_list(guiact_get_last_list());
+}
+
 static int call_get_focus(struct gui_activity*act){
 	if(!act)return -1;
 	if(act->w!=gui_sw||act->h!=gui_sh){
@@ -106,12 +130,17 @@ int guiact_remove_last(bool focus){
 	tlog_debug("end activity %s",l->name);
 	sysbar_focus_input(NULL);
 	call_lost_focus_last();
+	call_unload_data_last();
 	if(l->page)lv_obj_del_async(l->page);
+	bool mask=l->reg->mask;
 	bool fs=l->reg->full_screen;
 	guiact_remove_last_list();
 	l=guiact_get_last();
 	if(fs&&l&&!l->reg->full_screen)sysbar_set_full_screen(false);
-	if(focus)call_get_focus_last();
+	if(focus){
+		if(!mask)call_load_data_last();
+		call_get_focus_last();
+	}
 	return 0;
 }
 
@@ -144,6 +173,7 @@ int guiact_do_home(){
 		proc=true;
 	}
 	if(proc){
+		call_load_data_last();
 		call_get_focus_last();
 		return 0;
 	}else ERET(EPERM);
@@ -177,8 +207,10 @@ static int guiact_add_activity(struct gui_activity*act){
 	if(!e)ERET(ENOMEM);
 	if(activities){
 		call_lost_focus_last();
+		if(!act->reg->mask)call_unload_data_last();
 		list_push(activities,e);
 	}else activities=e;
+	call_load_data_last();
 	call_get_focus_last();
 	tlog_debug(
 		"add activity %s to stack, now have %d",

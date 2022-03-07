@@ -30,16 +30,18 @@ static struct conf conf_store={
 
 struct conf*conf_get_store(){return &conf_store;}
 
+static bool conf_cmp(list*l,void*d){
+	LIST_DATA_DECLARE(x,l,struct conf*);
+	return x&&d&&strcmp(x->name,(char*)d)==0;
+}
+
 static struct conf*conf_get(struct conf*conf,const char*name){
 	errno=0;
 	if(!conf)return NULL;
 	if(conf->type!=TYPE_KEY)EPRET(ENOTDIR);
-	list*p=list_first(conf->keys);
-	if(p)do{
-		LIST_DATA_DECLARE(d,p,struct conf*);
-		if(d&&strcmp(d->name,name)==0)return d;
-	}while((p=p->next));
-	EPRET(ENOENT);
+	list*l=list_search_one(conf->keys,conf_cmp,(char*)name);
+	if(!l)EPRET(ENOENT);
+	return LIST_DATA(l,struct conf*);
 }
 
 static bool check_perm_read(struct conf*conf,uid_t u,gid_t g){
@@ -62,12 +64,8 @@ static struct conf*conf_create(struct conf*conf,const char*name,uid_t u,gid_t g)
 	errno=0;
 	if(!conf)return NULL;
 	if(conf->type!=TYPE_KEY)EPRET(ENOTDIR);
-	list*p=list_first(conf->keys);
 	if(!check_perm_read(conf,u,g))EPRET(EACCES);
-	if(p)do{
-		LIST_DATA_DECLARE(d,p,struct conf*);
-		if(d&&strcmp(d->name,name)==0)EPRET(EEXIST);
-	}while((p=p->next));
+	if(list_search_one(conf->keys,conf_cmp,(char*)name))EPRET(EEXIST);
 	if(!check_perm_write(conf,u,g))EPRET(EACCES);
 	struct conf*n=malloc(sizeof(struct conf));
 	if(!n)EPRET(ENOMEM);
@@ -189,7 +187,6 @@ int conf_count(const char*path,uid_t u,gid_t g){
 	MUTEX_LOCK(store_lock);
 	int i=list_count(c->keys);
 	if(i<0)i=0;
-	log_debug("conf","%s %d",path,i);
 	MUTEX_UNLOCK(store_lock);
 	return i;
 }

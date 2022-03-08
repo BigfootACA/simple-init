@@ -169,8 +169,14 @@ static void edit_menu_cb(lv_obj_t*obj,lv_event_t e){
 
 static void keyboard_toggle(lv_obj_t*obj,lv_event_t e){
 	if(obj==sysbar.bottom.content.keyboard&&e!=LV_EVENT_CLICKED)return;
-	if(obj==sysbar.keyboard&&e==LV_EVENT_KEY&&sysbar.focus_input)
-		lv_textarea_add_char(sysbar.focus_input,lv_indev_get_key(lv_indev_get_act()));
+	if(obj==sysbar.keyboard&&e==LV_EVENT_KEY&&sysbar.focus_input){
+		uint32_t key=lv_indev_get_key(lv_indev_get_act());
+		switch(key){
+			case LV_KEY_DEL:lv_textarea_del_char_forward(sysbar.focus_input);break;
+			case LV_KEY_BACKSPACE:lv_textarea_del_char(sysbar.focus_input);break;
+			default:lv_textarea_add_char(sysbar.focus_input,key);
+		}
+	}
 	if(obj==sysbar.keyboard&&e!=LV_EVENT_CANCEL){
 		if(
 			e==LV_EVENT_VALUE_CHANGED&&

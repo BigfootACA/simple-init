@@ -38,6 +38,7 @@ struct gui_activity{
 	void*args;
 	void*data;
 	bool mask;
+	bool data_changed;
 	lv_coord_t w,h;
 	lv_obj_t*page;
 	struct gui_register*reg;

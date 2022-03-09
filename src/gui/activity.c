@@ -132,13 +132,13 @@ int guiact_remove_last(bool focus){
 	call_lost_focus_last();
 	call_unload_data_last();
 	if(l->page)lv_obj_del_async(l->page);
-	bool mask=l->reg->mask;
+	bool reload=!l->reg->mask||!l->mask||l->data_changed;
 	bool fs=l->reg->full_screen;
 	guiact_remove_last_list();
 	l=guiact_get_last();
 	if(fs&&l&&!l->reg->full_screen)sysbar_set_full_screen(false);
 	if(focus){
-		if(!mask)call_load_data_last();
+		if(reload)call_load_data_last();
 		call_get_focus_last();
 	}
 	return 0;
@@ -207,7 +207,11 @@ static int guiact_add_activity(struct gui_activity*act){
 	if(!e)ERET(ENOMEM);
 	if(activities){
 		call_lost_focus_last();
-		if(!act->reg->mask)call_unload_data_last();
+		if(
+			!act->reg->mask&&
+			!act->mask&&
+			!act->data_changed
+		)call_unload_data_last();
 		list_push(activities,e);
 	}else activities=e;
 	call_load_data_last();

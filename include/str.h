@@ -23,6 +23,9 @@
 #define LETTERS     " " LETTER
 #define NUMBER      "1234567890"
 #define NUMBERS     " " NUMBER
+#define UP_HEX      NUMBER"ABCDEF"
+#define LOW_HEX     NUMBER"abcdef"
+#define HEX         NUMBER"ABCDEFabcdef"
 #define VALID       LETTER NUMBER "_"
 #define VALIDL      LETTER "_"
 #define MONTH       "JanFebMarAprMayJunJulAugSepOctNovDec"

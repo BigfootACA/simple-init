@@ -33,3 +33,30 @@
 
 引用:
  - [src/loggerd/client.c](../../../src/loggerd/client.c)
+
+## logger.min_level
+
+最小的日志级别
+
+取值: loggerd日志级别
+
+| 日志级别      | 值     |
+|---------------|--------|
+| LEVEL_VERBOSE | 0xAE00 |
+| LEVEL_DEBUG   | 0xAE01 |
+| LEVEL_INFO    | 0xAE02 |
+| LEVEL_NOTICE  | 0xAE04 |
+| LEVEL_WARNING | 0xAE08 |
+| LEVEL_ERROR   | 0xAE10 |
+| LEVEL_CRIT    | 0xAE20 |
+| LEVEL_ALERT   | 0xAE40 |
+| LEVEL_EMERG   | 0xAE80 |
+
+类型: `INTEGER` (64位整型数字)
+
+支持的环境: `UEFI`
+
+默认: `PcdLoggerdMinLevel`的值
+
+引用:
+ - [src/loggerd/client.c](../../../src/loggerd/client.c)

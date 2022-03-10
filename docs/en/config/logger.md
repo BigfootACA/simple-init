@@ -33,3 +33,30 @@ Default: Value of `PcdLoggerdUseConsole`
 
 Reference:
  - [src/loggerd/client.c](../../../src/loggerd/client.c)
+
+## logger.min_level
+
+Min log level
+
+Values: loggerd log level
+
+| Logger Level  | Value  |
+|---------------|--------|
+| LEVEL_VERBOSE | 0xAE00 |
+| LEVEL_DEBUG   | 0xAE01 |
+| LEVEL_INFO    | 0xAE02 |
+| LEVEL_NOTICE  | 0xAE04 |
+| LEVEL_WARNING | 0xAE08 |
+| LEVEL_ERROR   | 0xAE10 |
+| LEVEL_CRIT    | 0xAE20 |
+| LEVEL_ALERT   | 0xAE40 |
+| LEVEL_EMERG   | 0xAE80 |
+
+Type: `INTEGER`
+
+Supported environments: `UEFI`
+
+Default: Value of `PcdLoggerdMinLevel`
+
+Reference:
+ - [src/loggerd/client.c](../../../src/loggerd/client.c)

@@ -79,6 +79,12 @@
   interface/filemgr/filetab.c
   interface/filemgr/fileview.c
   interface/filemgr/fileopen.c
+  interface/bootmgr/bootmgr.c
+  interface/bootmgr/bootitem.c
+  interface/bootmgr/bootdata_efi.c
+  interface/bootmgr/bootdata_linux.c
+  interface/bootmgr/bootdata_memreg.c
+  interface/bootmgr/bootdata_uefi_option.c
   interface/widgets/filepicker.c
   interface/widgets/inputbox.c
   interface/widgets/msgbox.c

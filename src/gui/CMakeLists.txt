@@ -21,6 +21,12 @@ add_library(init_gui STATIC
 	interface/settings/backlight.c
 	interface/settings/language.c
 	interface/settings/theme.c
+	interface/bootmgr/bootmgr.c
+	interface/bootmgr/bootitem.c
+	interface/bootmgr/bootdata_efi.c
+	interface/bootmgr/bootdata_linux.c
+	interface/bootmgr/bootdata_memreg.c
+	interface/bootmgr/bootdata_uefi_option.c
 	interface/conftool/conftool.c
 	interface/conftool/confsave.c
 	interface/conftool/confload.c

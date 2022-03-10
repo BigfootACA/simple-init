@@ -2325,3 +2325,186 @@ msgstr "下次启动时自动加载此UEFI驱动 (DXE)？"
 
 msgid "rename config item failed"
 msgstr "重命名配置项失败"
+
+msgid "Default"
+msgstr "默认"
+
+msgid "Settings"
+msgstr "设置"
+
+msgid "Boot Manager"
+msgstr "启动管理器"
+
+msgid "Are you sure you want to delete the boot item '%s' (%s)?"
+msgstr "你确定要删除启动项'%s'(%s)吗?"
+
+msgid "Are you sure you want to set boot item '%s' (%s) as default?"
+msgstr "你确定要将启动项'%s'(%s)设置为默认吗?"
+
+msgid "Boot Item Editor"
+msgstr "启动项编辑器"
+
+msgid "Description:"
+msgstr "描述:"
+
+msgid "Icon:"
+msgstr "图标:"
+
+msgid "Mode:"
+msgstr "模式:"
+
+msgid "Parent:"
+msgstr "父级:"
+
+msgid "Enable boot item"
+msgstr "启用启动项"
+
+msgid "Show in boot menu"
+msgstr "在启动菜单显示"
+
+msgid "Persist boot item"
+msgstr "永久启动项"
+
+msgid "Extra Items"
+msgstr "额外项目"
+
+msgid "Config Tool"
+msgstr "配置工具"
+
+msgid "Switch Root"
+msgstr "切换根"
+
+msgid "Charger"
+msgstr "充电器"
+
+msgid "Halt"
+msgstr "停机"
+
+msgid "System"
+msgstr "系统"
+
+msgid "UEFI App"
+msgstr "UEFI应用程序"
+
+msgid "UEFI Boot Option"
+msgstr "UEFI启动选项"
+
+msgid "Folder"
+msgstr "文件夹"
+
+msgid "Invalid boot item name."
+msgstr "无效的启动项名称"
+
+msgid "Invalid boot item mode."
+msgstr "无效的启动项模式"
+
+msgid "Invalid boot item parent."
+msgstr "无效的启动项父级目录"
+
+msgid "Unsupported boot item mode for extra data editor"
+msgstr "额外项编辑器不支持此启动项模式"
+
+msgid "Input reboot argument"
+msgstr "输入重启参数"
+
+msgid "Edit EFI Boot Item"
+msgstr "编辑EFI启动项"
+
+msgid "EFI File Path:"
+msgstr "EFI文件路径:"
+
+msgid "EFI Firmware Volume Guid:"
+msgstr "EFI固件卷GUID:"
+
+msgid "EFI Load Options:"
+msgstr "EFI加载选项:"
+
+msgid "Use options as wide char"
+msgstr "将选项作为宽字符"
+
+msgid "Boot Item Extra Data Editor"
+msgstr "启动项额外选项编辑器"
+
+msgid "Invalid number"
+msgstr "无效数字"
+
+msgid "Edit UEFI Option Boot Item"
+msgstr "编辑UEFI启动项"
+
+msgid "UEFI Option:"
+msgstr "UEFI启动项"
+
+msgid "Open"
+msgstr "打开"
+
+msgid "Edit Linux Boot Item"
+msgstr "编辑Linux启动项"
+
+msgid "Device Tree Overlay (dtbo)"
+msgstr "设备树附加层(dtbo)"
+
+msgid "Screen Framebuffer"
+msgstr "屏幕帧缓冲区"
+
+msgid "System Memory"
+msgstr "系统内存"
+
+msgid "Skip Device Tree Blob (dtb)"
+msgstr "跳过设备树(dtb)"
+
+msgid "Skip Device Tree Overlay (dtbo)"
+msgstr "跳过设备树附加层(dtbo)"
+
+msgid "Skip Initramfs"
+msgstr "跳过初始化内存盘(initrd)"
+
+msgid "Skip UEFI Memory Map"
+msgstr "跳过UEFI内存布局"
+
+msgid "Skip KernelFdtDxe System Memory"
+msgstr "跳过KernelFdtDxe系统内存"
+
+msgid "Skip KernelFdtDxe Commandline"
+msgstr "跳过KernelFdtDxe内核命令行"
+
+msgid "Use Custom Load Addresses"
+msgstr "使用自定义的加载地址"
+
+msgid "Default Load Address"
+msgstr "默认加载地址"
+
+msgid "Kernel Load Address"
+msgstr "内核加载地址"
+
+msgid "Initramfs Load Address"
+msgstr "初始化内存盘加载地址"
+
+msgid "Device Tree Load Address"
+msgstr "设备树加载地址"
+
+msgid "Update Screen Framebuffer"
+msgstr "更新屏幕帧缓冲区"
+
+msgid "(click button to add new)"
+msgstr "(点击按钮新建)"
+
+msgid "Invalid memory address or size"
+msgstr "无效的内存地址或大小"
+
+msgid "Edit Memory Region"
+msgstr "编辑内存区域"
+
+msgid "Memory Start Address (Hex):"
+msgstr "内存起始地址(十六进制):"
+
+msgid "Memory Size (Hex):"
+msgstr "内存大小(十六进制):"
+
+msgid "Memory End Address (hex):"
+msgstr "内存结束地址(十六进制):"
+
+msgid "Edit item"
+msgstr "编辑项目"
+
+msgid "Create new item"
+msgstr "创建新项目"

@@ -87,6 +87,9 @@ extern void logger_set_console(bool enabled);
 extern void logger_init(void);
 #endif
 
+// src/loggerd/client.c: set local logger level
+extern void logger_set_level(enum log_level level);
+
 // src/loggerd/client.c: send raw log
 extern int logger_write(struct log_item*log);
 

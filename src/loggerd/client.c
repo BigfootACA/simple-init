@@ -36,12 +36,10 @@
 #include"logger_internal.h"
 #define TAG "logger"
 
-#ifndef LOG_MIN_LEVEL
 #ifdef ENABLE_UEFI
-#define LOG_MIN_LEVEL PcdGet32(PcdLoggerdMinLevel)
+static enum log_level logger_level=FixedPcdGet32(PcdLoggerdMinLevel);
 #else
-#define LOG_MIN_LEVEL LEVEL_DEBUG
-#endif
+static enum log_level logger_level=LEVEL_DEBUG;
 #endif
 
 #ifndef ENABLE_UEFI
@@ -203,12 +201,20 @@ void logger_init(){
 		"logger.use_console",
 		console_output
 	);
+	logger_level=confd_set_integer(
+		"logger.min_level",
+		logger_level
+	);
 }
 #endif
 
+void logger_set_level(enum log_level level){
+	logger_level=level;
+}
+
 int logger_write(struct log_item*log){
 	if(!log)ERET(EINVAL);
-	if(log->level<LOG_MIN_LEVEL)return 0;
+	if(log->level<logger_level)return 0;
 	ssize_t s=strlen(log->content)-1;
 	while(s>=0)
 		if(!isspace(log->content[s]))break;
@@ -246,7 +252,7 @@ int logger_write(struct log_item*log){
 
 int logger_print(enum log_level level,char*tag,char*content){
 	if(!tag||!content)ERET(EINVAL);
-	if(level<LOG_MIN_LEVEL)return 0;
+	if(level<logger_level)return 0;
 	struct log_item log;
 	memset(&log,0,sizeof(struct log_item));
 	log.level=level;
@@ -261,7 +267,7 @@ int logger_print(enum log_level level,char*tag,char*content){
 
 static int logger_printf_x(enum log_level level,char*tag,const char*fmt,va_list ap){
 	if(!tag||!fmt)ERET(EINVAL);
-	if(level<LOG_MIN_LEVEL)return 0;
+	if(level<logger_level)return 0;
 	char content[4095];
 	memset(content,0,4095);
 	if(!vsnprintf(content,4094,fmt,ap))return -errno;
@@ -270,7 +276,7 @@ static int logger_printf_x(enum log_level level,char*tag,const char*fmt,va_list 
 
 static int logger_perror_x(enum log_level level,char*tag,const char*fmt,va_list ap){
 	if(!fmt)ERET(EINVAL);
-	if(level<LOG_MIN_LEVEL)return 0;
+	if(level<logger_level)return 0;
 	char*buff=NULL;
 	if(errno>0){
 		char*er=strerror(errno);
@@ -286,7 +292,7 @@ static int logger_perror_x(enum log_level level,char*tag,const char*fmt,va_list 
 
 int logger_printf(enum log_level level,char*tag,const char*fmt,...){
 	if(!tag||!fmt)ERET(EINVAL);
-	if(level<LOG_MIN_LEVEL)return 0;
+	if(level<logger_level)return 0;
 	int err=errno;
 	va_list ap;
 	va_start(ap,fmt);
@@ -299,7 +305,7 @@ int logger_printf(enum log_level level,char*tag,const char*fmt,...){
 
 int logger_perror(enum log_level level,char*tag,const char*fmt,...){
 	if(!tag||!fmt)ERET(EINVAL);
-	if(level<LOG_MIN_LEVEL)return 0;
+	if(level<logger_level)return 0;
 	int err=errno;
 	va_list ap;
 	va_start(ap,fmt);
@@ -312,7 +318,7 @@ int logger_perror(enum log_level level,char*tag,const char*fmt,...){
 
 int return_logger_printf(enum log_level level,int e,char*tag,const char*fmt,...){
 	if(!tag||!fmt)ERET(EINVAL);
-	if(level<LOG_MIN_LEVEL)return 0;
+	if(level<logger_level)return 0;
 	int err=errno;
 	va_list ap;
 	va_start(ap,fmt);
@@ -325,7 +331,7 @@ int return_logger_printf(enum log_level level,int e,char*tag,const char*fmt,...)
 
 int return_logger_perror(enum log_level level,int e,char*tag,const char*fmt,...){
 	if(!tag||!fmt)ERET(EINVAL);
-	if(level<LOG_MIN_LEVEL)return 0;
+	if(level<logger_level)return 0;
 	int ee=errno;
 	va_list ap;
 	va_start(ap,fmt);

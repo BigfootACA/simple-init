@@ -6,7 +6,6 @@
  *
  */
 
-#include "Library/PrintLib.h"
 #include"internal.h"
 static list*locate_cache=NULL;
 
@@ -68,6 +67,17 @@ static int init_default(){
 	return 0;
 }
 
+static const char*get_match_name(enum locate_match_state st){
+	switch(st){
+		case MATCH_NONE:return "none";
+		case MATCH_SKIP:return "skip";
+		case MATCH_SUCCESS:return "success";
+		case MATCH_INVALID:return "invalid";
+		case MATCH_FAILED:return "failed";
+		default:return "unknown";
+	}
+}
+
 static bool try_protocol(const char*tag,locate_dest*loc,EFI_GUID*protocol){
 	UINTN cnt=0;
 	EFI_STATUS st;
@@ -75,23 +85,35 @@ static bool try_protocol(const char*tag,locate_dest*loc,EFI_GUID*protocol){
 	CHAR16*dpt=NULL;
 	char dpx[PATH_MAX],guid[64];
 	EFI_DEVICE_PATH_PROTOCOL*dp=NULL;
+	AsciiSPrint(guid,sizeof(guid),"%g",protocol);
+	tlog_verbose("try locate protocol in guid %s",guid);
 	st=gBS->LocateHandleBuffer(
 		ByProtocol,
 		protocol,
 		NULL,&cnt,&hands
 	);
 	if(EFI_ERROR(st)){
-		AsciiSPrint(guid,sizeof(guid),"%g",protocol);
 		tlog_warn(
 			"locate protocol %s failed: %s",
 			guid,efi_status_to_string(st)
 		);
 		return false;
 	}
+	tlog_debug(
+		"found %llu handles in protocol %s",
+		(unsigned long long)cnt,guid
+	);
 	for(UINTN i=0;i<cnt;i++){
 		init_locate(loc,tag,hands[i]);
+		tlog_debug("try match handle %p (%llu)",hands[i],(unsigned long long)i);
 		for(UINTN s=0;locate_matches[s];s++){
-			switch(locate_matches[s](loc)){
+			enum locate_match_state st=locate_matches[s](loc);
+			if(st!=MATCH_SKIP)tlog_verbose(
+				"handle %p (%llu) match %llu state %s",
+				hands[i],(unsigned long long)i,
+				(unsigned long long)s,get_match_name(st)
+			);
+			switch(st){
 				case MATCH_NONE:
 				case MATCH_SKIP:
 				case MATCH_SUCCESS:continue;
@@ -144,50 +166,99 @@ static locate_dest*get_locate(const char*tag){
 	return loc;
 }
 
-static void dump_block_info(char*tag,EFI_BLOCK_IO_PROTOCOL*bi){
+static void dump_block_info(EFI_BLOCK_IO_PROTOCOL*bi){
 	char buf[64];
-	if(!tag||!bi||!bi->Media)return;
+	if(!bi||!bi->Media)return;
 	EFI_BLOCK_IO_MEDIA*m=bi->Media;
 	UINT64 size=m->BlockSize*(m->LastBlock+1);
-	tlog_verbose("locate %s block media id: %d",tag,m->MediaId);
-	tlog_verbose("locate %s block read only: %s",tag,BOOL2STR(m->ReadOnly));
-	tlog_verbose("locate %s block sector size: %d",tag,m->BlockSize);
-	tlog_verbose("locate %s block total sectors: %lld",tag,m->LastBlock+1);
+	tlog_verbose("  block:");
+	tlog_verbose("    revision:      0x%llx",(unsigned long long)bi->Revision);
+	tlog_verbose("    media id:      %d",m->MediaId);
+	tlog_verbose("    read only:     %s",BOOL2STR(m->ReadOnly));
+	tlog_verbose("    sector size:   %d",m->BlockSize);
+	tlog_verbose("    total sectors: %lld",m->LastBlock+1);
 	tlog_verbose(
-		"locate %s block total size: %lld (%s)",tag,size,
+		"    total size:    %lld (%s)",size,
 		make_readable_str_buf(buf,sizeof(buf),size,1,0)
 	);
 }
 
-static void dump_fs_info(char*tag,EFI_FILE_PROTOCOL*root){
+static void dump_fs_info(EFI_FILE_PROTOCOL*root){
 	UINTN bs=0;
 	EFI_STATUS st;
 	EFI_FILE_SYSTEM_INFO*fi=NULL;
 	char buf[64],xn[PATH_MAX];
-	if(!tag||!root)return;
+	if(!root)return;
 	st=root->GetInfo(root,&gEfiFileSystemInfoGuid,&bs,fi);
 	if(st==EFI_BUFFER_TOO_SMALL&&(fi=AllocateZeroPool(bs)))
 		st=root->GetInfo(root,&gEfiFileSystemInfoGuid,&bs,fi);
 	if(EFI_ERROR(st))return;
 	ZeroMem(xn,sizeof(xn));
 	UnicodeStrToAsciiStrS(fi->VolumeLabel,xn,sizeof(xn));
-	tlog_verbose("locate %s file system sector size: %d",tag,fi->BlockSize);
-	tlog_verbose("locate %s file system read only: %s",tag,BOOL2STR(fi->ReadOnly));
-	tlog_verbose("locate %s file system volume label: %s",tag,xn);
+	tlog_verbose("  file system:");
+	tlog_verbose("    revision:     0x%llx",(unsigned long long)root->Revision);
+	tlog_verbose("    sector size:  %d",fi->BlockSize);
+	tlog_verbose("    read only:    %s",BOOL2STR(fi->ReadOnly));
+	tlog_verbose("    volume label: %s",xn[0]?xn:"(none)");
 	tlog_verbose(
-		"locate %s file system total size: %lld (%s)",tag,fi->VolumeSize,
+		"    total size:   %lld (%s)",fi->VolumeSize,
 		make_readable_str_buf(buf,sizeof(buf),fi->VolumeSize,1,0)
 	);
 	tlog_verbose(
-		"locate %s file system free space: %lld (%s)",tag,fi->FreeSpace,
+		"    free space:   %lld (%s)",fi->FreeSpace,
 		make_readable_str_buf(buf,sizeof(buf),fi->FreeSpace,1,0)
 	);
 }
 
+static void dump_part_gpt(EFI_PARTITION_ENTRY*gpt){
+	char xn[PATH_MAX],guid[64];
+	if(!gpt)return;
+	tlog_verbose("    gpt disk label");
+	ZeroMem(xn,sizeof(xn));
+	UnicodeStrToAsciiStrS(gpt->PartitionName,xn,sizeof(xn));
+	tlog_verbose("      partition name: %s",xn[0]?xn:"(none)");
+	ZeroMem(guid,sizeof(guid));
+	AsciiSPrint(guid,sizeof(guid),"%g",&gpt->PartitionTypeGUID);
+	tlog_verbose("      type guid:      %s",guid);
+	ZeroMem(guid,sizeof(guid));
+	AsciiSPrint(guid,sizeof(guid),"%g",&gpt->UniquePartitionGUID);
+	tlog_verbose("      partition guid: %s",guid);
+	tlog_verbose("      attributes:     %llx",(unsigned long long)gpt->Attributes);
+	tlog_verbose("      starting lba:   %llx",(unsigned long long)gpt->StartingLBA);
+	tlog_verbose("      ending lba:     %llx",(unsigned long long)gpt->EndingLBA);
+}
+
+static void dump_part_mbr(MBR_PARTITION_RECORD*mbr){
+	if(!mbr)return;
+	tlog_verbose("    mbr disk label");
+	tlog_verbose("      type:           0x%02X",mbr->OSIndicator);
+	tlog_verbose("      activated:      %s",BOOL2STR(mbr->BootIndicator==0x80));
+	tlog_verbose("      start head:     %llx",(unsigned long long)mbr->StartHead);
+	tlog_verbose("      start sector:   %llx",(unsigned long long)mbr->StartSector);
+	tlog_verbose("      start track:    %llx",(unsigned long long)mbr->StartTrack);
+	tlog_verbose("      end head:       %llx",(unsigned long long)mbr->EndHead);
+	tlog_verbose("      end sector:     %llx",(unsigned long long)mbr->EndSector);
+	tlog_verbose("      end track:      %llx",(unsigned long long)mbr->EndTrack);
+}
+
+static void dump_part_info(EFI_PARTITION_INFO_PROTOCOL*pi){
+	if(!pi)return;
+	tlog_verbose("  partition info:");
+	tlog_verbose("    revision:     0x%llx",(unsigned long long)pi->Revision);
+	tlog_verbose("    efi system:   %s",BOOL2STR(pi->System==1));
+	switch(pi->Type){
+		case PARTITION_TYPE_GPT:dump_part_gpt(&pi->Info.Gpt);break;
+		case PARTITION_TYPE_MBR:dump_part_mbr(&pi->Info.Mbr);break;
+		default:tlog_verbose("    disk label:   %u",pi->Type);
+	}
+}
+
 static void dump_locate(locate_dest*loc){
 	if(!loc||loc->dump)return;
-	if(loc->root)dump_fs_info(loc->tag,loc->root);
-	if(loc->block_proto)dump_block_info(loc->tag,loc->block_proto);
+	tlog_verbose("locate %s info:",loc->tag);
+	if(loc->root)dump_fs_info(loc->root);
+	if(loc->block_proto)dump_block_info(loc->block_proto);
+	if(loc->part_proto)dump_part_info(loc->part_proto);
 	loc->dump=true;
 }
 
@@ -268,6 +339,7 @@ static bool locate_open_file(locate_dest*loc,locate_ret*ret,UINT64 mode){
 		);
 		return false;
 	}
+	tlog_debug("open file '%s' as %p",ret->path,ret->file);
 	if(!(ret->device=FileDevicePath(loc->file_hand,ret->path16))){
 		tlog_error(
 			"get file '%s' device path failed",

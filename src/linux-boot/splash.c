@@ -85,6 +85,7 @@ int linux_boot_update_splash(linux_boot*lb){
 	);
 	if(base<=0||size<=0)return 0;
 	if(stride<=0&&width>0)stride=width*4;
+	size=ALIGN_VALUE(size,EFI_PAGE_SIZE);
 
 	tlog_debug(
 		"splash memory: 0x%llx - 0x%llx (0x%llx %s)",

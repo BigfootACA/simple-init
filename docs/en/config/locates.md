@@ -111,7 +111,7 @@ Type: `STRING`
 Supported environments: `UEFI`
 
 Reference:
- - [src/locate/fs.c](../../../src/locate/gpt.c)
+ - [src/locate/gpt.c](../../../src/locate/gpt.c)
 
 ### locates.?.by_gpt_guid
 
@@ -126,7 +126,7 @@ Type: `STRING`
 Supported environments: `UEFI`
 
 Reference:
- - [src/locate/fs.c](../../../src/locate/gpt.c)
+ - [src/locate/gpt.c](../../../src/locate/gpt.c)
 
 ### locates.?.by_gpt_type
 
@@ -141,7 +141,7 @@ Type: `STRING`
 Supported environments: `UEFI`
 
 Reference:
- - [src/locate/fs.c](../../../src/locate/gpt.c)
+ - [src/locate/gpt.c](../../../src/locate/gpt.c)
 
 ### locates.?.by_mbr_active
 

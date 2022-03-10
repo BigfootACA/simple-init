@@ -18,7 +18,7 @@ locate_match_state locate_match_fs_name(locate_dest*loc){
 	if(!name)return MATCH_SKIP;
 	if(!*name||strlen(name)>255)
 		EDONE(tlog_warn("invalid file system label"));
-	if(!loc||!loc->part_proto)return MATCH_FAILED;
+	if(!loc||!loc->root)return MATCH_FAILED;
 	st=loc->root->GetInfo(
 		loc->root,
 		&gEfiFileSystemVolumeLabelInfoIdGuid,
@@ -51,6 +51,7 @@ locate_match_state locate_match_fs_name(locate_dest*loc){
 	if(fi)FreePool(fi);
 	return res;
 }
+
 locate_match_state locate_match_file(locate_dest*loc){
 	EFI_STATUS st;
 	CHAR16 fn[PATH_MAX];

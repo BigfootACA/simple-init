@@ -29,11 +29,15 @@ enum log_level{
 // log item
 struct log_item{
 	enum log_level level;
-	char tag[64],content[4096];
 	time_t time;
-	#ifndef ENABLE_UEFI
 	pid_t pid;
-	#endif
+	char tag[64];
+	char content[16384-
+		64-
+		sizeof(enum log_level)-
+		sizeof(time_t)-
+		sizeof(pid_t)
+	];
 };
 
 #ifndef ENABLE_UEFI

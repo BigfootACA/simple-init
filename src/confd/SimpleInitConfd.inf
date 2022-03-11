@@ -7,13 +7,14 @@
   LIBRARY_CLASS                  = SimpleInitConfd
 
 [BuildOptions]
-  GCC:*_*_*_CC_FLAGS = -DENABLE_UEFI=1
+  GCC:*_*_*_CC_FLAGS = -DENABLE_UEFI=1 -DENABLE_JSONC=1
 
 [Packages]
   MdePkg/MdePkg.dec
   SimpleInit.dec
 
 [LibraryClasses]
+  JSONC
   PcdLib
   BaseLib
   BaseMemoryLib
@@ -28,6 +29,7 @@
   store.c
   file.c
   file_conf.c
+  json_conf.c
 
 [Guids]
   gEfiFileInfoGuid

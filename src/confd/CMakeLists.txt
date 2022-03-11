@@ -6,4 +6,5 @@ add_library(init_confd STATIC
 	internal.c
 	file.c
 	file_conf.c
+	json_conf.c
 )

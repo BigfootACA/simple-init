@@ -70,3 +70,4 @@
 [BuildOptions]
   GCC:*_*_*_CC_FLAGS = -nostdlib -nostdinc -nolibc
   GCC:*_*_IA32_CC_FLAGS = -static-libgcc -lgcc
+  GCC:*_*_AARCH64_CC_FLAGS = -mno-outline-atomics

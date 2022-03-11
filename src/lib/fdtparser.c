@@ -44,7 +44,7 @@ int32_t fdt_get_size_cells(fdt*fdt){
 
 bool fdt_get_reg(fdt*fdt,int off,int index,uint64_t*base,uint64_t*size){
 	const int32_t*prop;
-	int32_t ac,sc,node,item,len=0;
+	int32_t ac,sc,item,len=0;
 	if(!fdt||off<0||index<0||!base||!size)return false;
 
 	// load address cells and size cells
@@ -54,10 +54,7 @@ bool fdt_get_reg(fdt*fdt,int off,int index,uint64_t*base,uint64_t*size){
 
 	prop=fdt_getprop(fdt,off,"reg",&len);
 	item=(ac+sc)*sizeof(int32_t);
-	if(len<item){
-		node=-1;
-		return false;
-	}
+	if(len<item)return false;
 
 	// in range
 	if(index>=len/item)return false;

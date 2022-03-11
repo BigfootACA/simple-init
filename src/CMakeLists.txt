@@ -120,6 +120,10 @@ if("${ENABLE_LODEPNG}" STREQUAL "ON")
 	target_link_libraries(simple-init lodepng)
 endif()
 
+if("${ENABLE_JSONC}" STREQUAL "ON")
+	target_link_libraries(simple-init jsonc)
+endif()
+
 if("${ENABLE_NANOSVG}" STREQUAL "ON")
 	target_link_libraries(simple-init m)
 endif()

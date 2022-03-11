@@ -1,5 +1,6 @@
 [LibraryClasses]
   Zlib|libs/Zlib.inf
+  JSONC|libs/JSONC.inf
   LodePNG|libs/LodePNG.inf
   FreeType|libs/FreeType.inf
   LittleVgl|libs/LittleVgl.inf
@@ -19,6 +20,7 @@
 
 [Components]
   libs/Zlib.inf
+  libs/JSONC.inf
   libs/LodePNG.inf
   libs/FreeType.inf
   libs/LittleVgl.inf

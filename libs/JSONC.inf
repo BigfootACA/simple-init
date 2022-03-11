@@ -1,0 +1,41 @@
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = JSONC
+  FILE_GUID                      = FC7626E8-75BF-4F00-9737-1E4259044B13
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = JSONC
+
+[Packages]
+  MdePkg/MdePkg.dec
+  SimpleInit.dec
+
+[LibraryClasses]
+  UefiLib
+  SimpleInitCompatible
+
+[Sources]
+  libs/json-c-uefi/config.h
+  libs/json-c-uefi/json_config.h
+  libs/json-c/json.h
+  libs/json-c/arraylist.h
+  libs/json-c/debug.h
+  libs/json-c/json_c_version.h
+  libs/json-c/json_object.h
+  libs/json-c/json_object_iterator.h
+  libs/json-c/json_pointer.h
+  libs/json-c/json_tokener.h
+  libs/json-c/json_util.h
+  libs/json-c/linkhash.h
+  libs/json-c/arraylist.c
+  libs/json-c/debug.c
+  libs/json-c/json_c_version.c
+  libs/json-c/json_object.c
+  libs/json-c/json_object_iterator.c
+  libs/json-c/json_tokener.c
+  libs/json-c/json_util.c
+  libs/json-c/json_visit.c
+  libs/json-c/linkhash.c
+  libs/json-c/printbuf.c
+  libs/json-c/strerror_override.c
+  libs/json-c-uefi/random_seed.c

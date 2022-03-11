@@ -5,6 +5,8 @@
 
 [Includes]
   include
+  libs/json-c
+  libs/json-c-uefi
   libs/freetype/include
   libs/zlib
   libs/lvgl

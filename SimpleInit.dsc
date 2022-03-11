@@ -64,10 +64,8 @@
 [LibraryClasses.X64, LibraryClasses.Ia32]
   TimerLib|MdePkg/Library/BaseTimerLibNullTemplate/BaseTimerLibNullTemplate.inf
 
-[BuildOptions.X64, BuildOptions.Ia32]
-  *_*_*_CC_FLAGS = -DNO_TIMER
-
 [BuildOptions]
   GCC:*_*_*_CC_FLAGS = -nostdlib -nostdinc -nolibc
-  GCC:*_*_IA32_CC_FLAGS = -static-libgcc -lgcc
+  GCC:*_*_IA32_CC_FLAGS = -DNO_TIMER -static-libgcc -lgcc
+  GCC:*_*_X64_CC_FLAGS = -DNO_TIMER
   GCC:*_*_AARCH64_CC_FLAGS = -mno-outline-atomics

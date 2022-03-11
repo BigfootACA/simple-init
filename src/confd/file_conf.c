@@ -154,13 +154,16 @@ static void conf_parse_line(struct conf_file_hand*hand,int*err,const char*name,s
 	}else if(value[0]=='"'){
 		if(vs<2||value[vs-1]!='"')goto inv_val;
 		line_set_string(hand,key,value,vs);
-	}else if(string_is_true(value))conf_set_boolean_inc(key,true,0,0,hand->include);
-	else if(string_is_false(value))conf_set_boolean_inc(key,false,0,0,hand->include);
-	else{
+	}else{
 		errno=0;
 		int64_t i=strtol(value,&p,0);
-		if(errno!=0||p==value)goto inv_val;
-		conf_set_integer_inc(key,i,0,0,hand->include);
+		if(errno!=0||p==value){
+			if(string_is_true(value))
+				conf_set_boolean_inc(key,true,0,0,hand->include);
+			else if(string_is_false(value))
+				conf_set_boolean_inc(key,false,0,0,hand->include);
+			else goto inv_val;
+		}else conf_set_integer_inc(key,i,0,0,hand->include);
 	}
 	return;
 	runtime:

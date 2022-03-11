@@ -34,7 +34,7 @@
   exp_data.c
   malloc.c
   exit.c
-  strtol.c
+  number.c
   stub.c
   qsort.c
   ctype.c

@@ -363,3 +363,19 @@ char*str_unescape(char*str){
 	}
 	return dup;
 }
+
+size_t _strlcpy(char *buf,const char*src,size_t len){
+        char*d0=buf;
+        if(!len--)goto finish;
+        for(;len&&(*buf=*src);len--,src++,buf++);
+        *buf=0;
+	finish:
+        return buf-d0+strlen(src);
+}
+
+size_t _strlcat(char*buf,const char*src,size_t len){
+        size_t slen=strnlen(buf,len);
+        return slen==len?
+		(slen+strlen(src)):
+		(slen+_strlcpy(buf+slen,src,len-slen));
+}

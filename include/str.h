@@ -185,8 +185,19 @@ extern list*path_simplify(list*paths,bool free);
 #endif
 
 // src/lib/strings.c: duplicate memory
+#undef memdup
 extern void*_memdup(void*mem,size_t len);
 #define memdup _memdup
+
+// src/lib/strings.c: string concatenation
+#undef strlcat
+extern size_t _strlcat(char*buf,const char*src,size_t len);
+#define strlcat _strlcat
+
+// src/lib/strings.c: string copy
+#undef strlcpy
+extern size_t _strlcpy(char*buf,const char*src,size_t len);
+#define strlcpy _strlcpy
 
 #ifdef b64_pton
 #undef b64_pton

@@ -53,7 +53,7 @@ static int confd_command(enum confd_action action,int code){
 
 int confd_quit(){return confd_command(CONF_QUIT,0);}
 
-int confd_dump(){return confd_command(CONF_DUMP,0);}
+int confd_dump(enum log_level level){return confd_command(CONF_DUMP,level);}
 
 int confd_delete(const char*path){
 	if(!path||confd<0)ERET(EINVAL);

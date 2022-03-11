@@ -18,45 +18,75 @@
 
 static const char*conf_summary(struct conf*key){
 	static char buf[256];
-	memset(buf,0,256);
+	memset(buf,0,sizeof(buf));
 	snprintf(
-		buf,255,
-		"SAVE:%s,UID:%d,GID:%d,MODE:%04o",
-		BOOL2STR(key->save),
-		key->user,key->group,key->mode
+		buf,sizeof(buf)-1,
+		"%c/%d:%d/%04o",
+		key->save?'S':'.',
+		key->user,key->group,
+		key->mode
 	);
 	return buf;
 }
 
-static int dump(struct conf*key,char*name){
-	char path[PATH_MAX]={0};
-	if(key->name[0]){
-		if(!name[0])strcpy(path,key->name);
-		else snprintf(path,PATH_MAX-1,"%s.%s",name,key->name);
-	}
+static int dump(enum log_level l,struct conf*key,int depth){
+	size_t cnt=16384,len;
+	char*buf,x[256],*p;
+	if(depth<0||!(buf=malloc(cnt)))return -1;
+	memset(buf,0,cnt);
+	snprintf(buf,cnt-1,"%-16s ",conf_summary(key));
+	for(int i=0;i<depth;i++)strlcat(buf,"  ",cnt-1);
+	if(key->name[0])strlcat(buf,key->name,cnt-1);
+	else strlcat(buf,"[ROOT]",cnt-1);
+	strlcat(buf," ",cnt-1);
 	if(key->type==TYPE_KEY){
-		tlog_debug("  %s %s (key)\n",conf_summary(key),*path?path:"[ROOT]");
+		strlcat(buf,"(key)",cnt-1);
+		logger_print(l,TAG,buf);
 		list*p=list_first(key->keys);
-		if(!p)return 0;
-		do{dump(LIST_DATA(p,struct conf*),path);}while((p=p->next));
-	}else switch(key->type){
-		case TYPE_STRING:{
-			int len=0;
-			char x[256]={0},*p=VALUE_STRING(key);
-			if(p){
-				strncpy(x,p,252);
-				len=strlen(p);
-			}else strcpy(x,"(null)");
-			tlog_debug("  %s %s = \"%s\"%s %d bytes (string)\n", conf_summary(key),path,x,len>252?"...":"",len);
-		}break;
-		case TYPE_INTEGER: tlog_debug("  %s %s = %lld (integer)\n",  conf_summary(key),path,(long long int)VALUE_INTEGER(key));break;
-		case TYPE_BOOLEAN: tlog_debug("  %s %s = %s (boolean)\n",    conf_summary(key),path,BOOL2STR(VALUE_BOOLEAN(key)));break;
-		default:           tlog_debug("  %s %s = (Unknown)\n",       conf_summary(key),path);break;
+		if(p)do{dump(l,LIST_DATA(p,struct conf*),depth+1);}
+		while((p=p->next));
+		free(buf);
+		return 0;
 	}
+	strlcat(buf," = ",cnt-1);
+	len=strlen(buf);
+	switch(key->type){
+		case TYPE_STRING:
+			if(!(p=VALUE_STRING(key))){
+				strlcat(buf,"(null string)",cnt-1);
+				break;
+			}
+			memset(x,0,sizeof(x));
+			strncpy(x,p,sizeof(x)-1);
+			snprintf(
+				buf+len,cnt-len-1,
+				"\"%s\"%s %zu bytes (string)",
+				x,(strlen(p)>sizeof(x)-1?"...":""),
+				strlen(p)
+			);
+		break;
+		case TYPE_INTEGER:
+			snprintf(
+				buf+len,cnt-len-1,
+				"%lld (integer)",
+				(long long int)VALUE_INTEGER(key)
+			);
+		break;
+		case TYPE_BOOLEAN:
+			snprintf(
+				buf+len,cnt-len-1,
+				"%s (boolean)",
+				BOOL2STR(VALUE_BOOLEAN(key))
+			);
+		break;
+		default:strlcat(buf,"(unknown)",cnt-1);break;
+	}
+	logger_print(l,TAG,buf);
+	free(buf);
 	return 0;
 }
 
-int conf_dump_store(){
-	tlog_debug("dump configuration store:");
-	return dump(conf_get_store(),"");
+int conf_dump_store(enum log_level level){
+	logger_printf(level,TAG,"dump configuration store:");
+	return dump(level,conf_get_store(),0);
 }

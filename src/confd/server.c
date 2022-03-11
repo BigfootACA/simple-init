@@ -206,7 +206,7 @@ static int confd_read(int fd){
 		// dump config store
 		case CONF_DUMP:
 			if(cred.uid!=0||cred.gid!=0)errno=EACCES;
-			else conf_dump_store();
+			else conf_dump_store(msg.code==0?LEVEL_DEBUG:msg.code);
 		break;
 
 		// delete item

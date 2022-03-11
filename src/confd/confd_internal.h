@@ -142,7 +142,7 @@ extern int confd_internal_read_msg(int fd,struct confd_msg*buff);
 extern const char*confd_action2name(enum confd_action action);
 
 // src/confd/dump.c: dump config store to loggerd
-extern int conf_dump_store(void);
+extern int conf_dump_store(enum log_level level);
 
 // src/confd/store.c: get config store root struct
 extern struct conf*conf_get_store(void);

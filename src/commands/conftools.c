@@ -36,7 +36,7 @@ int confdel_main(int argc,char**argv){
 int confdump_main(int argc,char**argv __attribute__((unused))){
 	if(argc!=1)return re_printf(1,"Usage: confdump\n");
 	errno=0;
-	confd_dump();
+	confd_dump(LEVEL_DEBUG);
 	if(errno!=0)perror(_("config daemon dump failed"));
 	return errno;
 }

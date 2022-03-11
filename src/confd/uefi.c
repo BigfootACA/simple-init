@@ -112,8 +112,8 @@ int confd_quit(){
 	return -1;
 }
 
-int confd_dump(){
-	conf_dump_store();
+int confd_dump(enum log_level level){
+	conf_dump_store(level);
 	return 0;
 }
 

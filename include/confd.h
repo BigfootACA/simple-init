@@ -15,6 +15,7 @@
 #include<Protocol/SimpleFileSystem.h>
 #endif
 #include"pathnames.h"
+#include"logger.h"
 #define DEFAULT_CONFD _PATH_RUN"/confd.sock"
 
 // config data types
@@ -46,7 +47,7 @@ extern int start_confd(char*tag,pid_t*p);
 extern int confd_quit(void);
 
 // src/confd/client.c: dump config store to logger
-extern int confd_dump(void);
+extern int confd_dump(enum log_level level);
 
 // src/confd/client.c: save config store as a file
 #ifdef ENABLE_UEFI

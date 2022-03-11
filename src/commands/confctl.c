@@ -280,7 +280,7 @@ int confctl_main(int argc,char**argv){
 			if(errno>0)perror(_("terminate confd failed"));
 		break;
 		case OPER_DUMP:
-			r=confd_dump();
+			r=confd_dump(LEVEL_DEBUG);
 			if(errno>0)perror(_("dump config store failed"));
 		break;
 		case OPER_LIST:

@@ -17,6 +17,7 @@
 #include"logger.h"
 #include"setjmp.h"
 #include"language.h"
+#define TAG "main"
 
 int main_retval=0;
 jmp_buf main_exit;
@@ -31,10 +32,12 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ih,IN EFI_SYSTEM_TABLE*st){
 	EfiBootManagerRefreshAllBootOption();
 	DEBUG((EFI_D_INFO,"Initialize SimpleInit GUI...\n"));
 
+	tlog_notice("initialize simple-init");
 	logger_set_console(PcdGetBool(PcdLoggerdUseConsole));
 	confd_include_file(NULL,NULL);
 	confd_load_file(NULL,NULL);
 	logger_init();
+	confd_dump(LEVEL_VERBOSE);
 	boot_load_drivers();
 	char*lang=confd_get_string("language",NULL);
 	if(lang)lang_set(lang);

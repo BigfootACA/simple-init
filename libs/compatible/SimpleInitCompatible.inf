@@ -61,6 +61,7 @@
   strtopx.c
   strtodg.c
   strtold_subr.c
+  strncasecmp.c
   refill.c
   findfp.c
   ulp.c

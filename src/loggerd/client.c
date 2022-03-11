@@ -232,11 +232,15 @@ int logger_write(struct log_item*log){
 	errno=msg.data.code;
 	return xs;
 	#else
-	char buff[BUFSIZ];
+	char buff[16384];
 	ZeroMem(buff,sizeof(buff));
-	AsciiSPrint(buff,sizeof(buff),"%a: %a\n",log->tag,log->content);
-	DEBUG((EFI_D_INFO,buff));
-	if(console_output)AsciiPrint(buff);
+	AsciiSPrint(buff,sizeof(buff),"%a: %a",log->tag,log->content);
+	DebugPrint(EFI_D_INFO,"%a",buff);
+	DebugPrint(EFI_D_INFO,"\n");
+	if(console_output){
+		AsciiPrint("%a",buff);
+		AsciiPrint("\n");
+	}
 	if(logger_output){
 		UINTN cnt,x,pos=0;
 		cnt=AsciiStrLen(buff),x=cnt;
@@ -244,6 +248,8 @@ int logger_write(struct log_item*log){
 			logger_output->Write(logger_output,&x,buff+pos);
 			pos+=x,x=cnt-pos;
 		}while(pos<cnt);
+		x=1;
+		logger_output->Write(logger_output,&x,"\n");
 		logger_output->Flush(logger_output);
 	}
 	return 0;
@@ -268,9 +274,9 @@ int logger_print(enum log_level level,char*tag,char*content){
 static int logger_printf_x(enum log_level level,char*tag,const char*fmt,va_list ap){
 	if(!tag||!fmt)ERET(EINVAL);
 	if(level<logger_level)return 0;
-	char content[4095];
-	memset(content,0,4095);
-	if(!vsnprintf(content,4094,fmt,ap))return -errno;
+	char content[16384];
+	memset(content,0,sizeof(content));
+	if(!vsnprintf(content,sizeof(content)-1,fmt,ap))return -errno;
 	return logger_print(level,tag,content);
 }
 

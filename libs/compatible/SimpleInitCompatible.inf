@@ -40,7 +40,7 @@
   ctype.c
   fvwrite.c
   vfprintf.c
-  #vfwprintf.c
+  vasprintf.c
   vsnprintf.c
   snprintf.c
   sprintf.c

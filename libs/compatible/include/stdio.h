@@ -204,6 +204,8 @@ int vfprintf(FILE *__restrict, const char *__restrict, __isoc_va_list);
 int vsprintf(char *__restrict, const char *__restrict, __isoc_va_list);
 int vsnprintf(char *__restrict, size_t, const char *__restrict, __isoc_va_list);
 
+int vasprintf(char ** __restrict, const char * __restrict, __isoc_va_list);
+
 int scanf(const char *__restrict, ...);
 int fscanf(FILE *__restrict, const char *__restrict, ...);
 int sscanf(const char *__restrict, const char *__restrict, ...);

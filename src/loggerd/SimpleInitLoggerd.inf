@@ -32,3 +32,4 @@
 [Sources]
   # Simple-Init loggerd UEFI wrapper
   src/loggerd/client.c
+  src/loggerd/buffer.c

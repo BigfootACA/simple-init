@@ -145,7 +145,16 @@ extern int logger_internal_free_buff(void*d);
 extern void clean_log_buffers(void);
 
 // src/loggerd/buffer.c: flush buffer to logger
+#ifdef ENABLE_UEFI
+extern void flush_buffer();
+#else
 extern void flush_buffer(struct logger*log);
+#endif
+
+#ifdef ENABLE_UEFI
+// src/loggerd/client.c: write file logger output
+extern void logger_out_write(char*buff);
+#endif
 
 // src/loggerd/klog.c: read all kmesg to buffer and read new kmsg to logger
 extern int init_kmesg(void);

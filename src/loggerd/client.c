@@ -20,6 +20,7 @@
 #include<Library/PrintLib.h>
 #include<Library/BaseMemoryLib.h>
 #include<Library/MemoryAllocationLib.h>
+#include<Library/UefiRuntimeServicesTableLib.h>
 #include<Protocol/SimpleFileSystem.h>
 #include<Guid/FileInfo.h>
 #include"str.h"
@@ -148,17 +149,24 @@ void logger_set_console(bool enabled){
 static int logger_init_out(){
 	UINTN s=0;
 	locate_ret l;
+	EFI_TIME tm;
 	EFI_STATUS st;
 	EFI_FILE_INFO*info=NULL;
+	char buff[PATH_MAX];
+	// 0: truncate
+	// 1: append
+	// 2: rename
+	int old=confd_get_integer("logger.old_file",0);
 	char*log=confd_get_string("logger.file_output",NULL);
 	if(!log)return 0;
 	if(!boot_locate_create_file(&l,log))
 		EDONE(tlog_warn("resolve logger file output locate failed"));
 	if(l.type!=LOCATE_FILE)
 		EDONE(tlog_warn("unsupported locate type for logger file output"));
-	l.file->SetPosition(l.file,0);
+	if(old!=1)l.file->SetPosition(l.file,0);
 	st=l.file->GetInfo(l.file,&gEfiFileInfoGuid,&s,info);
 	if(st==EFI_BUFFER_TOO_SMALL){
+		s+=64;
 		if(!(info=AllocateZeroPool(s)))
 			EDONE(tlog_warn("allocate file info failed"));
 		st=l.file->GetInfo(l.file,&gEfiFileInfoGuid,&s,info);
@@ -167,10 +175,49 @@ static int logger_init_out(){
 		"get file info failed: %s",
 		efi_status_to_string(st)
 	));
-	info->FileSize=0;
-	st=l.file->SetInfo(l.file,&gEfiFileInfoGuid,s,info);
-	if(EFI_ERROR(st)){
-		l.file->Delete(l.file);
+	if(info->FileSize==0)
+		tlog_verbose("old log file size is zero");
+	else if(old==0){
+		tlog_verbose(
+			"truncated old log file %llu bytes",
+			(unsigned long long)info->FileSize
+		);
+		info->FileSize=0;
+		st=l.file->SetInfo(l.file,&gEfiFileInfoGuid,s,info);
+		if(EFI_ERROR(st)){
+			tlog_warn(
+				"truncate file failed (%s), try to delete",
+				efi_status_to_string(st)
+			);
+			st=l.file->Delete(l.file);
+			if(EFI_ERROR(st))EDONE(tlog_warn(
+				"delete %s failed: %s",
+				log,efi_status_to_string(st)
+			));
+			l.file=NULL;
+		}
+	}else if(old==2){
+		int i=0;
+		CHAR16 path[PATH_MAX],fn[256];
+		EFI_FILE_PROTOCOL*fp=NULL;
+		do{
+			ZeroMem(path,sizeof(path));
+			UnicodeSPrint(path,sizeof(path),L"%s.%d",l.path16,i);
+			st=l.root->Open(l.root,&fp,path,EFI_FILE_MODE_READ,0);
+			i++;
+		}while(!EFI_ERROR(st));
+		if(fp)fp->Close(fp);
+		ZeroMem(fn,sizeof(fn));
+		UnicodeSPrint(fn,sizeof(fn),L"%s.%d",info->FileName,i);
+		StrCpyS(info->FileName,(s-80)/sizeof(CHAR16),fn);
+		tlog_verbose("rename old log file %s to %s.%d",l.path,l.path,i);
+		st=l.file->SetInfo(l.file,&gEfiFileInfoGuid,s,info);
+		if(EFI_ERROR(st))EDONE(tlog_warn(
+			"set info %s failed: %s",
+			log,efi_status_to_string(st)
+		));
+	}
+	if(!l.file){
 		st=l.root->Open(
 			l.root,&l.file,l.path16,
 			EFI_FILE_MODE_READ|
@@ -182,7 +229,24 @@ static int logger_init_out(){
 			log,efi_status_to_string(st)
 		));
 	}
+	if(old==1){
+		tlog_verbose(
+			"old log file size: %llu bytes",
+			(unsigned long long)info->FileSize
+		);
+		l.file->SetPosition(l.file,info->FileSize);
+	}
 	logger_output=l.file;
+	ZeroMem(&tm,sizeof(tm));
+	gRT->GetTime(&tm,NULL);
+	ZeroMem(buff,sizeof(buff));
+	AsciiSPrint(
+		buff,sizeof(buff),
+		"-------- file %a opened at %t --------",
+		l.path,&tm
+	);
+	logger_out_write(buff);
+	flush_buffer();
 	tlog_debug("opened logger file output %s",log);
 	free(log);
 	FreePool(info);
@@ -205,6 +269,19 @@ void logger_init(){
 		"logger.min_level",
 		logger_level
 	);
+}
+
+void logger_out_write(char*buff){
+	UINTN cnt,x,pos=0;
+	if(!logger_output)return;
+	cnt=AsciiStrLen(buff),x=cnt;
+	do{
+		logger_output->Write(logger_output,&x,buff+pos);
+		pos+=x,x=cnt-pos;
+	}while(pos<cnt);
+	x=1;
+	logger_output->Write(logger_output,&x,"\n");
+	logger_output->Flush(logger_output);
 }
 #endif
 
@@ -241,17 +318,7 @@ int logger_write(struct log_item*log){
 		AsciiPrint("%a",buff);
 		AsciiPrint("\n");
 	}
-	if(logger_output){
-		UINTN cnt,x,pos=0;
-		cnt=AsciiStrLen(buff),x=cnt;
-		do{
-			logger_output->Write(logger_output,&x,buff+pos);
-			pos+=x,x=cnt-pos;
-		}while(pos<cnt);
-		x=1;
-		logger_output->Write(logger_output,&x,"\n");
-		logger_output->Flush(logger_output);
-	}
+	logger_out_write(buff);
 	return 0;
 	#endif
 }
@@ -268,6 +335,7 @@ int logger_print(enum log_level level,char*tag,char*content){
 	#ifndef ENABLE_UEFI
 	log.pid=getpid();
 	#endif
+	logger_internal_buffer_push(&log);
 	return logger_write(&log);
 }
 

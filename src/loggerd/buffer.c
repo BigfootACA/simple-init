@@ -9,6 +9,10 @@
 #define _GNU_SOURCE
 #include<string.h>
 #include<stdlib.h>
+#ifdef ENABLE_UEFI
+#include<Library/PrintLib.h>
+#include<Library/BaseMemoryLib.h>
+#endif
 #include"list.h"
 #include"logger_internal.h"
 
@@ -106,6 +110,23 @@ void clean_log_buffers(){
 	list_free_all(logbuffer,logger_internal_free_buff);
 }
 
+#ifdef ENABLE_UEFI
+void flush_buffer(){
+	if(!logbuffer)return;
+	char str[16384];
+	list*head,*cur,*next;
+	struct log_buff*buff;
+	if(!(head=list_first(logbuffer)))return;
+	cur=head;
+	do{
+		next=cur->next;
+		if(!(buff=LIST_DATA(cur,struct log_buff*)))continue;
+		ZeroMem(str,sizeof(str));
+		AsciiSPrint(str,sizeof(str),"%a: %a",buff->tag,buff->content);
+		logger_out_write(str);
+	}while((cur=next));
+}
+#else
 void flush_buffer(struct logger*log){
 	if(
 		!log||
@@ -129,3 +150,4 @@ void flush_buffer(struct logger*log){
 	}while((cur=next));
 	log->flushed=true;
 }
+#endif

@@ -319,20 +319,40 @@ bool string_is_false(char*string){
 		strcasecmp(string,"disabled")==0;
 }
 
+static size_t str_escape_count(char*str){
+	if(!str)return -1;
+	size_t cnt=0;
+	while(*str)switch(*str){
+		case '"':case '\\':case '\t':case '\n':case '\r':cnt++;//fallthrough
+		default:cnt++,str++;
+	}
+	return cnt;
+}
+
+static size_t str_unescape_count(char*str){
+	if(!str)return -1;
+	size_t cnt=0;
+	while(*str)switch(*str){
+		case '\\':cnt++;//fallthrough
+		default:cnt++,str++;
+	}
+	return cnt;
+}
+
 char*str_escape(char*str){
 	if(!str)EPRET(EINVAL);
-	size_t xs=strlen(str)*2+1;
+	size_t xs=str_escape_count(str)+1;
 	char*dup=malloc(xs);
 	if(!dup)EPRET(ENOMEM);
 	memset(dup,0,xs);
 	char*ptr_dup=dup,*ptr_str=str;
 	while(*ptr_str){
 		switch(*ptr_str){
-			case '"':*ptr_dup++='\\',*ptr_dup++='\"';break;
-			case '\\':*ptr_dup++='\\',*ptr_dup++='\\';break;
-			case '\t':*ptr_dup++='\\',*ptr_dup++='t';break;
-			case '\n':*ptr_dup++='\\',*ptr_dup++='n';break;
-			case '\r':*ptr_dup++='\\',*ptr_dup++='r';break;
+			case '"':strcpy(ptr_dup,"\\\"");ptr_dup+=2;break;
+			case '\\':strcpy(ptr_dup,"\\\\");ptr_dup+=2;break;
+			case '\t':strcpy(ptr_dup,"\\t");ptr_dup+=2;break;
+			case '\n':strcpy(ptr_dup,"\\n");ptr_dup+=2;break;
+			case '\r':strcpy(ptr_dup,"\\r");ptr_dup+=2;break;
 			default:*ptr_dup++=*ptr_str;
 		}
 		ptr_str++;
@@ -342,7 +362,7 @@ char*str_escape(char*str){
 
 char*str_unescape(char*str){
 	if(!str)EPRET(EINVAL);
-	size_t xs=strlen(str)+1;
+	size_t xs=str_unescape_count(str)+1;
 	char*dup=malloc(xs);
 	if(!dup)EPRET(ENOMEM);
 	memset(dup,0,xs);

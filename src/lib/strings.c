@@ -339,6 +339,42 @@ static size_t str_unescape_count(char*str){
 	return cnt;
 }
 
+static size_t xml_escape_count(char*str){
+	if(!str)return -1;
+	size_t cnt=0;
+	while(*str){
+		switch(*str){
+			case '"':cnt+=6;break;
+			case '\'':cnt+=6;break;
+			case '<':cnt+=4;break;
+			case '>':cnt+=4;break;
+			case '&':cnt+=5;break;
+			default:cnt++;
+		}
+		str++;
+	}
+	return cnt;
+}
+
+static size_t xml_unescape_count(char*str){
+	if(!str)return -1;
+	size_t cnt=0;
+	while(*str){
+		switch(*str){
+			case '&':
+				if(strncmp(str,"&quot;",6)==0)str+=5;
+				if(strncmp(str,"&apos;",6)==0)str+=5;
+				if(strncmp(str,"&lt;",4)==0)str+=3;
+				if(strncmp(str,"&gt;",4)==0)str+=3;
+				if(strncmp(str,"&amp;",5)==0)str+=4;
+			//fallthrough
+			default:cnt++;
+		}
+		str++;
+	}
+	return cnt;
+}
+
 char*str_escape(char*str){
 	if(!str)EPRET(EINVAL);
 	size_t xs=str_escape_count(str)+1;
@@ -380,6 +416,46 @@ char*str_unescape(char*str){
 			default:*ptr_dup++=*ptr_str;
 		}
 		ptr_str++;
+	}
+	return dup;
+}
+
+char*xml_escape(char*str){
+	if(!str)EPRET(EINVAL);
+	size_t xs=xml_escape_count(str)+1;
+	char*dup=malloc(xs);
+	if(!dup)EPRET(ENOMEM);
+	memset(dup,0,xs);
+	char*ptr_dup=dup,*ptr_str=str;
+	while(*ptr_str){
+		switch(*ptr_str){
+			case '"':strcpy(ptr_dup,"&quot;");ptr_dup+=6;break;
+			case '\'':strcpy(ptr_dup,"&apos;");ptr_dup+=6;break;
+			case '<':strcpy(ptr_dup,"&lt;");ptr_dup+=4;break;
+			case '>':strcpy(ptr_dup,"&gt;");ptr_dup+=4;break;
+			case '&':strcpy(ptr_dup,"&amp;");ptr_dup+=5;break;
+			default:*ptr_dup++=*ptr_str;
+		}
+		ptr_str++;
+	}
+	return dup;
+}
+
+char*xml_unescape(char*str){
+	if(!str)EPRET(EINVAL);
+	size_t xs=xml_unescape_count(str)+1;
+	char*dup=malloc(xs);
+	if(!dup)EPRET(ENOMEM);
+	memset(dup,0,xs);
+	char*ptr_dup=dup,*ptr_str=str;
+	while(*ptr_str){
+		if(strncmp(ptr_str,"&quot;",6)==0)*ptr_dup='\"',ptr_str+=5;
+		else if(strncmp(ptr_str,"&apos;",6)==0)*ptr_dup='\'',ptr_str+=5;
+		else if(strncmp(ptr_str,"&lt;",4)==0)*ptr_dup='<',ptr_str+=3;
+		else if(strncmp(ptr_str,"&gt;",4)==0)*ptr_dup='>',ptr_str+=3;
+		else if(strncmp(ptr_str,"&amp;",5)==0)*ptr_dup='&',ptr_str+=4;
+		else *ptr_dup=*ptr_str;
+		ptr_dup++,ptr_str++;
 	}
 	return dup;
 }

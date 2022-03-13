@@ -175,6 +175,12 @@ extern char*str_escape(char*str);
 // src/lib/strings.c: unescape string
 extern char*str_unescape(char*str);
 
+// src/lib/strings.c: escape xml string
+extern char*xml_escape(char*str);
+
+// src/lib/strings.c: unescape xml string
+extern char*xml_unescape(char*str);
+
 #ifdef _LIST_H
 
 // src/lib/strings.c: convert path string to a list

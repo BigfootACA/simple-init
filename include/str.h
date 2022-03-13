@@ -164,22 +164,22 @@ extern char*add_right_slash(char*path,size_t len);
 extern char*buff2hex(char*hex,void*buff,size_t len);
 
 // src/lib/strings.c: string is true
-extern bool string_is_true(char*string);
+extern bool string_is_true(const char*string);
 
 // src/lib/strings.c: string is false
-extern bool string_is_false(char*string);
+extern bool string_is_false(const char*string);
 
 // src/lib/strings.c: escape string
-extern char*str_escape(char*str);
+extern char*str_escape(const char*str);
 
 // src/lib/strings.c: unescape string
-extern char*str_unescape(char*str);
+extern char*str_unescape(const char*str);
 
 // src/lib/strings.c: escape xml string
-extern char*xml_escape(char*str);
+extern char*xml_escape(const char*str);
 
 // src/lib/strings.c: unescape xml string
-extern char*xml_unescape(char*str);
+extern char*xml_unescape(const char*str);
 
 #ifdef _LIST_H
 

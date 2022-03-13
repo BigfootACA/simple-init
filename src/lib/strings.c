@@ -296,7 +296,7 @@ char*buff2hex(char*hex,void*buff,size_t len){
 	return hex;
 }
 
-bool string_is_true(char*string){
+bool string_is_true(const char*string){
 	return
 		strcasecmp(string,"1")==0||
 		strcasecmp(string,"ok")==0||
@@ -308,7 +308,7 @@ bool string_is_true(char*string){
 		strcasecmp(string,"enabled")==0;
 }
 
-bool string_is_false(char*string){
+bool string_is_false(const char*string){
 	return
 		strcasecmp(string,"0")==0||
 		strcasecmp(string,"no")==0||
@@ -319,7 +319,7 @@ bool string_is_false(char*string){
 		strcasecmp(string,"disabled")==0;
 }
 
-static size_t str_escape_count(char*str){
+static size_t str_escape_count(const char*str){
 	if(!str)return -1;
 	size_t cnt=0;
 	while(*str)switch(*str){
@@ -329,7 +329,7 @@ static size_t str_escape_count(char*str){
 	return cnt;
 }
 
-static size_t str_unescape_count(char*str){
+static size_t str_unescape_count(const char*str){
 	if(!str)return -1;
 	size_t cnt=0;
 	while(*str)switch(*str){
@@ -339,7 +339,7 @@ static size_t str_unescape_count(char*str){
 	return cnt;
 }
 
-static size_t xml_escape_count(char*str){
+static size_t xml_escape_count(const char*str){
 	if(!str)return -1;
 	size_t cnt=0;
 	while(*str){
@@ -356,7 +356,7 @@ static size_t xml_escape_count(char*str){
 	return cnt;
 }
 
-static size_t xml_unescape_count(char*str){
+static size_t xml_unescape_count(const char*str){
 	if(!str)return -1;
 	size_t cnt=0;
 	while(*str){
@@ -375,13 +375,14 @@ static size_t xml_unescape_count(char*str){
 	return cnt;
 }
 
-char*str_escape(char*str){
+char*str_escape(const char*str){
 	if(!str)EPRET(EINVAL);
 	size_t xs=str_escape_count(str)+1;
 	char*dup=malloc(xs);
 	if(!dup)EPRET(ENOMEM);
 	memset(dup,0,xs);
-	char*ptr_dup=dup,*ptr_str=str;
+	const char*ptr_str=str;
+	char*ptr_dup=dup;
 	while(*ptr_str){
 		switch(*ptr_str){
 			case '"':strcpy(ptr_dup,"\\\"");ptr_dup+=2;break;
@@ -396,13 +397,14 @@ char*str_escape(char*str){
 	return dup;
 }
 
-char*str_unescape(char*str){
+char*str_unescape(const char*str){
 	if(!str)EPRET(EINVAL);
 	size_t xs=str_unescape_count(str)+1;
 	char*dup=malloc(xs);
 	if(!dup)EPRET(ENOMEM);
 	memset(dup,0,xs);
-	char*ptr_dup=dup,*ptr_str=str;
+	const char*ptr_str=str;
+	char*ptr_dup=dup;
 	while(*ptr_str){
 		switch(*ptr_str){
 			case '\\':
@@ -420,13 +422,14 @@ char*str_unescape(char*str){
 	return dup;
 }
 
-char*xml_escape(char*str){
+char*xml_escape(const char*str){
 	if(!str)EPRET(EINVAL);
 	size_t xs=xml_escape_count(str)+1;
 	char*dup=malloc(xs);
 	if(!dup)EPRET(ENOMEM);
 	memset(dup,0,xs);
-	char*ptr_dup=dup,*ptr_str=str;
+	const char*ptr_str=str;
+	char*ptr_dup=dup;
 	while(*ptr_str){
 		switch(*ptr_str){
 			case '"':strcpy(ptr_dup,"&quot;");ptr_dup+=6;break;
@@ -441,13 +444,14 @@ char*xml_escape(char*str){
 	return dup;
 }
 
-char*xml_unescape(char*str){
+char*xml_unescape(const char*str){
 	if(!str)EPRET(EINVAL);
 	size_t xs=xml_unescape_count(str)+1;
 	char*dup=malloc(xs);
 	if(!dup)EPRET(ENOMEM);
 	memset(dup,0,xs);
-	char*ptr_dup=dup,*ptr_str=str;
+	const char*ptr_str=str;
+	char*ptr_dup=dup;
 	while(*ptr_str){
 		if(strncmp(ptr_str,"&quot;",6)==0)*ptr_dup='\"',ptr_str+=5;
 		else if(strncmp(ptr_str,"&apos;",6)==0)*ptr_dup='\'',ptr_str+=5;

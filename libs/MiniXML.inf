@@ -1,0 +1,32 @@
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = MiniXML
+  FILE_GUID                      = DFBEA5A1-63A2-4167-A776-31EE4D32E1A1
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = MiniXML
+
+[BuildOptions]
+  GCC:*_*_*_CC_FLAGS = -Wno-sign-compare -Wno-implicit-fallthrough
+
+[Packages]
+  MdePkg/MdePkg.dec
+  SimpleInit.dec
+
+[LibraryClasses]
+  UefiLib
+  SimpleInitCompatible
+
+[Sources]
+  libs/mxml/mxml-private.h
+  libs/mxml-uefi/config.h
+  libs/mxml/mxml-attr.c
+  libs/mxml/mxml-entity.c
+  libs/mxml/mxml-file.c
+  libs/mxml/mxml-get.c
+  libs/mxml/mxml-index.c
+  libs/mxml/mxml-node.c
+  libs/mxml/mxml-private.c
+  libs/mxml/mxml-search.c
+  libs/mxml/mxml-set.c
+  libs/mxml/mxml-string.c

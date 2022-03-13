@@ -36,6 +36,7 @@ option(ENABLE_FDISK       "Enable libfdisk for GUI partition tools"           ON
 option(ENABLE_KMOD        "Enable kmod modules load or remove"                ON)
 option(ENABLE_BLKID       "Enable blkid block detect and evalaute tag"        ON)
 option(ENABLE_JSONC       "Enable json-c for config files"                    ON)
+option(ENABLE_MXML        "Enable mxml for config files"                      ON)
 option(ENABLE_HIVEX       "Enable hivex for windows registry/bcd edit"        OFF)
 option(ENABLE_VNCSERVER   "Enable VNC Server for remote GUI"                  OFF)
 option(SYSTEM_FREETYPE2   "Use system FreeType 2 library"                     OFF)
@@ -64,6 +65,10 @@ endif()
 
 if("${ENABLE_JSONC}" STREQUAL "ON")
 	include(libs/json-c.cmake)
+endif()
+
+if("${ENABLE_MXML}" STREQUAL "ON")
+	include(libs/mxml.cmake)
 endif()
 
 if("${ENABLE_KMOD}" STREQUAL "OFF")

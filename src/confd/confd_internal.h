@@ -195,6 +195,9 @@ extern int conf_set_grp(const char*path,gid_t grp,uid_t u,gid_t g);
 // src/confd/store.c: set config mode
 extern int conf_set_mod(const char*path,mode_t mod,uid_t u,gid_t g);
 
+// src/confd/store.c: calculate conf store memory size
+extern size_t conf_calc_size(struct conf*c);
+
 // src/confd/file.c: load config file to config store
 extern int conf_load_file(_ROOT_TYPE root,const char*path);
 

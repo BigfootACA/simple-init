@@ -308,6 +308,26 @@ int conf_set_mod(const char*path,mode_t mod,uid_t u,gid_t g){
 	return 0;
 }
 
+size_t conf_calc_size(struct conf*c){
+	if(!c)return 0;
+	list*p;
+	size_t size=sizeof(struct conf);
+	switch(c->type){
+		case TYPE_KEY:
+			if((p=list_first(c->keys)))do{
+				LIST_DATA_DECLARE(l,p,struct conf*);
+				size+=sizeof(list);
+				size+=conf_calc_size(l);
+			}while((p=p->next));
+		break;
+		case TYPE_STRING:
+			if(c->value.string)size+=strlen(c->value.string)+1;
+		break;
+		default:;
+	}
+	return size;
+}
+
 #define FUNCTION_CONF_GET_SET(_tag,_type,_func) \
 	int conf_set_##_func##_inc(const char*path,_type data,uid_t u,gid_t g,bool inc){\
 		struct conf*c=conf_lookup(path,true,TYPE_##_tag,u,g);\

@@ -89,6 +89,8 @@ static void process_dtbo(linux_boot*lb,qcom_chip_info*chip_info,dtbo_info*dtbo){
 	if(!model)model="Linux Device Tree Overlay";
 	AsciiStrCpyS(dtbo->model,sizeof(dtbo->model),model);
 	qcom_parse_id(dtbo->address,&dtbo->info);
+	tlog_verbose("voting dtbo %zu (%s)",dtbo->id,model);
+	qcom_dump_info(&dtbo->info);
 	dtbo->vote=qcom_check_dtb(&dtbo->info,chip_info);
 	lb->status.dtbo_id=(int64_t)dtbo->id;
 	tlog_verbose(
@@ -146,8 +148,12 @@ static int read_qcom_dtbo(linux_boot*lb,linux_file_info*fi){
 			!(f=list_first(dtbos))||
 			!(sel=LIST_DATA(f,dtbo_info*))
 		)EDONE(tlog_warn("no dtbo found"));
-		r=select_dtbo(lb,sel);
+		if(sel->vote<0)EDONE(tlog_warn(
+			"selected dtbo %zu (%s) vote too few",
+			sel->id,sel->model
+		));
 	}
+	r=select_dtbo(lb,sel);
 	done:
 	list_free_all_def(dtbos);
 	dtbos=NULL;

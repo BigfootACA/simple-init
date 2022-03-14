@@ -62,6 +62,10 @@ static void search_dtb(linux_boot*lb,void*buff,void**pos){
 	AsciiStrCpyS(fi.model,sizeof(fi.model),model);
 	qcom_parse_id(fi.address,&fi.info);
 	if(fi.info.soc_id!=0)lb->status.qualcomm=true;
+	tlog_verbose(
+		"dtb id %zu offset %zu size %zu (%s)",
+		fi.id,fi.offset,fi.size,fi.model
+	);
 
 	list_obj_add_new_dup(&fdts,&fi,sizeof(fdt_info));
 	return;
@@ -88,6 +92,8 @@ static int check_dtbs(linux_boot*lb){
 	if(qcom_get_chip_info(lb,&chip_info)!=0)return -1;
 	if((f=list_first(fdts)))do{
 		LIST_DATA_DECLARE(fdt,f,fdt_info*);
+		tlog_verbose("voting dtb %zu (%s)",fdt->id,fdt->model);
+		qcom_dump_info(&fdt->info);
 		fdt->vote=qcom_check_dtb(&fdt->info,&chip_info);
 		tlog_verbose(
 			"dtb id %zu offset %zu size %zu vote %lld (%s)",
@@ -146,9 +152,12 @@ int linux_boot_select_fdt(linux_boot*lb){
 			!(f=list_first(fdts))||
 			!(fdt=LIST_DATA(f,fdt_info*))
 		)EDONE(tlog_warn("no dtb found"));
+		if(fdt->vote<0)EDONE(tlog_warn(
+			"selected dtb %zu (%s) vote too few",
+			fdt->id,fdt->model
+		));
 	}
-	select_dtb(lb,fdt);
-	ret=0;
+	ret=select_dtb(lb,fdt);
 	done:
 	list_free_all(fdts,free_fdt);
 	fdts=NULL;

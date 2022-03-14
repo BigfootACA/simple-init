@@ -193,6 +193,7 @@ static int image_open_source(char*path,unsigned char**data,size_t*len){
 
 static image_decoder*image_get_decoder(char*path){
 	if(!path)return NULL;
+	static list*unsupports=NULL;
 	char*e=NULL,*ext;
 	image_decoder*d=NULL;
 	if(!(ext=strrchr(path,'.')))return NULL;
@@ -201,6 +202,10 @@ static image_decoder*image_get_decoder(char*path){
 		if(!d->types)continue;
 		for(size_t t=0;(e=d->types[t]);t++)
 			if(strcasecmp(ext,e)==0)return d;
+	}
+	if(!list_search_string(unsupports,path)){
+		tlog_warn("unsupported image decoder for type %s (%s)",ext,path);
+		list_obj_add_new_strdup(&unsupports,path);
 	}
 	return NULL;
 }

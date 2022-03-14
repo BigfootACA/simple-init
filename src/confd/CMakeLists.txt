@@ -7,4 +7,5 @@ add_library(init_confd STATIC
 	file.c
 	file_conf.c
 	json_conf.c
+	xml_conf.c
 )

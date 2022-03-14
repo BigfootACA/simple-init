@@ -23,10 +23,14 @@
 
 extern struct conf_file_hand conf_hand_conf;
 extern struct conf_file_hand conf_hand_json;
+extern struct conf_file_hand conf_hand_xml;
 struct conf_file_hand*conf_hands[]={
 	&conf_hand_conf,
 	#ifdef ENABLE_JSONC
 	&conf_hand_json,
+	#endif
+	#ifdef ENABLE_MXML
+	&conf_hand_xml,
 	#endif
 	NULL
 };

@@ -46,6 +46,7 @@ static void search_dtb(linux_boot*lb,void*buff,void**pos){
 	if(fi.size<=0||fi.size>=MAX_DTB_SIZE)goto fail;
 	ZeroMem(buff,MAX_DTB_SIZE);
 	CopyMem(buff,(*pos),fi.size);
+	fi.offset=(*pos)-lb->dtb.address;
 	(*pos)+=fi.size;
 	if(fdt_check_header(buff)!=0)return;
 	if(fdt_path_offset(buff,"/")!=0)return;
@@ -55,7 +56,6 @@ static void search_dtb(linux_boot*lb,void*buff,void**pos){
 	ZeroMem(fi.address,fi.mem_size);
 	CopyMem(fi.address,buff,fi.size);
 	fi.id=MAX(list_count(fdts),0);
-	fi.offset=(*pos)-lb->dtb.address;
 
 	model=(char*)fdt_getprop(fi.address,0,"model",&len);
 	if(!model)model="Linux Device Tree Blob";

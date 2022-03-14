@@ -47,14 +47,23 @@ int qcom_parse_id(void*dtb,qcom_chip_info*info){
 }
 
 int qcom_dump_info(qcom_chip_info*info){
-	tlog_verbose("msm soc id: %llx",(unsigned long long)info->soc_id);
-	tlog_verbose("msm soc rev: %llx",(unsigned long long)info->soc_rev);
-	tlog_verbose("msm foundry id: %llx",(unsigned long long)info->foundry_id);
-	tlog_verbose("board variant major: %llx",(unsigned long long)info->variant_major);
-	tlog_verbose("board variant minor: %llx",(unsigned long long)info->variant_minor);
-	tlog_verbose("board variant id: %llx",(unsigned long long)info->variant_id);
-	tlog_verbose("board subtype id: %llx",(unsigned long long)info->subtype_id);
-	tlog_verbose("board subtype ddr: %llx",(unsigned long long)info->subtype_ddr);
+	tlog_verbose(
+		"msm soc id: 0x%03llx rev: 0x%05llx foundry id: 0x%02llx",
+		(unsigned long long)info->soc_id,
+		(unsigned long long)info->soc_rev,
+		(unsigned long long)info->foundry_id
+	);
+	tlog_verbose(
+		"board variant id: 0x%02llx major: 0x%02llx minor: 0x%02llx",
+		(unsigned long long)info->variant_id,
+		(unsigned long long)info->variant_major,
+		(unsigned long long)info->variant_minor
+	);
+	tlog_verbose(
+		"board subtype id: 0x%02llx ddr: 0x%02llx",
+		(unsigned long long)info->subtype_id,
+		(unsigned long long)info->subtype_ddr
+	);
 	return 0;
 }
 
@@ -117,6 +126,7 @@ int qcom_get_chip_info(linux_boot*lb,qcom_chip_info*info){
 	ZeroMem(info,sizeof(qcom_chip_info));
 	if(lb->config&&lb->config->info.soc_id>0){
 		tlog_debug("use chipinfo from config");
+		qcom_dump_info(&lb->config->info);
 		CopyMem(info,&lb->config->info,sizeof(qcom_chip_info));
 		return 0;
 	}

@@ -12,6 +12,11 @@
 #include<string.h>
 #include<unistd.h>
 #include<sys/stat.h>
+#ifdef ENABLE_UEFI
+#include<Library/MemoryAllocationLib.h>
+#include<Guid/FileInfo.h>
+#include"locate.h"
+#endif
 #include"list.h"
 #include"confd.h"
 #include"assets.h"
@@ -19,7 +24,6 @@
 #include"gui/image.h"
 #include"gui/fsext.h"
 #define TAG "image"
-#define EGOTO(e) {e;goto fail;}
 
 extern image_decoder image_decoder_bmp;
 extern image_decoder image_decoder_png;
@@ -27,14 +31,18 @@ extern image_decoder image_decoder_svg;
 extern image_decoder image_decoder_jpeg;
 typedef int(*img_backend)(char*,unsigned char**,size_t*);
 static int image_open_source_lvgl(char*,unsigned char**,size_t*);
-#ifndef ENABLE_UEFI
+#ifdef ENABLE_UEFI
+static int image_open_source_locate(char*,unsigned char**,size_t*);
+#else
 static int image_open_source_native(char*,unsigned char**,size_t*);
 #endif
 static int image_open_source_assets(char*,unsigned char**,size_t*);
 
 static img_backend img_backends[]={
 	image_open_source_lvgl,
-	#ifndef ENABLE_UEFI
+	#ifdef ENABLE_UEFI
+	image_open_source_locate,
+	#else
 	image_open_source_native,
 	#endif
 	image_open_source_assets,
@@ -66,40 +74,95 @@ static int image_open_source_lvgl(char*path,unsigned char**data,size_t*len){
 	if(strlen(path)<=3||path[0]=='/'||path[1]!=':')return -1;
 	if((r=lv_fs_open(&f,path,LV_FS_MODE_RD))!=LV_FS_RES_OK)return -1;
 	if((r=lv_fs_size(&f,&size)!=LV_FS_RES_OK))
-		EGOTO(tlog_warn("get image %s size failed: %s",path,lv_fs_res_to_i18n_string(r)));
-	if(size<=64)EGOTO(tlog_warn("invalid image %s",path));
-	if(!(*data=malloc(size+1)))EGOTO();
+		EDONE(tlog_warn("get image %s size failed: %s",path,lv_fs_res_to_i18n_string(r)));
+	if(size<=64)EDONE(tlog_warn("invalid image %s",path));
+	if(!(*data=malloc(size+1)))EDONE();
 	memset(*data,0,size+1);
 	if((r=lv_fs_read(&f,*data,size,&buf))!=LV_FS_RES_OK)
-		EGOTO(tlog_warn("read image %s failed: %s",path,lv_fs_res_to_i18n_string(r)));
-	if(buf!=size)EGOTO(tlog_warn("read image %s failed",path));
+		EDONE(tlog_warn("read image %s failed: %s",path,lv_fs_res_to_i18n_string(r)));
+	if(buf!=size)EDONE(tlog_warn("read image %s failed",path));
 	lv_fs_close(&f);
 	*len=(size_t)size;
 	return 0;
-	fail:
+	done:
 	if(f.file_d)lv_fs_close(&f);
 	if(*data)free(*data);
 	*data=NULL,*len=0;
 	return -1;
 }
 
-#ifndef ENABLE_UEFI
+#ifdef ENABLE_UEFI
+static int image_open_source_locate(char*path,unsigned char**data,size_t*len){
+	locate_ret loc;
+	EFI_STATUS st;
+	EFI_FILE_INFO*info=NULL;
+	UINTN infos=0,read;
+	if(path[0]=='/')return -1;
+	if(!boot_locate(&loc,path))return -1;
+	if(loc.type!=LOCATE_FILE)
+		EDONE(telog_warn("unsupported locate type for %s",path));
+
+	// get file info
+	st=loc.file->GetInfo(loc.file,&gEfiFileInfoGuid,&infos,info);
+	if(st==EFI_BUFFER_TOO_SMALL){
+		if(!(info=AllocateZeroPool(infos)))
+			EDONE(tlog_error("allocate pool failed"));
+		st=loc.file->GetInfo(loc.file,&gEfiFileInfoGuid,&infos,info);
+	}
+	if(EFI_ERROR(st))EDONE(tlog_warn(
+		"get file info of %s failed: %s",
+		path,efi_status_to_string(st)
+	));
+	if(info->FileSize<=0)
+		EDONE(tlog_warn("file %s size too small",path));
+	if(info->FileSize>=0x8000000)
+		EDONE(tlog_warn("file %s size too big",path));
+	if(info->Attribute&EFI_FILE_DIRECTORY)
+		EDONE(tlog_warn("file %s is a directory",path));
+	*len=info->FileSize;
+	FreePool(info);
+	info=NULL;
+
+	// read file to memory
+	read=*len;
+	if(!(*data=malloc(read+1)))
+		EDONE(tlog_error("allocate pool failed"));
+	memset(*data,0,read+1);
+	st=loc.file->Read(loc.file,&read,*data);
+	if(EFI_ERROR(st))EDONE(tlog_warn(
+		"read file %s failed: %s",
+		path,efi_status_to_string(st)
+	));
+	if(read!=*len)EDONE(tlog_warn(
+		"read file size %s not match %llu != %zu",
+		path,(unsigned long long)read,*len
+	));
+	loc.file->Close(loc.file);
+	return 0;
+	done:
+	if(info)FreePool(info);
+	if(loc.file)loc.file->Close(loc.file);
+	if(*data)free(*data);
+	*data=NULL,*len=0;
+	return -1;
+}
+#else
 static int image_open_source_native(char*path,unsigned char**data,size_t*len){
 	int fd=-1;
 	struct stat st;
 	if((fd=open(path,O_RDONLY,0644))<0)return -1;
 	if(fstat(fd,&st)!=0)
-		EGOTO(telog_warn("stat image %s failed",path));
+		EDONE(telog_warn("stat image %s failed",path));
 	if(!S_ISREG(st.st_mode)||st.st_size<=64)
-		EGOTO(tlog_warn("invalid image %s",path));
-	if(!(*data=malloc(st.st_size+1)))EGOTO();
+		EDONE(tlog_warn("invalid image %s",path));
+	if(!(*data=malloc(st.st_size+1)))EDONE();
 	memset(*data,0,st.st_size+1);
 	if(read(fd,*data,st.st_size)!=st.st_size)
-		EGOTO(telog_warn("read image %s failed",path));
+		EDONE(telog_warn("read image %s failed",path));
 	close(fd);
 	*len=st.st_size;
 	return 0;
-	fail:
+	done:
 	if(fd>=0)close(fd);
 	if(*data)free(*data);
 	*data=NULL,*len=0;
@@ -206,15 +269,15 @@ static image_data*image_decode(char*path){
 	image_decoder*d=NULL;
 	unsigned char*data=NULL;
 	if(!(d=image_get_decoder(path))||!d->decode_cb)return NULL;
-	if(image_open_source(path,&data,&len)==-1||!data||len<=0)goto fail;
-	if(!(img=malloc(sizeof(image_data))))goto fail;
+	if(image_open_source(path,&data,&len)==-1||!data||len<=0)goto done;
+	if(!(img=malloc(sizeof(image_data))))goto done;
 	memset(img,0,sizeof(image_data));
 	strncpy(img->path,path,sizeof(img->path)-1);
-	if(d->decode_cb(data,len,img)!=0)goto fail;
-	if(img->width<=0||img->height<=0||!img->pixels)goto fail;
+	if(d->decode_cb(data,len,img)!=0)goto done;
+	if(img->width<=0||img->height<=0||!img->pixels)goto done;
 	free(data);
 	return img;
-	fail:
+	done:
 	image_free_data(img);
 	if(data)free(data);
 	return NULL;

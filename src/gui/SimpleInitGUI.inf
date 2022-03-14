@@ -30,6 +30,7 @@
   SimpleInitBootLinux
   SimpleInitConfd
   SimpleInitLoggerd
+  SimpleInitLocate
   SimpleInitAssets
   ReportStatusCodeLib
   UefiBootManagerLib

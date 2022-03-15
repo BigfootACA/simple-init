@@ -304,6 +304,7 @@ static int filepicker_lost_focus(struct gui_activity*d){
 
 static int do_back(struct gui_activity*d __attribute__((unused))){
 	struct filepicker*box=d->args;
+	if(!box)return 0;
 	if(!fileview_is_top(box->fv)){
 		fileview_go_back(box->fv);
 		return 1;

@@ -203,9 +203,10 @@ static void keyboard_toggle(lv_obj_t*obj,lv_event_t e){
 		lv_keyboard_def_event_cb(obj,e);
 		return;
 	}
+	int w=gui_w,h=gui_h/3;
 	if(sysbar.keyboard){
+		gui_sh+=h;
 		lv_obj_del(sysbar.keyboard);
-		lv_obj_set_height(sysbar.content,gui_sh);
 		sysbar.keyboard=NULL;
 		if(sysbar.focus_input){
 			lv_event_send(sysbar.focus_input,LV_EVENT_DEFOCUSED,NULL);
@@ -214,15 +215,20 @@ static void keyboard_toggle(lv_obj_t*obj,lv_event_t e){
 		lv_group_set_editing(gui_grp,false);
 		sysbar_show_bar();
 		sysbar_edit_menu_hide();
+		struct gui_activity*act=guiact_get_last();
+		lv_obj_set_height(sysbar.content,gui_sh);
+		if(act){
+			lv_obj_set_height(act->page,gui_sh);
+			if(act->reg->resize)act->reg->resize(act);
+		}
 		return;
 	}
-	int w=gui_w,h=gui_h/3;
 	sysbar_show_bar();
 	sysbar_edit_menu_hide();
+	gui_sh-=h;
 	sysbar.keyboard=lv_keyboard_create(sysbar.screen,NULL);
 	lv_obj_move_foreground(sysbar.edit_menu);
 	lv_obj_set_size(sysbar.keyboard,w,h);
-	lv_obj_set_height(sysbar.content,gui_sh-h);
 	lv_obj_set_y(sysbar.keyboard,gui_h-sysbar.size-h);
 	lv_obj_set_event_cb(sysbar.keyboard,keyboard_toggle);
 	lv_keyboard_set_cursor_manage(sysbar.keyboard,true);
@@ -237,6 +243,12 @@ static void keyboard_toggle(lv_obj_t*obj,lv_event_t e){
 	lv_group_set_editing(gui_grp,true);
 	if(sysbar.hide)lv_task_del(sysbar.hide);
 	sysbar.hide=NULL;
+	struct gui_activity*act=guiact_get_last();
+	lv_obj_set_height(sysbar.content,gui_sh);
+	if(act){
+		lv_obj_set_height(act->page,gui_sh);
+		if(act->reg->resize)act->reg->resize(act);
+	}
 }
 
 void sysbar_keyboard_toggle(){

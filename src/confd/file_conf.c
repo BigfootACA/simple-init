@@ -155,6 +155,10 @@ static void conf_parse_line(struct conf_file_hand*hand,int*err,const char*name,s
 		if(vs<2||value[vs-1]!='"')goto inv_val;
 		line_set_string(hand,key,value,vs);
 	}else{
+		if(strcmp(value,"0")==0){
+			conf_set_integer_inc(key,0,0,0,hand->include);
+			return;
+		}
 		errno=0;
 		int64_t i=strtol(value,&p,0);
 		if(errno!=0||p==value){

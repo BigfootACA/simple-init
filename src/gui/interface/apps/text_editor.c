@@ -350,8 +350,6 @@ static void btns_cb(lv_obj_t*obj,lv_event_t e){
 static void input_cb(lv_obj_t*obj,lv_event_t e){
 	if(e==LV_EVENT_DELETE)return;
 	if(obj!=text||strcmp(guiact_get_last()->name,"text-editor")!=0)return;
-	lv_coord_t fh=gui_sh-bth-btm*2,sh=fh;
-	if(sysbar.keyboard)sh=gui_sh-lv_obj_get_height(sysbar.keyboard);
 	lv_textarea_ext_t*ext=lv_obj_get_ext_attr(text);
 	uint32_t ss=ext->sel_start,se=ext->sel_end,sl=se-ss;
 	lv_obj_set_enabled(btn_copy,sl>0);
@@ -362,11 +360,6 @@ static void input_cb(lv_obj_t*obj,lv_event_t e){
 		break;
 		case LV_EVENT_VALUE_CHANGED:
 			set_changed(true);
-		break;
-		case LV_EVENT_FOCUSED:
-		case LV_EVENT_DEFOCUSED:
-			lv_obj_set_height(text,MIN(sh,fh));
-			lv_obj_set_y(lv_page_get_scrl(sysbar.content),0);
 		break;
 		case LV_EVENT_INSERT:
 			if(*(char*)lv_event_get_data()==127&&sl>0){
@@ -405,68 +398,75 @@ static int do_clean(struct gui_activity*act __attribute__((unused))){
 	return 0;
 }
 
+static int editor_resize(struct gui_activity*act __attribute__((unused))){
+	btw=(gui_sw-btm)/6-btm,bth=btx*2;
+	lv_coord_t ts=gui_sh;
+	if(!sysbar.keyboard)ts-=bth+(btm*2);
+	lv_obj_set_size(text,gui_sw,ts);
+	lv_obj_set_size(btn_open,btw,bth);
+	lv_obj_align(btn_open,text,LV_ALIGN_OUT_BOTTOM_LEFT,btm,btm);
+	lv_obj_set_size(btn_new,btw,bth);
+	lv_obj_align(btn_new,btn_open,LV_ALIGN_OUT_RIGHT_MID,btm,0);
+	lv_obj_set_size(btn_save,btw,bth);
+	lv_obj_align(btn_save,btn_new,LV_ALIGN_OUT_RIGHT_MID,btm,0);
+	lv_obj_set_size(btn_copy,btw,bth);
+	lv_obj_align(btn_copy,btn_save,LV_ALIGN_OUT_RIGHT_MID,btm,0);
+	lv_obj_set_size(btn_paste,btw,bth);
+	lv_obj_align(btn_paste,btn_copy,LV_ALIGN_OUT_RIGHT_MID,btm,0);
+	lv_obj_set_size(btn_menu,btw,bth);
+	lv_obj_align(btn_menu,btn_paste,LV_ALIGN_OUT_RIGHT_MID,btm,0);
+	return 0;
+}
+
 static int editor_draw(struct gui_activity*act){
-	btx=gui_font_size,btm=btx/2,btw=(gui_sw-btm)/6-btm,bth=btx*2;
+	btx=gui_font_size,btm=btx/2;
 
 	text=lv_textarea_create(act->page,NULL);
 	lv_textarea_clear_selection(text);
 	lv_textarea_set_text(text,"");
 	lv_textarea_set_one_line(text,false);
 	lv_textarea_set_text_sel(text,true);
-	lv_obj_set_size(text,gui_sw,gui_sh-bth-btm*2);
 	lv_obj_set_event_cb(text,input_cb);
 	lv_obj_set_style_local_border_width(text,LV_TEXTAREA_PART_BG,LV_STATE_DEFAULT,0);
 	lv_obj_set_style_local_radius(text,LV_TEXTAREA_PART_BG,LV_STATE_DEFAULT,0);
 	lv_obj_set_small_text_font(text,LV_TEXTAREA_PART_BG);
 
 	btn_open=lv_btn_create(act->page,NULL);
-	lv_obj_set_size(btn_open,btw,bth);
 	lv_obj_set_event_cb(btn_open,btns_cb);
 	lv_obj_set_user_data(btn_open,"open");
-	lv_obj_align(btn_open,NULL,LV_ALIGN_IN_BOTTOM_LEFT,btm,-btm);
 	lv_obj_set_style_local_radius(btn_open,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
 	lv_label_set_text(lv_label_create(btn_open,NULL),LV_SYMBOL_UPLOAD);
 
 	btn_new=lv_btn_create(act->page,NULL);
-	lv_obj_set_size(btn_new,btw,bth);
 	lv_obj_set_event_cb(btn_new,btns_cb);
 	lv_obj_set_user_data(btn_new,"new");
-	lv_obj_align(btn_new,btn_open,LV_ALIGN_OUT_RIGHT_MID,btm,0);
 	lv_obj_set_style_local_radius(btn_new,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
 	lv_label_set_text(lv_label_create(btn_new,NULL),LV_SYMBOL_PLUS);
 
 	btn_save=lv_btn_create(act->page,NULL);
 	lv_obj_set_enabled(btn_save,false);
-	lv_obj_set_size(btn_save,btw,bth);
 	lv_obj_set_event_cb(btn_save,btns_cb);
 	lv_obj_set_user_data(btn_save,"save");
-	lv_obj_align(btn_save,btn_new,LV_ALIGN_OUT_RIGHT_MID,btm,0);
 	lv_obj_set_style_local_radius(btn_save,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
 	lv_label_set_text(lv_label_create(btn_save,NULL),LV_SYMBOL_SAVE);
 
 	btn_copy=lv_btn_create(act->page,NULL);
 	lv_obj_set_enabled(btn_copy,false);
-	lv_obj_set_size(btn_copy,btw,bth);
 	lv_obj_set_event_cb(btn_copy,btns_cb);
 	lv_obj_set_user_data(btn_copy,"copy");
-	lv_obj_align(btn_copy,btn_save,LV_ALIGN_OUT_RIGHT_MID,btm,0);
 	lv_obj_set_style_local_radius(btn_copy,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
 	lv_label_set_text(lv_label_create(btn_copy,NULL),LV_SYMBOL_COPY);
 
 	btn_paste=lv_btn_create(act->page,NULL);
 	lv_obj_set_enabled(btn_paste,clipboard_get_type()==CLIP_TEXT);
-	lv_obj_set_size(btn_paste,btw,bth);
 	lv_obj_set_event_cb(btn_paste,btns_cb);
 	lv_obj_set_user_data(btn_paste,"paste");
-	lv_obj_align(btn_paste,btn_copy,LV_ALIGN_OUT_RIGHT_MID,btm,0);
 	lv_obj_set_style_local_radius(btn_paste,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
 	lv_label_set_text(lv_label_create(btn_paste,NULL),LV_SYMBOL_PASTE);
 
 	btn_menu=lv_btn_create(act->page,NULL);
-	lv_obj_set_size(btn_menu,btw,bth);
 	lv_obj_set_event_cb(btn_menu,btns_cb);
 	lv_obj_set_user_data(btn_menu,"menu");
-	lv_obj_align(btn_menu,btn_paste,LV_ALIGN_OUT_RIGHT_MID,btm,0);
 	lv_obj_set_style_local_radius(btn_menu,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
 	lv_label_set_text(lv_label_create(btn_menu,NULL),LV_SYMBOL_LIST);
 
@@ -489,6 +489,7 @@ struct gui_register guireg_text_edit={
 	.open_file=true,
 	.ask_exit=do_back,
 	.quiet_exit=do_clean,
+	.resize=editor_resize,
 	.draw=editor_draw,
 	.lost_focus=editor_lost_focus,
 	.get_focus=editor_get_focus,

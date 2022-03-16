@@ -22,7 +22,6 @@
 #include"gui/activity.h"
 #include"gui/filepicker.h"
 #define TAG "regedit"
-#define MIME_DIR _PATH_USR"/share/pixmaps/mime"
 #define MIME_EXT ".svg"
 
 struct reg_item{
@@ -58,12 +57,12 @@ static char*get_string_path(struct regedit*reg,char*sub){
 
 static const char*get_icon(struct reg_item*ci){
 	if(!ci)return NULL;
-	if(ci->parent)return "inode-parent";
+	if(ci->parent)return "inode-parent"MIME_EXT;
 	switch(ci->type){
-		case hive_t_REG_NONE:return "inode-dir";
-		default:return "text-x-plain";
+		case hive_t_REG_NONE:return "inode-dir"MIME_EXT;
+		default:return "text-x-plain"MIME_EXT;
 	}
-	return "unknown";
+	return "unknown"MIME_EXT;
 }
 
 static int clean_item(void*d){
@@ -179,17 +178,10 @@ static void add_item(struct reg_item*ci){
 	lv_obj_set_event_cb(ci->img,click_item);
 	lv_obj_set_user_data(ci->img,ci);
 	lv_obj_add_style(ci->img,LV_IMG_PART_MAIN,&ci->reg->img_s);
-	char ipath[PATH_MAX];
-	memset(ipath,0,PATH_MAX);
-	snprintf(ipath,PATH_MAX-1,MIME_DIR"/%s"MIME_EXT,get_icon(ci));
-	lv_img_set_src(ci->img,ipath);
 	lv_img_ext_t*ext=lv_obj_get_ext_attr(ci->img);
-	if((ext->w<=0||ext->h<=0)){
-		memset(ipath,0,PATH_MAX);
-		strncpy(ipath,MIME_DIR"/inode-file"MIME_EXT,PATH_MAX-1);
-		lv_img_set_src(ci->img,ipath);
-		ext=lv_obj_get_ext_attr(ci->img);
-	}
+	lv_img_set_src(ci->img,get_icon(ci));
+	if((ext->w<=0||ext->h<=0))
+		lv_img_set_src(ci->img,"inode-file"MIME_EXT);
 	if(ext->w>0&&ext->h>0)lv_img_set_zoom(ci->img,(int)(((float)ci->reg->si/MAX(ext->w,ext->h))*256));
 	lv_img_set_pivot(ci->img,0,0);
 	lv_group_add_obj(gui_grp,ci->img);

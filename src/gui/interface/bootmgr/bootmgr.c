@@ -134,16 +134,10 @@ static void bootmgr_add(struct bootmgr*bm,char*c){
 	lv_obj_set_style_local_outline_width(bi->img,LV_IMG_PART_MAIN,LV_STATE_FOCUSED,gui_dpi/100);
 	lv_obj_set_style_local_outline_color(bi->img,LV_IMG_PART_MAIN,LV_STATE_FOCUSED,lv_theme_get_color_primary());
 	lv_obj_set_style_local_radius(bi->img,LV_IMG_PART_MAIN,LV_STATE_FOCUSED,gui_dpi/50);
-	if(!c)lv_img_set_src(bi->img,IMG_RES"/back.svg");
-	else if(bi->cfg.icon[0]=='/'||bi->cfg.icon[1]==':')lv_img_set_src(bi->img,bi->cfg.icon);
-	else{
-		char ipath[PATH_MAX];
-		memset(ipath,0,PATH_MAX);
-		snprintf(ipath,PATH_MAX-1,IMG_RES"/%s",bi->cfg.icon);
-		lv_img_set_src(bi->img,ipath);
-	}
 	lv_img_ext_t*ext=lv_obj_get_ext_attr(bi->img);
-	if((ext->w<=0||ext->h<=0))lv_img_set_src(bi->img,IMG_RES"/apps.svg");
+	lv_img_set_src(bi->img,c?bi->cfg.icon:"back.svg");
+	if((ext->w<=0||ext->h<=0))
+		lv_img_set_src(bi->img,"apps.svg");
 	lv_img_fill_image(bi->img,bm->si,bm->si);
 	lv_group_add_obj(gui_grp,bi->img);
 

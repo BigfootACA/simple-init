@@ -115,16 +115,10 @@ static int init(struct gui_activity*act){
 }
 
 static void load_icon(struct bootitem*bi){
-	char ipath[PATH_MAX];
-	const char*icon=lv_textarea_get_text(bi->txt_icon);
 	lv_coord_t s=lv_obj_get_height(bi->txt_icon);
-	memset(ipath,0,sizeof(ipath));
-	if(icon[0]=='/'||icon[1]==':')strncpy(ipath,icon,sizeof(ipath)-1);
-	else snprintf(ipath,sizeof(ipath)-1,IMG_RES"/%s",icon);
-	lv_img_set_src(bi->img_icon,ipath);
 	lv_img_ext_t*ext=lv_obj_get_ext_attr(bi->img_icon);
-	if((ext->w<=0||ext->h<=0))
-		lv_img_set_src(bi->img_icon,IMG_RES"/apps.svg");
+	lv_img_set_src(bi->img_icon,lv_textarea_get_text(bi->txt_icon));
+	if((ext->w<=0||ext->h<=0))lv_img_set_src(bi->img_icon,"apps.svg");
 	lv_img_fill_image(bi->img_icon,s,s);
 }
 

@@ -281,16 +281,10 @@ static void bootmenu_add(struct bootmenu*bm,char*c){
 	lv_obj_set_style_local_outline_width(bi->img,LV_IMG_PART_MAIN,LV_STATE_FOCUSED,gui_dpi/100);
 	lv_obj_set_style_local_outline_color(bi->img,LV_IMG_PART_MAIN,LV_STATE_FOCUSED,lv_theme_get_color_primary());
 	lv_obj_set_style_local_radius(bi->img,LV_IMG_PART_MAIN,LV_STATE_FOCUSED,gui_dpi/50);
-	if(!c)lv_img_set_src(bi->img,IMG_RES"/back.svg");
-	else if(bi->cfg.icon[0]=='/'||bi->cfg.icon[1]==':')lv_img_set_src(bi->img,bi->cfg.icon);
-	else{
-		char ipath[PATH_MAX];
-		memset(ipath,0,PATH_MAX);
-		snprintf(ipath,PATH_MAX-1,IMG_RES"/%s",bi->cfg.icon);
-		lv_img_set_src(bi->img,ipath);
-	}
 	lv_img_ext_t*ext=lv_obj_get_ext_attr(bi->img);
-	if((ext->w<=0||ext->h<=0))lv_img_set_src(bi->img,IMG_RES"/apps.svg");
+	lv_img_set_src(bi->img,c?bi->cfg.icon:"back.svg");
+	if((ext->w<=0||ext->h<=0))
+		lv_img_set_src(bi->img,"apps.svg");
 	lv_img_fill_image(bi->img,bm->si,bm->si);
 	lv_group_add_obj(gui_grp,bi->img);
 
@@ -363,13 +357,21 @@ static int bootmenu_draw(){
 	if(!bm)abort();
 	memset(bm,0,sizeof(struct bootmenu));
 
-	char*def_bg=IMG_RES"/bg.jpg",*bg,*key="gui.background";
-	if(confd_get_type(key)!=TYPE_STRING)confd_set_string(key,def_bg);
-	else if((bg=confd_get_string(key,NULL))){
-		strncpy(bm->bg_path,bg,sizeof(bm->bg_path)-1);
-		free(bg);
+	char*path;
+	if(
+		!bm->bg_path[0]&&
+		(path=confd_get_string(
+			"gui.background",
+			"bg.jpg"
+		))
+		){
+		strncpy(
+			bm->bg_path,
+			path,
+			sizeof(bm->bg_path)-1
+		);
+		free(path);
 	}
-	if(!bm->bg_path[0])strncpy(bm->bg_path,def_bg,sizeof(bm->bg_path)-1);
 	bm->do_auto_boot=true;
 
 	bm->scr=lv_obj_create(lv_scr_act(),NULL);

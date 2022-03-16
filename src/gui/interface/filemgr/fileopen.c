@@ -101,13 +101,8 @@ static void add_app(struct fileopen*fo,struct gui_register*reg){
 	lv_obj_set_style_local_outline_color(app->img,LV_IMG_PART_MAIN,LV_STATE_FOCUSED,lv_theme_get_color_primary());
 	lv_obj_set_style_local_radius(app->img,LV_IMG_PART_MAIN,LV_STATE_FOCUSED,gui_dpi/50);
 	lv_img_ext_t*ext=lv_obj_get_ext_attr(app->img);
-	char path[BUFSIZ]={0},fail[BUFSIZ]={0};
-	strcpy(fail,IMG_RES"/apps.svg");
-	if(reg->icon[0]){
-		if(contains_of("./",2,reg->icon[0]))strncpy(path,reg->icon,BUFSIZ-1);
-		else snprintf(path,BUFSIZ-1,IMG_RES"/%s",reg->icon);
-	}
-	lv_img_set_src(app->img,reg->icon[0]?path:fail);
+	lv_img_set_src(app->img,reg->icon);
+	if(ext->w<=0||ext->h<=0)lv_img_set_src(app->img,"apps.svg");
 	if(ext->w>0&&ext->h>0)lv_img_set_zoom(app->img,(int)(((float)si/MAX(ext->w,ext->h))*256));
 	lv_img_set_pivot(app->img,0,0);
 	lv_group_add_obj(gui_grp,app->img);

@@ -24,7 +24,6 @@
 #include"gui/tools.h"
 #include"gui/fileview.h"
 #define TAG "fileview"
-#define MIME_DIR _PATH_USR"/share/pixmaps/mime"
 #define MIME_EXT ".svg"
 
 struct fileview{
@@ -65,15 +64,17 @@ static char*get_parent(char*buff,size_t size,char*path){
 
 static const char*get_icon(struct fileitem*fi){
 	switch(fi->type){
-		case TYPE_DIR:return strcmp(fi->name,"..")==0?"inode-parent":"inode-dir";
-		case TYPE_BLOCK:return "inode-blockdevice";
-		case TYPE_CHAR:return "inode-chardevice";
-		case TYPE_SOCK:return "inode-socket";
-		case TYPE_LINK:return "inode-symlink";
-		case TYPE_FIFO:return "inode-fifo";
-		case TYPE_FILE:return "inode-file";
-		case TYPE_DISK:return "inode-disk";
-		default:return "unknown";
+		case TYPE_DIR:return strcmp(fi->name,"..")==0?
+			"inode-parent"MIME_EXT:
+			"inode-dir"MIME_EXT;
+		case TYPE_BLOCK:return "inode-blockdevice"MIME_EXT;
+		case TYPE_CHAR:return "inode-chardevice"MIME_EXT;
+		case TYPE_SOCK:return "inode-socket"MIME_EXT;
+		case TYPE_LINK:return "inode-symlink"MIME_EXT;
+		case TYPE_FIFO:return "inode-fifo"MIME_EXT;
+		case TYPE_FILE:return "inode-file"MIME_EXT;
+		case TYPE_DISK:return "inode-disk"MIME_EXT;
+		default:return "unknown"MIME_EXT;
 	}
 }
 
@@ -232,17 +233,10 @@ static struct fileitem*add_item(struct fileview*view,char*name){
 	lv_obj_set_event_cb(fi->img,item_click);
 	lv_obj_set_user_data(fi->img,fi);
 	lv_obj_add_style(fi->img,LV_IMG_PART_MAIN,&img_s);
-	char path[PATH_MAX];
-	memset(path,0,PATH_MAX);
-	snprintf(path,PATH_MAX-1,MIME_DIR"/%s"MIME_EXT,get_icon(fi));
-	lv_img_set_src(fi->img,path);
 	lv_img_ext_t*x=lv_obj_get_ext_attr(fi->img);
-	if((x->w<=0||x->h<=0)){
-		memset(path,0,PATH_MAX);
-		strncpy(path,MIME_DIR"/inode-file"MIME_EXT,PATH_MAX-1);
-		lv_img_set_src(fi->img,path);
-		x=lv_obj_get_ext_attr(fi->img);
-	}
+	lv_img_set_src(fi->img,get_icon(fi));
+	if(x->w<=0||x->h<=0)
+		lv_img_set_src(fi->img,"inode-file"MIME_EXT);
 	if(x->w>0&&x->h>0)lv_img_set_zoom(fi->img,(int)(((float)si/MAX(x->w,x->h))*256));
 	lv_img_set_pivot(fi->img,0,0);
 

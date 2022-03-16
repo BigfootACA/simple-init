@@ -152,15 +152,9 @@ static void add_button(struct gui_app*ga,struct gui_register*p){
 	lv_obj_set_pos(icon_w,im,im);
 
 	lv_obj_t*icon=lv_img_create(icon_w,NULL);
-	char path[BUFSIZ]={0},fail[BUFSIZ]={0};
-	strcpy(fail,IMG_RES"/apps.svg");
-	if(p->icon[0]){
-		if(contains_of("./",2,p->icon[0]))strncpy(path,p->icon,BUFSIZ-1);
-		else snprintf(path,BUFSIZ-1,IMG_RES"/%s",p->icon);
-	}
-	lv_img_set_src(icon,p->icon[0]?path:fail);
+	lv_img_set_src(icon,p->icon);
 	lv_img_ext_t*x=lv_obj_get_ext_attr(icon);
-	if((x->w<=0||x->h<=0)&&p->icon[0])lv_img_set_src(icon,fail);
+	if(x->w<=0||x->h<=0)lv_img_set_src(icon,"apps.svg");
 	lv_img_fill_image(icon,ix,ix);
 
 	lv_obj_t*txt=lv_label_create(ai->app,NULL);
@@ -254,13 +248,21 @@ static int guiapp_init(struct gui_activity*act){
 	if(!ga)return -ENOMEM;
 	memset(ga,0,sizeof(struct gui_app));
 	act->data=ga;
-	char*def_bg=IMG_RES"/bg.jpg",*bg,*key="gui.background";
-	if(confd_get_type(key)!=TYPE_STRING)confd_set_string(key,def_bg);
-	else if((bg=confd_get_string(key,NULL))){
-		strncpy(ga->bg_path,bg,sizeof(ga->bg_path)-1);
-		free(bg);
+	char*path;
+	if(
+		!ga->bg_path[0]&&
+		(path=confd_get_string(
+			"gui.background",
+			"bg.jpg"
+		))
+	){
+		strncpy(
+			ga->bg_path,
+			path,
+			sizeof(ga->bg_path)-1
+		);
+		free(path);
 	}
-	if(!ga->bg_path[0])strncpy(ga->bg_path,def_bg,sizeof(ga->bg_path)-1);
 	return 0;
 }
 

@@ -292,86 +292,86 @@ static void shadow_large_ofs_cb(void){
 static void img_rgb_cb(void){
 	lv_style_reset(&style_common);
 	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
-	img_create(&style_common,IMG_RES"/img_cogwheel_rgb.png",false,false,false);
+	img_create(&style_common,"img_cogwheel_rgb.png",false,false,false);
 }
 static void img_argb_cb(void){
 	lv_style_reset(&style_common);
 	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
-	img_create(&style_common,IMG_RES"/img_cogwheel_argb.png",false,false,false);
+	img_create(&style_common,"img_cogwheel_argb.png",false,false,false);
 }
 static void img_ckey_cb(void){
 	lv_style_reset(&style_common);
 	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
-	img_create(&style_common,IMG_RES"/img_cogwheel_chroma_keyed.png",false,false,false);
+	img_create(&style_common,"img_cogwheel_chroma_keyed.png",false,false,false);
 }
 static void img_index_cb(void){
 	lv_style_reset(&style_common);
 	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
-	img_create(&style_common,IMG_RES"/img_cogwheel_indexed16.png",false,false,false);
+	img_create(&style_common,"img_cogwheel_indexed16.png",false,false,false);
 }
 static void img_rgb_recolor_cb(void){
 	lv_style_reset(&style_common);
 	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
 	lv_style_set_image_recolor_opa(&style_common,LV_STATE_DEFAULT,LV_OPA_50);
-	img_create(&style_common,IMG_RES"/img_cogwheel_rgb.png",false,false,false);
+	img_create(&style_common,"img_cogwheel_rgb.png",false,false,false);
 }
 static void img_argb_recolor_cb(void){
 	lv_style_reset(&style_common);
 	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
 	lv_style_set_image_recolor_opa(&style_common,LV_STATE_DEFAULT,LV_OPA_50);
-	img_create(&style_common,IMG_RES"/img_cogwheel_argb.png",false,false,false);
+	img_create(&style_common,"img_cogwheel_argb.png",false,false,false);
 }
 static void img_ckey_recolor_cb(void){
 	lv_style_reset(&style_common);
 	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
 	lv_style_set_image_recolor_opa(&style_common,LV_STATE_DEFAULT,LV_OPA_50);
-	img_create(&style_common,IMG_RES"/img_cogwheel_chroma_keyed.png",false,false,false);
+	img_create(&style_common,"img_cogwheel_chroma_keyed.png",false,false,false);
 }
 static void img_index_recolor_cb(void){
 	lv_style_reset(&style_common);
 	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
 	lv_style_set_image_recolor_opa(&style_common,LV_STATE_DEFAULT,LV_OPA_50);
-	img_create(&style_common,IMG_RES"/img_cogwheel_indexed16.png",false,false,false);
+	img_create(&style_common,"img_cogwheel_indexed16.png",false,false,false);
 }
 static void img_rgb_rot_cb(void){
 	lv_style_reset(&style_common);
 	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
-	img_create(&style_common,IMG_RES"/img_cogwheel_rgb.png",true,false,false);
+	img_create(&style_common,"img_cogwheel_rgb.png",true,false,false);
 }
 static void img_rgb_rot_aa_cb(void){
 	lv_style_reset(&style_common);
 	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
-	img_create(&style_common,IMG_RES"/img_cogwheel_rgb.png",true,false,true);
+	img_create(&style_common,"img_cogwheel_rgb.png",true,false,true);
 }
 static void img_argb_rot_cb(void){
 	lv_style_reset(&style_common);
 	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
-	img_create(&style_common,IMG_RES"/img_cogwheel_argb.png",true,false,false);
+	img_create(&style_common,"img_cogwheel_argb.png",true,false,false);
 }
 static void img_argb_rot_aa_cb(void){
 	lv_style_reset(&style_common);
 	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
-	img_create(&style_common,IMG_RES"/img_cogwheel_argb.png",true,false,true);
+	img_create(&style_common,"img_cogwheel_argb.png",true,false,true);
 }
 static void img_rgb_zoom_cb(void){
 	lv_style_reset(&style_common);
 	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
-	img_create(&style_common,IMG_RES"/img_cogwheel_rgb.png",false,true,false);
+	img_create(&style_common,"img_cogwheel_rgb.png",false,true,false);
 }
 static void img_rgb_zoom_aa_cb(void){
 	lv_style_reset(&style_common);
 	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
-	img_create(&style_common,IMG_RES"/img_cogwheel_rgb.png",false,true,true);
+	img_create(&style_common,"img_cogwheel_rgb.png",false,true,true);
 }
 static void img_argb_zoom_cb(void){
 	lv_style_reset(&style_common);
 	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
-	img_create(&style_common,IMG_RES"/img_cogwheel_argb.png",false,true,false);
+	img_create(&style_common,"img_cogwheel_argb.png",false,true,false);
 }
 static void img_argb_zoom_aa_cb(void){
 	lv_style_reset(&style_common);
 	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
-	img_create(&style_common,IMG_RES"/img_cogwheel_argb.png",false,true,true);
+	img_create(&style_common,"img_cogwheel_argb.png",false,true,true);
 }
 static void txt_small_cb(void){
 	lv_style_reset(&style_common);
@@ -446,7 +446,7 @@ static void sub_img_cb(void){
 	#if LV_USE_BLEND_MODES
 	lv_style_set_image_blend_mode(&style_common,LV_STATE_DEFAULT,LV_BLEND_MODE_SUBTRACTIVE);
 	#endif
-	img_create(&style_common,IMG_RES"/img_cogwheel_argb.png",false,false,false);
+	img_create(&style_common,"img_cogwheel_argb.png",false,false,false);
 }
 static void sub_line_cb(void){
 	lv_style_reset(&style_common);

@@ -25,6 +25,8 @@
 #include"gui/fsext.h"
 #define TAG "image"
 
+#define IMG_RES1 _PATH_USR "/share/pixmaps/simple-init"
+#define IMG_RES2 _PATH_USR"/share/pixmaps/mime"
 extern image_decoder image_decoder_bmp;
 extern image_decoder image_decoder_png;
 extern image_decoder image_decoder_svg;
@@ -191,6 +193,26 @@ static int image_open_source(char*path,unsigned char**data,size_t*len){
 	return -1;
 }
 
+static int image_open_source_try(char*path,unsigned char**data,size_t*len){
+	int r=0,tr=0;
+	char rpath[PATH_MAX];
+	if(!path||!path[0]||!data||!len)return -1;
+	do{
+		if(*data)free(*data);
+		*data=NULL,*len=0;
+		memset(rpath,0,sizeof(rpath));
+		switch(tr){
+			case 0:strncpy(rpath,path,sizeof(rpath)-1);break;
+			case 1:snprintf(rpath,sizeof(rpath)-1,IMG_RES1"/%s",path);break;
+			case 2:snprintf(rpath,sizeof(rpath)-1,IMG_RES2"/%s",path);break;
+			default:return r;
+		}
+		r=image_open_source(rpath,data,len);
+		tr++;
+	}while(r==-1||!(*data)||(*len)<=0);
+	return r;
+}
+
 static image_decoder*image_get_decoder(char*path){
 	if(!path)return NULL;
 	static list*unsupports=NULL;
@@ -274,7 +296,7 @@ static image_data*image_decode(char*path){
 	image_decoder*d=NULL;
 	unsigned char*data=NULL;
 	if(!(d=image_get_decoder(path))||!d->decode_cb)return NULL;
-	if(image_open_source(path,&data,&len)==-1||!data||len<=0)goto done;
+	if(image_open_source_try(path,&data,&len)==-1||!data||len<=0)goto done;
 	if(!(img=malloc(sizeof(image_data))))goto done;
 	memset(img,0,sizeof(image_data));
 	strncpy(img->path,path,sizeof(img->path)-1);

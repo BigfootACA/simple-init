@@ -196,3 +196,6 @@ char *strstr(const char *h,const char *n){
 char *strrchr(const char *s, int c){
 	return memrchr(s, c, strlen(s) + 1);
 }
+int strcoll(const char *l, const char *r){
+        return strcmp(l, r);
+}

@@ -18,6 +18,7 @@
   errno.c
   str.c
   mem.c
+  __rem_pio2.c
   __rem_pio2f.c
   __rem_pio2_large.c
   cosf.c
@@ -32,6 +33,7 @@
   pow.c
   pow_data.c
   exp_data.c
+  log_data.c
   malloc.c
   exit.c
   number.c
@@ -73,3 +75,33 @@
   strftime.c
   zone.c
   sum.c
+  localeconv.c
+  rand.c
+  strspn.c
+  strcspn.c
+  strpbrk.c
+  strchrnul.c
+  atan.c
+  atan2.c
+  sin.c
+  sinh.c
+  cos.c
+  cosh.c
+  tan.c
+  tanh.c
+  asin.c
+  acos.c
+  ceil.c
+  fmod.c
+  modf.c
+  exp.c
+  expm1.c
+  log.c
+  log10.c
+  frexp.c
+  ldexp.c
+  abs.c
+  __tan.c
+  __sin.c
+  __cos.c
+  __expo2.c

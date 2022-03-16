@@ -46,9 +46,32 @@ extern const struct pow_log_data{
 	struct {double invc,pad,logc,logctail;}tab[1<<POW_LOG_TABLE_BITS];
 } __pow_log_data;
 
+#define LOG_TABLE_BITS 7
+#define LOG_POLY_ORDER 6
+#define LOG_POLY1_ORDER 12
+extern const struct log_data {
+	double ln2hi;
+	double ln2lo;
+	double poly[LOG_POLY_ORDER - 1]; /* First coefficient is 1.  */
+	double poly1[LOG_POLY1_ORDER - 1];
+	struct {
+		double invc, logc;
+	} tab[1 << LOG_TABLE_BITS];
+#if !__FP_FAST_FMA
+	struct {
+		double chi, clo;
+	} tab2[1 << LOG_TABLE_BITS];
+#endif
+} __log_data;
+
 extern float comp__cosdf(double x);
 extern float comp__sindf(double x);
 extern float comp__tandf(double x,int odd);
+extern double comp__sin(double,double,int);
+extern double comp__cos(double,double);
+extern double comp__tan(double,double,int);
+extern double comp__expo2(double,double);
+extern int comp__rem_pio2(double,double*);
 extern int comp__rem_pio2f(float x,double*y);
 extern int comp__rem_pio2_large(double*x,double*y,int e0,int nx,int prec);
 extern float comp_acosf(float x);
@@ -82,6 +105,7 @@ extern double comp_floor(double x);
 #define __math_oflowf comp__math_oflowf
 #define __math_invalid comp__math_invalid
 #define __math_invalidf comp__math_invalidf
+#define __math_divzero comp__math_divzero
 #define tanf comp_tanf
 #define atanf comp_atanf
 #define atan2f comp_atan2f
@@ -105,6 +129,12 @@ extern double comp_floor(double x);
 #define asdouble(i) ((union{uint64_t _i;double _f;}){i})._f
 #define GET_FLOAT_WORD(w,d) do{(w)=asuint(d);}while(0)
 #define SET_FLOAT_WORD(d,w) do{(d)=asfloat(w);}while(0)
+#define GET_HIGH_WORD(hi,d) do{(hi)=asuint64(d)>>32;}while(0)
+#define GET_LOW_WORD(lo,d) do{(lo)=(uint32_t)asuint64(d);}while(0)
+#define EXTRACT_WORDS(hi,lo,d) do{uint64_t __u=asuint64(d);(hi)=__u>>32;(lo)=(uint32_t)__u;}while(0)
+#define INSERT_WORDS(d,hi,lo) do{(d)=asdouble(((uint64_t)(hi)<<32)|(uint32_t)(lo));}while(0)
+#define SET_HIGH_WORD(d,hi) INSERT_WORDS(d,hi,(uint32_t)asuint64(d))
+#define SET_LOW_WORD(d,lo) INSERT_WORDS(d,asuint64(d)>>32,lo)
 
 #if !defined(__DEFINED_float_t)
 typedef float float_t;
@@ -162,6 +192,7 @@ static inline double comp__math_uflow(uint32_t sign){return comp__math_xflow(sig
 static inline float comp__math_uflowf(uint32_t sign){return comp__math_xflowf(sign,0x1p-95f);}
 static inline float comp__math_oflowf(uint32_t sign){return comp__math_xflowf(sign,0x1p97f);}
 static inline double comp__math_oflow(uint32_t sign){return comp__math_xflow(sign,0x1p769);}
+static inline double comp__math_divzero(uint32_t sign){return fp_barrier(sign?-1.0:1.0)/0.0;}
 
 #ifndef predict_true
 #ifdef __GNUC__

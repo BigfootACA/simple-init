@@ -586,6 +586,12 @@ time(time_t *timer)
   return CalTime;   // Return calendar time in microseconds
 }
 
+clock_t
+clock(void)
+{
+  return (clock_t)time(NULL);
+}
+
 /* #################  Time Conversion Functions  ########################## */
 /*
     Except for the strftime function, these functions each return a pointer to

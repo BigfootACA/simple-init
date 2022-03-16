@@ -53,30 +53,6 @@
 extern rwlock_t __sfp_lock;
 #endif
 
-/* Flush a single file, or (if fp is NULL) all files.  */
-int
-fflush(FILE *fp)
-{
-  int r;
-
-  if (fp == NULL) {
-    rwlock_rdlock(&__sfp_lock);
-    r = _fwalk(__sflush);
-    rwlock_unlock(&__sfp_lock);
-    return r;
-  }
-
-  FLOCKFILE(fp);
-  if ((fp->_flags & (__SWR | __SRW)) == 0) {
-    errno = EBADF;
-    r = EOF;
-  } else {
-    r = __sflush(fp);
-  }
-  FUNLOCKFILE(fp);
-  return r;
-}
-
 int
 __sflush(FILE *fp)
 {

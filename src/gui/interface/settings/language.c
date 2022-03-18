@@ -22,11 +22,13 @@ static lv_obj_t*scr,*box,*sel,*btn_ok,*arr_left,*arr_right;
 
 static void ok_action(lv_obj_t*obj,lv_event_t e){
 	if(obj!=btn_ok||e!=LV_EVENT_CLICKED)return;
+	struct gui_activity*act=lv_obj_get_user_data(obj);
 	uint16_t i=lv_dropdown_get_selected(sel);
 	if(!languages[i].lang)return;
 	const char*lang=lang_concat(&languages[i],true,true);
 	tlog_debug("set language to %s",lang);
 	lang_set(lang);
+	act->data_changed=true;
 	#ifndef ENABLE_UEFI
 	struct init_msg msg,response;
 	init_initialize_msg(&msg,ACTION_LANGUAGE);
@@ -115,6 +117,7 @@ static int language_menu_draw(struct gui_activity*act){
 	lv_obj_set_size(btn_ok,lv_page_get_scrl_width(box)-gui_dpi/10-bts*3,bts);
 	lv_obj_align(btn_ok,sel,LV_ALIGN_OUT_BOTTOM_MID,0,gui_dpi/10);
 	lv_obj_set_event_cb(btn_ok,ok_action);
+	lv_obj_set_user_data(btn_ok,act);
 	lv_label_set_text(lv_label_create(btn_ok,NULL),_("OK"));
 
 	arr_left=lv_btn_create(box,NULL);

@@ -71,10 +71,7 @@ struct log_item*logger_internal_buff2item(struct log_buff*log){
 int logger_internal_buffer_push(struct log_item*log){
 	struct log_buff*buff=logger_internal_item2buff(log);
 	if(!buff)return -errno;
-	if(logbuffer?
-		list_push_new(logbuffer,buff)<0:
-		!(logbuffer=list_new(buff))
-	)goto fail;
+	if(list_obj_add_new(&logbuffer,buff)!=0)goto fail;
 	return 0;
 	fail:
 	if(errno==0)errno=ENOMEM;
@@ -108,6 +105,7 @@ int logger_internal_free_buff(void*d){
 void clean_log_buffers(){
 	if(!logbuffer)return;
 	list_free_all(logbuffer,logger_internal_free_buff);
+	logbuffer=NULL;
 }
 
 #ifdef ENABLE_UEFI

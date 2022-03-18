@@ -253,18 +253,23 @@ int list_obj_add_new(list**lst,void*data){
 	return r;
 }
 
-int list_obj_del(list**lst,list*item,runnable_t*datafree){
+int list_obj_strip(list**lst,list*item){
 	if(!item||!lst)ERET(EINVAL);
 	if(list_is_alone(*lst)){
-		list_free_all(*lst,datafree);
+		if(*lst!=item)return -1;
 		*lst=NULL;
-	}else{
-		if(*lst==item){
-			if(item->prev)*lst=item->prev;
-			if(item->next)*lst=item->next;
-		}
-		list_remove_free(item,datafree);
+	}else if(*lst==item){
+		if(item->prev)*lst=item->prev;
+		if(item->next)*lst=item->next;
 	}
+	list_remove(item);
+	return 0;
+}
+
+int list_obj_del(list**lst,list*item,runnable_t*datafree){
+	if(!item||!lst)ERET(EINVAL);
+	if(list_obj_strip(lst,item)!=0)return -1;
+	list_free_item(item,datafree);
 	return 0;
 }
 

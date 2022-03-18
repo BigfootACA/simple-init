@@ -103,6 +103,9 @@ extern int list_obj_add(list**lst,list*item);
 // src/lib/list.c: new and add item to a list
 extern int list_obj_add_new(list**lst,void*data);
 
+// src/lib/list.c: strip item from a list
+extern int list_obj_strip(list**lst,list*item);
+
 // src/lib/list.c: delete item from a list
 extern int list_obj_del(list**lst,list*item,runnable_t*datafree);
 

@@ -18,9 +18,11 @@
 #include"gui/filepicker.h"
 
 struct filepicker{
-	char text[BUFSIZ],path[PATH_MAX];
+	char text[BUFSIZ];
+	char path[PATH_MAX];
+	char disp_path[PATH_MAX];
 	filepicker_callback callback;
-	lv_obj_t*mask,*box,*label;
+	lv_obj_t*box,*label;
 	lv_obj_t*view,*cur_path;
 	lv_obj_t*reload,*new,*home;
 	lv_obj_t*ok,*cancel;
@@ -124,6 +126,8 @@ static void on_change_dir(struct fileview*fv,char*old __attribute__((unused)),ch
 	confd_set_string("gui.filepicker.dir",new);
 	lv_label_set_text(fp->cur_path,new);
 	lv_obj_set_enabled(fp->new,!fsext_is_multi||!fileview_is_top(fv));
+	memset(fp->disp_path,0,sizeof(fp->disp_path));
+	strncpy(fp->disp_path,new,sizeof(fp->disp_path)-1);
 }
 
 static void on_item_select(
@@ -148,26 +152,17 @@ static bool on_item_click(struct fileview*fv,char*item,enum item_type type){
 	return true;
 }
 
-static int filepicker_draw(struct gui_activity*act){
+static int filepicker_resize(struct gui_activity*act){
+	lv_coord_t lh=gui_sh/8;
 	lv_coord_t box_h=gui_dpi/8;
 	lv_coord_t max_w=gui_dpi*4,cur_w=gui_sw/4*3,xw=MIN(max_w,cur_w);
 	lv_coord_t max_h=gui_dpi*6,cur_h=gui_sh/5*2,xh=MIN(max_h,cur_h);
+	static bool style_init=false;
+	static lv_style_t style;
 	struct filepicker*fp=act->args;
-	fp->act=act;
-
-	fp->mask=lv_create_opa_mask(act->page);
-	fp->box=lv_obj_create(fp->mask,NULL);
-	lv_obj_set_style_local_border_width(fp->box,LV_PAGE_PART_BG,LV_STATE_DEFAULT,0);
-	lv_obj_set_style_local_border_width(fp->box,LV_PAGE_PART_BG,LV_STATE_PRESSED,0);
-	lv_obj_set_style_local_border_width(fp->box,LV_PAGE_PART_BG,LV_STATE_FOCUSED,0);
+	if(!style_init)lv_style_init(&style);
 	lv_obj_set_width(fp->box,xw);
-
-	lv_coord_t lh=gui_sh/8;
-	fp->label=lv_label_create(fp->box,NULL);
-	lv_label_set_long_mode(fp->label,LV_LABEL_LONG_BREAK);
-	lv_label_set_align(fp->label,LV_LABEL_ALIGN_CENTER);
 	lv_obj_set_width(fp->label,lv_obj_get_width(fp->box));
-	lv_label_set_text(fp->label,fp->text);
 	lv_obj_set_pos(fp->label,0,box_h);
 	if(lv_obj_get_height(fp->label)>lh){
 		lv_label_set_long_mode(fp->label,LV_LABEL_LONG_DOT);
@@ -176,95 +171,108 @@ static int filepicker_draw(struct gui_activity*act){
 	box_h+=lv_obj_get_height(fp->label);
 
 	box_h+=gui_dpi/12;
-	fp->view=lv_page_create(fp->box,NULL);
-	lv_color_t c=lv_obj_get_style_border_color(fp->view,LV_PAGE_PART_BG);
-	lv_obj_set_style_local_border_color(fp->view,LV_PAGE_PART_BG,LV_STATE_DEFAULT,c);
-	lv_obj_set_style_local_border_color(fp->view,LV_PAGE_PART_BG,LV_STATE_PRESSED,c);
-	lv_obj_set_style_local_border_color(fp->view,LV_PAGE_PART_BG,LV_STATE_FOCUSED,c);
 	lv_obj_set_size(fp->view,lv_obj_get_width(fp->box)-gui_font_size,xh);
 	lv_obj_set_pos(fp->view,gui_font_size/2,box_h);
 	box_h+=xh;
 
-	fp->fv=fileview_create(fp->view);
-	fileview_set_margin(fp->fv,0);
-	fileview_set_verbose(fp->fv,false);
-	fileview_set_item_height(fp->fv,gui_dpi/3);
-	fileview_set_path(fp->fv,fp->path);
-	fileview_set_on_item_click(fp->fv,on_item_click);
-	fileview_set_on_item_select(fp->fv,on_item_select);
-	fileview_set_on_change_dir(fp->fv,on_change_dir);
-	fileview_set_data(fp->fv,fp);
-
 	box_h+=gui_dpi/12;
-	fp->cur_path=lv_label_create(fp->box,NULL);
-	lv_label_set_long_mode(fp->cur_path,LV_LABEL_LONG_CROP);
-	lv_label_set_align(fp->cur_path,LV_LABEL_ALIGN_RIGHT);
-	lv_label_set_text(fp->cur_path,fp->path);
 	lv_obj_set_width(fp->cur_path,lv_obj_get_width(fp->box)-gui_font_size);
-	lv_obj_set_small_text_font(fp->cur_path,LV_LABEL_PART_MAIN);
 	lv_obj_set_pos(fp->cur_path,gui_font_size/2,box_h);
 	box_h+=lv_obj_get_height(fp->cur_path);
-
 	lv_coord_t
 		bm=gui_font_size/2,
 		b1w=lv_obj_get_width(fp->box)/3,
 		b2w=lv_obj_get_width(fp->box)/2,
 		bh=gui_font_size+(gui_dpi/8);
 
+	lv_style_set_margin_bottom(&style,LV_STATE_DEFAULT,bm);
+	lv_style_set_radius(&style,LV_STATE_DEFAULT,gui_dpi/15);
 	box_h+=bm;
+	lv_obj_add_style(fp->reload,LV_BTN_PART_MAIN,&style);
+	lv_obj_set_size(fp->reload,b1w-bm,bh);
+	lv_obj_set_pos(fp->reload,bm/2,box_h);
+	lv_obj_add_style(fp->new,LV_BTN_PART_MAIN,&style);
+	lv_obj_set_size(fp->new,b1w-bm,bh);
+	lv_obj_set_pos(fp->new,bm/2+b1w,box_h);
+	lv_obj_add_style(fp->home,LV_BTN_PART_MAIN,&style);
+	lv_obj_set_size(fp->home,b1w-bm,bh);
+	lv_obj_set_pos(fp->home,bm/2+b1w*2,box_h);
+	box_h+=bh+bm;
+	lv_obj_add_style(fp->ok,LV_BTN_PART_MAIN,&style);
+	lv_obj_set_size(fp->ok,b2w-bm,bh);
+	lv_obj_set_pos(fp->ok,bm/2,box_h);
+	lv_obj_add_style(fp->cancel,LV_BTN_PART_MAIN,&style);
+	lv_obj_set_size(fp->cancel,b2w-bm,bh);
+	lv_obj_set_pos(fp->cancel,bm/2+b2w,box_h);
+	box_h+=bh+gui_dpi/8;
+	lv_obj_set_height(fp->box,box_h);
+	lv_obj_align(fp->box,NULL,LV_ALIGN_CENTER,0,0);
+	if(!fp->disp_path[0])strncpy(fp->disp_path,fp->path,sizeof(fp->disp_path)-1);
+	fileview_set_path(fp->fv,fp->disp_path);
+	return 0;
+}
+
+static int filepicker_draw(struct gui_activity*act){
+	struct filepicker*fp=act->args;
+	fp->act=act;
+
+	fp->box=lv_obj_create(act->page,NULL);
+	lv_obj_set_style_local_border_width(fp->box,LV_PAGE_PART_BG,LV_STATE_DEFAULT,0);
+	lv_obj_set_style_local_border_width(fp->box,LV_PAGE_PART_BG,LV_STATE_PRESSED,0);
+	lv_obj_set_style_local_border_width(fp->box,LV_PAGE_PART_BG,LV_STATE_FOCUSED,0);
+
+	fp->label=lv_label_create(fp->box,NULL);
+	lv_label_set_long_mode(fp->label,LV_LABEL_LONG_BREAK);
+	lv_label_set_align(fp->label,LV_LABEL_ALIGN_CENTER);
+	lv_label_set_text(fp->label,fp->text);
+
+	fp->view=lv_page_create(fp->box,NULL);
+	lv_color_t c=lv_obj_get_style_border_color(fp->view,LV_PAGE_PART_BG);
+	lv_obj_set_style_local_border_color(fp->view,LV_PAGE_PART_BG,LV_STATE_DEFAULT,c);
+	lv_obj_set_style_local_border_color(fp->view,LV_PAGE_PART_BG,LV_STATE_PRESSED,c);
+	lv_obj_set_style_local_border_color(fp->view,LV_PAGE_PART_BG,LV_STATE_FOCUSED,c);
+
+	fp->fv=fileview_create(fp->view);
+	fileview_set_margin(fp->fv,0);
+	fileview_set_verbose(fp->fv,false);
+	fileview_set_item_height(fp->fv,gui_dpi/3);
+	fileview_set_on_item_click(fp->fv,on_item_click);
+	fileview_set_on_item_select(fp->fv,on_item_select);
+	fileview_set_on_change_dir(fp->fv,on_change_dir);
+	fileview_set_data(fp->fv,fp);
+
+	fp->cur_path=lv_label_create(fp->box,NULL);
+	lv_label_set_long_mode(fp->cur_path,LV_LABEL_LONG_CROP);
+	lv_label_set_align(fp->cur_path,LV_LABEL_ALIGN_RIGHT);
+	lv_label_set_text(fp->cur_path,fp->path);
+	lv_obj_set_small_text_font(fp->cur_path,LV_LABEL_PART_MAIN);
+
 	fp->reload=lv_btn_create(fp->box,NULL);
 	lv_label_set_text(lv_label_create(fp->reload,NULL),LV_SYMBOL_REFRESH);
-	lv_obj_set_style_local_margin_bottom(fp->reload,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,bm);
-	lv_obj_set_style_local_radius(fp->reload,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,gui_dpi/15);
-	lv_obj_set_size(fp->reload,b1w-bm,bh);
 	lv_obj_set_user_data(fp->reload,fp);
 	lv_obj_set_event_cb(fp->reload,btn_click);
-	lv_obj_set_pos(fp->reload,bm/2,box_h);
 
 	fp->new=lv_btn_create(fp->box,NULL);
 	lv_obj_set_enabled(fp->new,!fsext_is_multi);
 	lv_label_set_text(lv_label_create(fp->new,NULL),LV_SYMBOL_PLUS);
-	lv_obj_set_style_local_margin_bottom(fp->new,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,bm);
-	lv_obj_set_style_local_radius(fp->new,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,gui_dpi/15);
-	lv_obj_set_size(fp->new,b1w-bm,bh);
 	lv_obj_set_user_data(fp->new,fp);
 	lv_obj_set_event_cb(fp->new,btn_click);
-	lv_obj_set_pos(fp->new,bm/2+b1w,box_h);
 
 	fp->home=lv_btn_create(fp->box,NULL);
 	lv_label_set_text(lv_label_create(fp->home,NULL),LV_SYMBOL_HOME);
-	lv_obj_set_style_local_margin_bottom(fp->home,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,bm);
-	lv_obj_set_style_local_radius(fp->home,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,gui_dpi/15);
-	lv_obj_set_size(fp->home,b1w-bm,bh);
 	lv_obj_set_user_data(fp->home,fp);
 	lv_obj_set_event_cb(fp->home,btn_click);
-	lv_obj_set_pos(fp->home,bm/2+b1w*2,box_h);
-	box_h+=bh;
 
-	box_h+=bm;
 	fp->ok=lv_btn_create(fp->box,NULL);
 	lv_obj_set_enabled(fp->ok,false);
 	lv_label_set_text(lv_label_create(fp->ok,NULL),LV_SYMBOL_OK);
-	lv_obj_set_style_local_margin_bottom(fp->ok,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,bm);
-	lv_obj_set_style_local_radius(fp->ok,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,gui_dpi/15);
-	lv_obj_set_size(fp->ok,b2w-bm,bh);
 	lv_obj_set_user_data(fp->ok,fp);
 	lv_obj_set_event_cb(fp->ok,filepicker_click);
-	lv_obj_set_pos(fp->ok,bm/2,box_h);
 
 	fp->cancel=lv_btn_create(fp->box,NULL);
 	lv_label_set_text(lv_label_create(fp->cancel,NULL),LV_SYMBOL_CLOSE);
-	lv_obj_set_style_local_margin_bottom(fp->cancel,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,bm);
-	lv_obj_set_style_local_radius(fp->cancel,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,gui_dpi/15);
-	lv_obj_set_size(fp->cancel,b2w-bm,bh);
 	lv_obj_set_user_data(fp->cancel,fp);
 	lv_obj_set_event_cb(fp->cancel,filepicker_click);
-	lv_obj_set_pos(fp->cancel,bm/2+b2w,box_h);
-	box_h+=bh;
-
-	box_h+=gui_dpi/8;
-	lv_obj_set_height(fp->box,box_h);
-	lv_obj_align(fp->box,NULL,LV_ALIGN_CENTER,0,0);
 
 	return 0;
 }
@@ -317,6 +325,7 @@ struct gui_register guireg_filepicker={
 	.title="File Picker",
 	.show_app=false,
 	.draw=filepicker_draw,
+	.resize=filepicker_resize,
 	.ask_exit=do_back,
 	.quiet_exit=filepicker_clean,
 	.get_focus=filepicker_get_focus,

@@ -38,6 +38,7 @@ extern lv_obj_t*lv_draw_title(lv_obj_t*box,char*title,lv_coord_t*h);
 extern lv_obj_t*lv_draw_side_clear_btn(lv_obj_t*box,lv_coord_t*h,lv_coord_t size);
 extern void lv_draw_file_input(lv_obj_t*box,char*title,lv_coord_t*h,lv_obj_t**clr,lv_obj_t**txt,lv_obj_t**btn);
 extern void lv_input_cb(lv_obj_t*obj,lv_event_t e);
+extern bool lv_parse_color_string(const char*val,lv_color_t*color);
 
 #define lv_obj_set_text_font_def(obj,part,font) lv_obj_set_text_font(obj,LV_STATE_DEFAULT,part,font)
 #define lv_obj_set_bg_color_def(obj,part,color) lv_obj_set_bg_color(obj,LV_STATE_DEFAULT,part,color)

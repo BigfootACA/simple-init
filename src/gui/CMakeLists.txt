@@ -69,5 +69,6 @@ add_library(init_gui STATIC
 	guidrv.c
 	activity.c
 	activities.c
+	color.c
 	tools.c
 )

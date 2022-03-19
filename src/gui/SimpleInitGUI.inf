@@ -61,6 +61,7 @@
 [Sources]
   # Simple-Init GUI interface
   tools.c
+  color.c
   activity.c
   activities.c
   gui_init.c

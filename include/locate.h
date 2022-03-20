@@ -46,6 +46,9 @@ typedef struct locate_ret{
 // src/locate/locate.c: parse path for get target block or file
 extern bool boot_locate(locate_ret*ret,const char*pattern);
 
+// src/locate/locate.c: quiet parse path for get target block or file
+extern bool boot_locate_quiet(locate_ret*ret,const char*file);
+
 // src/locate/locate.c: parse path for locate file path and create
 extern bool boot_locate_create_file(locate_ret*ret,const char*file);
 

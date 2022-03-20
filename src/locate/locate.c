@@ -306,14 +306,14 @@ static locate_dest*init_locate_ret(locate_ret*ret,const char*file){
 	return loc;
 }
 
-static bool locate_open_file(locate_dest*loc,locate_ret*ret,UINT64 mode){
+static bool locate_open_file(locate_dest*loc,locate_ret*ret,UINT64 mode,bool quiet){
 	EFI_STATUS st;
 	if(!ret->path[0]){
-		tlog_warn("no path specified");
+		if(!quiet)tlog_warn("no path specified");
 		return false;
 	}
 	if(!loc->root){
-		tlog_warn(
+		if(!quiet)tlog_warn(
 			"locate '%s' have no file system",
 			ret->tag
 		);
@@ -326,22 +326,22 @@ static bool locate_open_file(locate_dest*loc,locate_ret*ret,UINT64 mode){
 	);
 	st=loc->root->Open(loc->root,&ret->file,ret->path16,mode,0);
 	if(EFI_ERROR(st)){
-		tlog_error(
+		if(!quiet)tlog_error(
 			"open file '%s' failed: %s",
 			ret->path,efi_status_to_string(st)
 		);
 		return false;
 	}
 	if(!ret->file){
-		tlog_error(
+		if(!quiet)tlog_error(
 			"open file '%s' failed",
 			ret->path
 		);
 		return false;
 	}
-	tlog_debug("open file '%s' as %p",ret->path,ret->file);
+	if(!quiet)tlog_debug("open file '%s' as %p",ret->path,ret->file);
 	if(!(ret->device=FileDevicePath(loc->file_hand,ret->path16))){
-		tlog_error(
+		if(!quiet)tlog_error(
 			"get file '%s' device path failed",
 			ret->path
 		);
@@ -350,9 +350,9 @@ static bool locate_open_file(locate_dest*loc,locate_ret*ret,UINT64 mode){
 	return true;
 }
 
-static bool locate_open_block(locate_dest*loc,locate_ret*ret){
+static bool locate_open_block(locate_dest*loc,locate_ret*ret,bool quiet){
 	if(!(ret->device=DevicePathFromHandle(loc->file_hand))){
-		tlog_error(
+		if(!quiet)tlog_error(
 			"get block '%s' device path failed",
 			ret->tag
 		);
@@ -361,20 +361,28 @@ static bool locate_open_block(locate_dest*loc,locate_ret*ret){
 	return true;
 }
 
-bool boot_locate(locate_ret*ret,const char*file){
+static bool _boot_locate(locate_ret*ret,const char*file,bool quiet){
 	locate_dest*loc=init_locate_ret(ret,file);
 	if(loc)switch(ret->type){
-		case LOCATE_FILE:return locate_open_file(loc,ret,EFI_FILE_MODE_READ);
-		case LOCATE_BLOCK:return locate_open_block(loc,ret);
+		case LOCATE_FILE:return locate_open_file(loc,ret,EFI_FILE_MODE_READ,quiet);
+		case LOCATE_BLOCK:return locate_open_block(loc,ret,quiet);
 		default:;
 	}
 	return false;
 }
 
+bool boot_locate(locate_ret*ret,const char*file){
+	return _boot_locate(ret,file,false);
+}
+
+bool boot_locate_quiet(locate_ret*ret,const char*file){
+	return _boot_locate(ret,file,true);
+}
+
 bool boot_locate_create_file(locate_ret*ret,const char*file){
 	locate_dest*loc=init_locate_ret(ret,file);
 	return loc&&ret->type==LOCATE_FILE&&locate_open_file(loc,ret,
-		EFI_FILE_MODE_READ|EFI_FILE_MODE_WRITE|EFI_FILE_MODE_CREATE
+		EFI_FILE_MODE_READ|EFI_FILE_MODE_WRITE|EFI_FILE_MODE_CREATE,false
 	);
 }
 

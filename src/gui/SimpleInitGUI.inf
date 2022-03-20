@@ -7,7 +7,7 @@
   LIBRARY_CLASS                  = SimpleInitGUI
 
 [BuildOptions]
-  GCC:*_*_*_CC_FLAGS = -DENABLE_GUI=1 -DENABLE_UEFI=1 -DENABLE_LODEPNG=1 -DENABLE_NANOSVG=1 -DENABLE_FREETYPE2=1
+  GCC:*_*_*_CC_FLAGS = -DENABLE_GUI=1 -DENABLE_UEFI=1 -DENABLE_LODEPNG=1 -DENABLE_NANOSVG=1 -DENABLE_FREETYPE2=1 -DENABLE_STB=1
 
 [Packages]
   MdePkg/MdePkg.dec
@@ -71,6 +71,7 @@
   drivers/uefi_pointer.c
   drivers/uefi_keyboard.c
   drivers/uefi_touch.c
+  decoders/stb.c
   decoders/png.c
   decoders/bmp.c
   decoders/svg.c

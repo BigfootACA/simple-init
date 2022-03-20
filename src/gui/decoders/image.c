@@ -31,6 +31,7 @@ extern image_decoder image_decoder_bmp;
 extern image_decoder image_decoder_png;
 extern image_decoder image_decoder_svg;
 extern image_decoder image_decoder_jpeg;
+extern image_decoder image_decoder_stb;
 typedef int(*img_backend)(char*,unsigned char**,size_t*);
 static int image_open_source_lvgl(char*,unsigned char**,size_t*);
 #ifdef ENABLE_UEFI
@@ -61,6 +62,9 @@ image_decoder*img_decoders[]={
 	#endif
 	#ifdef ENABLE_LIBJPEG
 	&image_decoder_jpeg,
+	#endif
+	#ifdef ENABLE_STB
+	&image_decoder_stb,
 	#endif
 	NULL
 };

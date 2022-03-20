@@ -21,3 +21,4 @@
 #cmakedefine ENABLE_MXML        1
 #cmakedefine ENABLE_VNCSERVER   1
 #cmakedefine ENABLE_HIVEX       1
+#cmakedefine ENABLE_STB         1

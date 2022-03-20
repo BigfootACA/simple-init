@@ -104,7 +104,7 @@ static int image_open_source_locate(char*path,unsigned char**data,size_t*len){
 	EFI_FILE_INFO*info=NULL;
 	UINTN infos=0,read;
 	if(path[0]=='/')return -1;
-	if(!boot_locate(&loc,path))return -1;
+	if(!boot_locate_quiet(&loc,path))return -1;
 	if(loc.type!=LOCATE_FILE)
 		EDONE(telog_warn("unsupported locate type for %s",path));
 

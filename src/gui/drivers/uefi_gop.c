@@ -11,6 +11,7 @@
 #include<string.h>
 #include<stdlib.h>
 #include<stdbool.h>
+#include<Library/BaseMemoryLib.h>
 #include<Library/UefiBootServicesTableLib.h>
 #include<Protocol/GraphicsOutput.h>
 #include"gui.h"
@@ -105,6 +106,14 @@ static bool uefigop_can_sleep(){
 static void uefigop_exit(){
 	logger_set_console(true);
 	gST->ConOut->ClearScreen(gST->ConOut);
+	if(gop){
+		EFI_GRAPHICS_OUTPUT_BLT_PIXEL c;
+		ZeroMem(&c,sizeof(c));
+		gop->Blt(
+			gop,&c,EfiBltVideoFill,
+			0,0,ww,hh,ww,hh,0
+		);
+	}
 }
 struct gui_driver guidrv_uefigop={
 	.name="uefigop",

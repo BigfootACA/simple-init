@@ -15,27 +15,42 @@
 #include<stddef.h>
 #include<stdlib.h>
 #include<stdbool.h>
+#include<Library/UefiLib.h>
+#include<Library/DebugLib.h>
 #include<Library/UefiBootServicesTableLib.h>
 #include<Protocol/SimpleTextIn.h>
+#include<Protocol/SimpleTextInEx.h>
 #define TAG "uefikeyboard"
 #include"gui.h"
+#include"list.h"
 #include"logger.h"
 #include"defines.h"
 #include"gui/guidrv.h"
 
-// Qualcomm specified
-#define SCAN_VOLUME_UP            0x0080
-#define SCAN_VOLUME_DOWN          0x0081
-#define SCAN_BRIGHTNESS_UP        0x0100
-#define SCAN_BRIGHTNESS_DOWN      0x0101
-#define SCAN_SUSPEND              0x0102
-
+static list*kbds;
+static void*event_reg=NULL;
 static bool has_lr=false;
+struct keyboard_data{
+	EFI_SIMPLE_TEXT_INPUT_PROTOCOL*kbd;
+	lv_indev_drv_t drv;
+	lv_indev_t*dev;
+	void*pd;
+};
 static bool keyboard_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
-	EFI_SIMPLE_TEXT_INPUT_PROTOCOL*keyboard=indev_drv->user_data;
 	EFI_INPUT_KEY p;
+	struct keyboard_data*kd=indev_drv->user_data;
+	if(!kd)return false;
 	data->state=LV_INDEV_STATE_REL;
-	if(!EFI_ERROR(keyboard->ReadKeyStroke(keyboard,&p))){
+	if(!kd->pd)kd->pd=kd->kbd->ReadKeyStroke;
+	else if(kd->kbd->ReadKeyStroke!=kd->pd){
+		tlog_warn("ReadKeyStroke changed, disable keyboard device");
+		indev_drv->user_data=NULL;
+		list_obj_del_data(&kbds,kd,NULL);
+		memset(kd,0,sizeof(struct keyboard_data));
+		free(kd);
+		return false;
+	}
+	if(!EFI_ERROR(kd->kbd->ReadKeyStroke(kd->kbd,&p))){
 		data->state=0;
 		if(p.ScanCode!=0){
 			if(lv_group_get_editing(gui_grp))switch(p.ScanCode){
@@ -69,8 +84,37 @@ static bool keyboard_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
 			case ' ':case '\n':case '\r':data->key=LV_KEY_ENTER;break;
 		}else return false;
 		data->state=LV_INDEV_STATE_PR;
-	}
+	};
 	return false;
+}
+static bool proto_cmp(list*f,void*data){
+	LIST_DATA_DECLARE(d,f,struct keyboard_data*);
+	return d->kbd==(EFI_SIMPLE_TEXT_INPUT_PROTOCOL*)data;
+}
+static int _keyboard_register(EFI_SIMPLE_TEXT_INPUT_PROTOCOL*k){
+	struct keyboard_data*kbd=NULL;
+	if(list_search_one(kbds,proto_cmp,k))return 0;
+	if(!(kbd=malloc(sizeof(struct keyboard_data))))return -1;
+	memset(kbd,0,sizeof(struct keyboard_data));
+	kbd->kbd=k;
+	lv_indev_drv_init(&kbd->drv);
+	kbd->drv.type=LV_INDEV_TYPE_KEYPAD;
+	kbd->drv.read_cb=keyboard_read;
+	kbd->drv.user_data=kbd;
+	kbd->dev=lv_indev_drv_register(&kbd->drv);
+	lv_indev_set_group(kbd->dev,gui_grp);
+	tlog_debug("found new uefi keyboard %p",kbd->kbd);
+	list_obj_add_new(&kbds,kbd);
+	return 0;
+}
+STATIC VOID keyboard_event(IN EFI_EVENT ev,IN VOID*ctx){
+	EFI_SIMPLE_TEXT_INPUT_PROTOCOL*kbd=NULL;
+	EFI_STATUS st=gBS->LocateProtocol(
+		&gEfiSimpleTextInProtocolGuid,
+		event_reg,(VOID**)&kbd
+	);
+	tlog_notice("receive keyboard device hot-plug event");
+	if(!EFI_ERROR(st)&&kbd)_keyboard_register(kbd);
 }
 int keyboard_register(){
 	bool found=false;
@@ -81,23 +125,23 @@ int keyboard_register(){
 		&gEfiSimpleTextInProtocolGuid,
 		NULL,&cnt,&hands
 	);
-	if(EFI_ERROR(st))return trlog_warn(-1,"locate keyboard failed: %s",efi_status_to_string(st));
+	if(EFI_ERROR(st))return trlog_warn(-1,
+		"locate keyboard failed: %s",
+		efi_status_to_string(st)
+	);
 	for(UINTN i=0;i<cnt;i++){
-		EFI_SIMPLE_TEXT_INPUT_PROTOCOL*keyboard=NULL;
+		EFI_SIMPLE_TEXT_INPUT_PROTOCOL*kbd=NULL;
 		if(EFI_ERROR(gBS->HandleProtocol(
 			hands[i],
 			&gEfiSimpleTextInProtocolGuid,
-			(VOID**)&keyboard
-		))||!keyboard)continue;
-		static lv_indev_drv_t drv;
-		lv_indev_drv_init(&drv);
-		drv.type=LV_INDEV_TYPE_KEYPAD;
-		drv.read_cb=keyboard_read;
-		drv.user_data=keyboard;
-		lv_indev_set_group(lv_indev_drv_register(&drv),gui_grp);
-		tlog_debug("found uefi keyboard %p",keyboard);
-		found=true;
+			(VOID**)&kbd
+		))||!kbd)continue;
+		if(_keyboard_register(kbd)==0)found=true;
 	}
+	EfiCreateProtocolNotifyEvent(
+		&gEfiSimpleTextInProtocolGuid,
+		TPL_CALLBACK,keyboard_event,NULL,&event_reg
+	);
 	return found?0:trlog_warn(-1,"no uefi keyboard found");
 }
 #endif

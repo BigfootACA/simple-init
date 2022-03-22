@@ -13,6 +13,8 @@
 #ifdef ENABLE_UEFI
 extern int efi_status_to_errno(EFI_STATUS st);
 extern const char*efi_status_to_string(EFI_STATUS st);
+extern const char*efi_status_to_short_string(EFI_STATUS st);
+extern BOOLEAN efi_short_string_to_status(const char*str,EFI_STATUS*st);
 #endif
 
 #endif

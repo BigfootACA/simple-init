@@ -7,6 +7,7 @@
  */
 
 #include<errno.h>
+#include<Library/BaseLib.h>
 #include"compatible.h"
 #ifndef ENOMEDIUM
 #define ENOMEDIUM ENXIO
@@ -121,4 +122,127 @@ const char*efi_status_to_string(EFI_STATUS st){
 		case EFI_COMPROMISED_DATA:      return "Compromised Data";
 		default:                        return "Unknown";
 	}
+}
+
+const char*efi_status_to_short_string(EFI_STATUS st){
+	switch(st){
+		case EFI_SUCCESS:               return "success";
+		case EFI_WARN_UNKNOWN_GLYPH:    return "warn-unknown-glyph";
+		case EFI_WARN_DELETE_FAILURE:   return "warn-delete-failure";
+		case EFI_WARN_WRITE_FAILURE:    return "warn-write-failure";
+		case EFI_WARN_BUFFER_TOO_SMALL: return "warn-buffer-too-small";
+		case EFI_WARN_STALE_DATA:       return "warn-stale-data";
+		case EFI_LOAD_ERROR:            return "load-error";
+		case EFI_INVALID_PARAMETER:     return "invalid-parameter";
+		case EFI_UNSUPPORTED:           return "unsupported";
+		case EFI_BAD_BUFFER_SIZE:       return "bad-buffer-size";
+		case EFI_BUFFER_TOO_SMALL:      return "buffer-too-small";
+		case EFI_NOT_READY:             return "not-ready";
+		case EFI_DEVICE_ERROR:          return "device-error";
+		case EFI_WRITE_PROTECTED:       return "write-protected";
+		case EFI_OUT_OF_RESOURCES:      return "out-of-resources";
+		case EFI_VOLUME_CORRUPTED:      return "volume-corrupted";
+		case EFI_VOLUME_FULL:           return "volume-full";
+		case EFI_NO_MEDIA:              return "no-media";
+		case EFI_MEDIA_CHANGED:         return "media-changed";
+		case EFI_NOT_FOUND:             return "not-found";
+		case EFI_ACCESS_DENIED:         return "access-denied";
+		case EFI_NO_RESPONSE:           return "no-response";
+		case EFI_NO_MAPPING:            return "no-mapping";
+		case EFI_TIMEOUT:               return "timeout";
+		case EFI_NOT_STARTED:           return "not-started";
+		case EFI_ALREADY_STARTED:       return "already-started";
+		case EFI_ABORTED:               return "aborted";
+		case EFI_ICMP_ERROR:            return "icmp-error";
+		case EFI_TFTP_ERROR:            return "tftp-error";
+		case EFI_PROTOCOL_ERROR:        return "protocol-error";
+		case EFI_INCOMPATIBLE_VERSION:  return "incompatible-version";
+		case EFI_SECURITY_VIOLATION:    return "security-violation";
+		case EFI_CRC_ERROR:             return "crc-error";
+		case EFI_END_OF_MEDIA:          return "end-of-media";
+		case EFI_END_OF_FILE:           return "end-of-file";
+		case EFI_INVALID_LANGUAGE:      return "invalid-language";
+		case EFI_COMPROMISED_DATA:      return "compromised-data";
+		default:                        return "unknown";
+	}
+}
+
+BOOLEAN efi_short_string_to_status(const char*str,EFI_STATUS*st){
+	if(!str||!st)return FALSE;
+	if(AsciiStriCmp(str,"success")==0)
+		*st=EFI_SUCCESS;
+	else if(AsciiStriCmp(str,"warn-unknown-glyph")==0)
+		*st=EFI_WARN_UNKNOWN_GLYPH;
+	else if(AsciiStriCmp(str,"warn-delete-failure")==0)
+		*st=EFI_WARN_DELETE_FAILURE;
+	else if(AsciiStriCmp(str,"warn-write-failure")==0)
+		*st=EFI_WARN_WRITE_FAILURE;
+	else if(AsciiStriCmp(str,"warn-buffer-too-small")==0)
+		*st=EFI_WARN_BUFFER_TOO_SMALL;
+	else if(AsciiStriCmp(str,"warn-stale-data")==0)
+		*st=EFI_WARN_STALE_DATA;
+	else if(AsciiStriCmp(str,"load-error")==0)
+		*st=EFI_LOAD_ERROR;
+	else if(AsciiStriCmp(str,"invalid-parameter")==0)
+		*st=EFI_INVALID_PARAMETER;
+	else if(AsciiStriCmp(str,"unsupported")==0)
+		*st=EFI_UNSUPPORTED;
+	else if(AsciiStriCmp(str,"bad-buffer-size")==0)
+		*st=EFI_BAD_BUFFER_SIZE;
+	else if(AsciiStriCmp(str,"buffer-too-small")==0)
+		*st=EFI_BUFFER_TOO_SMALL;
+	else if(AsciiStriCmp(str,"not-ready")==0)
+		*st=EFI_NOT_READY;
+	else if(AsciiStriCmp(str,"device-error")==0)
+		*st=EFI_DEVICE_ERROR;
+	else if(AsciiStriCmp(str,"write-protected")==0)
+		*st=EFI_WRITE_PROTECTED;
+	else if(AsciiStriCmp(str,"out-of-resources")==0)
+		*st=EFI_OUT_OF_RESOURCES;
+	else if(AsciiStriCmp(str,"volume-corrupted")==0)
+		*st=EFI_VOLUME_CORRUPTED;
+	else if(AsciiStriCmp(str,"volume-full")==0)
+		*st=EFI_VOLUME_FULL;
+	else if(AsciiStriCmp(str,"no-media")==0)
+		*st=EFI_NO_MEDIA;
+	else if(AsciiStriCmp(str,"media-changed")==0)
+		*st=EFI_MEDIA_CHANGED;
+	else if(AsciiStriCmp(str,"not-found")==0)
+		*st=EFI_NOT_FOUND;
+	else if(AsciiStriCmp(str,"access-denied")==0)
+		*st=EFI_ACCESS_DENIED;
+	else if(AsciiStriCmp(str,"no-response")==0)
+		*st=EFI_NO_RESPONSE;
+	else if(AsciiStriCmp(str,"no-mapping")==0)
+		*st=EFI_NO_MAPPING;
+	else if(AsciiStriCmp(str,"timeout")==0)
+		*st=EFI_TIMEOUT;
+	else if(AsciiStriCmp(str,"not-started")==0)
+		*st=EFI_NOT_STARTED;
+	else if(AsciiStriCmp(str,"already-started")==0)
+		*st=EFI_ALREADY_STARTED;
+	else if(AsciiStriCmp(str,"aborted")==0)
+		*st=EFI_ABORTED;
+	else if(AsciiStriCmp(str,"icmp-error")==0)
+		*st=EFI_ICMP_ERROR;
+	else if(AsciiStriCmp(str,"tftp-error")==0)
+		*st=EFI_TFTP_ERROR;
+	else if(AsciiStriCmp(str,"protocol-error")==0)
+		*st=EFI_PROTOCOL_ERROR;
+	else if(AsciiStriCmp(str,"incompatible-version")==0)
+		*st=EFI_INCOMPATIBLE_VERSION;
+	else if(AsciiStriCmp(str,"security-violation")==0)
+		*st=EFI_SECURITY_VIOLATION;
+	else if(AsciiStriCmp(str,"crc-error")==0)
+		*st=EFI_CRC_ERROR;
+	else if(AsciiStriCmp(str,"end-of-media")==0)
+		*st=EFI_END_OF_MEDIA;
+	else if(AsciiStriCmp(str,"end-of-file")==0)
+		*st=EFI_END_OF_FILE;
+	else if(AsciiStriCmp(str,"invalid-language")==0)
+		*st=EFI_INVALID_LANGUAGE;
+	else if(AsciiStriCmp(str,"compromised-data")==0)
+		*st=EFI_COMPROMISED_DATA;
+	else return FALSE;
+	return TRUE;
 }

@@ -34,6 +34,7 @@
   pow_data.c
   exp_data.c
   log_data.c
+  log2_data.c
   malloc.c
   exit.c
   number.c
@@ -97,6 +98,7 @@
   exp.c
   expm1.c
   log.c
+  log2.c
   log10.c
   frexp.c
   ldexp.c

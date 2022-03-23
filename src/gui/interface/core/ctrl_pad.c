@@ -46,6 +46,15 @@ void ctrl_pad_show(void){
 	lv_group_add_obj(gui_grp,ctrl_pad.btn_close.btn);
 }
 
+bool ctrl_pad_is_show(void){
+	return ctrl_pad.show;
+}
+
+void ctrl_pad_toggle(void){
+	if(ctrl_pad.show)ctrl_pad_hide();
+	else ctrl_pad_show();
+}
+
 void ctrl_pad_hide(void){
 	if(!ctrl_pad.show)return;
 	ctrl_pad.show=false;

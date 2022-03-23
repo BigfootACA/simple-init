@@ -83,6 +83,12 @@ extern void ctrl_pad_show(void);
 // src/gui/interface/core/ctrl_pad.c: hide control pad
 extern void ctrl_pad_hide(void);
 
+// src/gui/interface/core/ctrl_pad.c: is control pad show
+extern bool ctrl_pad_is_show(void);
+
+// src/gui/interface/core/ctrl_pad.c: toggle control pad show
+extern void ctrl_pad_toggle(void);
+
 // src/gui/interface/core/ctrl_pad.c: set control pad target object
 extern void ctrl_pad_set_target(lv_obj_t*target);
 #endif

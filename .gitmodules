@@ -19,3 +19,6 @@
 [submodule "libs/stb"]
 	path = libs/stb
 	url = https://github.com/nothings/stb.git
+[submodule "libs/lua"]
+	path = libs/lua
+	url = https://github.com/lua/lua.git

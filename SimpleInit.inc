@@ -1,6 +1,7 @@
 [LibraryClasses]
   Zlib|libs/Zlib.inf
   JSONC|libs/JSONC.inf
+  LuaLib|libs/LuaLib.inf
   MiniXML|libs/MiniXML.inf
   LodePNG|libs/LodePNG.inf
   FreeType|libs/FreeType.inf
@@ -8,6 +9,7 @@
   SimpleInitCompatible|libs/compatible/SimpleInitCompatible.inf
   SimpleInitGUI|src/gui/SimpleInitGUI.inf
   SimpleInitLib|src/lib/SimpleInitLib.inf
+  SimpleInitLua|src/lua/SimpleInitLua.inf
   SimpleInitBoot|src/boot/SimpleInitBoot.inf
   SimpleInitBootLinux|src/linux-boot/SimpleInitBootLinux.inf
   SimpleInitCompress|src/compress/SimpleInitCompress.inf
@@ -22,6 +24,7 @@
 [Components]
   libs/Zlib.inf
   libs/JSONC.inf
+  libs/LuaLib.inf
   libs/MiniXML.inf
   libs/LodePNG.inf
   libs/FreeType.inf
@@ -29,6 +32,7 @@
   libs/compatible/SimpleInitCompatible.inf
   src/gui/SimpleInitGUI.inf
   src/lib/SimpleInitLib.inf
+  src/lua/SimpleInitLua.inf
   src/boot/SimpleInitBoot.inf
   src/linux-boot/SimpleInitBootLinux.inf
   src/compress/SimpleInitCompress.inf

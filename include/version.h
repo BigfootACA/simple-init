@@ -74,6 +74,66 @@
 #define _FEATURE_SDL2
 #endif
 
+#ifdef ENABLE_UUID
+#define _FEATURE_UUID "UUID "
+#else
+#define _FEATURE_UUID
+#endif
+
+#ifdef ENABLE_LODEPNG
+#define _FEATURE_LODEPNG "LODEPNG "
+#else
+#define _FEATURE_LODEPNG
+#endif
+
+#ifdef ENABLE_LIBJPEG
+#define _FEATURE_LIBJPEG "LIBJPEG "
+#else
+#define _FEATURE_LIBJPEG
+#endif
+
+#ifdef ENABLE_NANOSVG
+#define _FEATURE_NANOSVG "NANOSVG "
+#else
+#define _FEATURE_NANOSVG
+#endif
+
+#ifdef ENABLE_JSONC
+#define _FEATURE_JSONC "JSONC "
+#else
+#define _FEATURE_JSONC
+#endif
+
+#ifdef ENABLE_MXML
+#define _FEATURE_MXML "MXML "
+#else
+#define _FEATURE_MXML
+#endif
+
+#ifdef ENABLE_VNCSERVER
+#define _FEATURE_VNCSERVER "VNCSERVER "
+#else
+#define _FEATURE_VNCSERVER
+#endif
+
+#ifdef ENABLE_HIVEX
+#define _FEATURE_HIVEX "HIVEX "
+#else
+#define _FEATURE_HIVEX
+#endif
+
+#ifdef ENABLE_STB
+#define _FEATURE_STB "STB "
+#else
+#define _FEATURE_STB
+#endif
+
+#ifdef ENABLE_LUA
+#define _FEATURE_LUA "LUA "
+#else
+#define _FEATURE_LUA
+#endif
+
 #define _FEATURE_MOUNT "MOUNT"
 
 #define FEATURES \
@@ -87,6 +147,16 @@
 	_FEATURE_DRM \
 	_FEATURE_GTK \
 	_FEATURE_SDL2 \
+	_FEATURE_UUID \
+	_FEATURE_LODEPNG \
+	_FEATURE_LIBJPEG \
+	_FEATURE_NANOSVG \
+	_FEATURE_JSONC \
+	_FEATURE_MXML \
+	_FEATURE_VNCSERVER \
+	_FEATURE_HIVEX \
+	_FEATURE_STB \
+	_FEATURE_LUA \
 	_FEATURE_MOUNT
 
 #define VERSION_INFO \

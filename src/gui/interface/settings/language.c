@@ -18,7 +18,7 @@
 #include"gui/activity.h"
 #define TAG "language"
 
-static lv_obj_t*scr,*box,*sel,*btn_ok,*arr_left,*arr_right;
+static lv_obj_t*scr,*box,*txt,*sel,*btn_ok,*arr_left,*arr_right;
 
 static void ok_action(lv_obj_t*obj,lv_event_t e){
 	if(obj!=btn_ok||e!=LV_EVENT_CLICKED)return;
@@ -87,55 +87,55 @@ static int language_lost_focus(struct gui_activity*d __attribute__((unused))){
 	return 0;
 }
 
-static int language_menu_draw(struct gui_activity*act){
+static int language_resize(struct gui_activity*d __attribute__((unused))){
 	int bts=gui_font_size+(gui_dpi/8);
+	lv_obj_set_width(box,gui_sw/6*5);
+	lv_obj_set_width(txt,lv_page_get_scrl_width(box));
+	lv_obj_set_width(sel,lv_page_get_scrl_width(box)-gui_dpi/10);
+	lv_obj_align(sel,txt,LV_ALIGN_OUT_BOTTOM_MID,0,gui_dpi/10);
+	lv_obj_set_size(btn_ok,lv_page_get_scrl_width(box)-gui_dpi/10-bts*3,bts);
+	lv_obj_align(btn_ok,sel,LV_ALIGN_OUT_BOTTOM_MID,0,gui_dpi/10);
+	lv_obj_set_size(arr_left,bts,bts);
+	lv_obj_align(arr_left,btn_ok,LV_ALIGN_OUT_LEFT_MID,-bts/2,0);
+	lv_obj_set_size(arr_right,bts,bts);
+	lv_obj_align(arr_right,btn_ok,LV_ALIGN_OUT_RIGHT_MID,bts/2,0);
+	lv_obj_set_height(box,lv_obj_get_y(btn_ok)+lv_obj_get_height(btn_ok)+(gui_font_size*2)+gui_dpi/20);
+	lv_obj_align(box,NULL,LV_ALIGN_CENTER,0,0);
+	return 0;
+}
+
+static int language_menu_draw(struct gui_activity*act){
 	scr=act->page;
 
-	static lv_style_t bs;
-	lv_style_init(&bs);
-	lv_style_set_pad_all(&bs,LV_STATE_DEFAULT,gui_font_size);
-
 	box=lv_page_create(scr,NULL);
-	lv_obj_add_style(box,LV_PAGE_PART_BG,&bs);
+	lv_obj_set_style_local_pad_all(box,LV_PAGE_PART_BG,LV_STATE_DEFAULT,gui_font_size);
 	lv_obj_set_click(box,false);
-	lv_obj_set_width(box,gui_sw/6*5);
 
-	lv_obj_t*txt=lv_label_create(box,NULL);
+	txt=lv_label_create(box,NULL);
 	lv_label_set_long_mode(txt,LV_LABEL_LONG_BREAK);
 	lv_label_set_align(txt,LV_LABEL_ALIGN_CENTER);
-	lv_obj_set_width(txt,lv_page_get_scrl_width(box));
 	lv_label_set_text(txt,_("Select language"));
 
 	sel=lv_dropdown_create(box,NULL);
-	lv_obj_set_width(sel,lv_page_get_scrl_width(box)-gui_dpi/10);
-	lv_obj_align(sel,txt,LV_ALIGN_OUT_BOTTOM_MID,0,gui_dpi/10);
 	lv_obj_set_event_cb(sel,lv_default_dropdown_cb);
 	init_languages();
 
 	btn_ok=lv_btn_create(box,NULL);
 	lv_style_set_action_button(btn_ok,true);
-	lv_obj_set_size(btn_ok,lv_page_get_scrl_width(box)-gui_dpi/10-bts*3,bts);
-	lv_obj_align(btn_ok,sel,LV_ALIGN_OUT_BOTTOM_MID,0,gui_dpi/10);
 	lv_obj_set_event_cb(btn_ok,ok_action);
 	lv_obj_set_user_data(btn_ok,act);
 	lv_label_set_text(lv_label_create(btn_ok,NULL),_("OK"));
 
 	arr_left=lv_btn_create(box,NULL);
-	lv_obj_set_size(arr_left,bts,bts);
 	lv_obj_set_event_cb(arr_left,arrow_action);
-	lv_obj_align(arr_left,btn_ok,LV_ALIGN_OUT_LEFT_MID,-bts/2,0);
 	lv_style_set_action_button(arr_left,true);
 	lv_label_set_text(lv_label_create(arr_left,NULL),LV_SYMBOL_LEFT);
 
 	arr_right=lv_btn_create(box,NULL);
-	lv_obj_set_size(arr_right,bts,bts);
 	lv_obj_set_event_cb(arr_right,arrow_action);
-	lv_obj_align(arr_right,btn_ok,LV_ALIGN_OUT_RIGHT_MID,bts/2,0);
 	lv_style_set_action_button(arr_right,true);
 	lv_label_set_text(lv_label_create(arr_right,NULL),LV_SYMBOL_RIGHT);
 
-	lv_obj_set_height(box,lv_obj_get_y(btn_ok)+lv_obj_get_height(btn_ok)+(gui_font_size*2)+gui_dpi/20);
-	lv_obj_align(box,NULL,LV_ALIGN_CENTER,0,0);
 	return 0;
 }
 
@@ -144,6 +144,7 @@ struct gui_register guireg_language={
 	.title="Language",
 	.icon="language.svg",
 	.show_app=true,
+	.resize=language_resize,
 	.get_focus=language_get_focus,
 	.lost_focus=language_lost_focus,
 	.draw=language_menu_draw,

@@ -195,6 +195,9 @@ extern int set_active_console(int vt);
 // src/lib/stdio.c: get active kernel consoles
 extern char**get_active_consoles(void);
 
+// src/lib/stdio.c: full write string
+extern ssize_t full_write(int fd,void*data,size_t len);
+
 // file type macros
 #define is_type(fd,err,type,path...) fd_is_type(AT_FDCWD,err,type,path);
 #define fd_is_file(fd,path...) fd_is_type(fd,0,S_IFREG,path)

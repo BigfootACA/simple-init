@@ -144,3 +144,16 @@ char**get_active_consoles(){
 	if(v&&!r)free(v);
 	return r;
 }
+
+ssize_t full_write(int fd,void*data,size_t len){
+	ssize_t sent;
+	size_t rxl=len;
+	void*rxd=data;
+	do{
+		errno=0;
+		sent=write(fd,rxd,rxl);
+		if(sent<0&&errno!=EAGAIN&&errno!=EINTR)return sent;
+		rxl-=sent,rxd+=sent;
+	}while(rxl>0);
+	return (ssize_t)len;
+}

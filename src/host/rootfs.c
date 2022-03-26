@@ -57,6 +57,7 @@ static void add_line_indent(int len,const char*line,...){
 #define add_int_val(name,value) add_line("%s=%d,\n",(name),(value))
 
 static void print_info(struct stat*st,int depth){
+	add_line(".info.parent=NULL,\n");
 	add_int_val(".info.mode",          st->st_mode);
 	add_int_val(".info.owner",         st->st_uid);
 	add_int_val(".info.group",         st->st_gid);
@@ -118,6 +119,7 @@ static void print_file(int cfd,char*name,size_t size,int depth){
 	}
 	add_int_val(".length",size);
 	add_int_val(".offset",lseek(bfd,0,SEEK_CUR));
+	add_line(".content=NULL,\n");
 	if(size>0){
 		void*v=mmap(NULL,size,PROT_READ,MAP_PRIVATE,fd,0);
 		if(!v){

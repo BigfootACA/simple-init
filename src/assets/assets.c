@@ -18,7 +18,29 @@
 #include"assets.h"
 #include"defines.h"
 
+static bool rootfs_inited=false;
 extern char _binary_rootfs_bin_start;
+
+static void fill_assets_info(entry_dir*dir){
+	entry_dir*d=NULL;
+	entry_file*f=NULL;
+	if(!dir){
+		if(rootfs_inited)return;
+		fill_assets_info(&assets_rootfs);
+		rootfs_inited=true;
+		return;
+	}
+	if(dir->subdirs)for(size_t s=0;(d=dir->subdirs[s]);s++){
+		d->info.parent=dir;
+		fill_assets_info(d);
+	}
+	if(dir->subfiles)for(size_t s=0;(f=dir->subfiles[s]);s++){
+		f->info.parent=dir;
+		if(!f->content&&f->length>0)
+			f->content=&_binary_rootfs_bin_start+f->offset;
+	}
+
+}
 
 #ifndef ENABLE_UEFI
 int set_assets_file_info(int fd,entry_file*file){
@@ -30,7 +52,7 @@ int set_assets_file_info(int fd,entry_file*file){
 }
 
 int write_assets_file(int fd,entry_file*file,bool pres){
-	if(!file->content&&file->length>0)file->content=&_binary_rootfs_bin_start+file->offset;
+	fill_assets_info(NULL);
 	if(file->content){
 		if(file->length==0)file->length=strlen(file->content);
 		if(write(fd,file->content,file->length)<0)return -errno;
@@ -117,102 +139,61 @@ static entry_dir*_get_assets_subdir(entry_dir*dir,const char*name){
 	EPRET(ENOENT);
 }
 
-static list*resolve_relative_path(list*root,list*dir,char*path){
-	if(!path||!dir)EPRET(EINVAL);
-	if(!path[0])EPRET(ENOENT);
-	list*o,*z;
-	if(!(z=o=path2list(path,false)))EPRET(ENOENT);
-	if(dir->prev&&path[0]!='/'){
-		if(!(z=list_duplicate_chars(root,dir))){
-			int e=errno;
-			list_free_all_def(o);
-			EPRET(e);
-		}
-		if(!list_merge(z,o)){
-			int e=errno;
-			list_free_all_def(o);
-			list_free_all_def(z);
-			EPRET(e);
-		}
-	}
-	if(!(o=path_simplify(z,true))){
-		int e=errno;
-		list_free_all_def(z);
-		EPRET(e);
-	}
-	return o;
-}
-
-static entry_dir*get_assets_dir_component(entry_dir*dir,list*paths,int*cnt){
-	if(!dir||!cnt)EPRET(EINVAL);
-	list*p=list_first(paths);
-	entry_dir*cd=dir;
+entry_dir*get_assets_dir(entry_dir*dir,const char*path){
+	int cnt=0;
+	entry_file*f=NULL;
+	entry_dir*d=dir,*x;
+	char*p=strdup(path),*xp=p,*n=NULL;
+	if(!p)return NULL;
+	fill_assets_info(NULL);
+	for(size_t i=0;p[i];i++)if(p[i]=='\\')p[i]='/';
+	if(path[0]=='/')
+		while(d->info.parent)
+			d=d->info.parent;
 	do{
-		LIST_DATA_DECLARE(n,p,char*);
-		entry_dir*c=_get_assets_subdir(cd,n);
-		if(!c){
-			entry_file*l=_get_assets_subfile(cd,n);
-			if(!l)EPRET(ENOENT);
-			if(S_ISLNK(l->info.mode)){
-				if((*cnt)++>=40)EPRET(ELOOP);
-				list*o=resolve_relative_path(paths,p,l->content);
-				if(!o)return NULL;
-				c=get_assets_dir_component(dir,o,cnt);
-				int e=errno;
-				list_free_all_def(o);
-				if(!c)EPRET(e);
-			}else EPRET(ENOTDIR);
+		if(n)xp=n+1;
+		if((n=strchr(xp,'/')))*n=0;
+		if(!*xp)continue;
+		if(strcmp(xp,".")==0)continue;
+		if(strcmp(xp,"..")==0){
+			x=d->info.parent;
+			if(x)d=x;
+			continue;
 		}
-		cd=c;
-	}while((p=p->next));
-	return cd;
+		if((x=_get_assets_subdir(d,xp))){d=x;continue;}
+		if(!(f=_get_assets_subfile(d,xp)))continue;
+		if(!S_ISLNK(f->info.mode)){d=NULL,errno=ENOTDIR;break;}
+		if(cnt++>=40){d=NULL,errno=ELOOP;break;}
+		if(!f->content){d=NULL,errno=ENOENT;break;}
+		if(f->content[0]=='/')while(d->info.parent)d=d->info.parent;
+		if(!(d=get_assets_dir(d,f->content)))break;
+	}while(n);
+	free(p);
+	return d;
 }
 
-static entry_file*get_assets_file_component(entry_dir*dir,list*paths,int*cnt){
-	list*f=list_first(paths),*l=list_last(paths),*x;
-	if(!cnt||!dir||!f||!l)EPRET(EINVAL);
-	entry_file*r;
-	entry_dir*d=dir;
-	if(f->next){
-		if(!(x=l->prev))EPRET(EFAULT);
-		x->next=NULL;
-		d=get_assets_dir_component(dir,f,cnt);
-		int e=errno;
-		x->next=l;
-		if(!d)EPRET(e);
-	}else if(f!=l||f->prev)EPRET(EFAULT);
-	if(!(r=_get_assets_subfile(d,(char*)l->data)))return NULL;
-	if(S_ISLNK(r->info.mode)){
-		if((*cnt)++>=40)EPRET(ELOOP);
-		list*o=resolve_relative_path(paths,l,r->content);
-		if(!o)return NULL;
-		r=get_assets_file_component(dir,o,cnt);
-		int e=errno;
-		list_free_all_def(o);
-		if(!r)EPRET(e);
+entry_file*get_assets_file(entry_dir*dir,const char*path){
+	int cnt=0;
+	entry_file*f=NULL;
+	char*p=strdup(path),*xp=p,*n=NULL;
+	if(!p)return NULL;
+	fill_assets_info(NULL);
+	for(size_t i=0;p[i];i++)if(p[i]=='\\')p[i]='/';
+	if((n=strrchr(xp,'/'))){
+		*n=0,dir=get_assets_dir(dir,xp);
+		if(dir)xp=n+1;
 	}
-	if(!r->content&&r->length>0)r->content=&_binary_rootfs_bin_start+r->offset;
-	return r;
-}
-
-entry_dir*get_assets_dir(entry_dir*dir,char*path){
-	list*paths=path2list(path,true);
-	if(!paths)return NULL;
-	int c=0;
-	entry_dir*f=get_assets_dir_component(dir,paths,&c);
-	int e=errno;
-	list_free_all_def(paths);
-	errno=e;
-	return f;
-}
-
-entry_file*get_assets_file(entry_dir*dir,char*path){
-	list*paths=path2list(path,true);
-	if(!paths)return NULL;
-	int c=0;
-	entry_file*f=get_assets_file_component(dir,paths,&c);
-	int e=errno;
-	list_free_all_def(paths);
-	errno=e;
+	if(!*xp)errno=ENOTDIR;
+	else if(dir)f=_get_assets_subfile(dir,xp);
+	else errno=ENOENT;
+	while(f&&S_ISLNK(f->info.mode)){
+		if(cnt++>=40){f=NULL,errno=ELOOP;break;}
+		if(!f->content){f=NULL,errno=ENOENT;break;}
+		if(f->content[0]=='/')
+			while(dir->info.parent)
+				dir=dir->info.parent;
+		f=get_assets_file(dir,f->content);
+	}
+	free(p);
 	return f;
 }

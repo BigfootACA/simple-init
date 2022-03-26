@@ -19,6 +19,7 @@ typedef unsigned gid_t;
 
 // generic entry metadata
 struct entry{
+	struct entry_dir*parent;
 	char name[256];
 	mode_t mode;
 	uid_t owner;
@@ -62,10 +63,10 @@ extern int create_assets_file(int dfd,entry_file*file,bool pres,bool override);
 extern int create_assets_dir(int dfd,entry_dir*dir,bool override);
 
 // src/assets/assets.c: get file by path in an assets
-extern entry_file*get_assets_file(entry_dir*dir,char*path);
+extern entry_file*get_assets_file(entry_dir*dir,const char*path);
 
 // src/assets/assets.c: get folder by path in an assets
-extern entry_dir*get_assets_dir(entry_dir*dir,char*path);
+extern entry_dir*get_assets_dir(entry_dir*dir,const char*path);
 
 // get from rootfs
 #define rootfs_get_assets_file(paths)get_assets_file(&assets_rootfs,paths)

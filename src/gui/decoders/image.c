@@ -15,6 +15,7 @@
 #ifdef ENABLE_UEFI
 #include<Library/MemoryAllocationLib.h>
 #include<Guid/FileInfo.h>
+#include"uefi.h"
 #include"locate.h"
 #endif
 #include"list.h"
@@ -109,12 +110,7 @@ static int image_open_source_locate(char*path,unsigned char**data,size_t*len){
 		EDONE(telog_warn("unsupported locate type for %s",path));
 
 	// get file info
-	st=loc.file->GetInfo(loc.file,&gEfiFileInfoGuid,&infos,info);
-	if(st==EFI_BUFFER_TOO_SMALL){
-		if(!(info=AllocateZeroPool(infos)))
-			EDONE(tlog_error("allocate pool failed"));
-		st=loc.file->GetInfo(loc.file,&gEfiFileInfoGuid,&infos,info);
-	}
+	st=efi_file_get_file_info(loc.file,&infos,&info);
 	if(EFI_ERROR(st))EDONE(tlog_warn(
 		"get file info of %s failed: %s",
 		path,efi_status_to_string(st)

@@ -7,5 +7,8 @@ source scripts/environments.sh.inc
 fallocate -l "${LOGFS_SIZE}" "${LOGFS}"
 parted "${LOGFS}" mklabel gpt
 parted "${LOGFS}" mkpart logfs fat16 2048s "${LOGFS_SIZE}"
-mkfs.vfat -n LOGFS --offset=2048 "${LOGFS}"
+_BLK="$(losetup --partscan --find --show "${LOGFS}")"
+[ -b "${_BLK}" ]||exit 1
+mkfs.vfat -n LOGFS "${_BLK}p1"
+losetup -d "${_BLK}"
 popd >/dev/null

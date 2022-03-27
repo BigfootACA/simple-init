@@ -9,6 +9,7 @@
 #include<stdbool.h>
 #include<string.h>
 #include<errno.h>
+#include"system.h"
 #include"defines.h"
 #include"confd_internal.h"
 
@@ -27,7 +28,7 @@ void confd_internal_init_msg(struct confd_msg*msg,enum confd_action action){
 int confd_internal_send(int fd,struct confd_msg*msg){
 	if(fd<0)ERET(EINVAL);
 	static size_t xs=sizeof(struct confd_msg);
-	return ((size_t)write(fd,msg,xs))==xs?(int)xs:-1;
+	return (int)full_write(fd,msg,xs);
 }
 
 int confd_internal_send_code(int fd,enum confd_action action,int code){
@@ -40,19 +41,20 @@ int confd_internal_send_code(int fd,enum confd_action action,int code){
 
 int confd_internal_read_msg(int fd,struct confd_msg*buff){
 	if(!buff||fd<0)ERET(EINVAL);
-	size_t size=sizeof(struct confd_msg),s;
+	size_t size=sizeof(struct confd_msg),s,len=0;
 	memset(buff,0,size);
 	errno=0;
-	while(1){
+	do{
 		errno=0;
-		s=read(fd,buff,size);
-		if(errno==0)break;
-		switch(errno){
+		s=read(fd,buff+len,size-len);
+		if(s==0)break;
+		else if(s>0)len+=s;
+		else switch(errno){
 			case EINTR:continue;
 			case EAGAIN:return 0;
 			default:return -2;
 		}
-	}
+	}while(len<size);
 	if(s==0)return EOF;
 	return (s!=size||!(confd_internal_check_magic(buff)))?-2:1;
 }

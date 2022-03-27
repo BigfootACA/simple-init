@@ -82,7 +82,7 @@ static void do_get_string(int fd,struct confd_msg*msg,struct confd_msg*ret,struc
 	char*re=conf_get_string(msg->path,NULL,cred->uid,cred->gid);
 	ret->data.data_len=re?strlen(re):0;
 	confd_internal_send(fd,ret);
-	if(re)write(fd,re,ret->data.data_len);
+	if(re)full_write(fd,re,ret->data.data_len);
 }
 
 static int do_set_string(int fd,struct confd_msg*msg,struct ucred*cred){

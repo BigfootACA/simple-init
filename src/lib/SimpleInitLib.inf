@@ -18,8 +18,12 @@
   FdtLib
   SimpleInitCompatible
 
+[Guids]
+  gSimpleInitFileGuid
+
 [Sources]
   # Simple-Init library
+  uefi.c
   list.c
   replace.c
   keyval.c

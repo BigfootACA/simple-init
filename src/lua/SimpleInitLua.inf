@@ -1,0 +1,124 @@
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = SimpleInitLua
+  FILE_GUID                      = F57BE336-87CD-46AF-AA3B-A8F8A64F13BE
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = SimpleInitLua
+
+[BuildOptions]
+  GCC:*_*_*_CC_FLAGS = -DENABLE_GUI=1 -DENABLE_UEFI=1 -DENABLE_LODEPNG=1 -DENABLE_NANOSVG=1 -DENABLE_FREETYPE2=1 -DENABLE_STB=1 -DENABLE_MXML=1 -DENABLE_LUA=1
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  SimpleInit.dec
+
+[LibraryClasses]
+  LuaLib
+  SimpleInitLoggerd
+  SimpleInitConfd
+  BaseLib
+  PrintLib
+  IoLib
+  BootLogoLib
+  BaseMemoryLib
+  DevicePathLib
+  MemoryAllocationLib
+  UefiBootServicesTableLib
+  UefiRuntimeServicesTableLib
+
+[Protocols]
+  gEfiAbsolutePointerProtocolGuid
+  gEfiAcpiTableProtocolGuid
+  gEfiBlockIoProtocolGuid
+  gEfiBootLogoProtocolGuid
+  gEdkiiBootLogo2ProtocolGuid
+  gEfiBootManagerPolicyProtocolGuid
+  gEfiComponentNameProtocolGuid
+  gEfiComponentName2ProtocolGuid
+  gEfiDeferredImageLoadProtocolGuid
+  gEfiDevicePathProtocolGuid
+  gEfiDiskInfoProtocolGuid
+  gEfiDiskIoProtocolGuid
+  gEfiGraphicsOutputProtocolGuid
+  gEfiLoadedImageProtocolGuid
+  gEfiPartitionInfoProtocolGuid
+  gEfiRamDiskProtocolGuid
+  gEfiSecurityArchProtocolGuid
+  gEfiSecurity2ArchProtocolGuid
+  gEfiSerialIoProtocolGuid
+  gEfiSimpleFileSystemProtocolGuid
+  gEfiSimplePointerProtocolGuid
+  gEfiSimpleTextInProtocolGuid
+  gEfiSimpleTextOutProtocolGuid
+  gEfiTimestampProtocolGuid
+
+[Guids]
+  gEfiDiskInfoIdeInterfaceGuid
+  gEfiDiskInfoScsiInterfaceGuid
+  gEfiDiskInfoUsbInterfaceGuid
+  gEfiDiskInfoAhciInterfaceGuid
+  gEfiDiskInfoNvmeInterfaceGuid
+  gEfiDiskInfoUfsInterfaceGuid
+  gEfiDiskInfoSdMmcInterfaceGuid
+  gEfiFileInfoGuid
+  gEfiFileSystemInfoGuid
+  gEfiFileSystemVolumeLabelInfoIdGuid
+  gEfiBootManagerPolicyConsoleGuid
+  gEfiBootManagerPolicyNetworkGuid
+  gEfiBootManagerPolicyConnectAllGuid
+  gEfiVirtualDiskGuid
+  gEfiVirtualCdGuid
+  gEfiPersistentVirtualDiskGuid
+  gEfiPersistentVirtualCdGuid
+
+[Sources]
+  conf.c
+  feature.c
+  libs.c
+  logger.c
+  lua.c
+  uefi/uefi.c
+  uefi/system_table.c
+  uefi/guids.c
+  uefi/libs.c
+  uefi/file_info.c
+  uefi/libs/boot_logo_lib.c
+  uefi/libs/io_lib.c
+  uefi/libs/uefi_lib.c
+  uefi/data/boot_service.c
+  uefi/data/char16.c
+  uefi/data/data.c
+  uefi/data/devicepath.c
+  uefi/data/event.c
+  uefi/data/guid.c
+  uefi/data/handle.c
+  uefi/data/input_key.c
+  uefi/data/runtime_service.c
+  uefi/data/status.c
+  uefi/data/time.c
+  uefi/protocols/absolute_pointer.c
+  uefi/protocols/acpi_table.c
+  uefi/protocols/block_io.c
+  uefi/protocols/boot_logo.c
+  uefi/protocols/boot_logo2.c
+  uefi/protocols/boot_manager_policy.c
+  uefi/protocols/component_name.c
+  uefi/protocols/component_name2.c
+  uefi/protocols/deferred_image_load.c
+  uefi/protocols/disk_info.c
+  uefi/protocols/disk_io.c
+  uefi/protocols/file.c
+  uefi/protocols/graphics_output.c
+  uefi/protocols/loaded_image.c
+  uefi/protocols/partition_info.c
+  uefi/protocols/ramdisk.c
+  uefi/protocols/security_arch.c
+  uefi/protocols/security2_arch.c
+  uefi/protocols/serial_io.c
+  uefi/protocols/simple_file_system.c
+  uefi/protocols/simple_pointer.c
+  uefi/protocols/simple_text_input.c
+  uefi/protocols/simple_text_output.c
+  uefi/protocols/timestamp.c

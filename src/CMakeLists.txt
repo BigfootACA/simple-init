@@ -93,6 +93,7 @@ set(SUBDIRS
 	src/ttyd
 	src/bcd
 	src/compress
+	src/lua
 )
 
 target_link_libraries(simple-init -Wl,--start-group)
@@ -114,8 +115,6 @@ endif()
 add_library(init_rootfs STATIC ${CMAKE_CURRENT_BINARY_DIR}/rootfs.c ${CMAKE_CURRENT_BINARY_DIR}/rootfs_data.o)
 target_link_libraries(simple-init init_rootfs)
 
-target_link_libraries(simple-init -Wl,--end-group)
-
 if("${ENABLE_LODEPNG}" STREQUAL "ON")
 	target_link_libraries(simple-init lodepng)
 endif()
@@ -128,9 +127,15 @@ if("${ENABLE_MXML}" STREQUAL "ON")
 	target_link_libraries(simple-init mxml)
 endif()
 
+if("${ENABLE_LUA}" STREQUAL "ON")
+	target_link_libraries(simple-init lua m)
+endif()
+
 if("${ENABLE_NANOSVG}" STREQUAL "ON")
 	target_link_libraries(simple-init m)
 endif()
+
+target_link_libraries(simple-init -Wl,--end-group)
 
 if("${ENABLE_STATIC}" STREQUAL "ON")
 	target_link_libraries(simple-init ${DEPS_STATIC_LIBRARIES})

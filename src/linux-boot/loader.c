@@ -17,6 +17,7 @@
 #include<Protocol/SimpleFileSystem.h>
 #include<Guid/FileInfo.h>
 #include"str.h"
+#include"uefi.h"
 #include"list.h"
 #include"aboot.h"
 #include"logger.h"
@@ -25,7 +26,6 @@
 #define TAG "loader"
 
 bool linux_file_allocate(linux_file_info*fi,size_t size){
-	tlog_debug("size %zu %zu %zu",size,ALIGN_VALUE(size,MEM_ALIGN),ALIGN_VALUE(size,MEM_ALIGN)+fi->offset);
 	fi->mem_pages=EFI_SIZE_TO_PAGES(ALIGN_VALUE(size,MEM_ALIGN)+fi->offset);
 	fi->mem_size=EFI_PAGES_TO_SIZE(fi->mem_pages);
 	if(!(fi->address=AllocateAlignedPages(fi->mem_pages,MEM_ALIGN))){
@@ -48,17 +48,13 @@ static void load_done(linux_file_info*fi){
 }
 
 static int load_fp(linux_file_info*fi,EFI_FILE_PROTOCOL*fp){
+	char buf[64];
 	EFI_STATUS st;
 	EFI_FILE_INFO*info=NULL;
 	UINTN infos=0,read;
 
 	// get file info
-	st=fp->GetInfo(fp,&gEfiFileInfoGuid,&infos,info);
-	if(st==EFI_BUFFER_TOO_SMALL){
-		if(!(info=AllocateZeroPool(infos)))
-			EDONE(tlog_error("allocate pool failed"));
-		st=fp->GetInfo(fp,&gEfiFileInfoGuid,&infos,info);
-	}
+	st=efi_file_get_file_info(fp,&infos,&info);
 	if(EFI_ERROR(st))EDONE(tlog_warn(
 		"get file info failed: %s",
 		efi_status_to_string(st)
@@ -70,7 +66,10 @@ static int load_fp(linux_file_info*fi,EFI_FILE_PROTOCOL*fp){
 	if(info->Attribute&EFI_FILE_DIRECTORY)
 		EDONE(tlog_warn("file is a directory"));
 	fi->size=info->FileSize;
-	tlog_debug("file size %zu",fi->size);
+	tlog_debug(
+		"file size of %p: %zu (%s)",fp,fi->size,
+		make_readable_str_buf(buf,sizeof(buf),fi->size,1,0)
+	);
 	FreePool(info);
 	info=NULL;
 
@@ -100,12 +99,20 @@ static int load_fp(linux_file_info*fi,EFI_FILE_PROTOCOL*fp){
 }
 
 static int load_bp(linux_file_info*fi,EFI_BLOCK_IO_PROTOCOL*bp){
+	UINTN bs;
 	EFI_STATUS st;
+	char buf[64];
 
 	// calc block size
-	fi->size=bp->Media->BlockSize*(bp->Media->LastBlock+1);
+	bs=bp->Media->LastBlock+1;
+	fi->size=bp->Media->BlockSize*bs;
 	if(fi->size>=0x8000000)
 		EDONE(tlog_warn("block size too big"));
+	tlog_debug(
+		"block size of %p: %zu (%s, %llu blocks)",bp,fi->size,
+		make_readable_str_buf(buf,sizeof(buf),fi->size,1,0),
+		(unsigned long long)bs
+	);
 
 	// allocate memory for block
 	if(!linux_file_allocate(fi,fi->size))goto done;
@@ -128,9 +135,14 @@ static int load_bp(linux_file_info*fi,EFI_BLOCK_IO_PROTOCOL*bp){
 }
 
 static int load_pointer(linux_file_info*fi,void*p,size_t size){
+	char buf[64];
 	fi->size=size;
 	if(fi->size>=0x8000000)
 		EDONE(tlog_warn("pointer size too big"));
+	tlog_debug(
+		"pointer size of %p: %zu (%s)",p,fi->size,
+		make_readable_str_buf(buf,sizeof(buf),fi->size,1,0)
+	);
 
 	if(!linux_file_allocate(fi,fi->size))goto done;
 
@@ -195,7 +207,7 @@ static int load_merged_initrd(linux_boot*lb){
 static void single_load(linux_load_from*from,linux_file_info*fi,const char*tag){
 	if(!from->enabled)return;
 	if(fi->address)linux_file_clean(fi);
-	tlog_info("loading %s",tag);
+	tlog_info("single loading %s",tag);
 	linux_file_load(fi,from);
 }
 
@@ -210,7 +222,7 @@ static void multiple_load(list**from,list**fi,const char*tag){
 		linux_file_info*c=malloc(sizeof(linux_file_info));
 		if(!c)continue;
 		ZeroMem(c,sizeof(linux_file_info));
-		tlog_info("loading %s #%zu as #%d",tag,cnt,list_count(*from));
+		tlog_info("multiple loading %s #%zu as #%d",tag,cnt,list_count(*from));
 		linux_file_load(c,d);
 		if(!c->address){
 			tlog_warn("load failed");

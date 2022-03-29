@@ -228,6 +228,11 @@ static int guiapp_get_focus(struct gui_activity*d){
 	struct gui_app*ga=d->data;
 	ga->old_cb=lv_group_get_focus_cb(gui_grp);
 	lv_group_set_focus_cb(gui_grp,app_focus);
+	list*app=list_first(ga->apps);
+	if(app)do{
+		LIST_DATA_DECLARE(ai,app,struct app_info*);
+		lv_group_add_obj(gui_grp,ai->app);
+	}while((app=app->next));
 	return 0;
 }
 

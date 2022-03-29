@@ -23,28 +23,31 @@
 #include<Protocol/SimpleFileSystem.h>
 #define TAG "prober"
 
+static struct boot_config def={
+	.mode=BOOT_EFI,
+	.save=false,.replace=false,
+	.show=true,.enabled=true
+};
+
 static bool boot_scan_part(int part,int*id,char*tag,EFI_FILE_PROTOCOL*root){
 	list*probes=NULL;
-	CHAR8 locate[PATH_MAX*sizeof(CHAR8)];
-	CHAR8 path8[PATH_MAX*sizeof(CHAR8)];
-	CHAR16 path16[PATH_MAX*sizeof(CHAR16)];
+	CHAR8*path8;
+	CHAR8 locate[PATH_MAX];
+	CHAR16 path16[PATH_MAX];
 	EFI_FILE_PROTOCOL*fp=NULL;
 	EFI_STATUS st;
 	bool found=false;
 	char*dir,*name;
 	struct efi_path*ep;
-	struct boot_config use,def={
-		.mode=BOOT_EFI,
-		.save=false,.replace=false,
-		.show=true,.enabled=true
-	};
+	struct boot_config use;
 	for(size_t p=0;(ep=&boot_efi_paths[p])&&ep->title;p++){
 		if(!ep->enable||!ep->name||!ep->title||!ep->name[0]||!ep->title[0])continue;
 		if(ep->cpu!=CPU_ANY&&ep->cpu!=current_cpu)continue;
 		for(size_t d=0;(dir=ep->dir[d]);d++)for(size_t d=0;(name=ep->name[d]);d++){
-			ZeroMem(path8,sizeof(path8));
+			ZeroMem(locate,sizeof(locate));
 			ZeroMem(path16,sizeof(path16));
-			AsciiSPrint(path8,sizeof(path8),"%a%a",dir,name);
+			AsciiSPrint(locate,sizeof(locate),"@%a:%a%a",tag,dir,name);
+			path8=locate+strlen(tag)+2;
 			UnicodeSPrint(path16,sizeof(path16),L"%a%a",dir,name);
 			if(list_search_case_string(probes,path8))continue;
 			st=root->Open(root,&fp,path16,EFI_FILE_MODE_READ,0);
@@ -52,13 +55,11 @@ static bool boot_scan_part(int part,int*id,char*tag,EFI_FILE_PROTOCOL*root){
 			tlog_debug("found %s at %s from part %d",ep->title,path8,part);
 			list_obj_add_new_strdup(&probes,path8);
 			fp->Close(fp);
-			CopyMem(&use,&def,sizeof(use));
+			CopyMem(&use,&def,sizeof(struct boot_config));
 			AsciiSPrint(use.desc,sizeof(use.desc),"%a on #%d",ep->title,part);
 			AsciiSPrint(use.ident,sizeof(use.ident),"prober-%d",*id);
 			AsciiStrCpyS(use.icon,sizeof(use.icon),ep->icon);
 			boot_create_config(&use,NULL);
-			ZeroMem(locate,sizeof(locate));
-			AsciiSPrint(locate,sizeof(locate),"@%a:%a",tag,path8);
 			confd_set_string_base(use.key,"efi_file",locate);
 			if(ep->load_opt){
 				confd_set_string_base(use.key,"options",ep->load_opt);

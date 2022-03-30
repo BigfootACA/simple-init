@@ -1,5 +1,13 @@
 add_library(init_gui STATIC
 	gui_init.c
+	lua/render.c
+	lua/render_obj.c
+	lua/render_event.c
+	lua/lvgl/lvgl.c
+	lua/lvgl/obj.c
+	lua/lvgl/lib.c
+	lua/activity.c
+	lua/sysbar.c
 	interface/guipm/guipm.c
 	interface/guipm/disk_select.c
 	interface/guipm/disk_operation.c

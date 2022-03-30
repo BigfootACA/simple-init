@@ -11,6 +11,10 @@
 #include"lvgl.h"
 #include"lock.h"
 #include"defines.h"
+#ifdef ENABLE_LUA
+#include"xlua.h"
+extern lua_State*gui_global_lua;
+#endif
 extern mutex_t gui_lock;
 typedef void (*draw_func)(lv_obj_t*);
 extern int gui_dpi_def,gui_dpi_force;

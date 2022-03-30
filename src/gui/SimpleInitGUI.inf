@@ -7,7 +7,7 @@
   LIBRARY_CLASS                  = SimpleInitGUI
 
 [BuildOptions]
-  GCC:*_*_*_CC_FLAGS = -DENABLE_GUI=1 -DENABLE_UEFI=1 -DENABLE_LODEPNG=1 -DENABLE_NANOSVG=1 -DENABLE_FREETYPE2=1 -DENABLE_STB=1
+  GCC:*_*_*_CC_FLAGS = -DENABLE_GUI=1 -DENABLE_UEFI=1 -DENABLE_LODEPNG=1 -DENABLE_NANOSVG=1 -DENABLE_FREETYPE2=1 -DENABLE_STB=1 -DENABLE_MXML=1 -DENABLE_LUA=1
 
 [Packages]
   MdePkg/MdePkg.dec
@@ -25,6 +25,8 @@
   LittleVgl
   FreeType
   LodePNG
+  MiniXML
+  SimpleInitLua
   SimpleInitLib
   SimpleInitBoot
   SimpleInitBootLinux
@@ -78,6 +80,14 @@
   decoders/jpeg.c
   decoders/image.c
   decoders/freetype.c
+  lua/render.c
+  lua/render_obj.c
+  lua/render_event.c
+  lua/activity.c
+  lua/sysbar.c
+  lua/lvgl/lvgl.c
+  lua/lvgl/obj.c
+  lua/lvgl/lib.c
   interface/filemgr/filemgr.c
   interface/filemgr/filetab.c
   interface/filemgr/fileview.c

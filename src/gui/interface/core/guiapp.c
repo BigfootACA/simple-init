@@ -175,8 +175,10 @@ static void add_button(struct gui_app*ga,struct gui_register*p){
 static void redraw_apps(struct gui_app*ga){
 	clean_buttons(ga);
 	add_page(ga);
-	for(int i=0;guiact_register[i];i++)
-		add_button(ga,guiact_register[i]);
+	list*l;
+	if((l=guiact_get_registers()))do{
+		add_button(ga,LIST_DATA(l,struct gui_register*));
+	}while((l=l->next));
 	if(ga->cur_page>=lv_tabview_get_tab_count(ga->tabview))ga->cur_page=0;
 	lv_tabview_set_tab_act(ga->tabview,ga->cur_page,LV_ANIM_OFF);
 	lv_bar_set_start_value(ga->indic,ga->cur_page*8,LV_ANIM_OFF);

@@ -17,6 +17,7 @@ struct gui_register{
 	char name[256];
 	char title[512];
 	char icon[256];
+	char*xml;
 	bool show_app;
 	bool back;
 	bool mask;
@@ -44,9 +45,6 @@ struct gui_activity{
 	struct gui_register*reg;
 };
 
-// src/gui/activities.c: initial activity register
-extern struct gui_register*guiact_register[];
-
 // src/gui/activity.c: init activity manager
 extern void guiact_init(void);
 
@@ -55,6 +53,9 @@ extern int guiact_do_exit(void);
 
 // src/gui/activity.c: get activity list
 extern list*guiact_get_activities(void);
+
+// src/gui/activity.c: get register list
+extern list*guiact_get_registers(void);
 
 // src/gui/activity.c: only have one activity
 extern bool guiact_is_alone(void);
@@ -79,6 +80,9 @@ extern int guiact_start_activity(struct gui_register*reg,void*args);
 
 // src/gui/activity.c: start a new activity by name with arguments
 extern int guiact_start_activity_by_name(char*name,void*args);
+
+// src/gui/activity.c: add register to register list
+extern int guiact_add_register(struct gui_register*reg);
 
 // src/gui/activity.c: add activity to activity list
 extern int guiact_register_activity(struct gui_activity*act);

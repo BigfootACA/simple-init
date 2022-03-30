@@ -14,9 +14,11 @@
 #include"gui/tools.h"
 #include"gui/sysbar.h"
 #include"gui/activity.h"
+#include"gui/xmlrender.h"
 #define TAG "activity"
 
 static list*activities=NULL;
+static list*registers=NULL;
 static struct gui_activity*exclusive=NULL;
 
 int guiact_do_exit(){
@@ -32,10 +34,39 @@ static int guiact_force_free(void*data){
 	return 0;
 }
 
+static int guireg_force_free(void*data){
+	struct gui_register*reg=(struct gui_register*)data;
+	if(!reg)return 0;
+	if(reg->xml)free(reg->xml);
+	free(data);
+	return 0;
+}
+
+extern struct gui_register*guiact_register[];
 void guiact_init(){
 	list_free_all(activities,guiact_force_free);
+	list_free_all(registers,guireg_force_free);
 	activities=NULL;
+	registers=NULL;
 	exclusive=NULL;
+	for(int i=0;guiact_register[i];i++){
+		int r=guiact_add_register(guiact_register[i]);
+		if(r!=0)telog_warn(
+			"add gui register %s failed",
+			guiact_register[i]->name
+		);
+	}
+}
+
+list*guiact_get_registers(){
+	if(!registers)return NULL;
+	if(registers->prev)
+		registers=list_first(registers);
+	if(!registers){
+		tlog_error("cannot goto registers head");
+		abort();
+	}
+	return registers;
 }
 
 list*guiact_get_activities(){
@@ -119,6 +150,23 @@ static int call_get_focus_last(){
 	return call_get_focus_list(guiact_get_last_list());
 }
 
+static int call_ask_exit(struct gui_activity*act){
+	if(!act)return -1;
+	return act->reg->ask_exit?act->reg->ask_exit(act):0;
+}
+
+static int call_quiet_exit(struct gui_activity*act){
+	if(!act)return -1;
+	int r=act->reg->quiet_exit?act->reg->quiet_exit(act):0;
+	#ifdef ENABLE_MXML
+	if(act->data&&act->reg->draw==render_activity_draw){
+		render_free(act->data);
+		act->data=NULL;
+	}
+	#endif
+	return r;
+}
+
 static void guiact_remove_last_list(){
 	list_remove_free_def(guiact_get_last_list());
 }
@@ -144,39 +192,51 @@ int guiact_remove_last(bool focus){
 	return 0;
 }
 
-int guiact_do_back(){
+static void guiact_back_task(lv_task_t*t __attribute__((unused))){
 	if(sysbar.keyboard){
 		sysbar_keyboard_close();
-		return 0;
+		return;
 	}
 	struct gui_activity*c=guiact_get_last();
-	if(!c)return guiact_do_exit();
-	if(c==exclusive)ERET(EPERM);
-	if(!c->reg->back)return 0;
-	if(guiact_is_alone())return 0;
+	if(!c){
+		guiact_do_exit();
+		return;
+	}
+	if(c==exclusive)return;
+	if(!c->reg->back)return;
+	if(guiact_is_alone())return;
 	tlog_debug("do back");
-	if(c->reg->ask_exit&&c->reg->ask_exit(c)!=0)return 0;
-	if(c->reg->quiet_exit&&c->reg->quiet_exit(c)!=0)return 0;
-	return guiact_remove_last(true);
+	if(call_ask_exit(c)!=0)return;
+	if(call_quiet_exit(c)!=0)return;
+	guiact_remove_last(true);
 }
 
-int guiact_do_home(){
+int guiact_do_back(){
+	lv_task_once(lv_task_create(guiact_back_task,0,LV_TASK_PRIO_LOWEST,NULL));
+	return 0;
+}
+
+static void guiact_home_task(lv_task_t*t __attribute__((unused))){
 	sysbar_keyboard_close();
 	list*d;
 	bool proc=false;
-	if(guiact_is_alone())return 0;
+	if(guiact_is_alone())return;
 	while((d=guiact_get_last_list())&&d->prev){
 		LIST_DATA_DECLARE(z,d,struct gui_activity*);
 		if(z==exclusive)break;
-		if(z->reg->quiet_exit)z->reg->quiet_exit(z);
+		if(call_quiet_exit(z)!=0)return;
 		guiact_remove_last(false);
 		proc=true;
 	}
 	if(proc){
 		call_load_data_last();
 		call_get_focus_last();
-		return 0;
-	}else ERET(EPERM);
+	}
+}
+
+int guiact_do_home(){
+	lv_task_once(lv_task_create(guiact_home_task,0,LV_TASK_PRIO_LOWEST,NULL));
+	return 0;
 }
 
 int guiact_set_exclusive(struct gui_activity*target){
@@ -188,7 +248,7 @@ int guiact_set_exclusive(struct gui_activity*target){
 		return 0;
 	}
 	if(exclusive){
-		tlog_warn("alrerady have exclusive mode activity");
+		tlog_warn("already have exclusive mode activity");
 		ERET(EEXIST);
 	}
 	if((next=acts))do{
@@ -223,19 +283,37 @@ static int guiact_add_activity(struct gui_activity*act){
 	return 0;
 }
 
+int guiact_add_register(struct gui_register*reg){
+	if(!reg||!reg->name[0])ERET(EINVAL);
+	if(guiact_find_register(reg->name))ERET(EEXIST);
+	struct gui_register*dup=malloc(sizeof(struct gui_register));
+	if(!dup)ERET(ENOMEM);
+	memcpy(dup,reg,sizeof(struct gui_register));
+	if(reg->xml&&!(dup->xml=strdup(reg->xml))){
+		free(dup);
+		ERET(ENOMEM);
+	}
+	return list_obj_add_new(&registers,dup);
+}
+
 int guiact_register_activity(struct gui_activity*act){
 	if(!act)ERET(EINVAL);
 	return guiact_add_activity(memdup(act,sizeof(struct gui_activity)));
 }
 
+static bool reg_cmp(list*l,void*name){
+	LIST_DATA_DECLARE(reg,l,struct gui_register*);
+	return reg&&name&&strcmp((char*)name,reg->name)==0;
+}
+
 struct gui_register*guiact_find_register(char*name){
+	list*l;
 	if(!name)EPRET(EINVAL);
-	struct gui_register*reg=NULL;
-	for(int i=0;(reg=guiact_register[i]);i++){
-		if(strcmp(name,reg->name)!=0)continue;
-		return reg;
-	}
-	EPRET(ENOENT);
+	if(!(l=list_search_one(
+		guiact_get_registers(),
+		reg_cmp,(void*)name
+	)))EPRET(ENOENT);
+	return LIST_DATA(l,struct gui_register*);
 }
 
 struct guiact_data{
@@ -258,11 +336,19 @@ static void guiact_start_task(lv_task_t*t){
 	if(reg->full_screen)sysbar_set_full_screen(true);
 	act->w=gui_sw,act->h=gui_sh;
 	strcpy(act->name,reg->name);
-	if(reg->init&&(r=reg->init(act))<0){
-		tlog_warn("activity %s init failed: %d",act->name,r);
-		free(act);
-		return;
+	#ifdef ENABLE_MXML
+	if(reg->xml){
+		if(!(act->data=render_create(NULL)))
+			EDONE(tlog_error("cannot allocate xml render"));
+		if(!reg->draw)reg->draw=render_activity_draw;
+		if(!reg->resize)reg->resize=render_activity_resize;
+		if(!reg->get_focus)reg->get_focus=render_activity_get_focus;
+		if(!reg->lost_focus)reg->lost_focus=render_activity_lost_focus;
 	}
+	#endif
+	if(!reg->draw)EDONE(tlog_error("invalid activity"));
+	if(reg->init&&(r=reg->init(act))<0)
+		EDONE(tlog_warn("activity %s init failed: %d",act->name,r));
 	if(act->mask){
 		act->page=lv_objmask_create(sysbar.content,NULL);
 		lv_obj_add_style(act->page,LV_OBJMASK_PART_MAIN,lv_style_opa_mask());
@@ -274,17 +360,27 @@ static void guiact_start_task(lv_task_t*t){
 	lv_obj_set_pos(act->page,gui_sx,gui_sy);
 	if((r=reg->draw(act))<0){
 		if(r!=-10)tlog_warn("activity %s draw failed: %d",act->name,r);
-		lv_obj_del(act->page);
-		free(act);
-		return;
+		goto done;
 	}
 	if(reg->resize)reg->resize(act);
 	guiact_add_activity(act);
+	return;
+	done:
+	if(act){
+		#ifdef ENABLE_MXML
+		if(
+			act->data&&
+			reg->draw==render_activity_draw
+		)render_free(act->data);
+		#endif
+		if(act->page)lv_obj_del(act->page);
+		free(act);
+	}
 }
 
 int guiact_start_activity(struct gui_register*reg,void*args){
 	if(!reg)ERET(EINVAL);
-	if(!reg->draw){
+	if(!reg->draw&&!reg->xml){
 		tlog_warn("invalid activity %s",reg->name);
 		ERET(EINVAL);
 	}

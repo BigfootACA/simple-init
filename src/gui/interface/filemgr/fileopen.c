@@ -124,8 +124,10 @@ static void add_app(struct fileopen*fo,struct gui_register*reg){
 
 static void redraw_apps(struct fileopen*fo){
 	clean_apps(fo);
-	for(int i=0;guiact_register[i];i++)
-		add_app(fo,guiact_register[i]);
+	list*l;
+	if((l=guiact_get_registers()))do{
+		add_app(fo,LIST_DATA(l,struct gui_register*));
+	}while((l=l->next));
 }
 
 static void fileopen_click(lv_obj_t*obj,lv_event_t e){

@@ -88,6 +88,36 @@
   lua/lvgl/lvgl.c
   lua/lvgl/obj.c
   lua/lvgl/lib.c
+  engine/lib.c
+  engine/code.c
+  engine/size.c
+  engine/event.c
+  engine/style.c
+  engine/struct.c
+  engine/inline.c
+  engine/render.c
+  engine/object.c
+  engine/objects.c
+  engine/activity.c
+  engine/attribute.c
+  engine/attributes/pos.c
+  engine/attributes/bool.c
+  engine/attributes/size.c
+  engine/attributes/input.c
+  engine/attributes/image.c
+  engine/attributes/generic.c
+  engine/data/align.c
+  engine/data/event.c
+  engine/data/theme.c
+  engine/data/layout.c
+  engine/data/attr_hands.c
+  engine/data/obj_hands.c
+  engine/data/style_parts.c
+  engine/data/style_props.c
+  engine/data/style_set_type.c
+  engine/data/style_states.c
+  engine/data/label_align.c
+  engine/data/label_mode.c
   interface/filemgr/filemgr.c
   interface/filemgr/filetab.c
   interface/filemgr/fileview.c

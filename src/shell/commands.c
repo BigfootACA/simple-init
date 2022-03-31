@@ -61,6 +61,7 @@ DECLARE_MAIN(halt);
 DECLARE_MAIN(poweroff);
 DECLARE_MAIN(write);
 DECLARE_MAIN(simple_init);
+DECLARE_MAIN(lua);
 
 const struct shell_command*shell_cmds[]={
 	#ifdef ENABLE_INITSHELL
@@ -124,6 +125,9 @@ const struct shell_command*shell_cmds[]={
 	DECLARE_CMD(true,  halt,        "Halt the system")
 	DECLARE_CMD(true,  poweroff,    "Halt and shut off power")
 	DECLARE_CMD(false, write,       "Write data to file descriptor")
+	#ifdef ENABLE_LUA
+	DECLARE_CMD(true,  lua,         "Lua programming language interpreter")
+	#endif
 	DECLARE_CMD_MAIN(false, simple-init, "Simple Init Main",simple_init_main)
 	NULL
 };

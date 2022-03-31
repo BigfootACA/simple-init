@@ -24,6 +24,9 @@
 #include<semaphore.h>
 #include<pthread.h>
 #endif
+#ifdef ENABLE_LUA
+#include"xlua.h"
+#endif
 #include"gui.h"
 #include"confd.h"
 #include"system.h"
@@ -92,6 +95,10 @@ static sem_t gui_wait;
 int default_backlight=-1;
 #endif
 
+#ifdef ENABLE_LUA
+lua_State*gui_global_lua;
+#endif
+
 // gui process lock
 mutex_t gui_lock;
 
@@ -102,12 +109,20 @@ static int font_sizes[]={10,16,24,32,48,64,72,96};
 static runnable_t*run_exit=NULL;
 
 void gui_do_quit(){
+	#ifdef ENABLE_LUA
+	if(gui_global_lua)
+		xlua_run_confd(gui_global_lua,TAG,"lua.on_gui_quit");
+	#endif
 	#ifndef ENABLE_UEFI
 	sem_destroy(&gui_wait);
 	MUTEX_DESTROY(gui_lock);
 	#endif
 	image_cache_clean();
 	guidrv_exit();
+	#ifdef ENABLE_LUA
+	if(gui_global_lua)lua_close(gui_global_lua);
+	gui_global_lua=NULL;
+	#endif
 }
 
 void gui_quit_sleep(){
@@ -161,6 +176,11 @@ static void scroll_on_focus(lv_group_t*grp){
 int gui_pre_init(){
 	// initialize lvgl
 	lv_init();
+
+	#ifdef ENABLE_LUA
+	if(!gui_global_lua)
+		gui_global_lua=xlua_init();
+	#endif
 
 	#ifdef ENABLE_UEFI
 	// load dpi
@@ -227,6 +247,10 @@ int gui_pre_init(){
 	#endif
 	if(!gui_font||!gui_font_small)return terlog_error(-1,"failed to load font");
 
+	#ifdef ENABLE_LUA
+	if(gui_global_lua)
+		xlua_run_confd(gui_global_lua,TAG,"lua.on_gui_pre_init");
+	#endif
 	return 0;
 }
 
@@ -249,6 +273,11 @@ static void gui_enter_sleep(){
 	// clean image caches
 	image_cache_clean();
 
+	#ifdef ENABLE_LUA
+	if(gui_global_lua)
+		xlua_run_confd(gui_global_lua,TAG,"lua.on_gui_enter_sleep");
+	#endif
+
 	// turn off the screen after 20 seconds
 	int d=confd_get_integer("gui.screen_off_delay",20);
 	if(d>0)alarm(d);
@@ -260,6 +289,11 @@ static void gui_enter_sleep(){
 	alarm(0);
 	guidrv_set_brightness(o);
 	tlog_debug("quit sleep");
+
+	#ifdef ENABLE_LUA
+	if(gui_global_lua)
+		xlua_run_confd(gui_global_lua,TAG,"lua.on_gui_quit_sleep");
+	#endif
 }
 #else
 static EFI_EVENT e_timer,e_loop;
@@ -338,6 +372,11 @@ int gui_screen_init(){
 	lv_obj_t*screen;
 	if(!(screen=lv_scr_act()))return trlog_error(-1,"failed to get screen");
 
+	#ifdef ENABLE_LUA
+	if(gui_global_lua)
+		xlua_run_confd(gui_global_lua,TAG,"lua.on_gui_screen_init_pre");
+	#endif
+
 	// set current fonts and themes
 	lv_theme_t*th=LV_THEME_DEFAULT_INIT(
 		LV_THEME_DEFAULT_COLOR_PRIMARY,LV_THEME_DEFAULT_COLOR_SECONDARY,
@@ -369,10 +408,19 @@ int gui_screen_init(){
 		color?lv_color_hex((uint32_t)confd_get_integer(k,0)):
 		lv_obj_get_style_text_color(screen,LV_OBJ_PART_MAIN)
 	);
+	#ifdef ENABLE_LUA
+	if(gui_global_lua)
+		xlua_run_confd(gui_global_lua,TAG,"lua.on_gui_screen_init_post");
+	#endif
 	return 0;
 }
 
 int gui_draw(){
+	#ifdef ENABLE_LUA
+	if(gui_global_lua)
+		xlua_run_confd(gui_global_lua,TAG,"lua.on_gui_screen_draw_pre");
+	#endif
+
 	// draw top and bottom sysbar
 	sysbar_draw(lv_scr_act());
 
@@ -381,6 +429,11 @@ int gui_draw(){
 
 	// draw callback
 	guiact_start_activity_by_name("guiapp",NULL);
+
+	#ifdef ENABLE_LUA
+	if(gui_global_lua)
+		xlua_run_confd(gui_global_lua,TAG,"lua.on_gui_screen_draw_post");
+	#endif
 
 	lv_disp_trig_activity(NULL);
 	return 0;
@@ -429,6 +482,10 @@ int gui_main(){
 		NULL
 	);
 
+	#ifdef ENABLE_LUA
+	if(gui_global_lua)
+		xlua_run_confd(gui_global_lua,TAG,"lua.on_gui_pre_main");
+	#endif
 	UINTN wi;
 	while(gui_run&&!EFI_ERROR(gBS->WaitForEvent(1,&e_loop,&wi)));
 	#else
@@ -440,6 +497,10 @@ int gui_main(){
 		tlog_notice("config disabled sleep");
 		cansleep=false;
 	}
+	#ifdef ENABLE_LUA
+	if(gui_global_lua)
+		xlua_run_confd(gui_global_lua,TAG,"lua.on_gui_pre_main");
+	#endif
 	while(gui_run){
 		// 10 seconds inactive sleep
 		if(lv_disp_get_inactive_time(NULL)<10000||!cansleep){

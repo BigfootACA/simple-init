@@ -7,7 +7,7 @@
   ENTRY_POINT                    = UefiMain
 
 [BuildOptions]
-  GCC:*_*_*_CC_FLAGS = -DENABLE_UEFI=1
+  GCC:*_*_*_CC_FLAGS = -DENABLE_UEFI=1 -DENABLE_LUA=1
 
 [Packages]
   MdePkg/MdePkg.dec
@@ -15,6 +15,7 @@
   SimpleInit.dec
 
 [LibraryClasses]
+  LuaLib
   DebugLib
   UefiBootManagerLib
   ReportStatusCodeLib

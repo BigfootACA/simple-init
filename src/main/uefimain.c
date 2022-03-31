@@ -11,6 +11,9 @@
 #include<Library/DebugLib.h>
 #include<Library/UefiBootManagerLib.h>
 #include<Library/ReportStatusCodeLib.h>
+#ifdef ENABLE_LUA
+#include"xlua.h"
+#endif
 #include"boot.h"
 #include"confd.h"
 #include"errno.h"
@@ -42,6 +45,14 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ih,IN EFI_SYSTEM_TABLE*st){
 	char*lang=confd_get_string("language",NULL);
 	if(lang)lang_set(lang);
 	lang_init_locale();
+
+	#ifdef ENABLE_LUA
+	lua_State*L=xlua_init();
+	if(L){
+		xlua_run_confd(L,TAG,"lua.on_post_startup");
+		lua_close(L);
+	}
+	#endif
 
 	errno=0;
 	main_retval=0;

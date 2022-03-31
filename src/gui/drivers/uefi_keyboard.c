@@ -82,6 +82,7 @@ static bool keyboard_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
 			}
 		}else if(p.UnicodeChar!=0)switch(p.UnicodeChar){
 			case ' ':case '\n':case '\r':data->key=LV_KEY_ENTER;break;
+			default:data->key=p.UnicodeChar;
 		}else return false;
 		data->state=LV_INDEV_STATE_PR;
 	};

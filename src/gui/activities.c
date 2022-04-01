@@ -14,12 +14,14 @@ extern struct gui_register guireg_guipm_partitions;
 extern struct gui_register guireg_picture_viewer;
 extern struct gui_register guireg_uefi_bootmenu;
 extern struct gui_register guireg_uefi_dxe_load;
+extern struct gui_register guireg_acpi_manager;
 extern struct gui_register guireg_screen_test;
 extern struct gui_register guireg_boot_linux;
 extern struct gui_register guireg_uefi_start;
 extern struct gui_register guireg_uefi_shell;
 extern struct gui_register guireg_mouse_menu;
 extern struct gui_register guireg_theme_menu;
+extern struct gui_register guireg_acpi_load;
 extern struct gui_register guireg_text_edit;
 extern struct gui_register guireg_conf_save;
 extern struct gui_register guireg_conf_load;
@@ -48,10 +50,12 @@ struct gui_register*guiact_register[]={
 	#endif
 	&guireg_uefi_bootmenu,
 	&guireg_uefi_dxe_load,
+	&guireg_acpi_manager,
 	&guireg_uefi_start,
 	&guireg_uefi_shell,
 	&guireg_mouse_menu,
 	&guireg_boot_linux,
+	&guireg_acpi_load,
 	#else
 	#ifdef ENABLE_FDISK
 	&guireg_guipm_disk_select,

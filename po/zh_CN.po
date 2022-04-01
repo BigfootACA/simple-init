@@ -2508,3 +2508,39 @@ msgstr "编辑项目"
 
 msgid "Create new item"
 msgstr "创建新项目"
+
+msgid "ACPI Manager"
+msgstr "ACPI管理器"
+
+msgid "Load"
+msgstr "加载"
+
+msgid "Select aml file to save"
+msgstr "选择要保存的aml文件"
+
+msgid "Select aml file to load"
+msgstr "选择要加载的aml文件"
+
+msgid "Save %s failed"
+msgstr "保存%s失败"
+
+msgid "Read file %s failed"
+msgstr "读取文件%s失败"
+
+msgid "Install ACPI Table failed: %s"
+msgstr "安装ACPI表失败: %s"
+
+msgid "Locate ACPI Protocol failed: %s"
+msgstr "获取ACPI表协议失败: %s"
+
+msgid "No any ACPI tables found"
+msgstr "找不到任何ACPI表"
+
+msgid "Address: 0x%llx Size: %d OEM ID: %s"
+msgstr "地址: 0x%llx 大小: %d OEM ID: %s"
+
+msgid "Load ACPI Table"
+msgstr "加载ACPI表"
+
+msgid "Load ACPI table from '%s'?"
+msgstr "从'%s'加载ACPI表?"

@@ -510,6 +510,13 @@ struct gui_register guireg_guipm_partitions={
 	.icon="guipm.svg",
 	.show_app=false,
 	.open_file=true,
+	.open_regex=(char*[]){
+		"^/dev/.+",
+		"^[A-Z]?:/dev/.+",
+		".*\\.img$",
+		".*\\.raw$",
+		NULL
+	},
 	.init=init,
 	.quiet_exit=do_cleanup,
 	.get_focus=guipm_part_get_focus,

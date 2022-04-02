@@ -405,6 +405,14 @@ struct gui_register guireg_add_mount={
 	.icon="mount.svg",
 	.show_app=false,
 	.open_file=true,
+	.open_regex=(char*[]){
+		"^/dev/.+",
+		"^[A-Z]?:/dev/.+",
+		".*\\.img$",
+		".*\\.raw$",
+		".*\\.iso$",
+		NULL
+	},
 	.quiet_exit=do_cleanup,
 	.init=init,
 	.get_focus=add_mount_get_focus,

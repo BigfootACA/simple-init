@@ -96,6 +96,10 @@ struct gui_register guireg_uefi_start={
 	.icon="efi.svg",
 	.show_app=false,
 	.open_file=true,
+	.open_regex=(char*[]){
+		".*\\.efi$",
+		NULL
+	},
 	.draw=uefi_start_draw,
 };
 #endif

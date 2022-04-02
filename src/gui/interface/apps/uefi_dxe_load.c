@@ -125,6 +125,10 @@ struct gui_register guireg_uefi_dxe_load={
 	.icon="efi.svg",
 	.show_app=false,
 	.open_file=true,
+	.open_regex=(char*[]){
+		".*\\.efi$",
+		NULL
+	},
 	.draw=uefi_dxe_load_draw,
 };
 #endif

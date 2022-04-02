@@ -53,6 +53,13 @@ struct gui_register guireg_conf_save={
 	.icon="conftool.svg",
 	.show_app=false,
 	.open_file=true,
+	.open_regex=(char*[]){
+		".*\\.cfg$",
+		".*\\.json$",
+		".*\\.jsn$",
+		".*\\.xml$",
+		NULL
+	},
 	.draw=conf_save_draw,
 };
 #endif

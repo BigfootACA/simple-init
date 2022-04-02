@@ -419,6 +419,15 @@ struct gui_register guireg_abootimg={
 	.icon="abootimg.svg",
 	.show_app=true,
 	.open_file=true,
+	.open_regex=(char*[]){
+		"^/dev/.+",
+		"^[A-Z]?:/dev/.+",
+		".*\\.img$",
+		".*/boot.*",
+		".*/recovery.*",
+		".*/twrp.*",
+		NULL
+	},
 	.quiet_exit=do_cleanup,
 	.init=init,
 	.get_focus=abootimg_get_focus,

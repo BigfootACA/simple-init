@@ -538,6 +538,16 @@ struct gui_register guireg_regedit={
 	.icon="regedit.svg",
 	.show_app=true,
 	.open_file=true,
+	.open_regex=(char*[]){
+		".*/windows/system32/config/.+",
+		".*/software$",
+		".*/system$",
+		".*/security$",
+		".*/sam$",
+		".*/software$",
+		".*/bcd$",
+		NULL
+	},
 	.init=do_init,
 	.ask_exit=do_back,
 	.quiet_exit=do_clean,

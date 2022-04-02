@@ -50,6 +50,13 @@ struct gui_register guireg_conf_load={
 	.name="config-load",
 	.title="Load Config",
 	.icon="conftool.svg",
+	.open_regex=(char*[]){
+		".*\\.cfg$",
+		".*\\.json$",
+		".*\\.jsn$",
+		".*\\.xml$",
+		NULL
+	},
 	.show_app=false,
 	.open_file=true,
 	.draw=conf_load_draw,

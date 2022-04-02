@@ -291,6 +291,14 @@ struct gui_register guireg_add_mass={
 	.icon="usb.svg",
 	.show_app=false,
 	.open_file=true,
+	.open_regex=(char*[]){
+		"^/dev/.+",
+		"^[A-Z]?:/dev/.+",
+		".*\\.img$",
+		".*\\.raw$",
+		".*\\.iso$",
+		NULL
+	},
 	.init=init,
 	.get_focus=add_mass_get_focus,
 	.lost_focus=add_mass_lost_focus,

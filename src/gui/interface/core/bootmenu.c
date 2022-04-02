@@ -79,6 +79,10 @@ static int after_exit(void*d __attribute__((unused))){
 	gui_set_run_exit(NULL);
 	no_autoboot=true;
 	gui_run=true;
+	#ifdef ENABLE_LUA
+	if(!gui_global_lua)
+		gui_global_lua=xlua_init();
+	#endif
 	return
 		gui_screen_init()==0&&
 		bootmenu_draw()==0&&

@@ -13,6 +13,7 @@
   libs/freetype/include
   libs/zlib
   libs/lvgl
+  libs/regex
   libs/lodepng
   libs/nanosvg/src
   libs/compatible/include

@@ -143,4 +143,4 @@ else()
 	target_link_libraries(simple-init ${DEPS_LIBRARIES})
 endif()
 
-target_link_libraries(simple-init pthread crypt)
+target_link_libraries(simple-init pthread crypt regex)

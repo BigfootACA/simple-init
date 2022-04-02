@@ -1,0 +1,15 @@
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = RegexLib
+  FILE_GUID                      = A1A80C8A-DB5C-4B1C-B180-6AF5BB4841D7
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = RegexLib
+
+[Packages]
+  SimpleInit.dec
+  MdePkg/MdePkg.dec
+
+[Sources]
+  libs/regex/regexp.c
+  libs/regex/regexp.h

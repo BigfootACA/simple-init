@@ -6,6 +6,7 @@
   LodePNG|libs/LodePNG.inf
   FreeType|libs/FreeType.inf
   LittleVgl|libs/LittleVgl.inf
+  RegexLib|libs/regex/RegexLib.inf
   SimpleInitCompatible|libs/compatible/SimpleInitCompatible.inf
   SimpleInitGUI|src/gui/SimpleInitGUI.inf
   SimpleInitLib|src/lib/SimpleInitLib.inf
@@ -29,6 +30,7 @@
   libs/LodePNG.inf
   libs/FreeType.inf
   libs/LittleVgl.inf
+  libs/regex/RegexLib.inf
   libs/compatible/SimpleInitCompatible.inf
   src/gui/SimpleInitGUI.inf
   src/lib/SimpleInitLib.inf

@@ -17,6 +17,7 @@ struct gui_register{
 	char name[256];
 	char title[512];
 	char icon[256];
+	char**open_regex;
 	char*xml;
 	bool show_app;
 	bool back;

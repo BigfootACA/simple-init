@@ -10,6 +10,7 @@
 #ifdef ENABLE_GUI
 #include<stdlib.h>
 #include<string.h>
+#include"regexp.h"
 #include"str.h"
 #include"gui.h"
 #include"list.h"
@@ -24,6 +25,7 @@ struct fileopen{
 	char path[PATH_MAX];
 	lv_obj_t*mask,*box;
 	lv_obj_t*label,*view;
+	lv_obj_t*show_all;
 	lv_obj_t*ok,*cancel;
 	lv_obj_t*last_btn;
 	list*apps;
@@ -66,6 +68,16 @@ static void img_click(lv_obj_t*obj,lv_event_t e){
 
 static void add_app(struct fileopen*fo,struct gui_register*reg){
 	if(!reg||!reg->open_file)return;
+	if(reg->open_regex&&!lv_checkbox_is_checked(fo->show_all)){
+		Reprog*prog;
+		bool match=false;
+		for(size_t i=0;reg->open_regex[i];i++){
+			if(!(prog=regexp_comp(reg->open_regex[i],REG_ICASE,NULL)))continue;
+			if(regexp_exec(prog,fo->path,NULL,0)==0)match=true;
+			regexp_free(prog);
+		}
+		if(!match)return;
+	}
 	struct fileopen_app*app=malloc(sizeof(struct fileopen_app));
 	if(!app)return;
 	memset(app,0,sizeof(struct fileopen_app));
@@ -143,6 +155,13 @@ static void fileopen_click(lv_obj_t*obj,lv_event_t e){
 	}
 }
 
+static void show_all_click(lv_obj_t*obj,lv_event_t e){
+	if(!obj||e!=LV_EVENT_VALUE_CHANGED)return;
+	struct fileopen*fo=lv_obj_get_user_data(obj);
+	if(obj!=fo->show_all)return;
+	redraw_apps(fo);
+}
+
 static int fileopen_draw(struct gui_activity*act){
 	lv_coord_t box_h=gui_dpi/8;
 	lv_coord_t max_w=gui_dpi*4,cur_w=gui_sw/4*3;
@@ -185,6 +204,17 @@ static int fileopen_draw(struct gui_activity*act){
 		bw=lv_obj_get_width(fo->box)/2,
 		bh=gui_font_size+(gui_dpi/8);
 
+	box_h+=bm*2;
+	fo->show_all=lv_checkbox_create(fo->box,NULL);
+	lv_checkbox_set_text(fo->show_all,_("Show all apps"));
+	lv_obj_set_style_local_margin_bottom(fo->show_all,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,bm);
+	lv_obj_set_style_local_radius(fo->show_all,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,gui_dpi/15);
+	lv_obj_set_size(fo->show_all,lv_obj_get_width(fo->box)-bm,bh);
+	lv_obj_set_user_data(fo->show_all,fo);
+	lv_obj_set_event_cb(fo->show_all,show_all_click);
+	lv_obj_set_pos(fo->show_all,bm*2,box_h);
+	box_h+=bh;
+
 	box_h+=bm;
 	fo->ok=lv_btn_create(fo->box,NULL);
 	lv_obj_set_enabled(fo->ok,false);
@@ -226,6 +256,7 @@ static int fileopen_get_focus(struct gui_activity*d){
 	struct fileopen*fo=d->args;
 	if(!fo)return 0;
 	redraw_apps(fo);
+	lv_group_add_obj(gui_grp,fo->show_all);
 	lv_group_add_obj(gui_grp,fo->ok);
 	lv_group_add_obj(gui_grp,fo->cancel);
 	return 0;
@@ -239,6 +270,7 @@ static int fileopen_lost_focus(struct gui_activity*d){
 		LIST_DATA_DECLARE(item,o,struct fileopen_app*);
 		if(item->img)lv_group_remove_obj(item->img);
 	}while((o=o->next));
+	lv_group_remove_obj(box->show_all);
 	lv_group_remove_obj(box->ok);
 	lv_group_remove_obj(box->cancel);
 	return 0;

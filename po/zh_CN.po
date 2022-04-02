@@ -2544,3 +2544,6 @@ msgstr "加载ACPI表"
 
 msgid "Load ACPI table from '%s'?"
 msgstr "从'%s'加载ACPI表?"
+
+msgid "Show all apps"
+msgstr "显示所有软件"

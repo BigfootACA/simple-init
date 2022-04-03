@@ -67,7 +67,7 @@ static inline uint32_t top12(double x)
 	return asuint64(x) >> 52;
 }
 
-double exp(double x)
+weak_decl double exp(double x)
 {
 	uint32_t abstop;
 	uint64_t ki, idx, top, sbits;

@@ -64,7 +64,7 @@ static double R(double z)
 	return p/q;
 }
 
-double asin(double x)
+weak_decl double asin(double x)
 {
 	double z,r,s;
 	uint32_t hx,ix;

@@ -5,6 +5,7 @@
 extern "C" {
 #endif
 
+#include "compatible.h"
 #define __NEED_va_list
 
 #include <bits/alltypes.h>

@@ -32,7 +32,7 @@ THIS SOFTWARE.
  * with " at " changed at "@" and " dot " changed to ".").  */
 #include "gdtoaimp.h"
 
- double
+weak_decl double
 ulp
 #ifdef KR_headers
   (x) double x;

@@ -52,7 +52,7 @@
 #include "reentrant.h"
 #include "local.h"
 
-int
+weak_decl int
 sprintf(char *str, char const *fmt, ...)
 {
   int ret;

@@ -1,22 +1,14 @@
 #include <ctype.h>
-#undef isupper
-#undef islower
-#undef isalpha
-#undef isdigit
-#undef isalnum
-#undef isxdigit
-#undef iscntrl
-#undef isgraph
-#undef ispunct
-int comp_isspace(int c){return c==' '||(unsigned)c-'\t'<5;}
-int comp_isupper(int c){return (unsigned)c-'A'<26;}
-int comp_islower(int c){return (unsigned)c-'a'<26;}
-int comp_isalpha(int c){return ((unsigned)c|32)-'a'<26;}
-int comp_isdigit(int c){return (unsigned)c-'0'<10;}
-int comp_isxdigit(int c){return comp_isdigit(c)||((unsigned)c|32)-'a' < 6;}
-int comp_isalnum(int c){return comp_isalpha(c)||comp_isdigit(c);}
-int comp_iscntrl(int c){return (unsigned)c<0x20||c==0x7f;}
-int comp_isgraph(int c){return (unsigned)c-0x21<0x5e;}
-int comp_ispunct(int c){return comp_isgraph(c)&&!comp_isalnum(c);}
-int comp_toupper(int c){return (comp_islower(c))?(c&0x5f):c;}
-int comp_tolower(int c){return (comp_isupper(c))?(c|32):c;}
+#include "compatible.h"
+weak_decl int isspace(int c){return c==' '||(unsigned)c-'\t'<5;}
+weak_decl int isupper(int c){return (unsigned)c-'A'<26;}
+weak_decl int islower(int c){return (unsigned)c-'a'<26;}
+weak_decl int isalpha(int c){return ((unsigned)c|32)-'a'<26;}
+weak_decl int isdigit(int c){return (unsigned)c-'0'<10;}
+weak_decl int isxdigit(int c){return isdigit(c)||((unsigned)c|32)-'a' < 6;}
+weak_decl int isalnum(int c){return isalpha(c)||isdigit(c);}
+weak_decl int iscntrl(int c){return (unsigned)c<0x20||c==0x7f;}
+weak_decl int isgraph(int c){return (unsigned)c-0x21<0x5e;}
+weak_decl int ispunct(int c){return isgraph(c)&&!isalnum(c);}
+weak_decl int toupper(int c){return (islower(c))?(c&0x5f):c;}
+weak_decl int tolower(int c){return (isupper(c))?(c|32):c;}

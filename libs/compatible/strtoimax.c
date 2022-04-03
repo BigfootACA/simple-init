@@ -50,7 +50,7 @@ __RCSID("$NetBSD: strtoimax.c,v 1.4 2005/11/29 03:12:00 christos Exp $");
  * Ignores `locale' stuff.  Assumes that the upper and lower case
  * alphabets and digits are each contiguous.
  */
-intmax_t
+weak_decl intmax_t
 strtoimax(const char *nptr, char **endptr, int base)
 {
   const char *s;

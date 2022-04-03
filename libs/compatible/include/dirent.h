@@ -1,9 +1,6 @@
-//
-// Created by bigfoot on 2022/2/8.
-//
-
 #ifndef SIMPLE_INIT_DIRENT_H
 #define SIMPLE_INIT_DIRENT_H
+#include "compatible.h"
 #include "sys/types.h"
 enum d_type{
 	DT_UNKNOWN = 0,

@@ -9,7 +9,7 @@
 #endif
 static const double_t toint = 1/EPS;
 
-double comp_floor(double x)
+weak_decl double floor(double x)
 {
 	union {double f; uint64_t i;} u = {x};
 	int e = u.i >> 52 & 0x7ff;
@@ -32,7 +32,7 @@ double comp_floor(double x)
 	return x + y;
 }
 
-float comp_floorf(float x)
+weak_decl float floorf(float x)
 {
 	union {float f; uint32_t i;} u = {x};
 	int e = (int)(u.i >> 23 & 0xff) - 0x7f;

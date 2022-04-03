@@ -1,5 +1,6 @@
 #ifndef	_SETJMP_H
 #define	_SETJMP_H
+#include "compatible.h"
 #include  <Library/BaseLib.h>
 #ifdef __cplusplus
 extern "C" {

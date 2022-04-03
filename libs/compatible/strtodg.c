@@ -298,7 +298,7 @@ mantbits(double d)
   return P - 32 - lo0bits(&L);
   }
 
- int
+weak_decl int
 strtodg (
   CONST char *s00, char **se, CONST FPI *fpi, Long *expt, ULong *bits
 )

@@ -47,7 +47,7 @@ __RCSID("$NetBSD: vsnprintf.c,v 1.20 2005/02/09 21:35:47 kleink Exp $");
 #include "reentrant.h"
 #include "local.h"
 
-int
+weak_decl int
 vsnprintf(char *str, size_t n, const char *fmt, va_list ap)
 {
   int ret;

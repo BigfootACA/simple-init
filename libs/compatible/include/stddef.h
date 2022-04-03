@@ -1,6 +1,7 @@
 #ifndef _STDDEF_H
 #define _STDDEF_H
 
+#include "compatible.h"
 #ifndef NULL
 #ifdef __cplusplus
 #define NULL 0L

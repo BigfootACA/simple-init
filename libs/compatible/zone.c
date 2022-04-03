@@ -52,8 +52,8 @@
 #define WILDABBR  "   "
 #endif /* !defined WILDABBR */
 
-const char wildabbr[9]  = "WILDABBR";
-const char gmt[4]       = "GMT";
+weak_decl const char wildabbr[9]  = "WILDABBR";
+weak_decl const char gmt[4]       = "GMT";
 
 struct state * lclptr = NULL;
 struct state * gmtptr = NULL;
@@ -66,13 +66,13 @@ static char   lcl_TZname[TZ_STRLEN_MAX + 1];
 static int    lcl_is_set = 0;
 //static int    gmt_is_set = 0;
 
-char *   tzname[2] = {
+weak_decl char *   tzname[2] = {
   (char *)__UNCONST(wildabbr),
   (char *)__UNCONST(wildabbr)
 };
 
-long int    timezone = 0;
-int         daylight = 0;
+weak_decl long int    timezone = 0;
+weak_decl int         daylight = 0;
 
 #ifndef NO_ZONEINFO_FILES
 /** Get first 4 characters of codep as a 32-bit integer.
@@ -759,7 +759,7 @@ tzparse(
   return 0;
 }
 
-void
+weak_decl void
 gmtload(struct state * const sp)
 {
   if (tzload(gmt, sp) != 0)
@@ -785,7 +785,7 @@ tzsetwall(void)
   settzname();
 }
 
-void
+weak_decl void
 tzset(void)
 {
   register const char * name;

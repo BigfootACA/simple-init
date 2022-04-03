@@ -1,6 +1,6 @@
 #include "math.h"
 
-double modf(double x, double *iptr)
+weak_decl double modf(double x, double *iptr)
 {
 	union {double f; uint64_t i;} u = {x};
 	uint64_t mask;

@@ -118,7 +118,7 @@ const _TimeLocale *Locale =&(_TimeLocale){
 	"%H:%M:%S",
 	"%I:%M:%S %p"
 };
-size_t
+weak_decl size_t
 strftime(
   char            * __restrict  s,
   size_t                        maxsize,

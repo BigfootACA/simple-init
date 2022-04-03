@@ -43,6 +43,7 @@
 
 #ifndef _LOCALE_H_
 #define _LOCALE_H_
+#include "compatible.h"
 
 /** This is a structure containing members pertaining to the formatting and display of numeric values.
     Each member of this structure is commented with its value in the "C" locale.

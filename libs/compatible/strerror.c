@@ -27,7 +27,7 @@ static const unsigned short errmsgidx[] = {
 #undef E
 };
 
-char *strerror(int e)
+weak_decl char *strerror(int e)
 {
 	const char *s;
 #ifdef EDQUOT_ORIG

@@ -5,7 +5,7 @@ static const int k = 2043;
 static const double kln2 = 0x1.62066151add8bp+10;
 
 /* exp(x)/2 for x >= log(DBL_MAX), slightly better than 0.5*exp(x/2)*exp(x/2) */
-double comp__expo2(double x, double sign)
+weak_decl double __expo2(double x, double sign)
 {
 	double scale;
 

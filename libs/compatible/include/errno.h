@@ -1,12 +1,8 @@
-//
-// Created by bigfoot on 2022/2/8.
-//
-
 #ifndef SIMPLE_INIT_ERRNO_H
 #define SIMPLE_INIT_ERRNO_H
 #include<Uefi.h>
-extern int comp_errno;
-#define errno comp_errno
+#include "compatible.h"
+extern int errno;
 extern  RETURN_STATUS   EFIerrno;
 #define	EPERM		 1	/* Operation not permitted */
 #define	ENOENT		 2	/* No such file or directory */
@@ -147,4 +143,4 @@ extern  RETURN_STATUS   EFIerrno;
 #define ENOTRECOVERABLE	131
 #define ERFKILL		132
 #define EHWPOISON	133
-#endif //SIMPLE_INIT_ERRNO_H
+#endif

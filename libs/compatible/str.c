@@ -2,6 +2,7 @@
 #include <Library/BaseLib.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/MemoryAllocationLib.h>
+#include "ctype.h"
 #include "string.h"
 #include "stdlib.h"
 #include "limits.h"
@@ -12,56 +13,57 @@
 #define HIGHS (ONES *(UCHAR_MAX/2+1))
 #define HASZERO(x)(((x)-(ONES))& ~(x)& HIGHS)
 #define UNICODE_STRING_MAX    8192
-size_t wcslen(const wchar_t*s){
+#define BITOP(a,b,op)((a)[(size_t)(b)/(8*sizeof *(a))] op(size_t)1<<((size_t)(b)%(8*sizeof *(a))))
+weak_decl size_t wcslen(const wchar_t*s){
 	return(size_t)StrLen((CONST CHAR16*)s);
 }
-wchar_t*wmemset(wchar_t*s,wchar_t c,size_t n){
+weak_decl wchar_t*wmemset(wchar_t*s,wchar_t c,size_t n){
 	return(wchar_t*)SetMem16(s,(UINTN)(n*sizeof(wchar_t)),(UINT16)c);
 }
-wchar_t*wcschr(const wchar_t*s,wchar_t c){
+weak_decl wchar_t*wcschr(const wchar_t*s,wchar_t c){
 	do{if(*s==c)return(wchar_t *)s;}while(*s++!=0);
 	return NULL;
 }
-size_t strlen(const char*buff){
+weak_decl size_t strlen(const char*buff){
 	return(size_t)AsciiStrLen((CONST CHAR8*)buff);
 }
-size_t strnlen(const char*s,size_t n){
+weak_decl size_t strnlen(const char*s,size_t n){
 	const char*p=memchr(s,0,n);
 	return p?p-s:n;
 }
-int strcmp(const char*buff1,const char*buff2){
+weak_decl int strcmp(const char*buff1,const char*buff2){
 	return(int)AsciiStrCmp((CONST CHAR8*)buff1,(CONST CHAR8*)buff2);
 }
-int strncmp(const char*buff1,const char*buff2,size_t size){
+weak_decl int strncmp(const char*buff1,const char*buff2,size_t size){
 	return(int)AsciiStrnCmp((CONST CHAR8*)buff1,(CONST CHAR8*)buff2,(UINTN)size);
 }
-int strcasecmp(const char*buff1,const char*buff2){
+weak_decl int strcasecmp(const char*buff1,const char*buff2){
 	return(int)AsciiStriCmp((CONST CHAR8*)buff1,(CONST CHAR8*)buff2);
 }
-char*strcpy(char *dest,const char*src){
+weak_decl char*strcpy(char *dest,const char*src){
 	size_t i;
 	for(i=0;src[i];i++)dest[i]=src[i];
 	dest[i]=0;
 	return dest;
 }
-char*strncpy(char*dest,const char*src,size_t n){
+weak_decl char*strncpy(char*dest,const char*src,size_t n){
 	size_t i;
 	for(i=0;i<n&&src[i];i++)dest[i]=src[i];
 	for(;i<n;i++)dest[i]=0;
 	return dest;
 }
-int strncpyX(char*__restrict s1,const char*__restrict s2,size_t n){
+weak_decl int strncpyX(char*__restrict s1,const char*__restrict s2,size_t n){
 	int NumLeft;
 	for(;n!=0;--n)if((*s1++=*s2++)=='\0')break;
 	NumLeft=(int)n;
 	for(--s1;n!=0;--n)*s1++='\0';
 	return NumLeft;
 }
-char *strcat(char *restrict dest,const char *restrict src){
+weak_decl char *strcat(char *restrict dest,const char *restrict src){
 	strcpy(dest+strlen(dest),src);
 	return dest;
 }
-char *strchrnul(const char *s,int c){
+weak_decl char *strchrnul(const char *s,int c){
 	c=(unsigned char)c;
 	if(!c)return(char *)s + strlen(s);
 #ifdef __GNUC__
@@ -76,11 +78,11 @@ char *strchrnul(const char *s,int c){
 	for(;*s && *(unsigned char *)s !=c;s++);
 	return(char *)s;
 }
-char *strchr(const char *s,int c){
+weak_decl char *strchr(const char *s,int c){
 	char *r=strchrnul(s,c);
 	return *(unsigned char *)r==(unsigned char)c ? r : 0;
 }
-char*strdup(const char*str){
+weak_decl char*strdup(const char*str){
 	size_t len;
 	char*buff;
 	len=strlen(str)+1;
@@ -88,7 +90,7 @@ char*strdup(const char*str){
 	memcpy(buff,str,len);
 	return buff;
 }
-char*strndup(const char*s,size_t n){
+weak_decl char*strndup(const char*s,size_t n){
 	size_t l=strnlen(s,n);
 	char*d=malloc(l+1);
 	if(!d)return NULL;
@@ -96,7 +98,7 @@ char*strndup(const char*s,size_t n){
 	d[l]=0;
 	return d;
 }
-char *basename(char *s){
+weak_decl char *basename(char *s){
 	size_t i;
 	if(!s || !*s)return ".";
 	i=strlen(s)-1;
@@ -121,7 +123,6 @@ static char *fourbyte_strstr(const unsigned char *h,const unsigned char *n){
 	for(h+=3;*h && hw !=nw;hw=hw<<8 | *++h);
 	return *h ?(char *)h-3 : 0;
 }
-#define BITOP(a,b,op)((a)[(size_t)(b)/(8*sizeof *(a))] op(size_t)1<<((size_t)(b)%(8*sizeof *(a))))
 static char *twoway_strstr(const unsigned char *h,const unsigned char *n){
 	const unsigned char *z;
 	size_t l,ip,jp,k,p,ms,p0,mem,mem0,byteset[32 / sizeof(size_t)]={0},shift[256];
@@ -181,7 +182,7 @@ static char *twoway_strstr(const unsigned char *h,const unsigned char *n){
 		h +=p,mem=mem0;
 	}
 }
-char *strstr(const char *h,const char *n){
+weak_decl char *strstr(const char *h,const char *n){
 	if(!n[0])return(char *)h;
 	h=strchr(h,*n);
 	if(!h || !n[1])return(char *)h;
@@ -193,9 +194,63 @@ char *strstr(const char *h,const char *n){
 	if(!n[4])return fourbyte_strstr((void *)h,(void *)n);
 	return twoway_strstr((void *)h,(void *)n);
 }
-char *strrchr(const char *s, int c){
+weak_decl char *strrchr(const char *s, int c){
 	return memrchr(s, c, strlen(s) + 1);
 }
-int strcoll(const char *l, const char *r){
+weak_decl int strcoll(const char *l, const char *r){
         return strcmp(l, r);
+}
+weak_decl char *strpbrk(const char *s, const char *b)
+{
+	s += strcspn(s, b);
+	return *s ? (char *)s : 0;
+}
+
+weak_decl size_t strcspn(const char *s, const char *c)
+{
+	const char *a = s;
+	size_t byteset[32/sizeof(size_t)];
+
+	if (!c[0] || !c[1]) return strchrnul(s, *c)-a;
+
+	memset(byteset, 0, sizeof byteset);
+	for (; *c && BITOP(byteset, *(unsigned char *)c, |=); c++);
+	for (; *s && !BITOP(byteset, *(unsigned char *)s, &); s++);
+	return s-a;
+}
+
+weak_decl size_t strspn(const char *s, const char *c)
+{
+	const char *a = s;
+	size_t byteset[32/sizeof(size_t)] = { 0 };
+
+	if (!c[0]) return 0;
+	if (!c[1]) {
+		for (; *s == *c; s++);
+		return s-a;
+	}
+
+	for (; *c && BITOP(byteset, *(unsigned char *)c, |=); c++);
+	for (; *s && BITOP(byteset, *(unsigned char *)s, &); s++);
+	return s-a;
+}
+weak_decl int
+strncasecmp(const char *s1, const char *s2, size_t n)
+{
+  int   CompareVal;
+
+  if (n != 0) {
+    do {
+      CompareVal = tolower(*s1) - tolower(*s2);
+      if (CompareVal != 0) {
+        return (CompareVal);
+      }
+      ++s1;
+      ++s2;
+      if (*s1 == '\0') {
+        break;
+      }
+    } while (--n != 0);
+  }
+  return (0);
 }

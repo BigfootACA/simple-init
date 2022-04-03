@@ -43,7 +43,7 @@ static UINT32 next = 1;
   * Park and Miller, Communications of the ACM, vol. 31, no. 10,
   * October 1988, p. 1195.
 **/
-int
+weak_decl int
 rand()
 {
   INT32 hi, lo, x;
@@ -59,7 +59,7 @@ rand()
   return ((next = x) % ((UINT32)RAND_MAX + 1));
 }
 
-void
+weak_decl void
 srand(unsigned int seed)
 {
   next = (UINT32)seed;

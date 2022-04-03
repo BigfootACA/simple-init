@@ -55,7 +55,7 @@ THIS SOFTWARE.
 #define ldus_QNAN2 0x0
 #define ldus_QNAN3 0x4000
 #define ldus_QNAN4 0x7fff
- int
+weak_decl int
 #ifdef KR_headers
 strtopx(s, sp, V) CONST char *s; char **sp; void *V;
 #else

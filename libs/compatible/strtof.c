@@ -33,7 +33,7 @@ THIS SOFTWARE.
 #include "namespace.h"
 #include "gdtoaimp.h"
 
- float
+weak_decl float
 #ifdef KR_headers
 strtof(s, sp) CONST char *s; char **sp;
 #else

@@ -2,8 +2,8 @@
 #define _UNISTD_H
 #define __NEED_size_t
 #define __NEED_ssize_t
+#include "compatible.h"
 #include <bits/alltypes.h>
-#define usleep comp_usleep
 int usleep(unsigned);
 int close(int);
 ssize_t read(int, void *, size_t);

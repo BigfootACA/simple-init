@@ -1,7 +1,7 @@
 #include "math.h"
 #include "limits.h"
 
-double comp_scalbn(double x, int n)
+weak_decl double scalbn(double x, int n)
 {
 	union {double f; uint64_t i;} u;
 	double_t y = x;
@@ -30,4 +30,9 @@ double comp_scalbn(double x, int n)
 	u.i = (uint64_t)(0x3ff+n)<<52;
 	x = y * u.f;
 	return x;
+}
+
+weak_decl double ldexp(double x, int n)
+{
+	return scalbn(x, n);
 }

@@ -61,7 +61,7 @@ const _MonetaryLocale *_CurrentMonetaryLocale = &_DefaultMonetaryLocale;
 /*
  * Return the current locale conversion.
  */
-struct lconv *
+weak_decl struct lconv *
 localeconv()
 {
   static struct lconv ret;

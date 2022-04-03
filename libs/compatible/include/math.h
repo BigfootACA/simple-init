@@ -1,6 +1,3 @@
-//
-// Created by bigfoot on 2022/2/8.
-//
 #ifndef _MATH_H
 #define _MATH_H
 
@@ -10,6 +7,7 @@ extern "C" {
 
 #define __NEED_float_t
 #define __NEED_double_t
+#include "compatible.h"
 #include <bits/alltypes.h>
 #include <stdint.h>
 
@@ -83,64 +81,34 @@ extern const struct log2_data {
 #endif
 } __log2_data;
 
-extern float comp__cosdf(double x);
-extern float comp__sindf(double x);
-extern float comp__tandf(double x,int odd);
-extern double comp__sin(double,double,int);
-extern double comp__cos(double,double);
-extern double comp__tan(double,double,int);
-extern double comp__expo2(double,double);
-extern int comp__rem_pio2(double,double*);
-extern int comp__rem_pio2f(float x,double*y);
-extern int comp__rem_pio2_large(double*x,double*y,int e0,int nx,int prec);
-extern float comp_acosf(float x);
-extern float comp_atan2f(float y,float x);
-extern float comp_ceilf(float x);
-extern float comp_cosf(float x);
-extern float comp_fabsf(float x);
-extern float comp_floorf(float x);
-extern float comp_fmodf(float x,float y);
-extern float comp_sinf(float x);
-extern double comp_sqrt(double x);
-extern float comp_sqrtf(float x);
-extern float comp_tanf(float x);
-extern float comp_atanf(float x);
-extern double comp_fabs(double x);
-extern double comp_sqrt(double x);
-extern double comp_pow(double x,double y);
-extern double comp_scalbn(double x,int n);
-extern double comp_floor(double x);
+extern float __cosdf(double x);
+extern float __sindf(double x);
+extern float __tandf(double x,int odd);
+extern double __sin(double,double,int);
+extern double __cos(double,double);
+extern double __tan(double,double,int);
+extern double __expo2(double,double);
+extern int __rem_pio2(double,double*);
+extern int __rem_pio2f(float x,double*y);
+extern int __rem_pio2_large(double*x,double*y,int e0,int nx,int prec);
+extern float acosf(float x);
+extern float atan2f(float y,float x);
+extern float ceilf(float x);
+extern float cosf(float x);
+extern float fabsf(float x);
+extern float floorf(float x);
+extern float fmodf(float x,float y);
+extern float sinf(float x);
+extern double sqrt(double x);
+extern float sqrtf(float x);
+extern float tanf(float x);
+extern float atanf(float x);
+extern double fabs(double x);
+extern double sqrt(double x);
+extern double pow(double x,double y);
+extern double scalbn(double x,int n);
+extern double floor(double x);
 #define DBL_EPSILON 2.22044604925031308085e-16
-#define __cosdf comp__cosdf
-#define __sindf comp__sindf
-#define __tandf comp__tandf
-#define __rem_pio2f comp__rem_pio2f
-#define __rem_pio2_large comp__rem_pio2_large
-#define __math_xflow comp__math_xflow
-#define __math_xflowf comp__math_xflowf
-#define __math_uflow comp__math_uflow
-#define __math_uflowf comp__math_uflowf
-#define __math_oflow comp__math_oflow
-#define __math_oflowf comp__math_oflowf
-#define __math_invalid comp__math_invalid
-#define __math_invalidf comp__math_invalidf
-#define __math_divzero comp__math_divzero
-#define tanf comp_tanf
-#define atanf comp_atanf
-#define atan2f comp_atan2f
-#define ceilf comp_ceilf
-#define acosf comp_acosf
-#define cosf comp_cosf
-#define fabs comp_fabs
-#define fabsf comp_fabsf
-#define floor comp_floor
-#define floorf comp_floorf
-#define fmodf comp_fmodf
-#define sinf comp_sinf
-#define sqrt comp_sqrt
-#define sqrtf comp_sqrtf
-#define pow comp_pow
-#define scalbn comp_scalbn
 
 #define asuint(f) ((union{float _f;uint32_t _i;}){f})._i
 #define asfloat(i) ((union{uint32_t _i;float _f;}){i})._f
@@ -203,15 +171,15 @@ static inline long double fp_barrierl(long double x){volatile long double y=x;re
 
 static inline float eval_as_float(float x){float y=x;return y;}
 static inline double eval_as_double(double x){double y=x;return y;}
-static inline double comp__math_invalid(double x){return(x-x)/(x-x);}
-static inline float comp__math_invalidf(float x){return(x-x)/(x-x);}
-static inline double comp__math_xflow(uint32_t sign,double y){return eval_as_double(fp_barrier(sign?-y:y)*y);}
-static inline float comp__math_xflowf(uint32_t sign,float y){return eval_as_float(fp_barrierf(sign?-y:y)*y);}
-static inline double comp__math_uflow(uint32_t sign){return comp__math_xflow(sign,0x1p-767);}
-static inline float comp__math_uflowf(uint32_t sign){return comp__math_xflowf(sign,0x1p-95f);}
-static inline float comp__math_oflowf(uint32_t sign){return comp__math_xflowf(sign,0x1p97f);}
-static inline double comp__math_oflow(uint32_t sign){return comp__math_xflow(sign,0x1p769);}
-static inline double comp__math_divzero(uint32_t sign){return fp_barrier(sign?-1.0:1.0)/0.0;}
+static inline double __math_invalid(double x){return(x-x)/(x-x);}
+static inline float __math_invalidf(float x){return(x-x)/(x-x);}
+static inline double __math_xflow(uint32_t sign,double y){return eval_as_double(fp_barrier(sign?-y:y)*y);}
+static inline float __math_xflowf(uint32_t sign,float y){return eval_as_float(fp_barrierf(sign?-y:y)*y);}
+static inline double __math_uflow(uint32_t sign){return __math_xflow(sign,0x1p-767);}
+static inline float __math_uflowf(uint32_t sign){return __math_xflowf(sign,0x1p-95f);}
+static inline float __math_oflowf(uint32_t sign){return __math_xflowf(sign,0x1p97f);}
+static inline double __math_oflow(uint32_t sign){return __math_xflow(sign,0x1p769);}
+static inline double __math_divzero(uint32_t sign){return fp_barrier(sign?-1.0:1.0)/0.0;}
 
 #ifndef predict_true
 #ifdef __GNUC__

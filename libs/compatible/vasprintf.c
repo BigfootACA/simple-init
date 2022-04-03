@@ -38,7 +38,7 @@ __RCSID("$NetBSD: vasprintf.c,v 1.10 2005/02/09 21:35:47 kleink Exp $");
 #include "reentrant.h"
 #include "local.h"
 
-int
+weak_decl int
 vasprintf(str, fmt, ap)
   char **str;
   const char *fmt;

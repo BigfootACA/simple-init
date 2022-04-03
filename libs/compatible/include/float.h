@@ -5,6 +5,7 @@
 extern "C" {
 #endif
 
+#include "compatible.h"
 int __flt_rounds(void);
 #define FLT_ROUNDS (__flt_rounds())
 

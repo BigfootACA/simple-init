@@ -353,7 +353,7 @@ __ujtoa(uintmax_t val, CHAR_T *endp, int base, int octzero,
 /*
  * MT-safe version
  */
-int
+weak_decl int
 WDECL(vf,printf)(FILE * __restrict fp, const CHAR_T * __restrict fmt0, va_list ap)
 {
 	int ret;

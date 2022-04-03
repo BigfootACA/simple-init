@@ -78,7 +78,7 @@ static  LIST_ENTRY      MemPoolHead = INITIALIZE_LIST_HEAD_VARIABLE(MemPoolHead)
               - EINVAL: Requested Size is zero.
               - ENOMEM: Memory could not be allocated.
 **/
-void *
+weak_decl void *
 malloc(size_t Size)
 {
 	CPOOL_HEAD   *Head;
@@ -140,7 +140,7 @@ malloc(size_t Size)
               contains the cause.  Otherwise, a pointer to an 8-byte aligned
               region of the requested size is returned.
 **/
-void *calloc(size_t num, size_t size){
+weak_decl void *calloc(size_t num, size_t size){
 	void*ret=NULL;
 	size_t len=num*size;
 	if(len!=0) {
@@ -162,7 +162,7 @@ void *calloc(size_t num, size_t size){
     @param  Ptr     Pointer to a previously allocated region of memory to be freed.
 
 **/
-void
+weak_decl void
 free(void *Ptr)
 {
 	CPOOL_HEAD   *Head;
@@ -228,7 +228,7 @@ free(void *Ptr)
               region of the requested size is returned.  If NewSize is zero,
               NULL is returned and errno will be unchanged.
 **/
-void *
+weak_decl void *
 realloc(void *Ptr, size_t ReqSize)
 {
 	void       *RetVal = NULL;

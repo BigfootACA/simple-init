@@ -79,7 +79,7 @@ THIS SOFTWARE.
 #pragma warning ( disable : 4700 )
 #endif  /* defined(_MSC_VER) */
 
- char *
+weak_decl char *
 dtoa
 #ifdef KR_headers
   (d, mode, ndigits, decpt, sign, rve)

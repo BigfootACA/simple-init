@@ -38,7 +38,7 @@ static inline uint64_t mul64(uint64_t a, uint64_t b)
 	return ahi*bhi + (ahi*blo >> 32) + (alo*bhi >> 32);
 }
 
-float comp_sqrtf(float x)
+weak_decl float sqrtf(float x)
 {
 	uint32_t ix, m, m1, m0, even, ey;
 
@@ -108,7 +108,7 @@ float comp_sqrtf(float x)
 	return y;
 }
 
-double comp_sqrt(double x)
+weak_decl double sqrt(double x)
 {
 	uint64_t ix, top, m;
 

@@ -18,7 +18,7 @@
 #include  <stdlib.h>
 #include  "gdtoa.h"
 
-long double
+weak_decl long double
 strtold(const char *nptr, char **endptr)
 {
   long double ld;

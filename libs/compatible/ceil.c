@@ -7,7 +7,7 @@
 #endif
 static const double_t toint = 1/EPS;
 
-double ceil(double x)
+weak_decl double ceil(double x)
 {
 	union {double f; uint64_t i;} u = {x};
 	int e = u.i >> 52 & 0x7ff;
@@ -28,4 +28,30 @@ double ceil(double x)
 	if (y < 0)
 		return x + y + 1;
 	return x + y;
+}
+
+weak_decl float ceilf(float x)
+{
+	union {float f; uint32_t i;} u = {x};
+	int e = (int)(u.i >> 23 & 0xff) - 0x7f;
+	uint32_t m;
+
+	if (e >= 23)
+		return x;
+	if (e >= 0) {
+		m = 0x007fffff >> e;
+		if ((u.i & m) == 0)
+			return x;
+		FORCE_EVAL(x + 0x1p120f);
+		if (u.i >> 31 == 0)
+			u.i += m;
+		u.i &= ~m;
+	} else {
+		FORCE_EVAL(x + 0x1p120f);
+		if (u.i >> 31)
+			u.f = -0.0;
+		else if (u.i << 1)
+			u.f = 1.0;
+	}
+	return u.f;
 }

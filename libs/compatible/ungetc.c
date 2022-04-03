@@ -95,7 +95,7 @@ __submore(FILE *fp)
   return (0);
 }
 
-int
+weak_decl int
 ungetc(int c, FILE *fp)
 {
   if(fp == NULL) {

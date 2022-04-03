@@ -23,7 +23,7 @@ static inline uint32_t top16(double x)
 	return asuint64(x) >> 48;
 }
 
-double log(double x)
+weak_decl double log(double x)
 {
 	double_t w, z, r, r2, r3, y, invc, logc, kd, hi, lo;
 	uint64_t ix, iz, tmp;

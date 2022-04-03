@@ -32,7 +32,7 @@ THIS SOFTWARE.
  * with " at " changed at "@" and " dot " changed to ".").  */
 #include "gdtoaimp.h"
 
- Bigint *
+weak_decl Bigint *
 #ifdef KR_headers
 sum(a, b) Bigint *a; Bigint *b;
 #else

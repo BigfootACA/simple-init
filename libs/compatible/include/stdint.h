@@ -1,6 +1,7 @@
 #ifndef _STDINT_H
 #define _STDINT_H
 
+#include "compatible.h"
 #define __NEED_int8_t
 #define __NEED_int16_t
 #define __NEED_int32_t

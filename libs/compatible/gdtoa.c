@@ -124,7 +124,7 @@ ret:
  *     calculation.
  */
 
- char *
+weak_decl char *
 gdtoa
   (FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, int *decpt, char **rve)
 {

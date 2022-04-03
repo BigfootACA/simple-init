@@ -163,6 +163,7 @@
 #define _WCHAR_H
 #define __NEED_wint_t
 #define __NEED_wchar_t
+#include "compatible.h"
 #include <Uefi.h>
 #include  <stdarg.h>
 #include  <stdio.h>

@@ -53,11 +53,7 @@
 #include "reentrant.h"
 #include "local.h"
 
-#ifdef __weak_alias
-__weak_alias(snprintf,_snprintf)
-#endif
-
-int
+weak_decl int
 snprintf(char *str, size_t n, char const *fmt, ...)
 {
   int ret;

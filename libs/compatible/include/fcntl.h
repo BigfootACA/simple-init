@@ -5,6 +5,7 @@
 #define __NEED_pid_t
 #define __NEED_mode_t
 
+#include "compatible.h"
 #include <bits/alltypes.h>
 #include <bits/fcntl.h>
 

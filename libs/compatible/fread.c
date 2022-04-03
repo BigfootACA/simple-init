@@ -50,7 +50,7 @@
 #include "reentrant.h"
 #include "local.h"
 
-size_t
+weak_decl size_t
 fread(void *buf, size_t size, size_t count, FILE *fp)
 {
   size_t resid;

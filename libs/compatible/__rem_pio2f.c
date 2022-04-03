@@ -41,7 +41,7 @@ invpio2 = 6.36619772367581382433e-01, /* 0x3FE45F30, 0x6DC9C883 */
 pio2_1  = 1.57079631090164184570e+00, /* 0x3FF921FB, 0x50000000 */
 pio2_1t = 1.58932547735281966916e-08; /* 0x3E5110b4, 0x611A6263 */
 
-int comp__rem_pio2f(float x, double *y)
+weak_decl int __rem_pio2f(float x, double *y)
 {
 	union {float f; uint32_t i;} u = {x};
 	double tx[1],ty[1];

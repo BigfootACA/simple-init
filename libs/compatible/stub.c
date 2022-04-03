@@ -7,36 +7,36 @@
 #include "string.h"
 #include "logger.h"
 static int stub_stdin=0,stub_stdout=0,stub_stderr=0;
-FILE*const stdin=(FILE*)&stub_stdin;
-FILE*const stdout=(FILE*)&stub_stdout;
-FILE*const stderr=(FILE*)&stub_stderr;
-FILE *fopen(const char * file __attribute__((unused)), const char * mode __attribute__((unused))){
+weak_decl FILE*const stdin=(FILE*)&stub_stdin;
+weak_decl FILE*const stdout=(FILE*)&stub_stdout;
+weak_decl FILE*const stderr=(FILE*)&stub_stderr;
+weak_decl FILE *fopen(const char * file __attribute__((unused)), const char * mode __attribute__((unused))){
 	DEBUG((EFI_D_ERROR,"try to call unsupported fopen\n"));
 	errno=ENOSYS;
 	return NULL;
 }
-FILE *fdopen(int fildes, const char *mode){
+weak_decl FILE *fdopen(int fildes, const char *mode){
 	errno=ENOSYS;
 	return NULL;
 }
-FILE *freopen(const char *path, const char *mode, FILE *stream){
+weak_decl FILE *freopen(const char *path, const char *mode, FILE *stream){
 	errno=ENOSYS;
 	return NULL;
 }
-int fclose(FILE *f __attribute__((unused))){
+weak_decl int fclose(FILE *f __attribute__((unused))){
 	DEBUG((EFI_D_ERROR,"try to call unsupported fclose\n"));
 	errno=ENOSYS;
 	return -1;
 }
-int fseek(FILE *f __attribute__((unused)), long p __attribute__((unused)), int m __attribute__((unused))){
+weak_decl int fseek(FILE *f __attribute__((unused)), long p __attribute__((unused)), int m __attribute__((unused))){
 	DEBUG((EFI_D_ERROR,"try to call unsupported fseek\n"));
 	errno=ENOSYS;
 	return -1;
 }
-char*getenv(const char*name){
+weak_decl char*getenv(const char*name){
 	return NULL;
 }
-size_t fwrite(const void *restrict ptr, size_t size, size_t nmemb,FILE *restrict stream){
+weak_decl size_t fwrite(const void *restrict ptr, size_t size, size_t nmemb,FILE *restrict stream){
 	char*tag,*buf=(char*)ptr;
 	enum log_level level;
 	if(!buf||!stream)return -1;
@@ -47,7 +47,7 @@ size_t fwrite(const void *restrict ptr, size_t size, size_t nmemb,FILE *restrict
 	if(!*buf)return 0;
 	return logger_print(level,tag,buf);
 }
-int fprintf(FILE*stream,const char*format,...){
+weak_decl int fprintf(FILE*stream,const char*format,...){
 	char content[16384];
 	if(!format||!stream)return -1;
 	memset(content,0,sizeof(content));
@@ -57,7 +57,7 @@ int fprintf(FILE*stream,const char*format,...){
 	va_end(ap);
 	return fwrite(content,strlen(content),sizeof(char),stream);
 }
-int printf(const char*format,...){
+weak_decl int printf(const char*format,...){
 	char content[16384];
 	if(!format)return -1;
 	memset(content,0,sizeof(content));
@@ -67,57 +67,53 @@ int printf(const char*format,...){
 	va_end(ap);
 	return logger_print(LEVEL_INFO,"stdout",content);
 }
-int feof(FILE *stream){
+weak_decl int feof(FILE *stream){
 	errno=ENOSYS;
 	return EOF;
 }
-void clearerr(FILE *stream){
+weak_decl void clearerr(FILE *stream){
 	errno=ENOSYS;
 }
-int ferror(FILE *stream){
+weak_decl int ferror(FILE *stream){
 	errno=ENOSYS;
 	return -1;
 }
-int fflush(FILE *stream){
+weak_decl int fflush(FILE *stream){
 	errno=ENOSYS;
 	return -1;
 }
-int fileno(FILE *stream){
+weak_decl int fileno(FILE *stream){
 	errno=ENOSYS;
 	return -1;
 }
-int fgetc(FILE *stream){
+weak_decl int fgetc(FILE *stream){
 	errno=ENOSYS;
 	return EOF;
 }
-int getc(FILE *stream){
+weak_decl int getc(FILE *stream){
 	errno=ENOSYS;
 	return EOF;
 }
-int getchar(void){
+weak_decl int getchar(void){
 	errno=ENOSYS;
 	return EOF;
 }
-char *fgets(char *restrict s, int size, FILE *restrict stream){
+weak_decl char *fgets(char *restrict s, int size, FILE *restrict stream){
 	errno=ENOSYS;
 	return NULL;
 }
-size_t fread(void *restrict ptr, size_t size, size_t nmemb,FILE *restrict stream){
-	errno=ENOSYS;
-	return 0;
-}
-long ftell(FILE *stream){
+weak_decl long ftell(FILE *stream){
 	errno=ENOSYS;
 	return -1;
 }
-void rewind(FILE *stream){
+weak_decl void rewind(FILE *stream){
 	errno=ENOSYS;
 }
-int fgetpos(FILE *restrict stream, fpos_t *restrict pos){
+weak_decl int fgetpos(FILE *restrict stream, fpos_t *restrict pos){
 	errno=ENOSYS;
 	return -1;
 }
-int fsetpos(FILE *stream, const fpos_t *pos){
+weak_decl int fsetpos(FILE *stream, const fpos_t *pos){
 	errno=ENOSYS;
 	return -1;
 }

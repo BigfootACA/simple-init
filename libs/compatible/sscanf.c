@@ -58,11 +58,10 @@ static int eofread(void *, char *, int);
 static int
 eofread(void *cookie, char *buf, int len)
 {
-
   return (0);
 }
 
-int
+weak_decl int
 sscanf(const char *str, char const *fmt, ...)
 {
   int ret;

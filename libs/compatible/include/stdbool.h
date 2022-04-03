@@ -1,9 +1,6 @@
-//
-// Created by bigfoot on 2022/2/8.
-//
-
 #ifndef SIMPLE_INIT_STDBOOL_H
 #define SIMPLE_INIT_STDBOOL_H
+#include "compatible.h"
 #ifndef __cplusplus
 #ifdef ENABLE_UEFI
 typedef BOOLEAN bool;

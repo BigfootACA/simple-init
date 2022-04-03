@@ -206,7 +206,7 @@ timesub(
 
 /**
 **/
-double
+weak_decl double
 difftime(time_t time1, time_t time0)
 {
   return (double)(time1 - time0);
@@ -534,7 +534,7 @@ time1(
               as a value of type time_t.  If the calendar time cannot be
               represented, the function returns the value (time_t)(-1).
 **/
-time_t
+weak_decl time_t
 mktime(struct tm *timeptr)
 {
   /* From NetBSD */
@@ -556,7 +556,7 @@ mktime(struct tm *timeptr)
               pointer, the return value is also assigned to the object it
               points to.
 **/
-time_t
+weak_decl time_t
 time(time_t *timer)
 {
   time_t      CalTime;
@@ -586,7 +586,7 @@ time(time_t *timer)
   return CalTime;   // Return calendar time in microseconds
 }
 
-clock_t
+weak_decl clock_t
 clock(void)
 {
   return (clock_t)time(NULL);
@@ -605,7 +605,7 @@ clock(void)
 
 /**
 **/
-char *
+weak_decl char *
 ctime(const time_t *timer)
 {
   return asctime(localtime(timer));
@@ -614,7 +614,7 @@ ctime(const time_t *timer)
 /*
 ** gmtsub is to gmtime as localsub is to localtime.
 */
-void
+weak_decl void
 gmtsub(
   const time_t * const  timep,
   const long            offset,
@@ -659,7 +659,7 @@ gmtsub(
 
 /**
 **/
-struct tm *
+weak_decl struct tm *
 gmtime(const time_t *timer)
 {
   gmtsub(timer, 0L, &BDTime);
@@ -711,7 +711,7 @@ localsub(const time_t * const timep, const long   offset, struct tm * const tmp)
 
 /**
 **/
-struct tm *
+weak_decl struct tm *
 localtime(const time_t *timer)
 {
   tzset();

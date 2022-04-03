@@ -1,6 +1,7 @@
 #ifndef _LIMITS_H
 #define _LIMITS_H
 
+#include "compatible.h"
 #include <bits/alltypes.h> /* __LONG_MAX */
 #include <bits/limits.h>
 

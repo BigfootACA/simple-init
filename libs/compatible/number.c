@@ -32,7 +32,7 @@
 
   @return   The atoi function returns the converted value.
 **/
-int
+weak_decl int
 atoi(const char *nptr)
 {
   int       Retval;
@@ -62,7 +62,7 @@ atoi(const char *nptr)
 
   @return   The atol function returns the converted value.
 **/
-long int
+weak_decl long int
 atol(const char *nptr)
 {
   long int  Retval;
@@ -92,7 +92,7 @@ atol(const char *nptr)
 
   @return   The atoll function returns the converted value.
 **/
-long long int
+weak_decl long long int
 atoll(const char *nptr)
 {
   long long int   Retval;
@@ -178,7 +178,7 @@ Digit2Val( int c)
             and sign of the value, if any), and the value of the macro ERANGE
             is stored in errno.
 **/
-long
+weak_decl long
 strtol(const char * __restrict nptr, char ** __restrict endptr, int base)
 {
   const char *pEnd;
@@ -267,7 +267,7 @@ strtol(const char * __restrict nptr, char ** __restrict endptr, int base)
             value is outside the range of representable values, ULONG_MAX is
             returned and the value of the macro ERANGE is stored in errno.
 **/
-unsigned long
+weak_decl unsigned long
 strtoul(const char * __restrict nptr, char ** __restrict endptr, int base)
 {
   const char     *pEnd;
@@ -342,7 +342,7 @@ strtoul(const char * __restrict nptr, char ** __restrict endptr, int base)
             LLONG_MAX is returned (according to the sign of the value, if any),
             and the value of the macro ERANGE is stored in errno.
 **/
-long long
+weak_decl long long
 strtoll(const char * __restrict nptr, char ** __restrict endptr, int base)
 {
   const char *pEnd;
@@ -431,7 +431,7 @@ strtoll(const char * __restrict nptr, char ** __restrict endptr, int base)
             value is outside the range of representable values, ULLONG_MAX is
             returned and the value of the macro ERANGE is stored in errno.
 **/
-unsigned long long
+weak_decl unsigned long long
 strtoull(const char * __restrict nptr, char ** __restrict endptr, int base)
 {
   const char           *pEnd;

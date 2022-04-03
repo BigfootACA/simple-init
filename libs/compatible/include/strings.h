@@ -5,23 +5,12 @@
 extern "C" {
 #endif
 
+#include "compatible.h"
 
 #define __NEED_size_t
 #define __NEED_locale_t
 #include <bits/alltypes.h>
 
-#define bcmp comp_bcmp
-#define bcopy comp_bcopy
-#define bzero comp_bzero
-#define index comp_index
-#define rindex comp_rindex
-#define ffs comp_ffs
-#define ffsl comp_ffsl
-#define ffsll comp_ffsll
-#define strcasecmp comp_strcasecmp
-#define strncasecmp comp_strncasecmp
-#define strcasecmp_l comp_strcasecmp_l
-#define strncasecmp_l comp_strncasecmp_l
 int bcmp (const void *, const void *, size_t);
 void bcopy (const void *, void *, size_t);
 void bzero (void *, size_t);

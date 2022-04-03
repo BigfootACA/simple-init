@@ -65,12 +65,12 @@
 // Disable: warning C4700: uninitialized local variable 'xx' used
 #pragma warning ( disable : 4700 )
 #endif  /* defined(_MSC_VER) */
-int __flt_rounds()
+weak_decl int __flt_rounds()
 {
 	return 1;
 }
 
-double
+weak_decl double
 strtod(CONST char *s00, char **se)
 {
 #ifdef Avoid_Underflow
@@ -964,4 +964,3 @@ strtod(CONST char *s00, char **se)
     *se = __UNCONST(s);
   return sign ? -dval(rv) : dval(rv);
 }
-

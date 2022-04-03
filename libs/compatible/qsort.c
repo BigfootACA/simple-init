@@ -119,7 +119,7 @@ med3(char *a, char *b, char *c, cmp_t *cmp )
     If two elements compare as equal, their order in the resulting sorted array
     is unspecified.
 */
-void
+weak_decl void
 qsort(void *a, size_t n, size_t es, cmp_t *cmp)
 {
   char *pa, *pb, *pc, *pd, *pl, *pm, *pn;

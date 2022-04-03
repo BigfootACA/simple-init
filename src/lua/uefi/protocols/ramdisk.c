@@ -28,7 +28,7 @@ static int LuaUefiRamDiskProtocolRegister(lua_State*L){
 	if(!data->data||data->size<=0)
 		return luaL_argerror(L,2,"invalid data");
 	EFI_STATUS status=proto->proto->Register(
-		(UINT64)data->data,(UINT64)data->size,
+		(UINT64)(UINTN)data->data,(UINT64)data->size,
 		&type->guid,parent?parent->dp:NULL,&dp
 	);
 	uefi_status_to_lua(L,status);

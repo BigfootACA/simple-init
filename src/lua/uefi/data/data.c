@@ -157,10 +157,10 @@ static int LuaUefiDataAddress(lua_State*L){
 		UINTN size=data->size;
 		lua_Integer addr=luaL_checkinteger(L,2);
 		clean_data(data);
-		data->data=(VOID*)addr;
+		data->data=(VOID*)(UINTN)addr;
 		data->size=size;
 	}
-	lua_pushinteger(L,(lua_Integer)data->data);
+	lua_pushinteger(L,(lua_Integer)(UINTN)data->data);
 	return 1;
 }
 

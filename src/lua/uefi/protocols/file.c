@@ -131,7 +131,7 @@ static int LuaUefiFileProtocolOpenDir(lua_State*L){
 }
 
 static int LuaUefiFileProtocolCreate(lua_State*L){
-	UINTN attr=0;
+	UINT64 attr=0;
 	EFI_FILE_PROTOCOL*fp=NULL;
 	GET_PROTO(L,1,proto);
 	GET_CHAR16(L,2,file);
@@ -223,7 +223,7 @@ static int LuaUefiFileProtocolWrite(lua_State*L){
 
 static int LuaUefiFileProtocolGetPosition(lua_State*L){
 	GET_PROTO(L,1,proto);
-	UINTN pos=0;
+	UINT64 pos=0;
 	if(!proto->proto)return luaL_argerror(L,1,"file closed");
 	EFI_STATUS status=proto->proto->GetPosition(proto->proto,&pos);
 	uefi_status_to_lua(L,status);
@@ -234,7 +234,7 @@ static int LuaUefiFileProtocolGetPosition(lua_State*L){
 
 static int LuaUefiFileProtocolSetPosition(lua_State*L){
 	GET_PROTO(L,1,proto);
-	UINTN pos=luaL_checkinteger(L,2);
+	UINT64 pos=luaL_checkinteger(L,2);
 	if(!proto->proto)return luaL_argerror(L,1,"file closed");
 	EFI_STATUS status=proto->proto->SetPosition(proto->proto,pos);
 	uefi_status_to_lua(L,status);

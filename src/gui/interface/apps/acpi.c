@@ -140,7 +140,7 @@ static bool acpi_add_item(EFI_ACPI_DESCRIPTION_HEADER*table){
 	lv_label_set_text_fmt(
 		k->info,
 		_("Address: 0x%llx Size: %d OEM ID: %s"),
-		(long long)table,table->Length,table->OemId
+		(long long)(UINTN)table,table->Length,table->OemId
 	);
 
 	return true;
@@ -157,12 +157,12 @@ static void acpi_reload(){
 			!CompareGuid(&t->VendorGuid,&gEfiAcpi20TableGuid)
 		)continue;
 		if(!sdt||sdt->Signature!=EFI_ACPI_6_3_ROOT_SYSTEM_DESCRIPTION_POINTER_SIGNATURE)continue;
-		EFI_ACPI_SDT_HEADER*xsdt=(VOID*)sdt->XsdtAddress;
+		EFI_ACPI_SDT_HEADER*xsdt=(VOID*)(UINTN)sdt->XsdtAddress;
 		if(!xsdt||xsdt->Signature!=EFI_ACPI_6_3_EXTENDED_SYSTEM_DESCRIPTION_TABLE_SIGNATURE)continue;
 		UINT64*ptr=(UINT64*)(xsdt+1);
 		UINTN cnt=(xsdt->Length-sizeof(EFI_ACPI_SDT_HEADER))/sizeof(UINT64);
 		for(UINTN x=0;x<cnt;x++,ptr++) {
-			EFI_ACPI_DESCRIPTION_HEADER*e=(VOID*)*ptr;
+			EFI_ACPI_DESCRIPTION_HEADER*e=(VOID*)(UINTN)*ptr;
 			if(acpi_add_item(e))found=true;
 			if(e->Signature!=EFI_ACPI_6_3_FIXED_ACPI_DESCRIPTION_TABLE_SIGNATURE)continue;
 			EFI_ACPI_5_1_FIXED_ACPI_DESCRIPTION_TABLE*fadt=(VOID*)e;

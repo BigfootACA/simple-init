@@ -42,6 +42,7 @@
 #define CFG_UEFI(name) NULL
 #endif
 
+DECLARE_BOOT_COMM(lua);
 DECLARE_BOOT_COMM(reboot);
 DECLARE_BOOT_LINUX(root);
 DECLARE_BOOT_LINUX(system);
@@ -65,6 +66,7 @@ boot_main*boot_main_func[]={
 	[BOOT_EFI]            = CFG_UEFI(efi),
 	[BOOT_SIMPLE_INIT]    = NULL,
 	[BOOT_UEFI_OPTION]    = CFG_UEFI(uefi_option),
+	[BOOT_LUA]            = CFG_COMM(lua),
 	[BOOT_FOLDER]         = NULL,
 };
 

@@ -7,7 +7,7 @@
   LIBRARY_CLASS                  = SimpleInitBoot
 
 [BuildOptions]
-  GCC:*_*_*_CC_FLAGS = -DENABLE_UEFI=1
+  GCC:*_*_*_CC_FLAGS = -DENABLE_UEFI=1 -DENABLE_LUA=1
 
 [Packages]
   MdePkg/MdePkg.dec
@@ -23,6 +23,7 @@
   UefiBootManagerLib
   UefiBootServicesTableLib
   UefiRuntimeServicesTableLib
+  SimpleInitLua
   SimpleInitLib
   SimpleInitBootLinux
   SimpleInitLocate
@@ -39,6 +40,7 @@
   gEfiSimpleFileSystemProtocolGuid
 
 [Sources]
+  lua.c
   cpu.c
   efi.c
   exit.c

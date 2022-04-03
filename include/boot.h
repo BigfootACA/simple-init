@@ -31,6 +31,7 @@ enum boot_mode{
 	BOOT_EXIT        = 0x0A,
 	BOOT_SIMPLE_INIT = 0x0B,
 	BOOT_UEFI_OPTION = 0x0C,
+	BOOT_LUA         = 0x0D,
 	BOOT_FOLDER      = 0xFF,
 };
 
@@ -121,6 +122,11 @@ extern EFI_STATUS boot_setvar_int(CHAR16 *name,UINTN num);
 #else
 // src/boot/boot.c: register default boot
 extern int register_default_boot(void);
+#endif
+
+#ifdef ENABLE_LUA
+#include"xlua.h"
+extern int boot_config_to_lua(lua_State*st,boot_config*boot);
 #endif
 
 #endif

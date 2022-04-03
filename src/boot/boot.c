@@ -39,6 +39,7 @@ char*bootmode2string(enum boot_mode mode){
 		case BOOT_EXIT:return        "Continue Boot";
 		case BOOT_SIMPLE_INIT:return "Simple Init";
 		case BOOT_UEFI_OPTION:return "UEFI Boot Option";
+		case BOOT_LUA:return         "Lua Script";
 		case BOOT_FOLDER:return      "Folder";
 		default:return               "Unknown";
 	}
@@ -194,6 +195,46 @@ int register_default_boot(){
 		svc_set_start_function(svc_boot,default_boot);
 		svc_boot->stop_on_shutdown=false;
 	}
+	return 0;
+}
+#endif
+
+#ifdef ENABLE_LUA
+int boot_config_to_lua(lua_State*st,boot_config*boot){
+	lua_createtable(st,0,0);
+	lua_pushliteral(st,"mode");
+	lua_pushinteger(st,boot->mode);
+	lua_settable(st,-3);
+	lua_pushliteral(st,"ident");
+	lua_pushstring(st,boot->ident);
+	lua_settable(st,-3);
+	lua_pushliteral(st,"parent");
+	lua_pushstring(st,boot->parent);
+	lua_settable(st,-3);
+	lua_pushliteral(st,"icon");
+	lua_pushstring(st,boot->icon);
+	lua_settable(st,-3);
+	lua_pushliteral(st,"desc");
+	lua_pushstring(st,boot->desc);
+	lua_settable(st,-3);
+	lua_pushliteral(st,"base");
+	lua_pushstring(st,boot->base);
+	lua_settable(st,-3);
+	lua_pushliteral(st,"key");
+	lua_pushstring(st,boot->key);
+	lua_settable(st,-3);
+	lua_pushliteral(st,"save");
+	lua_pushboolean(st,boot->save);
+	lua_settable(st,-3);
+	lua_pushliteral(st,"replace");
+	lua_pushboolean(st,boot->replace);
+	lua_settable(st,-3);
+	lua_pushliteral(st,"show");
+	lua_pushboolean(st,boot->show);
+	lua_settable(st,-3);
+	lua_pushliteral(st,"enabled");
+	lua_pushboolean(st,boot->enabled);
+	lua_settable(st,-3);
 	return 0;
 }
 #endif

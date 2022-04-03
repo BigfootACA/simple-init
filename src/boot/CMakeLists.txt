@@ -5,4 +5,5 @@ add_library(init_boot STATIC
 	root.c
 	system.c
 	charger.c
+	lua.c
 )

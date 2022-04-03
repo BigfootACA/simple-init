@@ -34,6 +34,7 @@ function add_library(){
 function add_depend(){
 	[ -f "${1}" ]||return 1
 	[ -n "${2}" ]||return 1
+	add_library "$(readelf -l "${1}"|awk '/Requesting program interpreter/{print substr($4,0,length($4)-1)}')" "${2}"||true
 	for i in $(ldd "${1}" 2>/dev/null|awk '{print $3}'|grep '^/'|sort|uniq)
 	do add_library "${i}" "${2}"
 	done

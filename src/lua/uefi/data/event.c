@@ -9,7 +9,7 @@
 #ifdef ENABLE_LUA
 #include"../lua_uefi.h"
 
-static void uefi_event_notify(EFI_EVENT ev,VOID*ctx){
+STATIC EFIAPI VOID uefi_event_notify(EFI_EVENT ev,VOID*ctx){
 	if(!ctx)return;
 	struct lua_uefi_event_extra*ed=ctx;
 	if(ed->data->event!=ev||!ed||!ed->st)return;
@@ -86,7 +86,11 @@ struct lua_uefi_event_data*uefi_create_event(
 		lua_pushnil(L);
 		return NULL;
 	}
-	EFI_STATUS st=bs->CreateEvent(type,tpl,uefi_event_notify,d,&event);
+	EFI_STATUS st=bs->CreateEvent(
+		type,tpl,
+		(EFI_EVENT_NOTIFY)uefi_event_notify,
+		d,&event
+	);
 	uefi_status_to_lua(L,st);
 	struct lua_uefi_event_data*e=get_event(L);
 	e->event=event;

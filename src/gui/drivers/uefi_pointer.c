@@ -95,7 +95,7 @@ static int _pointer_register(EFI_SIMPLE_POINTER_PROTOCOL*mouse){
 	list_obj_add_new(&mouses,data);
 	return 0;
 }
-STATIC VOID pointer_event(IN EFI_EVENT ev,IN VOID*ctx){
+STATIC EFIAPI VOID pointer_event(IN EFI_EVENT ev,IN VOID*ctx){
 	EFI_SIMPLE_POINTER_PROTOCOL*mouse=NULL;
 	EFI_STATUS st=gBS->LocateProtocol(
 		&gEfiSimplePointerProtocolGuid,
@@ -132,7 +132,9 @@ int pointer_register(){
 	}
 	EfiCreateProtocolNotifyEvent(
 		&gEfiSimplePointerProtocolGuid,
-		TPL_CALLBACK,pointer_event,NULL,&event_reg
+		TPL_CALLBACK,
+		(EFI_EVENT_NOTIFY)pointer_event,
+		NULL,&event_reg
 	);
 	return found?0:trlog_warn(-1,"no uefi pointer found");
 }

@@ -108,7 +108,7 @@ static int _keyboard_register(EFI_SIMPLE_TEXT_INPUT_PROTOCOL*k){
 	list_obj_add_new(&kbds,kbd);
 	return 0;
 }
-STATIC VOID keyboard_event(IN EFI_EVENT ev,IN VOID*ctx){
+STATIC EFIAPI VOID keyboard_event(IN EFI_EVENT ev,IN VOID*ctx){
 	EFI_SIMPLE_TEXT_INPUT_PROTOCOL*kbd=NULL;
 	EFI_STATUS st=gBS->LocateProtocol(
 		&gEfiSimpleTextInProtocolGuid,
@@ -141,7 +141,9 @@ int keyboard_register(){
 	}
 	EfiCreateProtocolNotifyEvent(
 		&gEfiSimpleTextInProtocolGuid,
-		TPL_CALLBACK,keyboard_event,NULL,&event_reg
+		TPL_CALLBACK,
+		(EFI_EVENT_NOTIFY)keyboard_event,
+		NULL,&event_reg
 	);
 	return found?0:trlog_warn(-1,"no uefi keyboard found");
 }

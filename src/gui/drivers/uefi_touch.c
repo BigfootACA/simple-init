@@ -85,7 +85,7 @@ static int _touch_register(EFI_ABSOLUTE_POINTER_PROTOCOL*touch){
 	list_obj_add_new(&touchs,data);
 	return 0;
 }
-STATIC VOID touch_event(IN EFI_EVENT ev,IN VOID*ctx){
+STATIC EFIAPI VOID touch_event(IN EFI_EVENT ev,IN VOID*ctx){
 	EFI_ABSOLUTE_POINTER_PROTOCOL*touch=NULL;
 	EFI_STATUS st=gBS->LocateProtocol(
 		&gEfiAbsolutePointerProtocolGuid,
@@ -118,7 +118,9 @@ int touch_register(){
 	}
 	EfiCreateProtocolNotifyEvent(
 		&gEfiAbsolutePointerProtocolGuid,
-		TPL_CALLBACK,touch_event,NULL,&event_reg
+		TPL_CALLBACK,
+		(EFI_EVENT_NOTIFY)touch_event,
+		NULL,&event_reg
 	);
 	return found?0:trlog_warn(-1,"no uefi touch found");
 }

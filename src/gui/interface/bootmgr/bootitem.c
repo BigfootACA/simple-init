@@ -23,6 +23,7 @@ static boot_mode bootmode[]={
 	BOOT_EXIT,
 	BOOT_SIMPLE_INIT,
 	BOOT_UEFI_OPTION,
+	BOOT_LUA,
 	BOOT_FOLDER,
 };
 

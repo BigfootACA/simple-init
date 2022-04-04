@@ -24,7 +24,7 @@ void dump_memory(EFI_PHYSICAL_ADDRESS base,UINT64 size){
 	){
 		EFI_PHYSICAL_ADDRESS addr=base+off;
 		if((off%32)==0)DEBUG((EFI_D_INFO,"\n  0x%016lx | ",addr));
-		DEBUG((EFI_D_INFO,"%02x ",((CHAR8*)addr)[0]));
+		DEBUG((EFI_D_INFO,"%02x ",((CHAR8*)(UINTN)addr)[0]));
 	}
 	DEBUG((EFI_D_INFO,"\nDump Done\n"));
 }

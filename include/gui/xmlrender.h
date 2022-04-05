@@ -10,7 +10,8 @@
 #define _XMLRENDER_H
 #include"gui.h"
 #include"gui/activity.h"
-#define RENDER_COMPATIBLE_LEVEL 0x00000001
+#define RENDER_COMPATIBLE_LEVEL   0x00000001
+#define ACTIVITY_COMPATIBLE_LEVEL 0x00000001
 #define LV_EVENT_ALL _LV_EVENT_LAST
 typedef enum xml_obj_type xml_obj_type;
 typedef struct xml_render xml_render;
@@ -54,7 +55,15 @@ enum xml_obj_type{
 };
 #ifdef ASSETS_H
 extern bool render_set_content_assets(xml_render*render,entry_file*file);
+extern bool xml_assets_file_load_activity(entry_file*file);
+extern bool xml_assets_load_all_activity(entry_dir*dir);
+extern bool xml_assets_dir_load_activity(entry_dir*dir,const char*path);
+extern bool xml_assets_dir_load_all_activity(entry_dir*dir,const char*path);
 #endif
+extern bool xml_string_load_activity(const char*content);
+extern bool xml_sstring_load_activity(const char*content,size_t len);
+extern bool xml_rootfs_load_activity(const char*path);
+extern bool xml_rootfs_load_all_activity(const char*path);
 extern void render_free(xml_render*r);
 extern void render_obj_free(xml_render_obj*o);
 extern void render_code_free(xml_render_code*o);

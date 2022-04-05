@@ -56,6 +56,9 @@ void guiact_init(){
 			guiact_register[i]->name
 		);
 	}
+	#ifdef ENABLE_MXML
+	xml_rootfs_load_all_activity(_PATH_USR"/share/simple-init/apps");
+	#endif
 }
 
 list*guiact_get_registers(){

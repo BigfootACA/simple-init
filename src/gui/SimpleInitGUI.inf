@@ -92,6 +92,7 @@
   lua/lvgl/lvgl.c
   lua/lvgl/obj.c
   lua/lvgl/lib.c
+  engine/app.c
   engine/lib.c
   engine/code.c
   engine/size.c

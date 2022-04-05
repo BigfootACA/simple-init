@@ -6,12 +6,9 @@
  *
  */
 
-#ifdef ENABLE_GUI
-#include<signal.h>
 #ifndef ENABLE_UEFI
 #include<sys/prctl.h>
 #endif
-#include"gui.h"
 #include"boot.h"
 #include"confd.h"
 #include"logger.h"
@@ -19,8 +16,10 @@
 #include"proctitle.h"
 #include"language.h"
 #include"init_internal.h"
-#include"gui/tools.h"
 #define TAG "bootmenu"
+#ifdef ENABLE_GUI
+#include"gui.h"
+#include"gui/tools.h"
 
 struct bootmenu;
 struct bootmenu_item;
@@ -478,6 +477,8 @@ static int bootmenu_draw(){
 	return 0;
 }
 
+#endif
+
 extern int guiapp_main(int argc,char**argv);
 static int start_default(){
 	#ifdef ENABLE_UEFI
@@ -503,6 +504,7 @@ int bootmenu_main(int argc __attribute((unused)),char**argv __attribute((unused)
 	setproctitle("bootmenu");
 	if(confd_get_boolean("runtime.cmdline.gui_disable",false))return start_default();
 	#endif
+	#ifdef ENABLE_GUI
 	if(
 		gui_pre_init()==0&&
 		gui_screen_init()==0&&
@@ -510,6 +512,9 @@ int bootmenu_main(int argc __attribute((unused)),char**argv __attribute((unused)
 		gui_main()==0
 	)return 0;
 	tlog_error("gui initialize failed");
+	#else
+	tlog_notice("skip gui boot menu");
+	#endif
 	return start_default();
 }
 
@@ -527,5 +532,4 @@ int register_bootmenu(){
 	}
 	return 0;
 }
-#endif
 #endif

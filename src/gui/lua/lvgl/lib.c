@@ -6,6 +6,7 @@
  *
  */
 
+#ifdef ENABLE_GUI
 #ifdef ENABLE_LUA
 #include"gui/lua.h"
 
@@ -170,4 +171,5 @@ int lua_lvgl_obj_tostring(lua_State*L){
 	return 1;
 }
 
+#endif
 #endif

@@ -6,6 +6,7 @@
  *
  */
 
+#ifdef ENABLE_GUI
 #ifdef ENABLE_LUA
 #include"gui/lua.h"
 
@@ -254,4 +255,5 @@ LUAMOD_API int luaopen_activity(lua_State*L){
 	luaL_newlib(L,activity_lib);
 	return 1;
 }
+#endif
 #endif

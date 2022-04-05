@@ -6,6 +6,7 @@
  *
  */
 
+#ifdef ENABLE_GUI
 #include"lvgl.h"
 #include"array.h"
 #include"defines.h"
@@ -33,3 +34,4 @@ const char*lv_fs_res_to_string(lv_fs_res_t res){
 const char*lv_fs_res_to_i18n_string(lv_fs_res_t res){
 	return res>=ARRLEN(str_lv_fs_res)?NULL:_(str_lv_fs_res[res]);
 }
+#endif

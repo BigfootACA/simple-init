@@ -6,6 +6,7 @@
  *
  */
 
+#ifdef ENABLE_GUI
 #ifdef ENABLE_LUA
 #include"gui/lua.h"
 #define GET_OBJ(var,n)struct lua_lvgl_obj_data*var=luaL_checkudata(L,n,LUA_LVGL_OBJ)
@@ -161,4 +162,5 @@ VOID_FUNC(move_foreground)
 VOID_FUNC(move_background)
 VOID_FUNC(realign)
 
+#endif
 #endif

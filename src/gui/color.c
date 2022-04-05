@@ -6,6 +6,7 @@
  *
  */
 
+#ifdef ENABLE_GUI
 #include"gui.h"
 #include"str.h"
 #define DECL_COLOR(n,r,g,b){.valid=true,.name=(#n),.color=LV_COLOR_MAKE(r,g,b)}
@@ -214,3 +215,4 @@ bool lv_parse_color_string(const char*val,lv_color_t*color){
 	if(parse_color_int(val,color))return true;
 	return false;
 }
+#endif

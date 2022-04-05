@@ -6,6 +6,7 @@
  *
  */
 
+#ifdef ENABLE_GUI
 #ifdef ENABLE_LUA
 #ifdef ENABLE_MXML
 #include"gui/lua.h"
@@ -61,5 +62,6 @@ int render_obj_lua_init(lua_State*L){
 	xlua_create_metatable(L,LUA_RENDER_OBJ,render_obj_func,lua_render_obj_tostring,NULL);
 	return 1;
 }
+#endif
 #endif
 #endif

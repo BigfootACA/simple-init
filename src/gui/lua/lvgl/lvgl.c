@@ -6,6 +6,7 @@
  *
  */
 
+#ifdef ENABLE_GUI
 #ifdef ENABLE_LUA
 #include"gui/lua.h"
 #define DECL_FUNC(name)extern int lua_lvgl_##name(lua_State*L)
@@ -165,4 +166,5 @@ LUAMOD_API int luaopen_lvgl(lua_State*L){
 	return 1;
 }
 
+#endif
 #endif

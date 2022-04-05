@@ -7,13 +7,13 @@
  */
 
 #define _GNU_SOURCE
-#include"init.h"
 #include"boot.h"
 #include"hardware.h"
 #define TAG "charger"
 
 extern int charger_main();
 int run_boot_charger(boot_config*boot __attribute__((unused))){
+	#ifdef ENABLE_GUI
 	int bats[64]={0};
 	if(pwr_scan_device(bats,63,true)<=0){
 		tlog_info("wait for battery device");
@@ -33,4 +33,6 @@ int run_boot_charger(boot_config*boot __attribute__((unused))){
 		default:return 0;
 	}
 	_exit(charger_main());
+	#endif
+	return -1;
 }

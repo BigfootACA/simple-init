@@ -7,6 +7,7 @@
  */
 
 #ifdef ENABLE_GUI
+#ifdef ENABLE_MXML
 #include"../render_internal.h"
 
 #define DECL_THEME(_name,_theme){.valid=true,.name=(#_name),.theme=(_theme)}
@@ -187,4 +188,5 @@ xml_theme_spec xml_theme_specs[]={
 	#endif
 	{.valid=false,.name="",.theme=0}
 };
+#endif
 #endif

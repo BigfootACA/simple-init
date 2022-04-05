@@ -7,6 +7,7 @@
  */
 
 #ifdef ENABLE_GUI
+#ifdef ENABLE_MXML
 #include"../render_internal.h"
 
 #define DECL_LONG_MODE(_name,_mode){\
@@ -28,4 +29,5 @@ xml_label_long xml_label_longs[]={
 	DECL_LONG_MODE(crop,          LV_LABEL_LONG_CROP),
 	{.valid=false,.name="",.mode=0}
 };
+#endif
 #endif

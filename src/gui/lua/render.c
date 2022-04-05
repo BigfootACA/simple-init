@@ -7,6 +7,7 @@
  */
 
 #ifdef ENABLE_LUA
+#ifdef ENABLE_MXML
 #include"gui/lua.h"
 #include"../engine/render_internal.h"
 
@@ -48,4 +49,5 @@ LUAMOD_API int luaopen_xml_render(lua_State*L){
 	render_lua_init_event(L);
 	return 1;
 }
+#endif
 #endif

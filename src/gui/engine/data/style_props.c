@@ -7,6 +7,7 @@
  */
 
 #ifdef ENABLE_GUI
+#ifdef ENABLE_MXML
 #include"../render_internal.h"
 
 #define DECL_STYLE(_prop,_name,_type,_max){\
@@ -239,4 +240,5 @@ xml_style_prop xml_style_props[]={
 
 	{.valid=false,.prop=0,.max=0,.name="",.type=0,.hand=NULL}
 };
+#endif
 #endif

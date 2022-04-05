@@ -7,6 +7,7 @@
  */
 
 #ifdef ENABLE_GUI
+#ifdef ENABLE_MXML
 #include"str.h"
 #include"gui/tools.h"
 #include"../render_internal.h"
@@ -224,4 +225,5 @@ xml_style_set_type xml_style_set_types[]={
 	[STYLE_TEXT_DECOR]  = style_set_type_text_decor,
 	[STYLE_LAST]        = NULL
 };
+#endif
 #endif

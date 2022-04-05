@@ -7,6 +7,7 @@
  */
 
 #ifdef ENABLE_GUI
+#ifdef ENABLE_MXML
 #include"../render_internal.h"
 
 #define DECL_ALIGN(_name,_align){\
@@ -111,4 +112,5 @@ xml_align_spec xml_align_specs[]={
 	DECL_ALIGN(in-bottom-center, LV_ALIGN_IN_BOTTOM_MID),
 	{.valid=false,.name="",.align=0}
 };
+#endif
 #endif

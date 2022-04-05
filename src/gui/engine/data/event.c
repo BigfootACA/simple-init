@@ -7,6 +7,7 @@
  */
 
 #ifdef ENABLE_GUI
+#ifdef ENABLE_MXML
 #include"../render_internal.h"
 
 #define DECL_EVENT(_name,_event){.valid=true,.name=(#_name),.event=(_event)}
@@ -37,4 +38,5 @@ xml_event_spec xml_event_specs[]={
 	DECL_EVENT(delete,              LV_EVENT_DELETE),
 	{.valid=false,.name="",.event=0}
 };
+#endif
 #endif

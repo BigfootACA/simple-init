@@ -7,6 +7,7 @@
  */
 
 #ifdef ENABLE_GUI
+#ifdef ENABLE_MXML
 #include"../render_internal.h"
 
 #define DECL_STYLE_STATE(_name,_state){.valid=true,.name=(#_name),.state=(_state)}
@@ -21,4 +22,5 @@ xml_style_state xml_style_states[]={
 	DECL_STYLE_STATE(disabled, LV_STATE_DISABLED),
 	{.valid=false,.name="",.state=0}
 };
+#endif
 #endif

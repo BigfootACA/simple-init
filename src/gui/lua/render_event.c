@@ -7,6 +7,7 @@
  */
 
 #ifdef ENABLE_LUA
+#ifdef ENABLE_MXML
 #include"gui/lua.h"
 #include"../engine/render_internal.h"
 
@@ -128,4 +129,5 @@ int render_lua_init_event(lua_State*L){
 	xlua_create_metatable(L,LUA_RENDER_EVENT_INFO,lua_render_event_info_func,NULL,NULL);
 	return 1;
 }
+#endif
 #endif

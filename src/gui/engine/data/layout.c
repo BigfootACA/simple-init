@@ -7,6 +7,7 @@
  */
 
 #ifdef ENABLE_GUI
+#ifdef ENABLE_MXML
 #include"../render_internal.h"
 
 #define DECL_LAYOUT(_name,_layout){\
@@ -41,4 +42,5 @@ xml_layout_spec xml_layout_specs[]={
 	DECL_LAYOUT(grid,          LV_LAYOUT_GRID),
 	{.valid=false,.name="",.layout=0}
 };
+#endif
 #endif

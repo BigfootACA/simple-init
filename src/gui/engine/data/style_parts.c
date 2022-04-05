@@ -7,6 +7,7 @@
  */
 
 #ifdef ENABLE_GUI
+#ifdef ENABLE_MXML
 #include"../render_internal.h"
 
 #define DECL_STYLE_PART(_type,_name,_part){\
@@ -222,4 +223,5 @@ xml_style_part xml_style_parts[]={
 
 	{.valid=false,.type=OBJ_NONE,.name="",.part=0}
 };
+#endif
 #endif

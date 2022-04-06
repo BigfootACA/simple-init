@@ -17,11 +17,16 @@
 #include"defines.h"
 #include"output.h"
 
+extern void _mxml_global(void);
+
 // simple-init linux entry point
 int main(int argc,char**argv){
 
 	// init proctitle
 	spt_init(argc,argv);
+
+	// workaround for mxml pthread_key_delete crash (?)
+	_mxml_global();
 
 	// init config daemon connection
 	open_default_confd_socket(true,NULL);

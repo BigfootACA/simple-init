@@ -40,7 +40,6 @@ extern struct gui_register guireg_bootmgr;
 extern struct gui_register guireg_filemgr;
 extern struct gui_register guireg_regedit;
 extern struct gui_register guireg_gadget;
-extern struct gui_register guireg_reboot;
 extern struct gui_register guireg_guiapp;
 extern struct gui_register guireg_mount;
 struct gui_register*guiact_register[]={
@@ -86,7 +85,6 @@ struct gui_register*guiact_register[]={
 	&guireg_conftool,
 	&guireg_bootmgr,
 	&guireg_filemgr,
-	&guireg_reboot,
 	&guireg_guiapp,
 	NULL
 };

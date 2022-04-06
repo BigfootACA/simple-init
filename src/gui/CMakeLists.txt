@@ -73,7 +73,6 @@ add_library(init_gui STATIC
 	interface/regedit/string.c
 	interface/regedit/regedit.c
 	interface/core/bootmenu.c
-	interface/core/reboot.c
 	interface/core/sysbar.c
 	interface/core/charger.c
 	interface/core/guiapp.c

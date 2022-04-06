@@ -143,6 +143,7 @@ entry_dir*get_assets_dir(entry_dir*dir,const char*path){
 	int cnt=0;
 	entry_file*f=NULL;
 	entry_dir*d=dir,*x;
+	if(!dir||!path)return NULL;
 	char*p=strdup(path),*xp=p,*n=NULL;
 	if(!p)return NULL;
 	fill_assets_info(NULL);
@@ -169,12 +170,14 @@ entry_dir*get_assets_dir(entry_dir*dir,const char*path){
 		if(!(d=get_assets_dir(d,f->content)))break;
 	}while(n);
 	free(p);
+	if(d)errno=0;
 	return d;
 }
 
 entry_file*get_assets_file(entry_dir*dir,const char*path){
 	int cnt=0;
 	entry_file*f=NULL;
+	if(!dir||!path)return NULL;
 	char*p=strdup(path),*xp=p,*n=NULL;
 	if(!p)return NULL;
 	fill_assets_info(NULL);
@@ -195,5 +198,6 @@ entry_file*get_assets_file(entry_dir*dir,const char*path){
 		f=get_assets_file(dir,f->content);
 	}
 	free(p);
+	if(f)errno=0;
 	return f;
 }

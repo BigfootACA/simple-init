@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<SimpleInitGUI compatible="1">
+	<Style
+		id="style-button"
+		default:radius="8"
+		default:pad-all="8"
+		default:border-width="2"
+		default:border-color="gray"
+		default:outline-width="0"
+		focused:outline-width="2"
+		pressed:border-color="gray"
+		pressed:bg-color="lightgrey"/>
+	<Code id="code-reboot">if not feature("uefi")then init.reboot()end</Code>
+	<Code id="code-reboot-cold">if feature("uefi")then uefi.Reboot("reboot-cold")end</Code>
+	<Code id="code-reboot-warm">if feature("uefi")then uefi.Reboot("reboot-warm")end</Code>
+	<Code id="code-poweroff">if feature("uefi")then uefi.Reboot("poweroff") else init.poweroff()end</Code>
+	<Code id="code-fastboot">if feature("uefi")then uefi.Reboot("fastboot") else init.reboot("bootloader")end</Code>
+	<Code id="code-recovery">if feature("uefi")then uefi.Reboot("recovery") else init.reboot("recovery")end</Code>
+	<Code id="code-edl">if feature("uefi")then uefi.Reboot("edl") else init.reboot("edl")end</Code>
+	<VerticalBox
+		id="obj-root"
+		attr:theme="object"
+		attr:align="center"
+		style:pad-inner="10"
+		style:pad-all="20">
+		<Label
+			id="lbl-title"
+			attr:text-align="center"
+			attr:long-mode="crop"
+			attr:text="Select an action you want to do"/>
+		<If condition="feature('uefi')">
+			<Button
+				id="btn-reboot-cold"
+				attr:layout="off"
+				ref-style:default="style-button"
+				event:clicked="code-reboot-cold">
+				<HorizontalBox
+					id="box-reboot-cold"
+					attr:left="0"
+					attr:auto-height="false">
+					<Image
+						id="img-reboot-cold"
+						attr:square="parent-height"
+						attr:src="reboot.svg"
+						attr:fill="true"/>
+					<Label
+						id="lbl-reboot-cold"
+						attr:auto-height="false"
+						attr:text="Cold Reboot"/>
+				</HorizontalBox>
+			</Button>
+			<Button
+				id="btn-reboot-warm"
+				attr:layout="off"
+				ref-style:default="style-button"
+				event:clicked="code-reboot-warm">
+				<HorizontalBox
+					id="box-reboot-warm"
+					attr:left="0"
+					attr:auto-height="false">
+					<Image
+						id="img-reboot-warm"
+						attr:square="parent-height"
+						attr:src="reboot.svg"
+						attr:fill="true"/>
+					<Label
+						id="lbl-reboot-warm"
+						attr:auto-height="false"
+						attr:text="Warm Reboot"/>
+				</HorizontalBox>
+			</Button>
+		</If><Else>
+			<Button
+				id="btn-reboot"
+				attr:layout="off"
+				ref-style:default="style-button"
+				event:clicked="code-reboot">
+				<HorizontalBox
+					id="box-reboot"
+					attr:left="0"
+					attr:auto-height="false">
+					<Image
+						id="img-reboot"
+						attr:square="parent-height"
+						attr:src="reboot.svg"
+						attr:fill="true"/>
+					<Label
+						id="lbl-reboot"
+						attr:auto-height="false"
+						attr:text="Reboot"/>
+				</HorizontalBox>
+			</Button>
+		</Else>
+		<Button
+			id="btn-edl"
+			attr:layout="off"
+			ref-style:default="style-button"
+			event:clicked="code-edl">
+			<HorizontalBox
+				id="box-edl"
+				attr:left="0"
+				attr:auto-height="false">
+				<Image
+					id="img-edl"
+					attr:square="parent-height"
+					attr:src="download.svg"
+					attr:fill="true"/>
+				<Label
+					id="lbl-edl"
+					attr:auto-height="false"
+					attr:text="Reboot into EDL (9008)"/>
+			</HorizontalBox>
+		</Button>
+		<Button
+			id="btn-recovery"
+			attr:layout="off"
+			ref-style:default="style-button"
+			event:clicked="code-recovery">
+			<HorizontalBox
+				id="box-recovery"
+				attr:left="0"
+				attr:auto-height="false">
+				<Image
+					id="img-recovery"
+					attr:square="parent-height"
+					attr:src="twrp.png"
+					attr:fill="true"/>
+				<Label
+					id="lbl-recovery"
+					attr:auto-height="false"
+					attr:text="Reboot into Recovery"/>
+			</HorizontalBox>
+		</Button>
+		<Button
+			id="btn-fastboot"
+			attr:layout="off"
+			ref-style:default="style-button"
+			event:clicked="code-fastboot">
+			<HorizontalBox
+				id="box-fastboot"
+				attr:left="0"
+				attr:auto-height="false">
+				<Image
+					id="img-fastboot"
+					attr:square="parent-height"
+					attr:src="fastboot.svg"
+					attr:fill="true"/>
+				<Label
+					id="lbl-fastboot"
+					attr:auto-height="false"
+					attr:text="Reboot into Bootloader"/>
+			</HorizontalBox>
+		</Button>
+		<Button
+			id="btn-poweroff"
+			attr:layout="off"
+			ref-style:default="style-button"
+			event:clicked="code-poweroff">
+			<HorizontalBox
+				id="box-poweroff"
+				attr:left="0"
+				attr:auto-height="false">
+				<Image
+					id="img-poweroff"
+					attr:square="parent-height"
+					attr:src="poweroff.svg"
+					attr:fill="true"/>
+				<Label
+					id="lbl-poweroff"
+					attr:auto-height="false"
+					attr:text="Power Off"/>
+			</HorizontalBox>
+		</Button>
+	</VerticalBox>
+</SimpleInitGUI>

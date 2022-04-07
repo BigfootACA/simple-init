@@ -12,6 +12,7 @@
 [Packages]
   MdePkg/MdePkg.dec
   ShellPkg/ShellPkg.dec
+  EmbeddedPkg/EmbeddedPkg.dec
   MdeModulePkg/MdeModulePkg.dec
   SimpleInit.dec
 
@@ -41,6 +42,7 @@
   UefiRuntimeServicesTableLib
 
 [Guids]
+  gFdtTableGuid
   gEfiFileInfoGuid
   gUefiShellFileGuid
   gEfiFileSystemVolumeLabelInfoIdGuid
@@ -152,6 +154,7 @@
   interface/apps/abootimg.c
   interface/apps/boot_linux.c
   interface/apps/benchmark.c
+  interface/apps/fdt.c
   interface/apps/uefi_bootmenu.c
   interface/apps/uefi_start.c
   interface/apps/uefi_dxe_load.c

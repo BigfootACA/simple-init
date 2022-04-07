@@ -2550,3 +2550,15 @@ msgstr "显示所有软件"
 
 msgid "Lua Script"
 msgstr "Lua脚本"
+
+msgid "Invalid device tree %s"
+msgstr "无效设备树%s"
+
+msgid "Install device tree failed: %s"
+msgstr "加载设备树失败: %s"
+
+msgid "Load device tree blob from '%s'?"
+msgstr "从'%s'加载设备树?"
+
+msgid "Load device tree blob"
+msgstr "加载设备树"

@@ -31,6 +31,7 @@ extern struct gui_register guireg_logviewer;
 extern struct gui_register guireg_clipboard;
 extern struct gui_register guireg_add_mount;
 extern struct gui_register guireg_add_mass;
+extern struct gui_register guireg_fdt_load;
 extern struct gui_register guireg_vibrator;
 extern struct gui_register guireg_language;
 extern struct gui_register guireg_conftool;
@@ -55,6 +56,7 @@ struct gui_register*guiact_register[]={
 	&guireg_mouse_menu,
 	&guireg_boot_linux,
 	&guireg_acpi_load,
+	&guireg_fdt_load,
 	#else
 	#ifdef ENABLE_FDISK
 	&guireg_guipm_disk_select,

@@ -58,6 +58,7 @@ struct guid_info{
 	DECL_GUID("VirtualCd",                   gEfiVirtualCdGuid)
 	DECL_GUID("PersistentVirtualDisk",       gEfiPersistentVirtualDiskGuid)
 	DECL_GUID("PersistentVirtualCd",         gEfiPersistentVirtualCdGuid)
+	DECL_GUID("FdtTable",                    gFdtTableGuid)
 	{NULL,NULL,NULL}
 };
 

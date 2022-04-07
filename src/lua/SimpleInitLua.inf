@@ -12,6 +12,7 @@
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
+  EmbeddedPkg/EmbeddedPkg.dec
   SimpleInit.dec
 
 [LibraryClasses]
@@ -55,6 +56,7 @@
   gEfiTimestampProtocolGuid
 
 [Guids]
+  gFdtTableGuid
   gEfiDiskInfoIdeInterfaceGuid
   gEfiDiskInfoScsiInterfaceGuid
   gEfiDiskInfoUsbInterfaceGuid

@@ -501,15 +501,16 @@ int gui_main(){
 	if(gui_global_lua)
 		xlua_run_confd(gui_global_lua,TAG,"lua.on_gui_pre_main");
 	#endif
+	uint32_t time=30;
 	while(gui_run){
 		// 10 seconds inactive sleep
 		if(lv_disp_get_inactive_time(NULL)<10000||!cansleep){
 			MUTEX_LOCK(gui_lock);
-			lv_task_handler();
+			time=lv_task_handler();
 			guidrv_taskhandler();
 			MUTEX_UNLOCK(gui_lock);
 		}else gui_enter_sleep();
-		usleep(30000);
+		usleep(time*1000);
 	}
 	#endif
 	gui_do_quit();

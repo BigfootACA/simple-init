@@ -128,7 +128,7 @@ if("${ENABLE_MXML}" STREQUAL "ON")
 endif()
 
 if("${ENABLE_LUA}" STREQUAL "ON")
-	target_link_libraries(simple-init lua m)
+	target_link_libraries(simple-init lua dl m)
 endif()
 
 if("${ENABLE_NANOSVG}" STREQUAL "ON")

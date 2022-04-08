@@ -21,7 +21,7 @@
 #include"gui/guidrv.h"
 #define TAG "drm"
 #define DIV_ROUND_UP(n,d)(((n)+(d)-1)/(d))
-static lv_color_t*buf=NULL;
+static lv_color_t*buf1=NULL,*buf2=NULL;
 struct drm_buffer{
 	uint32_t handle,pitch,offset;
 	unsigned long int size;
@@ -44,6 +44,7 @@ static struct drm_dev{
 	uint32_t blob_id;
 	drmModeCrtc*saved_crtc;
 	drmModeAtomicReq*req;
+	drmEventContext drm_event_ctx;
 	drmModePlane*plane;
 	drmModeCrtc*crtc;
 	drmModeConnector*conn;
@@ -58,10 +59,20 @@ static struct drm_dev{
 	struct drm_buffer drm_bufs[2];
 	struct drm_buffer*cur_bufs[2];
 }drm_dev;
+static const char*fourcc_str(unsigned int fourcc){
+	static char buff[8];
+	buff[0]=(fourcc>>0)&0xff;
+	buff[1]=(fourcc>>8)&0xff;
+	buff[2]=(fourcc>>16)&0xff;
+	buff[3]=(fourcc>>24)&0xff;
+	buff[4]=0;
+	return buff;
+}
 static void drm_exit(void){
 	if(drm_dev.fd<0)return;
-	if(buf)free(buf);
-	buf=NULL;
+	if(buf1)free(buf1);
+	if(buf2)free(buf2);
+	buf1=NULL,buf2=NULL;
 	close(drm_dev.fd);
 	drm_dev.fd=-1;
 }
@@ -186,13 +197,14 @@ static int drm_add_conn_property(const char*name,uint64_t value){
 static int drm_dmabuf_set_plane(struct drm_buffer*b){
 	int ret;
 	static int first=1;
-	uint32_t flags=DRM_MODE_ATOMIC_ALLOW_MODESET;
+	uint32_t flags=DRM_MODE_PAGE_FLIP_EVENT;
 	drm_dev.req=drmModeAtomicAlloc();
 	if(first){
 		drm_add_conn_property("CRTC_ID",drm_dev.crtc_id);
 		drm_add_crtc_property("MODE_ID",drm_dev.blob_id);
 		drm_add_crtc_property("ACTIVE",1);
 		flags|=DRM_MODE_ATOMIC_ALLOW_MODESET;
+		first=0;
 	}
 	drm_add_plane_property("FB_ID",b->fb_handle);
 	drm_add_plane_property("CRTC_ID",drm_dev.crtc_id);
@@ -204,17 +216,18 @@ static int drm_dmabuf_set_plane(struct drm_buffer*b){
 	drm_add_plane_property("CRTC_Y",0);
 	drm_add_plane_property("CRTC_W",drm_dev.width);
 	drm_add_plane_property("CRTC_H",drm_dev.height);
-	if((ret=drmModeAtomicCommit(drm_dev.fd,drm_dev.req,flags,NULL)))
+	if((ret=drmModeAtomicCommit(drm_dev.fd,drm_dev.req,flags,NULL))){
 		telog_error("drmModeAtomicCommit failed");
-	drmModeAtomicFree(drm_dev.req);
+		drmModeAtomicFree(drm_dev.req);
+		drm_dev.req=NULL;
+	}
 	return ret;
 }
-static int find_plane(unsigned int fourcc,uint32_t*plane_id,uint32_t crtc_idx){
+static int find_plane(unsigned int*fourcc,uint32_t*plane_id,uint32_t crtc_idx){
 	drmModePlaneResPtr planes;
 	drmModePlanePtr plane;
 	unsigned int i,j;
 	int ret=0;
-	unsigned int format=fourcc;
 	if(!(planes=drmModeGetPlaneResources(drm_dev.fd)))
 		return trlog_error(-1,"drmModeGetPlaneResources failed");
 	for(i=0;i<planes->count_planes;++i){
@@ -226,16 +239,19 @@ static int find_plane(unsigned int fourcc,uint32_t*plane_id,uint32_t crtc_idx){
 			drmModeFreePlane(plane);
 			continue;
 		}
-		for(j=0;j<plane->count_formats;++j)
-			if(plane->formats[j]==format)break;
-		if(j==plane->count_formats){
-			drmModeFreePlane(plane);
-			continue;
+		for(j=0;j<plane->count_formats;++j)switch(plane->formats[j]){
+			case DRM_FORMAT_ARGB8888:
+			case DRM_FORMAT_XRGB8888:
+				*fourcc=plane->formats[j];
+				*plane_id=plane->plane_id;
+				drmModeFreePlane(plane);
+			goto found;
+			default:tlog_warn("skip %s",fourcc_str(plane->formats[j]));
 		}
-		*plane_id=plane->plane_id;
+		tlog_warn("plane %u have no supported color format, skip",i);
 		drmModeFreePlane(plane);
-		break;
 	}
+	found:
 	if(i==planes->count_planes)ret=-1;
 	drmModeFreePlaneResources(planes);
 	return ret;
@@ -335,8 +351,7 @@ static int drm_find_connector(void){
 		goto free_res;
 	}
 	return 0;
-
-free_res:
+	free_res:
 	drmModeFreeResources(res);
 	return -1;
 }
@@ -423,14 +438,14 @@ static int drm_open(int fd,int sfd){
 	if(b>=0&&b<=100)tlog_info("current backlight: %d%%\n",b);
 	return fd;
 }
-static int drm_setup(int fd,int sfd,unsigned int fourcc){
+static int drm_setup(int fd,int sfd){
 	if(drm_open(fd,sfd)<0)return -1;
 	if(drmSetClientCap(fd,DRM_CLIENT_CAP_ATOMIC,1))
 		return terlog_error(-1,"no atomic modesetting support");
 	if(drm_find_connector())
 		return trlog_error(-1,"available drm devices not found");
 	if(find_plane(
-		fourcc,
+		&drm_dev.fourcc,
 		&drm_dev.plane_id,
 		drm_dev.crtc_idx
 	))return trlog_error(-1,"can not find plane");
@@ -443,7 +458,6 @@ static int drm_setup(int fd,int sfd,unsigned int fourcc){
 	if(drm_get_plane_props())return trlog_error(-1,"can not get plane props");
 	if(drm_get_crtc_props())return trlog_error(-1,"can not get crtc props");
 	if(drm_get_conn_props())return trlog_error(-1,"can not get connector props");
-	drm_dev.fourcc=fourcc;
 	tlog_info(
 		"found plane %u, connector %d, crtc %d",
 		drm_dev.plane_id,
@@ -451,13 +465,10 @@ static int drm_setup(int fd,int sfd,unsigned int fourcc){
 		drm_dev.crtc_id
 	);
 	tlog_info(
-		"%dx%d(%dmmX%dmm) pixel format %c%c%c%c",
+		"%dx%d(%dmmX%dmm) pixel format %s",
 		drm_dev.width,drm_dev.height,
 		drm_dev.mmWidth,drm_dev.mmHeight,
-		(fourcc>>0)&0xff,
-		(fourcc>>8)&0xff,
-		(fourcc>>16)&0xff,
-		(fourcc>>24)&0xff
+		fourcc_str(drm_dev.fourcc)
 	);
 	return 0;
 }
@@ -518,6 +529,18 @@ static int drm_setup_buffers(void){
 	drm_dev.cur_bufs[1]=&drm_dev.drm_bufs[0];
 	return 0;
 }
+static void drm_wait_vsync(lv_disp_drv_t*disp_drv __attribute__((unused))){
+	int ret;
+	fd_set fds;
+	FD_ZERO(&fds);
+	FD_SET(drm_dev.fd,&fds);
+	do{ret=select(drm_dev.fd+1,&fds,NULL,NULL,NULL);}
+	while(ret<0&&errno==EINTR);
+	if(ret>=0&&FD_ISSET(drm_dev.fd,&fds))
+		drmHandleEvent(drm_dev.fd,&drm_dev.drm_event_ctx);
+	drmModeAtomicFree(drm_dev.req);
+	drm_dev.req=NULL;
+}
 static void drm_flush(lv_disp_drv_t*disp_drv,const lv_area_t*area,lv_color_t*color_p){
 	struct drm_buffer*fbuf=drm_dev.cur_bufs[1];
 	lv_coord_t w=(area->x2-area->x1+1);
@@ -534,12 +557,14 @@ static void drm_flush(lv_disp_drv_t*disp_drv,const lv_area_t*area,lv_color_t*col
 		(void*)color_p+(w*(LV_COLOR_SIZE/8)*y),
 		w*(LV_COLOR_SIZE/8)
 	);
+	if(drm_dev.req)drm_wait_vsync(disp_drv);
 	if(drm_dmabuf_set_plane(fbuf)){
 		tlog_warn("plane flush fail");
 		return;
 	}
-	drm_dev.cur_bufs[1]=(!drm_dev.cur_bufs[0])?
-		&drm_dev.drm_bufs[1]:drm_dev.cur_bufs[0];
+	drm_dev.cur_bufs[1]=drm_dev.cur_bufs[0]?
+		drm_dev.cur_bufs[0]:
+		&drm_dev.drm_bufs[1];
 	drm_dev.cur_bufs[0]=fbuf;
 	lv_disp_flush_ready(disp_drv);
 }
@@ -557,15 +582,16 @@ static int _drm_register(){
 		drm_exit();
 		return -1;
 	}
-	size_t s=drm_dev.width*drm_dev.height;
+	size_t s=drm_dev.width*drm_dev.height*sizeof(lv_color_t);
 	static lv_disp_buf_t disp_buf;
-	if(!(buf=malloc(s*sizeof(lv_color_t)))){
+	if(!(buf1=malloc(s))||!(buf2=malloc(s))){
 		telog_error("malloc display buffer");
 		drm_exit();
 		return -1;
 	}
-	memset(buf,0,s);
-	lv_disp_buf_init(&disp_buf,buf,NULL,s);
+	memset(buf1,0,s);
+	memset(buf2,0,s);
+	lv_disp_buf_init(&disp_buf,buf1,buf2,s);
 	lv_disp_drv_t disp_drv;
 	lv_disp_drv_init(&disp_drv);
 	disp_drv.hor_res=drm_dev.width;
@@ -577,6 +603,7 @@ static int _drm_register(){
 	);
 	disp_drv.buffer=&disp_buf;
 	disp_drv.flush_cb=drm_flush;
+	disp_drv.wait_cb=drm_wait_vsync;
 	switch(gui_rotate){
 		case 0:break;
 		case 90:disp_drv.sw_rotate=1,disp_drv.rotated=LV_DISP_ROT_90;break;
@@ -588,8 +615,8 @@ static int _drm_register(){
 	return 0;
 }
 
-static int _drm_init_fd(int fd,int sfd,unsigned int fourcc){
-	if(drm_setup(fd,sfd,fourcc)){
+static int _drm_init_fd(int fd,int sfd){
+	if(drm_setup(fd,sfd)){
 		drm_dev.fd=-1;
 		return -1;
 	}
@@ -615,7 +642,7 @@ static char*_drm_get_driver_name(int fd,char*buff,size_t len){
 	return ret;
 }
 
-static int drm_scan_init(unsigned int fourcc){
+static int drm_scan_init(){
 	int sfd,dfd;
 	char*dfmt,*sfmt,*driver;
 	char drbuff[128]={0},sdev[256]={0},ddev[256]={0};
@@ -649,7 +676,7 @@ static int drm_scan_init(unsigned int fourcc){
 				continue;
 			}
 		}
-		if(_drm_init_fd(dfd,sfd,fourcc)<0){
+		if(_drm_init_fd(dfd,sfd)<0){
 			tlog_error("card%d init failed, skip",i);
 			close(sfd);
 			close(dfd);
@@ -662,7 +689,7 @@ static int drm_scan_init(unsigned int fourcc){
 }
 
 static int drm_scan_init_register(){
-	if(drm_scan_init(DRM_FORMAT_ARGB8888)<0)return -1;
+	if(drm_scan_init()<0)return -1;
 	if(_drm_register()<0)return -1;
 	input_scan_register();
 	return 0;

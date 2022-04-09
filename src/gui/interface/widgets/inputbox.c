@@ -23,10 +23,10 @@ struct inputbox{
 	lv_obj_t*box;
 	lv_obj_t*label,*input;
 	lv_obj_t*ok,*cancel;
-	lv_label_align_t align;
 	lv_event_cb_t input_cb;
 	uint32_t max;
-	bool one_line,pwd;
+	lv_label_align_t align;
+	bool one_line,pwd,sel;
 	void*user_data;
 	struct gui_activity*act;
 };
@@ -119,6 +119,7 @@ static int inputbox_draw(struct gui_activity*act){
 	lv_textarea_set_text(box->input,box->content);
 	lv_textarea_set_cursor_hidden(box->input,true);
 	lv_textarea_set_pwd_mode(box->input,box->pwd);
+	lv_textarea_set_text_sel(box->input,box->sel);
 	lv_textarea_set_one_line(box->input,box->one_line);
 	if(box->align!=LV_LABEL_ALIGN_AUTO)lv_textarea_set_text_align(box->input,box->align);
 	if(box->max>0)lv_textarea_set_max_length(box->input,box->max);
@@ -205,6 +206,11 @@ struct inputbox*inputbox_create(inputbox_callback callback,const char*title,...)
 void inputbox_set_one_line(struct inputbox*input,bool one_line){
 	if(!input)return;
 	input->one_line=one_line;
+}
+
+void inputbox_set_text_select(struct inputbox*input,bool sel){
+	if(!input)return;
+	input->sel=sel;
 }
 
 void inputbox_set_pwd_mode(struct inputbox*input,bool pwd){

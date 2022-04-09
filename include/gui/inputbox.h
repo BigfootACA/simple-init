@@ -30,6 +30,9 @@ extern void inputbox_set_accept(struct inputbox*input,const char*accept);
 // src/gui/interface/widgets/inputbox.c: set inputbox textarea is one line
 extern void inputbox_set_one_line(struct inputbox*input,bool one_line);
 
+// src/gui/interface/widgets/inputbox.c: set inputbox textarea allow text select
+extern void inputbox_set_text_select(struct inputbox*input,bool sel);
+
 // src/gui/interface/widgets/inputbox.c: set inputbox textarea password mode
 extern void inputbox_set_pwd_mode(struct inputbox*input,bool pwd);
 

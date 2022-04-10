@@ -13,6 +13,7 @@
 DECL_LIB(Io);
 DECL_LIB(Uefi);
 DECL_LIB(BootLogo);
+DECL_LIB(UefiBootManager);
 static struct lib_reg{
 	const char*name;
 	const luaL_Reg*reg;
@@ -22,6 +23,7 @@ static struct lib_reg{
 	#endif
 	USE_LIB(Uefi)
 	USE_LIB(BootLogo)
+	USE_LIB(UefiBootManager)
 	{NULL,NULL}
 };
 

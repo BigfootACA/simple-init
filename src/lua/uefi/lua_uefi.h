@@ -19,6 +19,7 @@
 #include<Library/PrintLib.h>
 #include<Library/BaseMemoryLib.h>
 #include<Library/DevicePathLib.h>
+#include<Library/UefiBootManagerLib.h>
 #include<Library/MemoryAllocationLib.h>
 #include<Library/UefiBootServicesTableLib.h>
 #include<Library/UefiRuntimeServicesTableLib.h>
@@ -62,6 +63,7 @@
 #define LUA_UEFI_DATA                     "UEFI RAW Data"
 #define LUA_UEFI_EVENT                    "UEFI Event"
 #define LUA_UEFI_INPUT_KEY                "UEFI Input Key"
+#define LUA_UEFI_BOOT_OPTION              "UEFI Boot Option"
 
 #define CHECK_NULL(L,n,var) luaL_argcheck(L,var!=NULL,n,"not null")
 #define OPT_UDATA(L,n,var,type,name)struct type*(var)=NULL;if(!lua_isnoneornil(L,n)){var=luaL_checkudata(L,n,name);}
@@ -77,6 +79,7 @@
 #define OPT_EVENT(L,n,var)       OPT_UDATA(L,n,var,lua_uefi_event_data,LUA_UEFI_EVENT)
 #define OPT_CHAR16(L,n,var)      OPT_UDATA(L,n,var,lua_uefi_char16_data,LUA_UEFI_CHAR16)
 #define OPT_INPUT_KEY(L,n,var)   OPT_UDATA(L,n,var,lua_uefi_input_key_data,LUA_UEFI_INPUT_KEY)
+#define OPT_BOOT_OPTION(L,n,var) OPT_UDATA(L,n,var,lua_uefi_bootopt_data,LUA_UEFI_BOOT_OPTION)
 
 #define GET_BS(L,n,var)          OPT_BS(L,n,var);          CHECK_NULL(L,n,var)
 #define GET_RT(L,n,var)          OPT_RT(L,n,var);          CHECK_NULL(L,n,var)
@@ -89,6 +92,7 @@
 #define GET_EVENT(L,n,var)       OPT_EVENT(L,n,var);       CHECK_NULL(L,n,var)
 #define GET_CHAR16(L,n,var)      OPT_CHAR16(L,n,var);      CHECK_NULL(L,n,var)
 #define GET_INPUT_KEY(L,n,var)   OPT_INPUT_KEY(L,n,var);   CHECK_NULL(L,n,var)
+#define GET_BOOT_OPTION(L,n,var) OPT_BOOT_OPTION(L,n,var); CHECK_NULL(L,n,var)
 
 #define add_str_arr(L,i,str) lua_pushstring((L),(str));lua_rawseti((L),-2,(i))
 #define nadd_str_arr(L,i,str) (i)++;add_str_arr(L,i,str)
@@ -107,6 +111,10 @@ struct lua_uefi_hand_data{EFI_HANDLE hand;};
 struct lua_uefi_status_data{EFI_STATUS st;};
 struct lua_uefi_device_path_data{EFI_DEVICE_PATH_PROTOCOL*dp;};
 struct lua_uefi_guid_data{EFI_GUID guid;};
+struct lua_uefi_bootopt_data{
+	BOOLEAN allocated;
+	EFI_BOOT_MANAGER_LOAD_OPTION*bo;
+};
 struct lua_uefi_char16_data{
 	BOOLEAN allocated;
 	CHAR16*string;
@@ -134,7 +142,9 @@ extern BOOLEAN uefi_str_to_tpl(IN CONST CHAR8*str,OUT EFI_TPL*tpl);
 extern BOOLEAN uefi_str_to_event_type(IN CONST CHAR8*str,OUT UINT32*type);
 extern BOOLEAN uefi_str_to_reset_type(IN CONST CHAR8*str,OUT EFI_RESET_TYPE*type);
 extern BOOLEAN uefi_str_to_memory_type(IN CONST CHAR8*str,OUT EFI_MEMORY_TYPE*type);
+extern BOOLEAN uefi_str_to_load_option_type(IN CONST CHAR8*str,EFI_BOOT_MANAGER_LOAD_OPTION_TYPE*type);
 extern const char*uefi_memory_type_to_str(EFI_MEMORY_TYPE type);
+extern const char*uefi_load_option_type_to_str(EFI_BOOT_MANAGER_LOAD_OPTION_TYPE type);
 
 extern void uefi_absolute_pointer_protocol_to_lua(lua_State*L,EFI_ABSOLUTE_POINTER_PROTOCOL*proto);
 extern void uefi_acpi_table_protocol_to_lua(lua_State*L,EFI_ACPI_TABLE_PROTOCOL*proto);
@@ -191,6 +201,7 @@ extern void uefi_char16_an8_to_lua(lua_State*L,CHAR8*string,UINTN buff_len);
 extern void uefi_char16_a16_to_lua(lua_State*L,CHAR16*string);
 extern void uefi_char16_a8_to_lua(lua_State*L,CHAR8*string);
 extern void uefi_input_key_to_lua(lua_State*L,EFI_INPUT_KEY*key);
+extern void uefi_bootopt_to_lua(lua_State*L,EFI_BOOT_MANAGER_LOAD_OPTION*opt,BOOLEAN allocated);
 
 extern EFI_STATUS uefi_event_clean(lua_State*L,struct lua_uefi_event_data*ev);
 extern struct lua_uefi_event_data*uefi_create_event(

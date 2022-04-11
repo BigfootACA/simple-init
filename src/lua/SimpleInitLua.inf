@@ -90,6 +90,7 @@
   uefi/libs/boot_logo_lib.c
   uefi/libs/io_lib.c
   uefi/libs/uefi_lib.c
+  uefi/libs/uefi_boot_manager_lib.c
   uefi/data/bootopt.c
   uefi/data/boot_service.c
   uefi/data/char16.c

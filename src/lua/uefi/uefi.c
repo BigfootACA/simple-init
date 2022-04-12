@@ -22,6 +22,8 @@ DECL_META_TABLE(Hand);
 DECL_META_TABLE(RT);
 DECL_META_TABLE(Status);
 DECL_META_TABLE(Time);
+DECL_META_TABLE(InputKey);
+DECL_META_TABLE(BootOption);
 DECL_META_TABLE_PROTO(AbsolutePointer);
 DECL_META_TABLE_PROTO(AcpiTable);
 DECL_META_TABLE_PROTO(BlockIO);
@@ -57,6 +59,8 @@ static struct lua_uefi_meta_table*meta[]={
 	&LuaUefiRTMetaTable,
 	&LuaUefiStatusMetaTable,
 	&LuaUefiTimeMetaTable,
+	&LuaUefiInputKeyMetaTable,
+	&LuaUefiBootOptionMetaTable,
 	&LuaUefiAbsolutePointerProtocolMetaTable,
 	&LuaUefiAcpiTableProtocolMetaTable,
 	&LuaUefiBlockIOProtocolMetaTable,
@@ -166,6 +170,16 @@ BOOLEAN uefi_str_to_memory_type(IN CONST CHAR8*str,OUT EFI_MEMORY_TYPE*type){
 	return TRUE;
 }
 
+BOOLEAN uefi_str_to_load_option_type(const char*str,EFI_BOOT_MANAGER_LOAD_OPTION_TYPE*type){
+	if(!str||!type)return FALSE;
+	if(AsciiStriCmp(str,"boot")==0)return LoadOptionTypeBoot;
+	else if(AsciiStriCmp(str,"driver")==0)return LoadOptionTypeDriver;
+	else if(AsciiStriCmp(str,"sysprep")==0)return LoadOptionTypeSysPrep;
+	else if(AsciiStriCmp(str,"platform-recovery")==0)return LoadOptionTypePlatformRecovery;
+	else return FALSE;
+	return TRUE;
+}
+
 const char*uefi_memory_type_to_str(EFI_MEMORY_TYPE type){
 	switch(type){
 		case EfiReservedMemoryType:return "reserved-memory-type";
@@ -183,6 +197,16 @@ const char*uefi_memory_type_to_str(EFI_MEMORY_TYPE type){
 		case EfiMemoryMappedIOPortSpace:return "memory-mapped-io-port-space";
 		case EfiPalCode:return "pal-code";
 		case EfiPersistentMemory:return "persistent-memory";
+		default:return NULL;
+	}
+}
+
+const char*uefi_load_option_type_to_str(EFI_BOOT_MANAGER_LOAD_OPTION_TYPE type){
+	switch(type){
+		case LoadOptionTypeBoot:return "boot";
+		case LoadOptionTypeDriver:return "driver";
+		case LoadOptionTypeSysPrep:return "sysprep";
+		case LoadOptionTypePlatformRecovery:return "platform-recovery";
 		default:return NULL;
 	}
 }

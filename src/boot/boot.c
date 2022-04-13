@@ -9,6 +9,7 @@
 #include<errno.h>
 #include<stdlib.h>
 #include<string.h>
+#include<strings.h>
 #include"str.h"
 #include"boot.h"
 #include"confd.h"
@@ -126,7 +127,31 @@ boot_config*boot_get_config(const char*name){
 		strncpy(cfg->parent,buff,sizeof(cfg->parent)-1);
 		free(buff);
 	}
-	cfg->mode=confd_get_integer_base(cfg->base,"mode",BOOT_NONE);
+	cfg->mode=BOOT_NONE;
+	switch(confd_get_type_base(cfg->base,"mode")){
+		case TYPE_INTEGER:cfg->mode=confd_get_integer_base(cfg->base,"mode",BOOT_NONE);break;
+		case TYPE_STRING:{
+			char*x=confd_get_string_base(cfg->base,"mode",NULL);
+			if(!x)break;
+			if(strcasecmp(x,"switchroot")==0)cfg->mode=BOOT_SWITCHROOT;
+			else if(strcasecmp(x,"charger")==0)cfg->mode=BOOT_CHARGER;
+			else if(strcasecmp(x,"kexec")==0)cfg->mode=BOOT_KEXEC;
+			else if(strcasecmp(x,"reboot")==0)cfg->mode=BOOT_REBOOT;
+			else if(strcasecmp(x,"poweroff")==0)cfg->mode=BOOT_POWEROFF;
+			else if(strcasecmp(x,"halt")==0)cfg->mode=BOOT_HALT;
+			else if(strcasecmp(x,"system")==0)cfg->mode=BOOT_SYSTEM;
+			else if(strcasecmp(x,"exit")==0)cfg->mode=BOOT_EXIT;
+			else if(strcasecmp(x,"linux")==0)cfg->mode=BOOT_LINUX;
+			else if(strcasecmp(x,"efi")==0)cfg->mode=BOOT_EFI;
+			else if(strcasecmp(x,"simple-init")==0)cfg->mode=BOOT_SIMPLE_INIT;
+			else if(strcasecmp(x,"uefi-option")==0)cfg->mode=BOOT_UEFI_OPTION;
+			else if(strcasecmp(x,"lua")==0)cfg->mode=BOOT_LUA;
+			else if(strcasecmp(x,"folder")==0)cfg->mode=BOOT_FOLDER;
+			else tlog_warn("unknown boot mode: %s",x);
+			free(x);
+		}break;
+		default:tlog_warn("unknown boot mode");break;
+	}
 	cfg->show=confd_get_boolean_base(cfg->base,"show",false);
 	cfg->enabled=confd_get_boolean_base(cfg->base,"enabled",false);
 	cfg->save=confd_get_save(cfg->base);

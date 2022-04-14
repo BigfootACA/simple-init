@@ -31,9 +31,49 @@ static int LuaUefiBSRestoreTPL(lua_State*L){
 }
 
 static int LuaUefiBSGetMemoryMap(lua_State*L){
-	//GET_BS(L,1,bs);
-	// TODO: implement it
-	return luaL_error(L,"not implemented");
+	UINT32 dv=0;
+	EFI_STATUS st;
+	UINTN ms=0,mk=0,ds=0,i;
+	EFI_MEMORY_DESCRIPTOR*mm=NULL,*md;
+	st=gBS->GetMemoryMap(&ms,mm,&mk,&ds,&dv);
+	if(st==EFI_BUFFER_TOO_SMALL){
+		mm=AllocatePool(ms+(2*ds));
+		if(mm)st=gBS->GetMemoryMap(&ms,mm,&mk,&ds,&dv);
+	}
+	uefi_status_to_lua(L,st);
+	if(mm){
+		if(!EFI_ERROR(st)){
+			lua_createtable(L,0,0);
+			for(
+				md=mm,i=0;
+				(void*)md<(void*)mm+ms;
+				md=(void*)md+ds,i++
+			){
+				lua_createtable(L,0,0);
+				lua_pushliteral(L,"Type");
+				lua_pushstring(L,uefi_memory_type_to_str(md->Type));
+				lua_settable(L,-3);
+				lua_pushliteral(L,"PhysicalStart");
+				lua_pushinteger(L,md->PhysicalStart);
+				lua_settable(L,-3);
+				lua_pushliteral(L,"VirtualStart");
+				lua_pushinteger(L,md->VirtualStart);
+				lua_settable(L,-3);
+				lua_pushliteral(L,"NumberOfPages");
+				lua_pushinteger(L,md->NumberOfPages);
+				lua_settable(L,-3);
+				lua_pushliteral(L,"Attribute");
+				lua_pushinteger(L,md->Attribute);
+				lua_settable(L,-3);
+				lua_rawseti(L,-2,i+1);
+			}
+		}else lua_pushnil(L);
+		FreePool(mm);
+	}else lua_pushnil(L);
+	lua_pushinteger(L,mk);
+	lua_pushinteger(L,ds);
+	lua_pushinteger(L,dv);
+	return 5;
 }
 
 static int LuaUefiBSCreateEvent(lua_State*L){

@@ -39,6 +39,7 @@ option(ENABLE_JSONC       "Enable json-c for config files"                    ON
 option(ENABLE_MXML        "Enable mxml for config files"                      ON)
 option(ENABLE_LUA         "Enable lua for scripts"                            ON)
 option(ENABLE_STB         "Enable stb"                                        ON)
+option(ENABLE_LIBTSM      "Enable Terminal-emulator State Machine"            ON)
 option(ENABLE_HIVEX       "Enable hivex for windows registry/bcd edit"        OFF)
 option(ENABLE_VNCSERVER   "Enable VNC Server for remote GUI"                  OFF)
 option(SYSTEM_FREETYPE2   "Use system FreeType 2 library"                     OFF)
@@ -75,6 +76,10 @@ endif()
 
 if("${ENABLE_LUA}" STREQUAL "ON")
 	include(libs/lua.cmake)
+endif()
+
+if("${ENABLE_LIBTSM}" STREQUAL "ON")
+	include(libs/libtsm.cmake)
 endif()
 
 if("${ENABLE_STB}" STREQUAL "ON")

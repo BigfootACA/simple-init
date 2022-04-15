@@ -131,6 +131,10 @@ if("${ENABLE_LUA}" STREQUAL "ON")
 	target_link_libraries(simple-init lua dl m)
 endif()
 
+if("${ENABLE_LIBTSM}" STREQUAL "ON")
+	target_link_libraries(simple-init libtsm)
+endif()
+
 if("${ENABLE_NANOSVG}" STREQUAL "ON")
 	target_link_libraries(simple-init m)
 endif()

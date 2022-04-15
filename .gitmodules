@@ -22,3 +22,6 @@
 [submodule "libs/lua"]
 	path = libs/lua
 	url = https://github.com/lua/lua.git
+[submodule "libs/libtsm"]
+	path = libs/libtsm
+	url = https://github.com/Aetf/libtsm.git

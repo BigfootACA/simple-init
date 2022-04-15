@@ -1,0 +1,24 @@
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = TSMLib
+  FILE_GUID                      = 92680644-F62E-46F2-B2EC-D362D9746CCA
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = TSMLib
+
+[Packages]
+  MdePkg/MdePkg.dec
+  SimpleInit.dec
+
+[LibraryClasses]
+  SimpleInitCompatible
+
+[Sources]
+libs/libtsm/src/shared/shl-htable.c
+libs/libtsm/src/tsm/tsm-vte.c
+libs/libtsm/src/tsm/tsm-render.c
+libs/libtsm/src/tsm/tsm-vte-charsets.c
+libs/libtsm/src/tsm/tsm-selection.c
+libs/libtsm/src/tsm/tsm-unicode.c
+libs/libtsm/src/tsm/tsm-screen.c
+libs/libtsm/external/wcwidth/wcwidth.c

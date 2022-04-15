@@ -2,6 +2,7 @@
   Zlib|libs/Zlib.inf
   JSONC|libs/JSONC.inf
   LuaLib|libs/LuaLib.inf
+  TSMLib|libs/TSMLib.inf
   MiniXML|libs/MiniXML.inf
   LodePNG|libs/LodePNG.inf
   FreeType|libs/FreeType.inf
@@ -26,6 +27,7 @@
   libs/Zlib.inf
   libs/JSONC.inf
   libs/LuaLib.inf
+  libs/TSMLib.inf
   libs/MiniXML.inf
   libs/LodePNG.inf
   libs/FreeType.inf

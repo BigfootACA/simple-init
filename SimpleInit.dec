@@ -16,6 +16,9 @@
   libs/regex
   libs/lodepng
   libs/nanosvg/src
+  libs/libtsm/src/tsm
+  libs/libtsm/src/shared
+  libs/libtsm/external
   libs/compatible/include
   libs/compatible/include/arch/generic
 

@@ -25,12 +25,19 @@ This project has not been completed and may not work properly.
 | lvgl        | lvgl        | GUI support                |
 | wqy         | wenquanyi   | WQY-MicroHei Font for GUI  |
 | fontawesone | fontawesone | Font Awesome Font for GUI  |
-| freetype2   | freetype    | GUI load turetype fonts    |
+| freetype2   | freetype    | GUI load TrueType fonts    |
 | lodepng     | lodepng     | GUI load png pictures      |
 | nanosvg     | nanosvg     | GUI load svg pictures      |
 | libjpeg     | libjpeg     | GUI load jpeg pictures     |
 | vncserver   | libvnc      | GUI over VNC Server        |
 | hivex       | libguestfs  | Windows Registry/BCD Edit  |
+| json-c      | json-c      | JSON Format Support        |
+| mxml        | mxml        | XML Format Support         |
+| lua         | lua         | Lua Scripting Engine       |
+| stb         | stb         | Single File Libraries      |
+| libtsm      | libtsm      | Terminal Emulator Support  |
+| regexp      | regexp      | Regular Expression Support |
+| zlib        | zlib        | Deflate compression        |
 
 ### Code used
 

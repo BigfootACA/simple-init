@@ -13,7 +13,7 @@ This project has not been completed and may not work properly.
 ### Depends
 
 | Library     | Project     | Description                |
-| ----------- | ----------- | -------------------------- |
+|-------------|-------------|----------------------------|
 | blkid       | util-linux  | used to find block devices |
 | mount       | util-linux  | mount anything             |
 | fdisk       | util-linux  | for partition manager      |
@@ -35,7 +35,7 @@ This project has not been completed and may not work properly.
 ### Code used
 
 | Project            | Description                                     | URL                                                          |
-| ------------------ | ----------------------------------------------- | ------------------------------------------------------------ |
+|--------------------|-------------------------------------------------|--------------------------------------------------------------|
 | busybox            | some builtin commands                           | https://www.busybox.net                                      |
 | coreutils          | some builtin commands                           | https://www.gnu.org/software/coreutils/                      |
 | util-linux         | some builtin commands and block lookup / mount  | https://github.com/karelzak/util-linux                       |

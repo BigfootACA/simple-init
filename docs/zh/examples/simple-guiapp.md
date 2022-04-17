@@ -5,6 +5,9 @@
 ```C
 #ifdef ENABLE_GUI
 
+#include<errno.h>
+#include<stdbool.h>
+
 // GUI库
 #include"gui.h"
 
@@ -17,13 +20,22 @@
 // 日志tag
 #define TAG "example"
 
-// "Logger"按钮
-static lv_obj_t*btn;
+struct example{
+	bool exit;
+
+	// "Logger"按钮
+	lv_obj_t*btn;
+
+	// 标题
+	lv_obj_t*txt;
+};
 
 // 获取到焦点
 static int example_get_focus(struct gui_activity*act){
-	//将所有可控制的按钮加入组，以获取按键控制
-	lv_group_add_obj(gui_grp,btn);
+	// 将所有可控制的按钮加入组，以获取按键控制
+	struct example*data=act->data;
+	if(!data)return 0;
+	lv_group_add_obj(gui_grp,data->btn);
 	tlog_debug("hey %s, get focus",act->name);
 	return 0;
 }
@@ -31,7 +43,9 @@ static int example_get_focus(struct gui_activity*act){
 // 失去焦点
 static int example_lost_focus(struct gui_activity*act){
 	// 让出按钮控制权
-	lv_group_remove_obj(btn);
+	struct example*data=act->data;
+	if(!data)return 0;
+	lv_group_remove_obj(data->btn);
 	tlog_debug("hey %s, lost focus",act->name);
 	return 0;
 }
@@ -42,23 +56,41 @@ static void logger_click(lv_obj_t*obj,lv_event_t e){
 	tlog_debug("hello");
 }
 
+// 初始
+static int example_init(struct gui_activity*act){
+	struct example*data=malloc(sizeof(struct example));
+	if(!data)return -ENOMEM;
+	memset(data,0,sizeof(struct example));
+	act->data=data;
+	return 0;
+}
+
+// 图形界面大小改变事件
+static int example_resize(struct gui_activity*act){
+	struct example*data=act->data;
+	if(!data)return 0;
+	lv_obj_set_width(data->txt,act->w);
+	lv_obj_set_width(data->txt,act->w/2);
+	lv_obj_align(data->txt,NULL,LV_ALIGN_IN_TOP_MID,0,gui_dpi/2);
+	lv_obj_align(data->btn,data->txt,LV_ALIGN_OUT_BOTTOM_MID,0,gui_dpi/5);
+	return 0;
+}
+
 // 初始化图形界面
 static int example_draw(struct gui_activity*act){
+	struct example*data=act->data;
+	if(!data)return -1;
 
 	// 添加标题
-	lv_obj_t*txt=lv_label_create(act->page,NULL);
-	lv_label_set_text(txt,_("This is example app"));
-	lv_obj_set_width(txt,gui_sw);
-	lv_label_set_long_mode(txt,LV_LABEL_LONG_SROLL_CIRC);
-	lv_obj_align(txt,NULL,LV_ALIGN_IN_TOP_MID,0,gui_dpi/2);
-	lv_label_set_align(txt,LV_LABEL_ALIGN_CENTER);
+	data->txt=lv_label_create(act->page,NULL);
+	lv_label_set_text(data->txt,_("This is example app"));
+	lv_label_set_long_mode(data->txt,LV_LABEL_LONG_SROLL_CIRC);
+	lv_label_set_align(data->txt,LV_LABEL_ALIGN_CENTER);
 
 	// 添加按钮
-	btn=lv_btn_create(act->page,NULL);
-	lv_obj_set_width(txt,gui_sw/2);
-	lv_obj_align(btn,txt,LV_ALIGN_OUT_BOTTOM_MID,0,gui_dpi/5);
-	lv_obj_set_event_cb(btn,logger_click);
-	lv_label_set_text(lv_label_create(btn,NULL),_("Logger"));
+	data->btn=lv_btn_create(act->page,NULL);
+	lv_obj_set_event_cb(data->btn,logger_click);
+	lv_label_set_text(lv_label_create(data->btn,NULL),_("Logger"));
 
 	return 0;
 }
@@ -66,13 +98,15 @@ static int example_draw(struct gui_activity*act){
 // 正在销毁活动
 static int example_quiet_exit(struct gui_activity*act){
 	tlog_info("bye, %s",act->name);
+	if(act->data)free(act->data);
+	act->data=NULL;
 	return 0;
 }
 
 // 是否同意退出（或返回）
 static int example_ask_exit(struct gui_activity*act){
-	static bool exit=false;
-	int r=exit?0:-1;
+	struct example*data=act->data;
+	int r=data->exit?0:-1;
 	if(!exit)tlog_info("press again %s to exit",act->name);
 	exit=true;
 	return r;
@@ -93,8 +127,10 @@ struct gui_register guireg_example={
 	.show_app=true,
 
 	// 事件注册
+	.init=example_init,
 	.draw=example_draw,
 	.quiet_exit=example_quiet_exit,
+	.resize=example_resize,
 	.ask_exit=example_ask_exit,
 	.lost_focus=example_lost_focus,
 	.get_focus=example_get_focus,

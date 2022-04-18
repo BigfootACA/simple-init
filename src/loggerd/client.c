@@ -198,18 +198,18 @@ static int logger_init_out(){
 		}
 	}else if(old==2){
 		int i=0;
-		CHAR16 path[PATH_MAX],fn[256];
+		CHAR16*buff16=(CHAR16*)buff;
 		EFI_FILE_PROTOCOL*fp=NULL;
 		do{
-			ZeroMem(path,sizeof(path));
-			UnicodeSPrint(path,sizeof(path),L"%s.%d",l.path16,i);
-			st=l.root->Open(l.root,&fp,path,EFI_FILE_MODE_READ,0);
+			ZeroMem(buff16,sizeof(buff));
+			UnicodeSPrint(buff16,sizeof(buff),L"%s.%d",l.path16,i);
+			st=l.root->Open(l.root,&fp,buff16,EFI_FILE_MODE_READ,0);
 			i++;
 		}while(!EFI_ERROR(st));
 		if(fp)fp->Close(fp);
-		ZeroMem(fn,sizeof(fn));
-		UnicodeSPrint(fn,sizeof(fn),L"%s.%d",info->FileName,i);
-		StrCpyS(info->FileName,(s-80)/sizeof(CHAR16),fn);
+		ZeroMem(buff16,sizeof(buff));
+		UnicodeSPrint(buff16,sizeof(buff),L"%s.%d",info->FileName,i);
+		StrCpyS(info->FileName,(s-80)/sizeof(CHAR16),buff16);
 		tlog_verbose("rename old log file %s to %s.%d",l.path,l.path,i);
 		st=l.file->SetInfo(l.file,&gEfiFileInfoGuid,s,info);
 		if(EFI_ERROR(st))EDONE(tlog_warn(

@@ -33,7 +33,8 @@ static void load_kernel_fdt_cmdline(linux_boot*lb){
 }
 
 int linux_boot_update_cmdline(linux_boot*lb){
-	int r,off;
+	int r,off,len=0;
+	char cmdline[4096];
 	if(!lb->cmdline[0])return 0;
 	r=fdt_path_offset(lb->dtb.address,"/chosen");
 	if(r<0)return trlog_warn(
@@ -43,21 +44,21 @@ int linux_boot_update_cmdline(linux_boot*lb){
 	);
 	off=r;
 	load_kernel_fdt_cmdline(lb);
-	r=fdt_appendprop_string(
+	ZeroMem(cmdline,sizeof(cmdline));
+	const char*fdt_str=fdt_getprop(lb->dtb.address,r,"bootargs",&len);
+	if(fdt_str)AsciiStrnCatS(cmdline,sizeof(cmdline),fdt_str,len);
+	if(cmdline[0])AsciiStrCatS(cmdline,sizeof(cmdline)," ");
+	AsciiStrCatS(cmdline,sizeof(cmdline),lb->cmdline);
+	r=fdt_setprop_string(
 		lb->dtb.address,
-		off,
-		"bootargs",
-		lb->cmdline
+		off,"bootargs",cmdline
 	);
 	if(r<0)return trlog_warn(
 		-1,
 		"update bootargs failed: %s",
 		fdt_strerror(r)
 	);
-	tlog_verbose(
-		"update fdt cmdline done: '%s'",
-		lb->cmdline
-	);
+	tlog_verbose("update fdt cmdline done: '%s'",cmdline);
 	return 0;
 }
 

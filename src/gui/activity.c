@@ -337,6 +337,7 @@ static void guiact_start_task(lv_task_t*t){
 	memset(act,0,sizeof(struct gui_activity));
 	act->reg=reg,act->args=args,act->mask=reg->mask;
 	if(reg->full_screen)sysbar_set_full_screen(true);
+	sysbar_keyboard_close();
 	act->w=gui_sw,act->h=gui_sh;
 	strcpy(act->name,reg->name);
 	#ifdef ENABLE_MXML

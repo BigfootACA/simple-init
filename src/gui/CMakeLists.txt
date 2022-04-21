@@ -71,6 +71,7 @@ add_library(init_gui STATIC
 	interface/conftool/confload.c
 	interface/conftool/create.c
 	interface/term/termview.c
+	interface/term/console.c
 	interface/regedit/string.c
 	interface/regedit/regedit.c
 	interface/core/bootmenu.c

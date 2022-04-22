@@ -37,6 +37,7 @@ extern struct gui_register guireg_language;
 extern struct gui_register guireg_conftool;
 extern struct gui_register guireg_calendar;
 extern struct gui_register guireg_abootimg;
+extern struct gui_register guireg_terminal;
 extern struct gui_register guireg_bootmgr;
 extern struct gui_register guireg_filemgr;
 extern struct gui_register guireg_regedit;
@@ -61,6 +62,9 @@ struct gui_register*guiact_register[]={
 	#ifdef ENABLE_FDISK
 	&guireg_guipm_disk_select,
 	&guireg_guipm_partitions,
+	#endif
+	#ifdef ENABLE_LIBTSM
+	&guireg_terminal,
 	#endif
 	&guireg_backlight,
 	&guireg_logviewer,

@@ -19,6 +19,7 @@
 #include"hardware.h"
 #include"gui/tools.h"
 #include"gui/sysbar.h"
+#include"gui/snackbar.h"
 #include"gui/activity.h"
 #include"gui/clipboard.h"
 struct sysbar sysbar;
@@ -219,6 +220,7 @@ static void keyboard_toggle(lv_obj_t*obj,lv_event_t e){
 		lv_obj_set_height(sysbar.content,gui_sh);
 		if(act){
 			lv_obj_set_height(act->page,gui_sh);
+			act->w=gui_sw,act->h=gui_sh;
 			if(act->reg->resize)act->reg->resize(act);
 		}
 		return;
@@ -247,6 +249,7 @@ static void keyboard_toggle(lv_obj_t*obj,lv_event_t e){
 	lv_obj_set_height(sysbar.content,gui_sh);
 	if(act){
 		lv_obj_set_height(act->page,gui_sh);
+		act->w=gui_sw,act->h=gui_sh;
 		if(act->reg->resize)act->reg->resize(act);
 	}
 }
@@ -453,6 +456,7 @@ int sysbar_draw(lv_obj_t*scr){
 	);
 
 	ctrl_pad_draw();
+	snackbar_draw(sysbar.screen,sysbar.size,sysbar.size/2*3);
 
 	lv_task_create(sysbar_thread_cb,5000,LV_TASK_PRIO_LOW,&sysbar);
 	return 0;

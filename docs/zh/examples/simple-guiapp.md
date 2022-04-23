@@ -14,6 +14,9 @@
 // GUI活动管理
 #include"gui/activity.h"
 
+// Snack Bar
+#include"gui/snackbar.h"
+
 // 日志
 #include"logger.h"
 
@@ -103,12 +106,26 @@ static int example_quiet_exit(struct gui_activity*act){
 	return 0;
 }
 
+// 返回超时
+static int on_dismiss(void*d){
+	struct example*data=d;
+	data->exit=false;
+	return 0;
+}
+
 // 是否同意退出（或返回）
 static int example_ask_exit(struct gui_activity*act){
 	struct example*data=act->data;
 	int r=data->exit?0:-1;
-	if(!exit)tlog_info("press again %s to exit",act->name);
-	exit=true;
+	snackbar_set_show_time(3000);
+	if(data->exit){
+		snackbar_set_on_dismiss(NULL,NULL);
+		snackbar_hide();
+	}else{
+		snackbar_set_on_dismiss(on_dismiss,data);
+		snackbar_show_text(_("Press back again to exit"));
+	}
+	data->exit=true;
 	return r;
 }
 

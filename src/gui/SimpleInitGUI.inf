@@ -148,6 +148,7 @@
   interface/conftool/conftool.c
   interface/term/termview.c
   interface/term/console.c
+  interface/term/baudrates.c
   interface/core/sysbar.c
   interface/core/snackbar.c
   interface/core/guiapp.c

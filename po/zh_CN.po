@@ -2562,3 +2562,63 @@ msgstr "从'%s'加载设备树?"
 
 msgid "Load device tree blob"
 msgstr "加载设备树"
+
+msgid "Do you want to exit terminal emulator?"
+msgstr "你确定要退出终端模拟器吗？"
+
+msgid "Select string to copy"
+msgstr "选择要复制的字符串"
+
+msgid "[Process %d exited by signal %s (%d)]"
+msgstr "[进程 %d 已被信号 %s (%d) 结束]"
+
+msgid "[Process %d exited with status %d]"
+msgstr "[进程 %d 以状态 %d 退出]"
+
+msgid "[Process %d exited]"
+msgstr "[进程 %d 已退出]"
+
+msgid "[syscall select failed: %s]"
+msgstr "[系统调用select失败: %s]"
+
+msgid "[port closed]"
+msgstr "[端口已关闭]"
+
+msgid "[receive data failed: %s]"
+msgstr "[接收数据失败: %s]"
+
+msgid "[send data failed: %s]"
+msgstr "[发送数据失败: %s]"
+
+msgid "[open port %s failed: %s]"
+msgstr "[打开端口%s失败: %s]"
+
+msgid "[serial port %s opened]"
+msgstr "[串行端口 %s 已打开]"
+
+msgid "[no serial port specified]"
+msgstr "[未指定串行端口]"
+
+msgid "[setup serial port speed failed: %s]"
+msgstr "[配置串行端口速率失败: %s]"
+
+msgid "Serial Port"
+msgstr "串行端口"
+
+msgid "Terminal"
+msgstr "终端"
+
+msgid "Open Serial Port"
+msgstr "打开串口"
+
+msgid "Please select a serial port"
+msgstr "请选择一个串行端口"
+
+msgid "(Keep default)"
+msgstr "(保持默认)"
+
+msgid "Port:"
+msgstr "端口:"
+
+msgid "Speed:"
+msgstr "速率:"

@@ -74,6 +74,7 @@ add_library(init_gui STATIC
 	interface/term/console.c
 	interface/term/terminal.c
 	interface/term/baudrates.c
+	interface/term/serialport.c
 	interface/regedit/string.c
 	interface/regedit/regedit.c
 	interface/core/bootmenu.c

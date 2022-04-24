@@ -9,6 +9,7 @@
 #ifndef _SERIAL_H
 #define _SERIAL_H
 
+#include"gui/activity.h"
 #ifdef ENABLE_UEFI
 #include<Protocol/SerialIo.h>
 #include<Library/UefiBootServicesTableLib.h>
@@ -30,4 +31,5 @@ struct baudrate{
 };
 
 extern struct baudrate serial_baudrates[];
+extern struct gui_register guireg_serial_port;
 #endif

@@ -16,6 +16,7 @@ extern struct gui_register guireg_uefi_bootmenu;
 extern struct gui_register guireg_uefi_dxe_load;
 extern struct gui_register guireg_acpi_manager;
 extern struct gui_register guireg_screen_test;
+extern struct gui_register guireg_serial_open;
 extern struct gui_register guireg_boot_linux;
 extern struct gui_register guireg_uefi_start;
 extern struct gui_register guireg_uefi_shell;
@@ -76,6 +77,9 @@ struct gui_register*guiact_register[]={
 	#endif
 	#ifdef ENABLE_HIVEX
 	&guireg_regedit,
+	#endif
+	#ifdef ENABLE_LIBTSM
+	&guireg_serial_open,
 	#endif
 	&guireg_picture_viewer,
 	&guireg_screen_test,

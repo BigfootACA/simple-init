@@ -150,6 +150,7 @@
   interface/term/console.c
   interface/term/baudrates.c
   interface/term/serialport.c
+  interface/term/serialopen.c
   interface/core/sysbar.c
   interface/core/snackbar.c
   interface/core/guiapp.c

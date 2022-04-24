@@ -11,8 +11,8 @@
 		pressed:border-color="gray"
 		pressed:bg-color="lightgrey"/>
 	<Code id="code-reboot">if not feature("uefi")then init.reboot()end</Code>
-	<Code id="code-reboot-cold">if feature("uefi")then uefi.Reboot("reboot-cold")end</Code>
-	<Code id="code-reboot-warm">if feature("uefi")then uefi.Reboot("reboot-warm")end</Code>
+	<Code id="code-reboot-cold">if feature("uefi")then uefi.Reboot("cold")end</Code>
+	<Code id="code-reboot-warm">if feature("uefi")then uefi.Reboot("warm")end</Code>
 	<Code id="code-poweroff">if feature("uefi")then uefi.Reboot("poweroff") else init.poweroff()end</Code>
 	<Code id="code-fastboot">if feature("uefi")then uefi.Reboot("fastboot") else init.reboot("bootloader")end</Code>
 	<Code id="code-recovery">if feature("uefi")then uefi.Reboot("recovery") else init.reboot("recovery")end</Code>

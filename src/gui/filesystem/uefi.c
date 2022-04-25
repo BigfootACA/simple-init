@@ -236,11 +236,10 @@ static lv_res_t fs_get_type_cb(
 	struct fs_root*fs=fse->user_data;
 	if(!fs||!fs->proto)return false;
 	bool isdir=false;
-	UINTN infos=sizeof(EFI_FILE_INFO)+256;
+	UINTN infos=0;
 	EFI_STATUS st;
 	EFI_FILE_PROTOCOL*fh;
-	EFI_FILE_INFO*info=AllocateZeroPool(infos);
-	if(!info)return false;
+	EFI_FILE_INFO*info=NULL;
 	char ep[4096]={0},*cp=ep;
 	CHAR16 xpath[4096]={0};
 	strcpy(ep,fn);
@@ -254,6 +253,8 @@ static lv_res_t fs_get_type_cb(
 		);
 	}else{
 		st=fh->GetInfo(fh,&gEfiFileInfoGuid,&infos,info);
+		if(st==EFI_BUFFER_TOO_SMALL&&(info=AllocateZeroPool(infos)))
+			st=fh->GetInfo(fh,&gEfiFileInfoGuid,&infos,info);
 		if(EFI_ERROR(st)){
 			XWARN(
 				"get type %c:#%p failed: %s",
@@ -262,7 +263,7 @@ static lv_res_t fs_get_type_cb(
 		}else if(infos!=0)*type=fileinfo_is_dir(info)?TYPE_DIR:TYPE_FILE;
 		fh->Close(fh);
 	}
-	FreePool(info);
+	if(info)FreePool(info);
 	return isdir;
 }
 
@@ -275,10 +276,10 @@ static bool fs_is_dir_cb(
 	struct fs_root*fs=fse->user_data;
 	if(!fs||!fs->proto)return false;
 	bool isdir=false;
-	UINTN infos=sizeof(EFI_FILE_INFO)+256;
+	UINTN infos=0;
 	EFI_STATUS st;
 	EFI_FILE_PROTOCOL*fh;
-	EFI_FILE_INFO*info=AllocateZeroPool(infos);
+	EFI_FILE_INFO*info=NULL;
 	if(!info)return false;
 	char ep[4096]={0},*cp=ep;
 	CHAR16 xpath[4096]={0};
@@ -293,6 +294,8 @@ static bool fs_is_dir_cb(
 		);
 	}else{
 		st=fh->GetInfo(fh,&gEfiFileInfoGuid,&infos,info);
+		if(st==EFI_BUFFER_TOO_SMALL&&(info=AllocateZeroPool(infos)))
+			st=fh->GetInfo(fh,&gEfiFileInfoGuid,&infos,info);
 		if(EFI_ERROR(st)){
 			XWARN(
 				"is dir %c:#%p failed: %s",
@@ -301,7 +304,7 @@ static bool fs_is_dir_cb(
 		}else if(infos!=0)isdir=fileinfo_is_dir(info);
 		fh->Close(fh);
 	}
-	FreePool(info);
+	if(info)FreePool(info);
 	return isdir;
 }
 
@@ -407,10 +410,11 @@ static lv_res_t fs_size_cb(
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
 	if(!fs||!fs->proto)return LV_FS_RES_INV_PARAM;
-	UINTN infos=sizeof(EFI_FILE_INFO)+256;
-	EFI_FILE_INFO*info=AllocateZeroPool(infos);
-	if(!info)return LV_FS_RES_OUT_OF_MEM;
+	UINTN infos=0;
+	EFI_FILE_INFO*info=NULL;
 	EFI_STATUS st=fh->GetInfo(fh,&gEfiFileInfoGuid,&infos,info);
+	if(st==EFI_BUFFER_TOO_SMALL&&(info=AllocateZeroPool(infos)))
+		st=fh->GetInfo(fh,&gEfiFileInfoGuid,&infos,info);
 	if(EFI_ERROR(st)){
 		XWARN(
 			"size %c:#%p failed: %s",
@@ -418,7 +422,7 @@ static lv_res_t fs_size_cb(
 		);
 	}else if(infos!=0)*size_p=(uint32_t)info->FileSize;
 	else st=EFI_LOAD_ERROR;
-	FreePool(info);
+	if(info)FreePool(info);
 	return efi_status_to_lv_res(st);
 }
 
@@ -478,12 +482,18 @@ static lv_res_t fs_dir_read_cb(
 	struct fs_root*fs=fse->user_data;
 	if(!fs||!fs->proto)return LV_FS_RES_INV_PARAM;
 	EFI_FILE_PROTOCOL*dh=(EFI_FILE_PROTOCOL*)((lv_fs_dir_t*)rddir_p)->dir_d;
-	UINTN infos=sizeof(EFI_FILE_INFO)+256,si;
-	EFI_FILE_INFO*info=AllocateZeroPool(infos);
-	if(!info)return LV_FS_RES_OUT_OF_MEM;
+	UINTN infos=0,si;
+	EFI_FILE_INFO*info=NULL;
 	EFI_STATUS st;
 	for(;;){
 		si=infos,st=dh->Read(dh,&si,info);
+		if(st==EFI_BUFFER_TOO_SMALL){
+			if(info||si<=0)break;
+			if(!(info=AllocateZeroPool(si)))
+				return LV_FS_RES_OUT_OF_MEM;
+			infos=si;
+			continue;
+		}
 		if(EFI_ERROR(st)||si==0)break;
 		if(StrCmp(info->FileName,L".")==0)continue;
 		if(StrCmp(info->FileName,L"..")==0)continue;
@@ -501,7 +511,7 @@ static lv_res_t fs_dir_read_cb(
 		if(fileinfo_is_dir(info))*(name++)='/',i--;
 		UnicodeStrToAsciiStrS(info->FileName,name,i);
 	}
-	FreePool(info);
+	if(info)FreePool(info);
 	return efi_status_to_lv_res(st);
 }
 

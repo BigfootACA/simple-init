@@ -103,6 +103,7 @@ EFI_STATUS efi_file_read(EFI_FILE_PROTOCOL*file,UINTN size,VOID**data,UINTN*read
 EFI_STATUS efi_file_read_dir(EFI_FILE_PROTOCOL*file,EFI_FILE_INFO**data){
 	UINTN size=sizeof(EFI_FILE_INFO)+256;
 	EFI_STATUS status=efi_file_read(file,size,(VOID**)data,&size);
+	if(status==EFI_BUFFER_TOO_SMALL)status=efi_file_read(file,size,(VOID**)data,&size);
 	if((EFI_ERROR(status)||size<=0)&&*data){
 		FreePool(*data);
 		*data=NULL;

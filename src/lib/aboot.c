@@ -10,6 +10,7 @@
 #include<stddef.h>
 #include<stdint.h>
 #ifdef ENABLE_UEFI
+#include"uefi.h"
 #include<limits.h>
 #include<Library/BaseLib.h>
 #include<Library/BaseMemoryLib.h>
@@ -229,12 +230,11 @@ bool abootimg_save_to_blockio(aboot_image*img,EFI_BLOCK_IO_PROTOCOL*bio){
 
 aboot_image*abootimg_load_from_fp(EFI_FILE_PROTOCOL*fp){
 	if(!fp)return NULL;
+	UINTN read=0;
 	void*cont=NULL;
 	aboot_image*img=NULL;
 	EFI_FILE_INFO*info=NULL;
-	UINTN infos=sizeof(EFI_FILE_INFO)+256,read=0;
-	if(!(info=AllocateZeroPool(infos)))return NULL;
-	if(EFI_ERROR(fp->GetInfo(fp,&gEfiFileInfoGuid,&infos,info)))goto fail;
+	if(EFI_ERROR(efi_file_get_file_info(fp,NULL,&info)))goto fail;
 	read=info->FileSize;
 	if(!(cont=AllocateZeroPool(info->FileSize)))goto fail;
 	if(EFI_ERROR(fp->Read(fp,&read,cont)))goto fail;
@@ -277,14 +277,11 @@ bool abootimg_save_to_fp(aboot_image*img,EFI_FILE_PROTOCOL*fp){
 	EFI_STATUS st;
 	uint32_t len=0;
 	EFI_FILE_INFO*info=NULL;
-	UINTN infos=sizeof(EFI_FILE_INFO)+256,write=0;
+	UINTN infos=0,write=0;
 	if(!abootimg_generate(img,&out,&len))return false;
 	write=(UINTN)len;
 	fp->SetPosition(fp,0);
-	if(
-		(info=AllocateZeroPool(infos))&&
-		!EFI_ERROR(fp->GetInfo(fp,&gEfiFileInfoGuid,&infos,info))
-	){
+	if(!EFI_ERROR(efi_file_get_file_info(fp,&infos,&info))){
 		info->FileSize=write;
 		fp->SetInfo(fp,&gEfiFileInfoGuid,infos,info);
 	}
@@ -318,11 +315,10 @@ bool abootimg_save_to_file(aboot_image*img,EFI_FILE_PROTOCOL*root,char*path){
 #define ABOOTIMG_LOAD_SAVE(tag) \
 	bool abootimg_load_##tag##_from_fp(aboot_image*img,EFI_FILE_PROTOCOL*fp){\
 		if(!fp)return false;\
+		UINTN read=0;\
 		void*cont=NULL;\
 		EFI_FILE_INFO*info=NULL;\
-		UINTN infos=sizeof(EFI_FILE_INFO)+256,read=0;\
-		if(!(info=AllocateZeroPool(infos)))return false;\
-		if(EFI_ERROR(fp->GetInfo(fp,&gEfiFileInfoGuid,&infos,info)))goto fail;\
+		if(EFI_ERROR(efi_file_get_file_info(fp,NULL,&info)))goto fail;\
 		read=info->FileSize;\
 		if(!(cont=AllocateZeroPool(info->FileSize)))goto fail;\
 		if(EFI_ERROR(fp->Read(fp,&read,cont)))goto fail;\
@@ -359,14 +355,11 @@ bool abootimg_save_to_file(aboot_image*img,EFI_FILE_PROTOCOL*root,char*path){
 		EFI_STATUS st;\
 		uint32_t len;\
 		EFI_FILE_INFO*info=NULL;\
-		UINTN infos=sizeof(EFI_FILE_INFO)+256,write=0;\
+		UINTN infos=0,write=0;\
 		len=abootimg_get_##tag##_size(img);\
 		write=(UINTN)len;\
 		fp->SetPosition(fp,0);\
-		if(\
-			(info=AllocateZeroPool(infos))&&\
-			!EFI_ERROR(fp->GetInfo(fp,&gEfiFileInfoGuid,&infos,info))\
-		){\
+		if(!EFI_ERROR(efi_file_get_file_info(fp,&infos,&info))){\
 			info->FileSize=write;\
 			fp->SetInfo(fp,&gEfiFileInfoGuid,infos,info);\
 		}\

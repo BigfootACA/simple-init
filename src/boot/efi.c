@@ -15,6 +15,7 @@
 #include<Protocol/LoadedImage.h>
 #include<Guid/FileInfo.h>
 #include"boot.h"
+#include"uefi.h"
 #include"confd.h"
 #include"logger.h"
 #include"locate.h"
@@ -59,19 +60,12 @@ static EFI_DEVICE_PATH_PROTOCOL*locate_file(boot_config*boot){
 	locate_ret loc;
 	EFI_STATUS st;
 	EFI_FILE_INFO*info=NULL;
-	UINTN infos=sizeof(EFI_FILE_INFO)+256;
 	char*efi=confd_get_string_base(boot->key,"efi_file",NULL);
 	if(!efi||!*efi)goto done;
 	if(!boot_locate(&loc,efi))goto done;
 	if(loc.type!=LOCATE_FILE)goto done;
 
-	if(!(info=AllocateZeroPool(infos)))
-		EDONE(tlog_error("allocate pool failed"));
-	st=loc.file->GetInfo(
-		loc.file,
-		&gEfiFileInfoGuid,
-		&infos,info
-	);
+	st=efi_file_get_file_info(loc.file,NULL,&info);
 	if(EFI_ERROR(st))EDONE(tlog_error(
 		"get file '%s' info failed: %s",
 		loc.path,efi_status_to_string(st)

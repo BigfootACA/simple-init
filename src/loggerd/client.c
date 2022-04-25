@@ -148,28 +148,28 @@ void logger_set_console(bool enabled){
 
 static int logger_init_out(){
 	UINTN s=0;
-	locate_ret l;
 	EFI_TIME tm;
 	EFI_STATUS st;
 	EFI_FILE_INFO*info=NULL;
-	char buff[PATH_MAX];
+	locate_ret*l=AllocateZeroPool(sizeof(locate_ret));
+	if(!l)EDONE(tlog_warn("allocate pool failed"));
 	// 0: truncate
 	// 1: append
 	// 2: rename
 	int old=confd_get_integer("logger.old_file",0);
 	char*log=confd_get_string("logger.file_output",NULL);
 	if(!log)return 0;
-	if(!boot_locate_create_file(&l,log))
+	if(!boot_locate_create_file(l,log))
 		EDONE(tlog_warn("resolve logger file output locate failed"));
-	if(l.type!=LOCATE_FILE)
+	if(l->type!=LOCATE_FILE)
 		EDONE(tlog_warn("unsupported locate type for logger file output"));
-	if(old!=1)l.file->SetPosition(l.file,0);
-	st=l.file->GetInfo(l.file,&gEfiFileInfoGuid,&s,info);
+	if(old!=1)l->file->SetPosition(l->file,0);
+	st=l->file->GetInfo(l->file,&gEfiFileInfoGuid,&s,info);
 	if(st==EFI_BUFFER_TOO_SMALL){
 		s+=64;
 		if(!(info=AllocateZeroPool(s)))
 			EDONE(tlog_warn("allocate file info failed"));
-		st=l.file->GetInfo(l.file,&gEfiFileInfoGuid,&s,info);
+		st=l->file->GetInfo(l->file,&gEfiFileInfoGuid,&s,info);
 	}
 	if(EFI_ERROR(st))EDONE(tlog_warn(
 		"get file info failed: %s",
@@ -183,43 +183,46 @@ static int logger_init_out(){
 			(unsigned long long)info->FileSize
 		);
 		info->FileSize=0;
-		st=l.file->SetInfo(l.file,&gEfiFileInfoGuid,s,info);
+		st=l->file->SetInfo(l->file,&gEfiFileInfoGuid,s,info);
 		if(EFI_ERROR(st)){
 			tlog_warn(
 				"truncate file failed (%s), try to delete",
 				efi_status_to_string(st)
 			);
-			st=l.file->Delete(l.file);
+			st=l->file->Delete(l->file);
 			if(EFI_ERROR(st))EDONE(tlog_warn(
 				"delete %s failed: %s",
 				log,efi_status_to_string(st)
 			));
-			l.file=NULL;
+			l->file=NULL;
 		}
 	}else if(old==2){
 		int i=0;
-		CHAR16*buff16=(CHAR16*)buff;
 		EFI_FILE_PROTOCOL*fp=NULL;
+		UINTN bs=PATH_MAX*sizeof(CHAR16);
+		CHAR16*buff16=AllocatePool(bs);
+		if(!buff16)EDONE(tlog_warn("allocate pool failed"));
 		do{
-			ZeroMem(buff16,sizeof(buff));
-			UnicodeSPrint(buff16,sizeof(buff),L"%s.%d",l.path16,i);
-			st=l.root->Open(l.root,&fp,buff16,EFI_FILE_MODE_READ,0);
+			ZeroMem(buff16,bs);
+			UnicodeSPrint(buff16,bs,L"%s.%d",l->path16,i);
+			st=l->root->Open(l->root,&fp,buff16,EFI_FILE_MODE_READ,0);
 			i++;
 		}while(!EFI_ERROR(st));
 		if(fp)fp->Close(fp);
-		ZeroMem(buff16,sizeof(buff));
-		UnicodeSPrint(buff16,sizeof(buff),L"%s.%d",info->FileName,i);
+		ZeroMem(buff16,bs);
+		UnicodeSPrint(buff16,bs,L"%s.%d",info->FileName,i);
 		StrCpyS(info->FileName,(s-80)/sizeof(CHAR16),buff16);
-		tlog_verbose("rename old log file %s to %s.%d",l.path,l.path,i);
-		st=l.file->SetInfo(l.file,&gEfiFileInfoGuid,s,info);
+		tlog_verbose("rename old log file %s to %s.%d",l->path,l->path,i);
+		st=l->file->SetInfo(l->file,&gEfiFileInfoGuid,s,info);
+		FreePool(buff16);
 		if(EFI_ERROR(st))EDONE(tlog_warn(
 			"set info %s failed: %s",
 			log,efi_status_to_string(st)
 		));
 	}
-	if(!l.file){
-		st=l.root->Open(
-			l.root,&l.file,l.path16,
+	if(!l->file){
+		st=l->root->Open(
+			l->root,&l->file,l->path16,
 			EFI_FILE_MODE_READ|
 			EFI_FILE_MODE_WRITE|
 			EFI_FILE_MODE_CREATE,0
@@ -234,24 +237,29 @@ static int logger_init_out(){
 			"old log file size: %llu bytes",
 			(unsigned long long)info->FileSize
 		);
-		l.file->SetPosition(l.file,info->FileSize);
+		l->file->SetPosition(l->file,info->FileSize);
 	}
-	logger_output=l.file;
+	logger_output=l->file;
 	ZeroMem(&tm,sizeof(tm));
 	gRT->GetTime(&tm,NULL);
-	ZeroMem(buff,sizeof(buff));
-	AsciiSPrint(
-		buff,sizeof(buff),
-		"-------- file %a opened at %t --------",
-		l.path,&tm
-	);
-	logger_out_write(buff);
+	CHAR8*buff=AllocateZeroPool(PATH_MAX);
+	if(buff){
+		AsciiSPrint(
+			buff,PATH_MAX,
+			"-------- file %a opened at %t --------",
+			l->path,&tm
+		);
+		logger_out_write(buff);
+		FreePool(buff);
+	}
 	flush_buffer();
 	tlog_debug("opened logger file output %s",log);
 	free(log);
 	FreePool(info);
+	FreePool(l);
 	return 0;
 	done:
+	if(l)FreePool(l);
 	if(log)free(log);
 	if(info)FreePool(info);
 	return -1;

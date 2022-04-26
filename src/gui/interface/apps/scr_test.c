@@ -59,6 +59,7 @@ static void color_swap(struct screen_test*scr){
 	else if(scr->color==0x00FFFFFF)scr->color=0x007F7F7F,text="gray";   // WHITE  -> GRAY
 	else{
 		guiact_do_back();
+		reinit_task(scr,false);
 		return;
 	}
 	lv_label_set_text(scr->text,_(text));

@@ -37,6 +37,8 @@ extern const char*lv_fs_res_to_string(lv_fs_res_t res);
 extern const char*lv_fs_res_to_i18n_string(lv_fs_res_t res);
 #ifdef ENABLE_UEFI
 #include<Protocol/SimpleFileSystem.h>
+extern EFI_FILE_PROTOCOL*fs_get_root_by_letter(char letter);
+extern EFI_HANDLE fs_get_root_handle_by_letter(char letter);
 extern EFI_FILE_PROTOCOL*lv_fs_file_to_fp(lv_fs_file_t*fp);
 extern EFI_DEVICE_PATH_PROTOCOL*fs_drv_get_device_path(char letter);
 extern EFI_DEVICE_PATH_PROTOCOL*fs_get_device_path(const char*path);

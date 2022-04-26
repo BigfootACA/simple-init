@@ -701,5 +701,13 @@ EFI_FILE_PROTOCOL*fs_get_root_by_letter(char letter){
 	struct fs_root*fs=fse->user_data;
 	return fs->proto;
 }
+EFI_HANDLE fs_get_root_handle_by_letter(char letter){
+	lv_fs_drv_t*drv=lv_fs_get_drv(letter);
+	if(!drv)return NULL;
+	if(drv->ready_cb&&!drv->ready_cb(drv))return NULL;
+	struct fsext*fse=drv->user_data;
+	struct fs_root*fs=fse->user_data;
+	return fs->hand;
+}
 #endif
 #endif

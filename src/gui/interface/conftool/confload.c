@@ -13,7 +13,7 @@
 
 #ifdef ENABLE_UEFI
 #include<Protocol/SimpleFileSystem.h>
-extern EFI_FILE_PROTOCOL*fs_get_root_by_letter(char letter);
+#include"gui/fsext.h"
 #endif
 
 static bool conf_load_cb(uint16_t id,const char*btn __attribute__((unused)),void*user_data){

@@ -11,7 +11,6 @@
 #include<string.h>
 #include"str.h"
 #include"json.h"
-#include"list.h"
 #include"logger.h"
 #include"confd_internal.h"
 #define TAG "config"
@@ -90,7 +89,7 @@ static int conf_load(struct conf_file_hand*hand){
 }
 
 static int save_json_object(struct conf_file_hand*hand,struct json_object*obj,struct conf*c){
-	list*p;
+	struct conf*p;
 	struct json_object*val;
 	if(!hand||!obj||!c)return -1;
 	if(c->include||!c->save)return 0;
@@ -98,10 +97,8 @@ static int save_json_object(struct conf_file_hand*hand,struct json_object*obj,st
 		case TYPE_KEY:
 			if(!c->name[0])val=obj;
 			else if(!(val=json_object_new_object()))break;
-			if((p=list_first(c->keys)))do{
-				LIST_DATA_DECLARE(l,p,struct conf*);
-				save_json_object(hand,val,l);
-			}while((p=p->next));
+			rb_for_each_entry(p,&c->keys,node)
+				save_json_object(hand,val,p);
 		break;
 		case TYPE_STRING:val=VALUE_STRING(c)?
 			json_object_new_string(VALUE_STRING(c)):

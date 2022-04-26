@@ -11,6 +11,8 @@ add_library(init_lib STATIC
 	param.c
 	pool.c
 	proctitle.c
+	rbtree_debug.c
+	rbtree.c
 	readable.c
 	reboot.c
 	replace.c

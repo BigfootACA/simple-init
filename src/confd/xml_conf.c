@@ -168,7 +168,7 @@ static bool print_end_tag(struct conf*c,struct conf_file_hand*hand){
 }
 
 static int save_xml(struct conf_file_hand*hand,struct conf*c,int depth){
-	list*p;
+	struct conf*p;
 	char buff[64];
 	if(!hand||!c)return -1;
 	if(c->include||!c->save)return 0;
@@ -177,10 +177,8 @@ static int save_xml(struct conf_file_hand*hand,struct conf*c,int depth){
 	switch(c->type){
 		case TYPE_KEY:
 			hand->write(hand,"\n",0);
-			if((p=list_first(c->keys)))do{
-				LIST_DATA_DECLARE(l,p,struct conf*);
-				save_xml(hand,l,depth+1);
-			}while((p=p->next));
+			rb_for_each_entry(p,&c->keys,node)
+				save_xml(hand,p,depth+1);
 			for(int i=0;i<depth;i++)hand->write(hand,"\t",0);
 		break;
 		case TYPE_INTEGER:

@@ -30,18 +30,24 @@ static struct conf conf_store={
 
 struct conf*conf_get_store(){return &conf_store;}
 
-static bool conf_cmp(list*l,void*d){
-	LIST_DATA_DECLARE(x,l,struct conf*);
-	return x&&d&&strcmp(x->name,(char*)d)==0;
+static long conf_cmp(const struct rb_node*a,const struct rb_node*b){
+	struct conf*confa = rb_to_conf(a);
+	struct conf*confb = rb_to_conf(b);
+	return strcmp(confa->name, confb->name);
+}
+
+static long conf_find(const struct rb_node*n,const void*d){
+	struct conf*conf = rb_to_conf(n);
+	return strcmp((char*)d,conf->name);
 }
 
 static struct conf*conf_get(struct conf*conf,const char*name){
 	errno=0;
 	if(!conf)return NULL;
 	if(conf->type!=TYPE_KEY)EPRET(ENOTDIR);
-	list*l=list_search_one(conf->keys,conf_cmp,(char*)name);
-	if(!l)EPRET(ENOENT);
-	return LIST_DATA(l,struct conf*);
+	struct rb_node*n=rb_find(&conf->keys,(char*)name,conf_find);
+	if(!n)EPRET(ENOENT);
+	return rb_to_conf(n);
 }
 
 static bool check_perm_read(struct conf*conf,uid_t u,gid_t g){
@@ -65,14 +71,15 @@ static struct conf*conf_create(struct conf*conf,const char*name,uid_t u,gid_t g)
 	if(!conf)return NULL;
 	if(conf->type!=TYPE_KEY)EPRET(ENOTDIR);
 	if(!check_perm_read(conf,u,g))EPRET(EACCES);
-	if(list_search_one(conf->keys,conf_cmp,(char*)name))EPRET(EEXIST);
+	if(rb_find(&conf->keys,(char*)name,conf_find))EPRET(EEXIST);
 	if(!check_perm_write(conf,u,g))EPRET(EACCES);
 	struct conf*n=malloc(sizeof(struct conf));
 	if(!n)EPRET(ENOMEM);
 	memset(n,0,sizeof(struct conf));
 	strcpy(n->name,name);
 	n->parent=conf,n->save=conf->save,n->user=u,n->group=g;
-	list_obj_add_new_notnull(&conf->keys,n);
+	rb_insert(&conf->keys,&n->node,conf_cmp);
+	conf->count++;
 	return n;
 }
 
@@ -162,7 +169,7 @@ const char**conf_ls(const char*path,uid_t u,gid_t g){
 	if(!c)return NULL;
 	if(c->type!=TYPE_KEY)EPRET(ENOTDIR);
 	MUTEX_LOCK(store_lock);
-	int i=list_count(c->keys),x=0;
+	int i=c->count,x=0;
 	if(i<0)i=0;
 	size_t s=sizeof(char*)*(i+1);
 	const char**r=malloc(s);
@@ -171,11 +178,9 @@ const char**conf_ls(const char*path,uid_t u,gid_t g){
 		EPRET(ENOMEM);
 	}
 	memset(r,0,s);
-	list*p=list_first(c->keys);
-	if(p)do{
-		LIST_DATA_DECLARE(d,p,struct conf*);
+	struct conf*d;
+	rb_for_each_entry(d,&c->keys,node)
 		r[x++]=d->name;
-	}while((p=p->next));
 	MUTEX_UNLOCK(store_lock);
 	return r;
 }
@@ -185,7 +190,7 @@ int conf_count(const char*path,uid_t u,gid_t g){
 	if(!c)return -1;
 	if(c->type!=TYPE_KEY)ERET(ENOTDIR);
 	MUTEX_LOCK(store_lock);
-	int i=list_count(c->keys);
+	int i=c->count;
 	if(i<0)i=0;
 	MUTEX_UNLOCK(store_lock);
 	return i;
@@ -195,24 +200,20 @@ static int conf_del_obj(struct conf*c){
 	if(!c)return -1;
 	if(!c->parent)ERET(EINVAL);
 	MUTEX_LOCK(store_lock);
-	list*p;
+	struct conf*d,*t;
 	if(c->type==TYPE_KEY){
-		list*x;
-		if((p=list_first(c->keys)))do{
-			x=p->next;
+		rb_post_for_each_entry_safe(d,t,&c->keys,node) {
 			MUTEX_UNLOCK(store_lock);
-			conf_del_obj(LIST_DATA(p,struct conf*));
+			conf_del_obj(d);
 			MUTEX_LOCK(store_lock);
-		}while((p=x));
-		if(c->keys)free(c->keys);
-		c->keys=NULL;
+		}
 	}else if(c->type==TYPE_STRING&&c->value.string)free(c->value.string);
-	if((p=list_first(c->parent->keys)))do{
-		LIST_DATA_DECLARE(d,p,struct conf*);
+	rb_post_for_each_entry_safe(d,t,&c->parent->keys,node){
 		if(d!=c)continue;
-		list_obj_del(&c->parent->keys,p,NULL);
+		rb_delete(&c->parent->keys,&d->node);
+		c->parent->count--;
 		break;
-	}while((p=p->next));
+	}
 	free(c);
 	conf_store_changed=true;
 	MUTEX_UNLOCK(store_lock);
@@ -232,7 +233,7 @@ int conf_rename(const char*path,const char*name,uid_t u,gid_t g){
 	if(!c->parent||!c->name[0])ERET(EACCES);
 	if(strcmp(c->name,name)==0)return 0;
 	if(!check_perm_read(c->parent,u,g))ERET(EACCES);
-	if(list_search_one(c->parent->keys,conf_cmp,(char*)name))ERET(EEXIST);
+	if(rb_find(&c->keys,(char*)name,conf_find))ERET(EEXIST);
 	if(!check_perm_write(c,u,g))ERET(EACCES);
 	memset(c->name,0,sizeof(c->name));
 	strncpy(c->name,name,sizeof(c->name)-1);
@@ -244,15 +245,14 @@ int conf_add_key(const char*path,uid_t u,gid_t g){
 }
 
 static int _conf_set_save(bool lock,struct conf*c,bool save,uid_t u,gid_t g){
-	list*p;
+	struct conf*d;
 	int r=0;
 	if(!c)ERET(EINVAL);
 	if(lock)MUTEX_LOCK(store_lock);
-	if(c->type==TYPE_KEY&&(p=list_first(c->keys)))do{
-		LIST_DATA_DECLARE(d,p,struct conf*);
+	if(c->type==TYPE_KEY)rb_for_each_entry(d,&c->keys,node){
 		if(!check_perm_write(d,u,g))r=EPERM;
 		else if(_conf_set_save(false,d,save,u,g)!=0)r=-errno;
-	}while((p=p->next));
+	}
 	if(!check_perm_write(c,u,g))r=EPERM;
 	else c->save=save;
 	if(lock)MUTEX_UNLOCK(store_lock);
@@ -310,15 +310,14 @@ int conf_set_mod(const char*path,mode_t mod,uid_t u,gid_t g){
 
 size_t conf_calc_size(struct conf*c){
 	if(!c)return 0;
-	list*p;
+	struct conf*l;
 	size_t size=sizeof(struct conf);
 	switch(c->type){
 		case TYPE_KEY:
-			if((p=list_first(c->keys)))do{
-				LIST_DATA_DECLARE(l,p,struct conf*);
-				size+=sizeof(list);
+			rb_for_each_entry(l,&c->keys,node){
+				size+=sizeof(struct rb_root);
 				size+=conf_calc_size(l);
-			}while((p=p->next));
+			}
 		break;
 		case TYPE_STRING:
 			if(c->value.string)size+=strlen(c->value.string)+1;

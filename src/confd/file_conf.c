@@ -10,7 +10,6 @@
 #include<string.h>
 #include<stdlib.h>
 #include"str.h"
-#include"list.h"
 #include"logger.h"
 #include"confd_internal.h"
 #define TAG "config"
@@ -41,9 +40,9 @@ static int print_conf(struct conf_file_hand*hand,struct conf*key,const char*name
 		else snprintf(path,PATH_MAX-1,"%s.%s",name,key->name);
 	}
 	if(key->type==TYPE_KEY){
-		list*p=list_first(key->keys);
-		if(!p)return 0;
-		do{print_conf(hand,LIST_DATA(p,struct conf*),path);}while((p=p->next));
+		struct conf*p;
+		rb_for_each_entry(p,&key->keys,node)
+			print_conf(hand,p,path);
 	}else if(key->include)return 0;
 	else switch(key->type){
 		case TYPE_STRING:

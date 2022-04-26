@@ -10,7 +10,6 @@
 #include<stdio.h>
 #include<string.h>
 #include"str.h"
-#include"list.h"
 #include"logger.h"
 #include"system.h"
 #include"confd_internal.h"
@@ -42,9 +41,9 @@ static int dump(enum log_level l,struct conf*key,int depth){
 	if(key->type==TYPE_KEY){
 		strlcat(buf,"(key)",cnt-1);
 		logger_print(l,TAG,buf);
-		list*p=list_first(key->keys);
-		if(p)do{dump(l,LIST_DATA(p,struct conf*),depth+1);}
-		while((p=p->next));
+		struct conf*p;
+		rb_for_each_entry(p,&key->keys,node)
+			dump(l,p,depth+1);
 		free(buf);
 		return 0;
 	}

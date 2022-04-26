@@ -11,8 +11,8 @@
 #include<inttypes.h>
 #include"str.h"
 #include"lock.h"
-#include"list.h"
 #include"confd.h"
+#include"rbtree.h"
 
 #define CONFD_MAGIC0 0xEF
 #define CONFD_MAGIC1 0x66
@@ -69,6 +69,7 @@ struct confd_msg{
 
 // config struct
 struct conf{
+	struct rb_node node;
 	char name[256];
 	struct conf*parent;
 	enum conf_type type;
@@ -78,7 +79,10 @@ struct conf{
 	bool save;
 	bool include;
 	union{
-		list*keys;
+		struct {
+			struct rb_root keys;
+			unsigned int count;
+		};
 		union{
 			char*string;
 			int64_t integer;
@@ -86,6 +90,9 @@ struct conf{
 		}value;
 	};
 };
+
+#define rb_to_conf(ptr) \
+	rb_entry(ptr, struct conf, node)
 
 #ifdef ENABLE_UEFI
 #include<Protocol/SimpleFileSystem.h>

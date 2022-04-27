@@ -308,6 +308,24 @@ extern const char*svc_status_string(enum svc_status status);
 // src/service/string.c: convert svc_work to string
 extern const char*svc_work_string(enum svc_work work);
 
+// src/service/string.c: convert svc_exec_type to short string
+const char*svc_exec_type_short_string(enum svc_exec_type type);
+
+// src/service/string.c: convert svc_status to short string
+const char*svc_status_short_string(enum svc_status status);
+
+// src/service/string.c: convert svc_work to short string
+const char*svc_work_short_string(enum svc_work work);
+
+// src/service/string.c: convert short string to svc_exec_type
+bool short_string_svc_exec_type(const char*str,enum svc_exec_type*type);
+
+// src/service/string.c: convert short string to svc_status
+bool short_string_svc_status(const char*str,enum svc_status*status);
+
+// src/service/string.c: convert short string to svc_work
+bool short_string_svc_work(const char*str,enum svc_work*work);
+
 // src/service/dump.c: dump proc_status to loggerd
 extern int svc_proc_status_dump(struct proc_status*status);
 

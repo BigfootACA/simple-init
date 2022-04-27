@@ -53,11 +53,15 @@ static int _svc_exec_dump(int ident,struct svc_exec*exec){
 		case TYPE_UNKNOWN:tlog_debug("%s        (Unknown)",prefix);break;
 		case TYPE_FUNCTION:tlog_debug("%s        enter point:      %p",prefix,exec->exec.func);break;
 		case TYPE_COMMAND:
-			tlog_debug("%s        path:             %p",prefix,exec->exec.cmd.path);
-			tlog_debug("%s        args:",prefix);
-			for(i=0;exec->exec.cmd.args[i];i++)tlog_debug("%s            %d =          %s",prefix,i,exec->exec.cmd.args[i]);
-			tlog_debug("%s        environ:",prefix);
-			for(i=0;exec->exec.cmd.environ[i];i++)tlog_debug("%s            %d =          %s",prefix,i,exec->exec.cmd.environ[i]);
+			if(exec->exec.cmd.path)tlog_debug("%s        path:             %p",prefix,exec->exec.cmd.path);
+			if(exec->exec.cmd.args){
+				tlog_debug("%s        args:",prefix);
+				for(i=0;exec->exec.cmd.args[i];i++)tlog_debug("%s            %d =          %s",prefix,i,exec->exec.cmd.args[i]);
+			}
+			if(exec->exec.cmd.environ){
+				tlog_debug("%s        environ:",prefix);
+				for(i=0;exec->exec.cmd.environ[i];i++)tlog_debug("%s            %d =          %s",prefix,i,exec->exec.cmd.environ[i]);
+			}
 		break;
 		case TYPE_LIBRARY:
 			tlog_debug("%s        library:                  %s",prefix,exec->exec.lib.library);

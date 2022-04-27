@@ -86,14 +86,16 @@ struct service{
 	bool stop_on_shutdown;
 	bool auto_restart;
 	bool wait_restart;
+	bool stdio_syslog;
+	bool ignore_failed;
 	time_t restart_delay;
 	time_t last_update;
 	int restart_max,retry;
 	struct proc_status process;
 	enum svc_work mode;
+	enum svc_status status;
 	list*depends_on;
 	list*depends_of;
-	enum svc_status status;
 	struct svc_exec*start;
 	struct svc_exec*stop;
 	struct svc_exec*restart;

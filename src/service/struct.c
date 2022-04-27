@@ -44,6 +44,7 @@ struct service*svc_new_service(char*name,enum svc_work mode){
 	svc->retry=0;
 	svc->restart_max=5;
 	svc->status=STATUS_STOPPED;
+	svc->stdio_syslog=true;
 	svc->stop_on_shutdown=true;
 	return svc;
 	fail:

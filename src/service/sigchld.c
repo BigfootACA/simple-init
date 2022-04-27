@@ -127,14 +127,14 @@ static int svc_exec_on_exit(pid_t p,struct svc_exec*exec,struct service*svc,int 
 		c=WEXITSTATUS(st);
 		status->exit_code=c;
 		status->exit_signal=0;
-		fail=c!=0;
+		fail=c!=0&&!svc->ignore_failed;
 	}else if(WIFSIGNALED(st)){
 		c=WTERMSIG(st);
 		status->exit_code=128|c;
 		status->exit_signal=c;
 		switch(c){
 			case SIGTERM:case SIGHUP:case SIGINT:case SIGQUIT:break;
-			default:fail=true;
+			default:fail=!svc->ignore_failed;
 		}
 	}else goto finish;
 	time(&status->finish);

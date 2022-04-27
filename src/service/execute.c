@@ -7,6 +7,7 @@
  */
 
 #define _GNU_SOURCE
+#include<fcntl.h>
 #include<errno.h>
 #include<stdio.h>
 #include<unistd.h>
@@ -14,13 +15,16 @@
 #include<string.h>
 #include<stdlib.h>
 #include<pthread.h>
+#include<sys/un.h>
 #include<sys/prctl.h>
+#include<sys/socket.h>
 #include"confd.h"
 #include"logger.h"
 #include"system.h"
 #include"service.h"
 #include"defines.h"
 #include"proctitle.h"
+#include"pathnames.h"
 #define TAG "service"
 
 #define EGOTO(err) {r=err;goto end;}
@@ -28,6 +32,31 @@
 static void write_close(int fd,int data){
 	write(fd,&data,sizeof(data));
 	close(fd);
+}
+
+static bool init_stdio(struct svc_exec*exec){
+	if(!exec->prop.svc->stdio_syslog)return true;
+	int sock,sin;
+	struct sockaddr_un addr;
+	if((sock=socket(AF_UNIX,SOCK_DGRAM,0))<0)return false;
+	memset(&addr,0,sizeof(addr));
+	addr.sun_family=AF_UNIX;
+	strncpy(addr.sun_path,_PATH_DEV"/log",sizeof(addr.sun_path)-1);
+	if(connect(sock,(struct sockaddr*)&addr,sizeof(addr))<0){
+		close(sock);
+		return false;
+	}
+	if((sin=open(_PATH_DEV_NULL,O_RDWR))>0){
+		close(STDIN_FILENO);
+		dup2(sin,STDIN_FILENO);
+		close(sin);
+	}
+	close(STDOUT_FILENO);
+	close(STDERR_FILENO);
+	dup2(sock,STDOUT_FILENO);
+	dup2(sock,STDERR_FILENO);
+	close(sock);
+	return true;
 }
 
 static void _run_exec_child(struct svc_exec*exec,int fd){
@@ -48,6 +77,7 @@ static void _run_exec_child(struct svc_exec*exec,int fd){
 		case TYPE_FUNCTION:
 			if(!exec->exec.func)EGOTO(EINVAL);
 			write_close(fd,0);
+			if(!init_stdio(exec))EGOTO(errno);
 			close_all_fd(NULL,0);
 			reset_signals();
 			set_confd_socket(-1);
@@ -61,6 +91,7 @@ static void _run_exec_child(struct svc_exec*exec,int fd){
 			if(!exec->exec.cmd.args)EGOTO(EINVAL);
 			if(exec->exec.cmd.environ)clearenv();
 			write_close(fd,0);
+			if(!init_stdio(exec))EGOTO(errno);
 			close_all_fd(NULL,0);
 			execvpe(
 				exec->exec.cmd.path,

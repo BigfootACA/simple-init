@@ -9,7 +9,17 @@
 #define _GNU_SOURCE
 #ifdef ENABLE_GUI
 #include<stdlib.h>
-#ifndef ENABLE_UEFI
+#ifdef ENABLE_UEFI
+#include<Library/BaseLib.h>
+#include<Library/BaseMemoryLib.h>
+#include<Library/MemoryAllocationLib.h>
+#include<Library/UefiBootServicesTableLib.h>
+#include<Protocol/PartitionInfo.h>
+#include<Protocol/SimpleFileSystem.h>
+#include<Guid/FileInfo.h>
+#include<Guid/FileSystemInfo.h>
+#include"uefi.h"
+#else
 #include<fcntl.h>
 #include<sys/stat.h>
 #include<sys/sysmacros.h>
@@ -173,7 +183,7 @@ static struct fileitem*get_item(struct fileview*view,const char*name){
 	return NULL;
 }
 
-static struct fileitem*add_item(struct fileview*view,char*name){
+static struct fileitem*add_item(struct fileview*view,char*name,char letter){
 	if(!view->view||!name)return NULL;
 	if(view->bw==0)view->bw=lv_page_get_scrl_width(view->view)-view->margin;
 	if(view->bh==0)view->bh=gui_dpi/2;
@@ -288,7 +298,69 @@ static struct fileitem*add_item(struct fileview*view,char*name){
 			}
 		}
 
-		#ifndef ENABLE_UEFI
+		#ifdef ENABLE_UEFI
+		if(fi->type==TYPE_DISK){
+			EFI_STATUS st;
+			CHAR8 name[256];
+			EFI_PARTITION_INFO_PROTOCOL*pi=NULL;
+			EFI_HANDLE hand=fs_get_root_handle_by_letter(letter);
+			EFI_FILE_PROTOCOL*root=fs_get_root_by_letter(letter);
+			EFI_FILE_SYSTEM_INFO*info=NULL;
+			if(hand){
+				st=gBS->HandleProtocol(
+					hand,
+					&gEfiPartitionInfoProtocolGuid,
+					(VOID**)&pi
+				);
+				if(!EFI_ERROR(st)&&pi->Type==PARTITION_TYPE_GPT){
+					ZeroMem(name,sizeof(name));
+					UnicodeStrToAsciiStrS(
+						pi->Info.Gpt.PartitionName,
+						name,sizeof(name)-1
+					);
+					// disk info1 (gpt partition name)
+					fi->info1=lv_label_create(line,NULL);
+					lv_label_set_text(fi->info1,name);
+					lv_obj_set_small_text_font(fi->info1,LV_LABEL_PART_MAIN);
+					lv_obj_align(
+						fi->info1,fi->chk,
+						LV_ALIGN_OUT_BOTTOM_LEFT,
+						0,gui_font_size
+					);
+				}
+			}
+
+			st=efi_file_get_info(root,&gEfiFileSystemInfoGuid,NULL,(VOID**)&info);
+			if(!EFI_ERROR(st)){
+				uint8_t percent=0;
+				size_t sx=sizeof(name)/2;
+				char*b1=name,*b2=name+sx;
+				UINT64 used=info->VolumeSize-info->FreeSpace;
+				make_readable_str_buf(b1,sx,used,1,0);
+				make_readable_str_buf(b2,sx,info->VolumeSize,1,0);
+				if(info->VolumeSize>0)percent=used*100/info->VolumeSize;
+				// disk info2 (disk used, disk size)
+				fi->info2=lv_label_create(line,NULL);
+				lv_label_set_text_fmt(
+					fi->info2,
+					"%s/%s (%d%%)",
+					b1,b2,percent
+				);
+				lv_obj_set_small_text_font(fi->info2,LV_LABEL_PART_MAIN);
+				lv_obj_align_y(
+					fi->info2,fi->chk,
+					LV_ALIGN_OUT_BOTTOM_RIGHT,
+					gui_font_size
+				);
+				lv_obj_align_x(
+					fi->info2,fi->btn,
+					LV_ALIGN_OUT_BOTTOM_RIGHT,
+					-gui_font_size
+				);
+			}
+
+		}
+		#else
 		int fd=open(view->path,O_DIR);
 		if(fd>=0&&fstatat(fd,name,&fi->st,AT_SYMLINK_NOFOLLOW)==0){
 			mode_t m=fi->st.st_mode;
@@ -301,7 +373,6 @@ static struct fileitem*add_item(struct fileview*view,char*name){
 			lv_obj_set_small_text_font(fi->info1,LV_LABEL_PART_MAIN);
 			lv_label_set_text_fmt(fi->info1,"%s %s",times,mode_string(fi->st.st_mode));
 
-			#ifndef ENABLE_UEFI
 			dev_t d=fi->st.st_dev;
 			char dev[32]={0};
 			if(S_ISCHR(m))snprintf(dev,31,"char[%d:%d] ",major(d),minor(d));
@@ -322,12 +393,12 @@ static struct fileitem*add_item(struct fileview*view,char*name){
 				get_groupname(fi->st.st_gid,group,127),
 				dev,tgt
 			);
-			#endif
 			close(fd);
 		}
 		#endif
 	}
 	view->count++;
+	if(fsext_is_multi)fi->letter=letter;
 	return fi;
 }
 
@@ -376,14 +447,12 @@ static void scan_items(struct fileview*view){
 			if(!t)continue;
 			name[0]=x,name[1]=':',name[2]=' ';
 			lv_fs_get_volume_label(t,name+3,253);
-			struct fileitem*fi=add_item(view,name);
-			if(!fi)continue;
-			fi->letter=x;
+			add_item(view,name,x);
 		}
 		return;
 	}
 	if(view->parent&&!fileview_is_top(view))
-		add_item(view,"..");
+		add_item(view,"..",0);
 	lv_fs_dir_t dir;
 	int i;
 	char fn[256],*fp;
@@ -422,7 +491,7 @@ static void scan_items(struct fileview*view){
 		if(strlen(fn)==0)break;
 		if(fp[0]=='/')fp++;
 		if(fp[0]=='.'&&!view->hidden)continue;
-		add_item(view,fp);
+		add_item(view,fp,0);
 	}
 	lv_fs_dir_close(&dir);
 	if(i>=1024)tlog_warn("too many files, skip");

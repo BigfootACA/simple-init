@@ -69,7 +69,6 @@ static void _free_exec_cont(struct svc_exec*exec){
 	switch(exec->prop.type){
 		case TYPE_COMMAND:
 			array_free(exec->exec.cmd.args);
-			array_free(exec->exec.cmd.args);
 			_xfree(exec->exec.cmd.path);
 		break;
 		case TYPE_LIBRARY:

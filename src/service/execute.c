@@ -59,14 +59,13 @@ static void _run_exec_child(struct svc_exec*exec,int fd){
 		case TYPE_COMMAND:
 			if(!exec->exec.cmd.path)EGOTO(EINVAL);
 			if(!exec->exec.cmd.args)EGOTO(EINVAL);
-			if(!exec->exec.cmd.environ)EGOTO(EINVAL);
-			clearenv();
+			if(exec->exec.cmd.environ)clearenv();
 			write_close(fd,0);
 			close_all_fd(NULL,0);
 			execvpe(
 				exec->exec.cmd.path,
 				exec->exec.cmd.args,
-				exec->exec.cmd.environ
+				exec->exec.cmd.environ?:environ
 			);
 			fprintf(stderr,"execute %s failed",exec->exec.cmd.path);
 			fputs(errno==0?".\n":strerror(errno),stderr);

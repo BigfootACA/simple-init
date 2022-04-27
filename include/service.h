@@ -343,4 +343,10 @@ extern int svc_list_dump(list*svcs);
 // src/service/dump.c: dump all services from variable services to loggerd
 extern int svc_dump_services(void);
 
+// src/service/conf.c: load service from config
+extern struct service*svc_conf_parse_service(const char*base,const char*name,struct service*s);
+
+// src/service/conf.c: load services from config
+extern void svc_conf_parse_services(const char*base);
+
 #endif

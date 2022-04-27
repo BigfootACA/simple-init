@@ -11,4 +11,5 @@ add_library(init_service STATIC
 	default.c
 	string.c
 	dump.c
+	conf.c
 )

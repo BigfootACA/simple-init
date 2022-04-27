@@ -161,6 +161,9 @@ int init_main(int argc __attribute__((unused)),char**argv){
 	// register all services
 	init_register_all_service();
 
+	// load all services from config
+	svc_conf_parse_services("service.services");
+
 	// listen init control socket
 	if((sfd=listen_init_socket())<0){
 		telog_emerg("listen init control socket failed");

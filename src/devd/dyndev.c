@@ -15,6 +15,7 @@
 #include"logger.h"
 
 int process_new_node(int devdfd,uevent*event){
+	char path[PATH_MAX];
 	if(
 		!event->action||
 		!event->devname||
@@ -28,6 +29,16 @@ int process_new_node(int devdfd,uevent*event){
 			if(faccessat(devdfd,event->devname,F_OK,0)!=0)return -errno;
 			if(unlinkat(devdfd,event->devname,0)!=0)
 				return terlog_warn(-errno,"unlink %s/%s",_PATH_DEV,event->devname);
+			memset(path,0,sizeof(path));
+			snprintf(
+				path,
+				sizeof(path)-1,
+				"%s/%d:%d",
+				event->devtype,
+				event->major,
+				event->minor
+			);
+			unlinkat(devdfd,path,0);
 			return trlog_debug(0,"remove device %s/%s",_PATH_DEV,event->devname);
 		default:return -2;
 	}

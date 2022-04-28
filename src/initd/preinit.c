@@ -57,6 +57,7 @@ int preinit(){
 	if(is_folder(_PATH_PROC"/1"))tlog_warn("%s already mounted",_PATH_PROC);
 	else exmount("proc",_PATH_PROC,"proc","rw,nosuid,noexec,nodev");
 	xmount(false,"run",_PATH_RUN,"tmpfs","rw,nosuid,nodev,mode=755",true);
+	xmount(false,"tmp",_PATH_TMP,"tmpfs","rw,nosuid,nodev,mode=1777",true);
 	if(access(_PATH_PROC_CMDLINE,R_OK)!=0)
 		return terlog_error(2,"failed to find proc mountpoint");
 
@@ -117,6 +118,24 @@ int preinit(){
 	xmount(false,"devpts",_PATH_DEV_PTS,"devpts","rw,nosuid,noexec,mode=620,ptmxmode=000",true);
 	mkdir(_PATH_DEV_SHM,1777);
 	xmount(false,"shm",_PATH_DEV_SHM,"tmpfs","rw,nosuid,nodev",true);
+	mkdir(_PATH_DEV_MQUEUE,1777);
+	xmount(false,"mqueue",_PATH_DEV_MQUEUE,"mqueue","rw,nosuid,nodev,noexec",false);
+	mkdir(_PATH_DEV_HUGEPAGES,1777);
+	xmount(false,"hugetlbfs",_PATH_DEV_HUGEPAGES,"hugetlbfs","rw",false);
+	mkdir(_PATH_DEV"/binderfs",0755);
+	xmount(false,"binder",_PATH_DEV"/binderfs","binder","rw",false);
+	xmount(false,"bpf",_PATH_SYS_FS"/bpf","bpf","nosuid,nodev,noexec",false);
+	xmount(false,"pstore",_PATH_SYS_FS"/pstore","pstore","nosuid,nodev,noexec",false);
+	xmount(false,"resctrl",_PATH_SYS_FS"/resctrl","resctrl","nosuid,nodev,noexec",false);
+	xmount(false,"cgroup2",_PATH_SYS_FS"/cgroup","cgroup2","nosuid,nodev,noexec",false);
+	xmount(false,"fusectl",_PATH_SYS_FS"/fuse/connections","fusectl","nosuid,nodev,noexec",false);
+	xmount(false,"configfs",_PATH_SYS_KERNEL"/config","configfs","nosuid,nodev,noexec",false);
+	xmount(false,"debugfs",_PATH_SYS_KERNEL"/debug","debugfs","nosuid,nodev,noexec",false);
+	xmount(false,"tracefs",_PATH_SYS_KERNEL"/tracing","tracefs","nosuid,nodev,noexec",false);
+	xmount(false,"securityfs",_PATH_SYS_KERNEL"/security","securityfs","nosuid,nodev,noexec",false);
+	xmount(false,"efivarfs",_PATH_SYS_FIRMWARE"/efi/efivars","efivarfs","nosuid,nodev,noexec",false);
+	xmount(false,"binfmt_misc",_PATH_PROC"/fs/binfmt_misc","binfmt_misc","nosuid,nodev,noexec",false);
+	xmount(false,"nfsd",_PATH_PROC"/fs/nfsd","nfsd",NULL,false);
 
 	// start devd daemon
 	start_devd(TAG,NULL);

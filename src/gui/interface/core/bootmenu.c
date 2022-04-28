@@ -309,7 +309,6 @@ static void bootmenu_add(struct bootmenu*bm,char*c){
 		case BOOT_REBOOT:
 		case BOOT_POWEROFF:
 		case BOOT_HALT:
-		case BOOT_SYSTEM:
 		case BOOT_FOLDER:break;
 		default:
 			if(no_autoboot)break;

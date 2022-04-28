@@ -29,6 +29,8 @@
 struct add_mount{
 	lv_obj_t*box,*ok,*cancel;
 	lv_obj_t*btn_source,*btn_target;
+	lv_obj_t*lbl_title,*lbl_source;
+	lv_obj_t*lbl_target,*lbl_type,*lbl_options;
 	lv_obj_t*source,*target,*type,*options;
 	bool type_lock;
 	bool target_def;
@@ -260,30 +262,168 @@ static int do_cleanup(struct gui_activity*act){
 	return 0;
 }
 
+static int add_mount_resize(struct gui_activity*act){
+	lv_coord_t w=0,h=0;
+	struct add_mount*am=act->data;
+	lv_obj_set_width(am->box,act->w/8*7);
+	lv_obj_set_style_local_pad_all(
+		am->box,
+		LV_PAGE_PART_BG,
+		LV_STATE_DEFAULT,
+		gui_font_size
+	);
+	w=lv_page_get_scrl_width(am->box);
+	lv_obj_set_width(am->lbl_title,w);
+	lv_obj_set_y(am->lbl_title,h);
+	h+=lv_obj_get_height(am->lbl_title)+(gui_font_size/2);
+	lv_obj_set_y(am->lbl_source,h);
+	lv_obj_align_x(
+		am->source,am->lbl_source,
+		LV_ALIGN_OUT_RIGHT_MID,
+		gui_font_size/2
+	);
+	lv_obj_set_y(am->source,h);
+	lv_obj_align(
+		am->lbl_source,am->source,
+		LV_ALIGN_OUT_LEFT_MID,
+		-gui_font_size/2,0
+	);
+	lv_obj_set_style_local_radius(
+		am->btn_source,
+		LV_BTN_PART_MAIN,
+		LV_STATE_DEFAULT,
+		gui_font_size/2
+	);
+	lv_obj_set_size(
+		am->btn_source,
+		gui_font_size*3,
+		lv_obj_get_height(am->source)
+	);
+	lv_obj_set_width(
+		am->source,
+		w-lv_obj_get_width(am->btn_source)-
+		lv_obj_get_width(am->lbl_source)-
+		gui_font_size
+	);
+	lv_obj_align(
+		am->btn_source,am->source,
+		LV_ALIGN_OUT_RIGHT_MID,
+		gui_font_size/4,0
+	);
+	h+=lv_obj_get_height(am->btn_source)+gui_font_size;
+	lv_obj_set_y(am->lbl_target,h);
+	lv_obj_align_x(
+		am->target,am->lbl_target,
+		LV_ALIGN_OUT_RIGHT_MID,
+		gui_font_size/2
+	);
+	lv_obj_set_y(am->target,h);
+	lv_obj_align(
+		am->lbl_target,am->target,
+		LV_ALIGN_OUT_LEFT_MID,
+		-gui_font_size/2,0
+	);
+	lv_obj_set_style_local_radius(
+		am->btn_target,
+		LV_BTN_PART_MAIN,
+		LV_STATE_DEFAULT,
+		gui_font_size/2
+	);
+	lv_obj_set_size(
+		am->btn_target,
+		gui_font_size*3,
+		lv_obj_get_height(am->target)
+	);
+	lv_obj_set_width(
+		am->target,
+		w-lv_obj_get_width(am->btn_target)-
+		lv_obj_get_width(am->lbl_target)-
+		gui_font_size
+	);
+	lv_obj_align(
+		am->btn_target,am->target,
+		LV_ALIGN_OUT_RIGHT_MID,
+		gui_font_size/4,0
+	);
+	h+=lv_obj_get_height(am->btn_target)+gui_font_size;
+	lv_obj_set_y(am->lbl_type,h);
+	lv_obj_set_width(
+		am->type,
+		w-lv_obj_get_width(am->lbl_type)-
+		gui_font_size
+	);
+	lv_obj_align_x(
+		am->type,am->lbl_type,
+		LV_ALIGN_OUT_RIGHT_MID,
+		gui_font_size/2
+	);
+	lv_obj_set_y(am->type,h);
+	lv_obj_align(
+		am->lbl_type,am->type,
+		LV_ALIGN_OUT_LEFT_MID,
+		-gui_font_size/2,0
+	);
+	h+=lv_obj_get_height(am->type)+gui_font_size;
+	lv_obj_set_y(am->lbl_options,h);
+	lv_obj_set_width(
+		am->options,
+		w-lv_obj_get_width(am->lbl_options)-
+		gui_font_size
+	);
+	lv_obj_align_x(
+		am->options,am->lbl_options,
+		LV_ALIGN_OUT_RIGHT_MID,
+		gui_font_size/2
+	);
+	lv_obj_set_y(am->options,h);
+	lv_obj_align(
+		am->lbl_options,am->options,
+		LV_ALIGN_OUT_LEFT_MID,
+		-gui_font_size/2,0
+	);
+	h+=lv_obj_get_height(am->options)+gui_font_size;
+	lv_obj_set_size(
+		am->ok,
+		w/2-gui_font_size,
+		gui_font_size*2
+	);
+	lv_obj_align(
+		am->ok,NULL,
+		LV_ALIGN_IN_TOP_LEFT,
+		(gui_font_size/2),h
+	);
+	lv_obj_set_size(
+		am->cancel,
+		w/2-gui_font_size,
+		gui_font_size*2
+	);
+	lv_obj_align(
+		am->cancel,NULL,
+		LV_ALIGN_IN_TOP_RIGHT,
+		-(gui_font_size/2),h
+	);
+	h+=lv_obj_get_height(am->cancel)+(gui_font_size*3);
+	lv_obj_set_height(am->box,MIN(h,(lv_coord_t)gui_sh/6*5));
+	lv_obj_align(am->box,NULL,LV_ALIGN_CENTER,0,0);
+	return 0;
+}
+
 static int draw_add_mount(struct gui_activity*act){
+	char point[256];
 	struct add_mount*am=act->data;
 
 	am->box=lv_page_create(act->page,NULL);
-	lv_obj_set_style_local_pad_all(am->box,LV_PAGE_PART_BG,LV_STATE_DEFAULT,gui_font_size);
-	lv_obj_set_width(am->box,gui_sw/8*7);
 	lv_obj_set_click(am->box,false);
-	lv_coord_t h=0;
-	lv_coord_t w=lv_page_get_scrl_width(am->box);
 
 	// Title
-	lv_obj_t*title=lv_label_create(am->box,NULL);
-	lv_label_set_text(title,_("Add Mount"));
-	lv_label_set_long_mode(title,LV_LABEL_LONG_BREAK);
-	lv_obj_set_width(title,w);
-	lv_obj_set_y(title,h);
-	lv_label_set_align(title,LV_LABEL_ALIGN_CENTER);
-	h+=lv_obj_get_height(title);
+	am->lbl_title=lv_label_create(am->box,NULL);
+	lv_label_set_text(am->lbl_title,_("Add Mount"));
+	lv_label_set_long_mode(am->lbl_title,LV_LABEL_LONG_BREAK);
+	lv_label_set_align(am->lbl_title,LV_LABEL_ALIGN_CENTER);
 
 	// Source
-	h+=gui_font_size;
-	lv_obj_t*source=lv_label_create(am->box,NULL);
-	lv_label_set_text(source,_("Device:"));
-	lv_obj_set_y(source,h);
+	am->lbl_source=lv_label_create(am->box,NULL);
+	lv_label_set_text(am->lbl_source,_("Device:"));
 
 	am->source=lv_textarea_create(am->box,NULL);
 	lv_textarea_set_text(am->source,act->args?(char*)act->args:"");
@@ -291,28 +431,17 @@ static int draw_add_mount(struct gui_activity*act){
 	lv_textarea_set_cursor_hidden(am->source,true);
 	lv_obj_set_user_data(am->source,am);
 	lv_obj_set_event_cb(am->source,source_cb);
-	lv_obj_align(am->source,source,LV_ALIGN_OUT_RIGHT_MID,gui_font_size/2,0);
-	lv_obj_set_y(am->source,h);
-	lv_obj_align(source,am->source,LV_ALIGN_OUT_LEFT_MID,-gui_font_size/2,0);
 
 	am->btn_source=lv_btn_create(am->box,NULL);
 	lv_style_set_action_button(am->btn_source,true);
 	lv_obj_set_user_data(am->btn_source,am->source);
 	lv_obj_set_event_cb(am->btn_source,sel_cb);
-	lv_obj_set_style_local_radius(am->btn_source,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,gui_font_size/2);
-	lv_obj_set_size(am->btn_source,gui_font_size*3,lv_obj_get_height(am->source));
-	lv_obj_set_width(am->source,w-lv_obj_get_width(am->btn_source)-lv_obj_get_width(source)-gui_font_size);
-	lv_obj_align(am->btn_source,am->source,LV_ALIGN_OUT_RIGHT_MID,gui_font_size/4,0);
 	lv_label_set_text(lv_label_create(am->btn_source,NULL),"...");
-	h+=lv_obj_get_height(am->btn_source);
 
 	// Target
-	h+=gui_font_size;
-	lv_obj_t*target=lv_label_create(am->box,NULL);
-	lv_label_set_text(target,_("Target:"));
-	lv_obj_set_y(target,h);
+	am->lbl_target=lv_label_create(am->box,NULL);
+	lv_label_set_text(am->lbl_target,_("Target:"));
 
-	char point[256];
 	auto_mountpoint(point,256);
 	am->target_def=true;
 	am->target=lv_textarea_create(am->box,NULL);
@@ -321,41 +450,24 @@ static int draw_add_mount(struct gui_activity*act){
 	lv_textarea_set_cursor_hidden(am->target,true);
 	lv_obj_set_user_data(am->target,am);
 	lv_obj_set_event_cb(am->target,target_cb);
-	lv_obj_align(am->target,target,LV_ALIGN_OUT_RIGHT_MID,gui_font_size/2,0);
-	lv_obj_set_y(am->target,h);
-	lv_obj_align(target,am->target,LV_ALIGN_OUT_LEFT_MID,-gui_font_size/2,0);
 
 	am->btn_target=lv_btn_create(am->box,NULL);
 	lv_style_set_action_button(am->btn_target,true);
 	lv_obj_set_user_data(am->btn_target,am->target);
 	lv_obj_set_event_cb(am->btn_target,sel_cb);
-	lv_obj_set_style_local_radius(am->btn_target,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,gui_font_size/2);
-	lv_obj_set_size(am->btn_target,gui_font_size*3,lv_obj_get_height(am->target));
-	lv_obj_set_width(am->target,w-lv_obj_get_width(am->btn_target)-lv_obj_get_width(target)-gui_font_size);
-	lv_obj_align(am->btn_target,am->target,LV_ALIGN_OUT_RIGHT_MID,gui_font_size/4,0);
 	lv_label_set_text(lv_label_create(am->btn_target,NULL),"...");
-	h+=lv_obj_get_height(am->btn_target);
 
 	// Type
-	h+=gui_font_size;
-	lv_obj_t*type=lv_label_create(am->box,NULL);
-	lv_label_set_text(type,_("Type:"));
-	lv_obj_set_y(type,h);
+	am->lbl_type=lv_label_create(am->box,NULL);
+	lv_label_set_text(am->lbl_type,_("Type:"));
 
 	am->type=lv_dropdown_create(am->box,NULL);
 	lv_obj_set_user_data(am->type,am);
 	lv_obj_set_event_cb(am->type,type_cb);
-	lv_obj_set_width(am->type,w-lv_obj_get_width(type)-gui_font_size);
-	lv_obj_align(am->type,type,LV_ALIGN_OUT_RIGHT_MID,gui_font_size/2,0);
-	lv_obj_set_y(am->type,h);
-	lv_obj_align(type,am->type,LV_ALIGN_OUT_LEFT_MID,-gui_font_size/2,0);
-	h+=lv_obj_get_height(am->type);
 
 	// Options
-	h+=gui_font_size;
-	lv_obj_t*options=lv_label_create(am->box,NULL);
-	lv_label_set_text(options,_("Options:"));
-	lv_obj_set_y(options,h);
+	am->lbl_options=lv_label_create(am->box,NULL);
+	lv_label_set_text(am->lbl_options,_("Options:"));
 
 	am->options=lv_textarea_create(am->box,NULL);
 	lv_textarea_set_text(am->options,"rw,noatime");
@@ -364,18 +476,10 @@ static int draw_add_mount(struct gui_activity*act){
 	lv_obj_set_user_data(am->options,am);
 	lv_obj_set_event_cb(am->options,inp_cb);
 	lv_obj_set_user_data(am->options,am);
-	lv_obj_set_width(am->options,w-lv_obj_get_width(options)-gui_font_size);
-	lv_obj_align(am->options,options,LV_ALIGN_OUT_RIGHT_MID,gui_font_size/2,0);
-	lv_obj_set_y(am->options,h);
-	lv_obj_align(options,am->options,LV_ALIGN_OUT_LEFT_MID,-gui_font_size/2,0);
-	h+=lv_obj_get_height(am->options);
 
 	// OK Button
-	h+=gui_font_size;
 	am->ok=lv_btn_create(am->box,NULL);
 	lv_style_set_action_button(am->ok,true);
-	lv_obj_set_size(am->ok,w/2-gui_font_size,gui_font_size*2);
-	lv_obj_align(am->ok,NULL,LV_ALIGN_IN_TOP_LEFT,(gui_font_size/2),h);
 	lv_obj_set_user_data(am->ok,am);
 	lv_obj_set_event_cb(am->ok,ok_cb);
 	lv_label_set_text(lv_label_create(am->ok,NULL),_("OK"));
@@ -383,16 +487,9 @@ static int draw_add_mount(struct gui_activity*act){
 	// Cancel Button
 	am->cancel=lv_btn_create(am->box,NULL);
 	lv_style_set_action_button(am->cancel,true);
-	lv_obj_set_size(am->cancel,w/2-gui_font_size,gui_font_size*2);
-	lv_obj_align(am->cancel,NULL,LV_ALIGN_IN_TOP_RIGHT,-(gui_font_size/2),h);
 	lv_obj_set_user_data(am->cancel,am);
 	lv_obj_set_event_cb(am->cancel,cancel_cb);
 	lv_label_set_text(lv_label_create(am->cancel,NULL),_("Cancel"));
-	h+=lv_obj_get_height(am->cancel);
-
-	h+=gui_font_size*3;
-	lv_obj_set_height(am->box,MIN(h,(lv_coord_t)gui_sh/6*5));
-	lv_obj_align(am->box,NULL,LV_ALIGN_CENTER,0,0);
 
 	reload_type(am);
 	if(act->args)source_cb(am->source,LV_EVENT_DEFOCUSED);
@@ -415,6 +512,7 @@ struct gui_register guireg_add_mount={
 	},
 	.quiet_exit=do_cleanup,
 	.init=init,
+	.resize=add_mount_resize,
 	.get_focus=add_mount_get_focus,
 	.lost_focus=add_mount_lost_focus,
 	.draw=draw_add_mount,

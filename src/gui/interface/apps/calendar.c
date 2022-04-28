@@ -11,7 +11,6 @@
 #include<time.h>
 #include"gui.h"
 #include"gui/activity.h"
-static lv_obj_t*cal=NULL;
 
 static const char**get_month_name(){
 	static const char*mn[12]={0};
@@ -34,13 +33,33 @@ static const char**get_day_name(){
 	return dn;
 }
 
-static int calendar_get_focus(struct gui_activity*d __attribute__((unused))){
-	lv_group_add_obj(gui_grp,cal);
+static int calendar_get_focus(struct gui_activity*d){
+	if(d->data)lv_group_add_obj(gui_grp,d->data);
 	return 0;
 }
 
-static int calendar_lost_focus(struct gui_activity*d __attribute__((unused))){
-	lv_group_remove_obj(cal);
+static int calendar_lost_focus(struct gui_activity*d){
+	if(d->data)lv_group_remove_obj(d->data);
+	return 0;
+}
+
+static int calendar_resize(struct gui_activity*d){
+	lv_obj_t*cal=d->data;
+	lv_coord_t s=5*gui_dpi/2;
+	lv_coord_t w=d->w-gui_font_size;
+	lv_coord_t h=d->h-gui_font_size;
+	if(!cal)return 0;
+	lv_obj_set_size(
+		cal,
+		lv_obj_get_width(cal)>w?w:s,
+		lv_obj_get_height(cal)>h?h:s
+	);
+	lv_obj_align(cal,NULL,LV_ALIGN_CENTER,0,0);
+	return 0;
+}
+
+static int calendar_cleanup(struct gui_activity*d){
+	d->data=NULL;
 	return 0;
 }
 
@@ -51,7 +70,7 @@ static int calendar_draw(struct gui_activity*act){
 	ct=time(NULL);
 	tt=localtime(&ct);
 	if(tt)d.year=tt->tm_year+1900,d.month=tt->tm_mon+1,d.day=tt->tm_mday;
-	cal=lv_calendar_create(act->page,NULL);
+	lv_obj_t*cal=lv_calendar_create(act->page,NULL);
 	lv_obj_set_style_local_border_width(cal,LV_CALENDAR_PART_BG,LV_STATE_DEFAULT,0);
 	lv_obj_set_style_local_border_width(cal,LV_CALENDAR_PART_BG,LV_STATE_FOCUSED,0);
 	lv_obj_set_style_local_border_width(cal,LV_CALENDAR_PART_BG,LV_STATE_PRESSED,0);
@@ -59,9 +78,7 @@ static int calendar_draw(struct gui_activity*act){
 	lv_calendar_set_day_names(cal,get_day_name());
 	lv_calendar_set_today_date(cal,&d);
 	lv_calendar_set_showed_date(cal,&d);
-	if(lv_obj_get_width(cal)>(lv_coord_t)(gui_sw-gui_font_size))
-		lv_obj_set_width(cal,gui_sw-gui_font_size);
-	lv_obj_align(cal,NULL,LV_ALIGN_CENTER,0,0);
+	act->data=cal;
 	return 0;
 }
 
@@ -71,6 +88,8 @@ struct gui_register guireg_calendar={
 	.icon="calendar.svg",
 	.show_app=true,
 	.draw=calendar_draw,
+	.resize=calendar_resize,
+	.quiet_exit=calendar_cleanup,
 	.get_focus=calendar_get_focus,
 	.lost_focus=calendar_lost_focus,
 	.back=true,

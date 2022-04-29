@@ -113,32 +113,44 @@ int xlua_create_metatable(
 
 int xlua_loadfile(lua_State*L,const char*name){
 	#ifdef ENABLE_UEFI
-	locate_ret ret;
-	if(boot_locate(&ret,name)&&ret.type==LOCATE_FILE){
-		int r=-255;
-		VOID*data=NULL;
-		UINTN size=0;
-		EFI_STATUS status=efi_file_read_whole(ret.file,&data,&size);
-		if(data){
-			if(!EFI_ERROR(status))
-				r=luaL_loadbufferx(L,data,size,name,NULL);
-			FreePool(data);
+	locate_ret*ret=AllocateZeroPool(sizeof(locate_ret));
+	if(ret){
+		if(
+			boot_locate(ret,name)&&
+			ret->type==LOCATE_FILE
+		){
+			int r=-255;
+			VOID*data=NULL;
+			UINTN size=0;
+			EFI_STATUS status=efi_file_read_whole(
+				ret->file,&data,&size
+			);
+			if(data){
+				if(!EFI_ERROR(status))r=luaL_loadbufferx(
+					L,data,size,name,NULL
+				);
+				FreePool(data);
+			}
+			return r;
 		}
-		return r;
+		FreePool(ret);
 	}
 	#else
 	if(access(name,R_OK)==0)return luaL_loadfile(L,name);
 	#endif
 	entry_file*f;
-	char path[4096];
-	memset(path,0,sizeof(path));
-	strncpy(path,name,sizeof(path)-1);
+	char*path=malloc(PATH_MAX);
+	memset(path,0,PATH_MAX);
+	strncpy(path,name,PATH_MAX-1);
 	if((f=rootfs_get_assets_file(path)))goto found;
-	memset(path,0,sizeof(path));
-	snprintf(path,sizeof(path)-1,_PATH_USR"/share/simple-init/lua/%s",name);
+	memset(path,0,PATH_MAX);
+	snprintf(path,PATH_MAX-1,_PATH_USR"/share/simple-init/lua/%s",name);
 	if((f=rootfs_get_assets_file(path)))goto found;
+	free(path);
 	return -255;
-	found:return luaL_loadbufferx(L,f->content,f->length,name,NULL);
+	found:
+	free(path);
+	return luaL_loadbufferx(L,f->content,f->length,name,NULL);
 }
 
 int xlua_run(lua_State*L,char*tag,const char*name){

@@ -60,3 +60,24 @@ Default: Value of `PcdLoggerdMinLevel`
 
 Reference:
  - [src/loggerd/client.c](../../../src/loggerd/client.c)
+
+## logger.old_file
+
+What to do with old log files
+
+Values:
+
+| Action   | Value |
+|----------|-------|
+| Truncate | 0     |
+| Append   | 1     |
+| Rename   | 2     |
+
+Type: `INTEGER`
+
+Supported environments: `UEFI`
+
+Default: 0 (Truncate)
+
+Reference:
+ - [src/loggerd/client.c](../../../src/loggerd/client.c)

@@ -60,3 +60,24 @@
 
 引用:
  - [src/loggerd/client.c](../../../src/loggerd/client.c)
+
+## logger.old_file
+
+对于旧的日志文件的处理方式
+
+取值:
+
+| 行为   | 值 |
+|--------|----|
+| 截断   | 0  |
+| 追加   | 1  |
+| 重命名 | 2  |
+
+类型: `INTEGER` (64位整型数字)
+
+支持的环境: `UEFI`
+
+默认: 0 (截断)
+
+引用:
+ - [src/loggerd/client.c](../../../src/loggerd/client.c)

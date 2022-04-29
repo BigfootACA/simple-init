@@ -7,6 +7,7 @@
  */
 
 #ifdef ENABLE_UEFI
+#include<Library/MemoryAllocationLib.h>
 #include<Library/UefiBootServicesTableLib.h>
 #include<Protocol/DevicePath.h>
 #include<Protocol/LoadedImage.h>
@@ -53,28 +54,32 @@ bool boot_load_driver(EFI_DEVICE_PATH_PROTOCOL*p){
 }
 
 void boot_load_drivers(){
-	locate_ret loc;
-	char*d,**ds,*b="uefi.drivers";
-	if(!(ds=confd_ls(b)))return;
+	char*d,**ds=NULL,*b="uefi.drivers";
+	locate_ret*loc=AllocateZeroPool(sizeof(locate_ret));
+	if(!loc||!(ds=confd_ls(b)))goto done;
 	for(int i=0;ds[i];i++){
 		if(!(d=confd_get_string_base(b,ds[i],NULL)))continue;
 		tlog_verbose("try to load dxe driver from %s",d);
-		if(!boot_locate(&loc,d)){
+		if(!boot_locate(loc,d)){
 			tlog_warn("resolve locate %s failed",d);
 			free(d);
 			continue;
 		}
-		if(loc.type!=LOCATE_FILE){
+		if(loc->type!=LOCATE_FILE){
 			tlog_warn("only support load dxe driver from file");
 			free(d);
 			continue;
 		}
-		if(boot_load_driver(loc.device))
+		if(boot_load_driver(loc->device))
 			tlog_debug("loaded dxe driver %s",d);
-		loc.file->Close(loc.file);
+		loc->file->Close(loc->file);
 		free(d);
 	}
-	if(ds[0])free(ds[0]);
-	free(ds);
+	done:
+	if(ds){
+		if(ds[0])free(ds[0]);
+		free(ds);
+	}
+	if(loc)FreePool(loc);
 }
 #endif

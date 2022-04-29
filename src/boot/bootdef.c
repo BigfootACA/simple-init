@@ -7,12 +7,14 @@
  */
 
 #include"boot.h"
+#include"array.h"
 #include"confd.h"
 #include"keyval.h"
 #ifdef ENABLE_UEFI
 #include<Library/BaseLib.h>
 #include<Library/PrintLib.h>
 #include<Library/BaseMemoryLib.h>
+#include<Library/MemoryAllocationLib.h>
 #include<Library/UefiBootManagerLib.h>
 #endif
 
@@ -72,139 +74,185 @@ boot_main*boot_main_func[]={
 
 #define EXTRA_ARG(val)((keyval*[]){&KV("arg",(val)),NULL})
 
+static struct initial_cfg{
+	bool valid;
+	struct boot_config cfg;
+	keyval**args;
+}initial_cfgs[]={
+	#ifdef ENABLE_UEFI
+	{
+		.valid=true,
+		.cfg={
+			.mode=BOOT_EXIT,
+			.ident="continue",.icon="exit.svg",
+			.desc="Continue Boot",
+			.save=false,.replace=false,
+			.show=true,.enabled=true
+		},.args=NULL
+	},{
+		.valid=true,
+		.cfg={
+			.mode=BOOT_SIMPLE_INIT,
+			.ident="simple-init",.icon="launcher.svg",
+			.desc="Enter Simple Init",
+			.save=false,.replace=false,
+			.show=true,.enabled=true
+		},.args=NULL
+	},{
+		.valid=true,
+		.cfg={
+			.mode=BOOT_FOLDER,
+			.ident="uefi-bootmenu",
+			.icon="uefi.svg",
+			.desc="UEFI Boot Menu",
+			.save=false,.replace=false,
+			.show=false,.enabled=true
+		},.args=NULL
+	},
+	#else
+	{
+		.valid=true,
+		.cfg={
+			.mode=BOOT_SWITCHROOT,
+			.ident="switchroot",.icon="linux.svg",
+			.desc="Default SwitchRoot",
+			.save=false,.replace=false,
+			.show=true,.enabled=false
+		},.args=NULL
+	},{
+		.valid=true,
+		.cfg={
+			.mode=BOOT_SYSTEM,
+			.ident="system",.icon="launcher.svg",
+			.desc="Enter Simple Init",
+			.save=false,.replace=false,
+			.show=true,.enabled=true
+		},.args=NULL
+	},{
+		.valid=true,
+		.cfg={
+			.mode=BOOT_CHARGER,
+			.ident="charger",.icon="battery.svg",
+			.desc="Charger Screen",
+			.save=false,.replace=false,
+			.show=false,.enabled=false
+		},.args=NULL
+	},
+	#endif
+	{
+		.valid=true,
+		.cfg={
+			.mode=BOOT_FOLDER,
+			.ident="reboots",.icon="reboot.svg",
+			.desc="Reboot Menu",
+			.save=false,.replace=false,
+			.show=true,.enabled=true
+		},.args=NULL
+	},{
+		.valid=true,
+		.cfg={
+			.mode=BOOT_POWEROFF,
+			.ident="poweroff",.icon="poweroff.svg",
+			.desc="Power off system",
+			.parent="reboots",
+			.save=false,.replace=false,
+			.show=true,.enabled=true
+		},.args=NULL
+	},{
+		.valid=true,
+		.cfg={
+			.mode=BOOT_REBOOT,
+			.ident="reboot",.icon="reboot.svg",
+			.desc="Reboot system",
+			.parent="reboots",
+			.save=false,.replace=false,
+			.show=true,.enabled=true
+		},.args=NULL
+	},{
+		.valid=true,
+		.cfg={
+			.mode=BOOT_REBOOT,
+			.ident="edl",.icon="download.svg",
+			.desc="Reboot into EDL",
+			.parent="reboots",
+			.save=false,.replace=false,
+			.show=true,.enabled=true
+		},.args=EXTRA_ARG("edl")
+	},{
+		.valid=true,
+		.cfg={
+			.mode=BOOT_REBOOT,
+			.ident="recovery",.icon="twrp.png",
+			.desc="Reboot into recovery",
+			.parent="reboots",
+			.save=false,.replace=false,
+			.show=true,.enabled=true
+		},.args=EXTRA_ARG("recovery")
+	},{
+		.valid=true,
+		.cfg={
+			.mode=BOOT_REBOOT,
+			.ident="bootloader",.icon="fastboot.svg",
+			.desc="Reboot into bootloader",
+			.parent="reboots",
+			.save=false,.replace=false,
+			.show=true,.enabled=true
+		},.args=EXTRA_ARG("bootloader")
+	},
+	{.valid=false}
+};
+
 #ifdef ENABLE_UEFI
 static void load_uefi_boot(){
 	UINTN cnt=0,i=0;
-	EFI_BOOT_MANAGER_LOAD_OPTION*bo;
-	struct boot_config opt;
-	struct boot_config menu={
-		.mode=BOOT_FOLDER,
-		.ident="uefi-bootmenu",
-		.icon="uefi.svg",
-		.desc="UEFI Boot Menu",
-		.save=false,.replace=false,
-		.show=true,.enabled=true
-	};
-	struct boot_config def={
-		.mode=BOOT_UEFI_OPTION,
-		.parent="uefi-bootmenu",
-		.icon="uefi.svg",
-		.save=false,.replace=false,
-		.show=true,.enabled=true
-	};
-	if(!confd_get_boolean("boot.uefi_bootmenu",true))return;
-	boot_create_config(&menu,NULL);
+	EFI_BOOT_MANAGER_LOAD_OPTION*bo=NULL;
+	struct boot_config*opt=NULL,*def=NULL;
+	if(!(opt=AllocateZeroPool(sizeof(struct boot_config))))goto done;
+	if(!(def=AllocateZeroPool(sizeof(struct boot_config))))goto done;
+	def->mode=BOOT_UEFI_OPTION;
+	strcpy(def->parent,"uefi-bootmenu");
+	strcpy(def->icon,"uefi.svg");
+	def->save=false;
+	def->replace=false;
+	def->show=true;
+	def->enabled=true;
+	if(!confd_get_boolean("boot.uefi_bootmenu",true))goto done;
 	EfiBootManagerRefreshAllBootOption();
-	if(!(bo=EfiBootManagerGetLoadOptions(&cnt,LoadOptionTypeBoot)))return;
-	if(cnt<=0)return;
+	if(!(bo=EfiBootManagerGetLoadOptions(&cnt,LoadOptionTypeBoot)))goto done;
+	if(cnt<=0)goto done;
 	else for(i=0;i<cnt;i++){
-		CopyMem(&opt,&def,sizeof(struct boot_config));
-		UnicodeStrToAsciiStrS(bo[i].Description,opt.desc,sizeof(opt.desc));
+		CopyMem(opt,def,sizeof(struct boot_config));
+		UnicodeStrToAsciiStrS(bo[i].Description,opt->desc,sizeof(opt->desc));
 		AsciiSPrint(
-			opt.ident,
-			sizeof(opt.ident)-1,
+			opt->ident,
+			sizeof(opt->ident)-1,
 			"uefi-boot%04d",
 			bo[i].OptionNumber
 		);
-		boot_create_config(&opt,NULL);
+		boot_create_config(opt,NULL);
 		confd_set_integer_base(
-			opt.key,
+			opt->key,
 			"option",
 			bo[i].OptionNumber
 		);
 	}
+	done:
+	if(opt)FreePool(opt);
+	if(def)FreePool(def);
+	if(bo)EfiBootManagerFreeLoadOptions(bo,cnt);
 }
 #endif
 
 void boot_init_configs(void){
 	#ifdef ENABLE_UEFI
 	boot_scan_efi();
-	boot_create_config(&(struct boot_config){
-		.mode=BOOT_EXIT,
-		.ident="continue",.icon="exit.svg",
-		.desc="Continue Boot",
-		.save=false,.replace=false,
-		.show=true,.enabled=true
-	},NULL);
-	boot_create_config(&(struct boot_config){
-		.mode=BOOT_SIMPLE_INIT,
-		.ident="simple-init",.icon="launcher.svg",
-		.desc="Enter Simple Init",
-		.save=false,.replace=false,
-		.show=true,.enabled=true
-	},NULL);
-	load_uefi_boot();
-	#else
-	boot_create_config(&(struct boot_config){
-		.mode=BOOT_SWITCHROOT,
-		.ident="switchroot",.icon="linux.svg",
-		.desc="Default SwitchRoot",
-		.save=false,.replace=false,
-		.show=true,.enabled=false
-	},NULL);
-	boot_create_config(&(struct boot_config){
-		.mode=BOOT_SYSTEM,
-		.ident="system",.icon="launcher.svg",
-		.desc="Enter Simple Init",
-		.save=false,.replace=false,
-		.show=true,.enabled=true
-	},NULL);
-	boot_create_config(&(struct boot_config){
-		.mode=BOOT_CHARGER,
-		.ident="charger",.icon="battery.svg",
-		.desc="Charger Screen",
-		.save=false,.replace=false,
-		.show=false,.enabled=false
-	},NULL);
 	#endif
-	boot_create_config(&(struct boot_config){
-		.mode=BOOT_FOLDER,
-		.ident="reboots",.icon="reboot.svg",
-		.desc="Reboot Menu",
-		.save=false,.replace=false,
-		.show=true,.enabled=true
-	},NULL);
-	boot_create_config(&(struct boot_config){
-		.mode=BOOT_POWEROFF,
-		.ident="poweroff",.icon="poweroff.svg",
-		.desc="Power off system",
-		.parent="reboots",
-		.save=false,.replace=false,
-		.show=true,.enabled=true
-	},NULL);
-	boot_create_config(&(struct boot_config){
-		.mode=BOOT_REBOOT,
-		.ident="reboot",.icon="reboot.svg",
-		.desc="Reboot system",
-		.parent="reboots",
-		.save=false,.replace=false,
-		.show=true,.enabled=true
-	},NULL);
-	boot_create_config(&(struct boot_config){
-		.mode=BOOT_REBOOT,
-		.ident="edl",.icon="download.svg",
-		.desc="Reboot into EDL",
-		.parent="reboots",
-		.save=false,.replace=false,
-		.show=true,.enabled=true
-	},EXTRA_ARG("edl"));
-	boot_create_config(&(struct boot_config){
-		.mode=BOOT_REBOOT,
-		.ident="recovery",.icon="twrp.png",
-		.desc="Reboot into recovery",
-		.parent="reboots",
-		.save=false,.replace=false,
-		.show=true,.enabled=true
-	},EXTRA_ARG("recovery"));
-	boot_create_config(&(struct boot_config){
-		.mode=BOOT_REBOOT,
-		.ident="bootloader",.icon="fastboot.svg",
-		.desc="Reboot into bootloader",
-		.parent="reboots",
-		.save=false,.replace=false,
-		.show=true,.enabled=true
-	},EXTRA_ARG("bootloader"));
-
+	struct initial_cfg*c;
+	for(size_t i=0;(c=&initial_cfgs[i])->valid;i++)
+		boot_create_config(&c->cfg,c->args);
+	#ifdef ENABLE_UEFI
+	load_uefi_boot();
+	#endif
 	if(confd_get_type("boot.default")!=TYPE_STRING)
 		confd_set_string("boot.default",BOOT_DEFAULT);
 	if(confd_get_type("boot.second")!=TYPE_STRING)

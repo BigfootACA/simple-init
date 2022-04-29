@@ -88,11 +88,13 @@ static int do_close(struct conf_file_hand*hand,bool save){
 static int do_load(struct conf_file_hand*hand){
 	char*cp=hand->path;
 	UINTN infos=0;
-	CHAR16 xp[PATH_MAX]={0};
+	UINTN xs=PATH_MAX*sizeof(CHAR16);
+	CHAR16*xp=NULL;
 	EFI_STATUS st=EFI_SUCCESS;
 	EFI_FILE_INFO*info=NULL;
+	if(!(xp=AllocateZeroPool(xs)))goto done;
 	do{if(*cp=='/')*cp='\\';}while(*cp++);
-	AsciiStrToUnicodeStrS(hand->path,xp,sizeof(xp)/sizeof(CHAR16));
+	AsciiStrToUnicodeStrS(hand->path,xp,xs/sizeof(CHAR16));
 	do_close(hand,false);
 	st=hand->dir->Open(hand->dir,&hand->fd,xp,EFI_FILE_MODE_READ,0);
 	if(EFI_ERROR(st))EDONE(tlog_warn(
@@ -125,8 +127,10 @@ static int do_load(struct conf_file_hand*hand){
 		hand->path,efi_status_to_string(st)
 	));
 	FreePool(info);
+	FreePool(xp);
 	return 0;
 	done:
+	if(xp)FreePool(xp);
 	if(info)FreePool(info);
 	do_close(hand,false);
 	return EFI_ERROR(st)?ENUM(efi_status_to_errno(st)):-1;
@@ -135,11 +139,13 @@ static int do_load(struct conf_file_hand*hand){
 static int do_save(struct conf_file_hand*hand){
 	char*cp=hand->path;
 	UINTN infos=0;
-	CHAR16 xp[PATH_MAX]={0};
+	UINTN xs=PATH_MAX*sizeof(CHAR16);
+	CHAR16*xp=NULL;
 	EFI_STATUS st=EFI_SUCCESS;
 	EFI_FILE_INFO*info=NULL;
+	if(!(xp=AllocateZeroPool(xs)))goto done;
 	do{if(*cp=='/')*cp='\\';}while(*cp++);
-	AsciiStrToUnicodeStrS(hand->path,xp,sizeof(xp)/sizeof(CHAR16));
+	AsciiStrToUnicodeStrS(hand->path,xp,xs/sizeof(CHAR16));
 	do_close(hand,false);
 	st=hand->dir->Open(
 		hand->dir,&hand->fd,xp,
@@ -181,8 +187,10 @@ static int do_save(struct conf_file_hand*hand){
 	}
 	hand->fd->SetPosition(hand->fd,0);
 	FreePool(info);
+	FreePool(xp);
 	return 0;
 	done:
+	if(xp)FreePool(xp);
 	if(info)FreePool(info);
 	do_close(hand,false);
 	return EFI_ERROR(st)?ENUM(efi_status_to_errno(st)):-1;

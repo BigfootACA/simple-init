@@ -265,10 +265,15 @@ aboot_image*abootimg_load_from_wfile(EFI_FILE_PROTOCOL*root,CHAR16*path){
 
 aboot_image*abootimg_load_from_file(EFI_FILE_PROTOCOL*root,char*path){
 	if(!root||!path)return NULL;
-	CHAR16 wp[PATH_MAX];
-	ZeroMem(wp,sizeof(wp));
-	AsciiStrToUnicodeStrS(path,wp,sizeof(wp)/sizeof(CHAR16));
-	return abootimg_load_from_wfile(root,wp);
+	aboot_image*ret=NULL;
+	UINTN ws=PATH_MAX*sizeof(CHAR16);
+	CHAR16*wp=AllocateZeroPool(ws);
+	if(wp){
+		AsciiStrToUnicodeStrS(path,wp,ws/sizeof(CHAR16));
+		ret=abootimg_load_from_wfile(root,wp);
+		FreePool(wp);
+	}
+	return ret;
 }
 
 bool abootimg_save_to_fp(aboot_image*img,EFI_FILE_PROTOCOL*fp){
@@ -306,10 +311,15 @@ bool abootimg_save_to_wfile(aboot_image*img,EFI_FILE_PROTOCOL*root,CHAR16*path){
 
 bool abootimg_save_to_file(aboot_image*img,EFI_FILE_PROTOCOL*root,char*path){
 	if(!root||!path)return false;
-	CHAR16 wp[PATH_MAX];
-	ZeroMem(wp,sizeof(wp));
-	AsciiStrToUnicodeStrS(path,wp,sizeof(wp)/sizeof(CHAR16));
-	return abootimg_save_to_wfile(img,root,wp);
+	bool ret=false;
+	UINTN ws=PATH_MAX*sizeof(CHAR16);
+	CHAR16*wp=AllocateZeroPool(ws);
+	if(wp){
+		AsciiStrToUnicodeStrS(path,wp,ws/sizeof(CHAR16));
+		ret=abootimg_save_to_wfile(img,root,wp);
+		FreePool(wp);
+	}
+	return ret;
 }
 
 #define ABOOTIMG_LOAD_SAVE(tag) \
@@ -345,10 +355,15 @@ bool abootimg_save_to_file(aboot_image*img,EFI_FILE_PROTOCOL*root,char*path){
 	}\
 	bool abootimg_load_##tag##_from_file(aboot_image*img,EFI_FILE_PROTOCOL*root,char*path){\
 		if(!root||!path)return false;\
-		CHAR16 wp[PATH_MAX];\
-		ZeroMem(wp,sizeof(wp));\
-		AsciiStrToUnicodeStrS(path,wp,sizeof(wp)/sizeof(CHAR16));\
-		return abootimg_load_##tag##_from_wfile(img,root,wp);\
+		bool ret=false;\
+		UINTN ws=PATH_MAX*sizeof(CHAR16);\
+		CHAR16*wp=AllocateZeroPool(ws);\
+		if(wp){\
+			AsciiStrToUnicodeStrS(path,wp,ws/sizeof(CHAR16));\
+			ret=abootimg_load_##tag##_from_wfile(img,root,wp);\
+			FreePool(wp);\
+		}\
+		return ret;\
 	}\
 	bool abootimg_save_##tag##_to_fp(aboot_image*img,EFI_FILE_PROTOCOL*fp){\
 		if(!img||!fp||!img->tag)return false;\
@@ -381,10 +396,15 @@ bool abootimg_save_to_file(aboot_image*img,EFI_FILE_PROTOCOL*root,char*path){
 	}\
 	bool abootimg_save_##tag##_to_file(aboot_image*img,EFI_FILE_PROTOCOL*root,char*path){\
 		if(!root||!path)return false;\
-		CHAR16 wp[PATH_MAX];\
-		ZeroMem(wp,sizeof(wp));\
-		AsciiStrToUnicodeStrS(path,wp,sizeof(wp)/sizeof(CHAR16));\
-		return abootimg_save_##tag##_to_wfile(img,root,wp);\
+		bool ret=false;\
+		UINTN ws=PATH_MAX*sizeof(CHAR16);\
+		CHAR16*wp=AllocateZeroPool(ws);\
+		if(wp){\
+			AsciiStrToUnicodeStrS(path,wp,ws/sizeof(CHAR16));\
+			ret=abootimg_save_##tag##_to_wfile(img,root,wp);\
+			FreePool(wp);\
+		}\
+		return ret;\
 	}
 #else
 static bool allocate_read(int fd,size_t blk,void**buf,size_t*len){

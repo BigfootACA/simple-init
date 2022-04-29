@@ -100,17 +100,16 @@ static int image_open_source_lvgl(char*path,unsigned char**data,size_t*len){
 
 #ifdef ENABLE_UEFI
 static int image_open_source_locate(char*path,unsigned char**data,size_t*len){
-	locate_ret loc;
 	EFI_STATUS st;
-	EFI_FILE_INFO*info=NULL;
 	UINTN infos=0,read;
-	if(path[0]=='/')return -1;
-	if(!boot_locate_quiet(&loc,path))return -1;
-	if(loc.type!=LOCATE_FILE)
+	EFI_FILE_INFO*info=NULL;
+	locate_ret*loc=AllocateZeroPool(sizeof(locate_ret));
+	if(!loc||path[0]=='/'||!boot_locate_quiet(loc,path))goto done;
+	if(loc->type!=LOCATE_FILE)
 		EDONE(telog_warn("unsupported locate type for %s",path));
 
 	// get file info
-	st=efi_file_get_file_info(loc.file,&infos,&info);
+	st=efi_file_get_file_info(loc->file,&infos,&info);
 	if(EFI_ERROR(st))EDONE(tlog_warn(
 		"get file info of %s failed: %s",
 		path,efi_status_to_string(st)
@@ -130,7 +129,7 @@ static int image_open_source_locate(char*path,unsigned char**data,size_t*len){
 	if(!(*data=malloc(read+1)))
 		EDONE(tlog_error("allocate pool failed"));
 	memset(*data,0,read+1);
-	st=loc.file->Read(loc.file,&read,*data);
+	st=loc->file->Read(loc->file,&read,*data);
 	if(EFI_ERROR(st))EDONE(tlog_warn(
 		"read file %s failed: %s",
 		path,efi_status_to_string(st)
@@ -139,11 +138,13 @@ static int image_open_source_locate(char*path,unsigned char**data,size_t*len){
 		"read file size %s not match %llu != %zu",
 		path,(unsigned long long)read,*len
 	));
-	loc.file->Close(loc.file);
+	loc->file->Close(loc->file);
+	FreePool(loc);
 	return 0;
 	done:
 	if(info)FreePool(info);
-	if(loc.file)loc.file->Close(loc.file);
+	if(loc->file)loc->file->Close(loc->file);
+	if(loc)FreePool(loc);
 	if(*data)free(*data);
 	*data=NULL,*len=0;
 	return -1;

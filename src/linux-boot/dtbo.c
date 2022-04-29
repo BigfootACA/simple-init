@@ -138,7 +138,7 @@ static int read_qcom_dtbo(linux_boot*lb,linux_file_info*fi){
 	if(lb->config&&lb->config->dtbo_id>=0){
 		if((f=list_first(dtbos)))do{
 			LIST_DATA_DECLARE(i,f,dtbo_info*);
-			if(i&&i->id==lb->config->dtb_id)sel=i;
+			if(i&&i->id==lb->config->dtbo_id)sel=i;
 		}while((f=f->next));
 		if(sel)tlog_verbose("use pre selected dtbo from config");
 		else tlog_warn("specified dtbo id not found");

@@ -336,6 +336,62 @@ Default: `false`
 
 Supported environments: `UEFI`
 
+# boot.configs.?.extra.add_simplefb
+
+Specifies whether to add Simple FrameBuffer device to dtb (Device Tree)
+
+It may be unstable at present, if there is a problem, it is recommended to close
+
+Condition: [boot.configs.?.mode](boot.configs.md) is `BOOT_LINUX`
+
+Values: `true` or `false`
+
+Type: `BOOLEAN`
+
+Default: `false`
+
+Supported environments: `UEFI`
+
+# boot.configs.?.extra.update_splash
+
+Specifies whether to update the memory region of the display frame buffer in the dtb (Device Tree)
+
+It may be unstable at present, if there is a problem, it is recommended to close
+
+Condition: [boot.configs.?.mode](boot.configs.md) is `BOOT_LINUX`
+
+Values: `true` or `false`
+
+Type: `BOOLEAN`
+
+Default: `true`
+
+Supported environments: `UEFI`
+
+# boot.configs.?.extra.dtb_id
+
+When there are multiple dtb (Device Tree), select the ID of the target dtb (Device Tree) to use
+
+Unspecified will be automatically selected based on other information
+
+Condition: [boot.configs.?.mode](boot.configs.md) is `BOOT_LINUX`
+
+Type: `INTEGER`
+
+Supported environments: `UEFI`
+
+# boot.configs.?.extra.dtbo_id
+
+When there are multiple dtbo (Device Tree Overlay), select the ID of the target dtbo (Device Tree Overlay) to use
+
+Unspecified will be automatically selected based on other information
+
+Condition: [boot.configs.?.mode](boot.configs.md) is `BOOT_LINUX`
+
+Type: `INTEGER`
+
+Supported environments: `UEFI`
+
 # boot.configs.?.extra.soc_id
 
 Specify the ChipInfo SocID of Qualcomm platform for automatic selection of dtb and dtbo
@@ -425,6 +481,42 @@ Supported environments: `UEFI`
 Specify the PlatformInfo SubtypeDDR of Qualcomm platform for automatic selection of dtb and dtbo
 
 Unspecified will be automatically obtained from `PlatformInfoDxe`
+
+Condition: [boot.configs.?.mode](boot.configs.md) is `BOOT_LINUX`
+
+Type: `INTEGER`
+
+Supported environments: `UEFI`
+
+# boot.configs.?.extra.screen_width
+
+Specify the screen width for adding Simple FrameBuffer devices
+
+Unspecified will automatically get from `GraphicalOutputProtocol`
+
+Condition: [boot.configs.?.mode](boot.configs.md) is `BOOT_LINUX`
+
+Type: `INTEGER`
+
+Supported environments: `UEFI`
+
+# boot.configs.?.extra.screen_height
+
+Specify the screen height for adding Simple FrameBuffer devices
+
+Unspecified will automatically get from `GraphicalOutputProtocol`
+
+Condition: [boot.configs.?.mode](boot.configs.md) is `BOOT_LINUX`
+
+Type: `INTEGER`
+
+Supported environments: `UEFI`
+
+# boot.configs.?.extra.screen_stride
+
+Specify the screen stride for adding Simple FrameBuffer devices
+
+Unspecified will automatically get from `GraphicalOutputProtocol`
 
 Condition: [boot.configs.?.mode](boot.configs.md) is `BOOT_LINUX`
 

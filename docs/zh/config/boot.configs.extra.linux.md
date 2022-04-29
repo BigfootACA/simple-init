@@ -336,6 +336,62 @@
 
 支持的环境: `UEFI`
 
+# boot.configs.?.extra.add_simplefb
+
+指定是否往dtb(设备树)添加Simple FrameBuffer设备
+
+目前可能不稳定，如出现问题则建议关闭
+
+条件: [boot.configs.?.mode](boot.configs.md)为`BOOT_LINUX`
+
+取值: `true` 或 `false`
+
+类型: `BOOLEAN` (布尔值)
+
+默认: `false`
+
+支持的环境: `UEFI`
+
+# boot.configs.?.extra.update_splash
+
+指定是否更新dtb(设备树)中显示帧缓冲区的内存范围
+
+目前可能不稳定，如出现问题则建议关闭
+
+条件: [boot.configs.?.mode](boot.configs.md)为`BOOT_LINUX`
+
+取值: `true` 或 `false`
+
+类型: `BOOLEAN` (布尔值)
+
+默认: `true`
+
+支持的环境: `UEFI`
+
+# boot.configs.?.extra.dtb_id
+
+当有多个dtb(设备树)时，选择要使用的目标dtb(设备树)的ID
+
+未指定将会根据其它信息自动选择
+
+条件: [boot.configs.?.mode](boot.configs.md)为`BOOT_LINUX`
+
+类型: `INTEGER` (64位整型数字)
+
+支持的环境: `UEFI`
+
+# boot.configs.?.extra.dtbo_id
+
+当有多个dtbo(设备树叠加层)时，选择要使用的目标dtbo(设备树叠加层)的ID
+
+未指定将会根据其它信息自动选择
+
+条件: [boot.configs.?.mode](boot.configs.md)为`BOOT_LINUX`
+
+类型: `INTEGER` (64位整型数字)
+
+支持的环境: `UEFI`
+
 # boot.configs.?.extra.soc_id
 
 指定高通平台的ChipInfo SocID，用于自动选择dtb和dtbo
@@ -425,6 +481,42 @@
 指定高通平台的PlatformInfo SubtypeDDR，用于自动选择dtb和dtbo
 
 未指定将会自动从`PlatformInfoDxe`获取
+
+条件: [boot.configs.?.mode](boot.configs.md)为`BOOT_LINUX`
+
+类型: `INTEGER` (64位整型数字)
+
+支持的环境: `UEFI`
+
+# boot.configs.?.extra.screen_width
+
+指定屏幕宽度(width)，用于添加Simple FrameBuffer设备
+
+未指定将会自动从`GraphicalOutputProtocol`获取
+
+条件: [boot.configs.?.mode](boot.configs.md)为`BOOT_LINUX`
+
+类型: `INTEGER` (64位整型数字)
+
+支持的环境: `UEFI`
+
+# boot.configs.?.extra.screen_height
+
+指定屏幕高度(height)，用于添加Simple FrameBuffer设备
+
+未指定将会自动从`GraphicalOutputProtocol`获取
+
+条件: [boot.configs.?.mode](boot.configs.md)为`BOOT_LINUX`
+
+类型: `INTEGER` (64位整型数字)
+
+支持的环境: `UEFI`
+
+# boot.configs.?.extra.screen_stride
+
+指定屏幕行长度(stride)，用于添加Simple FrameBuffer设备
+
+未指定将会自动从`GraphicalOutputProtocol`获取
 
 条件: [boot.configs.?.mode](boot.configs.md)为`BOOT_LINUX`
 

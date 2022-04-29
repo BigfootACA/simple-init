@@ -17,6 +17,7 @@
 #include<Library/MemoryAllocationLib.h>
 #include<Library/UefiBootServicesTableLib.h>
 #include<Protocol/SimpleFileSystem.h>
+#include"uefi.h"
 #include"lvgl.h"
 #include"logger.h"
 #include"defines.h"
@@ -109,24 +110,12 @@ static EFI_HANDLE get_fs_proto(UINTN*bs){
 static lv_res_t fs_get_volume_label(struct _lv_fs_drv_t*drv,char*label,size_t len){
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
-	UINTN bs=0;
 	EFI_FILE_SYSTEM_VOLUME_LABEL*fi=NULL;
-	EFI_STATUS st=fs->proto->GetInfo(
+	EFI_STATUS st=st=efi_file_get_info(
 		fs->proto,
 		&gEfiFileSystemVolumeLabelInfoIdGuid,
-		&bs,fi
+		NULL,(VOID**)&fi
 	);
-	if(st==EFI_BUFFER_TOO_SMALL){
-		if(!(fi=AllocatePool(bs))){
-			tlog_warn("allocate buffer for file system volume label info failed");
-			return LV_FS_RES_OUT_OF_MEM;
-		}
-		st=fs->proto->GetInfo(
-			fs->proto,
-			&gEfiFileSystemVolumeLabelInfoIdGuid,
-			&bs,fi
-		);
-	}
 	strncpy(label,_("Unknown"),len-1);
 	if(
 		!EFI_ERROR(st)&&fi&&
@@ -164,18 +153,25 @@ static lv_res_t fs_open_cb(
 		break;
 		default:return LV_FS_RES_INV_PARAM;
 	}
+	EFI_STATUS st=EFI_OUT_OF_RESOURCES;
 	EFI_FILE_PROTOCOL*fh;
-	char ep[4096]={0},*cp=ep;
-	CHAR16 xpath[4096]={0};
+	UINTN xs=PATH_MAX*sizeof(CHAR16);
+	char*ep=NULL,*cp;
+	CHAR16*xpath=NULL;
+	if(!(cp=ep=AllocateZeroPool(PATH_MAX)))goto done;
+	if(!(xpath=AllocateZeroPool(xs)))goto done;
 	strcpy(ep,path);
 	do{if(*cp=='/')*cp='\\';}while(*cp++);
-	AsciiStrToUnicodeStrS(ep,xpath,sizeof(xpath)/sizeof(CHAR16));
-	EFI_STATUS st=fs->proto->Open(fs->proto,&fh,xpath,flags,0);
+	AsciiStrToUnicodeStrS(ep,xpath,xs/sizeof(CHAR16));
+	st=fs->proto->Open(fs->proto,&fh,xpath,flags,0);
 	if(EFI_ERROR(st))XWARN(
 		"open %c:%s mode %d failed: %s",
 		drv->letter,path,mode,efi_status_to_string(st)
 	);
 	if(fh)*(EFI_FILE_PROTOCOL**)((lv_fs_file_t*)file_p)=fh;
+	done:
+	if(ep)FreePool(ep);
+	if(xpath)FreePool(xpath);
 	return efi_status_to_lv_res(st);
 }
 
@@ -205,12 +201,16 @@ static lv_res_t fs_remove_cb(
 	struct fs_root*fs=fse->user_data;
 	if(!fs)return LV_FS_RES_INV_PARAM;
 	EFI_FILE_PROTOCOL*fh;
-	char ep[4096]={0},*cp=ep;
-	CHAR16 xpath[4096]={0};
+	EFI_STATUS st=EFI_OUT_OF_RESOURCES;
+	UINTN xs=PATH_MAX*sizeof(CHAR16);
+	char*ep=NULL,*cp;
+	CHAR16*xpath=NULL;
+	if(!(cp=ep=AllocateZeroPool(PATH_MAX)))goto done;
+	if(!(xpath=AllocateZeroPool(xs)))goto done;
 	strcpy(ep,fn);
 	do{if(*cp=='/')*cp='\\';}while(*cp++);
-	AsciiStrToUnicodeStrS(ep,xpath,sizeof(xpath)/sizeof(CHAR16));
-	EFI_STATUS st=fs->proto->Open(fs->proto,&fh,xpath,EFI_FILE_MODE_READ|EFI_FILE_MODE_WRITE,0);
+	AsciiStrToUnicodeStrS(ep,xpath,xs/sizeof(CHAR16));
+	st=fs->proto->Open(fs->proto,&fh,xpath,EFI_FILE_MODE_READ|EFI_FILE_MODE_WRITE,0);
 	if(EFI_ERROR(st)){
 		XWARN(
 			"open %c:%s failed: %s",
@@ -223,6 +223,9 @@ static lv_res_t fs_remove_cb(
 			drv->letter,fn,efi_status_to_string(st)
 		);
 	}
+	done:
+	if(ep)FreePool(ep);
+	if(xpath)FreePool(xpath);
 	return efi_status_to_lv_res(st);
 }
 
@@ -236,15 +239,17 @@ static lv_res_t fs_get_type_cb(
 	struct fs_root*fs=fse->user_data;
 	if(!fs||!fs->proto)return false;
 	bool isdir=false;
-	UINTN infos=0;
-	EFI_STATUS st;
+	EFI_STATUS st=EFI_OUT_OF_RESOURCES;
 	EFI_FILE_PROTOCOL*fh;
 	EFI_FILE_INFO*info=NULL;
-	char ep[4096]={0},*cp=ep;
-	CHAR16 xpath[4096]={0};
+	UINTN xs=PATH_MAX*sizeof(CHAR16);
+	char*ep=NULL,*cp;
+	CHAR16*xpath=NULL;
+	if(!(cp=ep=AllocateZeroPool(PATH_MAX)))goto done;
+	if(!(xpath=AllocateZeroPool(xs)))goto done;
 	strcpy(ep,fn);
 	do{if(*cp=='/')*cp='\\';}while(*cp++);
-	AsciiStrToUnicodeStrS(ep,xpath,sizeof(xpath)/sizeof(CHAR16));
+	AsciiStrToUnicodeStrS(ep,xpath,xs/sizeof(CHAR16));
 	st=fs->proto->Open(fs->proto,&fh,xpath,EFI_FILE_MODE_READ,0);
 	if(EFI_ERROR(st)){
 		XWARN(
@@ -252,17 +257,17 @@ static lv_res_t fs_get_type_cb(
 			drv->letter,fn,efi_status_to_string(st)
 		);
 	}else{
-		st=fh->GetInfo(fh,&gEfiFileInfoGuid,&infos,info);
-		if(st==EFI_BUFFER_TOO_SMALL&&(info=AllocateZeroPool(infos)))
-			st=fh->GetInfo(fh,&gEfiFileInfoGuid,&infos,info);
-		if(EFI_ERROR(st)){
-			XWARN(
-				"get type %c:#%p failed: %s",
-				drv->letter,fh,efi_status_to_string(st)
-			);
-		}else if(infos!=0)*type=fileinfo_is_dir(info)?TYPE_DIR:TYPE_FILE;
+		st=efi_file_get_file_info(fh,NULL,&info);
+		if(info&&!EFI_ERROR(st))*type=fileinfo_is_dir(info)?TYPE_DIR:TYPE_FILE;
+		else XWARN(
+			"get type %c:#%p failed: %s",
+			drv->letter,fh,efi_status_to_string(st)
+		);
 		fh->Close(fh);
 	}
+	done:
+	if(ep)FreePool(ep);
+	if(xpath)FreePool(xpath);
 	if(info)FreePool(info);
 	return isdir;
 }
@@ -276,16 +281,17 @@ static bool fs_is_dir_cb(
 	struct fs_root*fs=fse->user_data;
 	if(!fs||!fs->proto)return false;
 	bool isdir=false;
-	UINTN infos=0;
-	EFI_STATUS st;
+	EFI_STATUS st=EFI_OUT_OF_RESOURCES;
 	EFI_FILE_PROTOCOL*fh;
 	EFI_FILE_INFO*info=NULL;
-	if(!info)return false;
-	char ep[4096]={0},*cp=ep;
-	CHAR16 xpath[4096]={0};
+	UINTN xs=PATH_MAX*sizeof(CHAR16);
+	char*ep=NULL,*cp;
+	CHAR16*xpath=NULL;
+	if(!(cp=ep=AllocateZeroPool(PATH_MAX)))goto done;
+	if(!(xpath=AllocateZeroPool(xs)))goto done;
 	strcpy(ep,fn);
 	do{if(*cp=='/')*cp='\\';}while(*cp++);
-	AsciiStrToUnicodeStrS(ep,xpath,sizeof(xpath)/sizeof(CHAR16));
+	AsciiStrToUnicodeStrS(ep,xpath,xs/sizeof(CHAR16));
 	st=fs->proto->Open(fs->proto,&fh,xpath,EFI_FILE_MODE_READ,0);
 	if(EFI_ERROR(st)){
 		XWARN(
@@ -293,17 +299,17 @@ static bool fs_is_dir_cb(
 			drv->letter,fn,efi_status_to_string(st)
 		);
 	}else{
-		st=fh->GetInfo(fh,&gEfiFileInfoGuid,&infos,info);
-		if(st==EFI_BUFFER_TOO_SMALL&&(info=AllocateZeroPool(infos)))
-			st=fh->GetInfo(fh,&gEfiFileInfoGuid,&infos,info);
-		if(EFI_ERROR(st)){
-			XWARN(
-				"is dir %c:#%p failed: %s",
-				drv->letter,fh,efi_status_to_string(st)
-			);
-		}else if(infos!=0)isdir=fileinfo_is_dir(info);
+		st=efi_file_get_file_info(fh,NULL,&info);
+		if(info&&!EFI_ERROR(st))isdir=fileinfo_is_dir(info);
+		else XWARN(
+			"is dir %c:#%p failed: %s",
+			drv->letter,fh,efi_status_to_string(st)
+		);
 		fh->Close(fh);
 	}
+	done:
+	if(ep)FreePool(ep);
+	if(xpath)FreePool(xpath);
 	if(info)FreePool(info);
 	return isdir;
 }
@@ -410,18 +416,13 @@ static lv_res_t fs_size_cb(
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
 	if(!fs||!fs->proto)return LV_FS_RES_INV_PARAM;
-	UINTN infos=0;
 	EFI_FILE_INFO*info=NULL;
-	EFI_STATUS st=fh->GetInfo(fh,&gEfiFileInfoGuid,&infos,info);
-	if(st==EFI_BUFFER_TOO_SMALL&&(info=AllocateZeroPool(infos)))
-		st=fh->GetInfo(fh,&gEfiFileInfoGuid,&infos,info);
-	if(EFI_ERROR(st)){
-		XWARN(
-			"size %c:#%p failed: %s",
-			drv->letter,fh,efi_status_to_string(st)
-		);
-	}else if(infos!=0)*size_p=(uint32_t)info->FileSize;
-	else st=EFI_LOAD_ERROR;
+	EFI_STATUS st=st=efi_file_get_file_info(fh,NULL,&info);
+	if(info&&!EFI_ERROR(st))*size_p=(uint32_t)info->FileSize;
+	else XWARN(
+		"size %c:#%p failed: %s",
+		drv->letter,fh,efi_status_to_string(st)
+	);
 	if(info)FreePool(info);
 	return efi_status_to_lv_res(st);
 }
@@ -451,17 +452,20 @@ static lv_res_t fs_dir_open_cb(
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
 	if(!fs||!fs->proto)return LV_FS_RES_INV_PARAM;
-	EFI_STATUS st;
+	EFI_STATUS st=EFI_OUT_OF_RESOURCES;
 	EFI_FILE_PROTOCOL*fh;
+	UINTN xs=PATH_MAX*sizeof(CHAR16);
+	char*ep=NULL,*cp;
+	CHAR16*xpath=NULL;
+	if(!(cp=ep=AllocateZeroPool(PATH_MAX)))goto done;
+	if(!(xpath=AllocateZeroPool(xs)))goto done;
 	if(!*path||strcmp(path,"/")==0){
 		fh=fs->proto,st=EFI_SUCCESS;
 		fh->SetPosition(fh,0);
 	}else{
-		char ep[4096]={0},*cp=ep;
-		CHAR16 xpath[4096]={0};
 		strcpy(ep,path);
 		do{if(*cp=='/')*cp='\\';}while(*cp++);
-		AsciiStrToUnicodeStrS(ep,xpath,sizeof(xpath)/sizeof(CHAR16));
+		AsciiStrToUnicodeStrS(ep,xpath,xs/sizeof(CHAR16));
 		st=fs->proto->Open(fs->proto,&fh,xpath,EFI_FILE_READ_ONLY,0);
 		if(EFI_ERROR(st))XWARN(
 			"open dir %c:%s failed: %s",
@@ -469,6 +473,9 @@ static lv_res_t fs_dir_open_cb(
 		);
 	}
 	if(fh)((lv_fs_dir_t*)rddir_p)->dir_d=fh;
+	done:
+	if(ep)FreePool(ep);
+	if(xpath)FreePool(xpath);
 	return efi_status_to_lv_res(st);
 }
 
@@ -541,13 +548,16 @@ static lv_res_t fs_mkdir_cb(
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
 	if(!fs||!fs->proto)return LV_FS_RES_INV_PARAM;
-	EFI_STATUS st;
+	EFI_STATUS st=EFI_OUT_OF_RESOURCES;
 	EFI_FILE_PROTOCOL*fh=NULL;
-	char ep[4096]={0},*cp=ep;
-	CHAR16 xpath[4096]={0};
+	UINTN xs=PATH_MAX*sizeof(CHAR16);
+	char*ep=NULL,*cp;
+	CHAR16*xpath=NULL;
+	if(!(cp=ep=AllocateZeroPool(PATH_MAX)))goto done;
+	if(!(xpath=AllocateZeroPool(xs)))goto done;
 	strcpy(ep,name);
 	do{if(*cp=='/')*cp='\\';}while(*cp++);
-	AsciiStrToUnicodeStrS(ep,xpath,sizeof(xpath)/sizeof(CHAR16));
+	AsciiStrToUnicodeStrS(ep,xpath,xs/sizeof(CHAR16));
 	st=fs->proto->Open(
 		fs->proto,&fh,xpath,
 		EFI_FILE_MODE_READ|
@@ -560,6 +570,9 @@ static lv_res_t fs_mkdir_cb(
 		drv->letter,name,efi_status_to_string(st)
 	);
 	if(fh)fh->Close(fh);
+	done:
+	if(ep)FreePool(ep);
+	if(xpath)FreePool(xpath);
 	return efi_status_to_lv_res(st);
 }
 
@@ -571,13 +584,16 @@ static lv_res_t fs_creat_cb(
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
 	if(!fs||!fs->proto)return LV_FS_RES_INV_PARAM;
-	EFI_STATUS st;
+	EFI_STATUS st=EFI_OUT_OF_RESOURCES;
 	EFI_FILE_PROTOCOL*fh=NULL;
-	char ep[4096]={0},*cp=ep;
-	CHAR16 xpath[4096]={0};
+	UINTN xs=PATH_MAX*sizeof(CHAR16);
+	char*ep=NULL,*cp;
+	CHAR16*xpath=NULL;
+	if(!(cp=ep=AllocateZeroPool(PATH_MAX)))goto done;
+	if(!(xpath=AllocateZeroPool(xs)))goto done;
 	strcpy(ep,name);
 	do{if(*cp=='/')*cp='\\';}while(*cp++);
-	AsciiStrToUnicodeStrS(ep,xpath,sizeof(xpath)/sizeof(CHAR16));
+	AsciiStrToUnicodeStrS(ep,xpath,xs/sizeof(CHAR16));
 	st=fs->proto->Open(
 		fs->proto,&fh,xpath,
 		EFI_FILE_MODE_READ|
@@ -590,6 +606,9 @@ static lv_res_t fs_creat_cb(
 		drv->letter,name,efi_status_to_string(st)
 	);
 	if(fh)fh->Close(fh);
+	done:
+	if(ep)FreePool(ep);
+	if(xpath)FreePool(xpath);
 	return efi_status_to_lv_res(st);
 }
 
@@ -685,12 +704,20 @@ EFI_DEVICE_PATH_PROTOCOL*fs_get_device_path(const char*path){
 	if(drv->ready_cb&&!drv->ready_cb(drv))return NULL;
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
-	char ep[4096]={0},*cp=ep;
-	CHAR16 xp[PATH_MAX]={0};
+	EFI_DEVICE_PATH_PROTOCOL*ret=NULL;
+	UINTN xs=PATH_MAX*sizeof(CHAR16);
+	char*ep=NULL,*cp;
+	CHAR16*xp=NULL;
+	if(!(cp=ep=AllocateZeroPool(PATH_MAX)))goto done;
+	if(!(xp=AllocateZeroPool(xs)))goto done;
 	strcpy(ep,path+2);
 	do{if(*cp=='/')*cp='\\';}while(*cp++);
-	AsciiStrToUnicodeStrS(ep,xp,sizeof(xp)/sizeof(CHAR16));
-	return FileDevicePath(fs->hand,xp);
+	AsciiStrToUnicodeStrS(ep,xp,xs/sizeof(CHAR16));
+	ret=FileDevicePath(fs->hand,xp);
+	done:
+	if(ep)FreePool(ep);
+	if(xp)FreePool(xp);
+	return ret;
 }
 
 EFI_FILE_PROTOCOL*fs_get_root_by_letter(char letter){

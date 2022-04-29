@@ -156,26 +156,29 @@ static int load_pointer(linux_file_info*fi,void*p,size_t size){
 }
 
 int linux_file_load(linux_file_info*fi,linux_load_from*from){
-	locate_ret loc;
-	if(!fi||!from||!from->enabled)return -1;
+	int r=-1;
+	locate_ret*loc=AllocateZeroPool(sizeof(locate_ret));
+	if(!loc||!fi||!from||!from->enabled)goto done;
 	switch(from->type){
 		case FROM_LOCATE:
-			if(!boot_locate(&loc,from->locate)){
+			if(!boot_locate(loc,from->locate)){
 				tlog_warn("resolve locate failed");
 				break;
 			}
-			switch(loc.type){
-				case LOCATE_FILE:return load_fp(fi,loc.file);
-				case LOCATE_BLOCK:return load_bp(fi,loc.block);
+			switch(loc->type){
+				case LOCATE_FILE:r=load_fp(fi,loc->file);break;
+				case LOCATE_BLOCK:r=load_bp(fi,loc->block);break;
 				default:tlog_warn("unsupported locate type");
 			}
 		break;
-		case FROM_FILE_PROTOCOL:return load_fp(fi,from->file_proto);
-		case FROM_BLOCKIO_PROTOCOL:return load_bp(fi,from->blk_proto);
-		case FROM_POINTER:return load_pointer(fi,from->pointer,from->size);
+		case FROM_FILE_PROTOCOL:r=load_fp(fi,from->file_proto);break;
+		case FROM_BLOCKIO_PROTOCOL:r=load_bp(fi,from->blk_proto);break;
+		case FROM_POINTER:r=load_pointer(fi,from->pointer,from->size);break;
 		default:tlog_warn("unsupported from type");
 	}
-	return -1;
+	done:
+	FreePool(loc);
+	return r;
 }
 
 static int load_merged_initrd(linux_boot*lb){

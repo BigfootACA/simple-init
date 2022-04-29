@@ -9,6 +9,7 @@
 #include<Uefi.h>
 #include<Library/BaseLib.h>
 #include<Library/BaseMemoryLib.h>
+#include<Library/MemoryAllocationLib.h>
 #include"list.h"
 #include"aboot.h"
 #include"logger.h"
@@ -102,9 +103,14 @@ int linux_boot_load_abootimg_locate(linux_boot*lb,locate_ret*loc){
 }
 
 int linux_boot_load_abootimg_path(linux_boot*lb,char*path){
-	locate_ret loc;
-	if(!boot_locate(&loc,path))return -1;
-	return linux_boot_load_abootimg_locate(lb,&loc);
+	int r=-1;
+	locate_ret*loc=AllocateZeroPool(sizeof(locate_ret));
+	if(loc){
+		if(boot_locate(loc,path))
+			r=linux_boot_load_abootimg_locate(lb,loc);
+		FreePool(loc);
+	}
+	return r;
 }
 
 int linux_boot_load_abootimg_config(linux_boot*lb){

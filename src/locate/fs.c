@@ -54,7 +54,8 @@ locate_match_state locate_match_fs_name(locate_dest*loc){
 
 locate_match_state locate_match_file(locate_dest*loc){
 	EFI_STATUS st;
-	CHAR16 fn[PATH_MAX];
+	CHAR16*fn=NULL;
+	UINTN fs=PATH_MAX*sizeof(CHAR16);
 	EFI_FILE_PROTOCOL*f=NULL;
 	char*name=GSTR("by_file",NULL);
 	if(!name)return MATCH_SKIP;
@@ -64,10 +65,10 @@ locate_match_state locate_match_file(locate_dest*loc){
 		return MATCH_INVALID;
 	}
 	if(!loc||!loc->root)return MATCH_FAILED;
-	ZeroMem(fn,sizeof(fn));
+	if(!(fn=AllocateZeroPool(fs)))return MATCH_FAILED;
 	AsciiStrToUnicodeStrS(
 		name,fn,
-		sizeof(fn)/sizeof(CHAR16)
+		fs/sizeof(CHAR16)
 	);
 	free(name);
 	st=loc->root->Open(
@@ -76,6 +77,7 @@ locate_match_state locate_match_file(locate_dest*loc){
 		EFI_FILE_MODE_READ,
 		0
 	);
+	FreePool(fn);
 	if(EFI_ERROR(st)||!f)return MATCH_FAILED;
 	f->Close(f);
 	return MATCH_SUCCESS;

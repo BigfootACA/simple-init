@@ -105,7 +105,10 @@ static bool try_protocol(const char*tag,locate_dest*loc,EFI_GUID*protocol){
 	);
 	for(UINTN i=0;i<cnt;i++){
 		init_locate(loc,tag,hands[i]);
-		tlog_debug("try match handle %p (%llu)",hands[i],(unsigned long long)i);
+		tlog_debug(
+			"try match handle %p (%llu)",
+			hands[i],(unsigned long long)i
+		);
 		for(UINTN s=0;locate_matches[s];s++){
 			enum locate_match_state st=locate_matches[s](loc);
 			if(st!=MATCH_SKIP)tlog_verbose(
@@ -184,14 +187,11 @@ static void dump_block_info(EFI_BLOCK_IO_PROTOCOL*bi){
 }
 
 static void dump_fs_info(EFI_FILE_PROTOCOL*root){
-	UINTN bs=0;
 	EFI_STATUS st;
 	EFI_FILE_SYSTEM_INFO*fi=NULL;
 	char buf[64],xn[PATH_MAX];
 	if(!root)return;
-	st=root->GetInfo(root,&gEfiFileSystemInfoGuid,&bs,fi);
-	if(st==EFI_BUFFER_TOO_SMALL&&(fi=AllocateZeroPool(bs)))
-		st=root->GetInfo(root,&gEfiFileSystemInfoGuid,&bs,fi);
+	st=efi_file_get_info(root,&gEfiFileSystemInfoGuid,NULL,(VOID**)&fi);
 	if(EFI_ERROR(st))return;
 	ZeroMem(xn,sizeof(xn));
 	UnicodeStrToAsciiStrS(fi->VolumeLabel,xn,sizeof(xn));
@@ -401,17 +401,22 @@ char*locate_find_name(char*buf,size_t len){
 }
 
 bool locate_add_by_device_path(char*tag,bool save,EFI_DEVICE_PATH_PROTOCOL*dp){
+	bool ret=false;
 	CHAR16*dpt=NULL;
-	CHAR8 xpt[PATH_MAX];
-	if(!tag||!dp||get_locate(tag))return false;
-	if(!(dpt=ConvertDevicePathToText(dp,FALSE,FALSE)))return false;
+	UINTN xps=PATH_MAX;
+	CHAR8*xpt=NULL;
+	if(!tag||!dp||get_locate(tag))return ret;
+	if(!(dpt=ConvertDevicePathToText(dp,FALSE,FALSE)))return ret;
 	confd_add_key_base(BASE,tag);
 	confd_set_save_base(BASE,tag,save);
-	ZeroMem(xpt,sizeof(xpt));
-	UnicodeStrToAsciiStrS(dpt,xpt,sizeof(xpt));
-	confd_set_string_dict(BASE,tag,"by_device_path",xpt);
+	if((xpt=AllocateZeroPool(xps))){
+		UnicodeStrToAsciiStrS(dpt,xpt,sizeof(xpt));
+		confd_set_string_dict(BASE,tag,"by_device_path",xpt);
+		FreePool(xpt);
+		ret=true;
+	}
 	FreePool(dpt);
-	return true;
+	return ret;
 }
 
 bool locate_auto_add_by_device_path(char*buf,size_t len,EFI_DEVICE_PATH_PROTOCOL*dp){

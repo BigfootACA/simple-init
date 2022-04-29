@@ -26,6 +26,7 @@
 #include<stdlib.h>
 #include"str.h"
 #include"boot.h"
+#include"uefi.h"
 #include"list.h"
 #include"confd.h"
 #include"logger.h"

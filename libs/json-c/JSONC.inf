@@ -15,8 +15,8 @@
   SimpleInitCompatible
 
 [Sources]
-  libs/json-c-uefi/config.h
-  libs/json-c-uefi/json_config.h
+  libs/json-c/json-c-uefi/config.h
+  libs/json-c/json-c-uefi/json_config.h
   libs/json-c/json.h
   libs/json-c/arraylist.h
   libs/json-c/debug.h
@@ -38,4 +38,4 @@
   libs/json-c/linkhash.c
   libs/json-c/printbuf.c
   libs/json-c/strerror_override.c
-  libs/json-c-uefi/random_seed.c
+  libs/json-c/json-c-uefi/random_seed.c

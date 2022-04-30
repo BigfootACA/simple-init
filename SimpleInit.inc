@@ -1,6 +1,6 @@
 [LibraryClasses]
   Zlib|libs/Zlib.inf
-  JSONC|libs/JSONC.inf
+  JSONC|libs/json-c/JSONC.inf
   LuaLib|libs/lua/LuaLib.inf
   TSMLib|libs/libtsm/TSMLib.inf
   MiniXML|libs/mxml/MiniXML.inf
@@ -25,7 +25,7 @@
 
 [Components]
   libs/Zlib.inf
-  libs/JSONC.inf
+  libs/json-c/JSONC.inf
   libs/lua/LuaLib.inf
   libs/libtsm/TSMLib.inf
   libs/mxml/MiniXML.inf

@@ -4,6 +4,3 @@
 [submodule "libs/freetype"]
 	path = libs/freetype
 	url = https://gitlab.freedesktop.org/freetype/freetype.git
-[submodule "libs/json-c"]
-	path = libs/json-c
-	url = https://github.com/json-c/json-c.git

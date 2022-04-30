@@ -67,7 +67,7 @@ if("${ENABLE_NANOSVG}" STREQUAL "ON")
 endif()
 
 if("${ENABLE_JSONC}" STREQUAL "ON")
-	include(libs/json-c.cmake)
+	include(libs/json-c/json-c.cmake)
 endif()
 
 if("${ENABLE_MXML}" STREQUAL "ON")

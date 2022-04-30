@@ -9,7 +9,7 @@
   libs/stb
   libs/mxml
   libs/json-c
-  libs/json-c-uefi
+  libs/json-c/json-c-uefi
   libs/freetype/include
   libs/zlib
   libs/lvgl

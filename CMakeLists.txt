@@ -79,7 +79,7 @@ if("${ENABLE_LUA}" STREQUAL "ON")
 endif()
 
 if("${ENABLE_LIBTSM}" STREQUAL "ON")
-	include(libs/libtsm.cmake)
+	include(libs/libtsm/libtsm.cmake)
 endif()
 
 if("${ENABLE_STB}" STREQUAL "ON")

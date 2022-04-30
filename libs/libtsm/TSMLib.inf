@@ -14,11 +14,11 @@
   SimpleInitCompatible
 
 [Sources]
-libs/libtsm/src/shared/shl-htable.c
-libs/libtsm/src/tsm/tsm-vte.c
-libs/libtsm/src/tsm/tsm-render.c
-libs/libtsm/src/tsm/tsm-vte-charsets.c
-libs/libtsm/src/tsm/tsm-selection.c
-libs/libtsm/src/tsm/tsm-unicode.c
-libs/libtsm/src/tsm/tsm-screen.c
-libs/libtsm/external/wcwidth/wcwidth.c
+  libs/libtsm/src/shared/shl-htable.c
+  libs/libtsm/src/tsm/tsm-vte.c
+  libs/libtsm/src/tsm/tsm-render.c
+  libs/libtsm/src/tsm/tsm-vte-charsets.c
+  libs/libtsm/src/tsm/tsm-selection.c
+  libs/libtsm/src/tsm/tsm-unicode.c
+  libs/libtsm/src/tsm/tsm-screen.c
+  libs/libtsm/external/wcwidth/wcwidth.c

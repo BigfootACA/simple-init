@@ -101,6 +101,12 @@ extern int boot_name(const char*name);
 // src/boot/boot.c: convert boot_mode to string
 extern char*bootmode2string(enum boot_mode mode);
 
+// src/boot/boot.c: convert boot_mode to short string
+extern char*bootmode2shortstring(enum boot_mode mode);
+
+// src/boot/boot.c: convert short string to boot_mode
+extern bool shortstring2bootmode(const char*str,enum boot_mode*mode);
+
 // src/boot/boot.c: dump boot config to logger
 extern void dump_boot_config(char*tag,enum log_level level,boot_config*boot);
 

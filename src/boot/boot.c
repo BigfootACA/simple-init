@@ -46,6 +46,46 @@ char*bootmode2string(enum boot_mode mode){
 	}
 }
 
+char*bootmode2shortstring(enum boot_mode mode){
+	switch(mode){
+		case BOOT_SWITCHROOT:return  "switchroot";
+		case BOOT_CHARGER:return     "charger";
+		case BOOT_KEXEC:return       "kexec";
+		case BOOT_REBOOT:return      "reboot";
+		case BOOT_POWEROFF:return    "poweroff";
+		case BOOT_HALT:return        "halt";
+		case BOOT_SYSTEM:return      "system";
+		case BOOT_LINUX:return       "linux";
+		case BOOT_EFI:return         "efi";
+		case BOOT_EXIT:return        "exit";
+		case BOOT_SIMPLE_INIT:return "simple-init";
+		case BOOT_UEFI_OPTION:return "uefi-option";
+		case BOOT_LUA:return         "lua";
+		case BOOT_FOLDER:return      "folder";
+		default:return               "unknown";
+	}
+}
+
+bool shortstring2bootmode(const char*str,enum boot_mode*mode){
+	if(!str||!mode)return false;
+	else if(strcasecmp(str,"switchroot")==0)*mode=BOOT_SWITCHROOT;
+	else if(strcasecmp(str,"charger")==0)*mode=BOOT_CHARGER;
+	else if(strcasecmp(str,"kexec")==0)*mode=BOOT_KEXEC;
+	else if(strcasecmp(str,"reboot")==0)*mode=BOOT_REBOOT;
+	else if(strcasecmp(str,"poweroff")==0)*mode=BOOT_POWEROFF;
+	else if(strcasecmp(str,"halt")==0)*mode=BOOT_HALT;
+	else if(strcasecmp(str,"system")==0)*mode=BOOT_SYSTEM;
+	else if(strcasecmp(str,"linux")==0)*mode=BOOT_LINUX;
+	else if(strcasecmp(str,"efi")==0)*mode=BOOT_EFI;
+	else if(strcasecmp(str,"exit")==0)*mode=BOOT_EXIT;
+	else if(strcasecmp(str,"simple-init")==0)*mode=BOOT_SIMPLE_INIT;
+	else if(strcasecmp(str,"uefi-option")==0)*mode=BOOT_UEFI_OPTION;
+	else if(strcasecmp(str,"lua")==0)*mode=BOOT_LUA;
+	else if(strcasecmp(str,"folder")==0)*mode=BOOT_FOLDER;
+	else return false;
+	return true;
+}
+
 void dump_boot_config(char*tag,enum log_level level,boot_config*boot){
 	if(!tag||!boot)return;
 	logger_printf(level,tag,"Dump boot config of %s",boot->ident);
@@ -137,24 +177,11 @@ boot_config*boot_get_config(const char*name){
 	switch(confd_get_type_base(cfg->base,"mode")){
 		case TYPE_INTEGER:cfg->mode=confd_get_integer_base(cfg->base,"mode",BOOT_NONE);break;
 		case TYPE_STRING:{
-			char*x=confd_get_string_base(cfg->base,"mode",NULL);
-			if(!x)break;
-			if(strcasecmp(x,"switchroot")==0)cfg->mode=BOOT_SWITCHROOT;
-			else if(strcasecmp(x,"charger")==0)cfg->mode=BOOT_CHARGER;
-			else if(strcasecmp(x,"kexec")==0)cfg->mode=BOOT_KEXEC;
-			else if(strcasecmp(x,"reboot")==0)cfg->mode=BOOT_REBOOT;
-			else if(strcasecmp(x,"poweroff")==0)cfg->mode=BOOT_POWEROFF;
-			else if(strcasecmp(x,"halt")==0)cfg->mode=BOOT_HALT;
-			else if(strcasecmp(x,"system")==0)cfg->mode=BOOT_SYSTEM;
-			else if(strcasecmp(x,"exit")==0)cfg->mode=BOOT_EXIT;
-			else if(strcasecmp(x,"linux")==0)cfg->mode=BOOT_LINUX;
-			else if(strcasecmp(x,"efi")==0)cfg->mode=BOOT_EFI;
-			else if(strcasecmp(x,"simple-init")==0)cfg->mode=BOOT_SIMPLE_INIT;
-			else if(strcasecmp(x,"uefi-option")==0)cfg->mode=BOOT_UEFI_OPTION;
-			else if(strcasecmp(x,"lua")==0)cfg->mode=BOOT_LUA;
-			else if(strcasecmp(x,"folder")==0)cfg->mode=BOOT_FOLDER;
-			else tlog_warn("unknown boot mode: %s",x);
-			free(x);
+			char*k=confd_get_string_base(cfg->base,"mode",NULL);
+			if(!k)break;
+			if(!shortstring2bootmode(k,&cfg->mode))
+				tlog_warn("unknown boot mode: %s",x);
+			free(k);
 		}break;
 		default:tlog_warn("unknown boot mode");break;
 	}

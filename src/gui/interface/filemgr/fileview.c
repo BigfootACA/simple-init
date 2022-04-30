@@ -613,10 +613,10 @@ char*fileview_get_path(struct fileview*view){
 
 char*fileview_get_lvgl_path(struct fileview*view){
 	if(!view)return NULL;
-	if(!view->letter)return "/";
 	static char path[PATH_MAX];
 	memset(path,0,sizeof(path));
-	if(view->path[1]==':')strncpy(path,view->path,sizeof(path)-1);
+	if(!view->letter)strcpy(path,"/");
+	else if(view->path[1]==':')strncpy(path,view->path,sizeof(path)-1);
 	else snprintf(path,sizeof(path)-1,"%c:%s",view->letter,view->path);
 	return path;
 }

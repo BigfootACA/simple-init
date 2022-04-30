@@ -63,7 +63,7 @@ if("${ENABLE_LODEPNG}" STREQUAL "ON")
 endif()
 
 if("${ENABLE_NANOSVG}" STREQUAL "ON")
-	include(libs/nanosvg.cmake)
+	include(libs/nanosvg/nanosvg.cmake)
 endif()
 
 if("${ENABLE_JSONC}" STREQUAL "ON")

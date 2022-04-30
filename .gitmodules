@@ -10,9 +10,6 @@
 [submodule "libs/mxml"]
 	path = libs/mxml
 	url = https://github.com/michaelrsweet/mxml.git
-[submodule "libs/stb"]
-	path = libs/stb
-	url = https://github.com/nothings/stb.git
 [submodule "libs/libtsm"]
 	path = libs/libtsm
 	url = https://github.com/Aetf/libtsm.git

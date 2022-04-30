@@ -136,6 +136,7 @@ static int check_dtbs(linux_boot*lb){
 			if(c&&list_search_string(lb->config->dtb_compatible,c))
 				fdt->vote+=0x1000;
 		}while((n=n->next));
+		if(linux_boot_match_kfdt_model(lb,fdt->model))fdt->vote+=0x10000000;
 		tlog_debug(
 			"dtb id %zu offset %zu size %zu vote %lld (%s)",
 			fdt->id,fdt->offset,fdt->size,

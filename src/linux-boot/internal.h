@@ -176,6 +176,9 @@ extern int fill_kernel_device_path(linux_file_info*fi);
 // src/linux-boot/linux.c: check linux kernel magic
 extern bool is_kernel_magic(linux_file_info*fi,UINTN off,UINT32 require);
 
+// src/linux-boot/linux.c: check kernel fdt model match
+extern bool linux_boot_match_kfdt_model(linux_boot*lb,const char*model);
+
 // src/linux-boot/uefi.c: boot uefi mode linux kernel (efistub)
 extern int boot_linux_uefi(linux_boot*boot);
 

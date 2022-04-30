@@ -9,9 +9,11 @@
 #include<Uefi.h>
 #include<Library/BaseMemoryLib.h>
 #include<Library/MemoryAllocationLib.h>
+#include<Library/UefiBootServicesTableLib.h>
 #include"str.h"
 #include"logger.h"
 #include"internal.h"
+#include"KernelFdt.h"
 #define TAG "linux"
 
 int fill_kernel_device_path(linux_file_info*fi){
@@ -112,6 +114,38 @@ linux_boot*linux_boot_new(linux_config*cfg){
 	boot->status.dtb_id=-1;
 	boot->status.dtbo_id=-1;
 	return boot;
+}
+
+bool linux_boot_match_kfdt_model(linux_boot*lb,const char*model){
+	int len=0;
+	EFI_STATUS st;
+	bool ret=false;
+	KERNEL_FDT_PROTOCOL*fdt;
+	static bool initialize=false;
+	static char*last_model=NULL;
+	if(!lb->config->match_kfdt_model)return false;
+	if(!initialize){
+		initialize=true;
+		st=gBS->LocateProtocol(
+			&gKernelFdtProtocolGuid,
+			NULL,
+			(VOID**)&fdt
+		);
+		if(EFI_ERROR(st)||!fdt||!fdt->Fdt){
+			tlog_warn(
+				"Kernel Fdt Protocol failed: %s",
+				efi_status_to_string(st)
+			);
+			return false;
+		}
+		last_model=(char*)fdt_getprop(fdt->Fdt,0,"model",&len);
+		if(len<=0)last_model=NULL;
+	}
+	if(last_model){
+		tlog_debug("kernel fdt model: %s",last_model);
+		ret=strcmp(last_model,model)==0;
+	}
+	return ret;
 }
 
 void linux_boot_free(linux_boot*lb){

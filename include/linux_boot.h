@@ -97,6 +97,8 @@ typedef struct linux_config{
 	bool skip_kfdt_memory;
 	bool skip_kfdt_cmdline;
 	bool load_custom_address;
+	bool match_kfdt_model;
+	bool ignore_dtbo_error;
 	linux_load_from kernel;
 	linux_load_from dtb;
 	linux_load_from abootimg;

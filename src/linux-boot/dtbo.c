@@ -121,6 +121,7 @@ static void process_dtbo(linux_boot*lb,qcom_chip_info*chip_info,dtbo_info*dtbo,b
 		if(c&&list_search_string(lb->config->dtbo_compatible,c))
 			dtbo->vote+=0x1000;
 	}while((n=n->next));
+	if(linux_boot_match_kfdt_model(lb,dtbo->model))dtbo->vote+=0x10000000;
 
 	lb->status.dtbo_id=(int64_t)dtbo->id;
 	tlog_debug(
@@ -240,5 +241,6 @@ int linux_boot_apply_dtbo(linux_boot*lb){
 	done:
 	list_free_all(lb->dtbo,fi_free);
 	lb->dtbo=NULL;
+	if(lb->config->ignore_dtbo_error)r=0;
 	return r;
 }

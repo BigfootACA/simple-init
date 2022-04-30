@@ -166,6 +166,8 @@ linux_config*linux_config_new_from_confd(const char*key){
 	load_boolean(key,"skip_kernel_fdt_memory",&cfg->skip_kfdt_memory);
 	load_boolean(key,"skip_kernel_fdt_cmdline",&cfg->skip_kfdt_cmdline);
 	load_boolean(key,"load_custom_address",&cfg->load_custom_address);
+	load_boolean(key,"match_kernel_fdt_model",&cfg->match_kfdt_model);
+	load_boolean(key,"ignore_dtbo_error",&cfg->ignore_dtbo_error);
 	load_boolean(key,"add_simplefb",&cfg->screen.add_simplefb);
 	load_boolean(key,"update_splash",&cfg->screen.update_splash);
 	get_multi_str_from_confd(&cfg->dtb_model,key,"dtb_model");

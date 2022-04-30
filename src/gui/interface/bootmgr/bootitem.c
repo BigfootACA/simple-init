@@ -99,7 +99,16 @@ static bool do_save(struct bootitem*bi){
 	else confd_set_string_dict(bootmgr_base,bi->name,"icon",(char*)icon);
 	if(!desc[0])confd_delete_dict(bootmgr_base,bi->name,"desc");
 	else confd_set_string_dict(bootmgr_base,bi->name,"desc",(char*)desc);
-	confd_set_integer_dict(bootmgr_base,bi->name,"mode",bootmode[mode]);
+	switch(confd_get_type_dict(bootmgr_base,bi->name,"mode")){
+		case TYPE_STRING:confd_set_string_dict(
+			bootmgr_base,bi->name,"mode",
+			bootmode2shortstring(bootmode[mode])
+		);break;
+		default:confd_set_integer_dict(
+			bootmgr_base,bi->name,"mode",
+			bootmode[mode]
+		);break;
+	}
 	confd_set_boolean_dict(bootmgr_base,bi->name,"enabled",enable);
 	confd_set_boolean_dict(bootmgr_base,bi->name,"show",show);
 	confd_set_save_base(bootmgr_base,bi->name,save);
@@ -124,8 +133,23 @@ static void load_icon(struct bootitem*bi){
 }
 
 static void load_modes(struct bootitem*bi){
-	char name[BUFSIZ];
-	int64_t mode=confd_get_integer_dict(bootmgr_base,bi->name,"mode",-1);
+	int64_t mode;
+	char name[BUFSIZ],*x;
+	switch(confd_get_type_dict(bootmgr_base,bi->name,"mode")){
+		case TYPE_INTEGER:mode=confd_get_integer_dict(
+			bootmgr_base,bi->name,"mode",-1
+		);break;
+		case TYPE_STRING:
+			if(!(x=confd_get_string_dict(
+				bootmgr_base,bi->name,"mode",NULL
+			)))break;
+			if(!shortstring2bootmode(
+				x,(enum boot_mode*)&mode
+			))mode=-1;
+			free(x);
+		break;
+		default:mode=-1;break;
+	}
 	lv_dropdown_clear_options(bi->sel_mode);
 	for(unsigned char i=0;i<ARRLEN(bootmode);i++){
 		enum boot_mode m=bootmode[i];
@@ -251,15 +275,30 @@ static void show_arg_edit(struct bootitem*bi){
 }
 
 static void extra_cb(lv_obj_t*obj,lv_event_t e){
+	char*x;
+	enum boot_mode mode=BOOT_NONE;
 	struct bootitem*bi=lv_obj_get_user_data(obj);
 	if(!bi||obj!=bi->btn_extra||e!=LV_EVENT_CLICKED)return;
 	if(!do_save(bi))return;
-	switch(confd_get_integer_dict(bootmgr_base,bi->name,"mode",-1)){
+	switch(confd_get_type_dict(bootmgr_base,bi->name,"mode")){
+		case TYPE_INTEGER:mode=confd_get_integer_dict(
+			bootmgr_base,bi->name,"mode",BOOT_NONE
+		);break;
+		case TYPE_STRING:
+			if(!(x=confd_get_string_dict(
+				bootmgr_base,bi->name,"mode",NULL
+			)))break;
+			if(!shortstring2bootmode(x,&mode))mode=BOOT_NONE;
+			free(x);
+		break;
+		default:mode=BOOT_NONE;break;
+	}
+	switch(mode){
+		case BOOT_NONE:break;
 		case BOOT_REBOOT:show_arg_edit(bi);break;
 		case BOOT_EFI:guiact_start_activity(&guireg_bootdata_efi,bi->name);break;
 		case BOOT_LINUX:guiact_start_activity(&guireg_bootdata_linux,bi->name);break;
 		case BOOT_UEFI_OPTION:guiact_start_activity(&guireg_bootdata_uefi_option,bi->name);break;
-		case -1:return;
 		default:msgbox_alert("Unsupported boot item mode for extra data editor");
 	}
 }

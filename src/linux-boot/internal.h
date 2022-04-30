@@ -76,11 +76,11 @@ typedef struct linux_boot{
 	linux_boot_status status;
 	linux_boot_arch arch;
 	char cmdline[
-		PATH_MAX-
-		sizeof(linux_file_info)*4-
+		(PATH_MAX*2)-
+		sizeof(linux_file_info)*3-
 		sizeof(linux_boot_arch)-
 		sizeof(linux_boot_status)-
-		sizeof(void*)
+		(sizeof(void*)*3)
 	];
 }linux_boot;
 

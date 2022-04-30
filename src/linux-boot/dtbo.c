@@ -35,6 +35,7 @@ typedef struct dtbo_info{
 	int64_t vote;
 	dtbo_table_entry en;
 	size_t en_offset;
+	list*compatibles;
 }dtbo_info;
 
 static bool sort_dtbo(list*f1,list*f2){
@@ -64,9 +65,10 @@ static int select_dtbo(linux_boot*lb,dtbo_info*sel){
 	return r;
 }
 
-static void process_dtbo(linux_boot*lb,qcom_chip_info*chip_info,dtbo_info*dtbo){
-	char*model;
-	int r,len=0;
+static void process_dtbo(linux_boot*lb,qcom_chip_info*chip_info,dtbo_info*dtbo,bool auto_vote){
+	list*n;
+	int r,len=0,off=0;
+	char*model,*comps,*comp;
 	if((r=fdt_check_header(dtbo->address))!=0){
 		tlog_warn(
 			"dtbo id %zu invalid header: %s",
@@ -88,12 +90,40 @@ static void process_dtbo(linux_boot*lb,qcom_chip_info*chip_info,dtbo_info*dtbo){
 	model=(char*)fdt_getprop(dtbo->address,0,"model",&len);
 	if(!model)model="Linux Device Tree Overlay";
 	AsciiStrCpyS(dtbo->model,sizeof(dtbo->model),model);
-	qcom_parse_id(dtbo->address,&dtbo->info);
-	tlog_verbose("voting dtbo %zu (%s)",dtbo->id,model);
-	qcom_dump_info(&dtbo->info);
-	dtbo->vote=qcom_check_dtb(&dtbo->info,chip_info);
+
+	if((comps=(char*)fdt_getprop(dtbo->address,0,"compatible",&len)))do{
+		comp=comps+off;
+		if(!*comp)continue;
+		list_obj_add_new_strdup(&dtbo->compatibles,comp);
+		off+=strlen(comp);
+	}while(++off<len);
+
+	if(auto_vote){
+		qcom_parse_id(dtbo->address,&dtbo->info);
+		tlog_verbose("voting dtbo %zu (%s)",dtbo->id,model);
+		qcom_dump_info(&dtbo->info);
+		dtbo->vote=qcom_check_dtb(&dtbo->info,chip_info);
+	}
+
+	if(
+		lb->config->dtbo_id>=0&&
+		(size_t)lb->config->dtbo_id==dtbo->id
+	)dtbo->vote+=0x10000000;
+	if(
+		lb->config->dtbo_model&&
+		list_search_string(lb->config->dtbo_model,dtbo->model)
+	)dtbo->vote+=0x100000;
+	if(
+		lb->config->dtbo_compatible&&
+		(n=list_first(dtbo->compatibles))
+	)do{
+		LIST_DATA_DECLARE(c,dtbo->compatibles,char*);
+		if(c&&list_search_string(lb->config->dtbo_compatible,c))
+			dtbo->vote+=0x1000;
+	}while((n=n->next));
+
 	lb->status.dtbo_id=(int64_t)dtbo->id;
-	tlog_verbose(
+	tlog_debug(
 		"dtbo id %zu offset %zu size %zu vote %lld (%s)",
 		dtbo->id,dtbo->offset,dtbo->size,
 		(long long)dtbo->vote,
@@ -110,6 +140,20 @@ static int read_qcom_dtbo(linux_boot*lb,linux_file_info*fi){
 	qcom_chip_info chip_info;
 	dtbo_table_header hdr;
 	uint32_t ens_cnt,ens_off,en_size,total_size,header_size;
+	bool auto_vote=true;
+	if(lb->config->dtbo_id>=0){
+		tlog_debug("use pre selected dtbo id from config");
+		auto_vote=false;
+	}
+	if(lb->config->dtbo_model){
+		tlog_debug("use pre selected dtbo model from config");
+		auto_vote=false;
+	}
+	if(lb->config->dtbo_compatible){
+		tlog_debug("use pre selected dtbo compatible from config");
+		auto_vote=false;
+	}
+	if(!auto_vote)tlog_debug("disabled dtbo auto vote");
 	CopyMem(&hdr,fi->address,sizeof(dtbo_table_header));
 	en_size=fdt32_to_cpu(hdr.dt_entry_size);
 	ens_cnt=fdt32_to_cpu(hdr.dt_entry_count);
@@ -123,7 +167,7 @@ static int read_qcom_dtbo(linux_boot*lb,linux_file_info*fi){
 		header_size!=sizeof(dtbo_table_header)||
 		en_size!=sizeof(dtbo_table_entry)
 	)EDONE(tlog_error("invalid dtbo header"));
-	if(qcom_get_chip_info(lb,&chip_info)!=0)goto done;
+	if(auto_vote&&qcom_get_chip_info(lb,&chip_info)!=0)goto done;
 	tlog_info("found %u dtb overlays",ens_cnt);
 	for(size_t s=0;s<ens_cnt;s++){
 		ZeroMem(&dtbo,sizeof(dtbo_info));
@@ -133,26 +177,17 @@ static int read_qcom_dtbo(linux_boot*lb,linux_file_info*fi){
 		dtbo.offset=fdt32_to_cpu(dtbo.en.dt_offset);
 		dtbo.address=fi->address+dtbo.offset;
 		dtbo.size=fdt32_to_cpu(dtbo.en.dt_size);
-		process_dtbo(lb,&chip_info,&dtbo);
+		process_dtbo(lb,&chip_info,&dtbo,auto_vote);
 	}
-	if(lb->config&&lb->config->dtbo_id>=0){
-		if((f=list_first(dtbos)))do{
-			LIST_DATA_DECLARE(i,f,dtbo_info*);
-			if(i&&i->id==lb->config->dtbo_id)sel=i;
-		}while((f=f->next));
-		if(sel)tlog_verbose("use pre selected dtbo from config");
-		else tlog_warn("specified dtbo id not found");
-	}else{
-		list_sort(dtbos,sort_dtbo);
-		if(
-			!(f=list_first(dtbos))||
-			!(sel=LIST_DATA(f,dtbo_info*))
-		)EDONE(tlog_warn("no dtbo found"));
-		if(sel->vote<0)EDONE(tlog_warn(
-			"selected dtbo %zu (%s) vote too few",
-			sel->id,sel->model
-		));
-	}
+	list_sort(dtbos,sort_dtbo);
+	if(
+		!(f=list_first(dtbos))||
+		!(sel=LIST_DATA(f,dtbo_info*))
+	)EDONE(tlog_warn("no dtbo found"));
+	if(sel->vote<0)EDONE(tlog_warn(
+		"selected dtbo %zu (%s) vote too few",
+		sel->id,sel->model
+	));
 	r=select_dtbo(lb,sel);
 	done:
 	list_free_all_def(dtbos);
@@ -169,15 +204,13 @@ static int fi_free(void*data){
 
 int linux_boot_apply_dtbo(linux_boot*lb){
 	list*f;
+	int r=0;
 	size_t i=0;
-	int r=-1;
 	static const uint32_t dtbo_magic=MAGIC_DTBO;
+	if(!lb->config)return -1;
 	if(!lb->dtbo||!lb->dtb.address)return 0;
-	if(lb->config&&lb->config->skip_dtbo){
-		tlog_debug("skip load dtbo");
-		r=0;
-		goto done;
-	}
+	if(lb->config->skip_dtbo)
+		EDONE(tlog_debug("skip load dtbo"));
 	if((f=list_first(lb->dtbo)))do{
 		i++;
 		LIST_DATA_DECLARE(fi,f,linux_file_info*);

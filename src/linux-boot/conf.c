@@ -71,6 +71,26 @@ static inline void get_multi_from_confd(list**from,const char*key,const char*sub
 	}
 }
 
+static inline void get_multi_str_from_confd(list**from,const char*key,const char*sub){
+	switch(confd_get_type_base(key,sub)){
+		case TYPE_STRING:{
+			char*x=confd_get_string_base(key,sub,NULL);
+			if(x)list_obj_add_new(from,x);
+		}break;
+		case TYPE_KEY:{
+			char**xs=confd_ls_base(key,sub),*x;
+			if(!xs)break;
+			for(size_t i=0;xs[i];i++)
+				if((x=confd_get_string_dict(key,sub,xs[i],NULL)))
+					list_obj_add_new(from,x);
+			if(xs[0])free(xs[0]);
+			free(xs);
+		}break;
+		case TYPE_INTEGER:case TYPE_BOOLEAN:break;
+		default:tlog_warn("invalid config %s.%s",key,sub);
+	}
+}
+
 static inline void get_region_confd(linux_mem_region*reg,const char*key,const char*sub){
 	int64_t base=confd_get_integer_dict(key,sub,"base",0);
 	int64_t size=confd_get_integer_dict(key,sub,"size",0);
@@ -148,6 +168,10 @@ linux_config*linux_config_new_from_confd(const char*key){
 	load_boolean(key,"load_custom_address",&cfg->load_custom_address);
 	load_boolean(key,"add_simplefb",&cfg->screen.add_simplefb);
 	load_boolean(key,"update_splash",&cfg->screen.update_splash);
+	get_multi_str_from_confd(&cfg->dtb_model,key,"dtb_model");
+	get_multi_str_from_confd(&cfg->dtb_compatible,key,"dtb_compatible");
+	get_multi_str_from_confd(&cfg->dtbo_model,key,"dtbo_model");
+	get_multi_str_from_confd(&cfg->dtbo_compatible,key,"dtbo_compatible");
 	cfg->dtb_id=confd_get_integer_base(key,"dtb_id",-1);
 	cfg->dtbo_id=confd_get_integer_base(key,"dtbo_id",-1);
 	cfg->info.soc_id=confd_get_integer_base(key,"soc_id",0);

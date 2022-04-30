@@ -108,10 +108,14 @@ typedef struct linux_config{
 	qcom_chip_info info;
 	int64_t dtb_id;
 	int64_t dtbo_id;
+	list*dtb_model;
+	list*dtb_compatible;
+	list*dtbo_model;
+	list*dtbo_compatible;
 	char tag[256];
 	char cmdline[
-		PATH_MAX-
-		(sizeof(void*)*12)-
+		PATH_MAX*2-
+		(sizeof(void*)*16)-
 		(sizeof(int64_t)*2)-
 		(sizeof(char)*256)-
 		(sizeof(linux_screen_info))-

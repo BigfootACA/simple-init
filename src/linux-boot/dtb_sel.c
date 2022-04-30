@@ -33,12 +33,13 @@ typedef struct fdt_info{
 	char model[256];
 	qcom_chip_info info;
 	int64_t vote;
+	list*compatibles;
 }fdt_info;
 
 static void search_dtb(linux_boot*lb,void*buff,void**pos){
-	char*model;
 	fdt_info fi;
-	int len;
+	int len,off=0;
+	char*model,*comps,*comp;
 	if(CompareMem(&fdt_magic,(*pos),4)!=0)goto fail;
 
 	ZeroMem(&fi,sizeof(fdt_info));
@@ -60,6 +61,14 @@ static void search_dtb(linux_boot*lb,void*buff,void**pos){
 	model=(char*)fdt_getprop(fi.address,0,"model",&len);
 	if(!model)model="Linux Device Tree Blob";
 	AsciiStrCpyS(fi.model,sizeof(fi.model),model);
+
+	if((comps=(char*)fdt_getprop(fi.address,0,"compatible",&len)))do{
+		comp=comps+off;
+		if(!*comp)continue;
+		list_obj_add_new_strdup(&fi.compatibles,comp);
+		off+=strlen(comp);
+	}while(++off<len);
+
 	qcom_parse_id(fi.address,&fi.info);
 	if(fi.info.soc_id!=0)lb->status.qualcomm=true;
 	tlog_verbose(
@@ -87,19 +96,50 @@ static bool sort_fdt(list*f1,list*f2){
 }
 
 static int check_dtbs(linux_boot*lb){
-	list*f;
+	list*f,*n;
 	qcom_chip_info chip_info;
-	if(qcom_get_chip_info(lb,&chip_info)!=0)return -1;
+	bool auto_vote=lb->status.qualcomm;
+	if(lb->config->dtb_id>=0){
+		tlog_debug("use pre selected dtb id from config");
+		auto_vote=false;
+	}
+	if(lb->config->dtb_model){
+		tlog_debug("use pre selected dtb model from config");
+		auto_vote=false;
+	}
+	if(lb->config->dtb_compatible){
+		tlog_debug("use pre selected dtb compatible from config");
+		auto_vote=false;
+	}
+	if(!auto_vote)tlog_debug("disabled dtb auto vote");
+	else if(qcom_get_chip_info(lb,&chip_info)!=0)return -1;
 	if((f=list_first(fdts)))do{
 		LIST_DATA_DECLARE(fdt,f,fdt_info*);
-		tlog_verbose("voting dtb %zu (%s)",fdt->id,fdt->model);
-		qcom_dump_info(&fdt->info);
-		fdt->vote=qcom_check_dtb(&fdt->info,&chip_info);
-		tlog_verbose(
+		if(auto_vote){
+			tlog_verbose("voting dtb %zu (%s)",fdt->id,fdt->model);
+			qcom_dump_info(&fdt->info);
+			fdt->vote=qcom_check_dtb(&fdt->info,&chip_info);
+		}
+		if(
+			lb->config->dtb_id>=0&&
+			(size_t)lb->config->dtb_id==fdt->id
+		)fdt->vote+=0x10000000;
+		if(
+			lb->config->dtb_model&&
+			list_search_string(lb->config->dtb_model,fdt->model)
+		)fdt->vote+=0x100000;
+		if(
+			lb->config->dtb_compatible&&
+			(n=list_first(fdt->compatibles))
+		)do{
+			LIST_DATA_DECLARE(c,n,char*);
+			if(c&&list_search_string(lb->config->dtb_compatible,c))
+				fdt->vote+=0x1000;
+		}while((n=n->next));
+		tlog_debug(
 			"dtb id %zu offset %zu size %zu vote %lld (%s)",
 			fdt->id,fdt->offset,fdt->size,
-			(long long)fdt->vote,
-			fdt->model
+			(long long)fdt->vote,fdt->model
 		);
 	}while((f=f->next));
 	list_sort(fdts,sort_fdt);
@@ -118,6 +158,7 @@ int linux_boot_select_fdt(linux_boot*lb){
 	int r,ret=-1;
 	fdt_info*fdt=NULL;
 	void*buff,*end,*pos;
+	if(!lb->config)return -1;
 	if(!lb||!lb->dtb.address)return 0;
 	list_free_all(fdts,free_fdt);
 	lb->status.qualcomm=false,fdts=NULL;
@@ -136,27 +177,15 @@ int linux_boot_select_fdt(linux_boot*lb){
 	FreePool(buff);
 	tlog_info("found %d dtbs",fdts?list_count(fdts):0);
 	if(!fdts)EDONE(tlog_warn("no dtb found"));
-	if(lb->config&&lb->config->dtb_id>=0){
-		if((f=list_first(fdts)))do{
-			LIST_DATA_DECLARE(i,f,fdt_info*);
-			if(i&&i->id==lb->config->dtb_id)fdt=i;
-		}while((f=f->next));
-		if(fdt)tlog_verbose("use pre selected dtb from config");
-		else tlog_warn("specified dtb id not found");
-	}else{
-		if(lb->status.qualcomm){
-			tlog_debug("detected qualcomm dtb");
-			check_dtbs(lb);
-		}
-		if(
-			!(f=list_first(fdts))||
-			!(fdt=LIST_DATA(f,fdt_info*))
-		)EDONE(tlog_warn("no dtb found"));
-		if(fdt->vote<0)EDONE(tlog_warn(
-			"selected dtb %zu (%s) vote too few",
-			fdt->id,fdt->model
-		));
-	}
+	check_dtbs(lb);
+	if(
+		!(f=list_first(fdts))||
+		!(fdt=LIST_DATA(f,fdt_info*))
+	)EDONE(tlog_warn("no dtb found"));
+	if(fdt->vote<0)EDONE(tlog_warn(
+		"selected dtb %zu (%s) vote too few",
+		fdt->id,fdt->model
+	));
 	ret=select_dtb(lb,fdt);
 	done:
 	list_free_all(fdts,free_fdt);

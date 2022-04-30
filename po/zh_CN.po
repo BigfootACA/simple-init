@@ -2467,6 +2467,12 @@ msgstr "跳过KernelFdtDxe系统内存"
 msgid "Skip KernelFdtDxe Commandline"
 msgstr "跳过KernelFdtDxe内核命令行"
 
+msgid "Match KernelFdtDxe Model"
+msgstr "匹配KernelFdtDxe的model"
+
+msgid "Ignore DTBO Error"
+msgstr "忽略设备树附加层(dtbo)错误"
+
 msgid "Use Custom Load Addresses"
 msgstr "使用自定义的加载地址"
 

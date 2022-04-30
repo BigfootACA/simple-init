@@ -31,6 +31,8 @@ static int bootdata_linux_get_focus(struct gui_activity*d){
 	lv_group_add_obj(gui_grp,bi->chk_skip_efi_memory_map);
 	lv_group_add_obj(gui_grp,bi->chk_skip_kernel_fdt_memory);
 	lv_group_add_obj(gui_grp,bi->chk_skip_kernel_fdt_cmdline);
+	lv_group_add_obj(gui_grp,bi->chk_match_kfdt_model);
+	lv_group_add_obj(gui_grp,bi->chk_ignore_dtbo_error);
 	lv_group_add_obj(gui_grp,bi->chk_update_splash);
 	lv_group_add_obj(gui_grp,bi->chk_load_custom_address);
 	lv_group_add_obj(gui_grp,bi->btn_address_load);
@@ -65,6 +67,8 @@ static int bootdata_linux_lost_focus(struct gui_activity*d){
 	lv_group_remove_obj(bi->chk_skip_efi_memory_map);
 	lv_group_remove_obj(bi->chk_skip_kernel_fdt_memory);
 	lv_group_remove_obj(bi->chk_skip_kernel_fdt_cmdline);
+	lv_group_remove_obj(bi->chk_match_kfdt_model);
+	lv_group_remove_obj(bi->chk_ignore_dtbo_error);
 	lv_group_remove_obj(bi->chk_update_splash);
 	lv_group_remove_obj(bi->chk_load_custom_address);
 	lv_group_remove_obj(bi->btn_address_load);
@@ -172,6 +176,8 @@ static int do_load(struct gui_activity*act){
 	bool skip_kfcmd=confd_get_boolean_dict(bootmgr_base,bi->name,"extra.skip_kernel_fdt_cmdline",false);
 	bool upd_splash=confd_get_boolean_dict(bootmgr_base,bi->name,"extra.update_splash",true);
 	bool use_custom=confd_get_boolean_dict(bootmgr_base,bi->name,"extra.load_custom_address",false);
+	bool match_kfmodl=confd_get_boolean_dict(bootmgr_base,bi->name,"extra.match_kernel_fdt_model",false);
+	bool ignore_dtbo_err=confd_get_boolean_dict(bootmgr_base,bi->name,"extra.ignore_dtbo_error",false);
 	if(abootimg)lv_textarea_set_text(bi->txt_abootimg,abootimg);
 	if(cmdline)lv_textarea_set_text(bi->txt_cmdline,cmdline);
 	if(kernel)lv_textarea_set_text(bi->txt_kernel,kernel);
@@ -185,6 +191,8 @@ static int do_load(struct gui_activity*act){
 	lv_checkbox_set_checked(bi->chk_skip_kernel_fdt_cmdline,skip_kfcmd);
 	lv_checkbox_set_checked(bi->chk_update_splash,upd_splash);
 	lv_checkbox_set_checked(bi->chk_load_custom_address,use_custom);
+	lv_checkbox_set_checked(bi->chk_match_kfdt_model,match_kfmodl);
+	lv_checkbox_set_checked(bi->chk_ignore_dtbo_error,ignore_dtbo_err);
 	init_dropdown(bi,bi->sel_initrd,"initrd");
 	init_dropdown(bi,bi->sel_dtbo,"dtbo");
 	init_memory_region(bi,bi->txt_splash,"splash");
@@ -492,6 +500,16 @@ static int do_resize(struct gui_activity*act){
 	lv_obj_set_pos(bi->chk_skip_kernel_fdt_cmdline,x,h);
 	h+=lv_obj_get_height(bi->chk_skip_kernel_fdt_cmdline);
 
+	// match KernelFdtDxe model checkbox
+	h+=gui_font_size/2;
+	lv_obj_set_pos(bi->chk_match_kfdt_model,x,h);
+	h+=lv_obj_get_height(bi->chk_match_kfdt_model);
+
+	// ignore dtbo error checkbox
+	h+=gui_font_size/2;
+	lv_obj_set_pos(bi->chk_ignore_dtbo_error,x,h);
+	h+=lv_obj_get_height(bi->chk_ignore_dtbo_error);
+
 	// update splash checkbox
 	h+=gui_font_size/2;
 	lv_obj_set_pos(bi->chk_update_splash,x,h);
@@ -784,6 +802,20 @@ static int draw_bootdata_linux(struct gui_activity*act){
 	lv_checkbox_set_text(bi->chk_skip_kernel_fdt_cmdline,_("Skip KernelFdtDxe Commandline"));
 	lv_checkbox_set_checked(bi->chk_skip_kernel_fdt_cmdline,true);
 	lv_style_set_focus_checkbox(bi->chk_skip_kernel_fdt_cmdline);
+
+	bi->chk_match_kfdt_model=lv_checkbox_create(bi->box,NULL);
+	lv_obj_set_user_data(bi->chk_match_kfdt_model,bi);
+	lv_obj_set_drag_parent(bi->chk_match_kfdt_model,true);
+	lv_checkbox_set_text(bi->chk_match_kfdt_model,_("Match KernelFdtDxe Model"));
+	lv_checkbox_set_checked(bi->chk_match_kfdt_model,true);
+	lv_style_set_focus_checkbox(bi->chk_match_kfdt_model);
+
+	bi->chk_ignore_dtbo_error=lv_checkbox_create(bi->box,NULL);
+	lv_obj_set_user_data(bi->chk_ignore_dtbo_error,bi);
+	lv_obj_set_drag_parent(bi->chk_ignore_dtbo_error,true);
+	lv_checkbox_set_text(bi->chk_ignore_dtbo_error,_("Ignore DTBO Error"));
+	lv_checkbox_set_checked(bi->chk_ignore_dtbo_error,true);
+	lv_style_set_focus_checkbox(bi->chk_ignore_dtbo_error);
 
 	bi->chk_update_splash=lv_checkbox_create(bi->box,NULL);
 	lv_obj_set_user_data(bi->chk_update_splash,bi);

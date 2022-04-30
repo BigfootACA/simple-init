@@ -97,6 +97,8 @@ struct bootdata_linux{
 	lv_obj_t*chk_skip_efi_memory_map;
 	lv_obj_t*chk_skip_kernel_fdt_memory;
 	lv_obj_t*chk_skip_kernel_fdt_cmdline;
+	lv_obj_t*chk_match_kfdt_model;
+	lv_obj_t*chk_ignore_dtbo_error;
 	lv_obj_t*chk_update_splash;
 	lv_obj_t*chk_load_custom_address;
 	lv_obj_t*lbl_address_load,*btn_address_load,*txt_address_load;

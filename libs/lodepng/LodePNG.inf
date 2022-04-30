@@ -17,5 +17,5 @@
   UefiLib
 
 [Sources]
-  lodepng/lodepng.h
-  lodepng.c
+  libs/lodepng/lodepng.h
+  libs/lodepng/lodepng.c

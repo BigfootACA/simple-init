@@ -4,7 +4,7 @@
   LuaLib|libs/LuaLib.inf
   TSMLib|libs/TSMLib.inf
   MiniXML|libs/MiniXML.inf
-  LodePNG|libs/LodePNG.inf
+  LodePNG|libs/lodepng/LodePNG.inf
   FreeType|libs/FreeType.inf
   LittleVgl|libs/LittleVgl.inf
   RegexLib|libs/regex/RegexLib.inf
@@ -29,7 +29,7 @@
   libs/LuaLib.inf
   libs/TSMLib.inf
   libs/MiniXML.inf
-  libs/LodePNG.inf
+  libs/lodepng/LodePNG.inf
   libs/FreeType.inf
   libs/LittleVgl.inf
   libs/regex/RegexLib.inf

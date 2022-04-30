@@ -59,7 +59,7 @@ if("${ENABLE_FREETYPE2}" STREQUAL "ON")
 endif()
 
 if("${ENABLE_LODEPNG}" STREQUAL "ON")
-	include(libs/lodepng.cmake)
+	include(libs/lodepng/lodepng.cmake)
 endif()
 
 if("${ENABLE_NANOSVG}" STREQUAL "ON")

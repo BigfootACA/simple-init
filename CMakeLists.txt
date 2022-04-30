@@ -75,7 +75,7 @@ if("${ENABLE_MXML}" STREQUAL "ON")
 endif()
 
 if("${ENABLE_LUA}" STREQUAL "ON")
-	include(libs/lua.cmake)
+	include(libs/lua/lua.cmake)
 endif()
 
 if("${ENABLE_LIBTSM}" STREQUAL "ON")

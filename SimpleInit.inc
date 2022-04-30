@@ -1,7 +1,7 @@
 [LibraryClasses]
   Zlib|libs/Zlib.inf
   JSONC|libs/JSONC.inf
-  LuaLib|libs/LuaLib.inf
+  LuaLib|libs/lua/LuaLib.inf
   TSMLib|libs/TSMLib.inf
   MiniXML|libs/MiniXML.inf
   LodePNG|libs/lodepng/LodePNG.inf
@@ -26,7 +26,7 @@
 [Components]
   libs/Zlib.inf
   libs/JSONC.inf
-  libs/LuaLib.inf
+  libs/lua/LuaLib.inf
   libs/TSMLib.inf
   libs/MiniXML.inf
   libs/lodepng/LodePNG.inf

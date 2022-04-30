@@ -11,8 +11,8 @@
   MdePkg/MdePkg.dec
 
 [Sources]
-  libs/lua-uefi/loslib.c
-  libs/lua-uefi/liolib.c
+  libs/lua/lua-uefi/loslib.c
+  libs/lua/lua-uefi/liolib.c
   libs/lua/lapi.c
   libs/lua/lauxlib.c
   libs/lua/lbaselib.c

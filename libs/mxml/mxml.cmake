@@ -8,7 +8,7 @@ check_function_exists(strdup HAVE_STRDUP)
 check_function_exists(strlcat HAVE_STRLCAT)
 check_function_exists(strlcpy HAVE_STRLCPY)
 set(MXML_VERSION "Mini-XML v3.3")
-configure_file(libs/mxml.config.h.in mxml/config.h)
+configure_file(libs/mxml/mxml.config.h.in mxml/config.h)
 set(MXML_HEADERS
 	libs/mxml/mxml-private.h
 	${CMAKE_CURRENT_BINARY_DIR}/mxml/config.h

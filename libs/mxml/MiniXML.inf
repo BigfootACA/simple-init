@@ -19,7 +19,7 @@
 
 [Sources]
   libs/mxml/mxml-private.h
-  libs/mxml-uefi/config.h
+  libs/mxml/mxml-uefi/config.h
   libs/mxml/mxml-attr.c
   libs/mxml/mxml-entity.c
   libs/mxml/mxml-file.c

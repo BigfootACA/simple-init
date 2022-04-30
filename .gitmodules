@@ -7,9 +7,6 @@
 [submodule "libs/json-c"]
 	path = libs/json-c
 	url = https://github.com/json-c/json-c.git
-[submodule "libs/mxml"]
-	path = libs/mxml
-	url = https://github.com/michaelrsweet/mxml.git
 [submodule "libs/libtsm"]
 	path = libs/libtsm
 	url = https://github.com/Aetf/libtsm.git

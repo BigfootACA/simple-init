@@ -71,7 +71,7 @@ if("${ENABLE_JSONC}" STREQUAL "ON")
 endif()
 
 if("${ENABLE_MXML}" STREQUAL "ON")
-	include(libs/mxml.cmake)
+	include(libs/mxml/mxml.cmake)
 endif()
 
 if("${ENABLE_LUA}" STREQUAL "ON")

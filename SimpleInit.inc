@@ -1,5 +1,5 @@
 [LibraryClasses]
-  Zlib|libs/Zlib.inf
+  Zlib|libs/zlib/Zlib.inf
   JSONC|libs/json-c/JSONC.inf
   LuaLib|libs/lua/LuaLib.inf
   TSMLib|libs/libtsm/TSMLib.inf
@@ -24,7 +24,7 @@
   FdtLib|EmbeddedPkg/Library/FdtLib/FdtLib.inf
 
 [Components]
-  libs/Zlib.inf
+  libs/zlib/Zlib.inf
   libs/json-c/JSONC.inf
   libs/lua/LuaLib.inf
   libs/libtsm/TSMLib.inf

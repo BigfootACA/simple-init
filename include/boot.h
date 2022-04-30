@@ -69,6 +69,7 @@ struct boot_config{
 	char desc[256];
 	char base[256];
 	char key[256];
+	char splash[PATH_MAX];
 	bool save;
 	bool replace;
 	bool show;
@@ -87,6 +88,9 @@ extern void boot_init_configs(void);
 
 // src/boot/bootdef.c: get boot config by name
 extern boot_config*boot_get_config(const char*name);
+
+// src/boot/boot.c: draw splash image in boot config
+extern int boot_draw_splash(boot_config*cfg);
 
 // src/boot/boot.c: execute boot config
 extern int boot(boot_config*boot);

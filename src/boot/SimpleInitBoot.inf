@@ -47,6 +47,7 @@
   boot.c
   linux.c
   prober.c
+  splash.c
   bootdef.c
   drivers.c
   efi_path.c

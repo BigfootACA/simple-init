@@ -53,6 +53,7 @@ void dump_boot_config(char*tag,enum log_level level,boot_config*boot){
 	logger_printf(level,tag,"   Parent:      %s",boot->parent[0]?boot->parent:"(none)");
 	logger_printf(level,tag,"   Description: %s",boot->desc);
 	logger_printf(level,tag,"   Icon:        %s",boot->icon[0]?boot->icon:"(none)");
+	logger_printf(level,tag,"   Splash:      %s",boot->splash[0]?boot->splash:"(none)");
 	logger_printf(level,tag,"   Show:        %s",BOOL2STR(boot->show));
 	logger_printf(level,tag,"   Enabled:     %s",BOOL2STR(boot->enabled));
 	logger_printf(level,tag,"   Extra data: ");
@@ -97,6 +98,7 @@ int boot_create_config(struct boot_config*cfg,keyval**data){
 	confd_set_boolean_base(cfg->base,"enabled",cfg->enabled);
 	if(cfg->parent[0])confd_set_string_base(cfg->base,"parent",(char*)cfg->parent);
 	if(cfg->icon[0])confd_set_string_base(cfg->base,"icon",(char*)cfg->icon);
+	if(cfg->splash[0])confd_set_string_base(cfg->base,"splash",(char*)cfg->splash);
 	if(data)for(size_t i=0;data[i];i++)
 		confd_set_string_base(cfg->key,data[i]->key,data[i]->value);
 	done:
@@ -121,6 +123,10 @@ boot_config*boot_get_config(const char*name){
 	}
 	if((buff=confd_get_string_base(cfg->base,"icon","boot"))){
 		strncpy(cfg->icon,buff,sizeof(cfg->icon)-1);
+		free(buff);
+	}
+	if((buff=confd_get_string_base(cfg->base,"splash",NULL))){
+		strncpy(cfg->splash,buff,sizeof(cfg->splash)-1);
 		free(buff);
 	}
 	if((buff=confd_get_string_base(cfg->base,"parent",NULL))){
@@ -165,7 +171,11 @@ int boot(boot_config*boot){
 	if(!boot)return -1;
 	#ifdef ENABLE_UEFI
 	gST->ConOut->ClearScreen(gST->ConOut);
-	logger_set_console(confd_get_boolean("boot.console_log",true));
+	logger_set_console(confd_get_boolean(
+		"boot.console_log",
+		!boot->splash[0]
+	));
+	if(boot->splash[0])boot_draw_splash(boot);
 	#endif
 	tlog_info("try to execute boot config %s(%s)",boot->ident,boot->desc);
 	boot_main*main=boot_main_func[boot->mode];

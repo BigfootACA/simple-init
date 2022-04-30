@@ -139,6 +139,10 @@ if("${ENABLE_NANOSVG}" STREQUAL "ON")
 	target_link_libraries(simple-init m)
 endif()
 
+if("${ENABLE_STB}" STREQUAL "ON")
+	target_link_libraries(simple-init stb)
+endif()
+
 target_link_libraries(simple-init -Wl,--end-group)
 
 if("${ENABLE_STATIC}" STREQUAL "ON")

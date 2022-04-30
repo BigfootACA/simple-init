@@ -8,10 +8,8 @@
 
 #ifdef ENABLE_GUI
 #ifdef ENABLE_STB
-#define STBI_ASSERT(x) if(!(x))abort();
 #define STBI_NO_SIMD
 #define STBI_NO_STDIO
-#define STB_IMAGE_IMPLEMENTATION
 #include<unistd.h>
 #include"stb_image.h"
 #include"gui/image.h"

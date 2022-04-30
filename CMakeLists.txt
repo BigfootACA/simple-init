@@ -83,7 +83,7 @@ if("${ENABLE_LIBTSM}" STREQUAL "ON")
 endif()
 
 if("${ENABLE_STB}" STREQUAL "ON")
-	include_directories(libs/stb)
+	include(libs/stb/stb.cmake)
 endif()
 
 if("${ENABLE_KMOD}" STREQUAL "OFF")

@@ -269,11 +269,11 @@ void logger_init(){
 	// PcdLoggerdUseConsole is in uefimain.c
 
 	logger_init_out();
-	console_output=confd_set_boolean(
+	console_output=confd_get_boolean(
 		"logger.use_console",
 		console_output
 	);
-	logger_level=confd_set_integer(
+	logger_level=confd_get_integer(
 		"logger.min_level",
 		logger_level
 	);

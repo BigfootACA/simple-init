@@ -105,7 +105,7 @@ static bool try_protocol(const char*tag,locate_dest*loc,EFI_GUID*protocol){
 	);
 	for(UINTN i=0;i<cnt;i++){
 		init_locate(loc,tag,hands[i]);
-		tlog_debug(
+		tlog_verbose(
 			"try match handle %p (%llu)",
 			hands[i],(unsigned long long)i
 		);

@@ -1,0 +1,19 @@
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = UfdtLib
+  FILE_GUID                      = B6F52E2C-5128-4208-ACCF-34011042AD16
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = UfdtLib
+
+[Packages]
+  SimpleInit.dec
+  MdePkg/MdePkg.dec
+
+[Sources]
+  libs/libufdt/ufdt_convert.c
+  libs/libufdt/ufdt_node.c
+  libs/libufdt/ufdt_node_pool.c
+  libs/libufdt/ufdt_overlay.c
+  libs/libufdt/ufdt_prop_dict.c
+  libs/libufdt/sysdeps/libufdt_sysdeps_vendor.c

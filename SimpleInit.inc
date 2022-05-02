@@ -4,6 +4,7 @@
   JSONC|libs/json-c/JSONC.inf
   LuaLib|libs/lua/LuaLib.inf
   TSMLib|libs/libtsm/TSMLib.inf
+  UfdtLib|libs/libufdt/UfdtLib.inf
   MiniXML|libs/mxml/MiniXML.inf
   LodePNG|libs/lodepng/LodePNG.inf
   FreeType|libs/FreeType.inf
@@ -30,6 +31,7 @@
   libs/json-c/JSONC.inf
   libs/lua/LuaLib.inf
   libs/libtsm/TSMLib.inf
+  libs/libufdt/UfdtLib.inf
   libs/mxml/MiniXML.inf
   libs/lodepng/LodePNG.inf
   libs/FreeType.inf

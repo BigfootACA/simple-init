@@ -38,6 +38,8 @@ This project has not been completed and may not work properly.
 | libtsm      | libtsm      | Terminal Emulator Support  |
 | regexp      | regexp      | Regular Expression Support |
 | zlib        | zlib        | Deflate compression        |
+| libufdt     | aosp        | For dtb overlay merge      |
+| libfdt      | dtc         | For dtb process            |
 
 ### Code used
 

@@ -14,6 +14,7 @@ extern struct gui_register guireg_guipm_partitions;
 extern struct gui_register guireg_picture_viewer;
 extern struct gui_register guireg_uefi_bootmenu;
 extern struct gui_register guireg_uefi_dxe_load;
+extern struct gui_register guireg_pointer_test;
 extern struct gui_register guireg_acpi_manager;
 extern struct gui_register guireg_screen_test;
 extern struct gui_register guireg_serial_open;
@@ -82,6 +83,7 @@ struct gui_register*guiact_register[]={
 	&guireg_serial_open,
 	#endif
 	&guireg_picture_viewer,
+	&guireg_pointer_test,
 	&guireg_screen_test,
 	&guireg_theme_menu,
 	&guireg_benchmark,

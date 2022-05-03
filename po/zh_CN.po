@@ -2628,3 +2628,9 @@ msgstr "端口:"
 
 msgid "Speed:"
 msgstr "速率:"
+
+msgid "Pointer Test"
+msgstr "光标测试"
+
+msgid "This app will have exclusive pointer input, are you sure to continue?"
+msgstr "此应用将会独占光标输入，确认继续吗？"

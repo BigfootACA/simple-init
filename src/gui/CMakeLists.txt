@@ -95,6 +95,7 @@ add_library(init_gui STATIC
 	interface/apps/scr_test.c
 	interface/apps/picture.c
 	interface/apps/abootimg.c
+	interface/apps/pointer_test.c
 	drivers/drm.c
 	drivers/vnc.c
 	drivers/fbdev.c

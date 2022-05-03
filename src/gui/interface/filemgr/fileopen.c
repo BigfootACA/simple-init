@@ -62,6 +62,7 @@ static void img_click(lv_obj_t*obj,lv_event_t e){
 	lv_obj_set_checked(fa->btn,true);
 	fa->fo->selected=fa;
 	lv_obj_set_enabled(fa->fo->ok,true);
+	lv_group_focus_obj(fa->fo->ok);
 }
 
 static void add_app(struct fileopen*fo,struct gui_register*reg){

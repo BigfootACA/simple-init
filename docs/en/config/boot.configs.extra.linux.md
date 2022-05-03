@@ -54,7 +54,7 @@ Condition: [boot.configs.?.mode](boot.configs.md) is `BOOT_LINUX`
 
 Values: locate path [locates](locates.md)
 
-Type: `STRING`
+Type: `STRING` or `KEY`
 
 Supported environments: `UEFI`
 
@@ -68,7 +68,7 @@ Condition: [boot.configs.?.mode](boot.configs.md) is `BOOT_LINUX`
 
 Values: locate path [locates](locates.md)
 
-Type: `STRING`
+Type: `STRING` or `KEY`
 
 Supported environments: `UEFI`
 
@@ -336,6 +336,36 @@ Default: `false`
 
 Supported environments: `UEFI`
 
+# boot.configs.?.extra.match_kernel_fdt_model
+
+Matches the `model` of device tree in `KernelFdtDxe`
+
+For automatic selection when using multiple dtb/dtbo
+
+Condition: [boot.configs.?.mode](boot.configs.md) is `BOOT_LINUX`
+
+Values: `true` or `false`
+
+Type: `BOOLEAN`
+
+Default: `false`
+
+Supported environments: `UEFI`
+
+# boot.configs.?.extra.ignore_dtbo_error
+
+Ignore errors while processing dtbo
+
+Condition: [boot.configs.?.mode](boot.configs.md) is `BOOT_LINUX`
+
+Values: `true` or `false`
+
+Type: `BOOLEAN`
+
+Default: `false`
+
+Supported environments: `UEFI`
+
 # boot.configs.?.extra.add_simplefb
 
 Specifies whether to add Simple FrameBuffer device to dtb (Device Tree)
@@ -365,6 +395,54 @@ Values: `true` or `false`
 Type: `BOOLEAN`
 
 Default: `true`
+
+Supported environments: `UEFI`
+
+# boot.configs.?.extra.dtb_model
+
+When there are multiple dtb (Device Tree), select the model of the target dtb (Device Tree) to use
+
+Unspecified will be automatically selected based on other information
+
+Condition: [boot.configs.?.mode](boot.configs.md) is `BOOT_LINUX`
+
+Type: `STRING` or `KEY`
+
+Supported environments: `UEFI`
+
+# boot.configs.?.extra.dtbo_model
+
+When there are multiple dtbo (Device Tree Overlay), select the model of the target dtbo (Device Tree Overlay) to use
+
+Unspecified will be automatically selected based on other information
+
+Condition: [boot.configs.?.mode](boot.configs.md) is `BOOT_LINUX`
+
+Type: `STRING` or `KEY`
+
+Supported environments: `UEFI`
+
+# boot.configs.?.extra.dtb_compatible
+
+When there are multiple dtb (Device Tree), select the compatible of the target dtb (Device Tree) to use
+
+Unspecified will be automatically selected based on other information
+
+Condition: [boot.configs.?.mode](boot.configs.md) is `BOOT_LINUX`
+
+Type: `STRING` or `KEY`
+
+Supported environments: `UEFI`
+
+# boot.configs.?.extra.dtbo_compatible
+
+When there are multiple dtbo (Device Tree Overlay), select the compatible of the target dtbo (Device Tree Overlay) to use
+
+Unspecified will be automatically selected based on other information
+
+Condition: [boot.configs.?.mode](boot.configs.md) is `BOOT_LINUX`
+
+Type: `STRING` or `KEY`
 
 Supported environments: `UEFI`
 

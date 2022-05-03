@@ -54,7 +54,7 @@
 
 取值: locate路径 [locates](locates.md)
 
-类型: `STRING` (字符串)
+类型: `STRING` (字符串) 或 `KEY` (项)
 
 支持的环境: `UEFI`
 
@@ -68,7 +68,7 @@
 
 取值: locate路径 [locates](locates.md)
 
-类型: `STRING` (字符串)
+类型: `STRING` (字符串) 或 `KEY` (项)
 
 支持的环境: `UEFI`
 
@@ -336,6 +336,36 @@
 
 支持的环境: `UEFI`
 
+# boot.configs.?.extra.match_kernel_fdt_model
+
+匹配`KernelFdtDxe`中设备树的`model`
+
+用于在使用多个dtb/dtbo时自动选择
+
+条件: [boot.configs.?.mode](boot.configs.md)为`BOOT_LINUX`
+
+取值: `true` 或 `false`
+
+类型: `BOOLEAN` (布尔值)
+
+默认: `false`
+
+支持的环境: `UEFI`
+
+# boot.configs.?.extra.ignore_dtbo_error
+
+忽略处理dtbo时发生的错误
+
+条件: [boot.configs.?.mode](boot.configs.md)为`BOOT_LINUX`
+
+取值: `true` 或 `false`
+
+类型: `BOOLEAN` (布尔值)
+
+默认: `false`
+
+支持的环境: `UEFI`
+
 # boot.configs.?.extra.add_simplefb
 
 指定是否往dtb(设备树)添加Simple FrameBuffer设备
@@ -365,6 +395,54 @@
 类型: `BOOLEAN` (布尔值)
 
 默认: `true`
+
+支持的环境: `UEFI`
+
+# boot.configs.?.extra.dtb_model
+
+当有多个dtb(设备树)时，选择要使用的目标dtb(设备树)的model
+
+未指定将会根据其它信息自动选择
+
+条件: [boot.configs.?.mode](boot.configs.md)为`BOOT_LINUX`
+
+类型: `STRING` (字符串) 或 `KEY` (项)
+
+支持的环境: `UEFI`
+
+# boot.configs.?.extra.dtbo_model
+
+当有多个dtbo(设备树叠加层)时，选择要使用的目标dtbo(设备树叠加层)的model
+
+未指定将会根据其它信息自动选择
+
+条件: [boot.configs.?.mode](boot.configs.md)为`BOOT_LINUX`
+
+类型: `STRING` (字符串) 或 `KEY` (项)
+
+支持的环境: `UEFI`
+
+# boot.configs.?.extra.dtb_compatible
+
+当有多个dtb(设备树)时，选择要使用的目标dtb(设备树)的compatible
+
+未指定将会根据其它信息自动选择
+
+条件: [boot.configs.?.mode](boot.configs.md)为`BOOT_LINUX`
+
+类型: `STRING` (字符串) 或 `KEY` (项)
+
+支持的环境: `UEFI`
+
+# boot.configs.?.extra.dtbo_compatible
+
+当有多个dtbo(设备树叠加层)时，选择要使用的目标dtbo(设备树叠加层)的compatible
+
+未指定将会根据其它信息自动选择
+
+条件: [boot.configs.?.mode](boot.configs.md)为`BOOT_LINUX`
+
+类型: `STRING` (字符串) 或 `KEY` (项)
 
 支持的环境: `UEFI`
 

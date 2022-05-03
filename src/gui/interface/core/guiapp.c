@@ -25,6 +25,8 @@
 #include"gui/msgbox.h"
 #include"gui/activity.h"
 #define TAG "guiapp"
+
+struct gui_register guireg_guiapp;
 struct gui_app{
 	lv_obj_t*screen,*bg,*tabview,*indic,*author;
 	list*apps;
@@ -216,7 +218,10 @@ static int do_load(struct gui_activity*d){
 }
 
 static void app_focus(lv_group_t*grp){
-	struct gui_app*ga=guiact_get_last()->data;
+	struct gui_activity*d=guiact_get_last();
+	if(!d||d->reg!=&guireg_guiapp)return;
+	struct gui_app*ga=d->data;
+	if(!ga)return;
 	lv_obj_t*o=lv_group_get_focused(grp);
 	list*l=list_first(ga->apps);
 	if(l)do{

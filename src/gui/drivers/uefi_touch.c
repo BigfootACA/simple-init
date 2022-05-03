@@ -21,21 +21,21 @@
 #define TAG "uefitouch"
 #include"gui.h"
 #include"list.h"
+#include"confd.h"
 #include"logger.h"
 #include"defines.h"
 #include"gui/guidrv.h"
 static void*event_reg=NULL;
 static list*touchs;
 struct input_data{
-	bool lp,oldp;
-	INT64 rx,lx,oldx;
-	INT64 ry,ly,oldy;
+	INT64 lx,ly,rx,ry;
 	EFI_ABSOLUTE_POINTER_PROTOCOL*touch;
 	lv_indev_drv_t drv;
 	lv_indev_t*dev;
 	void*pd;
 };
 static bool touch_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
+	bool r=false;
 	EFI_ABSOLUTE_POINTER_STATE p;
 	struct input_data*d=indev_drv->user_data;
 	if(!d)return false;
@@ -48,21 +48,13 @@ static bool touch_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
 		free(d);
 		return false;
 	}
-	if(!EFI_ERROR(d->touch->GetState(d->touch,&p))){
-		d->lx=(p.CurrentX*gui_w/d->rx);
-		d->ly=(p.CurrentY*gui_h/d->ry);
-		d->lp=p.ActiveButtons==1;
-		if(
-			d->oldx==d->lx&&
-			d->oldy==d->ly&&
-			d->oldp==d->lp
-		)return true;
-		d->oldx=d->lx,d->oldy=d->ly,d->oldp=d->lp;
-	}
-	data->point.x=d->lx;
-	data->point.y=d->ly;
-	data->state=d->lp?LV_INDEV_STATE_PR:LV_INDEV_STATE_REL;
-	return false;
+	if(EFI_ERROR(d->touch->GetState(d->touch,&p)))return false;
+	if(p.CurrentX==d->lx&&p.CurrentY==d->ly)return false;
+	data->point.x=((double)p.CurrentX/(double)d->rx)*gui_w;
+	data->point.y=((double)p.CurrentY/(double)d->ry)*gui_h;
+	d->lx=p.CurrentX,d->ly=p.CurrentY;
+	data->state=LV_INDEV_STATE_PR;
+	return r;
 }
 static bool proto_cmp(list*f,void*data){
 	LIST_DATA_DECLARE(d,f,struct input_data*);
@@ -71,6 +63,13 @@ static bool proto_cmp(list*f,void*data){
 static int _touch_register(EFI_ABSOLUTE_POINTER_PROTOCOL*touch){
 	struct input_data*data=NULL;
 	if(list_search_one(touchs,proto_cmp,touch))return 0;
+	if(confd_get_boolean(
+		"gui.driver.pointer.use_first",
+		(bool)PcdGetBool(PcdGuiDefaultMouseOnlyFirst)
+	)&&list_count(touchs)>=1){
+		tlog_debug("skip uefi touch %p",touch);
+		return 0;
+	}
 	if(!(data=malloc(sizeof(struct input_data))))return -1;
 	memset(data,0,sizeof(struct input_data));
 	data->touch=touch;

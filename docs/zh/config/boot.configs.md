@@ -100,6 +100,19 @@
 引用:
  - [src/gui/interface/core/bootmenu.c](../../../src/gui/interface/core/bootmenu.c)
 
+### boot.configs.?.splash
+
+启动时的过场图片
+
+取值: locate路径 [locates](locates.md)
+
+类型: `STRING` (字符串)
+
+支持的环境: `UEFI`
+
+引用:
+ - [src/boot/splash.c](../../../src/boot/splash.c)
+
 ### boot.configs.?.parent
 
 启动项所处的文件夹

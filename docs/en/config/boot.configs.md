@@ -100,6 +100,19 @@ Supported environments: `LINUX` | `UEFI`
 Reference:
  - [src/gui/interface/core/bootmenu.c](../../../src/gui/interface/core/bootmenu.c)
 
+### boot.configs.?.splash
+
+Splash picture when boot
+
+Values: locate path [locates](locates.md)
+
+Type: `STRING`
+
+Supported environments: `UEFI`
+
+Reference:
+ - [src/boot/splash.c](../../../src/boot/splash.c)
+
 ### boot.configs.?.parent
 
 The folder where the boot item is located

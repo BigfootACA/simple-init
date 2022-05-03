@@ -15,6 +15,8 @@
 #include<Protocol/SimpleFileSystem.h>
 #include<Guid/Fdt.h>
 #include<comp_libfdt.h>
+#include<libufdt.h>
+#include<ufdt_overlay.h>
 #include<stdint.h>
 #include"str.h"
 #include"list.h"
@@ -45,23 +47,36 @@ static bool sort_dtbo(list*f1,list*f2){
 }
 
 static int select_dtbo(linux_boot*lb,dtbo_info*sel){
-	int r;
-	size_t fdt;
+	int r=-1;
 	char buf[64];
+	size_t dtbs,dtbos,fdts;
+	struct fdt_header*fdt=NULL;
 	tlog_info("select dtbo id %zu (%s)",sel->id,sel->model);
-	fdt=MIN(lb->dtb.mem_size,lb->dtb.size+sel->size);
-	if(fdt>lb->dtb.size){
-		fdt_set_totalsize(lb->dtb.address,fdt);
-		tlog_debug(
-			"expand fdt size to %zu bytes (%s)",fdt,
-			make_readable_str_buf(buf,sizeof(buf),fdt,1,0)
-		);
-		lb->dtb.size=fdt;
-	}
+	dtbs=fdt_totalsize(lb->dtb.address);
+	dtbos=fdt_totalsize(sel->address);
+	tlog_debug(
+		"dtb size %zu bytes (%s)",dtbs,
+		make_readable_str_buf(buf,sizeof(buf),dtbs,1,0)
+	);
+	tlog_debug(
+		"dtbo size %zu bytes (%s)",dtbos,
+		make_readable_str_buf(buf,sizeof(buf),dtbos,1,0)
+	);
 	tlog_debug("try to apply dtb overlay...");
-	r=fdt_overlay_apply(lb->dtb.address,sel->address);
-	if(r!=0)tlog_error("apply overlay failed: %s",fdt_strerror(r));
-	else tlog_debug("applied dtb overlay");
+	if((fdt=ufdt_apply_overlay(lb->dtb.address,dtbs,sel->address,dtbos))){
+		fdts=fdt_totalsize(fdt);
+		linux_file_clean(&lb->dtb);
+		if(linux_file_allocate(&lb->dtb,fdts)){
+			CopyMem(lb->dtb.address,fdt,fdts);
+			tlog_debug(
+				"fdt size %zu bytes (%s)",fdts,
+				make_readable_str_buf(buf,sizeof(buf),fdts,1,0)
+			);
+			r=0;
+		}else tlog_warn("allocate for dtb failed");
+		dto_free(fdt);
+	}else tlog_error("apply overlay failed");
+	if(r==0)tlog_debug("applied dtb overlay");
 	return r;
 }
 

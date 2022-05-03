@@ -11,11 +11,9 @@
 #include<stdlib.h>
 #include<string.h>
 #include"regexp.h"
-#include"str.h"
 #include"gui.h"
 #include"list.h"
 #include"confd.h"
-#include"pathnames.h"
 #include"gui/tools.h"
 #include"gui/fileopen.h"
 #include"gui/activity.h"
@@ -23,7 +21,7 @@
 struct fileopen_app;
 struct fileopen{
 	char path[PATH_MAX];
-	lv_obj_t*mask,*box;
+	lv_obj_t*box;
 	lv_obj_t*label,*view;
 	lv_obj_t*show_all;
 	lv_obj_t*ok,*cancel;
@@ -163,83 +161,83 @@ static void show_all_click(lv_obj_t*obj,lv_event_t e){
 }
 
 static int fileopen_draw(struct gui_activity*act){
-	lv_coord_t box_h=gui_dpi/8;
-	lv_coord_t max_w=gui_dpi*4,cur_w=gui_sw/4*3;
-	lv_coord_t max_h=gui_dpi*6,cur_h=gui_sh/5*2;
 	struct fileopen*fo=act->args;
 	fo->act=act;
 
-	fo->mask=lv_create_opa_mask(act->page);
-	fo->box=lv_obj_create(fo->mask,NULL);
+	fo->box=lv_obj_create(act->page,NULL);
 	lv_obj_set_style_local_border_width(fo->box,LV_PAGE_PART_BG,LV_STATE_DEFAULT,0);
 	lv_obj_set_style_local_border_width(fo->box,LV_PAGE_PART_BG,LV_STATE_PRESSED,0);
 	lv_obj_set_style_local_border_width(fo->box,LV_PAGE_PART_BG,LV_STATE_FOCUSED,0);
-	lv_obj_set_width(fo->box,MIN(max_w,cur_w));
 
-	lv_coord_t lh=gui_sh/8;
 	fo->label=lv_label_create(fo->box,NULL);
 	lv_label_set_long_mode(fo->label,LV_LABEL_LONG_BREAK);
 	lv_label_set_align(fo->label,LV_LABEL_ALIGN_CENTER);
-	lv_obj_set_width(fo->label,lv_obj_get_width(fo->box));
 	lv_label_set_text(fo->label,_("Open file with"));
-	lv_obj_set_pos(fo->label,0,box_h);
-	if(lv_obj_get_height(fo->label)>lh){
-		lv_label_set_long_mode(fo->label,LV_LABEL_LONG_DOT);
-		lv_obj_set_height(fo->label,lh);
-	}
-	box_h+=lv_obj_get_height(fo->label);
 
-	box_h+=gui_dpi/12;
 	fo->view=lv_page_create(fo->box,NULL);
 	lv_color_t c=lv_obj_get_style_border_color(fo->view,LV_PAGE_PART_BG);
 	lv_obj_set_style_local_border_color(fo->view,LV_PAGE_PART_BG,LV_STATE_DEFAULT,c);
 	lv_obj_set_style_local_border_color(fo->view,LV_PAGE_PART_BG,LV_STATE_PRESSED,c);
 	lv_obj_set_style_local_border_color(fo->view,LV_PAGE_PART_BG,LV_STATE_FOCUSED,c);
+
+	fo->show_all=lv_checkbox_create(fo->box,NULL);
+	lv_checkbox_set_text(fo->show_all,_("Show all apps"));
+	lv_obj_set_user_data(fo->show_all,fo);
+	lv_obj_set_event_cb(fo->show_all,show_all_click);
+
+	fo->ok=lv_btn_create(fo->box,NULL);
+	lv_obj_set_enabled(fo->ok,false);
+	lv_label_set_text(lv_label_create(fo->ok,NULL),LV_SYMBOL_OK);
+	lv_obj_set_user_data(fo->ok,fo);
+	lv_obj_set_event_cb(fo->ok,fileopen_click);
+
+	fo->cancel=lv_btn_create(fo->box,NULL);
+	lv_label_set_text(lv_label_create(fo->cancel,NULL),LV_SYMBOL_CLOSE);
+	lv_obj_set_user_data(fo->cancel,fo);
+	lv_obj_set_event_cb(fo->cancel,fileopen_click);
+	return 0;
+}
+
+static int fileopen_resize(struct gui_activity*d){
+	struct fileopen*fo=d->args;
+	if(!fo)return 0;
+	lv_coord_t box_h=gui_dpi/8;
+	lv_coord_t max_w=gui_dpi*4,cur_w=d->w/4*3;
+	lv_coord_t max_h=gui_dpi*6,cur_h=d->h/5*2;
+	lv_obj_set_width(fo->box,MIN(max_w,cur_w));
+	lv_coord_t lh=d->h/8;
+	lv_obj_set_width(fo->label,lv_obj_get_width(fo->box));
+	lv_obj_set_pos(fo->label,0,box_h);
+	if(lv_obj_get_height(fo->label)>lh){
+		lv_label_set_long_mode(fo->label,LV_LABEL_LONG_DOT);
+		lv_obj_set_height(fo->label,lh);
+	}
+	box_h+=lv_obj_get_height(fo->label)+gui_dpi/12;
 	lv_obj_set_size(fo->view,lv_obj_get_width(fo->box)-gui_font_size,MIN(max_h,cur_h));
 	lv_obj_set_pos(fo->view,gui_font_size/2,box_h);
 	box_h+=lv_obj_get_height(fo->view);
-
 	lv_coord_t
 		bm=gui_font_size/2,
 		bw=lv_obj_get_width(fo->box)/2,
 		bh=gui_font_size+(gui_dpi/8);
-
 	box_h+=bm*2;
-	fo->show_all=lv_checkbox_create(fo->box,NULL);
-	lv_checkbox_set_text(fo->show_all,_("Show all apps"));
 	lv_obj_set_style_local_margin_bottom(fo->show_all,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,bm);
 	lv_obj_set_style_local_radius(fo->show_all,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,gui_dpi/15);
 	lv_obj_set_size(fo->show_all,lv_obj_get_width(fo->box)-bm,bh);
-	lv_obj_set_user_data(fo->show_all,fo);
-	lv_obj_set_event_cb(fo->show_all,show_all_click);
 	lv_obj_set_pos(fo->show_all,bm*2,box_h);
-	box_h+=bh;
-
-	box_h+=bm;
-	fo->ok=lv_btn_create(fo->box,NULL);
-	lv_obj_set_enabled(fo->ok,false);
-	lv_label_set_text(lv_label_create(fo->ok,NULL),LV_SYMBOL_OK);
+	box_h+=bh+bm;
 	lv_obj_set_style_local_margin_bottom(fo->ok,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,bm);
 	lv_obj_set_style_local_radius(fo->ok,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,gui_dpi/15);
 	lv_obj_set_size(fo->ok,bw-bm,bh);
-	lv_obj_set_user_data(fo->ok,fo);
-	lv_obj_set_event_cb(fo->ok,fileopen_click);
 	lv_obj_set_pos(fo->ok,bm/2,box_h);
-
-	fo->cancel=lv_btn_create(fo->box,NULL);
-	lv_label_set_text(lv_label_create(fo->cancel,NULL),LV_SYMBOL_CLOSE);
 	lv_obj_set_style_local_margin_bottom(fo->cancel,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,bm);
 	lv_obj_set_style_local_radius(fo->cancel,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,gui_dpi/15);
 	lv_obj_set_size(fo->cancel,bw-bm,bh);
-	lv_obj_set_user_data(fo->cancel,fo);
-	lv_obj_set_event_cb(fo->cancel,fileopen_click);
 	lv_obj_set_pos(fo->cancel,bm/2+bw,box_h);
-	box_h+=bh;
-
-	box_h+=bm;
+	box_h+=bh+bm;
 	lv_obj_set_height(fo->box,box_h);
 	lv_obj_align(fo->box,NULL,LV_ALIGN_CENTER,0,0);
-
+	redraw_apps(fo);
 	return 0;
 }
 
@@ -281,6 +279,7 @@ struct gui_register guireg_fileopen={
 	.title="File Open",
 	.show_app=false,
 	.draw=fileopen_draw,
+	.resize=fileopen_resize,
 	.quiet_exit=fileopen_clean,
 	.get_focus=fileopen_get_focus,
 	.lost_focus=fileopen_lost_focus,

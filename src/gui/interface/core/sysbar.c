@@ -173,6 +173,16 @@ static void keyboard_toggle(lv_obj_t*obj,lv_event_t e){
 	if(obj==sysbar.keyboard&&e==LV_EVENT_KEY&&sysbar.focus_input){
 		uint32_t key=lv_indev_get_key(lv_indev_get_act());
 		switch(key){
+			case LV_KEY_UP:
+			case LV_KEY_DOWN:
+			case LV_KEY_RIGHT:
+			case LV_KEY_LEFT:
+			case LV_KEY_ESC:
+			case LV_KEY_ENTER:
+			case LV_KEY_NEXT:
+			case LV_KEY_PREV:
+			case LV_KEY_HOME:
+			case LV_KEY_END:break;
 			case LV_KEY_DEL:lv_textarea_del_char_forward(sysbar.focus_input);break;
 			case LV_KEY_BACKSPACE:lv_textarea_del_char(sysbar.focus_input);break;
 			default:lv_textarea_add_char(sysbar.focus_input,key);

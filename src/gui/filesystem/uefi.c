@@ -495,7 +495,8 @@ static lv_res_t fs_dir_read_cb(
 	for(;;){
 		si=infos,st=dh->Read(dh,&si,info);
 		if(st==EFI_BUFFER_TOO_SMALL){
-			if(info||si<=0)break;
+			if(si<=0)break;
+			if(info)FreePool(info);
 			if(!(info=AllocateZeroPool(si)))
 				return LV_FS_RES_OUT_OF_MEM;
 			infos=si;

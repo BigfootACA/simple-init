@@ -410,7 +410,7 @@ bool locate_add_by_device_path(char*tag,bool save,EFI_DEVICE_PATH_PROTOCOL*dp){
 	confd_add_key_base(BASE,tag);
 	confd_set_save_base(BASE,tag,save);
 	if((xpt=AllocateZeroPool(xps))){
-		UnicodeStrToAsciiStrS(dpt,xpt,sizeof(xpt));
+		UnicodeStrToAsciiStrS(dpt,xpt,xps);
 		confd_set_string_dict(BASE,tag,"by_device_path",xpt);
 		FreePool(xpt);
 		ret=true;

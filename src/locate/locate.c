@@ -319,6 +319,8 @@ static bool locate_open_file(locate_dest*loc,locate_ret*ret,UINT64 mode,bool qui
 		);
 		return false;
 	}
+	CHAR8*cp=ret->path;
+	do{if(*cp=='/')*cp='\\';}while(*cp++);
 	ZeroMem(ret->path16,sizeof(ret->path16));
 	AsciiStrToUnicodeStrS(
 		ret->path,ret->path16,

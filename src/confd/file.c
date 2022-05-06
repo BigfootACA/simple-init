@@ -19,6 +19,8 @@
 #include<sys/stat.h>
 #include"confd_internal.h"
 #include"logger.h"
+#include"locate.h"
+#include"uefi.h"
 #define TAG "config"
 
 extern struct conf_file_hand conf_hand_conf;
@@ -87,26 +89,31 @@ static int do_close(struct conf_file_hand*hand,bool save){
 
 static int do_load(struct conf_file_hand*hand){
 	char*cp=hand->path;
-	UINTN infos=0;
 	UINTN xs=PATH_MAX*sizeof(CHAR16);
 	CHAR16*xp=NULL;
+	locate_ret*loc=NULL;
 	EFI_STATUS st=EFI_SUCCESS;
 	EFI_FILE_INFO*info=NULL;
-	if(!(xp=AllocateZeroPool(xs)))goto done;
-	do{if(*cp=='/')*cp='\\';}while(*cp++);
-	AsciiStrToUnicodeStrS(hand->path,xp,xs/sizeof(CHAR16));
 	do_close(hand,false);
-	st=hand->dir->Open(hand->dir,&hand->fd,xp,EFI_FILE_MODE_READ,0);
-	if(EFI_ERROR(st))EDONE(tlog_warn(
-		"open config '%s' failed: %s",
-		hand->path,efi_status_to_string(st)
-	));
-	st=hand->fd->GetInfo(hand->fd,&gEfiFileInfoGuid,&infos,info);
-	if(st==EFI_BUFFER_TOO_SMALL){
-		if(!(info=AllocateZeroPool(infos)))
-			EDONE(tlog_warn("allocate file info failed"));
-		st=hand->fd->GetInfo(hand->fd,&gEfiFileInfoGuid,&infos,info);
+	if((cp[0]=='@'&&strchr(cp,':'))||!hand->dir){
+		if(!(loc=AllocateZeroPool(sizeof(locate_ret))))
+			EDONE(tlog_warn("alloc locate failed"));
+		if(!boot_locate(loc,cp))
+			EDONE(tlog_warn("locate %s failed",cp));
+		if(loc->type!=LOCATE_FILE||!loc->file)
+			EDONE(tlog_warn("locate %s type not supported failed",cp));
+		hand->fd=loc->file;
+	}else{
+		if(!(xp=AllocateZeroPool(xs)))goto done;
+		do{if(*cp=='/')*cp='\\';}while(*cp++);
+		AsciiStrToUnicodeStrS(hand->path,xp,xs/sizeof(CHAR16));
+		st=hand->dir->Open(hand->dir,&hand->fd,xp,EFI_FILE_MODE_READ,0);
+		if(EFI_ERROR(st))EDONE(tlog_warn(
+			"open config '%s' failed: %s",
+			hand->path,efi_status_to_string(st)
+		));
 	}
+	st=efi_file_get_file_info(hand->fd,NULL,&info);
 	if(EFI_ERROR(st))EDONE(tlog_warn(
 		"get config '%s' file info failed: %s",
 		hand->path,efi_status_to_string(st)
@@ -126,10 +133,12 @@ static int do_load(struct conf_file_hand*hand){
 		"read '%s' failed: %s",
 		hand->path,efi_status_to_string(st)
 	));
-	FreePool(info);
-	FreePool(xp);
+	if(loc)FreePool(loc);
+	if(info)FreePool(info);
+	if(xp)FreePool(xp);
 	return 0;
 	done:
+	if(loc)FreePool(loc);
 	if(xp)FreePool(xp);
 	if(info)FreePool(info);
 	do_close(hand,false);
@@ -141,28 +150,35 @@ static int do_save(struct conf_file_hand*hand){
 	UINTN infos=0;
 	UINTN xs=PATH_MAX*sizeof(CHAR16);
 	CHAR16*xp=NULL;
+	locate_ret*loc=NULL;
 	EFI_STATUS st=EFI_SUCCESS;
 	EFI_FILE_INFO*info=NULL;
-	if(!(xp=AllocateZeroPool(xs)))goto done;
-	do{if(*cp=='/')*cp='\\';}while(*cp++);
-	AsciiStrToUnicodeStrS(hand->path,xp,xs/sizeof(CHAR16));
+	EFI_FILE_PROTOCOL*dir=hand->dir;
 	do_close(hand,false);
-	st=hand->dir->Open(
-		hand->dir,&hand->fd,xp,
-		EFI_FILE_MODE_READ|
-		EFI_FILE_MODE_WRITE|
-		EFI_FILE_MODE_CREATE,0
-	);
-	if(EFI_ERROR(st))EDONE(tlog_warn(
-		"open config '%s' failed: %s",
-		hand->path,efi_status_to_string(st)
-	));
-	st=hand->fd->GetInfo(hand->fd,&gEfiFileInfoGuid,&infos,info);
-	if(st==EFI_BUFFER_TOO_SMALL){
-		if(!(info=AllocateZeroPool(infos)))
-			EDONE(tlog_warn("allocate file info failed"));
-		st=hand->fd->GetInfo(hand->fd,&gEfiFileInfoGuid,&infos,info);
+	if((cp[0]=='@'&&strchr(cp,':'))||!dir){
+		if(!(loc=AllocateZeroPool(sizeof(locate_ret))))
+			EDONE(tlog_warn("alloc locate failed"));
+		if(!boot_locate_create_file(loc,cp))
+			EDONE(tlog_warn("locate %s failed",cp));
+		if(loc->type!=LOCATE_FILE||!loc->file)
+			EDONE(tlog_warn("locate %s type not supported failed",cp));
+		hand->fd=loc->file,dir=loc->root;
+	}else{
+		if(!(xp=AllocateZeroPool(xs)))goto done;
+		do{if(*cp=='/')*cp='\\';}while(*cp++);
+		AsciiStrToUnicodeStrS(hand->path,xp,xs/sizeof(CHAR16));
+		st=dir->Open(
+			dir,&hand->fd,xp,
+			EFI_FILE_MODE_READ|
+			EFI_FILE_MODE_WRITE|
+			EFI_FILE_MODE_CREATE,0
+		);
+		if(EFI_ERROR(st))EDONE(tlog_warn(
+			"open config '%s' failed: %s",
+			hand->path,efi_status_to_string(st)
+		));
 	}
+	st=efi_file_get_file_info(hand->fd,&infos,&info);
 	if(EFI_ERROR(st))EDONE(tlog_warn(
 		"get config '%s' file info failed: %s",
 		hand->path,efi_status_to_string(st)
@@ -174,8 +190,8 @@ static int do_save(struct conf_file_hand*hand){
 	if(EFI_ERROR(st)){
 		hand->fd->Delete(hand->fd);
 		hand->fd=NULL;
-		st=hand->dir->Open(
-			hand->dir,&hand->fd,xp,
+		st=dir->Open(
+			dir,&hand->fd,xp,
 			EFI_FILE_MODE_READ|
 			EFI_FILE_MODE_WRITE|
 			EFI_FILE_MODE_CREATE,0
@@ -186,10 +202,12 @@ static int do_save(struct conf_file_hand*hand){
 		));
 	}
 	hand->fd->SetPosition(hand->fd,0);
-	FreePool(info);
-	FreePool(xp);
+	if(loc)FreePool(loc);
+	if(info)FreePool(info);
+	if(xp)FreePool(xp);
 	return 0;
 	done:
+	if(loc)FreePool(loc);
 	if(xp)FreePool(xp);
 	if(info)FreePool(info);
 	do_close(hand,false);

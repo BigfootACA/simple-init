@@ -104,6 +104,7 @@ struct conf_file_hand{
 	mutex_t lock;
 	bool initialized;
 	bool include;
+	int depth;
 	char*path;
 	char*buff;
 	size_t len;
@@ -203,6 +204,9 @@ extern int conf_load_file(_ROOT_TYPE root,const char*path);
 
 // src/confd/file.c: include config file to config store
 extern int conf_include_file(_ROOT_TYPE root,const char*path);
+
+// src/confd/file.c: include config file to config store with depth
+extern int conf_include_file_depth(_ROOT_TYPE dir,const char*file,int depth);
 
 // src/confd/file.c: save config store to config file
 extern int conf_save_file(_ROOT_TYPE root,const char*path);

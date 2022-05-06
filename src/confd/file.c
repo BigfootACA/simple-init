@@ -299,9 +299,10 @@ static ssize_t conf_write(struct conf_file_hand*hand,char*buff,size_t len){
 	return len;
 }
 
-static int _conf_load_file(_ROOT_TYPE dir,const char*file,bool inc){
+static int _conf_load_file(_ROOT_TYPE dir,const char*file,bool inc,int depth){
 	int r=0;
 	static char xpath[PATH_MAX];
+	if(depth>=8)ERET(ELOOP);
 	if(!file)ERET(EINVAL);
 	#ifdef ENABLE_UEFI
 	if(!dir)ERET(EINVAL);
@@ -323,6 +324,7 @@ static int _conf_load_file(_ROOT_TYPE dir,const char*file,bool inc){
 	hand->write=NULL;
 	hand->read=conf_read;
 	hand->path=xpath;
+	hand->depth=depth;
 	r=do_load(hand);
 	if(r==0){
 		r=hand->load(hand);
@@ -357,11 +359,15 @@ char**conf_get_supported_exts(){
 }
 
 int conf_load_file(_ROOT_TYPE dir,const char*file){
-	return _conf_load_file(dir,file,false);
+	return _conf_load_file(dir,file,false,0);
 }
 
 int conf_include_file(_ROOT_TYPE dir,const char*file){
-	return _conf_load_file(dir,file,true);
+	return _conf_load_file(dir,file,true,0);
+}
+
+int conf_include_file_depth(_ROOT_TYPE dir,const char*file,int depth){
+	return _conf_load_file(dir,file,true,depth);
 }
 
 int conf_save_file(_ROOT_TYPE dir,const char*file){

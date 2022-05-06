@@ -207,6 +207,9 @@ extern int conf_include_file(_ROOT_TYPE root,const char*path);
 // src/confd/file.c: save config store to config file
 extern int conf_save_file(_ROOT_TYPE root,const char*path);
 
+// src/confd/file.c: get all supported config file exts
+extern char**conf_get_supported_exts();
+
 // config item value
 #define VALUE_STRING(conf)conf->value.string
 #define VALUE_BOOLEAN(conf)conf->value.boolean

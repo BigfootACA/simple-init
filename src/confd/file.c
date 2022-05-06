@@ -341,6 +341,21 @@ static int _conf_load_file(_ROOT_TYPE dir,const char*file,bool inc){
 	return r;
 }
 
+char**conf_get_supported_exts(){
+	char**exts=NULL;
+	size_t cnt=0,size;
+	struct conf_file_hand*h;
+	for(size_t x=0;(h=conf_hands[x]);x++)
+		if(h->ext)for(size_t y=0;h->ext[y];y++)cnt++;
+	size=(cnt+1)*sizeof(char*),cnt=0;
+	if(!(exts=malloc(size)))return NULL;
+	memset(exts,0,size);
+	for(size_t x=0;(h=conf_hands[x]);x++)
+		if(h->ext)for(size_t y=0;h->ext[y];y++)
+			exts[cnt++]=h->ext[y];
+	return exts;
+}
+
 int conf_load_file(_ROOT_TYPE dir,const char*file){
 	return _conf_load_file(dir,file,false);
 }

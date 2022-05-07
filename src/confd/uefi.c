@@ -11,6 +11,9 @@
 #include<string.h>
 #include<Library/BaseLib.h>
 #include<Library/PcdLib.h>
+#include<Library/PrintLib.h>
+#include<Library/BaseMemoryLib.h>
+#include<Library/MemoryAllocationLib.h>
 #include<Library/UefiBootServicesTableLib.h>
 #include<Protocol/PartitionInfo.h>
 #include<Protocol/SimpleFileSystem.h>
@@ -20,85 +23,95 @@
 #define TAG "conf"
 
 int confd=-1;
+static char*def_path=NULL;
+static EFI_FILE_PROTOCOL*def_fp=NULL;
 
-static EFI_HANDLE get_usable_pi(){
-	UINTN cnt=0;
+int confd_init(){
 	EFI_STATUS st;
+	UINTN cnt=0,size=0;
 	EFI_HANDLE*hands=NULL;
-	st=gBS->LocateHandleBuffer(
-		ByProtocol,
-		&gEfiPartitionInfoProtocolGuid,
-		NULL,&cnt,&hands
-	);
-	if(EFI_ERROR(st)){
-		tlog_error("locate Partition Info Protocol failed: %s",efi_status_to_string(st));
-		return NULL;
-	}
-	char*match[]={
-		(char*)PcdGetPtr(PcdConfGptPartition),
-		"logfs",
-		"esp",
-		NULL
-	};
-	char partname[256];
-	for(UINTN i=0;i<cnt;i++){
-		EFI_PARTITION_INFO_PROTOCOL*pi=NULL;
-		st=gBS->HandleProtocol(hands[i],&gEfiPartitionInfoProtocolGuid,(VOID**)&pi);
-		if(EFI_ERROR(st)||!pi)continue;
-		if(pi->Type!=PARTITION_TYPE_GPT)continue;
-		memset(partname,0,sizeof(partname));
-		UnicodeStrToAsciiStrS(pi->Info.Gpt.PartitionName,partname,sizeof(partname));
-		for(int c=0;match[c];c++)if(strcmp(match[c],partname)==0)return hands[i];
-	}
-	return NULL;
-}
-
-static EFI_HANDLE get_usable_fs(){
-	UINTN cnt=0;
-	EFI_STATUS st;
-	EFI_HANDLE*hands=NULL;
+	EFI_FILE_PROTOCOL**fps=NULL;
+	char**exts=NULL,*path=NULL;
+	EFI_SIMPLE_FILE_SYSTEM_PROTOCOL*proto=NULL;
+	if(!(exts=conf_get_supported_exts()))
+		EDONE(tlog_warn("get supported exts failed"));
+	if(!(path=AllocatePool(PATH_MAX)))
+		EDONE(tlog_warn("alloc path failed"));
+	if(def_fp)def_fp->Close(def_fp);
+	if(def_path)free(def_path);
+	def_fp=NULL,def_path=NULL;
 	st=gBS->LocateHandleBuffer(
 		ByProtocol,
 		&gEfiSimpleFileSystemProtocolGuid,
 		NULL,&cnt,&hands
 	);
-	if(EFI_ERROR(st)){
-		tlog_error("locate Simple File System Protocol failed: %s",efi_status_to_string(st));
-		return NULL;
-	}
+	if(EFI_ERROR(st)||cnt<0||!hands)EDONE(tlog_warn(
+		"locate Simple File System Protocol failed: %s",
+		efi_status_to_string(st)
+	));
+	size=(cnt+1)*sizeof(EFI_FILE_PROTOCOL*);
+	if(!(fps=AllocateZeroPool(size)))
+		EDONE(tlog_warn("alloc file protocols failed"));
 	for(UINTN i=0;i<cnt;i++){
-		EFI_SIMPLE_FILE_SYSTEM_PROTOCOL*fs=NULL;
-		st=gBS->HandleProtocol(hands[i],&gEfiSimpleFileSystemProtocolGuid,(VOID**)&fs);
-		if(EFI_ERROR(st)||!fs)continue;
-		return hands[i];
+		proto=NULL,st=gBS->HandleProtocol(
+			hands[i],
+			&gEfiSimpleFileSystemProtocolGuid,
+			(VOID**)&proto
+		);
+		if(EFI_ERROR(st)||!proto){
+			tlog_warn(
+				"handle Simple File System Protocol"
+				" %p(%lld) failed: %s",hands[i],i,
+				efi_status_to_string(st)
+			);
+			continue;
+		}
+		st=proto->OpenVolume(proto,&fps[i]);
+		if(EFI_ERROR(st)||!fps[i])tlog_warn(
+			"open volume %p(%lld) failed: %s",
+			proto,i,efi_status_to_string(st)
+		);
 	}
-	return NULL;
+	for(UINTN i=0;i<cnt;i++)for(size_t x=0;exts[x];x++){
+		ZeroMem(path,PATH_MAX);
+		AsciiSPrint(
+			path,PATH_MAX,"%a.%a",
+			PcdGetPtr(PcdConfDefaultStaticPrefix),
+			exts[x]
+		);
+		if(conf_include_file(fps[i],path)==0){
+			tlog_debug("loaded %s from %p(%lld)",path,fps[i],i);
+		}
+	}
+	for(UINTN i=0;i<cnt;i++)for(size_t x=0;exts[x];x++){
+		ZeroMem(path,PATH_MAX);
+		AsciiSPrint(
+			path,PATH_MAX,"%a.%a",
+			PcdGetPtr(PcdConfDefaultPrefix),
+			exts[x]
+		);
+		if(conf_load_file(fps[i],path)==0){
+			tlog_debug("loaded %s from %p(%lld)",path,fps[i],i);
+			if(def_path)free(def_path);
+			def_path=strdup(path),def_fp=fps[i];
+		}
+	}
+	done:
+	if(fps){
+		if(cnt>0)for(UINTN i=0;i<cnt;i++)
+			if(def_fp!=fps[i])fps[i]->Close(fps[i]);
+		FreePool(fps);
+	}
+	if(path)FreePool(path);
+	if(exts)free(exts);
+	return 0;
 }
 
-static EFI_FILE_PROTOCOL*get_usable_fp(){
-	EFI_STATUS st;
-	EFI_HANDLE*hand=NULL;
-	EFI_SIMPLE_FILE_SYSTEM_PROTOCOL*proto=NULL;
-	static EFI_FILE_PROTOCOL*fp=NULL;
-	if(fp)return fp;
-	if(!hand)hand=get_usable_pi();
-	if(!hand)hand=get_usable_fs();
-	if(!hand)return NULL;
-	st=gBS->HandleProtocol(hand,&gEfiSimpleFileSystemProtocolGuid,(VOID**)&proto);
-	if(EFI_ERROR(st)){
-		tlog_error("handle Simple File System Protocol failed: %s",efi_status_to_string(st));
-		return NULL;
-	}
-	st=proto->OpenVolume(proto,&fp);
-	if(EFI_ERROR(st)){
-		tlog_error("open volume failed: 0x%s",efi_status_to_string(st));
-		fp=NULL;
-		return NULL;
-	}
-	return fp;
-}
-
-int open_confd_socket(bool quiet __attribute__((unused)),char*tag __attribute__((unused)),char*path __attribute__((unused))){
+int open_confd_socket(
+	bool quiet __attribute__((unused)),
+	char*tag __attribute__((unused)),
+	char*path __attribute__((unused))
+){
 	return -1;
 }
 
@@ -162,20 +175,19 @@ char**confd_ls(const char*path){
 }
 
 int confd_load_file(EFI_FILE_PROTOCOL*fd,const char*file){
-	const char*fn=file?file:(const char*)PcdGetPtr(PcdConfDefaultPath);
-	EFI_FILE_PROTOCOL*fp=fd?fd:get_usable_fp();
+	const char*fn=file?file:def_path;
+	EFI_FILE_PROTOCOL*fp=fd?fd:def_fp;
 	return conf_load_file(fp,fn);
 }
 
 int confd_include_file(EFI_FILE_PROTOCOL*fd,const char*file){
-	const char*fn=file?file:(const char*)PcdGetPtr(PcdConfDefaultStaticPath);
-	EFI_FILE_PROTOCOL*fp=fd?fd:get_usable_fp();
-	return conf_include_file(fp,fn);
+	if(!fd||!file)return -1;
+	return conf_include_file(fd,file);
 }
 
 int confd_save_file(EFI_FILE_PROTOCOL*fd,const char*file){
-	const char*fn=file?file:(const char*)PcdGetPtr(PcdConfDefaultPath);
-	EFI_FILE_PROTOCOL*fp=fd?fd:get_usable_fp();
+	const char*fn=file?file:def_path;
+	EFI_FILE_PROTOCOL*fp=fd?fd:def_fp;
 	return conf_save_file(fp,fn);
 }
 

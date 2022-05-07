@@ -14,13 +14,13 @@
 #include<Protocol/SimpleFileSystem.h>
 #include<Guid/FileSystemInfo.h>
 #include<Guid/FileInfo.h>
+#include"locate.h"
+#include"uefi.h"
 #endif
 #include<string.h>
 #include<sys/stat.h>
 #include"confd_internal.h"
 #include"logger.h"
-#include"locate.h"
-#include"uefi.h"
 #define TAG "config"
 
 extern struct conf_file_hand conf_hand_conf;

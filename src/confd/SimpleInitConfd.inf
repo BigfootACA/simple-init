@@ -41,6 +41,5 @@
   gEfiPartitionInfoProtocolGuid
 
 [FixedPcd]
-  gSimpleInitTokenSpaceGuid.PcdConfDefaultPath
-  gSimpleInitTokenSpaceGuid.PcdConfDefaultStaticPath
-  gSimpleInitTokenSpaceGuid.PcdConfGptPartition
+  gSimpleInitTokenSpaceGuid.PcdConfDefaultPrefix
+  gSimpleInitTokenSpaceGuid.PcdConfDefaultStaticPrefix

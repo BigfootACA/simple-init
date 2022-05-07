@@ -38,7 +38,10 @@ extern void close_confd_socket(void);
 // src/confd/client.c: set confd socket fd
 extern int set_confd_socket(int fd);
 
-#ifndef ENABLE_UEFI
+#ifdef ENABLE_UEFI
+// src/confd/uefi.c: initialize config daemon
+extern int confd_init();
+#else
 // src/confd/client.c: start a config daemon in protect mode
 extern int start_confd(char*tag,pid_t*p);
 #endif

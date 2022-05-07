@@ -113,6 +113,16 @@ static void conf_parse_line(struct conf_file_hand*hand,int*err,const char*name,s
 		}
 		return;
 	}
+	if(data[0]=='!'){
+		data++;
+		if(strncmp(data,"include ",8)==0){
+			data+=8;
+			if(conf_include_file_depth(
+				hand->dir,data,hand->depth+1
+			)<0)telog_warn("include \"%s\" failed",data);
+		}else goto inv_key;
+		return;
+	}
 	if(!(p=strchr(data,'='))){
 		if((p=strchr(data,'{'))){
 			if(*(p+1))goto inv_key;

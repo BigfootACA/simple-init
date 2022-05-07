@@ -50,6 +50,18 @@ static void parse_number(const char*match,mxml_node_t*node,uint32_t*val,int base
 	}
 }
 
+static int include_xml(struct conf_file_hand*hand,mxml_node_t*node){
+	char*val,*path;
+	if(!hand||!node)return -1;
+	if(!(val=(char*)mxmlGetOpaque(node)))
+		val=(char*)mxmlElementGetAttr(node,"path");
+	if(!(path=strdup(val)))return -1;
+	trim(path);
+	if(conf_include_file_depth(hand->dir,path,hand->depth+1)<0)
+		telog_warn("include \"%s\" failed",path);
+	return 0;
+}
+
 static int load_xml(struct conf_file_hand*hand,mxml_node_t*node,const char*path){
 	uid_t uid=0;
 	gid_t gid=0;
@@ -63,6 +75,8 @@ static int load_xml(struct conf_file_hand*hand,mxml_node_t*node,const char*path)
 	if(path[0])strncpy(rpath,path,sizeof(rpath)-1);
 	if(!(title=mxmlGetElement(node)))return -1;
 	if(strncmp(title,"!--",3)==0)return 0;
+	if(strcasecmp(title,"include")==0)
+		return include_xml(hand,node);
 	if((type=tag2type(title))==0)
 		return trlog_warn(-1,"unknown type %s",title);
 	name=mxmlElementGetAttr(node,"name");

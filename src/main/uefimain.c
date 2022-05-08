@@ -37,8 +37,7 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ih,IN EFI_SYSTEM_TABLE*st){
 
 	tlog_notice("initialize simple-init");
 	logger_set_console(PcdGetBool(PcdLoggerdUseConsole));
-	confd_include_file(NULL,NULL);
-	confd_load_file(NULL,NULL);
+	confd_init();
 	logger_init();
 	confd_dump(LEVEL_VERBOSE);
 	boot_load_drivers();

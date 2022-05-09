@@ -59,6 +59,7 @@ static EFI_DEVICE_PATH_PROTOCOL*locate_fv_guid(boot_config*boot){
 static EFI_DEVICE_PATH_PROTOCOL*locate_file(boot_config*boot){
 	EFI_STATUS st;
 	EFI_FILE_INFO*info=NULL;
+	EFI_DEVICE_PATH_PROTOCOL*ret=NULL;
 	locate_ret*loc=AllocateZeroPool(sizeof(locate_ret));
 	char*efi=confd_get_string_base(boot->key,"efi_file",NULL);
 	if(!loc||!efi||!*efi)goto done;
@@ -79,18 +80,15 @@ static EFI_DEVICE_PATH_PROTOCOL*locate_file(boot_config*boot){
 		"invalid file '%s'",
 		loc->path
 	));
-
-	FreePool(loc);
- 	FreePool(info);
-	loc->file->Close(loc->file);
-	free(efi);
-	return loc->device;
+	ret=loc->device;
 	done:
-	if(loc)FreePool(loc);
+	if(loc){
+		if(loc->file)loc->file->Close(loc->file);
+		FreePool(loc);
+	}
 	if(info)FreePool(info);
-	if(loc->file)loc->file->Close(loc->file);
 	if(efi)free(efi);
-	return NULL;
+	return ret;
 }
 
 static image_locator*locators[]={

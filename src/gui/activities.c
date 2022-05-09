@@ -16,6 +16,7 @@ extern struct gui_register guireg_uefi_bootmenu;
 extern struct gui_register guireg_uefi_dxe_load;
 extern struct gui_register guireg_pointer_test;
 extern struct gui_register guireg_acpi_manager;
+extern struct gui_register guireg_add_ramdisk;
 extern struct gui_register guireg_screen_test;
 extern struct gui_register guireg_serial_open;
 extern struct gui_register guireg_boot_linux;
@@ -54,6 +55,7 @@ struct gui_register*guiact_register[]={
 	&guireg_uefi_bootmenu,
 	&guireg_uefi_dxe_load,
 	&guireg_acpi_manager,
+	&guireg_add_ramdisk,
 	&guireg_uefi_start,
 	&guireg_uefi_shell,
 	&guireg_mouse_menu,

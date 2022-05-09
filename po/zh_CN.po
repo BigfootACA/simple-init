@@ -2634,3 +2634,66 @@ msgstr "光标测试"
 
 msgid "This app will have exclusive pointer input, are you sure to continue?"
 msgstr "此应用将会独占光标输入，确认继续吗？"
+
+msgid "Invalid memory size"
+msgstr "无效内存大小"
+
+msgid "Invalid memory type"
+msgstr "无效内存类型"
+
+msgid "Invalid disk type"
+msgstr "无效磁盘类型"
+
+msgid "Locate RamDisk protocol failed: %s"
+msgstr "获取内存盘协议失败: %s"
+
+msgid "Failed to allocate memory: %s"
+msgstr "无法分配内存: %s"
+
+msgid "Failed to open file %s: %s"
+msgstr "无法打开文件%s: %s"
+
+msgid "Get file info failed: %s"
+msgstr "读取文件信息失败: %s"
+
+msgid "Memory too small to read file"
+msgstr "指定内存对于文件太小，无法读取文件"
+
+msgid "Failed to register ramdisk: %s"
+msgstr "无法注册内存盘: %s"
+
+msgid "Add Ramdisk"
+msgstr "添加内存盘"
+
+msgid "Image:"
+msgstr "镜像:"
+
+msgid "Memory Size:"
+msgstr "内存大小:"
+
+msgid "Memory Type:"
+msgstr "内存类型:"
+
+msgid "Disk Type:"
+msgstr "磁盘类型:"
+
+msgid "Boot Services Data"
+msgstr "启动服务数据"
+
+msgid "Reserved Memory"
+msgstr "保留内存"
+
+msgid "Conventional Memory"
+msgstr "传统内存"
+
+msgid "Virtual CD"
+msgstr "虚拟光盘"
+
+msgid "Virtual Disk"
+msgstr "虚拟磁盘"
+
+msgid "Persistent Virtual CD"
+msgstr "永久虚拟光盘"
+
+msgid "Persistent Virtual Disk"
+msgstr "永久虚拟磁盘"

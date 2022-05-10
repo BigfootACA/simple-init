@@ -14,7 +14,6 @@
 
 DECL_META_TABLE(BS);
 DECL_META_TABLE(Char16);
-DECL_META_TABLE(Data);
 DECL_META_TABLE(DevicePath);
 DECL_META_TABLE(Event);
 DECL_META_TABLE(Guid);
@@ -51,7 +50,6 @@ DECL_META_TABLE_PROTO(TimeStamp);
 static struct lua_uefi_meta_table*meta[]={
 	&LuaUefiBSMetaTable,
 	&LuaUefiChar16MetaTable,
-	&LuaUefiDataMetaTable,
 	&LuaUefiDevicePathMetaTable,
 	&LuaUefiEventMetaTable,
 	&LuaUefiGuidMetaTable,

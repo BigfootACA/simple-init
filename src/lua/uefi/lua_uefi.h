@@ -60,13 +60,9 @@
 #define LUA_UEFI_DEVICE_PATH              "UEFI Device Path"
 #define LUA_UEFI_CHAR16                   "UEFI 16-bit String"
 #define LUA_UEFI_GUID                     "UEFI GUID"
-#define LUA_UEFI_DATA                     "UEFI RAW Data"
 #define LUA_UEFI_EVENT                    "UEFI Event"
 #define LUA_UEFI_INPUT_KEY                "UEFI Input Key"
 #define LUA_UEFI_BOOT_OPTION              "UEFI Boot Option"
-
-#define CHECK_NULL(L,n,var) luaL_argcheck(L,var!=NULL,n,"not null")
-#define OPT_UDATA(L,n,var,type,name)struct type*(var)=NULL;if(!lua_isnoneornil(L,n)){var=luaL_checkudata(L,n,name);}
 
 #define OPT_BS(L,n,var)          OPT_UDATA(L,n,var,lua_uefi_bs_data,LUA_UEFI_BS)
 #define OPT_RT(L,n,var)          OPT_UDATA(L,n,var,lua_uefi_rt_data,LUA_UEFI_RT)
@@ -75,7 +71,6 @@
 #define OPT_STATUS(L,n,var)      OPT_UDATA(L,n,var,lua_uefi_status_data,LUA_UEFI_STATUS)
 #define OPT_DEVICE_PATH(L,n,var) OPT_UDATA(L,n,var,lua_uefi_device_path_data,LUA_UEFI_DEVICE_PATH)
 #define OPT_GUID(L,n,var)        OPT_UDATA(L,n,var,lua_uefi_guid_data,LUA_UEFI_GUID)
-#define OPT_DATA(L,n,var)        OPT_UDATA(L,n,var,lua_uefi_data_data,LUA_UEFI_DATA)
 #define OPT_EVENT(L,n,var)       OPT_UDATA(L,n,var,lua_uefi_event_data,LUA_UEFI_EVENT)
 #define OPT_CHAR16(L,n,var)      OPT_UDATA(L,n,var,lua_uefi_char16_data,LUA_UEFI_CHAR16)
 #define OPT_INPUT_KEY(L,n,var)   OPT_UDATA(L,n,var,lua_uefi_input_key_data,LUA_UEFI_INPUT_KEY)
@@ -88,7 +83,6 @@
 #define GET_STATUS(L,n,var)      OPT_STATUS(L,n,var);      CHECK_NULL(L,n,var)
 #define GET_DEVICE_PATH(L,n,var) OPT_DEVICE_PATH(L,n,var); CHECK_NULL(L,n,var)
 #define GET_GUID(L,n,var)        OPT_GUID(L,n,var);        CHECK_NULL(L,n,var)
-#define GET_DATA(L,n,var)        OPT_DATA(L,n,var);        CHECK_NULL(L,n,var)
 #define GET_EVENT(L,n,var)       OPT_EVENT(L,n,var);       CHECK_NULL(L,n,var)
 #define GET_CHAR16(L,n,var)      OPT_CHAR16(L,n,var);      CHECK_NULL(L,n,var)
 #define GET_INPUT_KEY(L,n,var)   OPT_INPUT_KEY(L,n,var);   CHECK_NULL(L,n,var)
@@ -118,13 +112,6 @@ struct lua_uefi_bootopt_data{
 struct lua_uefi_char16_data{
 	BOOLEAN allocated;
 	CHAR16*string;
-};
-struct lua_uefi_data_data{
-	BOOLEAN allocated;
-	VOID*data;
-	UINTN size;
-	struct lua_uefi_data_data*parent;
-	list*refs;
 };
 struct lua_uefi_event_extra{
 	struct lua_uefi_event_data*data;

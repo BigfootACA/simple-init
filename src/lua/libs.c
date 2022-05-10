@@ -24,6 +24,7 @@ const luaL_Reg lua_core_libs[]={
 };
 
 const luaL_Reg simple_init_lua_libs[]={
+	{"data",     luaopen_data},
 	{"conf",     luaopen_conf},
 	{"logger",   luaopen_logger},
 	#ifdef ENABLE_GUI

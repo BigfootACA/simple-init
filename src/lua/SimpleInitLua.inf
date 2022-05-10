@@ -82,6 +82,8 @@
   libs.c
   logger.c
   lua.c
+  data.c
+  locate.c
   uefi/uefi.c
   uefi/system_table.c
   uefi/guids.c
@@ -94,7 +96,6 @@
   uefi/data/bootopt.c
   uefi/data/boot_service.c
   uefi/data/char16.c
-  uefi/data/data.c
   uefi/data/devicepath.c
   uefi/data/event.c
   uefi/data/guid.c

@@ -37,6 +37,7 @@ const luaL_Reg simple_init_lua_libs[]={
 	#endif
 	#ifdef ENABLE_UEFI
 	{"uefi",     luaopen_uefi},
+	{"locate",   luaopen_locate},
 	#else
 	{"init",     luaopen_init},
 	#endif

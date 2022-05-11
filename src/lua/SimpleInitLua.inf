@@ -80,6 +80,7 @@
   conf.c
   feature.c
   libs.c
+  locate.c
   logger.c
   lua.c
   data.c

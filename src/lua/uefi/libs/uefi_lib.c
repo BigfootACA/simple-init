@@ -78,12 +78,15 @@ static int LuaUefiLibGetVariable2(lua_State*L){
 	EFI_STATUS status;
 	VOID*data=NULL;
 	UINTN size=0;
-	GET_CHAR16(L,1,name);
+	CHAR16*name=NULL;
+	lua_arg_get_char16(L,1,false,&name);
 	GET_GUID(L,2,guid);
-	status=GetVariable2(name->string,&guid->guid,&data,&size);
+	if(!name)return luaL_argerror(L,1,"get argument failed");
+	status=GetVariable2(name,&guid->guid,&data,&size);
 	uefi_status_to_lua(L,status);
 	if(EFI_ERROR(status)||!data)lua_pushnil(L);
 	else uefi_data_to_lua(L,TRUE,data,size);
+	FreePool(name);
 	return 2;
 }
 
@@ -91,11 +94,14 @@ static int LuaUefiLibGetEfiGlobalVariable2(lua_State*L){
 	EFI_STATUS status;
 	VOID*data=NULL;
 	UINTN size=0;
-	GET_CHAR16(L,1,name);
-	status=GetEfiGlobalVariable2(name->string,&data,&size);
+	CHAR16*name=NULL;
+	lua_arg_get_char16(L,1,false,&name);
+	if(!name)return luaL_argerror(L,1,"get argument failed");
+	status=GetEfiGlobalVariable2(name,&data,&size);
 	uefi_status_to_lua(L,status);
 	if(EFI_ERROR(status)||!data)lua_pushnil(L);
 	else uefi_data_to_lua(L,TRUE,data,size);
+	FreePool(name);
 	return 2;
 }
 
@@ -104,13 +110,16 @@ static int LuaUefiLibGetVariable3(lua_State*L){
 	VOID*data=NULL;
 	UINTN size=0;
 	UINT32 attr=0;
-	GET_CHAR16(L,1,name);
+	CHAR16*name=NULL;
+	lua_arg_get_char16(L,1,false,&name);
 	GET_GUID(L,2,guid);
-	status=GetVariable3(name->string,&guid->guid,&data,&size,&attr);
+	if(!name)return luaL_argerror(L,1,"get argument failed");
+	status=GetVariable3(name,&guid->guid,&data,&size,&attr);
 	uefi_status_to_lua(L,status);
 	if(EFI_ERROR(status)||!data)lua_pushnil(L);
 	else uefi_data_to_lua(L,TRUE,data,size);
 	lua_pushinteger(L,attr);
+	FreePool(name);
 	return 3;
 }
 
@@ -142,6 +151,7 @@ static int LuaUefiLibEfiSignalEventLegacyBoot(lua_State*L){
 }
 
 static int LuaUefiLibPrintXY(lua_State*L){
+	CHAR16*str=NULL;
 	UINTN px=0,py=0,res=0;
 	BOOLEAN hfg=FALSE,hbg=FALSE;
 	EFI_GRAPHICS_OUTPUT_BLT_PIXEL fg,bg;
@@ -151,13 +161,15 @@ static int LuaUefiLibPrintXY(lua_State*L){
 		uefi_graphics_output_get_pixel(L,3,&fg);
 	if((hbg=!lua_isnoneornil(L,4)))
 		uefi_graphics_output_get_pixel(L,4,&bg);
-	GET_CHAR16(L,5,str);
+	lua_arg_get_char16(L,5,false,&str);
+	if(!str)return luaL_argerror(L,5,"get argument failed");
 	res=PrintXY(
 		px,py,
 		hfg?&fg:NULL,
 		hbg?&bg:NULL,
-		L"%s",str->string
+		L"%s",str
 	);
+	FreePool(str);
 	lua_pushinteger(L,res);
 	return 1;
 }

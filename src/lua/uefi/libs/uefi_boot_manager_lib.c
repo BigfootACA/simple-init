@@ -36,28 +36,34 @@ static int LuaUefiBootManagerLibNewLoadOption(lua_State*L){
 }
 
 static int LuaUefiBootManagerLibInitializeLoadOption(lua_State*L){
+	CHAR16*desc=NULL;
 	GET_BOOT_OPTION(L,1,bo);
 	UINTN bn=luaL_checkinteger(L,2);
 	EFI_BOOT_MANAGER_LOAD_OPTION_TYPE type=0;
 	if(!uefi_str_to_load_option_type(luaL_checkstring(L,3),&type))
 		return luaL_argerror(L,1,"invalid load option type");
 	UINT32 attr=luaL_checkinteger(L,4);
-	GET_CHAR16(L,5,desc);
+	lua_arg_get_char16(L,5,false,&desc);
 	GET_DEVICE_PATH(L,6,dp);
+	if(!desc)return luaL_argerror(L,5,"get argument failed");
 	OPT_DATA(L,7,data);
 	EFI_STATUS st=EfiBootManagerInitializeLoadOption(
-		bo->bo,bn,type,attr,desc->string,dp->dp,
+		bo->bo,bn,type,attr,desc,dp->dp,
 		data?data->data:NULL,data?data->size:0
 	);
 	uefi_status_to_lua(L,st);
+	FreePool(desc);
 	return 1;
 }
 
 static int LuaUefiBootManagerLibVariableToLoadOption(lua_State*L){
+	CHAR16*var=NULL;
 	GET_BOOT_OPTION(L,1,bo);
-	GET_CHAR16(L,2,var);
-	EFI_STATUS st=EfiBootManagerVariableToLoadOption(var->string,bo->bo);
+	lua_arg_get_char16(L,2,false,&var);
+	if(!var)return luaL_argerror(L,2,"get argument failed");
+	EFI_STATUS st=EfiBootManagerVariableToLoadOption(var,bo->bo);
 	uefi_status_to_lua(L,st);
+	FreePool(var);
 	return 1;
 }
 
@@ -157,13 +163,16 @@ static int LuaUefiBootManagerLibProcessLoadOption(lua_State*L){
 
 static int LuaUefiBootManagerLibIsValidLoadOptionVariableName(lua_State*L){
 	UINT16 bn=0;
+	CHAR16*var=NULL;
 	EFI_BOOT_MANAGER_LOAD_OPTION_TYPE type=0;
-	GET_CHAR16(L,1,var);
+	lua_arg_get_char16(L,1,false,&var);
+	if(!var)return luaL_argerror(L,1,"get argument failed");
 	lua_pushboolean(L,EfiBootManagerIsValidLoadOptionVariableName(
-		var->string,&type,&bn
+		var,&type,&bn
 	));
 	lua_pushstring(L,uefi_load_option_type_to_str(type));
 	lua_pushinteger(L,bn);
+	FreePool(var);
 	return 3;
 }
 

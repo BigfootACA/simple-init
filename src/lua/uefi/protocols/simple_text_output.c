@@ -51,18 +51,24 @@ static int LuaUefiSimpleTextOutProtocolReset(lua_State*L){
 }
 
 static int LuaUefiSimpleTextOutProtocolOutputString(lua_State*L){
+	CHAR16*data=NULL;
 	GET_PROTO(L,1,proto);
-	GET_CHAR16(L,2,data);
-	EFI_STATUS status=proto->proto->OutputString(proto->proto,data->string);
+	lua_arg_get_char16(L,2,false,&data);
+	if(!data)return luaL_argerror(L,2,"get argument failed");
+	EFI_STATUS status=proto->proto->OutputString(proto->proto,data);
 	uefi_status_to_lua(L,status);
+	FreePool(data);
 	return 1;
 }
 
 static int LuaUefiSimpleTextOutProtocolTestString(lua_State*L){
+	CHAR16*data=NULL;
 	GET_PROTO(L,1,proto);
-	GET_CHAR16(L,2,data);
-	EFI_STATUS status=proto->proto->TestString(proto->proto,data->string);
+	lua_arg_get_char16(L,2,false,&data);
+	if(!data)return luaL_argerror(L,2,"get argument failed");
+	EFI_STATUS status=proto->proto->TestString(proto->proto,data);
 	uefi_status_to_lua(L,status);
+	FreePool(data);
 	return 1;
 }
 

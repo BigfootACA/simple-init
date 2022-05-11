@@ -61,22 +61,21 @@ static int LuaUefiBootOptionOptionalData(lua_State*L){
 }
 
 static int LuaUefiBootOptionDescription(lua_State*L){
+	CHAR16*c16=NULL;
 	bool found=false;
 	GET_BOOT_OPTION(L,1,bo);
-	OPT_CHAR16(L,2,c16);
+	lua_arg_get_char16(L,2,true,&c16);
 	if(bo->bo){
 		if(c16){
 			luaL_argcheck(L,bo->allocated,1,"read only option");
-			luaL_argcheck(L,c16->string!=NULL,2,"char16 string must not null");
 			if(bo->bo->Description)FreePool(bo->bo->Description);
-			bo->bo->Description=AllocateCopyPool(StrSize(c16->string),c16->string);
-			if(!bo->bo->Description)return luaL_error(L,"allocate for char16 string failed");
+			bo->bo->Description=c16;
 		}
 		if(bo->bo->Description){
 			uefi_char16_16_to_lua(L,FALSE,bo->bo->Description);
 			found=true;
 		}
-	}
+	}else if(c16)FreePool(c16);
 	if(!found)lua_pushnil(L);
 	return 1;
 }

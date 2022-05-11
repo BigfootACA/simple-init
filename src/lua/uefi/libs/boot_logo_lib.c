@@ -21,16 +21,19 @@ int LuaBootLogoLibBootLogoDisableLogo(lua_State*L){
 }
 
 int LuaBootLogoLibBootLogoUpdateProgress(lua_State*L){
+	CHAR16*title=NULL;
 	EFI_GRAPHICS_OUTPUT_BLT_PIXEL tfg,tbg,pc;
 	uefi_graphics_output_get_pixel(L,1,&tfg);
 	uefi_graphics_output_get_pixel(L,2,&tbg);
-	GET_CHAR16(L,3,title);
+	lua_arg_get_char16(L,3,false,&title);
+	if(!title)return luaL_argerror(L,3,"get argument failed");
 	uefi_graphics_output_get_pixel(L,4,&pc);
 	UINTN prog=luaL_checkinteger(L,5);
 	UINTN prev=luaL_checkinteger(L,6);
 	uefi_status_to_lua(L,BootLogoUpdateProgress(
-		tfg,tbg,title->string,pc,prog,prev
+		tfg,tbg,title,pc,prog,prev
 	));
+	FreePool(title);
 	return 1;
 }
 

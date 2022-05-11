@@ -101,64 +101,81 @@ void uefi_file_protocol_get_attr(lua_State*L,int n,UINT64*attr,BOOLEAN nil){
 }
 
 static int LuaUefiFileProtocolOpen(lua_State*L){
+	CHAR16*file=NULL;
 	UINT64 mode=0,attr=0;
 	EFI_FILE_PROTOCOL*fp=NULL;
 	GET_PROTO(L,1,proto);
-	GET_CHAR16(L,2,file);
 	if(!proto->proto)return luaL_argerror(L,1,"file closed");
+	lua_arg_get_char16(L,2,false,&file);
+	if(!file)return luaL_argerror(L,2,"get argument failed");
 	uefi_file_protocol_get_mode(L,3,&mode,FALSE);
 	uefi_file_protocol_get_attr(L,4,&attr,TRUE);
 	EFI_STATUS status=proto->proto->Open(
-		proto->proto,&fp,file->string,mode,attr
+		proto->proto,&fp,file,mode,attr
 	);
 	uefi_status_to_lua(L,status);
 	uefi_file_protocol_to_lua(L,fp);
+	FreePool(file);
 	return 2;
 }
 
 static int LuaUefiFileProtocolOpenDir(lua_State*L){
+	CHAR16*file=NULL;
 	EFI_FILE_PROTOCOL*fp=NULL;
 	GET_PROTO(L,1,proto);
-	GET_CHAR16(L,2,file);
 	if(!proto->proto)return luaL_argerror(L,1,"file closed");
+	lua_arg_get_char16(L,2,false,&file);
+	if(!file)return luaL_argerror(L,2,"get argument failed");
 	EFI_STATUS status=proto->proto->Open(
-		proto->proto,&fp,file->string,
-		EFI_FILE_MODE_READ,EFI_FILE_DIRECTORY
+		proto->proto,&fp,file,
+		EFI_FILE_MODE_READ,
+		EFI_FILE_DIRECTORY
 	);
 	uefi_status_to_lua(L,status);
 	uefi_file_protocol_to_lua(L,fp);
+	FreePool(file);
 	return 2;
 }
 
 static int LuaUefiFileProtocolCreate(lua_State*L){
 	UINT64 attr=0;
+	CHAR16*file=NULL;
 	EFI_FILE_PROTOCOL*fp=NULL;
 	GET_PROTO(L,1,proto);
-	GET_CHAR16(L,2,file);
-	uefi_file_protocol_get_attr(L,3,&attr,TRUE);
 	if(!proto->proto)return luaL_argerror(L,1,"file closed");
+	lua_arg_get_char16(L,2,false,&file);
+	if(!file)return luaL_argerror(L,2,"get argument failed");
+	uefi_file_protocol_get_attr(L,3,&attr,TRUE);
 	EFI_STATUS status=proto->proto->Open(
-		proto->proto,&fp,file->string,
-		EFI_FILE_MODE_READ|EFI_FILE_MODE_WRITE|EFI_FILE_MODE_CREATE,
+		proto->proto,&fp,file,
+		EFI_FILE_MODE_READ|
+		EFI_FILE_MODE_WRITE|
+		EFI_FILE_MODE_CREATE,
 		attr
 	);
 	uefi_status_to_lua(L,status);
 	uefi_file_protocol_to_lua(L,fp);
+	FreePool(file);
 	return 2;
 }
 
 static int LuaUefiFileProtocolCreateDir(lua_State*L){
+	CHAR16*file=NULL;
 	EFI_FILE_PROTOCOL*fp=NULL;
 	GET_PROTO(L,1,proto);
-	GET_CHAR16(L,2,file);
 	if(!proto->proto)return luaL_argerror(L,1,"file closed");
+	lua_arg_get_char16(L,2,false,&file);
+	if(!file)return luaL_argerror(L,2,"get argument failed");
 	EFI_STATUS status=proto->proto->Open(
-		proto->proto,&fp,file->string,
-		EFI_FILE_MODE_READ|EFI_FILE_MODE_WRITE|EFI_FILE_MODE_CREATE,
+		proto->proto,&fp,file,
+		EFI_FILE_MODE_READ|
+		EFI_FILE_MODE_WRITE|
+		EFI_FILE_MODE_CREATE,
 		EFI_FILE_DIRECTORY
 	);
 	uefi_status_to_lua(L,status);
 	uefi_file_protocol_to_lua(L,fp);
+	FreePool(file);
 	return 2;
 }
 
@@ -405,26 +422,29 @@ static int LuaUefiFileProtocolSetLength(lua_State*L){
 
 static int LuaUefiFileProtocolSetName(lua_State*L){
 	VOID*ptr;
+	CHAR16*filename=NULL;
 	EFI_STATUS status;
 	UINTN size=0,ns,fs;
 	EFI_FILE_INFO*info=NULL;
 	GET_PROTO(L,1,proto);
-	GET_CHAR16(L,2,filename);
 	if(!proto->proto)return luaL_argerror(L,1,"file closed");
+	lua_arg_get_char16(L,2,false,&filename);
+	if(!filename)return luaL_argerror(L,2,"get argument failed");
 	status=get_file_info(proto,&info);
 	if(EFI_ERROR(status)||!info)goto fail;
-	ns=sizeof(EFI_FILE_INFO),fs=StrSize(filename->string)+ns;
+	ns=sizeof(EFI_FILE_INFO),fs=StrSize(filename)+ns;
 	if(fs>size){
 		status=EFI_OUT_OF_RESOURCES;
 		if(!(ptr=ReallocatePool(size,fs,info)))goto fail;
 		info=ptr,size=fs,proto->info=info;
 	}
 	fs=size-ns+sizeof(info->FileName);
-	StrCpyS(info->FileName,fs,filename->string);
+	StrCpyS(info->FileName,fs,filename);
 	status=proto->proto->SetInfo(
 		proto->proto,&gEfiFileInfoGuid,size,info
 	);
 	fail:uefi_status_to_lua(L,status);
+	FreePool(filename);
 	return 1;
 }
 

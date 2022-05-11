@@ -248,16 +248,18 @@ static int LuaUefiBSStartImage(lua_State*L){
 }
 
 static int LuaUefiBSExit(lua_State*L){
+	CHAR16*data=NULL;
 	GET_BS(L,1,bs);
 	GET_HANDLE(L,2,hand);
 	GET_STATUS(L,3,exit_st);
-	OPT_CHAR16(L,4,data);
-	UINTN data_size=data?StrSize(data->string):0;
+	lua_arg_get_char16(L,4,true,&data);
+	UINTN data_size=data?StrSize(data):0;
 	EFI_STATUS status=bs->bs->Exit(
 		hand,exit_st->st,data_size,
-		data?data->string:NULL
+		data?data:NULL
 	);
 	uefi_status_to_lua(L,status);
+	if(data)FreePool(data);
 	return 1;
 }
 
@@ -296,16 +298,18 @@ static int LuaUefiBSStall(lua_State*L){
 }
 
 static int LuaUefiBSSetWatchdogTimer(lua_State*L){
+	CHAR16*data=NULL;
 	GET_BS(L,1,bs);
 	UINTN timeout=(UINTN)luaL_checkinteger(L,2);
 	UINT16 wdog_code=(UINTN)luaL_checkinteger(L,3);
-	OPT_CHAR16(L,4,data);
-	UINTN data_size=data?StrSize(data->string):0;
+	lua_arg_get_char16(L,4,true,&data);
+	UINTN data_size=data?StrSize(data):0;
 	EFI_STATUS status=bs->bs->SetWatchdogTimer(
 		timeout,wdog_code,data_size,
-		data?data->string:NULL
+		data?data:NULL
 	);
 	uefi_status_to_lua(L,status);
+	if(data)FreePool(data);
 	return 1;
 }
 

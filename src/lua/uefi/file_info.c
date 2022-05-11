@@ -62,6 +62,7 @@ static EFI_FILE_INFO*uefi_file_info_from_lua(
 	UINTN*size,
 	int n
 ){
+	CHAR16*fn=NULL;
 	luaL_checktype(L,n,LUA_TTABLE);
 	lua_getfield(L,n,"FileSize");
 	UINT64 fs=luaL_checkinteger(L,-1);
@@ -82,9 +83,9 @@ static EFI_FILE_INFO*uefi_file_info_from_lua(
 	UINT64 attr=luaL_checkinteger(L,-1);
 	lua_pop(L,1);
 	lua_getfield(L,n,"FileName");
-	GET_CHAR16(L,-1,fn);
+	lua_arg_get_char16(L,-1,false,&fn);
 	lua_pop(L,1);
-	*size=sizeof(EFI_FILE_INFO)+StrSize(fn->string);
+	*size=sizeof(EFI_FILE_INFO)+StrSize(fn);
 	EFI_FILE_INFO*fi=AllocateZeroPool(*size);
 	if(fi){
 		fi->Size=*size;
@@ -94,8 +95,9 @@ static EFI_FILE_INFO*uefi_file_info_from_lua(
 		CopyMem(&fi->LastAccessTime,&at->time,sizeof(EFI_TIME));
 		CopyMem(&fi->ModificationTime,&mt->time,sizeof(EFI_TIME));
 		fi->Attribute=attr;
-		StrCpyS(fi->FileName,*size,fn->string);
+		StrCpyS(fi->FileName,*size,fn);
 	}
+	FreePool(fn);
 	return fi;
 }
 
@@ -104,6 +106,7 @@ static EFI_FILE_SYSTEM_INFO*uefi_file_system_info_from_lua(
 	UINTN*size,
 	int n
 ){
+	CHAR16*vl=NULL;
 	luaL_checktype(L,n,LUA_TTABLE);
 	lua_getfield(L,n,"ReadOnly");
 	luaL_checktype(L,-1,LUA_TBOOLEAN);
@@ -119,17 +122,18 @@ static EFI_FILE_SYSTEM_INFO*uefi_file_system_info_from_lua(
 	UINT32 bs=luaL_checkinteger(L,-1);
 	lua_pop(L,1);
 	lua_getfield(L,n,"VolumeLabel");
-	GET_CHAR16(L,-1,vl);
+	lua_arg_get_char16(L,-1,false,&vl);
 	lua_pop(L,1);
-	*size=sizeof(EFI_FILE_SYSTEM_INFO)+StrSize(vl->string);
+	*size=sizeof(EFI_FILE_SYSTEM_INFO)+StrSize(vl);
 	EFI_FILE_SYSTEM_INFO*fi=AllocateZeroPool(*size);
 	if(fi){
 		fi->ReadOnly=ro;
 		fi->VolumeSize=vs;
 		fi->FreeSpace=fs;
 		fi->BlockSize=bs;
-		StrCpyS(fi->VolumeLabel,*size,vl->string);
+		StrCpyS(fi->VolumeLabel,*size,vl);
 	}
+	FreePool(vl);
 	return fi;
 }
 
@@ -138,10 +142,13 @@ static EFI_FILE_SYSTEM_VOLUME_LABEL*uefi_file_system_volume_label_info_from_lua(
 	UINTN*size,
 	int n
 ){
-	GET_CHAR16(L,n,c16);
-	*size=sizeof(EFI_FILE_SYSTEM_VOLUME_LABEL)+StrSize(c16->string);
+	CHAR16*c16=NULL;
+	lua_arg_get_char16(L,n,false,&c16);
+	if(!c16)luaL_argerror(L,n,"get argument failed");
+	*size=sizeof(EFI_FILE_SYSTEM_VOLUME_LABEL)+StrSize(c16);
 	EFI_FILE_SYSTEM_VOLUME_LABEL*fi=AllocateZeroPool(*size);
-	if(fi)StrCpyS(fi->VolumeLabel,*size,c16->string);
+	if(fi)StrCpyS(fi->VolumeLabel,*size,c16);
+	FreePool(c16);
 	return fi;
 }
 

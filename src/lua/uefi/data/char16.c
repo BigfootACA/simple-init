@@ -9,6 +9,9 @@
 #ifdef ENABLE_LUA
 #include"../lua_uefi.h"
 
+#define LUA_UEFI_CHAR16     "UEFI 16-bit String"
+#define OPT_CHAR16(L,n,var) OPT_UDATA(L,n,var,lua_uefi_char16_data,LUA_UEFI_CHAR16)
+#define GET_CHAR16(L,n,var) OPT_CHAR16(L,n,var);CHECK_NULL(L,n,var)
 static void clean_char16(struct lua_uefi_char16_data*c16){
 	if(c16->allocated)FreePool(c16->string);
 	c16->allocated=FALSE;
@@ -122,6 +125,39 @@ void uefi_char16_a16_to_lua(lua_State*L,CHAR16*string){
 
 void uefi_char16_a8_to_lua(lua_State*L,CHAR8*string){
 	uefi_char16_an8_to_lua(L,string,AsciiStrSize(string));
+}
+
+void lua_arg_get_char16(lua_State*L,int idx,bool nil,CHAR16**data){
+	switch(lua_type(L,idx)){
+		case LUA_TSTRING:{
+			const char*a=lua_tostring(L,idx);
+			if(data){
+				UINTN s=(AsciiStrLen(a)+1)*sizeof(CHAR16);
+				if((*data=AllocateZeroPool(s)))
+					AsciiStrToUnicodeStrS(a,*data,s);
+			}
+		}break;
+		case LUA_TUSERDATA:{
+			struct lua_data*d1;
+			if((d1=luaL_testudata(L,idx,LUA_DATA))){
+				if(data&&d1->data&&d1->size>0)
+					*data=AllocateCopyPool(d1->size,d1->data);
+				break;
+			}
+			struct lua_uefi_char16_data*d2;
+			if((d2=luaL_testudata(L,idx,LUA_UEFI_CHAR16))){
+				if(data&&d2->string)*data=AllocateCopyPool(
+					StrSize(d2->string),
+					d2->string
+				);
+				break;
+			}
+		}break;
+		case LUA_TNIL:case LUA_TNONE:
+			if(!nil)luaL_argerror(L,idx,"required argument");
+		break;
+		default:luaL_argerror(L,idx,"argument type unknown");
+	}
 }
 
 struct lua_uefi_meta_table LuaUefiChar16MetaTable={

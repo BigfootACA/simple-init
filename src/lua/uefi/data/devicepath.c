@@ -54,11 +54,14 @@ static int LuaUefiDevicePathFromString(lua_State*L){
 }
 
 static int LuaUefiDevicePathFromChar16(lua_State*L){
+	CHAR16*c16=NULL;
 	GET_DEVICE_PATH(L,1,dp);
-	GET_CHAR16(L,2,c16);
+	lua_arg_get_char16(L,2,false,&c16);
+	if(!c16)return luaL_argerror(L,2,"get argument failed");
 	EFI_DEVICE_PATH_PROTOCOL*dpx=NULL;
-	if((dpx=ConvertTextToDevicePath(c16->string)))dp->dp=dpx;
+	if((dpx=ConvertTextToDevicePath(c16)))dp->dp=dpx;
 	lua_pushboolean(L,dpx!=NULL);
+	FreePool(c16);
 	return 1;
 }
 

@@ -121,6 +121,7 @@ struct lua_uefi_event_data{
 	struct lua_uefi_event_extra*data;
 };
 
+extern void uefi_lua_check_status(lua_State*L,EFI_STATUS st);
 extern BOOLEAN uefi_str_to_tpl(IN CONST CHAR8*str,OUT EFI_TPL*tpl);
 extern BOOLEAN uefi_str_to_event_type(IN CONST CHAR8*str,OUT UINT32*type);
 extern BOOLEAN uefi_str_to_reset_type(IN CONST CHAR8*str,OUT EFI_RESET_TYPE*type);

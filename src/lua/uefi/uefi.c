@@ -209,6 +209,16 @@ const char*uefi_load_option_type_to_str(EFI_BOOT_MANAGER_LOAD_OPTION_TYPE type){
 	}
 }
 
+void uefi_lua_check_status(lua_State*L,EFI_STATUS st){
+	lua_getglobal(L,"uefi_error");
+	bool err=lua_toboolean(L,-1);
+	lua_pop(L,1);
+	if(err&&EFI_ERROR(st))luaL_error(
+		L,"uefi call failed: %s",
+		efi_status_to_string(st)
+	);
+}
+
 static int LuaUefiLibStringToGuid(lua_State*L){
 	EFI_GUID guid;
 	uefi_str_to_guid(luaL_checkstring(L,1),&guid);

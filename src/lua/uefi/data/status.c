@@ -53,6 +53,7 @@ void uefi_str_status_to_lua(lua_State*L,const char*st){
 }
 
 void uefi_status_to_lua(lua_State*L,EFI_STATUS st){
+	uefi_lua_check_status(L,st);
 	struct lua_uefi_status_data*e;
 	e=lua_newuserdata(L,sizeof(struct lua_uefi_status_data));
 	luaL_getmetatable(L,LUA_UEFI_STATUS);

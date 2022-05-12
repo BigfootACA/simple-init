@@ -162,26 +162,28 @@ static int LuaUefiBSCheckEvent(lua_State*L){
 }
 
 static int LuaUefiBSHandleProtocol(lua_State*L){
+	EFI_GUID guid;
 	GET_BS(L,1,bs);
 	GET_HANDLE(L,2,hand);
-	GET_GUID(L,3,guid);
+	lua_arg_get_guid(L,3,false,&guid);
 	VOID*proto=NULL;
 	EFI_STATUS status=bs->bs->HandleProtocol(
-		hand->hand,&guid->guid,&proto
+		hand->hand,&guid,&proto
 	);
 	uefi_status_to_lua(L,status);
 	if(EFI_ERROR(status)||!proto)lua_pushnil(L);
-	else uefi_data_to_protocol(L,&guid->guid,proto,FALSE);
+	else uefi_data_to_protocol(L,&guid,proto,FALSE);
 	return 2;
 }
 
 static int LuaUefiBSRegisterProtocolNotify(lua_State*L){
+	EFI_GUID guid;
 	GET_BS(L,1,bs);
-	GET_GUID(L,2,guid);
+	lua_arg_get_guid(L,2,false,&guid);
 	GET_EVENT(L,3,event);
 	VOID*data=NULL;
 	EFI_STATUS status=bs->bs->RegisterProtocolNotify(
-		&guid->guid,event->event,&data
+		&guid,event->event,&data
 	);
 	uefi_status_to_lua(L,status);
 	if(EFI_ERROR(status))lua_pushnil(L);
@@ -190,13 +192,14 @@ static int LuaUefiBSRegisterProtocolNotify(lua_State*L){
 }
 
 static int LuaUefiBSLocateDevicePath(lua_State*L){
+	EFI_GUID guid;
 	GET_BS(L,1,bs);
-	GET_GUID(L,2,guid);
+	lua_arg_get_guid(L,2,false,&guid);
 	GET_DEVICE_PATH(L,3,dp);
 	EFI_DEVICE_PATH_PROTOCOL*xdp=dp->dp;
 	EFI_HANDLE hand=NULL;
 	EFI_STATUS status=bs->bs->LocateDevicePath(
-		&guid->guid,&xdp,&hand
+		&guid,&xdp,&hand
 	);
 	uefi_status_to_lua(L,status);
 	uefi_device_path_to_lua(L,xdp);
@@ -205,11 +208,12 @@ static int LuaUefiBSLocateDevicePath(lua_State*L){
 }
 
 static int LuaUefiBSInstallConfigurationTable(lua_State*L){
+	EFI_GUID guid;
 	GET_BS(L,1,bs);
-	GET_GUID(L,2,guid);
+	lua_arg_get_guid(L,2,false,&guid);
 	GET_DATA(L,3,data);
 	EFI_STATUS status=bs->bs->InstallConfigurationTable(
-		&guid->guid,&data->data
+		&guid,&data->data
 	);
 	uefi_status_to_lua(L,status);
 	return 1;
@@ -360,11 +364,12 @@ static BOOLEAN str_to_open_protocol(const char*str,UINT32*res){
 }
 
 static int LuaUefiBSOpenProtocol(lua_State*L){
+	EFI_GUID guid;
 	UINT32 attr=0;
 	VOID*proto=NULL;
 	GET_BS(L,1,bs);
 	GET_HANDLE(L,2,hand);
-	GET_GUID(L,3,guid);
+	lua_arg_get_guid(L,3,false,&guid);
 	OPT_HANDLE(L,4,agent);
 	OPT_HANDLE(L,5,ctrl);
 	switch(lua_type(L,6)){
@@ -388,26 +393,27 @@ static int LuaUefiBSOpenProtocol(lua_State*L){
 		default:return luaL_argerror(L,6,"invalid attribute");
 	}
 	EFI_STATUS status=bs->bs->OpenProtocol(
-		hand->hand,&guid->guid,&proto,
+		hand->hand,&guid,&proto,
 		agent?agent->hand:NULL,
 		ctrl?ctrl->hand:NULL,
 		attr
 	);
 	uefi_status_to_lua(L,status);
 	if(EFI_ERROR(status)||!proto)lua_pushnil(L);
-	else uefi_data_to_protocol(L,&guid->guid,proto,FALSE);
+	else uefi_data_to_protocol(L,&guid,proto,FALSE);
 	return 1;
 }
 
 static int LuaUefiBSCloseProtocol(lua_State*L){
+	EFI_GUID guid;
 	GET_BS(L,1,bs);
 	GET_HANDLE(L,2,hand);
-	GET_GUID(L,3,guid);
+	lua_arg_get_guid(L,3,false,&guid);
 	GET_HANDLE(L,4,agent_hand);
 	GET_HANDLE(L,5,ctrl_hand);
 	EFI_STATUS status=bs->bs->CloseProtocol(
 		hand->hand,
-		&guid->guid,
+		&guid,
 		agent_hand->hand,
 		ctrl_hand->hand
 	);
@@ -440,9 +446,10 @@ static int LuaUefiBSProtocolsPerHandle(lua_State*L){
 }
 
 static int LuaUefiBSLocateHandleBuffer(lua_State*L){
+	EFI_GUID guid;
 	GET_BS(L,1,bs);
 	const char*by=luaL_checkstring(L,2);
-	GET_GUID(L,3,guid);
+	lua_arg_get_guid(L,3,false,&guid);
 	UINTN count=0;
 	EFI_HANDLE*hands=NULL;
 	EFI_LOCATE_SEARCH_TYPE type;
@@ -450,7 +457,7 @@ static int LuaUefiBSLocateHandleBuffer(lua_State*L){
 	else if(AsciiStriCmp(by,"protocol")==0)type=ByProtocol;
 	else return luaL_argerror(L,2,"invalid search type");
 	EFI_STATUS status=bs->bs->LocateHandleBuffer(
-		type,&guid->guid,
+		type,&guid,
 		NULL,&count,&hands
 	);
 	uefi_status_to_lua(L,status);
@@ -465,16 +472,17 @@ static int LuaUefiBSLocateHandleBuffer(lua_State*L){
 }
 
 static int LuaUefiBSLocateProtocol(lua_State*L){
+	EFI_GUID guid;
 	GET_BS(L,1,bs);
-	GET_GUID(L,3,guid);
-	GET_DATA(L,4,reg);
+	lua_arg_get_guid(L,2,false,&guid);
+	GET_DATA(L,3,reg);
 	VOID*proto=NULL;
 	EFI_STATUS status=bs->bs->LocateProtocol(
-		&guid->guid,reg->data,&proto
+		&guid,reg->data,&proto
 	);
 	uefi_status_to_lua(L,status);
 	if(EFI_ERROR(status)||!proto)lua_pushnil(L);
-	else uefi_data_to_protocol(L,&guid->guid,proto,FALSE);
+	else uefi_data_to_protocol(L,&guid,proto,FALSE);
 	return 2;
 }
 
@@ -492,12 +500,13 @@ static int LuaUefiBSCalculateCrc32(lua_State*L){
 }
 
 static int LuaUefiBSCreateEventEx(lua_State*L){
+	EFI_GUID guid;
 	GET_BS(L,1,bs);
 	UINT32 type=0;
 	EFI_TPL tpl=0;
 	const char*_type=luaL_checkstring(L,2);
 	const char*_tpl=luaL_checkstring(L,3);
-	OPT_GUID(L,4,group);
+	bool got=lua_arg_get_guid(L,4,true,&guid);
 	if(!uefi_str_to_event_type(_type,&type))
 		return luaL_argerror(L,2,"invalid event type");
 	if(!uefi_str_to_tpl(_tpl,&tpl))
@@ -512,7 +521,7 @@ static int LuaUefiBSCreateEventEx(lua_State*L){
 	}
 	uefi_create_event_ex(
 		L,bs->bs,type,tpl,
-		group?&group->guid:NULL,
+		got?&guid:NULL,
 		data,func
 	);
 	return 2;

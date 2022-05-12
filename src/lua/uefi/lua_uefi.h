@@ -70,7 +70,6 @@
 #define OPT_HANDLE(L,n,var)      OPT_UDATA(L,n,var,lua_uefi_hand_data,LUA_UEFI_HANDLE)
 #define OPT_STATUS(L,n,var)      OPT_UDATA(L,n,var,lua_uefi_status_data,LUA_UEFI_STATUS)
 #define OPT_DEVICE_PATH(L,n,var) OPT_UDATA(L,n,var,lua_uefi_device_path_data,LUA_UEFI_DEVICE_PATH)
-#define OPT_GUID(L,n,var)        OPT_UDATA(L,n,var,lua_uefi_guid_data,LUA_UEFI_GUID)
 #define OPT_EVENT(L,n,var)       OPT_UDATA(L,n,var,lua_uefi_event_data,LUA_UEFI_EVENT)
 #define OPT_INPUT_KEY(L,n,var)   OPT_UDATA(L,n,var,lua_uefi_input_key_data,LUA_UEFI_INPUT_KEY)
 #define OPT_BOOT_OPTION(L,n,var) OPT_UDATA(L,n,var,lua_uefi_bootopt_data,LUA_UEFI_BOOT_OPTION)
@@ -81,7 +80,6 @@
 #define GET_HANDLE(L,n,var)      OPT_HANDLE(L,n,var);      CHECK_NULL(L,n,var)
 #define GET_STATUS(L,n,var)      OPT_STATUS(L,n,var);      CHECK_NULL(L,n,var)
 #define GET_DEVICE_PATH(L,n,var) OPT_DEVICE_PATH(L,n,var); CHECK_NULL(L,n,var)
-#define GET_GUID(L,n,var)        OPT_GUID(L,n,var);        CHECK_NULL(L,n,var)
 #define GET_EVENT(L,n,var)       OPT_EVENT(L,n,var);       CHECK_NULL(L,n,var)
 #define GET_INPUT_KEY(L,n,var)   OPT_INPUT_KEY(L,n,var);   CHECK_NULL(L,n,var)
 #define GET_BOOT_OPTION(L,n,var) OPT_BOOT_OPTION(L,n,var); CHECK_NULL(L,n,var)
@@ -156,6 +154,7 @@ extern void uefi_simple_text_input_protocol_to_lua(lua_State*L,EFI_SIMPLE_TEXT_I
 extern void uefi_simple_text_output_protocol_to_lua(lua_State*L,EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL*proto);
 extern void uefi_timestamp_protocol_to_lua(lua_State*L,EFI_TIMESTAMP_PROTOCOL*proto);
 
+extern bool lua_arg_get_guid(lua_State*L,int idx,bool nil,EFI_GUID*guid);
 extern void lua_arg_get_char16(lua_State*L,int idx,bool nil,CHAR16**data);
 extern void uefi_file_protocol_get_mode(lua_State*L,int n,UINT64*mode,BOOLEAN nil);
 extern void uefi_file_protocol_get_attr(lua_State*L,int n,UINT64*attr,BOOLEAN nil);

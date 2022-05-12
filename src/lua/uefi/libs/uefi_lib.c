@@ -11,10 +11,11 @@
 #include"../lua_uefi.h"
 
 static int LuaUefiLibEfiGetSystemConfigurationTable(lua_State*L){
+	EFI_GUID guid;
 	VOID*table=NULL;
 	EFI_STATUS status;
-	GET_GUID(L,1,guid);
-	status=EfiGetSystemConfigurationTable(&guid->guid,&table);
+	lua_arg_get_guid(L,1,false,&guid);
+	status=EfiGetSystemConfigurationTable(&guid,&table);
 	uefi_status_to_lua(L,status);
 	if(EFI_ERROR(status)||!table)lua_pushnil(L);
 	else uefi_data_to_lua(L,FALSE,table,0);
@@ -22,44 +23,48 @@ static int LuaUefiLibEfiGetSystemConfigurationTable(lua_State*L){
 }
 
 static int LuaUefiLibEfiNamedEventSignal(lua_State*L){
+	EFI_GUID guid;
 	EFI_STATUS status;
-	GET_GUID(L,1,guid);
-	status=EfiNamedEventSignal(&guid->guid);
+	lua_arg_get_guid(L,1,false,&guid);
+	status=EfiNamedEventSignal(&guid);
 	uefi_status_to_lua(L,status);
 	return 1;
 }
 
 static int LuaUefiLibEfiEventGroupSignal(lua_State*L){
+	EFI_GUID guid;
 	EFI_STATUS status;
-	GET_GUID(L,1,guid);
-	status=EfiEventGroupSignal(&guid->guid);
+	lua_arg_get_guid(L,1,false,&guid);
+	status=EfiEventGroupSignal(&guid);
 	uefi_status_to_lua(L,status);
 	return 1;
 }
 
 static int LuaUefiLibEfiTestManagedDevice(lua_State*L){
+	EFI_GUID guid;
 	EFI_STATUS status;
 	GET_HANDLE(L,1,ctrl);
 	GET_HANDLE(L,2,drv_bind);
-	GET_GUID(L,3,guid);
+	lua_arg_get_guid(L,3,false,&guid);
 	status=EfiTestManagedDevice(
 		ctrl->hand,
 		drv_bind->hand,
-		&guid->guid
+		&guid
 	);
 	uefi_status_to_lua(L,status);
 	return 1;
 }
 
 static int LuaUefiLibEfiTestChildHandle(lua_State*L){
+	EFI_GUID guid;
 	EFI_STATUS status;
 	GET_HANDLE(L,1,ctrl);
 	GET_HANDLE(L,2,child);
-	GET_GUID(L,3,guid);
+	lua_arg_get_guid(L,3,false,&guid);
 	status=EfiTestChildHandle(
 		ctrl->hand,
 		child->hand,
-		&guid->guid
+		&guid
 	);
 	uefi_status_to_lua(L,status);
 	return 1;
@@ -75,14 +80,15 @@ static int LuaUefiLibIsLanguageSupported(lua_State*L){
 }
 
 static int LuaUefiLibGetVariable2(lua_State*L){
+	EFI_GUID guid;
 	EFI_STATUS status;
 	VOID*data=NULL;
 	UINTN size=0;
 	CHAR16*name=NULL;
 	lua_arg_get_char16(L,1,false,&name);
-	GET_GUID(L,2,guid);
+	lua_arg_get_guid(L,2,false,&guid);
 	if(!name)return luaL_argerror(L,1,"get argument failed");
-	status=GetVariable2(name,&guid->guid,&data,&size);
+	status=GetVariable2(name,&guid,&data,&size);
 	uefi_status_to_lua(L,status);
 	if(EFI_ERROR(status)||!data)lua_pushnil(L);
 	else uefi_data_to_lua(L,TRUE,data,size);
@@ -106,15 +112,16 @@ static int LuaUefiLibGetEfiGlobalVariable2(lua_State*L){
 }
 
 static int LuaUefiLibGetVariable3(lua_State*L){
+	EFI_GUID guid;
 	EFI_STATUS status;
 	VOID*data=NULL;
 	UINTN size=0;
 	UINT32 attr=0;
 	CHAR16*name=NULL;
 	lua_arg_get_char16(L,1,false,&name);
-	GET_GUID(L,2,guid);
+	lua_arg_get_guid(L,2,false,&guid);
 	if(!name)return luaL_argerror(L,1,"get argument failed");
-	status=GetVariable3(name,&guid->guid,&data,&size,&attr);
+	status=GetVariable3(name,&guid,&data,&size,&attr);
 	uefi_status_to_lua(L,status);
 	if(EFI_ERROR(status)||!data)lua_pushnil(L);
 	else uefi_data_to_lua(L,TRUE,data,size);
@@ -196,17 +203,18 @@ static int LuaUefiLibAsciiPrintXY(lua_State*L){
 }
 
 static int LuaUefiLibEfiLocateProtocolBuffer(lua_State*L){
+	EFI_GUID guid;
 	EFI_STATUS status;
 	VOID**data=NULL;
 	UINTN size=0;
-	GET_GUID(L,1,guid);
-	status=EfiLocateProtocolBuffer(&guid->guid,&size,&data);
+	lua_arg_get_guid(L,1,false,&guid);
+	status=EfiLocateProtocolBuffer(&guid,&size,&data);
 	uefi_status_to_lua(L,status);
 	if(EFI_ERROR(status)||!data)lua_pushnil(L);
 	else{
 		lua_createtable(L,0,0);
 		for(UINTN i=0;data[i];i++){
-			uefi_data_to_protocol(L,&guid->guid,data[i],FALSE);
+			uefi_data_to_protocol(L,&guid,data[i],FALSE);
 			lua_rawseti(L,-2,i+1);
 		}
 	}

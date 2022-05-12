@@ -259,17 +259,18 @@ static int LuaUefiFileProtocolSetPosition(lua_State*L){
 }
 
 static int LuaUefiFileProtocolGetInfo(lua_State*L){
+	EFI_GUID guid;
 	VOID*data=NULL;
 	EFI_STATUS status;
 	GET_PROTO(L,1,proto);
-	GET_GUID(L,2,guid);
+	lua_arg_get_guid(L,2,false,&guid);
 	if(!proto->proto)return luaL_argerror(L,1,"file closed");
-	status=efi_file_get_info(proto->proto,&guid->guid,NULL,&data);
+	status=efi_file_get_info(proto->proto,&guid,NULL,&data);
 	uefi_status_to_lua(L,status);
 	if(EFI_ERROR(status)||!data)lua_pushnil(L);
-	else uefi_raw_file_info_to_lua(L,&guid->guid,data);
+	else uefi_raw_file_info_to_lua(L,&guid,data);
 	if(data){
-		if(CompareGuid(&guid->guid,&gEfiFileInfoGuid)){
+		if(CompareGuid(&guid,&gEfiFileInfoGuid)){
 			if(proto->info)FreePool(proto->info);
 			proto->info=data;
 		}
@@ -368,17 +369,18 @@ static int LuaUefiFileProtocolGetLength(lua_State*L){
 }
 
 static int LuaUefiFileProtocolSetInfo(lua_State*L){
+	EFI_GUID guid;
 	UINTN size=0;
 	VOID*data=NULL;
 	GET_PROTO(L,1,proto);
-	GET_GUID(L,2,guid);
+	lua_arg_get_guid(L,2,false,&guid);
 	if(!proto->proto)return luaL_argerror(L,1,"file closed");
-	if(!(data=uefi_raw_file_info_from_lua(L,&guid->guid,&size,3)))
+	if(!(data=uefi_raw_file_info_from_lua(L,&guid,&size,3)))
 		return luaL_argerror(L,3,"invalid file info");
 	EFI_STATUS status=proto->proto->SetInfo(
-		proto->proto,&guid->guid,size,data
+		proto->proto,&guid,size,data
 	);
-	if(CompareGuid(&guid->guid,&gEfiFileInfoGuid)){
+	if(CompareGuid(&guid,&gEfiFileInfoGuid)){
 		if(proto->info)FreePool(proto->info);
 		proto->info=data;
 	}

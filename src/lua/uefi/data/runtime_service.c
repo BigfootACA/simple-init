@@ -68,23 +68,24 @@ static int LuaUefiRTSetVirtualAddressMap(lua_State*L){
 }
 
 static int LuaUefiRTGetVariable(lua_State*L){
+	EFI_GUID guid;
 	CHAR16*name=NULL;
 	GET_RT(L,1,rt);
 	lua_arg_get_char16(L,2,false,&name);
-	GET_GUID(L,3,guid);
+	lua_arg_get_guid(L,3,false,&guid);
 	if(!name)return luaL_argerror(L,2,"get argument failed");
 	UINT32 attr=0;
 	UINTN size=0;
 	VOID*data=NULL;
 	EFI_STATUS status=rt->rt->GetVariable(
-		name,&guid->guid,
+		name,&guid,
 		&attr,&size,&data
 	);
 	if(status==EFI_BUFFER_TOO_SMALL){
 		if(!(data=AllocateZeroPool(size)))
 			return luaL_error(L,"allocate pool failed");
 		status=rt->rt->GetVariable(
-			name,&guid->guid,
+			name,&guid,
 			&attr,&size,&data
 		);
 	}
@@ -117,16 +118,16 @@ static int LuaUefiRTGetNextVariableName(lua_State*L){
 }
 
 static int LuaUefiRTSetVariable(lua_State*L){
+	EFI_GUID guid;
 	CHAR16*name=NULL;
 	GET_RT(L,1,rt);
 	lua_arg_get_char16(L,2,false,&name);
-	GET_GUID(L,3,guid);
+	lua_arg_get_guid(L,3,false,&guid);
 	if(!name)return luaL_argerror(L,2,"get argument failed");
 	lua_Integer attr=luaL_checkinteger(L,4);
 	GET_DATA(L,5,data);
 	EFI_STATUS status=rt->rt->SetVariable(
-		name,&guid->guid,
-		attr,data->size,data->data
+		name,&guid,attr,data->size,data->data
 	);
 	uefi_status_to_lua(L,status);
 	FreePool(name);

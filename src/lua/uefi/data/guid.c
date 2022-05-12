@@ -9,6 +9,10 @@
 #ifdef ENABLE_LUA
 #include"../lua_uefi.h"
 
+#define LUA_UEFI_GUID     "UEFI GUID"
+#define OPT_GUID(L,n,var) OPT_UDATA(L,n,var,lua_uefi_guid_data,LUA_UEFI_GUID)
+#define GET_GUID(L,n,var) OPT_GUID(L,n,var);CHECK_NULL(L,n,var)
+
 static int LuaUefiGuidToRawString(lua_State*L){
 	char buff[64];
 	GET_GUID(L,1,guid);
@@ -73,6 +77,36 @@ void uefi_char16_guid_to_lua(lua_State*L,CHAR16*str){
 	EFI_GUID guid;
 	StrToGuid(str,&guid);
 	uefi_guid_to_lua(L,&guid);
+}
+
+bool lua_arg_get_guid(lua_State*L,int idx,bool nil,EFI_GUID*guid){
+	switch(lua_type(L,idx)){
+		case LUA_TSTRING:{
+			const char*a=lua_tostring(L,idx);
+			if(guid)uefi_str_to_guid(a,guid);
+			else return false;
+		}break;
+		case LUA_TUSERDATA:{
+			struct lua_data*d1;
+			if((d1=luaL_testudata(L,idx,LUA_DATA))){
+				if(guid)uefi_str_to_guid((char*)d1->data,guid);
+				else return false;
+				break;
+			}
+			struct lua_uefi_guid_data*d2;
+			if((d2=luaL_testudata(L,idx,LUA_UEFI_GUID))){
+				if(guid)CopyGuid(guid,&d2->guid);
+				else return false;
+				break;
+			}
+		}break;
+		case LUA_TNIL:case LUA_TNONE:
+			if(!nil)luaL_argerror(L,idx,"required argument");
+			else return false;
+		break;
+		default:luaL_argerror(L,idx,"argument type unknown");
+	}
+	return true;
 }
 
 struct lua_uefi_meta_table LuaUefiGuidMetaTable={

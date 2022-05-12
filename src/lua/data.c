@@ -130,9 +130,10 @@ static int lua_data_to_file_info(lua_State*L){
 }
 
 static int lua_data_to_protocol(lua_State*L){
+	EFI_GUID guid;
 	GET_DATA(L,1,data);
-	GET_GUID(L,2,guid);
-	uefi_data_to_protocol(L,&guid->guid,&data->data,true);
+	lua_arg_get_guid(L,2,false,&guid);
+	uefi_data_to_protocol(L,&guid,&data->data,true);
 	return 1;
 }
 #endif
@@ -354,6 +355,36 @@ void uefi_data_dup_to_lua(lua_State*L,VOID*data,UINTN size){
 	e->uefi=true;
 }
 #endif
+
+void lua_arg_get_data(lua_State*L,int idx,bool nil,void**data,size_t*size){
+	switch(lua_type(L,idx)){
+		case LUA_TSTRING:{
+			const char*a=lua_tostring(L,idx);
+			if(data)*data=(void*)a;
+			if(size)*size=strlen(a)+1;
+		}break;
+		case LUA_TUSERDATA:{
+			struct lua_data*d1;
+			if((d1=luaL_testudata(L,idx,LUA_DATA))){
+				if(data)*data=d1->data;
+				if(size)*size=d1->size;
+				break;
+			}
+			#ifdef ENABLE_UEFI
+			struct lua_uefi_char16_data*d2;
+			if((d2=luaL_testudata(L,idx,LUA_UEFI_CHAR16))){
+				if(data)*data=d2->string;
+				if(size)*size=StrLen(d2->string)+1;
+				break;
+			}
+			#endif
+		}break;
+		case LUA_TNIL:case LUA_TNONE:
+			if(!nil)luaL_argerror(L,idx,"required argument");
+		break;
+		default:luaL_argerror(L,idx,"argument type unknown");
+	}
+}
 
 static luaL_Reg data_meta[]={
 	{"ToString",          lua_data_to_raw_string},

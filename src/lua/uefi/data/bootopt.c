@@ -94,12 +94,9 @@ static int LuaUefiBootOptionOptionNumber(lua_State*L){
 
 static int LuaUefiBootOptionVendorGuid(lua_State*L){
 	GET_BOOT_OPTION(L,1,bo);
-	OPT_GUID(L,2,guid);
 	if(bo->bo){
-		if(guid){
-			luaL_argcheck(L,bo->allocated,1,"read only option");
-			CopyGuid(&bo->bo->VendorGuid,&guid->guid);
-		}
+		luaL_argcheck(L,bo->allocated,1,"read only option");
+		lua_arg_get_guid(L,2,true,&bo->bo->VendorGuid);
 		uefi_guid_to_lua(L,&bo->bo->VendorGuid);
 	}else lua_pushnil(L);
 	return 1;

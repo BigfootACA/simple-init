@@ -32,10 +32,11 @@ static int LuaUefiBootManagerPolicyProtocolConnectDevicePath(lua_State*L){
 }
 
 static int LuaUefiBootManagerPolicyProtocolConnectDeviceClass(lua_State*L){
+	EFI_GUID guid;
 	GET_PROTO(L,1,proto);
-	GET_GUID(L,2,guid);
+	lua_arg_get_guid(L,2,false,&guid);
 	EFI_STATUS status=proto->proto->ConnectDeviceClass(
-		proto->proto,&guid->guid
+		proto->proto,&guid
 	);
 	uefi_status_to_lua(L,status);
 	return 1;

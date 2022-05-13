@@ -28,6 +28,40 @@ static int LuaUefiSimpleFileSystemProtocolOpenVolume(lua_State*L){
 	return 2;
 }
 
+static int LuaUefiSimpleFileSystemProtocolOpen(lua_State*L){
+	GET_PROTO(L,1,proto);
+	LuaUefiSimpleFileSystemProtocolOpenVolume(L);
+	lua_copy(L,-1,1);
+	lua_pop(L,2);
+	lua_getfield(L,1,"Open");
+	lua_insert(L,1);
+	lua_call(L,lua_gettop(L)-1,LUA_MULTRET);
+	return 2;
+}
+
+static int LuaUefiSimpleFileSystemProtocolOpenDir(lua_State*L){
+	GET_PROTO(L,1,proto);
+	LuaUefiSimpleFileSystemProtocolOpenVolume(L);
+	lua_copy(L,-1,1);
+	lua_pop(L,2);
+	lua_getfield(L,1,"OpenDir");
+	lua_insert(L,1);
+	lua_call(L,lua_gettop(L)-1,LUA_MULTRET);
+	return 2;
+}
+
+static int LuaUefiSimpleFileSystemProtocolGetInfo(lua_State*L){
+	GET_PROTO(L,1,proto);
+	LuaUefiSimpleFileSystemProtocolOpenVolume(L);
+	lua_copy(L,-1,1);
+	lua_pop(L,2);
+	lua_getfield(L,1,"GetInfo");
+	lua_insert(L,1);
+	uefi_guid_to_lua(L,&gEfiFileSystemInfoGuid);
+	lua_call(L,2,LUA_MULTRET);
+	return 2;
+}
+
 static int LuaUefiSimpleFileSystemProtocolRevision(lua_State*L){
 	GET_PROTO(L,1,proto);
 	lua_pushinteger(L,proto->proto->Revision);
@@ -51,6 +85,9 @@ struct lua_uefi_meta_table LuaUefiSimpleFileSystemProtocolMetaTable={
 	.reg=(const luaL_Reg[]){
 		{"Revision",   LuaUefiSimpleFileSystemProtocolRevision},
 		{"OpenVolume", LuaUefiSimpleFileSystemProtocolOpenVolume},
+		{"Open",       LuaUefiSimpleFileSystemProtocolOpen},
+		{"OpenDir",    LuaUefiSimpleFileSystemProtocolOpenDir},
+		{"GetInfo",    LuaUefiSimpleFileSystemProtocolGetInfo},
 		{NULL, NULL}
 	},
 	.tostring=LuaUefiSimpleFileSystemProtocolToString,

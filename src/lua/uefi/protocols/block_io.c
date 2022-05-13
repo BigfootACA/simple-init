@@ -42,6 +42,9 @@ static void load_media(lua_State*L,UINT64 rev,EFI_BLOCK_IO_MEDIA*media){
 	lua_pushliteral(L,"LastBlock");
 	lua_pushinteger(L,media->LastBlock);
 	lua_settable(L,-3);
+	lua_pushliteral(L,"TotalSize");
+	lua_pushinteger(L,(media->LastBlock-1)*media->BlockSize);
+	lua_settable(L,-3);
 	lua_pushliteral(L,"LowestAlignedLba");
 	#ifdef EFI_BLOCK_IO_PROTOCOL_REVISION2
 	if(rev>=EFI_BLOCK_IO_PROTOCOL_REVISION2)

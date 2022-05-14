@@ -72,7 +72,8 @@ static inline void get_multi_from_confd(list**from,const char*key,const char*sub
 }
 
 static inline void get_multi_str_from_confd(list**from,const char*key,const char*sub){
-	switch(confd_get_type_base(key,sub)){
+	switch((int)confd_get_type_base(key,sub)){
+		case -1:return;
 		case TYPE_STRING:{
 			char*x=confd_get_string_base(key,sub,NULL);
 			if(x)list_obj_add_new(from,x);
@@ -86,7 +87,6 @@ static inline void get_multi_str_from_confd(list**from,const char*key,const char
 			if(xs[0])free(xs[0]);
 			free(xs);
 		}break;
-		case TYPE_INTEGER:case TYPE_BOOLEAN:break;
 		default:tlog_warn("invalid config %s.%s",key,sub);
 	}
 }

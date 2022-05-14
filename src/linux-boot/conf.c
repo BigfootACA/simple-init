@@ -130,10 +130,6 @@ static inline void get_boot_addresses_pcd(linux_config*cfg){
 	cfg->load_address.fdt.end=PcdGet64(PcdBootFdtAddressEnd);
 }
 
-static inline void load_boolean(const char*key,const char*sub,bool*b){
-	(*b)=confd_get_boolean_base(key,sub,*b);
-}
-
 linux_config*linux_config_new(){
 	linux_config*cfg=AllocateZeroPool(sizeof(linux_config));
 	if(cfg){
@@ -147,6 +143,8 @@ linux_config*linux_config_new(){
 	return cfg;
 }
 
+#define load_boolean(key,name,var) var=confd_get_boolean_base(key,name,var)
+
 linux_config*linux_config_new_from_confd(const char*key){
 	linux_config*cfg=linux_config_new();
 	if(!cfg)return NULL;
@@ -158,18 +156,18 @@ linux_config*linux_config_new_from_confd(const char*key){
 	get_from_confd(&cfg->dtb,key,"dtb");
 	get_region_confd(&cfg->screen.splash,key,"splash");
 	get_memory_confd(cfg,key);
-	load_boolean(key,"use_uefi",&cfg->use_uefi);
-	load_boolean(key,"skip_dtb",&cfg->skip_dtb);
-	load_boolean(key,"skip_dtbo",&cfg->skip_dtbo);
-	load_boolean(key,"skip_initrd",&cfg->skip_initrd);
-	load_boolean(key,"skip_efi_memory_map",&cfg->skip_efi_memory_map);
-	load_boolean(key,"skip_kernel_fdt_memory",&cfg->skip_kfdt_memory);
-	load_boolean(key,"skip_kernel_fdt_cmdline",&cfg->skip_kfdt_cmdline);
-	load_boolean(key,"load_custom_address",&cfg->load_custom_address);
-	load_boolean(key,"match_kernel_fdt_model",&cfg->match_kfdt_model);
-	load_boolean(key,"ignore_dtbo_error",&cfg->ignore_dtbo_error);
-	load_boolean(key,"add_simplefb",&cfg->screen.add_simplefb);
-	load_boolean(key,"update_splash",&cfg->screen.update_splash);
+	load_boolean(key,"use_uefi",cfg->use_uefi);
+	load_boolean(key,"skip_dtb",cfg->skip_dtb);
+	load_boolean(key,"skip_dtbo",cfg->skip_dtbo);
+	load_boolean(key,"skip_initrd",cfg->skip_initrd);
+	load_boolean(key,"skip_efi_memory_map",cfg->skip_efi_memory_map);
+	load_boolean(key,"skip_kernel_fdt_memory",cfg->skip_kfdt_memory);
+	load_boolean(key,"skip_kernel_fdt_cmdline",cfg->skip_kfdt_cmdline);
+	load_boolean(key,"load_custom_address",cfg->load_custom_address);
+	load_boolean(key,"match_kernel_fdt_model",cfg->match_kfdt_model);
+	load_boolean(key,"ignore_dtbo_error",cfg->ignore_dtbo_error);
+	load_boolean(key,"add_simplefb",cfg->screen.add_simplefb);
+	load_boolean(key,"update_splash",cfg->screen.update_splash);
 	get_multi_str_from_confd(&cfg->dtb_model,key,"dtb_model");
 	get_multi_str_from_confd(&cfg->dtb_compatible,key,"dtb_compatible");
 	get_multi_str_from_confd(&cfg->dtbo_model,key,"dtbo_model");

@@ -89,16 +89,16 @@ typedef struct linux_screen_info{
 // linux boot config
 typedef struct linux_config{
 	linux_boot_arch arch;
-	bool use_uefi;
-	bool skip_dtb;
-	bool skip_dtbo;
-	bool skip_initrd;
-	bool skip_efi_memory_map;
-	bool skip_kfdt_memory;
-	bool skip_kfdt_cmdline;
-	bool load_custom_address;
-	bool match_kfdt_model;
-	bool ignore_dtbo_error;
+	bool use_uefi:1;
+	bool skip_dtb:1;
+	bool skip_dtbo:1;
+	bool skip_initrd:1;
+	bool skip_efi_memory_map:1;
+	bool skip_kfdt_memory:1;
+	bool skip_kfdt_cmdline:1;
+	bool load_custom_address:1;
+	bool match_kfdt_model:1;
+	bool ignore_dtbo_error:1;
 	linux_load_from kernel;
 	linux_load_from dtb;
 	linux_load_from abootimg;
@@ -117,7 +117,7 @@ typedef struct linux_config{
 	char tag[256];
 	char cmdline[
 		PATH_MAX*2-
-		(sizeof(void*)*16)-
+		(sizeof(void*)*15)-
 		(sizeof(int64_t)*2)-
 		(sizeof(char)*256)-
 		(sizeof(linux_screen_info))-

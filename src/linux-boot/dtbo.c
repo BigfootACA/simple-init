@@ -238,8 +238,9 @@ int linux_boot_apply_dtbo(linux_boot*lb){
 		if(CompareMem(&fdt_magic,fi->address,4)==0){
 			tlog_debug("found generic dtbo #%zu",i);
 			lb->status.dtbo_id=0;
+			fdt_set_totalsize(lb->dtb.address,fi->size+lb->dtb.size);
 			xr=fdt_overlay_apply(lb->dtb.address,fi->address);
-			if(xr!=0)tlog_error("apply overlay failed: %s",fdt_strerror(r));
+			if(xr!=0)tlog_error("apply overlay failed: %s",fdt_strerror(xr));
 		}else if(CompareMem(&dtbo_magic,fi->address,4)==0){
 			tlog_debug("found qualcomm dtbo #%zu",i);
 			if(fi->size<=sizeof(dtbo_table_header)){

@@ -199,11 +199,17 @@ static int LuaUefiFileProtocolDelete(lua_State*L){
 
 static int LuaUefiFileProtocolRead(lua_State*L){
 	GET_PROTO(L,1,proto);
-	UINTN size=luaL_checkinteger(L,2);
+	UINTN size=luaL_optinteger(L,2,0);
+	EFI_FILE_INFO*info=NULL;
 	EFI_STATUS status;
 	VOID*buff=NULL;
 	if(!proto->proto)return luaL_argerror(L,1,"file closed");
-	status=efi_file_read(proto->proto,size,&buff,&size);
+	if(size<=0){
+		status=get_file_info(proto,&info);
+		if(!EFI_ERROR(status))size=info->FileSize;
+	}
+	if(size<=0)return luaL_argerror(L,2,"read buffer zero");
+	else status=efi_file_read(proto->proto,size,&buff,&size);
 	uefi_status_to_lua(L,status);
 	if(EFI_ERROR(status)||!buff)lua_pushnil(L);
 	else uefi_data_to_lua(L,TRUE,buff,size);

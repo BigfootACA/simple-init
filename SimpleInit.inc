@@ -6,6 +6,7 @@
   TSMLib|libs/libtsm/TSMLib.inf
   UfdtLib|libs/libufdt/UfdtLib.inf
   MiniXML|libs/mxml/MiniXML.inf
+  NanoSVG|libs/nanosvg/NanoSVG.inf
   LodePNG|libs/lodepng/LodePNG.inf
   FreeType|libs/FreeType.inf
   LittleVgl|libs/LittleVgl.inf
@@ -33,6 +34,7 @@
   libs/libtsm/TSMLib.inf
   libs/libufdt/UfdtLib.inf
   libs/mxml/MiniXML.inf
+  libs/nanosvg/NanoSVG.inf
   libs/lodepng/LodePNG.inf
   libs/FreeType.inf
   libs/LittleVgl.inf

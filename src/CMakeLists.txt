@@ -136,7 +136,7 @@ if("${ENABLE_LIBTSM}" STREQUAL "ON")
 endif()
 
 if("${ENABLE_NANOSVG}" STREQUAL "ON")
-	target_link_libraries(simple-init m)
+	target_link_libraries(simple-init nanosvg m)
 endif()
 
 if("${ENABLE_STB}" STREQUAL "ON")

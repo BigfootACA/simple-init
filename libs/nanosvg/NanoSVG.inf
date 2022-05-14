@@ -1,0 +1,22 @@
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = NanoSVG
+  FILE_GUID                      = 07A30FCC-5BB7-4957-9F39-293A0C7BDFF0
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = NanoSVG
+
+[BuildOptions]
+  GCC:*_*_*_CC_FLAGS = -DENABLE_UEFI=1
+
+[Packages]
+  MdePkg/MdePkg.dec
+  SimpleInit.dec
+
+[LibraryClasses]
+  SimpleInitCompatible
+
+[Sources]
+  libs/nanosvg/src/nanosvg.h
+  libs/nanosvg/src/nanosvgrast.h
+  libs/nanosvg/nanosvg.c

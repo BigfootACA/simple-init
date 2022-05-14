@@ -8,8 +8,6 @@
 
 #ifdef ENABLE_GUI
 #ifdef ENABLE_NANOSVG
-#define NANOSVG_IMPLEMENTATION
-#define NANOSVGRAST_IMPLEMENTATION
 #include<stdio.h>
 #include<stdlib.h>
 #include<unistd.h>

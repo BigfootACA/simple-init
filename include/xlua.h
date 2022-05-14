@@ -63,4 +63,5 @@ extern int xlua_create_metatable(
 );
 extern void lua_data_to_lua(lua_State*L,bool allocated,void*data,size_t size);
 extern void lua_data_dup_to_lua(lua_State*L,void*data,size_t size);
+extern void xlua_dump_stack(lua_State*L);
 #endif

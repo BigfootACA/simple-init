@@ -198,4 +198,15 @@ void xlua_run_confd(lua_State*L,char*tag,const char*key,...){
 		default:;
 	}
 }
+
+void xlua_dump_stack(lua_State*L){
+	for(int i=lua_gettop(L);i>0;--i){
+		log_debug(
+			"lua","stack #%d: type: %s value: %s\n",
+			i,lua_typename(L,lua_type(L,i)),
+			luaL_tolstring(L,i,NULL)
+		);
+		lua_pop(L,1);
+	}
+}
 #endif

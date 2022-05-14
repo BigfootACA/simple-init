@@ -197,6 +197,36 @@ static int LuaUefiFileProtocolDelete(lua_State*L){
 	return 1;
 }
 
+static int LuaUefiFileProtocolFileToData(lua_State*L){
+	UINTN size=0;
+	VOID*buff=NULL;
+	CHAR16*file=NULL;
+	EFI_STATUS status;
+	EFI_FILE_INFO*info=NULL;
+	EFI_FILE_PROTOCOL*fp=NULL;
+	GET_PROTO(L,1,proto);
+	if(!proto->proto)return luaL_argerror(L,1,"file closed");
+	lua_arg_get_char16(L,2,false,&file);
+	if(!file)return luaL_argerror(L,2,"get argument failed");
+	status=proto->proto->Open(
+		proto->proto,&fp,file,
+		EFI_FILE_READ_ONLY,0
+	);
+	if(EFI_ERROR(status)||!fp)goto done;
+	status=efi_file_get_file_info(fp,NULL,&info);
+	if(EFI_ERROR(status)||!info)goto done;
+	status=efi_file_read(fp,info->FileSize,&buff,&size);
+	if(EFI_ERROR(status)||!buff)goto done;
+	if(size!=info->FileSize)status=EFI_LOAD_ERROR;
+	done:
+	if(fp)fp->Close(fp);
+	uefi_status_to_lua(L,status);
+	if(EFI_ERROR(status)||!buff)lua_pushnil(L);
+	else uefi_data_to_lua(L,TRUE,buff,size);
+	FreePool(file);
+	return 2;
+}
+
 static int LuaUefiFileProtocolRead(lua_State*L){
 	GET_PROTO(L,1,proto);
 	UINTN size=luaL_optinteger(L,2,0);
@@ -513,6 +543,7 @@ struct lua_uefi_meta_table LuaUefiFileProtocolMetaTable={
 		{"ReName",       LuaUefiFileProtocolSetName},
 		{"SetLength",    LuaUefiFileProtocolSetLength},
 		{"Truncate",     LuaUefiFileProtocolSetLength},
+		{"FileToData",   LuaUefiFileProtocolFileToData},
 		{NULL, NULL}
 	},
 	.tostring=LuaUefiFileProtocolToString,

@@ -22,16 +22,8 @@ static int io_type (lua_State *L) {
   return luaL_error(L, "io.type is not allow");
 }
 
-static int f_tostring (lua_State *L) {
-  return luaL_error(L, "file.tostring is not allow");
-}
-
 static int io_close (lua_State *L) {
   return luaL_error(L, "io.close is not allow");
-}
-
-static int f_gc (lua_State *L) {
-  return 0;
 }
 
 static int io_open (lua_State *L) {
@@ -54,10 +46,6 @@ static int io_output (lua_State *L) {
   return luaL_error(L, "io.output is not allow");
 }
 
-static int f_lines (lua_State *L) {
-  return luaL_error(L, "file.lines is not allow");
-}
-
 static int io_lines (lua_State *L) {
   return luaL_error(L, "io.lines is not allow");
 }
@@ -66,32 +54,12 @@ static int io_read (lua_State *L) {
   return luaL_error(L, "io.read is not allow");
 }
 
-static int f_read (lua_State *L) {
-  return luaL_error(L, "file.read is not allow");
-}
-
 static int io_write (lua_State *L) {
   return luaL_error(L, "file.flush is not allow");
 }
 
-static int f_write (lua_State *L) {
-  return luaL_error(L, "file.write is not allow");
-}
-
-static int f_seek (lua_State *L) {
-  return luaL_error(L, "file.seek is not allow");
-}
-
-static int f_setvbuf (lua_State *L) {
-  return luaL_error(L, "file.setvbuf is not allow");
-}
-
 static int io_flush (lua_State *L) {
   return luaL_error(L, "io.flush is not allow");
-}
-
-static int f_flush (lua_State *L) {
-  return luaL_error(L, "file.flush is not allow");
 }
 
 /*
@@ -109,23 +77,6 @@ static const luaL_Reg iolib[] = {
   {"tmpfile", io_tmpfile},
   {"type", io_type},
   {"write", io_write},
-  {NULL, NULL}
-};
-
-
-/*
-** methods for file handles
-*/
-static const luaL_Reg flib[] = {
-  {"close", io_close},
-  {"flush", f_flush},
-  {"lines", f_lines},
-  {"read", f_read},
-  {"seek", f_seek},
-  {"setvbuf", f_setvbuf},
-  {"write", f_write},
-  {"__gc", f_gc},
-  {"__tostring", f_tostring},
   {NULL, NULL}
 };
 

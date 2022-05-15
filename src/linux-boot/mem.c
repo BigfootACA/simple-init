@@ -90,11 +90,12 @@ static int update_from_memory_map(linux_boot*lb){
 	EFI_MEMORY_DESCRIPTOR*mm=NULL,*md;
 	UINTN ms=0,mk=0,ds=0;
 	UINT32 dv=0;
-	st=gBS->GetMemoryMap(&ms,mm,&mk,&ds,&dv);
-	if(st==EFI_BUFFER_TOO_SMALL){
-		mm=AllocatePool(ms+(2*ds));
-		if(mm)st=gBS->GetMemoryMap(&ms,mm,&mk,&ds,&dv);
-	}
+	do{
+		ms+=sizeof(EFI_MEMORY_DESCRIPTOR);
+		if(mm)FreePool(mm);
+		if(!(mm=AllocatePool(ms+(2*ds))))break;
+		st=gBS->GetMemoryMap(&ms,mm,&mk,&ds,&dv);
+	}while(st==EFI_BUFFER_TOO_SMALL);
 	if(EFI_ERROR(st)){
 		tlog_warn(
 			"get memory map failed: %s",

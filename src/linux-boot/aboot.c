@@ -10,10 +10,15 @@
 #include<Library/BaseLib.h>
 #include<Library/BaseMemoryLib.h>
 #include<Library/MemoryAllocationLib.h>
+#include<Library/UefiBootServicesTableLib.h>
+#include"str.h"
 #include"list.h"
 #include"aboot.h"
 #include"logger.h"
+#include"compress.h"
 #include"internal.h"
+#include"fdtparser.h"
+#include"KernelFdt.h"
 #define TAG "abootimg"
 
 static void load_kernel(linux_boot*lb,aboot_image*img){
@@ -128,5 +133,60 @@ int linux_boot_load_abootimg_config(linux_boot*lb){
 	if(!img)return trlog_warn(-1,"parse android boot image failed");
 	int ret=linux_boot_load_abootimg(lb,img);
 	abootimg_free(img);
+	return ret;
+}
+
+int linux_boot_load_abootimg_kfdt(linux_boot*lb){
+	int ret;
+	char buf[64];
+	EFI_STATUS st;
+	aboot_image*img;
+	compressor*comp=NULL;
+	void*initrd=NULL,*bo=NULL;
+	KERNEL_FDT_PROTOCOL*fdt=NULL;
+	size_t size=0,bs=0x8000000,pos=0,len=0;
+	if(!lb||!lb->config)return -1;
+	if(!lb->config->use_kfdt_ramdisk_abootimg)return 0;
+	st=gBS->LocateProtocol(
+		&gKernelFdtProtocolGuid,
+		NULL,
+		(VOID**)&fdt
+	);
+	if(EFI_ERROR(st)||!fdt||!fdt->Fdt)return trlog_warn(
+		-1,"failed to locate KernelFdtProtocol: %s",
+		efi_status_to_string(st)
+	);
+	if(!fdt_get_initrd(fdt->Fdt,&initrd,&size))
+		return trlog_warn(-1,"get initrd from kfdt failed");
+	if((comp=compressor_get_by_format(initrd,size))){
+		tlog_debug(
+			"found %s compressed abootimg",
+			compressor_get_name(comp)
+		);
+		if(!(bo=AllocateZeroPool(bs)))
+			return trlog_debug(-1,"alloc for decompress failed");
+		if(compressor_decompress(
+			comp,initrd,size,
+			bo,bs,&pos,&len
+		)!=0){
+			FreePool(bo);
+			return trlog_error(-1,"decompress kernel failed at %zu",pos);
+		}
+		tlog_info(
+			"decompressed abootimg size %zu (%s %d%%)",len,
+			make_readable_str_buf(buf,sizeof(buf),len,1,0),
+			(int)(size*100/len)
+		);
+		if(pos<size)tlog_warn(
+			"ignore %zu bytes after compress data",
+			size-pos
+		);
+		initrd=bo,size=len;
+	}
+	if((img=abootimg_load_from_memory(initrd,size))){
+		ret=linux_boot_load_abootimg(lb,img);
+		abootimg_free(img);
+	}else ret=trlog_error(-1,"parse abootimg failed");
+	if(bo)FreePool(bo);
 	return ret;
 }

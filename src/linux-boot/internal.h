@@ -116,6 +116,9 @@ extern int linux_boot_load_abootimg_path(linux_boot*lb,char*path);
 // src/linux-boot/aboot.c: load abootimg from config
 extern int linux_boot_load_abootimg_config(linux_boot*lb);
 
+// src/linux-boot/aboot.c: load abootimg from kernel fdt
+extern int linux_boot_load_abootimg_kfdt(linux_boot*lb);
+
 // src/linux-boot/move.c: move files to specified memory region
 extern int linux_boot_move(linux_boot*lb);
 

@@ -13,6 +13,7 @@
 #include<Library/BaseMemoryLib.h>
 #include<Library/DevicePathLib.h>
 #include<Library/MemoryAllocationLib.h>
+#include<Library/UefiBootServicesTableLib.h>
 #include<Protocol/BlockIo.h>
 #include<Protocol/SimpleFileSystem.h>
 #include<Guid/FileInfo.h>
@@ -23,6 +24,8 @@
 #include"logger.h"
 #include"locate.h"
 #include"internal.h"
+#include"fdtparser.h"
+#include"KernelFdt.h"
 #define TAG "loader"
 
 bool linux_file_allocate(linux_file_info*fi,size_t size){
@@ -235,6 +238,32 @@ static void multiple_load(list**from,list**fi,const char*tag){
 	}while((f=f->next));
 }
 
+int load_kernel_from_kfdt(linux_boot*lb){
+	size_t size=0;
+	EFI_STATUS st;
+	void*initrd=NULL;
+	KERNEL_FDT_PROTOCOL*fdt=NULL;
+	if(!lb||!lb->config)return -1;
+	if(!lb->config->use_kfdt_ramdisk_abootimg)return 0;
+	st=gBS->LocateProtocol(
+		&gKernelFdtProtocolGuid,
+		NULL,
+		(VOID**)&fdt
+	);
+	if(EFI_ERROR(st)||!fdt||!fdt->Fdt)return trlog_warn(
+		-1,"failed to locate KernelFdtProtocol: %s",
+		efi_status_to_string(st)
+	);
+	if(!fdt_get_initrd(fdt->Fdt,&initrd,&size))
+		return trlog_warn(-1,"get initrd from kfdt failed");
+	linux_file_clean(&lb->kernel);
+	if(!linux_file_allocate(&lb->kernel,size))
+		return trlog_warn(-1,"alloc for load kfdt kernel failed");
+	CopyMem(lb->kernel.address,initrd,size);
+	linux_file_dump("ramdisk as kernel",&lb->kernel);
+	return 0;
+}
+
 int linux_load_from_config(linux_boot*lb){
 	if(!boot||!lb)return -1;
 	if(lb->config->use_uefi){
@@ -246,11 +275,15 @@ int linux_load_from_config(linux_boot*lb){
 	}
 	if(lb->config->abootimg.enabled)
 		linux_boot_load_abootimg_config(lb);
+	if(lb->config->use_kfdt_ramdisk_abootimg)
+		linux_boot_load_abootimg_kfdt(lb);
 	switch(lb->arch){
 		case ARCH_ARM32:lb->kernel.offset=LINUX_ARM32_OFFSET;break;
 		case ARCH_ARM64:lb->kernel.offset=LINUX_ARM64_OFFSET;break;
 		default:;
 	}
+	if(lb->config->use_kfdt_ramdisk_kernel)
+		load_kernel_from_kfdt(lb);
 	single_load(&lb->config->kernel,&lb->kernel,"kernel");
 	single_load(&lb->config->dtb,&lb->dtb,"dtb");
 	multiple_load(&lb->config->initrd,&lb->initrd_buf,"initrd");

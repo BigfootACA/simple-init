@@ -101,6 +101,8 @@ typedef struct linux_config{
 	bool ignore_dtbo_error:1;
 	bool add_uefi_runtime:1;
 	bool pass_kfdt_dtb:1;
+	bool use_kfdt_ramdisk_kernel:1;
+	bool use_kfdt_ramdisk_abootimg:1;
 	linux_load_from kernel;
 	linux_load_from dtb;
 	linux_load_from abootimg;

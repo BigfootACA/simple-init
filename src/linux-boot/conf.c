@@ -168,6 +168,8 @@ linux_config*linux_config_new_from_confd(const char*key){
 	load_boolean(key,"ignore_dtbo_error",cfg->ignore_dtbo_error);
 	load_boolean(key,"add_uefi_runtime",cfg->add_uefi_runtime);
 	load_boolean(key,"pass_kernel_fdt_as_dtb",cfg->pass_kfdt_dtb);
+	load_boolean(key,"use_kernel_fdt_ramdisk_kernel",cfg->use_kfdt_ramdisk_kernel);
+	load_boolean(key,"use_kernel_fdt_ramdisk_abootimg",cfg->use_kfdt_ramdisk_abootimg);
 	load_boolean(key,"add_simplefb",cfg->screen.add_simplefb);
 	load_boolean(key,"update_splash",cfg->screen.update_splash);
 	get_multi_str_from_confd(&cfg->dtb_model,key,"dtb_model");

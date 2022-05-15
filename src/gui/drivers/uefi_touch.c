@@ -128,6 +128,8 @@ struct input_driver indrv_uefi_touch={
 	.compatible={
 		"uefigop",
 		"uefiuga",
+		"dummy",
+		NULL
 	},
 	.drv_register=touch_register,
 };

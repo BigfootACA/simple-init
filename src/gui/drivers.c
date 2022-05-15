@@ -9,6 +9,7 @@
 #ifdef ENABLE_GUI
 #include<stdlib.h>
 #include"gui/guidrv.h"
+extern struct gui_driver guidrv_dummy;
 extern struct gui_driver guidrv_gtk;
 extern struct gui_driver guidrv_sdl2;
 extern struct gui_driver guidrv_drm;
@@ -45,6 +46,7 @@ struct gui_driver*gui_drvs[]={
 	#endif
 	&guidrv_fbdev,
 	#endif
+	&guidrv_dummy,
 	NULL
 };
 struct input_driver*input_drvs[]={

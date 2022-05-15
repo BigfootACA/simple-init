@@ -79,6 +79,7 @@
   gui_init.c
   guidrv.c
   drivers.c
+  drivers/dummy.c
   drivers/uefi_gop.c
   drivers/uefi_uga.c
   drivers/uefi_pointer.c

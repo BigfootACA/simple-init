@@ -98,6 +98,7 @@ add_library(init_gui STATIC
 	interface/apps/pointer_test.c
 	drivers/drm.c
 	drivers/vnc.c
+	drivers/dummy.c
 	drivers/fbdev.c
 	drivers/input.c
 	drivers/gtk.c

@@ -153,6 +153,8 @@ struct input_driver indrv_uefi_kbd={
 	.compatible={
 		"uefigop",
 		"uefiuga",
+		"dummy",
+		NULL
 	},
 	.drv_register=keyboard_register,
 };

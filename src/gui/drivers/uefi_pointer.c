@@ -144,6 +144,8 @@ struct input_driver indrv_uefi_pointer={
 	.compatible={
 		"uefigop",
 		"uefiuga",
+		"dummy",
+		NULL
 	},
 	.drv_register=pointer_register,
 };

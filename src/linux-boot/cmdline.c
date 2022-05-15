@@ -20,6 +20,7 @@ static void load_kernel_fdt_cmdline(linux_boot*lb){
 	EFI_STATUS st;
 	KERNEL_FDT_PROTOCOL*fdt;
 	if(lb->config->skip_kfdt_cmdline)return;
+	if(lb->config->pass_kfdt_dtb)return;
 	st=gBS->LocateProtocol(
 		&gKernelFdtProtocolGuid,
 		NULL,

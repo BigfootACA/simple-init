@@ -258,6 +258,7 @@ static int update_ddr_info(linux_boot*lb){
 
 int linux_boot_update_memory(linux_boot*lb){
 	if(!lb->dtb.address)return 0;
+	if(lb->config->pass_kfdt_dtb)return 0;
 	if(update_ddr_info(lb)!=0)return -1;
 	if(update_from_conf(lb)==0)return 0;
 	if(update_from_ram_partition(lb)==0)return 0;

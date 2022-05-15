@@ -167,6 +167,7 @@ linux_config*linux_config_new_from_confd(const char*key){
 	load_boolean(key,"match_kernel_fdt_model",cfg->match_kfdt_model);
 	load_boolean(key,"ignore_dtbo_error",cfg->ignore_dtbo_error);
 	load_boolean(key,"add_uefi_runtime",cfg->add_uefi_runtime);
+	load_boolean(key,"pass_kernel_fdt_as_dtb",cfg->pass_kfdt_dtb);
 	load_boolean(key,"add_simplefb",cfg->screen.add_simplefb);
 	load_boolean(key,"update_splash",cfg->screen.update_splash);
 	get_multi_str_from_confd(&cfg->dtb_model,key,"dtb_model");

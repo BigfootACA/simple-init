@@ -60,17 +60,43 @@ int linux_boot_set_fdt(linux_boot*lb,void*data,size_t size){
 
 int linux_boot_generate_fdt(linux_boot*lb){
 	int r=0;
-	if(!lb||lb->dtb.address)return 0;
-	tlog_debug("generating empty device tree...");
-	lb->dtb.size=MAX_DTB_SIZE/2;
-	linux_file_allocate(&lb->dtb,lb->dtb.size);
-	r=fdt_create_empty_tree(lb->dtb.address,(int)lb->dtb.size);
-	if(r!=0)return trlog_warn(
-		-1,"create empty device tree failed: %s",
-		fdt_strerror(r)
-	);
-	fdt_add_subnode(lb->dtb.address,0,"chosen");
-	fdt_add_subnode(lb->dtb.address,0,"memory");
+	EFI_STATUS st;
+	KERNEL_FDT_PROTOCOL*fdt=NULL;
+	if(!lb||!lb->config)return -1;
+	if(lb->config->pass_kfdt_dtb){
+		st=gBS->LocateProtocol(
+			&gKernelFdtProtocolGuid,
+			NULL,
+			(VOID**)&fdt
+		);
+		if(!EFI_ERROR(st)&&fdt&&fdt->Fdt){
+			tlog_debug("use kernel fdt as dtb");
+			linux_file_clean(&lb->dtb);
+			if(!linux_file_allocate(&lb->dtb,fdt->FdtSize)){
+				tlog_error("failed to allocate for copy kernel fdt");
+				return -1;
+			}else{
+				CopyMem(lb->dtb.address,fdt->Fdt,fdt->FdtSize);
+				linux_file_dump("kernel fdt",&lb->dtb);
+				return 0;
+			}
+		}else tlog_warn(
+			"failed to locate KernelFdtProtocol: %s",
+			efi_status_to_string(st)
+		);
+	}
+	if(!lb->dtb.address){
+		tlog_debug("generating empty device tree...");
+		lb->dtb.size=MAX_DTB_SIZE/2;
+		linux_file_allocate(&lb->dtb,lb->dtb.size);
+		r=fdt_create_empty_tree(lb->dtb.address,(int)lb->dtb.size);
+		if(r!=0)return trlog_warn(
+			-1,"create empty device tree failed: %s",
+			fdt_strerror(r)
+		);
+		fdt_add_subnode(lb->dtb.address,0,"chosen");
+		fdt_add_subnode(lb->dtb.address,0,"memory");
+	}
 	return 0;
 }
 

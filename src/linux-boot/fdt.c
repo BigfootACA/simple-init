@@ -62,7 +62,8 @@ int linux_boot_generate_fdt(linux_boot*lb){
 	int r=0;
 	if(!lb||lb->dtb.address)return 0;
 	tlog_debug("generating empty device tree...");
-	linux_file_allocate(&lb->dtb,MAX_DTB_SIZE/2);
+	lb->dtb.size=MAX_DTB_SIZE/2;
+	linux_file_allocate(&lb->dtb,lb->dtb.size);
 	r=fdt_create_empty_tree(lb->dtb.address,(int)lb->dtb.size);
 	if(r!=0)return trlog_warn(
 		-1,"create empty device tree failed: %s",

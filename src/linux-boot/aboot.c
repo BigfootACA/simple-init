@@ -23,6 +23,8 @@
 
 static void load_kernel(linux_boot*lb,aboot_image*img){
 	if(!abootimg_have_kernel(img))return;
+	if(lb->config->skip_abootimg_kernel)
+		tlog_debug("skip kernel from abootimg");
 	linux_file_clean(&lb->kernel);
 	switch(lb->arch){
 		case ARCH_ARM32:lb->kernel.offset=LINUX_ARM32_OFFSET;break;
@@ -42,6 +44,8 @@ static void load_kernel(linux_boot*lb,aboot_image*img){
 
 static void load_ramdisk(linux_boot*lb,aboot_image*img){
 	if(!abootimg_have_ramdisk(img))return;
+	if(lb->config->skip_abootimg_initrd)
+		tlog_debug("skip ramdisk from abootimg");
 	linux_file_info*f=malloc(sizeof(linux_file_info));
 	int cur=list_count(lb->initrd_buf);
 	if(cur<0)cur=0;
@@ -78,7 +82,9 @@ int linux_boot_load_abootimg(linux_boot*lb,aboot_image*img){
 	if(abootimg_have_second(img))
 		tlog_warn("second stage bootloader is not supported");
 
-	linux_boot_append_cmdline(lb,cmdline);
+	if(!lb->config->skip_abootimg_cmdline)linux_boot_append_cmdline(lb,cmdline);
+	else tlog_debug("skip cmdline from abootimg");
+
 	return 0;
 }
 

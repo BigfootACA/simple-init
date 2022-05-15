@@ -163,6 +163,11 @@ linux_config*linux_config_new_from_confd(const char*key){
 	load_boolean(key,"skip_efi_memory_map",cfg->skip_efi_memory_map);
 	load_boolean(key,"skip_kernel_fdt_memory",cfg->skip_kfdt_memory);
 	load_boolean(key,"skip_kernel_fdt_cmdline",cfg->skip_kfdt_cmdline);
+	load_boolean(key,"skip_abootimg_kernel",cfg->skip_abootimg_kernel);
+	load_boolean(key,"skip_abootimg_cmdline",cfg->skip_abootimg_cmdline);
+	load_boolean(key,"skip_abootimg_initrd",cfg->skip_abootimg_initrd);
+	load_boolean(key,"skip_dtb_after_kernel",cfg->skip_dtb_after_kernel);
+	load_boolean(key,"force_dtb_after_kernel",cfg->force_dtb_after_kernel);
 	load_boolean(key,"load_custom_address",cfg->load_custom_address);
 	load_boolean(key,"match_kernel_fdt_model",cfg->match_kfdt_model);
 	load_boolean(key,"ignore_dtbo_error",cfg->ignore_dtbo_error);

@@ -51,7 +51,10 @@ int linux_boot_uncompress_kernel(linux_boot*lb){
 	);
 
 	if(pos<lb->kernel.size){
-		if(!lb->dtb.address){
+		bool should=!lb->dtb.address;
+		if(lb->config->skip_dtb_after_kernel)should=false;
+		if(lb->config->force_dtb_after_kernel)should=true;
+		if(should){
 			tlog_debug(
 				"found dtb after compressed kernel at 0x%llx",
 				(unsigned long long)pos

@@ -96,6 +96,11 @@ typedef struct linux_config{
 	bool skip_efi_memory_map:1;
 	bool skip_kfdt_memory:1;
 	bool skip_kfdt_cmdline:1;
+	bool skip_abootimg_kernel:1;
+	bool skip_abootimg_cmdline:1;
+	bool skip_abootimg_initrd:1;
+	bool skip_dtb_after_kernel:1;
+	bool force_dtb_after_kernel:1;
 	bool load_custom_address:1;
 	bool match_kfdt_model:1;
 	bool ignore_dtbo_error:1;

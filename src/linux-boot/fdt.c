@@ -108,6 +108,7 @@ int linux_boot_update_fdt(linux_boot*lb){
 	linux_boot_update_random(lb);
 	linux_boot_update_splash(lb);
 	linux_boot_update_info(lb);
+	linux_boot_update_uefi(lb);
 
 	lb->dtb.size=fdt_totalsize(lb->dtb.address);
 	tlog_debug(

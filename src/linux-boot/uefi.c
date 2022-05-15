@@ -14,6 +14,7 @@
 #include<Library/MemoryAllocationLib.h>
 #include<Library/UefiBootServicesTableLib.h>
 #include<Protocol/LoadedImage.h>
+#include<comp_libfdt.h>
 #include"confd.h"
 #include"logger.h"
 #include"internal.h"
@@ -83,4 +84,68 @@ int boot_linux_uefi(linux_boot*boot){
 	else tlog_error("kernel image unexpected return");
 	gBS->SetWatchdogTimer(0,0x10000,0,NULL);
 	return -1;
+}
+
+int linux_boot_update_uefi(linux_boot*lb){
+	UINT32 dv=0;
+	int off,r,l;
+	VOID*rsv=NULL;
+	EFI_STATUS st;
+	UINTN ms=0,mk=0,ds=0;
+	EFI_MEMORY_DESCRIPTOR*mm=NULL,*md;
+	if(!lb->dtb.address||!lb->initrd.address)return 0;
+	if(!lb->config||!lb->config->add_uefi_runtime)return 0;
+
+	r=fdt_path_offset(lb->dtb.address,"/chosen");
+	if(r<0)return trlog_warn(
+		-1,"get chosen node failed: %s",
+		fdt_strerror(r)
+	);
+	off=r;
+        st=gBS->AllocatePool(EfiLoaderData,64,&rsv);
+        if(!EFI_ERROR(st)){
+		ZeroMem(rsv,64);
+		EFI_GUID guid={0x888eb0c6,0x8ede,0x4ff5,{0xa8,0xf0,0x9a,0xee,0x5c,0xb9,0x77,0xc2}};
+		gBS->InstallConfigurationTable(&guid,rsv);
+	}
+	fdt_setprop_u64(
+		lb->dtb.address,off,
+		"linux,uefi-system-table",
+		(UINT64)gST
+	);
+
+	st=gBS->GetMemoryMap(&ms,mm,&mk,&ds,&dv);
+	if(st==EFI_BUFFER_TOO_SMALL){
+		st=gBS->AllocatePool(EfiLoaderData,ms+(2*ds),(VOID**)&mm);
+		if(mm&&!EFI_ERROR(st))st=gBS->GetMemoryMap(&ms,mm,&mk,&ds,&dv);
+	}
+	if(!EFI_ERROR(st)){
+		for(l=0;l<ms;l+=ds){
+			md=(void*)mm+l;
+			if((md->Attribute&EFI_MEMORY_RUNTIME))
+				md->VirtualStart=md->PhysicalStart;
+		}
+		fdt_setprop_u64(
+			lb->dtb.address,off,
+			"linux,uefi-mmap-start",
+			(UINT64)mm
+		);
+		fdt_setprop_u32(
+			lb->dtb.address,off,
+			"linux,uefi-mmap-size",
+			(UINT32)ms
+		);
+		fdt_setprop_u32(
+			lb->dtb.address,off,
+			"linux,uefi-mmap-desc-size",
+			(UINT32)ds
+		);
+		fdt_setprop_u32(
+			lb->dtb.address,off,
+			"linux,uefi-mmap-desc-ver",
+			(UINT32)dv
+		);
+	}
+
+	return 0;
 }

@@ -99,6 +99,7 @@ typedef struct linux_config{
 	bool load_custom_address:1;
 	bool match_kfdt_model:1;
 	bool ignore_dtbo_error:1;
+	bool add_uefi_runtime:1;
 	linux_load_from kernel;
 	linux_load_from dtb;
 	linux_load_from abootimg;

@@ -158,6 +158,9 @@ extern int linux_boot_update_cmdline(linux_boot*lb);
 // src/linux-boot/info.c: update device tree to add boot info
 extern int linux_boot_update_info(linux_boot*lb);
 
+// src/linux-boot/uefi.c: update device tree to add uefi info
+extern int linux_boot_update_uefi(linux_boot*lb);
+
 // src/linux-boot/cmdline.c: add cmdline to buffer
 extern void linux_boot_append_cmdline(linux_boot*lb,const char*cmdline);
 

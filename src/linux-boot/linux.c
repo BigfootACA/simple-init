@@ -83,6 +83,8 @@ int linux_boot_prepare(linux_boot*lb){
 		return trlog_error(-1,"generate fdt failed");
 	if(linux_boot_move(lb)!=0)
 		return trlog_error(-1,"move load failed");
+	if(linux_boot_install_initrd(lb)!=0)
+		return trlog_error(-1,"install initrd failed");
 	if(linux_boot_update_fdt(lb)!=0)
 		return trlog_error(-1,"update fdt failed");
 	if(check_boot(lb)!=0)

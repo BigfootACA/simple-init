@@ -94,4 +94,24 @@ keyval**fdt_get_cmdline_items(fdt*fdt,size_t*length){
 	if(len<=0||!cmdline)return NULL;
 	return param_s_parse_items(cmdline,(size_t)len,length);
 }
+
+bool fdt_get_initrd(fdt*fdt,void**initrd,size_t*size){
+	int node,l;
+	const void*data=NULL;
+	uint64_t start=0,end=0;
+	if(!fdt||!initrd||!size)return false;
+	node=fdt_path_offset(fdt,"/chosen");
+	if(node<0)return false;
+	data=fdt_getprop(fdt,node,"linux,initrd-start",&l);
+	if(l!=sizeof(void*))return false;
+	start=*(uint64_t*)data;
+	data=fdt_getprop(fdt,node,"linux,initrd-end",&l);
+	if(l!=sizeof(void*))return false;
+	end=*(uint64_t*)data;
+	if(start<=end)return false;
+	*initrd=(void*)start;
+	*size=(size_t)(end-start);
+	return true;
+}
+
 #endif

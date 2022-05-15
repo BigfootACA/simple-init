@@ -38,4 +38,7 @@ extern int fdt_get_cmdline(fdt*fdt,char**cmdline,int*length);
 // src/lib/fdtparser.c: get kernel cmdline from fdt and convert to keyval
 extern keyval**fdt_get_cmdline_items(fdt*fdt,size_t*length);
 
+// src/lib/fdtparser.c: get kernel initrd from fdt
+extern bool fdt_get_initrd(fdt*fdt,void**initrd,size_t*size);
+
 #endif

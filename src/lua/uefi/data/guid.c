@@ -24,11 +24,9 @@ static int LuaUefiGuidToRawString(lua_State*L){
 
 static int LuaUefiGuidToString(lua_State*L){
 	char buff[64];
-	const char*name;
 	GET_GUID(L,1,guid);
 	ZeroMem(buff,sizeof(buff));
 	AsciiSPrint(buff,sizeof(buff),"%g",&guid->guid);
-	name=
 	lua_pushstring(L,buff);
 	return 1;
 }

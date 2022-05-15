@@ -691,7 +691,6 @@ static int drm_scan_init(){
 static int drm_scan_init_register(){
 	if(drm_scan_init()<0)return -1;
 	if(_drm_register()<0)return -1;
-	input_scan_register();
 	return 0;
 }
 

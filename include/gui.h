@@ -28,7 +28,6 @@ extern lv_font_t*gui_font_small;
 extern lv_group_t*gui_grp;
 extern lv_obj_t*gui_cursor;
 extern bool gui_sleep,gui_run,gui_dark;
-extern void input_scan_register(void);
 extern int init_lvgl_fs(char letter,char*root,bool debug);
 extern int gui_pre_init(void);
 extern int gui_screen_init(void);

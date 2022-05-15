@@ -24,8 +24,17 @@ struct gui_driver{
 	bool(*drv_cansleep)(void);
 };
 
-// src/gui/drivers.c: initial drivers storage
+struct input_driver{
+	char name[32];
+	char*compatible[32];
+	int(*drv_register)(void);
+};
+
+// src/gui/drivers.c: initial gui drivers storage
 extern struct gui_driver*gui_drvs[];
+
+// src/gui/drivers.c: initial input drivers storage
+extern struct input_driver*input_drvs[];
 
 // src/gui/guidrv.c: get screen width and height from driver
 extern int guidrv_getsize(lv_coord_t*w,lv_coord_t*h);
@@ -44,6 +53,9 @@ extern int guidrv_get_dpi(void);
 
 // src/gui/guidrv.c: get driver name
 extern const char*guidrv_getname(void);
+
+// src/gui/guidrv.c: check driver name
+extern bool guidrv_isname(const char*name);
 
 // src/gui/guidrv.c: gui driver custom lvgl taskhandler
 extern int guidrv_taskhandler(void);
@@ -77,4 +89,7 @@ extern void guidrv_set_driver(struct gui_driver*driver);
 
 // src/gui/guidrv.c: get current gui driver
 extern struct gui_driver*guidrv_get_driver(void);
+
+// src/gui/guidrv.c: init input drivers
+extern int indrv_init(void);
 #endif

@@ -108,11 +108,8 @@ static int vnc_register(){
 	static lv_color_t buf[846000];
 	static lv_disp_buf_t disp_buf;
 	static lv_disp_drv_t disp_drv;
-	static lv_indev_drv_t kbd_in,ptr_in;
 	lv_disp_buf_init(&disp_buf,buf,NULL,846000);
 	lv_disp_drv_init(&disp_drv);
-	lv_indev_drv_init(&kbd_in);
-	lv_indev_drv_init(&ptr_in);
 	size_t bpp=sizeof(*fb);
 	if(!(fb=malloc(WIDTH*HEIGHT*bpp)))return -1;
 	if(!(server=rfbGetScreen(0,NULL,WIDTH,HEIGHT,8,3,bpp))){
@@ -141,21 +138,27 @@ static int vnc_register(){
 		case 270:disp_drv.sw_rotate=1,disp_drv.rotated=LV_DISP_ROT_270;break;
 	}
 
-	kbd_in.type=LV_INDEV_TYPE_KEYPAD;
-	ptr_in.type=LV_INDEV_TYPE_POINTER;
-	kbd_in.read_cb=vnc_read;
-	ptr_in.read_cb=vnc_read;
-
 	lv_disp_drv_register(&disp_drv);
-	kbd_dev=lv_indev_drv_register(&kbd_in);
-	ptr_dev=lv_indev_drv_register(&ptr_in);
-	lv_indev_set_group(kbd_dev,gui_grp);
-	lv_indev_set_group(ptr_dev,gui_grp);
 
 	tlog_notice("screen resolution: %dx%d",WIDTH,HEIGHT);
 	rfbInitServer(server);
 	rfbRunEventLoop(server,-1,1);
 
+	return 0;
+}
+
+static int vnc_input_init(){
+	static lv_indev_drv_t kbd_in,ptr_in;
+	lv_indev_drv_init(&kbd_in);
+	lv_indev_drv_init(&ptr_in);
+	kbd_in.type=LV_INDEV_TYPE_KEYPAD;
+	ptr_in.type=LV_INDEV_TYPE_POINTER;
+	kbd_in.read_cb=vnc_read;
+	ptr_in.read_cb=vnc_read;
+	kbd_dev=lv_indev_drv_register(&kbd_in);
+	ptr_dev=lv_indev_drv_register(&ptr_in);
+	lv_indev_set_group(kbd_dev,gui_grp);
+	lv_indev_set_group(ptr_dev,gui_grp);
 	return 0;
 }
 
@@ -180,6 +183,14 @@ static void vnc_exit(){
 	fb=NULL,server=NULL;
 }
 
+struct input_driver indrv_vnc={
+	.name="vnc-input",
+	.compatible={
+		"vnc",
+		NULL
+	},
+	.drv_register=vnc_input_init,
+};
 struct gui_driver guidrv_vnc={
 	.name="vnc",
 	.drv_register=vnc_register,

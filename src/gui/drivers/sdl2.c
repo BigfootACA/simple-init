@@ -212,29 +212,39 @@ static int monitor_init(){
 	}
 	lv_disp_drv_register(&disp_drv);
 
-	// Mouse input device
-	lv_indev_drv_t indev_drv;
-	lv_indev_drv_init(&indev_drv);
-	indev_drv.type=LV_INDEV_TYPE_POINTER;
-	indev_drv.read_cb=mouse_read;
-	lv_indev_drv_register(&indev_drv);
+	return 0;
+}
 
+static int kbd_init(){
 	// Keyboard input device
 	lv_indev_drv_t kb_drv;
 	lv_indev_drv_init(&kb_drv);
 	kb_drv.type=LV_INDEV_TYPE_KEYPAD;
 	kb_drv.read_cb=keyboard_read;
 	lv_indev_set_group(lv_indev_drv_register(&kb_drv),gui_grp);
+	return 0;
+}
 
+static int mse_init(){
+	// Mouse input device
+	lv_indev_drv_t indev_drv;
+	lv_indev_drv_init(&indev_drv);
+	indev_drv.type=LV_INDEV_TYPE_POINTER;
+	indev_drv.read_cb=mouse_read;
+	lv_indev_drv_register(&indev_drv);
+	return 0;
+}
+
+static int whl_init(){
 	// Mouse wheel input device
 	lv_indev_drv_t enc_drv;
 	lv_indev_drv_init(&enc_drv);
 	enc_drv.type=LV_INDEV_TYPE_ENCODER;
 	enc_drv.read_cb=mousewheel_read;
 	lv_indev_drv_register(&enc_drv);
-
 	return 0;
 }
+
 static void sdl2_get_sizes(lv_coord_t*width,lv_coord_t*height){
 	lv_coord_t w=0,h=0;
 	switch(gui_rotate){
@@ -260,6 +270,30 @@ static void sdl2_set_brightness(int value){
 	telog_debug("set virtual backlight to %d%%",value);
 }
 #endif
+struct input_driver indrv_sdl2_kbd={
+	.name="sdl2-keyboard",
+	.compatible={
+		"sdl2",
+		NULL
+	},
+	.drv_register=kbd_init,
+};
+struct input_driver indrv_sdl2_mse={
+	.name="sdl2-mouse",
+	.compatible={
+		"sdl2",
+		NULL
+	},
+	.drv_register=mse_init,
+};
+struct input_driver indrv_sdl2_whl={
+	.name="sdl2-mouse-wheel",
+	.compatible={
+		"sdl2",
+		NULL
+	},
+	.drv_register=whl_init,
+};
 struct gui_driver guidrv_sdl2={
 	.name="sdl2",
 	.drv_register=monitor_init,

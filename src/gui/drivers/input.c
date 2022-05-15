@@ -22,6 +22,7 @@
 #define TAG "input"
 #include"gui.h"
 #include"logger.h"
+#include"gui/guidrv.h"
 struct in_data{
 	bool enabled,mouse;
 	int fd,flags,type;
@@ -240,4 +241,13 @@ static int input_scan_init(void){
 }
 void input_register(char*dev){input_init(dev,open(dev,O_RDONLY|O_CLOEXEC));}
 void input_scan_register(void){input_scan_init();}
+struct input_driver indrv_event={
+	.name="event-input",
+	.compatible={
+		"drm",
+		"fbdev",
+		NULL
+	},
+	.drv_register=input_scan_init,
+};
 #endif

@@ -16,6 +16,16 @@ extern struct gui_driver guidrv_vnc;
 extern struct gui_driver guidrv_fbdev;
 extern struct gui_driver guidrv_uefigop;
 extern struct gui_driver guidrv_uefiuga;
+extern struct input_driver indrv_uefi_kbd;
+extern struct input_driver indrv_uefi_touch;
+extern struct input_driver indrv_uefi_pointer;
+extern struct input_driver indrv_sdl2_kbd;
+extern struct input_driver indrv_sdl2_mse;
+extern struct input_driver indrv_sdl2_whl;
+extern struct input_driver indrv_gtk_kbd;
+extern struct input_driver indrv_gtk_mse;
+extern struct input_driver indrv_vnc;
+extern struct input_driver indrv_event;
 struct gui_driver*gui_drvs[]={
 	#ifdef ENABLE_UEFI
 	&guidrv_uefigop,
@@ -34,6 +44,28 @@ struct gui_driver*gui_drvs[]={
 	&guidrv_drm,
 	#endif
 	&guidrv_fbdev,
+	#endif
+	NULL
+};
+struct input_driver*input_drvs[]={
+	#ifdef ENABLE_UEFI
+	&indrv_uefi_kbd,
+	&indrv_uefi_touch,
+	&indrv_uefi_pointer,
+	#else
+	#ifdef ENABLE_GTK
+	&indrv_gtk_kbd,
+	&indrv_gtk_mse,
+	#endif
+	#ifdef ENABLE_SDL2
+	&indrv_sdl2_kbd,
+	&indrv_sdl2_mse,
+	&indrv_sdl2_whl,
+	#endif
+	#ifdef ENABLE_VNCSERVER
+	&indrv_vnc,
+	#endif
+	&indrv_event,
 	#endif
 	NULL
 };

@@ -9,6 +9,7 @@
 #ifdef ENABLE_GUI
 #include<stdlib.h>
 #include"gui.h"
+#include"list.h"
 #include"confd.h"
 #include"logger.h"
 #include"defines.h"
@@ -16,6 +17,7 @@
 #define TAG "guidrv"
 
 static struct gui_driver*drv;
+static list*indrvs=NULL;
 
 int guidrv_getsize(lv_coord_t*w,lv_coord_t*h){
 	errno=ENOENT;
@@ -63,6 +65,15 @@ const char*guidrv_getname(){
 	if(!drv->name[0])return "Unknown";
 	errno=0;
 	return (char*)&drv->name;
+}
+
+bool guidrv_isname(const char*name){
+	errno=ENOENT;
+	if(!drv)return false;
+	errno=ENOSYS;
+	if(!drv->name[0])return false;
+	errno=0;
+	return strcasecmp(name,drv->name)==0;
 }
 
 int guidrv_taskhandler(){
@@ -132,6 +143,21 @@ struct gui_driver*guidrv_get_by_name(const char*name){
 	for(int i=0;(d=gui_drvs[i]);i++)
 		if(d->name[0]&&strcmp(d->name,name)==0)return d;
 	EPRET(ENOENT);
+}
+
+int indrv_init(){
+	char*n;
+	struct input_driver*in;
+	for(int x=0;(in=input_drvs[x]);x++){
+		bool compatible=false;
+		for(int y=0;(n=in->compatible[y]);y++)
+			if(guidrv_isname(n))compatible=true;
+		if(!compatible||!in->drv_register)continue;
+		tlog_debug("try init input driver %s",in->name);
+		if(in->drv_register()==0)
+			list_obj_add_new(&indrvs,in);
+	}
+	return 0;
 }
 
 int guidrv_init(lv_coord_t*w,lv_coord_t*h,int*dpi){

@@ -54,9 +54,6 @@ static int uefiuga_init(){
 	return 0;
 }
 
-extern int keyboard_register();
-extern int pointer_register();
-extern int touch_register();
 static int uefiuga_register(){
 	if(uefiuga_init()!=0)return -1;
 	size_t s=ww*hh;
@@ -82,11 +79,9 @@ static int uefiuga_register(){
 	}
 	lv_disp_drv_register(&disp_drv);
 	logger_set_console(false);
-	keyboard_register();
-	pointer_register();
-	touch_register();
 	return 0;
 }
+
 static void uefiuga_get_sizes(lv_coord_t*width,lv_coord_t*height){
 	lv_coord_t w=0,h=0;
 	switch(gui_rotate){
@@ -96,9 +91,11 @@ static void uefiuga_get_sizes(lv_coord_t*width,lv_coord_t*height){
 	if(width)*width=w;
 	if(height)*height=h;
 }
+
 static bool uefiuga_can_sleep(){
 	return false;
 }
+
 static void uefiuga_exit(){
 	logger_set_console(true);
 	gST->ConOut->ClearScreen(gST->ConOut);
@@ -111,6 +108,7 @@ static void uefiuga_exit(){
 		);
 	}
 }
+
 struct gui_driver guidrv_uefiuga={
 	.name="uefiuga",
 	.drv_register=uefiuga_register,

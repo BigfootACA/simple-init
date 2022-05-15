@@ -104,7 +104,7 @@ STATIC EFIAPI VOID pointer_event(IN EFI_EVENT ev,IN VOID*ctx){
 	tlog_notice("receive mouse device hot-plug event");
 	if(!EFI_ERROR(st)&&mouse)_pointer_register(mouse);
 }
-int pointer_register(){
+static int pointer_register(){
 	bool found=false;
 	UINTN cnt=0;
 	EFI_HANDLE*hands=NULL;
@@ -138,5 +138,14 @@ int pointer_register(){
 	);
 	return found?0:trlog_warn(-1,"no uefi pointer found");
 }
+
+struct input_driver indrv_uefi_pointer={
+	.name="uefi-pointer",
+	.compatible={
+		"uefigop",
+		"uefiuga",
+	},
+	.drv_register=pointer_register,
+};
 #endif
 #endif

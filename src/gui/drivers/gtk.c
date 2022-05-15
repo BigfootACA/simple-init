@@ -226,12 +226,18 @@ static int gtkdrv_scan_init_register(){
 		case 270:disp.sw_rotate=1,disp.rotated=LV_DISP_ROT_270;break;
 	}
 	lv_disp_drv_register(&disp);
+
+	return 0;
+}
+static int mse_init(){
 	lv_indev_drv_t mouse;
 	lv_indev_drv_init(&mouse);
 	mouse.type=LV_INDEV_TYPE_POINTER;
 	mouse.read_cb=gtkdrv_mouse_read_cb;
 	lv_indev_drv_register(&mouse);
-
+	return 0;
+}
+static int kbd_init(){
 	lv_indev_drv_t kbd;
 	lv_indev_drv_init(&kbd);
 	kbd.type=LV_INDEV_TYPE_KEYPAD;
@@ -255,6 +261,22 @@ static bool gtkdrv_can_sleep(){
 	return false;
 }
 
+struct input_driver indrv_gtk_kbd={
+	.name="gtk-keyboard",
+	.compatible={
+		"gtk",
+		NULL
+	},
+	.drv_register=kbd_init,
+};
+struct input_driver indrv_gtk_mse={
+	.name="gtk-mouse",
+	.compatible={
+		"gtk",
+		NULL
+	},
+	.drv_register=mse_init,
+};
 struct gui_driver guidrv_gtk={
 	.name="gtk",
 	.drv_register=gtkdrv_scan_init_register,

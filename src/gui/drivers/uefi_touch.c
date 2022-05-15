@@ -93,7 +93,7 @@ STATIC EFIAPI VOID touch_event(IN EFI_EVENT ev,IN VOID*ctx){
 	tlog_notice("receive touch device hot-plug event");
 	if(!EFI_ERROR(st)&&touch)_touch_register(touch);
 }
-int touch_register(){
+static int touch_register(){
 	bool found=false;
 	UINTN cnt=0;
 	EFI_HANDLE*hands=NULL;
@@ -123,5 +123,13 @@ int touch_register(){
 	);
 	return found?0:trlog_warn(-1,"no uefi touch found");
 }
+struct input_driver indrv_uefi_touch={
+	.name="uefi-touch",
+	.compatible={
+		"uefigop",
+		"uefiuga",
+	},
+	.drv_register=touch_register,
+};
 #endif
 #endif

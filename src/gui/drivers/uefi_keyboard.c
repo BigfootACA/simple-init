@@ -117,7 +117,7 @@ STATIC EFIAPI VOID keyboard_event(IN EFI_EVENT ev,IN VOID*ctx){
 	tlog_notice("receive keyboard device hot-plug event");
 	if(!EFI_ERROR(st)&&kbd)_keyboard_register(kbd);
 }
-int keyboard_register(){
+static int keyboard_register(){
 	bool found=false;
 	UINTN cnt=0;
 	EFI_HANDLE*hands=NULL;
@@ -147,5 +147,14 @@ int keyboard_register(){
 	);
 	return found?0:trlog_warn(-1,"no uefi keyboard found");
 }
+
+struct input_driver indrv_uefi_kbd={
+	.name="uefi-keyboard",
+	.compatible={
+		"uefigop",
+		"uefiuga",
+	},
+	.drv_register=keyboard_register,
+};
 #endif
 #endif

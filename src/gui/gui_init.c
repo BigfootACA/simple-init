@@ -215,6 +215,7 @@ int gui_pre_init(){
 	// init gui
 	if(guidrv_init(&gui_w,&gui_h,&gui_dpi)<0)return -1;
 	gui_sx=0,gui_sy=0,gui_sw=gui_w,gui_sh=gui_h;
+	indrv_init();
 	tlog_debug("driver init done");
 	guess_font_size();
 	image_decoder_init();

@@ -15,9 +15,11 @@ extern struct gui_driver guidrv_drm;
 extern struct gui_driver guidrv_vnc;
 extern struct gui_driver guidrv_fbdev;
 extern struct gui_driver guidrv_uefigop;
+extern struct gui_driver guidrv_uefiuga;
 struct gui_driver*gui_drvs[]={
 	#ifdef ENABLE_UEFI
 	&guidrv_uefigop,
+	&guidrv_uefiuga,
 	#else
 	#ifdef ENABLE_GTK
 	&guidrv_gtk,

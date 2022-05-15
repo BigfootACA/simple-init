@@ -58,6 +58,7 @@
   gEfiSimplePointerProtocolGuid
   gEfiSimpleTextInProtocolGuid
   gEfiGraphicsOutputProtocolGuid
+  gEfiUgaDrawProtocolGuid
   gEfiLoadedImageProtocolGuid
   gEfiSimpleFileSystemProtocolGuid
   gEfiTimestampProtocolGuid
@@ -79,6 +80,7 @@
   guidrv.c
   drivers.c
   drivers/uefi_gop.c
+  drivers/uefi_uga.c
   drivers/uefi_pointer.c
   drivers/uefi_keyboard.c
   drivers/uefi_touch.c

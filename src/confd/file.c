@@ -108,10 +108,13 @@ static int do_load(struct conf_file_hand*hand){
 		do{if(*cp=='/')*cp='\\';}while(*cp++);
 		AsciiStrToUnicodeStrS(hand->path,xp,xs/sizeof(CHAR16));
 		st=hand->dir->Open(hand->dir,&hand->fd,xp,EFI_FILE_MODE_READ,0);
-		if(EFI_ERROR(st))EDONE(tlog_warn(
-			"open config '%s' failed: %s",
-			hand->path,efi_status_to_string(st)
-		));
+		if(EFI_ERROR(st)){
+			if(st!=EFI_NOT_FOUND)tlog_warn(
+				"open config '%s' failed: %s",
+				hand->path,efi_status_to_string(st)
+			);
+			goto done;
+		}
 	}
 	st=efi_file_get_file_info(hand->fd,NULL,&info);
 	if(EFI_ERROR(st))EDONE(tlog_warn(
@@ -330,10 +333,7 @@ static int _conf_load_file(_ROOT_TYPE dir,const char*file,bool inc,int depth){
 		r=hand->load(hand);
 		do_close(hand,false);
 		if(r==0)errno=0;
-	}else{
-		tlog_warn("load failed");
-		r=-1;
-	}
+	}else r=-1;
 	hand->include=false;
 	hand->dir=0;
 	hand->write=NULL;

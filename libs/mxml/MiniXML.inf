@@ -7,7 +7,7 @@
   LIBRARY_CLASS                  = MiniXML
 
 [BuildOptions]
-  GCC:*_*_*_CC_FLAGS = -Wno-sign-compare -Wno-implicit-fallthrough
+  GCC:*_*_*_CC_FLAGS = -include src/config-uefi.h -Wno-sign-compare -Wno-implicit-fallthrough
 
 [Packages]
   MdePkg/MdePkg.dec

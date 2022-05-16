@@ -7,7 +7,7 @@
   LIBRARY_CLASS                  = FreeType
 
 [BuildOptions]
-  GCC:*_*_*_CC_FLAGS = -DFT2_BUILD_LIBRARY=1 '-DFT_CONFIG_OPTIONS_H=<ftoption.h>'
+  GCC:*_*_*_CC_FLAGS = -include src/config-uefi.h
 
 [Packages]
   MdePkg/MdePkg.dec

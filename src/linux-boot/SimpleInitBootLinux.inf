@@ -7,7 +7,7 @@
   LIBRARY_CLASS                  = SimpleInitBootLinux
 
 [BuildOptions]
-  GCC:*_*_*_CC_FLAGS = -DENABLE_UEFI=1 -DENABLE_CHECKSUM=1
+  GCC:*_*_*_CC_FLAGS = -include src/config-uefi.h
 
 [Packages]
   MdePkg/MdePkg.dec

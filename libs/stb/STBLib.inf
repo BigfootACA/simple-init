@@ -7,7 +7,7 @@
   LIBRARY_CLASS                  = STBLib
 
 [BuildOptions]
-  GCC:*_*_*_CC_FLAGS = -DENABLE_UEFI=1 -Wno-unused-function
+  GCC:*_*_*_CC_FLAGS = -include src/config-uefi.h -Wno-unused-function
 
 [Packages]
   MdePkg/MdePkg.dec

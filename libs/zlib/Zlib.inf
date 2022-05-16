@@ -7,7 +7,7 @@
   LIBRARY_CLASS                  = Zlib
 
 [BuildOptions]
-  GCC:*_*_*_CC_FLAGS = -DLV_CONF_PATH=lv_conf.h -DENABLE_UEFI=1
+  GCC:*_*_*_CC_FLAGS = -include src/config-uefi.h
 
 [Packages]
   MdePkg/MdePkg.dec

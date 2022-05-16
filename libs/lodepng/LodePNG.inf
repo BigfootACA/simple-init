@@ -7,7 +7,7 @@
   LIBRARY_CLASS                  = LodePNG
 
 [BuildOptions]
-  GCC:*_*_*_CC_FLAGS = -DLODEPNG_NO_COMPILE_DISK
+  GCC:*_*_*_CC_FLAGS = -include src/config-uefi.h
 
 [Packages]
   MdePkg/MdePkg.dec

@@ -7,7 +7,7 @@
   LIBRARY_CLASS                  = SimpleInitGUI
 
 [BuildOptions]
-  GCC:*_*_*_CC_FLAGS = -DENABLE_GUI=1 -DENABLE_UEFI=1 -DENABLE_LODEPNG=1 -DENABLE_NANOSVG=1 -DENABLE_FREETYPE2=1 -DENABLE_STB=1 -DENABLE_MXML=1 -DENABLE_LUA=1 -DENABLE_LIBTSM=1
+  GCC:*_*_*_CC_FLAGS = -include src/config-uefi.h
 
 [Packages]
   MdePkg/MdePkg.dec

@@ -6,6 +6,9 @@
   VERSION_STRING                 = 1.0
   LIBRARY_CLASS                  = LuaLib
 
+[BuildOptions]
+  GCC:*_*_*_CC_FLAGS = -include src/config-uefi.h
+
 [Packages]
   SimpleInit.dec
   MdePkg/MdePkg.dec

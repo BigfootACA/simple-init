@@ -7,8 +7,10 @@
  */
 
 #define _GNU_SOURCE
+#include<stdarg.h>
 #include<stdlib.h>
 #include<string.h>
+#include<Library/UefiLib.h>
 #include<Library/BaseLib.h>
 #include<Library/PcdLib.h>
 #include<Library/PrintLib.h>
@@ -17,6 +19,8 @@
 #include<Library/UefiBootServicesTableLib.h>
 #include<Protocol/PartitionInfo.h>
 #include<Protocol/SimpleFileSystem.h>
+#include<Guid/FileSystemInfo.h>
+#include"uefi.h"
 #include"logger.h"
 #include"compatible.h"
 #include"confd_internal.h"
@@ -26,13 +30,107 @@ int confd=-1;
 static char*def_path=NULL;
 static EFI_FILE_PROTOCOL*def_fp=NULL;
 
+static void hand2fp(EFI_HANDLE hand,UINTN i,EFI_FILE_PROTOCOL**out){
+	EFI_STATUS st;
+	EFI_SIMPLE_FILE_SYSTEM_PROTOCOL*proto=NULL;
+	proto=NULL,st=gBS->HandleProtocol(
+		hand,
+		&gEfiSimpleFileSystemProtocolGuid,
+		(VOID**)&proto
+	);
+	if(EFI_ERROR(st)||!proto){
+		tlog_warn(
+			"handle Simple File System Protocol"
+			" %p(%lld) failed: %s",hand,i,
+			efi_status_to_string(st)
+		);
+		return;
+	}
+	st=proto->OpenVolume(proto,out);
+	if(EFI_ERROR(st)||!*out)tlog_warn(
+		"open volume %p(%lld) failed: %s",
+		proto,i,efi_status_to_string(st)
+	);
+}
+
+static void set_default(EFI_FILE_PROTOCOL*fp,char*path,...){
+	if(def_path)free(def_path);
+	if(def_fp)def_fp->Close(def_fp);
+	if(!(def_path=malloc(PATH_MAX)))return;
+	ZeroMem(def_path,PATH_MAX);
+	va_list va;
+	va_start(va,path);
+	vsnprintf(def_path,PATH_MAX-1,path,va);
+	va_end(va);
+	def_fp=fp;
+	tlog_debug(
+		"use %p:%s as default config path",
+		def_fp,def_path
+	);
+}
+
+static void load_default(){
+	EFI_STATUS st;
+	UINTN cnt=0,size,i;
+	EFI_HANDLE*hands=NULL;
+	EFI_FILE_PROTOCOL*fp=NULL;
+	EFI_PARTITION_INFO_PROTOCOL**pis=NULL;
+	if(def_fp&&def_path)return;
+	st=gBS->LocateHandleBuffer(
+		ByProtocol,
+		&gEfiPartitionInfoProtocolGuid,
+		NULL,&cnt,&hands
+	);
+	if(EFI_ERROR(st)||!hands||cnt<=0){
+		tlog_warn(
+			"failed to handle PartitionInfo: %s",
+			efi_status_to_string(st)
+		);
+		return;
+	}
+	size=(cnt+1)*sizeof(EFI_FILE_PROTOCOL*);
+	if(!(pis=AllocateZeroPool(size)))
+		EDONE(tlog_warn("alloc file protocols failed"));
+	for(i=0;i<cnt;i++)gBS->HandleProtocol(
+		hands[i],
+		&gEfiPartitionInfoProtocolGuid,
+		(VOID**)&pis[i]
+	);
+
+	for(i=0;i<cnt;i++){
+		if(!pis[i]||!hands[i])continue;
+		if(pis[i]->Type!=PARTITION_TYPE_GPT)continue;
+		if(StrCmp(pis[i]->Info.Gpt.PartitionName,L"logfs")==0)goto found;
+		if(StrCmp(pis[i]->Info.Gpt.PartitionName,L"LOGFS")==0)goto found;
+	}
+	for(i=0;i<cnt;i++){
+		if(!pis[i]||!hands[i])continue;
+		if(pis[i]->Type!=PARTITION_TYPE_GPT)continue;
+		if(StrCmp(pis[i]->Info.Gpt.PartitionName,L"esp")==0)goto found;
+		if(StrCmp(pis[i]->Info.Gpt.PartitionName,L"ESP")==0)goto found;
+	}
+	for(i=0;i<cnt;i++)if(pis[i]&&hands[i]&&pis[i]->System)goto found;
+	tlog_warn("no logfs or esp found");
+	done:
+	if(pis)FreePool(pis);
+	return;
+	found:
+	fp=NULL;
+	hand2fp(hands[i],i,&fp);
+	if(fp)set_default(
+		fp,"%s.cfg",
+		PcdGetPtr(PcdConfDefaultPrefix)
+	);
+	goto done;
+}
+
 int confd_init(){
 	EFI_STATUS st;
 	UINTN cnt=0,size=0;
 	EFI_HANDLE*hands=NULL;
-	EFI_FILE_PROTOCOL**fps=NULL;
 	char**exts=NULL,*path=NULL;
-	EFI_SIMPLE_FILE_SYSTEM_PROTOCOL*proto=NULL;
+	EFI_FILE_PROTOCOL**fps=NULL;
+	EFI_FILE_SYSTEM_INFO*fsi=NULL;
 	if(!(exts=conf_get_supported_exts()))
 		EDONE(tlog_warn("get supported exts failed"));
 	if(!(path=AllocatePool(PATH_MAX)))
@@ -52,26 +150,8 @@ int confd_init(){
 	size=(cnt+1)*sizeof(EFI_FILE_PROTOCOL*);
 	if(!(fps=AllocateZeroPool(size)))
 		EDONE(tlog_warn("alloc file protocols failed"));
-	for(UINTN i=0;i<cnt;i++){
-		proto=NULL,st=gBS->HandleProtocol(
-			hands[i],
-			&gEfiSimpleFileSystemProtocolGuid,
-			(VOID**)&proto
-		);
-		if(EFI_ERROR(st)||!proto){
-			tlog_warn(
-				"handle Simple File System Protocol"
-				" %p(%lld) failed: %s",hands[i],i,
-				efi_status_to_string(st)
-			);
-			continue;
-		}
-		st=proto->OpenVolume(proto,&fps[i]);
-		if(EFI_ERROR(st)||!fps[i])tlog_warn(
-			"open volume %p(%lld) failed: %s",
-			proto,i,efi_status_to_string(st)
-		);
-	}
+	for(UINTN i=0;i<cnt;i++)hand2fp(hands[i],i,&fps[i]);
+	load_default();
 	for(UINTN i=0;i<cnt;i++)for(size_t x=0;exts[x];x++){
 		ZeroMem(path,PATH_MAX);
 		AsciiSPrint(
@@ -92,14 +172,34 @@ int confd_init(){
 		);
 		if(conf_load_file(fps[i],path)==0){
 			tlog_debug("loaded %s from %p(%lld)",path,fps[i],i);
-			if(def_path)free(def_path);
-			def_path=strdup(path),def_fp=fps[i];
+			set_default(fps[i],path);
+			fps[i]=NULL;
 		}
 	}
+	if(!def_fp||!def_path)for(UINTN i=0;i<cnt;i++){
+		fsi=NULL,st=efi_file_get_info(
+			fps[i],&gEfiFileSystemInfoGuid,
+			NULL,(VOID**)&fsi
+		);
+		if(EFI_ERROR(st)||!fsi)continue;
+		if(!fsi->ReadOnly&&fsi->FreeSpace>0x20000){
+			tlog_debug(
+				"fallback use first usable filesystem %p(%lld)",
+				fps[i],i
+			);
+			set_default(
+				fps[i],"%s.cfg",
+				PcdGetPtr(PcdConfDefaultPrefix)
+			);
+		}
+		FreePool(fsi);
+		if(def_fp&&def_path)break;
+	}
+	if(!def_fp||!def_path)tlog_warn("no default config save path");
 	done:
 	if(fps){
 		if(cnt>0)for(UINTN i=0;i<cnt;i++)
-			if(def_fp!=fps[i])fps[i]->Close(fps[i]);
+			if(fps[i])fps[i]->Close(fps[i]);
 		FreePool(fps);
 	}
 	if(path)FreePool(path);

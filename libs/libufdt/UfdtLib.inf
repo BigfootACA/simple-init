@@ -7,7 +7,7 @@
   LIBRARY_CLASS                  = UfdtLib
 
 [BuildOptions]
-  GCC:*_*_*_CC_FLAGS = -include src/config-uefi.h
+  GCC:*_*_*_CC_FLAGS = -include src/config-uefi.h -Wno-pointer-to-int-cast
 
 [Packages]
   SimpleInit.dec

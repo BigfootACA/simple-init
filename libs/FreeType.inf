@@ -7,7 +7,7 @@
   LIBRARY_CLASS                  = FreeType
 
 [BuildOptions]
-  GCC:*_*_*_CC_FLAGS = -include src/config-uefi.h
+  GCC:*_*_*_CC_FLAGS = -include src/config-uefi.h -Wno-dangling-pointer
 
 [Packages]
   MdePkg/MdePkg.dec

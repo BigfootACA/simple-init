@@ -41,7 +41,8 @@ static void hand2fp(EFI_HANDLE hand,UINTN i,EFI_FILE_PROTOCOL**out){
 	if(EFI_ERROR(st)||!proto){
 		tlog_warn(
 			"handle Simple File System Protocol"
-			" %p(%lld) failed: %s",hand,i,
+			" %p(%lld) failed: %s",
+			hand,(unsigned long long)i,
 			efi_status_to_string(st)
 		);
 		return;
@@ -49,7 +50,8 @@ static void hand2fp(EFI_HANDLE hand,UINTN i,EFI_FILE_PROTOCOL**out){
 	st=proto->OpenVolume(proto,out);
 	if(EFI_ERROR(st)||!*out)tlog_warn(
 		"open volume %p(%lld) failed: %s",
-		proto,i,efi_status_to_string(st)
+		proto,(unsigned long long)i,
+		efi_status_to_string(st)
 	);
 }
 
@@ -160,7 +162,10 @@ int confd_init(){
 			exts[x]
 		);
 		if(conf_include_file(fps[i],path)==0){
-			tlog_debug("loaded %s from %p(%lld)",path,fps[i],i);
+			tlog_debug(
+				"loaded %s from %p(%lld)",
+				path,fps[i],(unsigned long long)i
+			);
 		}
 	}
 	for(UINTN i=0;i<cnt;i++)for(size_t x=0;exts[x];x++){
@@ -171,7 +176,10 @@ int confd_init(){
 			exts[x]
 		);
 		if(conf_load_file(fps[i],path)==0){
-			tlog_debug("loaded %s from %p(%lld)",path,fps[i],i);
+			tlog_debug(
+				"loaded %s from %p(%llu)",
+				path,fps[i],(unsigned long long)i
+			);
 			set_default(fps[i],path);
 			fps[i]=NULL;
 		}
@@ -184,8 +192,8 @@ int confd_init(){
 		if(EFI_ERROR(st)||!fsi)continue;
 		if(!fsi->ReadOnly&&fsi->FreeSpace>0x20000){
 			tlog_debug(
-				"fallback use first usable filesystem %p(%lld)",
-				fps[i],i
+				"fallback use first usable filesystem %p(%llu)",
+				fps[i],(unsigned long long)i
 			);
 			set_default(
 				fps[i],"%s.cfg",

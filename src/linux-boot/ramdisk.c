@@ -86,7 +86,7 @@ int linux_boot_install_initrd(linux_boot*lb){
 	);
 	tlog_debug(
 		"installed initrd 0x%llx",
-		(unsigned long long)loader
+		(long long)(UINTN)loader
 	);
 	return 0;
 }

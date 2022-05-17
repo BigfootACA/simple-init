@@ -111,7 +111,7 @@ int linux_boot_update_uefi(linux_boot*lb){
 	fdt_setprop_u64(
 		lb->dtb.address,off,
 		"linux,uefi-system-table",
-		(UINT64)gST
+		(UINT64)(UINTN)gST
 	);
 
 	st=gBS->GetMemoryMap(&ms,mm,&mk,&ds,&dv);
@@ -128,22 +128,22 @@ int linux_boot_update_uefi(linux_boot*lb){
 		fdt_setprop_u64(
 			lb->dtb.address,off,
 			"linux,uefi-mmap-start",
-			(UINT64)mm
+			(UINT64)(UINTN)mm
 		);
 		fdt_setprop_u32(
 			lb->dtb.address,off,
 			"linux,uefi-mmap-size",
-			(UINT32)ms
+			(UINT32)(UINTN)ms
 		);
 		fdt_setprop_u32(
 			lb->dtb.address,off,
 			"linux,uefi-mmap-desc-size",
-			(UINT32)ds
+			(UINT32)(UINTN)ds
 		);
 		fdt_setprop_u32(
 			lb->dtb.address,off,
 			"linux,uefi-mmap-desc-ver",
-			(UINT32)dv
+			(UINT32)(UINTN)dv
 		);
 	}
 

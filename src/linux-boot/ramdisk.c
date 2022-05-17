@@ -80,11 +80,11 @@ int linux_boot_install_initrd(linux_boot*lb){
 		loader,
 		NULL
 	);
-	if(EFI_ERROR(st))return trlog_warn(
-		-1,"install initrd loader failed: %p",
+	if(EFI_ERROR(st))tlog_warn(
+		"install initrd loader failed: %p",
 		efi_status_to_string(st)
 	);
-	tlog_debug(
+	else tlog_debug(
 		"installed initrd 0x%llx",
 		(long long)(UINTN)loader
 	);

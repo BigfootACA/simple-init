@@ -219,7 +219,7 @@ static void ok_cb(lv_obj_t*obj,lv_event_t e){
 		FreePool(info);
 		lv_fs_close(&file);
 	}
-	st=ramdisk->Register((UINT64)buffer,ms,dt,NULL,&dp);
+	st=ramdisk->Register((UINT64)(UINTN)buffer,ms,dt,NULL,&dp);
 	if(EFI_ERROR(st)){
 		gBS->FreePool(buffer);
 		msgbox_alert(

@@ -64,8 +64,8 @@ int boot_draw_splash(boot_config*cfg){
 		efi_status_to_string(st)
 	));
 	tlog_debug(
-		"parse splash image %s size %lld bytes",
-		cfg->splash,bs
+		"parse splash image %s size %llu bytes",
+		cfg->splash,(unsigned long long)bs
 	);
 	image=stbi_load_from_memory(
 		buffer,(int)bs,&iw,&ih,NULL,sizeof(c)

@@ -42,15 +42,17 @@ static int LuaUefiDiskIOProtocolReadDisk(lua_State*L){
 }
 
 static int LuaUefiDiskIOProtocolWriteDisk(lua_State*L){
+	size_t ds=0;
+	void*data=NULL;
 	GET_PROTO(L,1,proto);
 	UINT32 media=luaL_checkinteger(L,2);
 	UINT64 off=luaL_checkinteger(L,3);
-	GET_DATA(L,4,data);
-	UINTN size=luaL_optinteger(L,5,data->size);
-	if(!data->data||size<0)
-		return luaL_argerror(L,2,"empty data");
+	lua_arg_get_data(L,4,false,&data,&ds);
+	UINTN size=luaL_optinteger(L,5,ds);
+	if(!data)return luaL_argerror(L,4,"empty data");
+	if(size<0)return luaL_argerror(L,5,"empty data");
 	EFI_STATUS status=proto->proto->WriteDisk(
-		proto->proto,media,off,size,data->data
+		proto->proto,media,off,size,data
 	);
 	uefi_status_to_lua(L,status);
 	if(EFI_ERROR(status))size=0;

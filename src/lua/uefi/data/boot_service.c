@@ -208,30 +208,32 @@ static int LuaUefiBSLocateDevicePath(lua_State*L){
 }
 
 static int LuaUefiBSInstallConfigurationTable(lua_State*L){
+	size_t ds=0;
+	void*data=NULL;
 	EFI_GUID guid;
 	GET_BS(L,1,bs);
 	lua_arg_get_guid(L,2,false,&guid);
-	GET_DATA(L,3,data);
+	lua_arg_get_data(L,3,false,&data,&ds);
 	EFI_STATUS status=bs->bs->InstallConfigurationTable(
-		&guid,&data->data
+		&guid,data
 	);
 	uefi_status_to_lua(L,status);
 	return 1;
 }
 
 static int LuaUefiBSLoadImage(lua_State*L){
+	size_t ds=0;
+	void*data=NULL;
 	GET_BS(L,1,bs);
 	luaL_checktype(L,2,LUA_TBOOLEAN);
 	BOOLEAN boot_policy=lua_toboolean(L,2);
 	GET_HANDLE(L,3,parent);
 	GET_DEVICE_PATH(L,4,dp);
-	OPT_DATA(L,5,source);
+	lua_arg_get_data(L,5,false,&data,&ds);
 	EFI_HANDLE hand=NULL;
 	EFI_STATUS status=bs->bs->LoadImage(
 		boot_policy,parent,dp->dp,
-		source?source->data:NULL,
-		source?source->size:0,
-		&hand
+		data,data?ds:0,&hand
 	);
 	uefi_status_to_lua(L,status);
 	uefi_handle_to_lua(L,hand);
@@ -472,13 +474,15 @@ static int LuaUefiBSLocateHandleBuffer(lua_State*L){
 }
 
 static int LuaUefiBSLocateProtocol(lua_State*L){
+	size_t ds=0;
+	void*reg=NULL;
 	EFI_GUID guid;
 	GET_BS(L,1,bs);
 	lua_arg_get_guid(L,2,false,&guid);
-	GET_DATA(L,3,reg);
+	lua_arg_get_data(L,3,true,&reg,&ds);
 	VOID*proto=NULL;
 	EFI_STATUS status=bs->bs->LocateProtocol(
-		&guid,reg->data,&proto
+		&guid,reg,&proto
 	);
 	uefi_status_to_lua(L,status);
 	if(EFI_ERROR(status)||!proto)lua_pushnil(L);
@@ -487,13 +491,13 @@ static int LuaUefiBSLocateProtocol(lua_State*L){
 }
 
 static int LuaUefiBSCalculateCrc32(lua_State*L){
+	size_t ds=0;
+	void*data=NULL;
 	GET_BS(L,1,bs);
-	GET_DATA(L,2,data);
+	lua_arg_get_data(L,2,false,&data,&ds);
 	UINT32 out=0;
 	EFI_STATUS status=bs->bs->CalculateCrc32(
-		data->data,
-		data->size,
-		&out
+		data,ds,&out
 	);
 	uefi_status_to_lua(L,status);
 	return 1;

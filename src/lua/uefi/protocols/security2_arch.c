@@ -20,17 +20,15 @@ static int LuaUefiSecurity2ArchProtocolToString(lua_State*L){
 }
 
 static int LuaUefiSecurity2ArchProtocolFileAuthentication(lua_State*L){
+	size_t ds=0;
+	void*data=NULL;
 	GET_PROTO(L,1,proto);
 	OPT_DEVICE_PATH(L,2,dp);
-	GET_DATA(L,3,file);
+	lua_arg_get_data(L,3,false,&data,&ds);
 	luaL_checktype(L,4,LUA_TBOOLEAN);
 	BOOLEAN boot_policy=lua_toboolean(L,2);
 	EFI_STATUS status=proto->proto->FileAuthentication(
-		proto->proto,
-		dp?dp->dp:NULL,
-		file->data,
-		file->size,
-		boot_policy
+		proto->proto,dp?dp->dp:NULL,data,ds,boot_policy
 	);
 	uefi_status_to_lua(L,status);
 	return 1;

@@ -20,16 +20,18 @@ static int LuaUefiRamDiskProtocolToString(lua_State*L){
 }
 
 static int LuaUefiRamDiskProtocolRegister(lua_State*L){
+	size_t ds=0;
 	EFI_GUID guid;
+	void*data=NULL;
 	GET_PROTO(L,1,proto);
-	GET_DATA(L,2,data);
+	lua_arg_get_data(L,2,false,&data,&ds);
 	lua_arg_get_guid(L,3,false,&guid);
 	OPT_DEVICE_PATH(L,4,parent);
 	EFI_DEVICE_PATH_PROTOCOL*dp=NULL;
-	if(!data->data||data->size<=0)
+	if(!data||ds<=0)
 		return luaL_argerror(L,2,"invalid data");
 	EFI_STATUS status=proto->proto->Register(
-		(UINT64)(UINTN)data->data,(UINT64)data->size,
+		(UINT64)(UINTN)data,(UINT64)ds,
 		&guid,parent?parent->dp:NULL,&dp
 	);
 	uefi_status_to_lua(L,status);

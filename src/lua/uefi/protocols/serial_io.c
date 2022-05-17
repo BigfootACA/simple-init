@@ -224,13 +224,15 @@ static int LuaUefiSerialIOProtocolRead(lua_State*L){
 }
 
 static int LuaUefiSerialIOProtocolWrite(lua_State*L){
+	size_t ds=0;
+	void*data=NULL;
 	GET_PROTO(L,1,proto);
-	GET_DATA(L,2,data);
-	UINTN size=luaL_optinteger(L,3,data->size);
-	if(!data->data||size<0)
-		return luaL_argerror(L,2,"empty data");
+	lua_arg_get_data(L,2,true,&data,&ds);
+	UINTN size=luaL_optinteger(L,3,ds);
+	if(!data)return luaL_argerror(L,2,"empty data");
+	if(size<0)return luaL_argerror(L,3,"empty data");
 	EFI_STATUS status=proto->proto->Write(
-		proto->proto,&size,data->data
+		proto->proto,&size,data
 	);
 	uefi_status_to_lua(L,status);
 	if(EFI_ERROR(status))size=0;

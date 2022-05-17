@@ -36,15 +36,17 @@ static int LuaUefiBootOptionFilePath(lua_State*L){
 }
 
 static int LuaUefiBootOptionOptionalData(lua_State*L){
+	size_t ds=0;
+	void*data=NULL;
 	bool found=false;
 	GET_BOOT_OPTION(L,1,bo);
-	OPT_DATA(L,2,data);
+	lua_arg_get_data(L,2,true,&data,&ds);
 	if(bo->bo){
 		if(data){
 			luaL_argcheck(L,bo->allocated,1,"read only option");
-			luaL_argcheck(L,data->data!=NULL&&data->size>0,2,"data must not null");
+			luaL_argcheck(L,ds>0,2,"data must not null");
 			if(bo->bo->OptionalData)FreePool(bo->bo->OptionalData);
-			bo->bo->OptionalData=AllocateCopyPool(data->size,data->data);
+			bo->bo->OptionalData=AllocateCopyPool(ds,data);
 			if(!bo->bo->OptionalData)return luaL_error(L,"allocate for data failed");
 		}
 		if(bo->bo->OptionalData&&bo->bo->OptionalDataSize>=0){

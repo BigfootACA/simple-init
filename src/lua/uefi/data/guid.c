@@ -40,13 +40,15 @@ static int LuaUefiGuidFromString(lua_State*L){
 }
 
 static int LuaUefiGuidToProtocol(lua_State*L){
+	size_t ds=0;
+	void*reg=NULL;
 	GET_GUID(L,1,guid);
 	OPT_BS(L,2,bs);
-	OPT_DATA(L,3,reg);
+	lua_arg_get_data(L,3,true,&reg,&ds);
 	VOID*d=NULL;
 	EFI_BOOT_SERVICES*b=bs?bs->bs:gBS;
 	EFI_STATUS status=b->LocateProtocol(
-		&guid->guid,reg?reg->data:NULL,&d
+		&guid->guid,reg,&d
 	);
 	uefi_status_to_lua(L,status);
 	uefi_data_to_protocol(L,&guid->guid,d,TRUE);

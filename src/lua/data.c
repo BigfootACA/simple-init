@@ -17,6 +17,8 @@
 #define alloc_data(data,size) malloc(size)
 #endif
 
+#define OPT_DATA(L,n,var) OPT_UDATA(L,n,var,lua_data,LUA_DATA)
+#define GET_DATA(L,n,var) OPT_DATA(L,n,var);CHECK_NULL(L,n,var)
 static void clean_parent(struct lua_data*data){
 	if(!data->parent)return;
 	list_obj_del_data(&data->parent->refs,data,NULL);

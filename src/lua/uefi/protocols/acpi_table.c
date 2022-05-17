@@ -20,11 +20,13 @@ static int LuaUefiAcpiTableProtocolToString(lua_State*L){
 }
 
 static int LuaUefiAcpiTableProtocolInstall(lua_State*L){
+	size_t ds=0;
+	void*data=NULL;
 	GET_PROTO(L,1,proto);
-	GET_DATA(L,2,data);
+	lua_arg_get_data(L,2,false,&data,&ds);
 	UINTN key=0;
 	EFI_STATUS status=proto->proto->InstallAcpiTable(
-		proto->proto,data->data,data->size,&key
+		proto->proto,data,ds,&key
 	);
 	uefi_status_to_lua(L,status);
 	lua_pushinteger(L,key);

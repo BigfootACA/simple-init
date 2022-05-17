@@ -77,7 +77,6 @@ static void load_mode(lua_State*L,EFI_GRAPHICS_OUTPUT_PROTOCOL_MODE*mode){
 }
 
 void uefi_graphics_output_get_pixel(lua_State*L,int t,EFI_GRAPHICS_OUTPUT_BLT_PIXEL*pixel){
-	luaL_checktype(L,t,LUA_TTABLE);
 	switch(lua_type(L,t)){
 		case LUA_TTABLE:{
 			lua_getfield(L,t,"Red");
@@ -92,10 +91,12 @@ void uefi_graphics_output_get_pixel(lua_State*L,int t,EFI_GRAPHICS_OUTPUT_BLT_PI
 			pixel->Reserved=0;
 		}break;
 		case LUA_TUSERDATA:{
-			GET_DATA(L,t,data);
-			if(data->data){
+			size_t ds=0;
+			void*data=NULL;
+			lua_arg_get_data(L,t,false,&data,&ds);
+			if(data&&(ds==0||ds>sizeof(EFI_GRAPHICS_OUTPUT_BLT_PIXEL))){
 				CopyMem(
-					pixel,data->data,
+					pixel,data,
 					sizeof(EFI_GRAPHICS_OUTPUT_BLT_PIXEL)
 				);
 				break;
@@ -110,8 +111,10 @@ void uefi_graphics_output_get_pixels(lua_State*L,int t,EFI_GRAPHICS_OUTPUT_BLT_P
 	*alloc=FALSE,*pixels=NULL;
 	switch(lua_type(L,t)){
 		case LUA_TUSERDATA:{
-			GET_DATA(L,t,data);
-			buff=data->data;
+			size_t ds=0;
+			void*data=NULL;
+			lua_arg_get_data(L,t,false,&data,&ds);
+			buff=data;
 		}break;
 		case LUA_TTABLE:{
 			lua_Integer cnt=luaL_len(L,t);

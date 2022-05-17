@@ -36,6 +36,8 @@ static int LuaUefiBootManagerLibNewLoadOption(lua_State*L){
 }
 
 static int LuaUefiBootManagerLibInitializeLoadOption(lua_State*L){
+	size_t ds=0;
+	void*data=NULL;
 	CHAR16*desc=NULL;
 	GET_BOOT_OPTION(L,1,bo);
 	UINTN bn=luaL_checkinteger(L,2);
@@ -46,10 +48,9 @@ static int LuaUefiBootManagerLibInitializeLoadOption(lua_State*L){
 	lua_arg_get_char16(L,5,false,&desc);
 	GET_DEVICE_PATH(L,6,dp);
 	if(!desc)return luaL_argerror(L,5,"get argument failed");
-	OPT_DATA(L,7,data);
+	lua_arg_get_data(L,7,true,&data,&ds);
 	EFI_STATUS st=EfiBootManagerInitializeLoadOption(
-		bo->bo,bn,type,attr,desc,dp->dp,
-		data?data->data:NULL,data?data->size:0
+		bo->bo,bn,type,attr,desc,dp->dp,data,data?ds:0
 	);
 	uefi_status_to_lua(L,st);
 	FreePool(desc);

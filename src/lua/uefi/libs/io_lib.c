@@ -36,10 +36,12 @@ static int LuaIoLibIoReadFifo8(lua_State*L){
 }
 
 static int LuaIoLibIoWriteFifo8(lua_State*L){
+	size_t ds=0;
+	void*data=NULL;
 	UINTN port=luaL_checkinteger(L,1);
-	GET_DATA(L,2,data);
-	UINTN count=luaL_optinteger(L,3,data->size/sizeof(UINT8));
-	IoWriteFifo8(port,count,data->data);
+	lua_arg_get_data(L,2,false,&data,&ds);
+	UINTN count=luaL_optinteger(L,3,ds/sizeof(UINT8));
+	IoWriteFifo8(port,count,data);
 	return 0;
 }
 
@@ -134,10 +136,12 @@ static int LuaIoLibIoReadFifo16(lua_State*L){
 }
 
 static int LuaIoLibIoWriteFifo16(lua_State*L){
+	size_t ds=0;
+	void*data=NULL;
 	UINTN port=luaL_checkinteger(L,1);
-	GET_DATA(L,2,data);
-	UINTN count=luaL_optinteger(L,3,data->size/sizeof(UINT16));
-	IoWriteFifo16(port,count,data->data);
+	lua_arg_get_data(L,2,false,&data,&ds);
+	UINTN count=luaL_optinteger(L,3,ds/sizeof(UINT16));
+	IoWriteFifo16(port,count,data);
 	return 0;
 }
 
@@ -232,10 +236,12 @@ static int LuaIoLibIoReadFifo32(lua_State*L){
 }
 
 static int LuaIoLibIoWriteFifo32(lua_State*L){
+	size_t ds=0;
+	void*data=NULL;
 	UINTN port=luaL_checkinteger(L,1);
-	GET_DATA(L,2,data);
-	UINTN count=luaL_optinteger(L,3,data->size/sizeof(UINT32));
-	IoWriteFifo32(port,count,data->data);
+	lua_arg_get_data(L,2,false,&data,&ds);
+	UINTN count=luaL_optinteger(L,3,ds/sizeof(UINT32));
+	IoWriteFifo32(port,count,data);
 	return 0;
 }
 
@@ -741,34 +747,42 @@ static int LuaIoLibMmioReadBuffer64(lua_State*L){
 }
 
 static int LuaIoLibMmioWriteBuffer8(lua_State*L){
+	size_t ds=0;
+	void*data=NULL;
 	UINTN addr=luaL_checkinteger(L,1);
-	GET_DATA(L,2,data);
-	UINTN len=luaL_optinteger(L,3,data->size);
-	MmioWriteBuffer8(addr,len,data->data);
+	lua_arg_get_data(L,2,false,&data,&ds);
+	UINTN len=luaL_optinteger(L,3,ds);
+	MmioWriteBuffer8(addr,len,data);
 	return 0;
 }
 
 static int LuaIoLibMmioWriteBuffer16(lua_State*L){
+	size_t ds=0;
+	void*data=NULL;
 	UINTN addr=luaL_checkinteger(L,1);
-	GET_DATA(L,2,data);
-	UINTN len=luaL_optinteger(L,3,data->size);
-	MmioWriteBuffer16(addr,len,data->data);
+	lua_arg_get_data(L,2,false,&data,&ds);
+	UINTN len=luaL_optinteger(L,3,ds);
+	MmioWriteBuffer16(addr,len,data);
 	return 0;
 }
 
 static int LuaIoLibMmioWriteBuffer32(lua_State*L){
+	size_t ds=0;
+	void*data=NULL;
 	UINTN addr=luaL_checkinteger(L,1);
-	GET_DATA(L,2,data);
-	UINTN len=luaL_optinteger(L,3,data->size);
-	MmioWriteBuffer32(addr,len,data->data);
+	lua_arg_get_data(L,2,false,&data,&ds);
+	UINTN len=luaL_optinteger(L,3,ds);
+	MmioWriteBuffer32(addr,len,data);
 	return 0;
 }
 
 static int LuaIoLibMmioWriteBuffer64(lua_State*L){
+	size_t ds=0;
+	void*data=NULL;
 	UINTN addr=luaL_checkinteger(L,1);
-	GET_DATA(L,2,data);
-	UINTN len=luaL_optinteger(L,3,data->size);
-	MmioWriteBuffer64(addr,len,data->data);
+	lua_arg_get_data(L,2,false,&data,&ds);
+	UINTN len=luaL_optinteger(L,3,ds);
+	MmioWriteBuffer64(addr,len,data);
 	return 0;
 }
 

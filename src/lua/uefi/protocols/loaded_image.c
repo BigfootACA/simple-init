@@ -44,11 +44,13 @@ static int LuaUefiLoadedImageProtocolFilePath(lua_State*L){
 }
 
 static int LuaUefiLoadedImageProtocolLoadOptions(lua_State*L){
+	size_t ds=0;
+	void*data=NULL;
 	GET_PROTO(L,1,proto);
-	OPT_DATA(L,2,data);
+	lua_arg_get_data(L,2,true,&data,&ds);
 	if(data){
-		proto->proto->LoadOptions=data->data;
-		proto->proto->LoadOptionsSize=data->size;
+		proto->proto->LoadOptions=data;
+		proto->proto->LoadOptionsSize=ds;
 	}
 	uefi_data_to_lua(L,FALSE,
 		proto->proto->LoadOptions,

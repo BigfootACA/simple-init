@@ -118,6 +118,8 @@ static int LuaUefiRTGetNextVariableName(lua_State*L){
 }
 
 static int LuaUefiRTSetVariable(lua_State*L){
+	size_t ds=0;
+	void*data=NULL;
 	EFI_GUID guid;
 	CHAR16*name=NULL;
 	GET_RT(L,1,rt);
@@ -125,9 +127,10 @@ static int LuaUefiRTSetVariable(lua_State*L){
 	lua_arg_get_guid(L,3,false,&guid);
 	if(!name)return luaL_argerror(L,2,"get argument failed");
 	lua_Integer attr=luaL_checkinteger(L,4);
-	GET_DATA(L,5,data);
+	lua_arg_get_data(L,5,false,&data,&ds);
+	if(!data)return luaL_argerror(L,5,"get argument failed");
 	EFI_STATUS status=rt->rt->SetVariable(
-		name,&guid,attr,data->size,data->data
+		name,&guid,attr,ds,data
 	);
 	uefi_status_to_lua(L,status);
 	FreePool(name);
@@ -144,17 +147,18 @@ static int LuaUefiRTGetNextHighMonotonicCount(lua_State*L){
 }
 
 static int LuaUefiRTResetSystem(lua_State*L){
+	size_t ds=0;
+	void*data=NULL;
 	GET_RT(L,1,rt);
 	const char*_reset=luaL_checkstring(L,2);
 	GET_STATUS(L,3,status);
-	OPT_DATA(L,4,data);
+	lua_arg_get_data(L,4,true,&data,&ds);
 	EFI_RESET_TYPE reset=0;
 	if(!uefi_str_to_reset_type(_reset,&reset))
 		return luaL_error(L,"invalid reset type %s",_reset);
 	rt->rt->ResetSystem(
 		reset,status->st,
-		data?data->size:0,
-		data?data->data:NULL
+		data?ds:0,data
 	);
 	return 0;
 }

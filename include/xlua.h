@@ -20,8 +20,6 @@
 	if(!lua_isnoneornil(L,n)){\
 		var=luaL_checkudata(L,n,name);\
 	}
-#define OPT_DATA(L,n,var) OPT_UDATA(L,n,var,lua_data,LUA_DATA)
-#define GET_DATA(L,n,var) OPT_DATA(L,n,var);CHECK_NULL(L,n,var)
 struct lua_data{
 	bool allocated;
 	#ifdef ENABLE_UEFI
@@ -61,6 +59,7 @@ extern int xlua_create_metatable(
 	lua_CFunction tostring,
 	lua_CFunction gc
 );
+extern void lua_arg_get_data(lua_State*L,int idx,bool nil,void**data,size_t*size);
 extern void lua_data_to_lua(lua_State*L,bool allocated,void*data,size_t size);
 extern void lua_data_dup_to_lua(lua_State*L,void*data,size_t size);
 extern void xlua_dump_stack(lua_State*L);

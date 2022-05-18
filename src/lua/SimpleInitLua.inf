@@ -79,6 +79,7 @@
 [Sources]
   conf.c
   feature.c
+  nanosvg.c
   libs.c
   locate.c
   logger.c

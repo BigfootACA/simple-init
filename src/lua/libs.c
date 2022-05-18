@@ -27,6 +27,9 @@ const luaL_Reg simple_init_lua_libs[]={
 	{"data",     luaopen_data},
 	{"conf",     luaopen_conf},
 	{"logger",   luaopen_logger},
+	#ifdef ENABLE_NANOSVG
+	{"nanosvg",  luaopen_nanosvg},
+	#endif
 	#ifdef ENABLE_GUI
 	{"lvgl",     luaopen_lvgl},
 	{"sysbar",   luaopen_sysbar},

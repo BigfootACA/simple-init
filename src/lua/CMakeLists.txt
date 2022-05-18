@@ -5,5 +5,6 @@ add_library(init_lua STATIC
 	lua.c
 	libs.c
 	feature.c
+	nanosvg.c
 	init.c
 )

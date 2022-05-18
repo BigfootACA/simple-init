@@ -86,6 +86,7 @@
   lua.c
   data.c
   locate.c
+  abootimg.c
   uefi/uefi.c
   uefi/system_table.c
   uefi/guids.c

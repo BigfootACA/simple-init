@@ -6,5 +6,6 @@ add_library(init_lua STATIC
 	libs.c
 	feature.c
 	nanosvg.c
+	abootimg.c
 	init.c
 )

@@ -59,6 +59,9 @@ extern aboot_image*abootimg_load_from_wfile(EFI_FILE_PROTOCOL*root,CHAR16*path);
 // src/lib/aboot.c: allocate and load image from a file with ascii path
 extern aboot_image*abootimg_load_from_file(EFI_FILE_PROTOCOL*root,char*path);
 
+// src/lib/aboot.c: allocate and load image from locate path
+extern aboot_image*abootimg_load_from_locate(const char*path);
+
 // src/lib/aboot.c: write image to a block
 extern bool abootimg_save_to_blockio(aboot_image*img,EFI_BLOCK_IO_PROTOCOL*bio);
 
@@ -71,14 +74,21 @@ extern bool abootimg_save_to_wfile(aboot_image*img,EFI_FILE_PROTOCOL*root,CHAR16
 // src/lib/aboot.c: write image to a file with ascii path
 extern bool abootimg_save_to_file(aboot_image*img,EFI_FILE_PROTOCOL*root,char*path);
 
+// src/lib/aboot.c: write image to a file with locate path
+extern bool abootimg_save_to_locate(aboot_image*img,const char*path);
+
 // load and save kernel ramdisk second
 #define DECL_ABOOTIMG_LOAD_SAVE(tag)\
+	extern bool abootimg_load_##tag##_from_blockio(aboot_image*img,EFI_BLOCK_IO_PROTOCOL*bio);\
 	extern bool abootimg_load_##tag##_from_fp(aboot_image*img,EFI_FILE_PROTOCOL*fp);\
 	extern bool abootimg_load_##tag##_from_wfile(aboot_image*img,EFI_FILE_PROTOCOL*root,CHAR16*path);\
 	extern bool abootimg_load_##tag##_from_file(aboot_image*img,EFI_FILE_PROTOCOL*root,char*path);\
+	extern bool abootimg_load_##tag##_from_locate(aboot_image*img,const char*path);\
+	extern bool abootimg_save_##tag##_to_blockio(aboot_image*img,EFI_BLOCK_IO_PROTOCOL*bio);\
 	extern bool abootimg_save_##tag##_to_fp(aboot_image*img,EFI_FILE_PROTOCOL*fp);\
 	extern bool abootimg_save_##tag##_to_wfile(aboot_image*img,EFI_FILE_PROTOCOL*root,CHAR16*path);\
-	extern bool abootimg_save_##tag##_to_file(aboot_image*img,EFI_FILE_PROTOCOL*root,char*path);
+	extern bool abootimg_save_##tag##_to_file(aboot_image*img,EFI_FILE_PROTOCOL*root,char*path);\
+	extern bool abootimg_save_##tag##_to_locate(aboot_image*img,const char*path);
 #else
 
 // src/lib/aboot.c: allocate and load image from a file descriptor

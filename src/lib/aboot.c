@@ -11,6 +11,7 @@
 #include<stdint.h>
 #ifdef ENABLE_UEFI
 #include"uefi.h"
+#include"locate.h"
 #include<limits.h>
 #include<Library/BaseLib.h>
 #include<Library/BaseMemoryLib.h>
@@ -276,6 +277,27 @@ aboot_image*abootimg_load_from_file(EFI_FILE_PROTOCOL*root,char*path){
 	return ret;
 }
 
+aboot_image*abootimg_load_from_locate(const char*path){
+	if(!path)return NULL;
+	aboot_image*ret=NULL;
+	locate_ret*loc=AllocateZeroPool(sizeof(locate_ret));
+	if(!loc)return NULL;
+	if(boot_locate(loc,path))switch(loc->type){
+		case LOCATE_FILE:
+			if(loc->file){
+				ret=abootimg_load_from_fp(loc->file);
+				loc->file->Close(loc->file);
+			}
+		break;
+		case LOCATE_BLOCK:
+			ret=abootimg_load_from_blockio(loc->block);
+		break;
+		default:;
+	}
+	FreePool(loc);
+	return ret;
+}
+
 bool abootimg_save_to_fp(aboot_image*img,EFI_FILE_PROTOCOL*fp){
 	if(!img||!fp)return false;
 	void*out=NULL;
@@ -322,7 +344,51 @@ bool abootimg_save_to_file(aboot_image*img,EFI_FILE_PROTOCOL*root,char*path){
 	return ret;
 }
 
+bool abootimg_save_to_locate(aboot_image*img,const char*path){
+	if(!path)return false;
+	bool ret=false;
+	locate_ret*loc=AllocateZeroPool(sizeof(locate_ret));
+	if(!loc)return false;
+	if(!boot_locate_create_file(loc,path))goto fail;
+	if(!boot_locate(loc,path))goto fail;
+	switch(loc->type){
+		case LOCATE_FILE:
+			if(loc->file){
+				ret=abootimg_save_to_fp(img,loc->file);
+				loc->file->Close(loc->file);
+			}
+		break;
+		case LOCATE_BLOCK:
+			ret=abootimg_save_to_blockio(img,loc->block);
+		break;
+		default:;
+	}
+	FreePool(loc);
+	return ret;
+	fail:
+	if(loc){
+		if(loc->type==LOCATE_FILE&&loc->file)
+			loc->file->Close(loc->file);
+		FreePool(loc);
+	}
+	return false;
+}
+
 #define ABOOTIMG_LOAD_SAVE(tag) \
+	bool abootimg_load_##tag##_from_blockio(aboot_image*img,EFI_BLOCK_IO_PROTOCOL*bio){\
+		if(!bio)return false;\
+		void*cont=NULL;\
+		bool ret=false;\
+		UINT32 mid=bio->Media->MediaId;\
+		UINTN size=(bio->Media->LastBlock-1)*bio->Media->BlockSize;\
+		if(size>=UINT32_MAX)goto fail;\
+		if(!(cont=AllocateZeroPool(size)))goto fail;\
+		if(EFI_ERROR(bio->ReadBlocks(bio,mid,0,size,cont)))goto fail;\
+		ret=abootimg_set_##tag(img,cont,(uint32_t)size);\
+		fail:\
+		if(cont)FreePool(cont);\
+		return ret;\
+	}\
 	bool abootimg_load_##tag##_from_fp(aboot_image*img,EFI_FILE_PROTOCOL*fp){\
 		if(!fp)return false;\
 		UINTN read=0;\
@@ -365,6 +431,35 @@ bool abootimg_save_to_file(aboot_image*img,EFI_FILE_PROTOCOL*root,char*path){
 		}\
 		return ret;\
 	}\
+	bool abootimg_load_##tag##_from_locate(aboot_image*img,const char*path){\
+		if(!path)return false;\
+		bool ret=false;\
+		locate_ret*loc=AllocateZeroPool(sizeof(locate_ret));\
+		if(!loc)return false;\
+		if(boot_locate(loc,path))switch(loc->type){\
+			case LOCATE_FILE:\
+				if(loc->file){\
+					ret=abootimg_load_##tag##_from_fp(img,loc->file);\
+					loc->file->Close(loc->file);\
+				}\
+			break;\
+			case LOCATE_BLOCK:\
+				ret=abootimg_load_##tag##_from_blockio(img,loc->block);\
+			break;\
+			default:;\
+		}\
+		FreePool(loc);\
+		return ret;\
+	}\
+	bool abootimg_save_##tag##_to_blockio(aboot_image*img,EFI_BLOCK_IO_PROTOCOL*bio){\
+		if(!bio)return false;\
+		EFI_STATUS st;\
+		UINT32 mid=bio->Media->MediaId;\
+		UINTN len=abootimg_get_##tag##_size(img);\
+		st=bio->WriteBlocks(bio,mid,0,len,img->tag);\
+		bio->FlushBlocks(bio);\
+		return !EFI_ERROR(st);\
+	}\
 	bool abootimg_save_##tag##_to_fp(aboot_image*img,EFI_FILE_PROTOCOL*fp){\
 		if(!img||!fp||!img->tag)return false;\
 		EFI_STATUS st;\
@@ -405,6 +500,35 @@ bool abootimg_save_to_file(aboot_image*img,EFI_FILE_PROTOCOL*root,char*path){
 			FreePool(wp);\
 		}\
 		return ret;\
+	}\
+	bool abootimg_save_##tag##_to_locate(aboot_image*img,const char*path){\
+		if(!path)return false;\
+		bool ret=false;\
+		locate_ret*loc=AllocateZeroPool(sizeof(locate_ret));\
+		if(!loc)return false;\
+		if(!boot_locate_create_file(loc,path))goto fail;\
+		if(!boot_locate(loc,path))goto fail;\
+		switch(loc->type){\
+			case LOCATE_FILE:\
+				if(loc->file){\
+					ret=abootimg_save_##tag##_to_fp(img,loc->file);\
+					loc->file->Close(loc->file);\
+				}\
+			break;\
+			case LOCATE_BLOCK:\
+				ret=abootimg_save_##tag##_to_blockio(img,loc->block);\
+			break;\
+			default:;\
+		}\
+		FreePool(loc);\
+		return ret;\
+		fail:\
+		if(loc){\
+			if(loc->type==LOCATE_FILE&&loc->file)\
+				loc->file->Close(loc->file);\
+			FreePool(loc);\
+		}\
+		return false;\
 	}
 #else
 static bool allocate_read(int fd,size_t blk,void**buf,size_t*len){

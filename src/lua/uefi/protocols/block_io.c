@@ -89,7 +89,7 @@ static int LuaUefiBlockIOProtocolReset(lua_State*L){
 static int LuaUefiBlockIOProtocolReadBlocks(lua_State*L){
 	VOID*buffer=NULL;
 	GET_PROTO(L,1,proto);
-	UINT32 media=luaL_checkinteger(L,2);
+	UINT32 media=luaL_optinteger(L,2,proto->proto->Media->MediaId);
 	EFI_LBA lba=luaL_checkinteger(L,3);
 	UINTN size=luaL_checkinteger(L,4);
 	if(!(buffer=AllocateZeroPool(size))){
@@ -112,7 +112,7 @@ static int LuaUefiBlockIOProtocolWriteBlocks(lua_State*L){
 	size_t ds=0;
 	void*data=NULL;
 	GET_PROTO(L,1,proto);
-	UINT32 media=luaL_checkinteger(L,2);
+	UINT32 media=luaL_optinteger(L,2,proto->proto->Media->MediaId);
 	EFI_LBA lba=luaL_checkinteger(L,3);
 	lua_arg_get_data(L,4,false,&data,&ds);
 	UINTN size=luaL_optinteger(L,5,ds);

@@ -496,6 +496,11 @@ static int LuaUefiFileProtocolFlush(lua_State*L){
 	return 1;
 }
 
+EFI_FILE_PROTOCOL*uefi_lua_to_file_protocol(lua_State*L,int n){
+	OPT_PROTO(L,n,proto);
+	return proto?proto->proto:NULL;
+}
+
 void uefi_file_protocol_to_lua(lua_State*L,EFI_FILE_PROTOCOL*proto){
 	struct lua_uefi_file_proto*e;
 	if(!proto){

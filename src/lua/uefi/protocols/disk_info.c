@@ -96,6 +96,11 @@ static int LuaUefiDiskInfoProtocolWhichIde(lua_State*L){
 	return 3;
 }
 
+EFI_DISK_INFO_PROTOCOL*uefi_lua_to_disk_info_protocol(lua_State*L,int n){
+	OPT_PROTO(L,n,proto);
+	return proto?proto->proto:NULL;
+}
+
 void uefi_disk_info_protocol_to_lua(lua_State*L,EFI_DISK_INFO_PROTOCOL*proto){
 	struct lua_uefi_disk_info_proto*e;
 	if(!proto){

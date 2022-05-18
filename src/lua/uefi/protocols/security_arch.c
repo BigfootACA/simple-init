@@ -30,6 +30,11 @@ static int LuaUefiSecurityArchProtocolFileAuthenticationState(lua_State*L){
 	return 1;
 }
 
+EFI_SECURITY_ARCH_PROTOCOL*uefi_lua_to_security_arch_protocol(lua_State*L,int n){
+	OPT_PROTO(L,n,proto);
+	return proto?proto->proto:NULL;
+}
+
 void uefi_security_arch_protocol_to_lua(lua_State*L,EFI_SECURITY_ARCH_PROTOCOL*proto){
 	struct lua_uefi_security_arch_proto*e;
 	if(!proto){

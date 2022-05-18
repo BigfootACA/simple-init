@@ -39,6 +39,11 @@ static int LuaUefiBootLogoProtocolSetBootLogo(lua_State*L){
 	return 1;
 }
 
+EFI_BOOT_LOGO_PROTOCOL*uefi_lua_to_boot_logo_protocol(lua_State*L,int n){
+	OPT_PROTO(L,n,proto);
+	return proto?proto->proto:NULL;
+}
+
 void uefi_boot_logo_protocol_to_lua(lua_State*L,EFI_BOOT_LOGO_PROTOCOL*proto){
 	struct lua_uefi_boot_logo_proto*e;
 	if(!proto){

@@ -56,6 +56,11 @@ static int LuaUefiComponentNameProtocolSupportedLanguages(lua_State*L){
 	return 1;
 }
 
+EFI_COMPONENT_NAME_PROTOCOL*uefi_lua_to_component_name_protocol(lua_State*L,int n){
+	OPT_PROTO(L,n,proto);
+	return proto?proto->proto:NULL;
+}
+
 void uefi_component_name_protocol_to_lua(lua_State*L,EFI_COMPONENT_NAME_PROTOCOL*proto){
 	struct lua_uefi_component_name_proto*e;
 	if(!proto){

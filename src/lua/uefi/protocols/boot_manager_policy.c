@@ -48,6 +48,11 @@ static int LuaUefiBootManagerPolicyProtocolRevision(lua_State*L){
 	return 1;
 }
 
+EFI_BOOT_MANAGER_POLICY_PROTOCOL*uefi_lua_to_boot_manager_policy_protocol(lua_State*L,int n){
+	OPT_PROTO(L,n,proto);
+	return proto?proto->proto:NULL;
+}
+
 void uefi_boot_manager_policy_protocol_to_lua(lua_State*L,EFI_BOOT_MANAGER_POLICY_PROTOCOL*proto){
 	struct lua_uefi_boot_manager_policy_proto*e;
 	if(!proto){

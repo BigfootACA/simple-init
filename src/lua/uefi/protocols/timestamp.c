@@ -43,6 +43,11 @@ static int LuaUefiTimeStampProtocolGetTimestamp(lua_State*L){
 	return 2;
 }
 
+EFI_TIMESTAMP_PROTOCOL*uefi_lua_to_timestamp_protocol(lua_State*L,int n){
+	OPT_PROTO(L,n,proto);
+	return proto?proto->proto:NULL;
+}
+
 void uefi_timestamp_protocol_to_lua(lua_State*L,EFI_TIMESTAMP_PROTOCOL*proto){
 	struct lua_uefi_timestamp_proto*e;
 	if(!proto){

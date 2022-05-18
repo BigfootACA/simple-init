@@ -211,6 +211,11 @@ static int LuaUefiGraphicsOutputProtocolMode(lua_State*L){
 	return 1;
 }
 
+EFI_GRAPHICS_OUTPUT_PROTOCOL*uefi_lua_to_graphics_output_protocol(lua_State*L,int n){
+	OPT_PROTO(L,n,proto);
+	return proto?proto->proto:NULL;
+}
+
 void uefi_graphics_output_protocol_to_lua(lua_State*L,EFI_GRAPHICS_OUTPUT_PROTOCOL*proto){
 	struct lua_uefi_graphics_output_proto*e;
 	if(!proto){

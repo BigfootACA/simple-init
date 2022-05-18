@@ -43,6 +43,11 @@ static int LuaUefiAcpiTableProtocolUninstall(lua_State*L){
 	return 1;
 }
 
+EFI_ACPI_TABLE_PROTOCOL*uefi_lua_to_acpi_table_protocol(lua_State*L,int n){
+	OPT_PROTO(L,n,proto);
+	return proto?proto->proto:NULL;
+}
+
 void uefi_acpi_table_protocol_to_lua(lua_State*L,EFI_ACPI_TABLE_PROTOCOL*proto){
 	struct lua_uefi_acpi_table_proto*e;
 	if(!proto){

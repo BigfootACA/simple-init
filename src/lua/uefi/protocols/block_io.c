@@ -147,6 +147,11 @@ static int LuaUefiBlockIOProtocolRevision(lua_State*L){
 	return 1;
 }
 
+EFI_BLOCK_IO_PROTOCOL*uefi_lua_to_block_io_protocol(lua_State*L,int n){
+	OPT_PROTO(L,n,proto);
+	return proto?proto->proto:NULL;
+}
+
 void uefi_block_io_protocol_to_lua(lua_State*L,EFI_BLOCK_IO_PROTOCOL*proto){
 	struct lua_uefi_block_io_proto*e;
 	if(!proto){

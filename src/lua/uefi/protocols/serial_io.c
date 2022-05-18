@@ -263,6 +263,11 @@ static int LuaUefiSerialIOProtocolDeviceTypeGuid(lua_State*L){
 }
 #endif
 
+EFI_SERIAL_IO_PROTOCOL*uefi_lua_to_serial_io_protocol(lua_State*L,int n){
+	OPT_PROTO(L,n,proto);
+	return proto?proto->proto:NULL;
+}
+
 void uefi_serial_io_protocol_to_lua(lua_State*L,EFI_SERIAL_IO_PROTOCOL*proto){
 	struct lua_uefi_serial_io_proto*e;
 	if(!proto){

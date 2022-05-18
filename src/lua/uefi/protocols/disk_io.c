@@ -66,6 +66,11 @@ static int LuaUefiDiskIOProtocolRevision(lua_State*L){
 	return 1;
 }
 
+EFI_DISK_IO_PROTOCOL*uefi_lua_to_disk_io_protocol(lua_State*L,int n){
+	OPT_PROTO(L,n,proto);
+	return proto?proto->proto:NULL;
+}
+
 void uefi_disk_io_protocol_to_lua(lua_State*L,EFI_DISK_IO_PROTOCOL*proto){
 	struct lua_uefi_disk_io_proto*e;
 	if(!proto){

@@ -155,6 +155,31 @@ extern void uefi_simple_text_input_protocol_to_lua(lua_State*L,EFI_SIMPLE_TEXT_I
 extern void uefi_simple_text_output_protocol_to_lua(lua_State*L,EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL*proto);
 extern void uefi_timestamp_protocol_to_lua(lua_State*L,EFI_TIMESTAMP_PROTOCOL*proto);
 
+extern EFI_ABSOLUTE_POINTER_PROTOCOL*uefi_lua_to_absolute_pointer_protocol(lua_State*L,int n);
+extern EFI_ACPI_TABLE_PROTOCOL*uefi_lua_to_acpi_table_protocol(lua_State*L,int n);
+extern EFI_BLOCK_IO_PROTOCOL*uefi_lua_to_block_io_protocol(lua_State*L,int n);
+extern EDKII_BOOT_LOGO2_PROTOCOL*uefi_lua_to_boot_logo2_protocol(lua_State*L,int n);
+extern EFI_BOOT_LOGO_PROTOCOL*uefi_lua_to_boot_logo_protocol(lua_State*L,int n);
+extern EFI_BOOT_MANAGER_POLICY_PROTOCOL*uefi_lua_to_boot_manager_policy_protocol(lua_State*L,int n);
+extern EFI_COMPONENT_NAME2_PROTOCOL*uefi_lua_to_component_name2_protocol(lua_State*L,int n);
+extern EFI_COMPONENT_NAME_PROTOCOL*uefi_lua_to_component_name_protocol(lua_State*L,int n);
+extern EFI_DEFERRED_IMAGE_LOAD_PROTOCOL*uefi_lua_to_deferred_image_load_protocol(lua_State*L,int n);
+extern EFI_DISK_INFO_PROTOCOL*uefi_lua_to_disk_info_protocol(lua_State*L,int n);
+extern EFI_DISK_IO_PROTOCOL*uefi_lua_to_disk_io_protocol(lua_State*L,int n);
+extern EFI_FILE_PROTOCOL*uefi_lua_to_file_protocol(lua_State*L,int n);
+extern EFI_GRAPHICS_OUTPUT_PROTOCOL*uefi_lua_to_graphics_output_protocol(lua_State*L,int n);
+extern EFI_LOADED_IMAGE_PROTOCOL*uefi_lua_to_loaded_image_protocol(lua_State*L,int n);
+extern EFI_PARTITION_INFO_PROTOCOL*uefi_lua_to_partition_info_protocol(lua_State*L,int n);
+extern EFI_RAM_DISK_PROTOCOL*uefi_lua_to_ramdisk_protocol(lua_State*L,int n);
+extern EFI_SECURITY2_ARCH_PROTOCOL*uefi_lua_to_security2_arch_protocol(lua_State*L,int n);
+extern EFI_SECURITY_ARCH_PROTOCOL*uefi_lua_to_security_arch_protocol(lua_State*L,int n);
+extern EFI_SERIAL_IO_PROTOCOL*uefi_lua_to_serial_io_protocol(lua_State*L,int n);
+extern EFI_SIMPLE_FILE_SYSTEM_PROTOCOL*uefi_lua_to_simple_file_system_protocol(lua_State*L,int n);
+extern EFI_SIMPLE_POINTER_PROTOCOL*uefi_lua_to_simple_pointer_protocol(lua_State*L,int n);
+extern EFI_SIMPLE_TEXT_INPUT_PROTOCOL*uefi_lua_to_simple_text_input_protocol(lua_State*L,int n);
+extern EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL*uefi_lua_to_simple_text_output_protocol(lua_State*L,int n);
+extern EFI_TIMESTAMP_PROTOCOL*uefi_lua_to_timestamp_protocol(lua_State*L,int n);
+
 extern bool lua_arg_get_guid(lua_State*L,int idx,bool nil,EFI_GUID*guid);
 extern void lua_arg_get_char16(lua_State*L,int idx,bool nil,CHAR16**data);
 extern void uefi_file_protocol_get_mode(lua_State*L,int n,UINT64*mode,BOOLEAN nil);

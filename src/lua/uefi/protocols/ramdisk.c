@@ -48,6 +48,11 @@ static int LuaUefiRamDiskProtocolUnregister(lua_State*L){
 	return 1;
 }
 
+EFI_RAM_DISK_PROTOCOL*uefi_lua_to_ramdisk_protocol(lua_State*L,int n){
+	OPT_PROTO(L,n,proto);
+	return proto?proto->proto:NULL;
+}
+
 void uefi_ramdisk_protocol_to_lua(lua_State*L,EFI_RAM_DISK_PROTOCOL*proto){
 	struct lua_uefi_ramdisk_proto*e;
 	if(!proto){

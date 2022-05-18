@@ -41,6 +41,11 @@ static int LuaUefiDeferredImageLoadProtocolGetImageInfo(lua_State*L){
 	return 4;
 }
 
+EFI_DEFERRED_IMAGE_LOAD_PROTOCOL*uefi_lua_to_deferred_image_load_protocol(lua_State*L,int n){
+	OPT_PROTO(L,n,proto);
+	return proto?proto->proto:NULL;
+}
+
 void uefi_deferred_image_load_protocol_to_lua(lua_State*L,EFI_DEFERRED_IMAGE_LOAD_PROTOCOL*proto){
 	struct lua_uefi_deferred_image_load_proto*e;
 	if(!proto){

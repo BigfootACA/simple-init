@@ -94,6 +94,11 @@ static int LuaUefiLoadedImageProtocolRevision(lua_State*L){
 	return 1;
 }
 
+EFI_LOADED_IMAGE_PROTOCOL*uefi_lua_to_loaded_image_protocol(lua_State*L,int n){
+	OPT_PROTO(L,n,proto);
+	return proto?proto->proto:NULL;
+}
+
 void uefi_loaded_image_protocol_to_lua(lua_State*L,EFI_LOADED_IMAGE_PROTOCOL*proto){
 	struct lua_uefi_loaded_image_proto*e;
 	if(!proto){

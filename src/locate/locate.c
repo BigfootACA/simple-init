@@ -264,11 +264,12 @@ static void dump_locate(locate_dest*loc){
 
 static locate_dest*init_locate_ret(locate_ret*ret,const char*file){
 	locate_dest*loc;
-	char buf[PATH_MAX],*tag=NULL,*path=NULL;
+	char*buf,*tag=NULL,*path=NULL;
 	if(!ret||!file||!*file)return NULL;
+	if(!(buf=AllocatePool(PATH_MAX)))return NULL;
 	ZeroMem(ret,sizeof(locate_ret));
-	ZeroMem(buf,sizeof(buf));
-	AsciiStrCpyS(buf,sizeof(buf)-1,file);
+	ZeroMem(buf,PATH_MAX);
+	AsciiStrCpyS(buf,PATH_MAX-1,file);
 	ret->type=LOCATE_FILE;
 	if(buf[0]=='@'){
 		tag=buf+1;
@@ -276,7 +277,6 @@ static locate_dest*init_locate_ret(locate_ret*ret,const char*file){
 		if(d)*d=0,path=d+1;
 	}else if(buf[0]=='#'){
 		tag=buf+1;
-		tlog_info("tag %s",tag);
 		ret->type=LOCATE_BLOCK;
 	}else path=buf,tag="default";
 	AsciiStrCpyS(
@@ -289,7 +289,10 @@ static locate_dest*init_locate_ret(locate_ret*ret,const char*file){
 		sizeof(ret->path)-1,
 		path
 	);
-	if(!(loc=get_locate(tag)))return NULL;
+	if(!(loc=get_locate(tag))){
+		FreePool(buf);
+		return NULL;
+	}
 	dump_locate(loc);
 	switch(ret->type){
 		case LOCATE_FILE:
@@ -303,6 +306,7 @@ static locate_dest*init_locate_ret(locate_ret*ret,const char*file){
 		default:;
 	}
 	ret->part=loc->part_proto;
+	FreePool(buf);
 	return loc;
 }
 

@@ -26,6 +26,7 @@
 #include"logger.h"
 #include"defines.h"
 #include"gui/guidrv.h"
+#include"gui/activity.h"
 
 static list*kbds;
 static void*event_reg=NULL;
@@ -67,6 +68,11 @@ static bool keyboard_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
 				case SCAN_RIGHT:data->key=LV_KEY_RIGHT;has_lr=true;break;
 				case SCAN_PAGE_DOWN:data->key=LV_KEY_DOWN;break;
 				case SCAN_SUSPEND:data->key=LV_KEY_ENTER;break;
+				case SCAN_ESC:
+					if(guiact_get_activities())
+						guiact_do_back();
+					data->key=0;
+				return true;
 			}else switch(p.ScanCode){
 				case SCAN_UP:
 				case SCAN_LEFT:
@@ -79,6 +85,11 @@ static bool keyboard_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
 				case SCAN_BRIGHTNESS_DOWN:
 				case SCAN_PAGE_DOWN:data->key=LV_KEY_NEXT;break;
 				case SCAN_SUSPEND:data->key=LV_KEY_ENTER;break;
+				case SCAN_ESC:
+					if(guiact_get_activities())
+						guiact_do_back();
+					data->key=0;
+				return true;
 			}
 		}else if(p.UnicodeChar!=0)switch(p.UnicodeChar){
 			case ' ':case '\n':case '\r':data->key=LV_KEY_ENTER;break;

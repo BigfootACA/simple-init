@@ -392,6 +392,38 @@ bool boot_locate_create_file(locate_ret*ret,const char*file){
 	);
 }
 
+bool boot_locate_content(const char*file,void**data,size_t*size){
+	UINTN s=0;
+	locate_ret*loc;
+	bool ret=false;
+	EFI_STATUS st=EFI_OUT_OF_RESOURCES;
+	if(!file||!data)return ret;
+	*data=NULL;
+	if(size)*size=0;
+	if(!(loc=AllocateZeroPool(sizeof(locate_ret))))return ret;
+	if(boot_locate(loc,file))switch(loc->type){
+		case LOCATE_BLOCK:{
+			EFI_BLOCK_IO_MEDIA*m=loc->block->Media;
+			s=(m->LastBlock-1)*m->BlockSize;
+			if((*data=AllocateZeroPool(s)))
+				st=loc->block->ReadBlocks(loc->block,m->MediaId,0,s,*data);
+		}break;
+		case LOCATE_FILE:{
+			st=efi_file_read_whole(loc->file,data,&s);
+			loc->file->Close(loc->file);
+		}break;
+		default:;
+	}
+	if(!EFI_ERROR(st))ret=true;
+	if(*data&&!ret){
+		FreePool(*data);
+		*data=NULL,s=0;
+	}
+	if(ret&&size)*size=s;
+	FreePool(loc);
+	return ret;
+}
+
 char*locate_find_name(char*buf,size_t len){
 	CHAR8 name[255];
 	ZeroMem(buf,len);

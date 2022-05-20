@@ -52,6 +52,9 @@ extern bool boot_locate_quiet(locate_ret*ret,const char*file);
 // src/locate/locate.c: parse path for locate file path and create
 extern bool boot_locate_create_file(locate_ret*ret,const char*file);
 
+// src/locate/locate.c: parse path and read file content
+extern bool boot_locate_content(const char*file,void**data,size_t*size);
+
 // src/locate/locate.c: find a available locate name
 extern char*locate_find_name(char*buf,size_t len);
 

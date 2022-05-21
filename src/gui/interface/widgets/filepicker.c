@@ -141,6 +141,7 @@ static void on_item_select(
 	struct filepicker*fp=fileview_get_data(fv);
 	if(!fp)return;
 	lv_obj_set_enabled(fp->ok,cnt>0&&(cnt<=fp->max||fp->max==0));
+	if(cnt==fp->max)lv_group_focus_obj(fp->ok);
 }
 
 static bool on_item_click(struct fileview*fv,char*item,enum item_type type){

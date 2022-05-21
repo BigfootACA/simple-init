@@ -203,19 +203,22 @@ static bool create_cb(uint16_t id,const char*text __attribute__((unused)),void*u
 
 static bool rename_cb(bool ok,const char*name,void*user_data __attribute__((unused))){
 	if(!ok||filetab_get_checked_count(active)!=1)return false;
-	char oldname[256]={0};
-	char oldpath[PATH_MAX]={0};
-	char newpath[PATH_MAX]={0};
+	char*buff=malloc(PATH_MAX*3);
+	if(!buff)return true;
+	memset(buff,0,PATH_MAX*3);
+	char*oldname=buff;
+	char*oldpath=oldname+PATH_MAX;
+	char*newpath=oldpath+PATH_MAX;
 	char*fp=filetab_get_lvgl_path(active);
 	char**sel=filetab_get_checked(active);
 	if(!sel||!sel[0]||sel[1]){
 		if(sel)free(sel);
 		msgbox_alert("File select invalid");
+		free(buff);
 		return true;
 	}
-	strncpy(oldname,sel[0],255);
-	free(sel);
-	snprintf(oldpath,PATH_MAX-1,"%s/%s",fp,oldname);
+	strncpy(oldname,sel[0],PATH_MAX-1);
+	snprintf(oldpath,PATH_MAX-1,"%s/%s",fp,sel[0]);
 	snprintf(newpath,PATH_MAX-1,"%s/%s",fp,name);
 	lv_res_t r=lv_fs_rename(oldpath,newpath);
 	filetab_set_path(active,NULL);
@@ -224,6 +227,8 @@ static bool rename_cb(bool ok,const char*name,void*user_data __attribute__((unus
 		oldname,name,
 		lv_fs_res_to_i18n_string(r)
 	);
+	free(buff);
+	free(sel);
 	return false;
 }
 

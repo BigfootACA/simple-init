@@ -8,15 +8,21 @@
 
 #ifdef ENABLE_GUI
 #ifdef ENABLE_UEFI
+#include<errno.h>
 #include<string.h>
 #include<stdlib.h>
 #include<stdbool.h>
+#include<Library/BaseLib.h>
+#include<Library/PrintLib.h>
 #include<Library/BaseMemoryLib.h>
+#include<Library/MemoryAllocationLib.h>
 #include<Library/UefiBootServicesTableLib.h>
 #include<Protocol/GraphicsOutput.h>
 #include"gui.h"
+#include"confd.h"
 #include"logger.h"
 #include"version.h"
+#include"compatible.h"
 #include"gui/guidrv.h"
 #define TAG "uefigop"
 
@@ -37,24 +43,85 @@ static void uefigop_flush(lv_disp_drv_t*disp_drv,const lv_area_t*area,lv_color_t
 	lv_disp_flush_ready(disp_drv);
 }
 
+static int uefigop_get_modes(int*cnt,struct display_mode**modes){
+	UINTN s;
+	EFI_STATUS st;
+	EFI_GRAPHICS_OUTPUT_MODE_INFORMATION*info;
+	if(!cnt||!modes)ERET(EINVAL);
+	if(!gop)ERET(ENODEV);
+	*cnt=gop->Mode->MaxMode;
+	if(*cnt<=0)return 0;
+	size_t size=(gop->Mode->MaxMode+1)*sizeof(struct display_mode);
+	if(!(*modes=malloc(size)))ERET(ENOMEM);
+	memset(*modes,0,size);
+	for(UINT32 i=0;i<*cnt;i++){
+		s=sizeof(EFI_GRAPHICS_OUTPUT_MODE_INFORMATION),info=NULL;
+		st=gop->QueryMode(gop,i,&s,&info);
+		if(EFI_ERROR(st)||!info)continue;
+		(*modes)[i].width=info->HorizontalResolution;
+		(*modes)[i].height=info->VerticalResolution;
+		AsciiSPrint(
+			(*modes)[i].name,
+			sizeof((*modes)[i].name),
+			"%dx%d",
+			info->HorizontalResolution,
+			info->VerticalResolution
+		);
+		FreePool(info);
+	}
+	return 0;
+}
+
+static void uefigop_apply_mode(){
+	UINTN s;
+	int cnt=0;
+	EFI_STATUS st;
+	char*name=NULL;
+	EFI_GRAPHICS_OUTPUT_MODE_INFORMATION*info;
+	struct display_mode*mode=NULL,*modes=NULL;
+	if(uefigop_get_modes(&cnt,&modes)!=0)
+		EDONE(telog_warn("get modes failed"));
+	if(!(name=confd_get_string("gui.mode",NULL)))goto done;
+	if(!modes||cnt<=0)
+		EDONE(tlog_warn("no any modes found"));
+	for(int i=0;i<cnt;i++)
+		if(AsciiStriCmp(name,modes[i].name)==0)
+			mode=&modes[i];
+	if(!mode)EDONE(tlog_warn("mode %s not found",name));
+	for(UINT32 i=0;i<gop->Mode->MaxMode;i++){
+		s=sizeof(EFI_GRAPHICS_OUTPUT_MODE_INFORMATION),info=NULL;
+		st=gop->QueryMode(gop,i,&s,&info);
+		if(EFI_ERROR(st)||!info)continue;
+		if(
+			info->VerticalResolution==mode->height&&
+			info->HorizontalResolution==mode->width
+		){
+			st=gop->SetMode(gop,i);
+			if(!EFI_ERROR(st))tlog_info("set mode to %s",name);
+			else tlog_warn("set mode failed: %s",efi_status_to_string(st));
+		}
+		FreePool(info);
+	}
+	done:
+	if(name)free(name);
+	if(modes)free(modes);
+}
+
 static int uefigop_init(){
+	EFI_STATUS st;
 	if(!gBS)return -1;
-	if(EFI_ERROR(gBS->LocateProtocol(
+	st=gBS->LocateProtocol(
 		&gEfiGraphicsOutputProtocolGuid,
 		NULL,
 		(VOID**)&gop
-	))||!gop)return -1;
-	EFI_GRAPHICS_OUTPUT_PROTOCOL_MODE*mode=gop->Mode;
-	if(!mode)
-		return trlog_error(-1,"cannot get uefi graphics mode");
-	EFI_GRAPHICS_OUTPUT_MODE_INFORMATION*info=mode->Info;
-	if(!info)
-		return trlog_error(-1,"cannot get uefi graphics mode info");
-	ww=info->HorizontalResolution;
-	hh=info->VerticalResolution;
+	);
+	if(EFI_ERROR(st)||!gop)return -1;
+	uefigop_apply_mode();
+	ww=gop->Mode->Info->HorizontalResolution;
+	hh=gop->Mode->Info->VerticalResolution;
 	if(ww<=0||hh<=0)
 		return trlog_error(-1,"invalid uefi graphics mode");
-	tlog_debug("uefigop resolution %dx%d",ww,hh);
+	tlog_debug("use uefigop resolution %dx%d",ww,hh);
 	return 0;
 }
 
@@ -118,7 +185,8 @@ struct gui_driver guidrv_uefigop={
 	.drv_register=uefigop_register,
 	.drv_getsize=uefigop_get_sizes,
 	.drv_cansleep=uefigop_can_sleep,
-	.drv_exit=uefigop_exit
+	.drv_get_modes=uefigop_get_modes,
+	.drv_exit=uefigop_exit,
 };
 #endif
 #endif

@@ -316,6 +316,7 @@ static void bootmenu_add(struct bootmenu*bm,char*c){
 			if(strcmp(bm->def,bi->cfg.ident)!=0)break;
 			lv_obj_set_enabled(bm->btn,true);
 			lv_obj_set_checked(bi->btn,true);
+			lv_group_focus_obj(bi->img);
 			bi->bm->selected=bi;
 		break;
 	}

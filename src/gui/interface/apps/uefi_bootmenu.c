@@ -46,6 +46,7 @@ static void option_click(lv_obj_t*obj,lv_event_t e){
 	if(!selected)return;
 	lv_obj_set_checked(selected->btn,true);
 	lv_obj_set_enabled(btn_ok,true);
+	lv_group_focus_obj(btn_ok);
 	tlog_debug("selected option %s",selected->name);
 }
 

@@ -16,6 +16,7 @@
 #include<Library/BaseMemoryLib.h>
 #include<Library/DevicePathLib.h>
 #include<Library/UefiBootServicesTableLib.h>
+#include<Library/MemoryAllocationLib.h>
 #include<Protocol/DevicePath.h>
 #include<Protocol/LoadedImage.h>
 #include"gui.h"
@@ -31,21 +32,26 @@
 
 static bool auto_cb(uint16_t id,const char*btn __attribute__((unused)),void*user_data){
 	EFI_DEVICE_PATH_PROTOCOL*dp;
-	char path[PATH_MAX],buff[PATH_MAX],loc[256],drv[256];
+	char*buffer=AllocateZeroPool(PATH_MAX*4);
+	if(!buffer)return true;
+	char*path=buffer;
+	char*buff=path+PATH_MAX;
+	char*loc=buff+PATH_MAX;
+	char*drv=loc+PATH_MAX;
 	char*p=user_data,*cp=path;
 	int did=0;
 	if(id==0){
 		if(!p||p[1]!=':'||(p[2]!='/'&&p[2]!='\\'))return true;
 		if(!(dp=fs_drv_get_device_path(p[0])))return true;
-		if(!locate_auto_add_by_device_path(loc,sizeof(loc),dp))return true;
-		ZeroMem(path,sizeof(path));
-		AsciiStrCpyS(path,sizeof(path),p);
+		if(!locate_auto_add_by_device_path(loc,PATH_MAX,dp))return true;
+		ZeroMem(path,PATH_MAX);
+		AsciiStrCpyS(path,PATH_MAX,p);
 		do{if(*cp=='/')*cp='\\';}while(*cp++);
-		ZeroMem(buff,sizeof(buff));
-		AsciiSPrint(buff,sizeof(buff),"@%a:%a",loc,p+2);
+		ZeroMem(buff,PATH_MAX);
+		AsciiSPrint(buff,PATH_MAX,"@%a:%a",loc,p+2);
 		do{
-			ZeroMem(drv,sizeof(drv));
-			AsciiSPrint(drv,sizeof(drv),"driver-%d",did);
+			ZeroMem(drv,PATH_MAX);
+			AsciiSPrint(drv,PATH_MAX,"driver-%d",did);
 			did++;
 		}while(confd_get_type_base("uefi.drivers",drv)==TYPE_STRING);
 		confd_set_string_base("uefi.drivers",drv,buff);

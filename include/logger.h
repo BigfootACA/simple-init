@@ -28,9 +28,9 @@ enum log_level{
 
 // log item
 struct log_item{
-	enum log_level level;
 	time_t time;
 	pid_t pid;
+	enum log_level level;
 	char tag[64];
 	char content[16384-
 		64-

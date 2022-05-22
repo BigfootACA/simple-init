@@ -317,9 +317,9 @@ int logger_write(struct log_item*log){
 	errno=msg.data.code;
 	return xs;
 	#else
-	char buff[16384];
-	ZeroMem(buff,sizeof(buff));
-	AsciiSPrint(buff,sizeof(buff),"%a: %a",log->tag,log->content);
+	char*buff=AllocateZeroPool(16384);
+	if(!buff)ERET(ENOMEM);
+	AsciiSPrint(buff,16384,"%a: %a",log->tag,log->content);
 	DebugPrint(EFI_D_INFO,"%a",buff);
 	DebugPrint(EFI_D_INFO,"\n");
 	if(console_output){
@@ -334,26 +334,33 @@ int logger_write(struct log_item*log){
 int logger_print(enum log_level level,char*tag,char*content){
 	if(!tag||!content)ERET(EINVAL);
 	if(level<logger_level)return 0;
-	struct log_item log;
-	memset(&log,0,sizeof(struct log_item));
-	log.level=level;
-	strncpy(log.tag,tag,sizeof(log.tag)-1);
-	strncpy(log.content,content,sizeof(log.content)-1);
-	time(&log.time);
+	struct log_item*log=malloc(sizeof(struct log_item));
+	if(!log)ERET(ENOMEM);
+	memset(log,0,sizeof(struct log_item));
+	log->level=level;
+	strncpy(log->tag,tag,sizeof(log->tag)-1);
+	strncpy(log->content,content,sizeof(log->content)-1);
+	time(&log->time);
 	#ifndef ENABLE_UEFI
-	log.pid=getpid();
+	log->pid=getpid();
 	#endif
-	logger_internal_buffer_push(&log);
-	return logger_write(&log);
+	logger_internal_buffer_push(log);
+	int r=logger_write(log);
+	free(log);
+	return r;
 }
 
 static int logger_printf_x(enum log_level level,char*tag,const char*fmt,va_list ap){
 	if(!tag||!fmt)ERET(EINVAL);
 	if(level<logger_level)return 0;
-	char content[16384];
-	memset(content,0,sizeof(content));
-	if(!vsnprintf(content,sizeof(content)-1,fmt,ap))return -errno;
-	return logger_print(level,tag,content);
+	size_t s=16384;
+	char*content=malloc(s);
+	if(!content)ERET(ENOMEM);
+	memset(content,0,s);
+	if(!vsnprintf(content,s-1,fmt,ap))return -errno;
+	int r=logger_print(level,tag,content);
+	free(content);
+	return r;
 }
 
 static int logger_perror_x(enum log_level level,char*tag,const char*fmt,va_list ap){

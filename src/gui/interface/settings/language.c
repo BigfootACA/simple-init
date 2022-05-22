@@ -19,6 +19,7 @@
 #define TAG "language"
 
 struct language_menu{
+	struct gui_activity*act;
 	lv_obj_t*box,*txt,*sel;
 	lv_obj_t*arr_left,*btn_ok,*arr_right;
 };
@@ -27,13 +28,12 @@ static void ok_action(lv_obj_t*obj,lv_event_t e){
 	if(e==LV_EVENT_DELETE)return;
 	struct language_menu*m=lv_obj_get_user_data(obj);
 	if(!m||obj!=m->btn_ok||e!=LV_EVENT_CLICKED)return;
-	struct gui_activity*act=lv_obj_get_user_data(obj);
 	uint16_t i=lv_dropdown_get_selected(m->sel);
 	if(!languages[i].lang)return;
 	const char*lang=lang_concat(&languages[i],true,true);
 	tlog_debug("set language to %s",lang);
 	lang_set(lang);
-	act->data_changed=true;
+	m->act->data_changed=true;
 	#ifndef ENABLE_UEFI
 	struct init_msg msg,response;
 	init_initialize_msg(&msg,ACTION_LANGUAGE);
@@ -121,7 +121,7 @@ static int language_init(struct gui_activity*act){
 	struct language_menu*m=malloc(sizeof(struct language_menu));
 	if(!m)ERET(ENOMEM);
 	memset(m,0,sizeof(struct language_menu));
-	act->data=m;
+	act->data=m,m->act=act;
 	return 0;
 }
 
@@ -151,15 +151,17 @@ static int language_menu_draw(struct gui_activity*act){
 	m->btn_ok=lv_btn_create(m->box,NULL);
 	lv_style_set_action_button(m->btn_ok,true);
 	lv_obj_set_event_cb(m->btn_ok,ok_action);
-	lv_obj_set_user_data(m->btn_ok,act);
+	lv_obj_set_user_data(m->btn_ok,m);
 	lv_label_set_text(lv_label_create(m->btn_ok,NULL),_("OK"));
 
 	m->arr_left=lv_btn_create(m->box,NULL);
+	lv_obj_set_user_data(m->arr_left,m);
 	lv_obj_set_event_cb(m->arr_left,arrow_action);
 	lv_style_set_action_button(m->arr_left,true);
 	lv_label_set_text(lv_label_create(m->arr_left,NULL),LV_SYMBOL_LEFT);
 
 	m->arr_right=lv_btn_create(m->box,NULL);
+	lv_obj_set_user_data(m->arr_right,m);
 	lv_obj_set_event_cb(m->arr_right,arrow_action);
 	lv_style_set_action_button(m->arr_right,true);
 	lv_label_set_text(lv_label_create(m->arr_right,NULL),LV_SYMBOL_RIGHT);

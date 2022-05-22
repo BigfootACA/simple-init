@@ -10,8 +10,10 @@
 #include<string.h>
 #include<stdlib.h>
 #ifdef ENABLE_UEFI
+#include<Library/BaseLib.h>
 #include<Library/PrintLib.h>
 #include<Library/BaseMemoryLib.h>
+#include<Library/MemoryAllocationLib.h>
 #endif
 #include"list.h"
 #include"logger_internal.h"
@@ -111,7 +113,8 @@ void clean_log_buffers(){
 #ifdef ENABLE_UEFI
 void flush_buffer(){
 	if(!logbuffer)return;
-	char str[16384];
+	char*str=NULL;
+	UINTN len=0,xz=0;
 	list*head,*cur,*next;
 	struct log_buff*buff;
 	if(!(head=list_first(logbuffer)))return;
@@ -119,10 +122,16 @@ void flush_buffer(){
 	do{
 		next=cur->next;
 		if(!(buff=LIST_DATA(cur,struct log_buff*)))continue;
-		ZeroMem(str,sizeof(str));
-		AsciiSPrint(str,sizeof(str),"%a: %a",buff->tag,buff->content);
+		xz=AsciiStrLen(buff->tag)+AsciiStrLen(buff->content)+8;
+		if(len<xz||!str){
+			if(str)FreePool(str);
+			if(!(str=AllocateZeroPool(xz)))return;
+			len=xz;
+		}
+		AsciiSPrint(str,xz,"%a: %a",buff->tag,buff->content);
 		logger_out_write(str);
 	}while((cur=next));
+	if(str)FreePool(str);
 }
 #else
 void flush_buffer(struct logger*log){

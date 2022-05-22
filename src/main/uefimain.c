@@ -36,6 +36,8 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ih,IN EFI_SYSTEM_TABLE*st){
 	DEBUG((EFI_D_INFO,"Initialize SimpleInit GUI...\n"));
 
 	tlog_notice("initialize simple-init");
+	tlog_debug("simple init main arguments: %p %p",ih,st);
+	tlog_debug("simple init main entry point at %p",&UefiMain);
 	logger_set_console(PcdGetBool(PcdLoggerdUseConsole));
 	confd_init();
 	logger_init();

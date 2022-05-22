@@ -1,4 +1,5 @@
 #include <Library/DebugLib.h>
+#include <Library/MemoryAllocationLib.h>
 #include "ctype.h"
 #include "stdio.h"
 #include "errno.h"
@@ -48,24 +49,26 @@ weak_decl size_t fwrite(const void *restrict ptr, size_t size, size_t nmemb,FILE
 	return logger_print(level,tag,buf);
 }
 weak_decl int fprintf(FILE*stream,const char*format,...){
-	char content[16384];
-	if(!format||!stream)return -1;
-	memset(content,0,sizeof(content));
+	char*content=AllocateZeroPool(16384);
+	if(!content||!format||!stream)return -1;
 	va_list ap;
 	va_start(ap,format);
-	if(!vsnprintf(content,sizeof(content)-1,format,ap))return -errno;
+	if(!vsnprintf(content,16383,format,ap))return -errno;
 	va_end(ap);
-	return fwrite(content,strlen(content),sizeof(char),stream);
+	int r=fwrite(content,strlen(content),sizeof(char),stream);;
+	FreePool(content);
+	return r;
 }
 weak_decl int printf(const char*format,...){
-	char content[16384];
-	if(!format)return -1;
-	memset(content,0,sizeof(content));
+	char*content=AllocateZeroPool(16384);
+	if(!content||!format)return -1;
 	va_list ap;
 	va_start(ap,format);
-	if(!vsnprintf(content,sizeof(content)-1,format,ap))return -1;
+	if(!vsnprintf(content,16383,format,ap))return -1;
 	va_end(ap);
-	return logger_print(LEVEL_INFO,"stdout",content);
+	int r=logger_print(LEVEL_INFO,"stdout",content);
+	FreePool(content);
+	return r;
 }
 weak_decl int feof(FILE *stream){
 	errno=ENOSYS;

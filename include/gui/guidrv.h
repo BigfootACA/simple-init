@@ -11,6 +11,13 @@
 #include<stdint.h>
 #include<stdbool.h>
 #include"gui.h"
+
+struct display_mode{
+	char name[24];
+	uint32_t width;
+	uint32_t height;
+};
+
 struct gui_driver{
 	char name[32];
 	int(*drv_register)(void);
@@ -22,6 +29,7 @@ struct gui_driver{
 	void(*drv_setbrightness)(int);
 	int(*drv_getbrightness)(void);
 	bool(*drv_cansleep)(void);
+	int(*drv_get_modes)(int*,struct display_mode**);
 };
 
 struct input_driver{
@@ -74,6 +82,9 @@ extern int guidrv_get_brightness(void);
 
 // src/gui/guidrv.c: get gui driver is screen suspendable
 extern bool guidrv_can_sleep(void);
+
+// src/gui/guidrv.c: get gui driver display modes
+extern int guidrv_get_modes(int*cnt,struct display_mode**modes);
 
 // src/gui/guidrv.c: try init all drivers and return screen width height dpi
 extern int guidrv_init(lv_coord_t*w,lv_coord_t*h,int*dpi);

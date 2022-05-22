@@ -113,6 +113,14 @@ bool guidrv_can_sleep(){
 	return drv->drv_cansleep();
 }
 
+int guidrv_get_modes(int*cnt,struct display_mode**modes){
+	errno=0;
+	if(!cnt||!modes)ERET(EINVAL);
+	else if(!drv)ERET(ENOENT);
+	else if(!drv->drv_get_modes)ERET(ENOSYS);
+	else return drv->drv_get_modes(cnt,modes);
+}
+
 int guidrv_register(){
 	errno=0;
 	if(!drv)ERET(ENOENT);

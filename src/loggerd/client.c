@@ -289,10 +289,24 @@ void logger_init(){
 		"logger.use_console",
 		console_output
 	);
-	logger_level=confd_get_integer(
-		"logger.min_level",
-		logger_level
-	);
+	switch((int)confd_get_type("logger.min_level")){
+		case -1:break;
+		case TYPE_INTEGER:logger_level=confd_get_integer(
+			"logger.min_level",
+			logger_level
+		);break;
+		case TYPE_STRING:{
+			char*k=confd_get_string("logger.min_level",NULL);
+			if(k){
+				enum log_level level;
+				level=logger_parse_level((char*)k);
+				if(level!=0)logger_level=level;
+				else tlog_warn("unknown log level %s",k);
+				free(k);
+			}
+		}break;
+		default:tlog_warn("unknown type for min_level");
+	}
 }
 
 void logger_out_write(char*buff){

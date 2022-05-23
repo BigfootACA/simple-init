@@ -18,7 +18,7 @@ struct msgbox{
 	const char**buttons;
 	msgbox_callback callback;
 	uint16_t btn_cnt;
-	lv_obj_t*box;
+	lv_obj_t*page,*box;
 	lv_obj_t*label;
 	lv_obj_t*btn[64];
 	void*btn_data_p;
@@ -65,13 +65,15 @@ static int msgbox_resize(struct gui_activity*act){
 	static bool style_init=false;
 	static lv_style_t style;
 	if(!style_init)lv_style_init(&style);
+	lv_obj_set_width(box->page,xw);
+	xw=lv_page_get_scrl_width(box->page);
 	lv_obj_set_width(box->box,xw);
-	lv_obj_set_width(box->label,lv_page_get_scrl_width(box->box));
+	lv_obj_set_width(box->label,xw);
 	box_h+=lv_obj_get_height(box->label);
 	if(box->btn_cnt>0){
 		lv_coord_t
 			btn_m=gui_font_size/2,
-			btn_w=lv_page_get_scrl_width(box->box)-(gui_dpi/16),
+			btn_w=lv_obj_get_width(box->box)-(gui_dpi/16),
 			btn_h=gui_font_size+(gui_dpi/8);
 		box_h+=btn_m;
 		lv_style_set_margin_bottom(&style,LV_STATE_DEFAULT,btn_m);
@@ -92,9 +94,12 @@ static int msgbox_resize(struct gui_activity*act){
 			box_h+=btn_h+btn_m;
 		}
 	}
-	box_h+=gui_dpi/3;
-	lv_obj_set_height(box->box,MIN(box_h,xh));
-	lv_obj_align(box->box,NULL,LV_ALIGN_CENTER,0,0);
+	box_h+=gui_font_size/2;
+	lv_obj_set_height(box->box,box_h);
+	box_h+=lv_obj_get_style_pad_top(box->page,LV_PAGE_PART_BG);
+	box_h+=lv_obj_get_style_pad_bottom(box->page,LV_PAGE_PART_BG);
+	lv_obj_set_height(box->page,MIN(box_h,xh));
+	lv_obj_align(box->page,NULL,LV_ALIGN_CENTER,0,0);
 	return 0;
 }
 
@@ -105,10 +110,12 @@ static int msgbox_draw(struct gui_activity*act){
 	if(box->btn_cnt>64)return 3;
 	box->act=act;
 
-	box->box=lv_page_create(act->page,NULL);
+	box->page=lv_page_create(act->page,NULL);
+	lv_obj_set_click(box->page,false);
+
+	box->box=lv_obj_create(box->page,NULL);
+	lv_obj_set_click(box->box,false);
 	lv_obj_set_style_local_border_width(box->box,LV_PAGE_PART_BG,LV_STATE_DEFAULT,0);
-	lv_obj_set_style_local_border_width(box->box,LV_PAGE_PART_BG,LV_STATE_PRESSED,0);
-	lv_obj_set_style_local_border_width(box->box,LV_PAGE_PART_BG,LV_STATE_FOCUSED,0);
 
 	box->label=lv_label_create(box->box,NULL);
 	lv_label_set_align(box->label,LV_LABEL_ALIGN_CENTER);

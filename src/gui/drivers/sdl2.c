@@ -5,20 +5,20 @@
 #include<stdbool.h>
 #include<SDL.h>
 #include"gui.h"
+#include"confd.h"
 #include"logger.h"
 #include"version.h"
 #include"gui/guidrv.h"
 #define TAG "sdl2"
 #define SDL2_Z 1
-#define SDL2_W 540
-#define SDL2_H 960
 typedef struct{
 	SDL_Window*window;
 	SDL_Renderer*renderer;
 	SDL_Texture*texture;
 	volatile bool sdl_refr_qry;
-	uint32_t tft_fb[SDL2_W*SDL2_H];
+	uint32_t*tft_fb;
 }monitor_t;
+static uint32_t ww=540,hh=960;
 static monitor_t monitor;
 static volatile bool sdl_inited=false,sdl_quit_qry=false;
 static bool left_button_down=false;
@@ -72,7 +72,7 @@ static bool keyboard_read(lv_indev_drv_t*indev_drv __attribute__((unused)),lv_in
 	return false;
 }
 static void window_update(){
-	SDL_UpdateTexture(monitor.texture,NULL,monitor.tft_fb,SDL2_W*sizeof(uint32_t));
+	SDL_UpdateTexture(monitor.texture,NULL,monitor.tft_fb,ww*sizeof(uint32_t));
 	SDL_RenderClear(monitor.renderer);
 	SDL_RenderCopy(monitor.renderer,monitor.texture,NULL,NULL);
 	SDL_RenderPresent(monitor.renderer);
@@ -123,8 +123,8 @@ void sdl_event_handler(lv_task_t*t __attribute__((unused))){
 		case SDL_FINGERUP:
 		case SDL_FINGERDOWN:left_button_down=e.type==SDL_FINGERDOWN;//FALLTHROUGH
 		case SDL_FINGERMOTION:
-			last_x=SDL2_W*e.tfinger.x/SDL2_Z;
-			last_y=SDL2_H*e.tfinger.y/SDL2_Z;
+			last_x=ww*e.tfinger.x/SDL2_Z;
+			last_y=hh*e.tfinger.y/SDL2_Z;
 		break;
 		case SDL_MOUSEWHEEL:enc_diff=-e.wheel.y;break;
 		case SDL_KEYDOWN:kbd_state=LV_INDEV_STATE_PR,last_key=e.key.keysym.sym;break;
@@ -157,16 +157,39 @@ static int quit_filter(void*userdata __attribute__((unused)),SDL_Event*e){
 	)sdl_quit_qry=true;
 	return 1;
 }
+static void sdl_apply_mode(){
+	int cnt=0;
+	char*name=NULL;
+	struct display_mode*mode=NULL;
+	for(cnt=0;builtin_modes[cnt].name[0];cnt++);
+	name=confd_get_string("gui.mode",NULL);
+	if(!name){
+		char*n=getenv("GUIMODE");
+		if(n)name=strdup(n);
+	}
+	if(!name)goto done;
+	if(cnt<=0)EDONE(tlog_warn("no any modes found"));
+	for(int i=0;i<cnt;i++)
+		if(strcasecmp(name,builtin_modes[i].name)==0)
+			mode=&builtin_modes[i];
+	if(!mode)EDONE(tlog_warn("mode %s not found",name));
+	tlog_info("set mode to %s",name);
+	ww=mode->width;
+	hh=mode->height;
+	done:
+	if(name)free(name);
+}
 static int monitor_init(){
 	if(!getenv("DISPLAY")&&!getenv("WAYLAND_DISPLAY"))return -1;
+	sdl_apply_mode();
 	SDL_Init(SDL_INIT_VIDEO);
 	SDL_SetEventFilter(quit_filter,NULL);
 	monitor.window=SDL_CreateWindow(
 		PRODUCT,
 		SDL_WINDOWPOS_UNDEFINED,
 		SDL_WINDOWPOS_UNDEFINED,
-		SDL2_W*SDL2_Z,
-		SDL2_H*SDL2_Z,0
+		ww*SDL2_Z,
+		hh*SDL2_Z,0
 	);
 	monitor.renderer=SDL_CreateRenderer(
 		monitor.window,-1,
@@ -176,24 +199,24 @@ static int monitor_init(){
 		monitor.renderer,
 		SDL_PIXELFORMAT_ARGB8888,
 		SDL_TEXTUREACCESS_STATIC,
-		SDL2_W,SDL2_H
+		ww,hh
 	);
 	SDL_SetTextureBlendMode(
 		monitor.texture,
 		SDL_BLENDMODE_BLEND
 	);
-	memset(monitor.tft_fb,0x44,SDL2_W*SDL2_H*sizeof(uint32_t));
+	if(!(monitor.tft_fb=malloc(ww*hh*sizeof(uint32_t))))
+		return terlog_error(-1,"malloc framebuffer failed");
+	memset(monitor.tft_fb,0x44,ww*hh*sizeof(uint32_t));
 	monitor.sdl_refr_qry=true,sdl_inited=true;
 	lv_task_create(sdl_event_handler,10,LV_TASK_PRIO_HIGH,NULL);
 
 	// Display buffers
-	static size_t s=SDL2_H*SDL2_W;
-	static lv_color_t*buf=NULL;
+	size_t s=ww*hh;
+	lv_color_t*buf=NULL;
 	static lv_disp_buf_t disp_buf;
-	if(!(buf=malloc(s*sizeof(lv_color_t)))){
-		telog_error("malloc display buffer");
-		return -1;
-	}
+	if(!(buf=malloc(s*sizeof(lv_color_t))))
+		return terlog_error(-1,"malloc display buffer failed");
 	memset(buf,0,s);
 	lv_disp_buf_init(&disp_buf,buf,NULL,s);
 
@@ -202,8 +225,8 @@ static int monitor_init(){
 	lv_disp_drv_init(&disp_drv);
 	disp_drv.buffer=&disp_buf;
 	disp_drv.flush_cb=sdl2_flush;
-	disp_drv.hor_res=SDL2_W;
-	disp_drv.ver_res=SDL2_H;
+	disp_drv.hor_res=ww;
+	disp_drv.ver_res=hh;
 	switch(gui_rotate){
 		case 0:break;
 		case 90:disp_drv.sw_rotate=1,disp_drv.rotated=LV_DISP_ROT_90;break;
@@ -248,8 +271,8 @@ static int whl_init(){
 static void sdl2_get_sizes(lv_coord_t*width,lv_coord_t*height){
 	lv_coord_t w=0,h=0;
 	switch(gui_rotate){
-		case 0:case 180:w=SDL2_W,h=SDL2_H;break;
-		case 90:case 270:w=SDL2_H,h=SDL2_W;break;
+		case 0:case 180:w=ww,h=hh;break;
+		case 90:case 270:w=hh,h=ww;break;
 	}
 	if(width)*width=w;
 	if(height)*height=h;
@@ -259,6 +282,15 @@ static void sdl2_get_dpi(int*dpi){
 }
 static bool sdl2_can_sleep(){
 	return false;
+}
+static int sdl2_get_modes(int*cnt,struct display_mode**modes){
+	if(!cnt||!modes)ERET(EINVAL);
+	for(*cnt=0;builtin_modes[*cnt].name[0];(*cnt)++);
+	if(*cnt<=0)return 0;
+	size_t size=((*cnt)+1)*sizeof(struct display_mode);
+	if(!(*modes=malloc(size)))ERET(ENOMEM);
+	memcpy(*modes,builtin_modes,size);
+	return 0;
 }
 #ifdef SDL2_VIRTUAL_BACKLIGHT
 static int sdl2_vbl=50;
@@ -300,6 +332,7 @@ struct gui_driver guidrv_sdl2={
 	.drv_getsize=sdl2_get_sizes,
 	.drv_getdpi=sdl2_get_dpi,
 	.drv_cansleep=sdl2_can_sleep,
+	.drv_get_modes=sdl2_get_modes,
 	#ifdef SDL2_VIRTUAL_BACKLIGHT
 	.drv_getbrightness=sdl2_get_brightness,
 	.drv_setbrightness=sdl2_set_brightness,

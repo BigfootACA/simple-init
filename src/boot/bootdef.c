@@ -236,6 +236,7 @@ static void load_uefi_boot(){
 			bo[i].OptionNumber
 		);
 	}
+	confd_set_boolean("boot.configs.uefi-bootmenu.show",true);
 	done:
 	if(opt)FreePool(opt);
 	if(def)FreePool(def);

@@ -13,14 +13,12 @@
 #include<rfb/rfb.h>
 #include<rfb/keysym.h>
 #include"gui.h"
+#include"confd.h"
 #include"logger.h"
 #include"version.h"
 #include"gui/guidrv.h"
 #define TAG "vnc"
-#define WIDTH  540
-#define HEIGHT 960
 #define DPI    200
-#define PORT   5900
 
 static rfbScreenInfoPtr server=NULL;
 static uint32_t*fb=NULL;
@@ -29,6 +27,7 @@ static int ptr_x=0,ptr_y=0;
 static lv_indev_state_t kbd_state=LV_INDEV_STATE_REL;
 static lv_indev_state_t ptr_state=LV_INDEV_STATE_REL;
 static lv_indev_t*kbd_dev,*ptr_dev;
+static uint32_t ww=540,hh=960;
 
 static inline uint32_t swap(uint32_t x){
 	return
@@ -41,7 +40,7 @@ static inline uint32_t swap(uint32_t x){
 static void fbdev_flush(lv_disp_drv_t*drv,const lv_area_t*area,lv_color_t*color_p){
 	for(int32_t y=area->y1;y<=area->y2;y++)
 		for(int32_t x=area->x1;x<=area->x2;x++)
-			fb[y*WIDTH+x]=swap(*(uint32_t*)(color_p++));
+			fb[y*ww+x]=swap(*(uint32_t*)(color_p++));
 	rfbMarkRectAsModified(server,area->x1,area->y1,area->x2+1,area->y2+1);
 	lv_disp_flush_ready(drv);
 }
@@ -104,6 +103,29 @@ static void vnc_log_warn(const char*text,...){
 	logger_print(LEVEL_WARNING,TAG,buff);
 }
 
+static void vnc_apply_mode(){
+	int cnt=0;
+	char*name=NULL;
+	struct display_mode*mode=NULL;
+	for(cnt=0;builtin_modes[cnt].name[0];cnt++);
+	name=confd_get_string("gui.mode",NULL);
+	if(!name){
+		char*n=getenv("GUIMODE");
+		if(n)name=strdup(n);
+	}
+	if(!name)goto done;
+	if(cnt<=0)EDONE(tlog_warn("no any modes found"));
+	for(int i=0;i<cnt;i++)
+		if(strcasecmp(name,builtin_modes[i].name)==0)
+			mode=&builtin_modes[i];
+	if(!mode)EDONE(tlog_warn("mode %s not found",name));
+	tlog_info("set mode to %s",name);
+	ww=mode->width;
+	hh=mode->height;
+	done:
+	if(name)free(name);
+}
+
 static int vnc_register(){
 	static lv_color_t buf[846000];
 	static lv_disp_buf_t disp_buf;
@@ -111,8 +133,9 @@ static int vnc_register(){
 	lv_disp_buf_init(&disp_buf,buf,NULL,846000);
 	lv_disp_drv_init(&disp_drv);
 	size_t bpp=sizeof(*fb);
-	if(!(fb=malloc(WIDTH*HEIGHT*bpp)))return -1;
-	if(!(server=rfbGetScreen(0,NULL,WIDTH,HEIGHT,8,3,bpp))){
+	vnc_apply_mode();
+	if(!(fb=malloc(ww*hh*bpp)))return -1;
+	if(!(server=rfbGetScreen(0,NULL,ww,hh,8,3,bpp))){
 		free(fb);
 		return -1;
 	}
@@ -121,14 +144,14 @@ static int vnc_register(){
 	server->frameBuffer=(void*)fb;
 	server->alwaysShared=true;
 	server->httpDir=NULL;
-	server->port=PORT;
+	server->port=confd_get_integer("gui.vnc_port",5900);
 	server->kbdAddEvent=vnc_key;
 	server->ptrAddEvent=vnc_ptr;
 	rfbLog=vnc_log_normal;
 	rfbErr=vnc_log_warn;
 
-	disp_drv.hor_res=WIDTH;
-	disp_drv.ver_res=HEIGHT;
+	disp_drv.hor_res=ww;
+	disp_drv.ver_res=hh;
 	disp_drv.buffer=&disp_buf;
 	disp_drv.flush_cb=fbdev_flush;
 	switch(gui_rotate){
@@ -140,7 +163,7 @@ static int vnc_register(){
 
 	lv_disp_drv_register(&disp_drv);
 
-	tlog_notice("screen resolution: %dx%d",WIDTH,HEIGHT);
+	tlog_notice("screen resolution: %dx%d",ww,hh);
 	rfbInitServer(server);
 	rfbRunEventLoop(server,-1,1);
 
@@ -165,8 +188,8 @@ static int vnc_input_init(){
 static void vnc_get_sizes(lv_coord_t*width,lv_coord_t*height){
 	lv_coord_t w=0,h=0;
 	switch(gui_rotate){
-		case 0:case 180:w=WIDTH,h=HEIGHT;break;
-		case 90:case 270:w=HEIGHT,h=WIDTH;break;
+		case 0:case 180:w=ww,h=hh;break;
+		case 90:case 270:w=hh,h=ww;break;
 	}
 	if(width)*width=w;
 	if(height)*height=h;
@@ -174,6 +197,16 @@ static void vnc_get_sizes(lv_coord_t*width,lv_coord_t*height){
 
 static bool vnc_cansleep(){
 	return false;
+}
+
+static int vnc_get_modes(int*cnt,struct display_mode**modes){
+	if(!cnt||!modes)ERET(EINVAL);
+	for(*cnt=0;builtin_modes[*cnt].name[0];(*cnt)++);
+	if(*cnt<=0)return 0;
+	size_t size=((*cnt)+1)*sizeof(struct display_mode);
+	if(!(*modes=malloc(size)))ERET(ENOMEM);
+	memcpy(*modes,builtin_modes,size);
+	return 0;
 }
 
 static void vnc_exit(){
@@ -195,7 +228,8 @@ struct gui_driver guidrv_vnc={
 	.name="vnc",
 	.drv_register=vnc_register,
 	.drv_getsize=vnc_get_sizes,
-	.drv_cansleep=&vnc_cansleep,
+	.drv_cansleep=vnc_cansleep,
+	.drv_get_modes=vnc_get_modes,
 	.drv_exit=vnc_exit,
 };
 #endif

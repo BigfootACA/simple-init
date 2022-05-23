@@ -16,6 +16,7 @@
 #include"defines.h"
 #include"system.h"
 #include"logger.h"
+#include"str.h"
 #define TAG "modalias"
 
 static int scan_modalias(int dir);
@@ -36,7 +37,11 @@ static int scan_modalias_file(int dir,char*name){
 	char buff[PATH_MAX]={0};
 	if(strcmp(name,"modalias")!=0)return 0;
 	if((f=openat(dir,name,O_RDONLY))>=0){
-		e=(read(f,buff,PATH_MAX-1)>0)?insmod(buff,false):-errno;
+		ssize_t r=read(f,buff,PATH_MAX-1);
+		if(r>0){
+			trim(buff);
+			e=insmod(buff,false);
+		}else e=-errno;
 		close(f);
 	}else e=-errno;
 	return e;

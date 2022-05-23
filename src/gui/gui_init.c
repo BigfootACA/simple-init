@@ -216,6 +216,18 @@ int gui_pre_init(){
 	if(guidrv_init(&gui_w,&gui_h,&gui_dpi)<0)return -1;
 	gui_sx=0,gui_sy=0,gui_sw=gui_w,gui_sh=gui_h;
 	indrv_init();
+	int cnt=0;
+	struct display_mode*modes=NULL;
+	if(guidrv_get_modes(&cnt,&modes)==0&&cnt>0&&modes){
+		tlog_debug("available display modes:");
+		for(int i=0;i<cnt;i++)tlog_debug(
+			"    %d: %s (%ux%u)",
+			i,modes[i].name,
+			modes[i].width,
+			modes[i].height
+		);
+		free(modes);
+	}
 	tlog_debug("driver init done");
 	guess_font_size();
 	image_decoder_init();

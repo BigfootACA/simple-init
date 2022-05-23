@@ -110,7 +110,7 @@ struct open_data{
 
 static bool open_read_cb(uint16_t id,const char*name __attribute__((unused)),void*user_data){
 	struct open_data*od=user_data;
-	char*buf;
+	char*buf=NULL;
 	uint32_t rs=0;
 	lv_fs_res_t res;
 	if(id==0){
@@ -133,7 +133,8 @@ static bool open_read_cb(uint16_t id,const char*name __attribute__((unused)),voi
 				}
 				memset(xb,0,bs);
 				rs=bs;
-				if((res=lv_fs_read(&od->file,xb,rs,&rs))!=LV_FS_RES_OK)goto e_read;
+				res=lv_fs_read(&od->file,xb,rs,&rs);
+				if(res!=LV_FS_RES_OK)goto e_read;
 				if(rs<bs)break;
 				cs+=bs;
 				if(!(x=realloc(buf,cs)))goto e_buf;
@@ -142,7 +143,8 @@ static bool open_read_cb(uint16_t id,const char*name __attribute__((unused)),voi
 		}else{
 			if(!(buf=malloc(od->size+1)))goto e_buf;
 			memset(buf,0,od->size+1);
-			if((res=lv_fs_read(&od->file,buf,od->size,&rs))!=LV_FS_RES_OK)goto e_read;
+			res=lv_fs_read(&od->file,buf,od->size,&rs);
+			if(res!=LV_FS_RES_OK)goto e_read;
 		}
 		lv_textarea_set_text(text,buf);
 		lv_textarea_set_cursor_pos(text,0);

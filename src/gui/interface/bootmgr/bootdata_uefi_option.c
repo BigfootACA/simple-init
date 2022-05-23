@@ -105,7 +105,7 @@ static void option_cb(lv_obj_t*obj,lv_event_t e){
 	if(e!=LV_EVENT_VALUE_CHANGED)return;
 	uint16_t o=lv_dropdown_get_selected(bi->sel_opt);
 	memset(option,0,sizeof(option));
-	if(o>0)snprintf(option,5,"%04X",bi->options[o-1]);
+	if(o>0)snprintf(option,5,"%04X",bi->options[o]);
 	lv_textarea_set_text(bi->txt_opt,option);
 }
 #endif

@@ -38,6 +38,9 @@ struct input_driver{
 	int(*drv_register)(void);
 };
 
+// src/gui/drivers.c: builtin display modes
+extern struct display_mode builtin_modes[];
+
 // src/gui/drivers.c: initial gui drivers storage
 extern struct gui_driver*gui_drvs[];
 

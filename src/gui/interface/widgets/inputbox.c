@@ -20,7 +20,7 @@ struct inputbox{
 	char content[BUFSIZ];
 	const char*accepts;
 	inputbox_callback callback;
-	lv_obj_t*box;
+	lv_obj_t*box,*page;
 	lv_obj_t*label,*input;
 	lv_obj_t*ok,*cancel;
 	lv_event_cb_t input_cb;
@@ -68,16 +68,17 @@ static int inputbox_resize(struct gui_activity*act){
 	static lv_style_t style;
 	if(!style_init)lv_style_init(&style);
 	lv_obj_set_style_local_border_width(box->box,LV_PAGE_PART_BG,LV_STATE_FOCUSED,0);
+	lv_obj_set_width(box->page,xw);
+	xw=lv_page_get_scrl_width(box->page);
 	lv_obj_set_width(box->box,xw);
 
 	lv_coord_t
-		pw=lv_page_get_width_fit(box->box),
 		btn_m=gui_font_size/2,
-		btn_w=pw/2,
+		btn_w=xw/2,
 		btn_h=gui_font_size+(gui_dpi/8);
 	box_h+=btn_m;
 
-	lv_obj_set_width(box->label,pw);
+	lv_obj_set_width(box->label,xw);
 	box_h+=lv_obj_get_height(box->label);
 
 	lv_style_set_margin_bottom(&style,LV_STATE_DEFAULT,btn_m);
@@ -85,7 +86,7 @@ static int inputbox_resize(struct gui_activity*act){
 
 	lv_obj_set_style_local_margin_bottom(box->input,LV_TEXTAREA_PART_BG,LV_STATE_DEFAULT,btn_m);
 	lv_obj_set_pos(box->input,btn_m/2,box_h);
-	lv_obj_set_width(box->input,pw-btn_m);
+	lv_obj_set_width(box->input,xw-btn_m);
 	box_h+=lv_obj_get_height(box->input)+btn_m;
 
 	lv_obj_add_style(box->ok,LV_BTN_PART_MAIN,&style);
@@ -96,9 +97,12 @@ static int inputbox_resize(struct gui_activity*act){
 	lv_obj_set_size(box->cancel,btn_w-btn_m,btn_h);
 	lv_obj_set_pos(box->cancel,btn_m/2+btn_w,box_h);
 
-	box_h+=btn_m+btn_h+gui_dpi/4;
-	lv_obj_set_height(box->box,MIN(box_h,xh));
-	lv_obj_align(box->box,NULL,LV_ALIGN_CENTER,0,0);
+	box_h+=btn_m+btn_h+gui_font_size/2;
+	lv_obj_set_height(box->box,box_h);
+	box_h+=lv_obj_get_style_pad_top(box->page,LV_PAGE_PART_BG);
+	box_h+=lv_obj_get_style_pad_bottom(box->page,LV_PAGE_PART_BG);
+	lv_obj_set_height(box->page,MIN(box_h,xh));
+	lv_obj_align(box->page,NULL,LV_ALIGN_CENTER,0,0);
 	return 0;
 }
 
@@ -106,9 +110,12 @@ static int inputbox_draw(struct gui_activity*act){
 	struct inputbox*box=act->args;
 	box->act=act;
 
-	box->box=lv_page_create(act->page,NULL);
+	box->page=lv_page_create(act->page,NULL);
+	lv_obj_set_click(box->page,false);
+
+	box->box=lv_obj_create(box->page,NULL);
+	lv_obj_set_click(box->box,false);
 	lv_obj_set_style_local_border_width(box->box,LV_PAGE_PART_BG,LV_STATE_DEFAULT,0);
-	lv_obj_set_style_local_border_width(box->box,LV_PAGE_PART_BG,LV_STATE_PRESSED,0);
 
 	box->label=lv_label_create(box->box,NULL);
 	lv_label_set_align(box->label,LV_LABEL_ALIGN_CENTER);

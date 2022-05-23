@@ -330,8 +330,9 @@ static lv_res_t fs_read_cb(
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
 	if(!fs||!fs->proto)return LV_FS_RES_INV_PARAM;
-	*br=btr;
-	EFI_STATUS st=fh->Read(fh,(UINTN*)br,buf);
+	UINTN r=(UINTN)btr;
+	EFI_STATUS st=fh->Read(fh,&r,buf);
+	*br=(uint32_t)r;
 	if(EFI_ERROR(st))XWARN(
 		"read %c:#%p failed: %s",
 		drv->letter,fh,efi_status_to_string(st)

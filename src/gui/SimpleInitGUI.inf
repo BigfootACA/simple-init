@@ -173,6 +173,7 @@
   interface/apps/uefi_shell.c
   interface/apps/uefi_mass.c
   interface/apps/text_editor.c
+  interface/apps/logviewer.c
   interface/apps/calendar.c
   interface/apps/scr_test.c
   interface/apps/picture.c

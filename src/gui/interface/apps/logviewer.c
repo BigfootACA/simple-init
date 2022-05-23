@@ -8,6 +8,7 @@
 
 #ifdef ENABLE_GUI
 #include"gui.h"
+#include"list.h"
 #include"logger.h"
 #include"defines.h"
 #include"gui/tools.h"
@@ -20,7 +21,29 @@ static lv_obj_t*btn_ctrl,*btn_reload;
 
 static void load_log_task(lv_task_t*t __attribute__((unused))){
 	if(!view)return;
-	char buff[BUFSIZ]={0};
+	#ifdef ENABLE_UEFI
+	list*l=list_first(logbuffer);
+	if(l){
+		lv_textarea_set_text(view,"");
+		do{
+			bool changed=false;
+			LIST_DATA_DECLARE(b,l,struct log_buff*);
+			if(!b)continue;
+			if(b->tag&&b->tag[0]){
+				lv_textarea_add_text(view,b->tag);
+				changed=true;
+			}
+			if(b->content&&b->content[0]){
+				if(changed)lv_textarea_add_text(view,": ");
+				lv_textarea_add_text(view,b->content);
+				changed=true;
+			}
+			if(changed)lv_textarea_add_text(view,"\n");
+		}while((l=l->next));
+	}else lv_textarea_set_text(view,_("No buffer found"));
+	#else
+	char buff[BUFSIZ];
+	memset(buff,0,BUFSIZ);
 	int fd=open(_PATH_DEV"/logger.log",O_RDONLY);
 	if(fd<0){
 		telog_warn("open logger.log failed");
@@ -37,6 +60,7 @@ static void load_log_task(lv_task_t*t __attribute__((unused))){
 		close(fd);
 		lv_textarea_set_cursor_pos(view,0);
 	}
+	#endif
 }
 
 static void load_log(){

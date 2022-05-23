@@ -2697,3 +2697,6 @@ msgstr "永久虚拟光盘"
 
 msgid "Persistent Virtual Disk"
 msgstr "永久虚拟磁盘"
+
+msgid "No buffer found"
+msgstr "没有找到缓冲区"

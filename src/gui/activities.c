@@ -71,7 +71,6 @@ struct gui_register*guiact_register[]={
 	&guireg_terminal,
 	#endif
 	&guireg_backlight,
-	&guireg_logviewer,
 	&guireg_add_mount,
 	&guireg_vibrator,
 	&guireg_add_mass,
@@ -93,6 +92,7 @@ struct gui_register*guiact_register[]={
 	&guireg_conf_save,
 	&guireg_conf_load,
 	&guireg_clipboard,
+	&guireg_logviewer,
 	&guireg_language,
 	&guireg_calendar,
 	&guireg_abootimg,

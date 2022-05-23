@@ -311,6 +311,8 @@ static VOID EFIAPI efi_timer(IN EFI_EVENT e,IN VOID*ctx){
 		tlog_notice("exiting");
 		gBS->CloseEvent(e_timer);
 		gBS->CloseEvent(e_loop);
+		e_timer=NULL;
+		e_loop=NULL;
 	}
 }
 
@@ -348,7 +350,11 @@ uint32_t custom_tick_get(void){
 			if(EFI_ERROR(st))tp=NULL;
 		}
 		#ifdef NO_TIMER
-		if(!tp)tlog_warn("unable to get stable timer, time may be inaccurate");
+		static bool warned=false;
+		if(!tp&&warned){
+			tlog_warn("unable to get stable timer, time may be inaccurate");
+			warned=true;
+		}
 		#endif
 	}
 	if(tp){
@@ -456,25 +462,29 @@ int gui_main(){
 	if(i>0)lv_task_create(image_cache_cb,i,LV_TASK_PRIO_LOWEST,NULL);
 	MUTEX_INIT(gui_lock);
 	#ifdef ENABLE_UEFI
+	EFI_STATUS st;
 	REPORT_STATUS_CODE(EFI_PROGRESS_CODE,(EFI_SOFTWARE_DXE_BS_DRIVER|EFI_SW_PC_INPUT_WAIT));
 
 	// kill the watchdog
 	gBS->SetWatchdogTimer(0,0,0,NULL);
 
-	if(EFI_ERROR(gBS->CreateEvent(
+	st=gBS->CreateEvent(
 		EVT_NOTIFY_SIGNAL|EVT_TIMER,TPL_CALLBACK,
 		efi_timer,NULL,&e_timer
-	)))return trlog_error(-1,"create timer event failed");
+	);
+	if(EFI_ERROR(st))return trlog_error(-1,"create timer event failed");
 
-	if(EFI_ERROR(gBS->CreateEvent(
+	st=gBS->CreateEvent(
 		EVT_NOTIFY_WAIT,TPL_NOTIFY,
 		efi_loop,NULL,&e_loop
-	)))return trlog_error(-1,"create loop event failed");
+	);
+	if(EFI_ERROR(st))return trlog_error(-1,"create loop event failed");
 
-	if(EFI_ERROR(gBS->SetTimer(
+	st=gBS->SetTimer(
 		e_timer,TimerPeriodic,
 		EFI_TIMER_PERIOD_MILLISECONDS(10)
-	)))return trlog_error(-1,"create timer failed");
+	);
+	if(EFI_ERROR(st))return trlog_error(-1,"create timer failed");
 
 	lv_task_create(
 		conf_save_cb,
@@ -488,7 +498,9 @@ int gui_main(){
 		xlua_run_confd(gui_global_lua,TAG,"lua.on_gui_pre_main");
 	#endif
 	UINTN wi;
-	while(gui_run&&!EFI_ERROR(gBS->WaitForEvent(1,&e_loop,&wi)));
+	if(e_loop)do{st=gBS->WaitForEvent(1,&e_loop,&wi);}
+	while(gui_run&&e_loop&&!EFI_ERROR(st));
+
 	#else
 	sem_init(&gui_wait,0,0);
 	handle_signals((int[]){SIGINT,SIGQUIT,SIGTERM},3,gui_quit_handler);

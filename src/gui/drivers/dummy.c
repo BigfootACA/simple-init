@@ -10,10 +10,11 @@
 #include<string.h>
 #include<stdlib.h>
 #include"gui.h"
+#include"confd.h"
 #include"logger.h"
 #include"version.h"
 #include"gui/guidrv.h"
-#define TAG "uefigop"
+#define TAG "dummy"
 #define WIDTH  540
 #define HEIGHT 960
 
@@ -27,7 +28,31 @@ static void dummy_flush(
 	lv_disp_flush_ready(disp_drv);
 }
 
+static void dummy_apply_mode(){
+	int cnt=0;
+	char*name=NULL;
+	struct display_mode*mode=NULL;
+	for(cnt=0;builtin_modes[cnt].name[0];cnt++);
+	name=confd_get_string("gui.mode",NULL);
+	if(!name){
+		char*n=getenv("GUIMODE");
+		if(n)name=strdup(n);
+	}
+	if(!name)goto done;
+	if(cnt<=0)EDONE(tlog_warn("no any modes found"));
+	for(int i=0;i<cnt;i++)
+		if(strcasecmp(name,builtin_modes[i].name)==0)
+			mode=&builtin_modes[i];
+	if(!mode)EDONE(tlog_warn("mode %s not found",name));
+	tlog_info("set mode to %s",name);
+	ww=mode->width;
+	hh=mode->height;
+	done:
+	if(name)free(name);
+}
+
 static int dummy_register(){
+	dummy_apply_mode();
 	size_t s=ww*hh;
 	static lv_color_t*buf=NULL;
 	static lv_disp_buf_t disp_buf;
@@ -64,9 +89,20 @@ static void dummy_get_sizes(lv_coord_t*width,lv_coord_t*height){
 	if(height)*height=h;
 }
 
+static int dummy_get_modes(int*cnt,struct display_mode**modes){
+	if(!cnt||!modes)ERET(EINVAL);
+	for(*cnt=0;builtin_modes[*cnt].name[0];(*cnt)++);
+	if(*cnt<=0)return 0;
+	size_t size=((*cnt)+1)*sizeof(struct display_mode);
+	if(!(*modes=malloc(size)))ERET(ENOMEM);
+	memcpy(*modes,builtin_modes,size);
+	return 0;
+}
+
 struct gui_driver guidrv_dummy={
 	.name="dummy",
 	.drv_register=dummy_register,
 	.drv_getsize=dummy_get_sizes,
+	.drv_get_modes=dummy_get_modes,
 };
 #endif

@@ -10,8 +10,8 @@
 #define _LOGGER_INTERNAL_H
 #include<stdio.h>
 #include<sys/socket.h>
-#include"logger.h"
 #include"list.h"
+#include"logger.h"
 
 // logger packet magic
 #define LOGD_MAGIC0 0xEF
@@ -55,19 +55,8 @@ struct logger{
 	bool enabled;
 };
 
-// log storage item
-struct log_buff{
-	enum log_level level;
-	char*tag,*content;
-	time_t time;
-	pid_t pid;
-};
-
 // src/loggerd/internal.c: logger output list
 extern list*loggers;
-
-// src/loggerd/buffer.c: log storage
-extern list*logbuffer;
 
 // src/loggerd/server.c: logger server thread
 extern int loggerd_thread(int fd);

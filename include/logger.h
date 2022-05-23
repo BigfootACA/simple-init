@@ -40,6 +40,19 @@ struct log_item{
 	];
 };
 
+// log storage item
+struct log_buff{
+	enum log_level level;
+	char*tag,*content;
+	time_t time;
+	pid_t pid;
+};
+
+#ifdef _LIST_H
+// src/loggerd/buffer.c: log storage
+extern list*logbuffer;
+#endif
+
 #ifndef ENABLE_UEFI
 // src/loggerd/client.c: current logfd
 extern int logfd;

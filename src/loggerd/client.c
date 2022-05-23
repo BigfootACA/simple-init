@@ -150,15 +150,31 @@ static int logger_init_out(){
 	UINTN s=0;
 	EFI_TIME tm;
 	EFI_STATUS st;
+	char*log=NULL;
 	EFI_FILE_INFO*info=NULL;
 	locate_ret*l=AllocateZeroPool(sizeof(locate_ret));
 	if(!l)EDONE(tlog_warn("allocate pool failed"));
 	// 0: truncate
 	// 1: append
 	// 2: rename
-	int old=confd_get_integer("logger.old_file",0);
-	char*log=confd_get_string("logger.file_output",NULL);
-	if(!log)return 0;
+	int old=0;
+	switch((int)confd_get_type("logger.old_file")){
+		case -1:break;
+		case TYPE_INTEGER:old=confd_get_integer("logger.old_file",0);break;
+		case TYPE_STRING:{
+			char*k=confd_get_string("logger.old_file",NULL);
+			if(k){
+				size_t s=MIN(strlen(k),1);
+				if(strncasecmp(k,"truncate",s)==0)old=0;
+				else if(strncasecmp(k,"append",s)==0)old=1;
+				else if(strncasecmp(k,"rename",s)==0)old=2;
+				else tlog_warn("unknown old_file mode %s",k);
+				free(k);
+			}
+		}break;
+		default:tlog_warn("unknown type for old_file mode");
+	}
+	if(!(log=confd_get_string("logger.file_output",NULL)))return 0;
 	if(!boot_locate_create_file(l,log))
 		EDONE(tlog_warn("resolve logger file output locate failed"));
 	if(l->type!=LOCATE_FILE)

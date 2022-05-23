@@ -6,19 +6,19 @@
 #include<pthread.h>
 #include<sys/time.h>
 #include"gui.h"
+#include"confd.h"
 #include"logger.h"
 #include"hardware.h"
 #include"gui/guidrv.h"
 #define TAG "gtk"
 
-#define GTK_W 540
-#define GTK_H 960
+static uint32_t ww=540,hh=960;
 static GtkWidget*window,*event_box,*output_image;
 static GdkPixbuf*pixbuf;
 static lv_coord_t mouse_x,mouse_y;
 static lv_indev_state_t mouse_btn=LV_INDEV_STATE_REL,last_key_state;
 static lv_key_t last_key;
-static uint8_t fb[GTK_W*GTK_H*3];
+static uint8_t*fb=NULL;
 
 static void quit_handler(void){
 	exit(0);
@@ -101,10 +101,33 @@ static gboolean keyboard_release(
 	return TRUE;
 }
 
+static void gtk_apply_mode(){
+	int cnt=0;
+	char*name=NULL;
+	struct display_mode*mode=NULL;
+	for(cnt=0;builtin_modes[cnt].name[0];cnt++);
+	name=confd_get_string("gui.mode",NULL);
+	if(!name){
+		char*n=getenv("GUIMODE");
+		if(n)name=strdup(n);
+	}
+	if(!name)goto done;
+	if(cnt<=0)EDONE(tlog_warn("no any modes found"));
+	for(int i=0;i<cnt;i++)
+		if(strcasecmp(name,builtin_modes[i].name)==0)
+			mode=&builtin_modes[i];
+	if(!mode)EDONE(tlog_warn("mode %s not found",name));
+	tlog_info("set mode to %s",name);
+	ww=mode->width;
+	hh=mode->height;
+	done:
+	if(name)free(name);
+}
+
 static void gtkdrv_init(void){
 	gtk_init(NULL,NULL);
 	window=gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	gtk_window_set_default_size(GTK_WINDOW(window),GTK_W,GTK_H);
+	gtk_window_set_default_size(GTK_WINDOW(window),ww,hh);
 	gtk_window_set_resizable(GTK_WINDOW(window),FALSE);
 	output_image=gtk_image_new();
 	event_box=gtk_event_box_new();
@@ -124,13 +147,9 @@ static void gtkdrv_init(void){
 	pixbuf=gdk_pixbuf_new_from_data(
 		(guchar*)fb,
 		GDK_COLORSPACE_RGB,
-		false,
-		8,
-		GTK_W,
-		GTK_H,
-		GTK_W*3,
-		NULL,
-		NULL
+		false,8,
+		ww,hh,ww*3,
+		NULL,NULL
 	);
 	if(!pixbuf){
 		tlog_error("creating pixbuf failed");
@@ -201,14 +220,15 @@ static bool gtkdrv_keyboard_read_cb(
 }
 
 static int gtkdrv_scan_init_register(){
-	static size_t s=GTK_W*GTK_H;
-	static lv_color_t*buf=NULL;
+	size_t s=ww*hh;
+	lv_color_t*buf=NULL;
 	static lv_disp_buf_t disp_buf;
 	if(!getenv("DISPLAY"))return -1;
-	if(!(buf=malloc(s*sizeof(lv_color_t)))){
-		telog_error("malloc display buffer");
-		return -1;
-	}
+	gtk_apply_mode();
+	if(!(buf=malloc(s*sizeof(lv_color_t))))
+		return terlog_error(-1,"malloc display buffer");
+	if(!(fb=malloc(ww*hh*3)))
+		return terlog_error(-1,"malloc framebuffer failed");
 	memset(buf,0,s);
 	lv_disp_buf_init(&disp_buf,buf,NULL,s);
 	gtkdrv_init();
@@ -217,8 +237,8 @@ static int gtkdrv_scan_init_register(){
 	lv_disp_drv_init(&disp);
 	disp.buffer=&disp_buf;
 	disp.flush_cb=gtkdrv_flush_cb;
-	disp.hor_res=GTK_W;
-	disp.ver_res=GTK_H;
+	disp.hor_res=ww;
+	disp.ver_res=hh;
 	switch(gui_rotate){
 		case 0:break;
 		case 90:disp.sw_rotate=1,disp.rotated=LV_DISP_ROT_90;break;
@@ -248,8 +268,8 @@ static int kbd_init(){
 static void gtkdrv_get_sizes(lv_coord_t*width,lv_coord_t*height){
 	lv_coord_t w=0,h=0;
 	switch(gui_rotate){
-		case 0:case 180:w=GTK_W,h=GTK_H;break;
-		case 90:case 270:w=GTK_H,h=GTK_W;break;
+		case 0:case 180:w=ww,h=hh;break;
+		case 90:case 270:w=hh,h=ww;break;
 	}
 	if(width)*width=w;
 	if(height)*height=h;
@@ -259,6 +279,15 @@ static void gtkdrv_get_dpi(int*dpi){
 }
 static bool gtkdrv_can_sleep(){
 	return false;
+}
+static int gtkdrv_get_modes(int*cnt,struct display_mode**modes){
+	if(!cnt||!modes)ERET(EINVAL);
+	for(*cnt=0;builtin_modes[*cnt].name[0];(*cnt)++);
+	if(*cnt<=0)return 0;
+	size_t size=((*cnt)+1)*sizeof(struct display_mode);
+	if(!(*modes=malloc(size)))ERET(ENOMEM);
+	memcpy(*modes,builtin_modes,size);
+	return 0;
 }
 
 struct input_driver indrv_gtk_kbd={
@@ -284,7 +313,8 @@ struct gui_driver guidrv_gtk={
 	.drv_getdpi=gtkdrv_get_dpi,
 	.drv_tickget=gtkdrv_tick_get,
 	.drv_taskhandler=gtkdrv_taskhandler,
-	.drv_cansleep=gtkdrv_can_sleep
+	.drv_cansleep=gtkdrv_can_sleep,
+	.drv_get_modes=gtkdrv_get_modes,
 };
 #endif
 #endif

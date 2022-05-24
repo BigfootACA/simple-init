@@ -30,5 +30,6 @@ target_include_directories(mxml PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/mxml)
 target_compile_options(mxml PRIVATE
 	-Wno-sign-compare
 	-Wno-implicit-fallthrough
+	-Wno-use-after-free
 )
 include_directories(libs/mxml)

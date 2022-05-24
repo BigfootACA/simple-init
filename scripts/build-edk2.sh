@@ -35,24 +35,35 @@ case "$_ARG1" in
 	ia32|IA32)
 		export CROSS_COMPILE=i686-linux-gnu-
 		export GCC5_IA32_PREFIX="${CROSS_COMPILE}"
+		export GCC5_BIN="${CROSS_COMPILE}"
 		bash scripts/gen-rootfs-source.sh "${SIMPLE_INIT}" "${BUILD}" "${SIMPLE_INIT}"/root
 		build -p SimpleInit.dsc -t "${TOOLCHAIN}" -a IA32 -b "${TARGET}"
 	;;
 	x64|X64)
 		export CROSS_COMPILE=x86_64-linux-gnu-
 		export GCC5_X64_PREFIX="${CROSS_COMPILE}"
+		export GCC5_BIN="${CROSS_COMPILE}"
 		bash scripts/gen-rootfs-source.sh "${SIMPLE_INIT}" "${BUILD}" "${SIMPLE_INIT}"/root
 		build -p SimpleInit.dsc -t "${TOOLCHAIN}" -a X64 -b "${TARGET}"
+	;;
+	arm|ARM)
+		export CROSS_COMPILE=arm-none-eabi-
+		export GCC5_ARM_PREFIX="${CROSS_COMPILE}"
+		export GCC5_BIN="${CROSS_COMPILE}"
+		bash scripts/gen-rootfs-source.sh "${SIMPLE_INIT}" "${BUILD}" "${SIMPLE_INIT}"/root
+		build -p SimpleInit.dsc -t "${TOOLCHAIN}" -a ARM -b "${TARGET}"
 	;;
 	aarch64|AARCH64)
 		export CROSS_COMPILE=aarch64-linux-gnu-
 		export GCC5_AARCH64_PREFIX="${CROSS_COMPILE}"
+		export GCC5_BIN="${CROSS_COMPILE}"
 		bash scripts/gen-rootfs-source.sh "${SIMPLE_INIT}" "${BUILD}" "${SIMPLE_INIT}"/root
 		build -p SimpleInit.dsc -t "${TOOLCHAIN}" -a AARCH64 -b "${TARGET}"
 	;;
 	all)
 		bash "${0}" ia32
 		bash "${0}" x64
+		bash "${0}" arm
 		bash "${0}" aarch64
 	;;
 	img)

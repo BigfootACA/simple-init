@@ -62,6 +62,8 @@
   CacheMaintenanceLib|ArmPkg/Library/ArmCacheMaintenanceLib/ArmCacheMaintenanceLib.inf
   IoLib|MdePkg/Library/BaseIoLibIntrinsic/BaseIoLibIntrinsic.inf
   TimerLib|ArmPkg/Library/ArmArchTimerLib/ArmArchTimerLib.inf
+  NULL|ArmPkg/Library/CompilerIntrinsicsLib/CompilerIntrinsicsLib.inf
+  NULL|MdePkg/Library/BaseStackCheckLib/BaseStackCheckLib.inf
 
 [LibraryClasses.X64, LibraryClasses.Ia32]
   TimerLib|MdePkg/Library/BaseTimerLibNullTemplate/BaseTimerLibNullTemplate.inf
@@ -71,3 +73,4 @@
   GCC:*_*_IA32_CC_FLAGS = -DNO_TIMER -static-libgcc -lgcc
   GCC:*_*_X64_CC_FLAGS = -DNO_TIMER
   GCC:*_*_AARCH64_CC_FLAGS = -mno-outline-atomics
+  GCC:*_*_ARM_CC_FLAGS = -lgcc

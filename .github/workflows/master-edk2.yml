@@ -10,7 +10,9 @@ jobs:
     strategy:
       matrix:
         arch:
+          - ARM
           - AARCH64
+          - IA32
           - X64
     steps:
       - uses: actions/checkout@v2
@@ -26,7 +28,7 @@ jobs:
       - name: Install requires packages
         run: |
           sudo apt update
-          sudo apt install --yes --no-install-recommends build-essential uuid-dev iasl nasm gcc-aarch64-linux-gnu gcc-i686-linux-gnu gettext python make
+          sudo apt install --yes --no-install-recommends build-essential uuid-dev iasl nasm gcc-aarch64-linux-gnu gcc-arm-none-eabi gcc-i686-linux-gnu gettext python make
       - name: Build for ${{matrix.arch}}
         run: bash scripts/build-edk2.sh ${{matrix.arch}}
       - name: Upload Artifact SimpleInit-${{matrix.arch}}.efi

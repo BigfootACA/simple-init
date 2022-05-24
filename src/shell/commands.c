@@ -31,6 +31,7 @@ DECLARE_MAIN(logdumpargv);
 DECLARE_MAIN(dumpenv);
 DECLARE_MAIN(logdumpenv);
 DECLARE_MAIN(exit);
+DECLARE_MAIN(dumpinput);
 DECLARE_MAIN(findfs);
 DECLARE_MAIN(guiapp);
 DECLARE_MAIN(help);
@@ -100,6 +101,7 @@ const struct shell_command*shell_cmds[]={
 	DECLARE_CMD(false, echo,        "Echo string")
 	DECLARE_CMD(true,  dmesg,       "Print or control the kernel ring buffer")
 	DECLARE_CMD(true,  dumpargv,    "Dump all arguments to stdout")
+	DECLARE_CMD(true,  dumpinput,   "Fetch input devices events")
 	DECLARE_CMD(true,  logdumpargv, "Dump all arguments to initloggerd")
 	DECLARE_CMD(true,  loggerctl,   "Control init logger daemon")
 	DECLARE_CMD(true,  dumpenv,     "Dump all environments variables to stdout")

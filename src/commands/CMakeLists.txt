@@ -38,4 +38,5 @@ add_library(init_commands STATIC
 	echo.c
 	simple-init.c
 	abootimg.c
+	dumpinput.c
 )

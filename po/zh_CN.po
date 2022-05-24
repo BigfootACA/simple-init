@@ -2700,3 +2700,83 @@ msgstr "永久虚拟磁盘"
 
 msgid "No buffer found"
 msgstr "没有找到缓冲区"
+
+msgid "Cleanup...\n"
+msgstr "清理中...\n"
+
+msgid "epoll wait failed"
+msgstr "epoll调用失败"
+
+msgid "No any devices found\n"
+msgstr "找不到任何设备\n"
+
+msgid "epoll malloc failed"
+msgstr "epoll分配失败"
+
+msgid "epoll create failed"
+msgstr "epoll创建失败"
+
+msgid "Terminated by %s\n"
+msgstr "已被信号%s结束\n"
+
+msgid "opendir failed"
+msgstr "打开文件夹失败"
+
+msgid "Unknown option: %s\n"
+msgstr "未知选项: %s\n"
+
+msgid "Usage: dumpinput [INPUT]...\n"
+msgstr "使用方法: dumpinput [输入设备]...\n"
+
+msgid "read %d failed"
+msgstr "读取%d失败"
+
+msgid ""
+" ! Device %s:%s "
+"Type: %-6s ( %3d / 0x%03X ), "
+"Code: %-28s ( %4d / 0x%04X ), "
+"Value: %8d / 0x%08X (%s)\n"
+msgstr ""
+" ! 设备 %s:%s "
+"类型: %-6s ( %3d / 0x%03X ), "
+"键: %-28s ( %4d / 0x%04X ), "
+"值: %8d / 0x%08X (%s)\n"
+
+msgid "read %d(%s) failed"
+msgstr "读取 %d(%s) 失败"
+
+msgid "cannot bind netlink socket"
+msgstr "无法绑定netlink套接字"
+
+msgid "cannot create netlink socket"
+msgstr "无法创建netlink套接字"
+
+msgid " + Add device %s fd %d (%s)\n"
+msgstr " + 添加设备 %s 描述符 %d (%s)\n"
+
+msgid "open %s failed"
+msgstr "打开 %s 失败"
+
+msgid "skip device '%s'\n"
+msgstr "跳过设备'%s'\n"
+
+msgid "invalid device '%s'\n"
+msgstr "无效设备'%s'\n"
+
+msgid " - Delete device %s fd %d\n"
+msgstr " - 删除设备 %s 描述符 %d\n"
+
+msgid " - Delete fd %d\n"
+msgstr " - 删除描述符 %d\n"
+
+msgid "add fd %d(%s) to epoll failed"
+msgstr "添加描述符 %d(%s) 到epoll失败"
+
+msgid "add fd %d to epoll failed"
+msgstr "添加描述符 %d 到epoll失败"
+
+msgid "alloc device failed"
+msgstr "分配设备失败"
+
+msgid "Fetch input devices events"
+msgstr "获取输入设备事件"

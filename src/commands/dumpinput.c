@@ -60,17 +60,17 @@ static bool run=true;
 static list*devices=NULL;
 
 static struct input_code codes[]={
-	#define DECL_TYPE(_type){\
+	#define DECL_TYPE(_type,_value){\
 		.category=CATE_TYPE,\
-		.type=(_type),\
+		.type=(_value),\
 		.code=0,\
-		.name=(#_type)\
+		.name=(_type)\
 	},
-	#define DECL_INPUT(_type,_code){\
+	#define DECL_INPUT(_type,_code,_value){\
 		.category=CATE_CODE,\
 		.type=(_type),\
-		.code=(_code),\
-		.name=(#_code)\
+		.code=(_value),\
+		.name=(_code)\
 	},
 	#include"input_code.h"
 	{.category=0,.type=0,.code=0,.name=""}

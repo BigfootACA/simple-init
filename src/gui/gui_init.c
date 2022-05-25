@@ -283,9 +283,6 @@ static void gui_enter_sleep(){
 	if(o<=0)o=100;
 	if(o>s)guidrv_set_brightness(s);
 
-	// clean image caches
-	image_cache_clean();
-
 	#ifdef ENABLE_LUA
 	if(gui_global_lua)
 		xlua_run_confd(gui_global_lua,TAG,"lua.on_gui_enter_sleep");

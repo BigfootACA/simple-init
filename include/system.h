@@ -195,6 +195,9 @@ extern int set_active_console(int vt);
 // src/lib/stdio.c: get active kernel consoles
 extern char**get_active_consoles(void);
 
+// src/lib/stdio.c: full read string
+extern ssize_t full_read(int fd,void*data,size_t len);
+
 // src/lib/stdio.c: full write string
 extern ssize_t full_write(int fd,void*data,size_t len);
 

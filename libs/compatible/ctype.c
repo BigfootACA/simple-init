@@ -12,3 +12,4 @@ weak_decl int isgraph(int c){return (unsigned)c-0x21<0x5e;}
 weak_decl int ispunct(int c){return isgraph(c)&&!isalnum(c);}
 weak_decl int toupper(int c){return (islower(c))?(c&0x5f):c;}
 weak_decl int tolower(int c){return (isupper(c))?(c|32):c;}
+weak_decl int isprint(int c){return (unsigned)c-0x20<0x5f;}

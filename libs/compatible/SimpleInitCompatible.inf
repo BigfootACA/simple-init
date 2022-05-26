@@ -7,7 +7,7 @@
   LIBRARY_CLASS                  = SimpleInitCompatible
 
 [BuildOptions]
-  GCC:*_*_*_CC_FLAGS = -include src/config-uefi.h
+  GCC:*_*_*_CC_FLAGS = -include src/config-uefi.h -Wno-missing-braces
 
 [Packages]
   MdePkg/MdePkg.dec
@@ -92,3 +92,9 @@
   ldexp.c
   abs.c
   __expo2.c
+  iconv.c
+  wctomb.c
+  wcrtomb.c
+  mbtowc.c
+  mbrtowc.c
+  mb.c

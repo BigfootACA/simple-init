@@ -210,16 +210,6 @@ typedef __mbstate_t mbstate_t;
   #undef _EFI_WINT_T
 #endif
 
-#ifndef WCHAR_MIN
-  /** @{
-      Since wchar_t is an unsigned 16-bit value, it has a minimum value of 0, and
-      a maximum value defined by __USHRT_MAX (65535 on IA processors).
-  */
-  #define WCHAR_MIN       0
-  #define WCHAR_MAX       __USHRT_MAX
-  /*@}*/
-#endif
-
 #ifndef WEOF
   /** WEOF expands to a constant expression of type wint_t whose value does not
       correspond to any member of the extended character set. It is accepted
@@ -229,12 +219,6 @@ typedef __mbstate_t mbstate_t;
       extended character set.
   */
   #define WEOF  ((wint_t)-1)
-#endif
-
-/* limits of wint_t -- These are NOT specified by ISO/IEC 9899 */
-#ifndef WINT_MIN
-  #define WINT_MIN        _EFI_WINT_MIN       /* wint_t   */
-  #define WINT_MAX        _EFI_WINT_MAX       /* wint_t   */
 #endif
 
 /** Type struct tm is declared here as an incomplete structure type for use as an argument

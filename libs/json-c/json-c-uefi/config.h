@@ -25,6 +25,7 @@
 #define HAVE_GETRANDOM
 #define HAVE_GETRUSAGE
 #define HAVE_STRTOLL
+#define JSON_C_HAVE_INTTYPES_H 1
 #define STRERROR_OVERRIDE_IMPL 1
 #if !defined(HAVE_STRTOLL)
 #define strtoll strtoll

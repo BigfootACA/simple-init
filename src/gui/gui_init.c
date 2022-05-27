@@ -32,7 +32,6 @@
 #include"system.h"
 #include"logger.h"
 #include"defines.h"
-#include"language.h"
 #include"hardware.h"
 #include"gui/font.h"
 #include"gui/tools.h"
@@ -59,7 +58,7 @@ lv_coord_t gui_sw,gui_sh,gui_sx,gui_sy;
 uint16_t gui_rotate;
 
 // gui fonts
-lv_font_t*gui_font=&lv_font_montserrat_24,*gui_font_small=&lv_font_montserrat_24,*symbol_font=NULL;
+lv_font_t*gui_font=NULL,*gui_font_small=NULL,*symbol_font=NULL;
 
 // gui group (for buttons)
 lv_group_t*gui_grp=NULL;

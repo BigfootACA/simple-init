@@ -1,6 +1,3 @@
-[submodule "libs/lvgl"]
-	path = libs/lvgl
-	url = https://github.com/lvgl/lvgl.git
 [submodule "libs/freetype"]
 	path = libs/freetype
 	url = https://gitlab.freedesktop.org/freetype/freetype.git

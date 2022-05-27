@@ -373,21 +373,8 @@ static void img_argb_zoom_aa_cb(void){
 	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
 	img_create(&style_common,"img_cogwheel_argb.png",false,true,true);
 }
-static void txt_small_cb(void){
+static void txt_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_text_font(&style_common,LV_STATE_DEFAULT,&lv_font_montserrat_12);
-	lv_style_set_text_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
-	txt_create(&style_common);
-}
-static void txt_medium_cb(void){
-	lv_style_reset(&style_common);
-	lv_style_set_text_font(&style_common,LV_STATE_DEFAULT,&lv_font_montserrat_16);
-	lv_style_set_text_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
-	txt_create(&style_common);
-}
-static void txt_large_cb(void){
-	lv_style_reset(&style_common);
-	lv_style_set_text_font(&style_common,LV_STATE_DEFAULT,&lv_font_montserrat_24);
 	lv_style_set_text_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
 	txt_create(&style_common);
 }
@@ -507,9 +494,7 @@ static scene_dsc_t scenes[]={
 	{.name="Image RGB zoom anti aliased",	 .weight=3, .create_cb=img_rgb_zoom_aa_cb},
 	{.name="Image ARGB zoom",		 .weight=5, .create_cb=img_argb_zoom_cb},
 	{.name="Image ARGB zoom anti aliased",	 .weight=5, .create_cb=img_argb_zoom_aa_cb},
-	{.name="Text small",			 .weight=20,.create_cb=txt_small_cb},
-	{.name="Text medium",			 .weight=30,.create_cb=txt_medium_cb},
-	{.name="Text large",			 .weight=20,.create_cb=txt_large_cb},
+	{.name="Text",				 .weight=20,.create_cb=txt_cb},
 	{.name="Line",				 .weight=10,.create_cb=line_cb},
 	{.name="Arc think",			 .weight=10,.create_cb=arc_think_cb},
 	{.name="Arc thick",			 .weight=10,.create_cb=arc_thick_cb},
@@ -724,9 +709,8 @@ static void benchmark_draw(lv_obj_t*scr){
 
 int benchmark_main(int argc __attribute__((unused)),char**argv __attribute__((unused))){
 	open_socket_logfd_default();
-	lv_init();
-	if(guidrv_init(&gui_w,&gui_h,&gui_dpi)<0)return -1;
-	image_decoder_init();
+	gui_pre_init();
+	gui_screen_init();
 	run=true;
 	benchmark_draw(lv_scr_act());
 	for(;;){

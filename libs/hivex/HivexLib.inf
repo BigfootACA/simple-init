@@ -1,0 +1,29 @@
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = HivexLib
+  FILE_GUID                      = 41C9667F-7AC7-441E-AED8-03B7DC86C3A5
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = HivexLib
+
+[BuildOptions]
+  GCC:*_*_*_CC_FLAGS = -include src/config-uefi.h
+
+[Packages]
+  MdePkg/MdePkg.dec
+  SimpleInit.dec
+
+[LibraryClasses]
+  UefiLib
+  SimpleInitLocate
+  SimpleInitCompatible
+
+[Sources]
+  libs/hivex/lib/util.c
+  libs/hivex/lib/utf16.c
+  libs/hivex/lib/node.c
+  libs/hivex/lib/value.c
+  libs/hivex/lib/handle_uefi.c
+  libs/hivex/lib/offset-list.c
+  libs/hivex/lib/visit.c
+  libs/hivex/lib/write.c

@@ -24,10 +24,6 @@ if("${ENABLE_BLKID}" STREQUAL "ON")
 	set(DEPENDS ${DEPENDS} blkid)
 endif()
 
-if("${ENABLE_HIVEX}" STREQUAL "ON")
-	set(DEPENDS ${DEPENDS} hivex)
-endif()
-
 if("${ENABLE_UUID}" STREQUAL "ON")
 	set(DEPENDS ${DEPENDS} uuid)
 endif()
@@ -141,6 +137,10 @@ endif()
 
 if("${ENABLE_STB}" STREQUAL "ON")
 	target_link_libraries(simple-init stb)
+endif()
+
+if("${ENABLE_HIVEX}" STREQUAL "ON")
+	target_link_libraries(simple-init hivex)
 endif()
 
 target_link_libraries(simple-init -Wl,--end-group)

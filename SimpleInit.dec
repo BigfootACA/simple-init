@@ -18,6 +18,7 @@
   libs/libufdt/include
   libs/libufdt/sysdeps/include
   libs/nanosvg/src
+  libs/hivex/include
   libs/libtsm/src/tsm
   libs/libtsm/src/shared
   libs/libtsm/external

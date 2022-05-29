@@ -330,6 +330,7 @@ insert_lf_record (hive_h *h, size_t old_offs, size_t posn,
    */
   int test = block_id_eq (h, old_offs, "lf") || block_id_eq (h, old_offs, "lh");
   assert (test);
+  if (!test) abort();
 
   struct ntreg_lf_record *old_lf =
     (struct ntreg_lf_record *) ((char *) h->addr + old_offs);

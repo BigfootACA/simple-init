@@ -12,6 +12,7 @@
 #include<sys/stat.h>
 #include<sys/ioctl.h>
 #include<linux/fb.h>
+#include<semaphore.h>
 #include"gui.h"
 #include"confd.h"
 #include"logger.h"
@@ -26,17 +27,19 @@ static bool blank=false,swap_abgr=false;
 static char*fbp=0;
 static long int screensize=0;
 static int fbfd=-1;
+static sem_t flush;
 struct fb_var_screeninfo vinfo;
 struct fb_fix_screeninfo finfo;
 static void*fbdev_refresh(void*args __attribute__((unused))){
-	while(fbfd>0){
+	for(;;){
+		sem_wait(&flush);
 		ioctl(fbfd,FBIOPAN_DISPLAY,&vinfo);
-		usleep(40000);
 	}
 	return NULL;
 }
 static int fbdev_refresher_start(){
 	if(fbrt)return terlog_error(-1,"refresher thread already running");
+	sem_init(&flush,0,0);
 	if(pthread_create(&fbrt,NULL,fbdev_refresh,(void*)0)!=0)
 		return terlog_error(-1,"failed to start refresher thread");
 	else pthread_setname_np(fbrt,"FrameBuffer Refresher Thread");
@@ -109,7 +112,8 @@ static void fbdev_flush(lv_disp_drv_t*drv,const lv_area_t*area,lv_color_t*color_
 		return;
 	}
 	int32_t act_x1=area->x1<0?0:area->x1,act_y1=area->y1<0?0:area->y1;
-	int32_t act_x2=area->x2>(int32_t)vinfo.xres-1?(int32_t)vinfo.xres-1:area->x2,act_y2=area->y2>(int32_t)vinfo.yres-1?(int32_t)vinfo.yres-1:area->y2;
+	int32_t act_x2=area->x2>(int32_t)vinfo.xres-1?(int32_t)vinfo.xres-1:area->x2;
+	int32_t act_y2=area->y2>(int32_t)vinfo.yres-1?(int32_t)vinfo.yres-1:area->y2;
 	lv_coord_t w=(act_x2-act_x1+1);
 	long int location,byte_location;
 	unsigned char bit_location;
@@ -148,6 +152,7 @@ static void fbdev_flush(lv_disp_drv_t*drv,const lv_area_t*area,lv_color_t*color_
 			color_p+=area->x2-act_x2;
 		}
 	}
+	if(fbrt)sem_post(&flush);
 	lv_disp_flush_ready(drv);
 }
 static int _fbdev_register(){

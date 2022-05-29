@@ -265,7 +265,7 @@ static int guiapp_init(struct gui_activity*act){
 		!ga->bg_path[0]&&
 		(path=confd_get_string(
 			"gui.background",
-			"bg.jpg"
+			NULL
 		))
 	){
 		strncpy(

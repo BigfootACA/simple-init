@@ -365,9 +365,9 @@ static int bootmenu_draw(){
 		!bm->bg_path[0]&&
 		(path=confd_get_string(
 			"gui.background",
-			"bg.jpg"
+			NULL
 		))
-		){
+	){
 		strncpy(
 			bm->bg_path,
 			path,

@@ -38,13 +38,13 @@ struct gui_driver*gui_drvs[]={
 	#ifdef ENABLE_SDL2
 	&guidrv_sdl2,
 	#endif
-	#ifdef ENABLE_VNCSERVER
-	&guidrv_vnc,
-	#endif
 	#ifdef ENABLE_DRM
 	&guidrv_drm,
 	#endif
 	&guidrv_fbdev,
+	#ifdef ENABLE_VNCSERVER
+	&guidrv_vnc,
+	#endif
 	#endif
 	&guidrv_dummy,
 	NULL

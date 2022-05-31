@@ -23,7 +23,7 @@ bcd_object bcd_get_object_by_node(bcd_store bcd,hive_node_h node){
 	}while((l=l->next));
 	hive_type t;
 	hive_value_h type;
-	char*key,*alias;
+	char*key=NULL,*alias;
 	bcd_object obj=malloc(sizeof(struct bcd_object));
 	if(!obj)EPRET(ENOMEM);
 	memset(obj,0,sizeof(struct bcd_object));
@@ -100,7 +100,7 @@ bcd_object bcd_get_object_by_name(bcd_store bcd,const char*name){
 bcd_object*bcd_get_all_objects(bcd_store bcd){
 	size_t cnt,size;
 	hive_node_h*cs;
-	bcd_object*objs;
+	bcd_object*objs=NULL;
 	if(!bcd)return NULL;
 
 	if(!(cs=hivex_node_children(
@@ -129,7 +129,7 @@ bcd_object*bcd_get_all_objects(bcd_store bcd){
 bcd_object*bcd_get_boot_menu_objects(bcd_store bcd){
 	size_t cnt,size;
 	bcd_element menu;
-	bcd_object*objs,*buf,mgr;
+	bcd_object*objs=NULL,*buf,mgr;
 	uuid_t*us=NULL;
 	if(!bcd)return NULL;
 

@@ -19,7 +19,7 @@ hive_value_h bcd_element_get_value(bcd_element ele){
 }
 
 void*bcd_element_get_value_data(bcd_element ele){
-	char*data;
+	char*data=NULL;
 	size_t len;
 	hive_type type;
 	if(

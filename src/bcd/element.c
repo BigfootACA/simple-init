@@ -95,7 +95,7 @@ bcd_element bcd_get_element_by_name(bcd_object obj,const char*name){
 bcd_element*bcd_get_all_elements(bcd_object obj){
 	size_t cnt,size;
 	hive_node_h*cs;
-	bcd_element*eles;
+	bcd_element*eles=NULL;
 	if(!obj)return NULL;
 
 	if(!(cs=hivex_node_children(

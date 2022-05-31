@@ -20,20 +20,23 @@
 #include<sys/ioctl.h>
 #include<linux/input.h>
 #define TAG "input"
+#include"str.h"
 #include"gui.h"
 #include"logger.h"
 #include"gui/guidrv.h"
 struct in_data{
 	bool enabled,mouse;
-	int fd,flags,type;
+	int fd,type;
 	char path[64],name[256];
 	lv_indev_drv_t indrv;
 	lv_indev_t*indev;
 	bool down;
-	int16_t last_x,last_y,last_x_tmp,last_y_tmp;
+	int16_t last_x,last_y;
 	uint32_t key;
 	char _pad[104];
+	uint32_t xmax,ymax;
 };
+static bool mouse=false;
 static struct epoll_event*evs;
 static struct in_data*indatas[32]={0};
 static size_t
@@ -77,7 +80,7 @@ static void*input_handler(void*args __attribute__((unused))){
 		int r=epoll_wait(efd,evs,64,-1);
 		if(r<0){
 			if(errno==EINTR)continue;
-			telog_error("epoll");
+			telog_error("epoll failed");
 			break;
 		}else for(int i=0;i<r;i++){
 			struct in_data*d=evs[i].data.ptr;
@@ -91,25 +94,31 @@ static void*input_handler(void*args __attribute__((unused))){
 			}
 			if(!gui_sleep)switch(d->indrv.type){
 				case LV_INDEV_TYPE_POINTER:switch(event.type){
-					case EV_SYN:if(event.code==SYN_REPORT&&d->flags>=0){
-						if((d->flags&0x03)==0x03){
-							d->flags=0x00;
-							d->last_x=d->last_x_tmp;
-							d->last_y=d->last_y_tmp;
-							if(!d->down)d->down=true;
-						}else d->down=false;
-					}break;
 					case EV_REL:switch(event.code){
-						case REL_X:d->last_x_tmp+=event.value,d->flags|=0x01;break;
-						case REL_Y:d->last_y_tmp+=event.value,d->flags|=0x02;break;
-					}break;
+						case REL_X:
+							d->last_x+=event.value;
+							if(d->last_x>gui_w)d->last_x=gui_w;
+							if(d->last_x<0)d->last_x=0;
+							mouse=true;
+						break;
+						case REL_Y:
+							d->last_y+=event.value;
+							if(d->last_y>gui_h)d->last_y=gui_h;
+							if(d->last_y<0)d->last_y=0;
+							mouse=true;
+						break;
+					}
+					break;
 					case EV_ABS:switch(event.code){
-						case ABS_X:d->last_x=gui_w*event.value/65536,d->flags=-1;break;
-						case ABS_Y:d->last_y=gui_h*event.value/65536,d->flags=-1;break;
-						case ABS_MT_POSITION_X:d->last_x_tmp=event.value,d->flags|=0x01;break;
-						case ABS_MT_POSITION_Y:d->last_y_tmp=event.value,d->flags|=0x02;break;
+						case ABS_X:d->last_x=gui_w*event.value/d->xmax,mouse=true;break;
+						case ABS_Y:d->last_y=gui_h*event.value/d->ymax,mouse=true;break;
+						case ABS_MT_POSITION_X:d->last_x=event.value,mouse=false;break;
+						case ABS_MT_POSITION_Y:d->last_y=event.value,mouse=false;break;
 					}break;
-					case EV_KEY:if(event.code==BTN_LEFT)d->down=event.value==1;break;
+					case EV_KEY:switch(event.code){
+						case BTN_TOUCH:mouse=false;//fallthrough
+						case BTN_LEFT:d->down=event.value==1;break;
+					}break;
 				}break;
 				case LV_INDEV_TYPE_KEYPAD:switch(event.type){
 					case EV_KEY:
@@ -139,12 +148,15 @@ static bool input_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
 			data->state=d->down?LV_INDEV_STATE_PR:LV_INDEV_STATE_REL;
 		break;
 	}
-	if(d->flags<0&&!d->mouse&&gui_cursor&&symbol_font){
-		d->mouse=true;
-		lv_indev_t*in=NULL;
-		while((in=lv_indev_get_next(in)))if(indev_drv==&in->driver){
-			lv_indev_set_cursor(in,gui_cursor);
-			break;
+	if(gui_cursor&&symbol_font&&indev_drv->type==LV_INDEV_TYPE_POINTER){
+		static bool old=false;
+		if(!d->indev->cursor){
+			lv_indev_set_cursor(d->indev,gui_cursor);
+			lv_obj_set_hidden(gui_cursor,true);
+		}
+		if(old!=mouse){
+			old=mouse;
+			lv_obj_set_hidden(gui_cursor,!mouse);
 		}
 	}
 	return false;
@@ -182,7 +194,7 @@ static struct in_data*get_unused_in_data(){
 }
 static int input_init(char*dev,int fd){
 	if(fd<0||!dev)return -1;
-	bool support=false;
+	bool support=false,abs=false;
 	unsigned char mask[EV_MAX/8+1];
 	struct in_data*d=get_unused_in_data();
 	if(!d)return -1;
@@ -192,9 +204,11 @@ static int input_init(char*dev,int fd){
 		telog_warn("failed to %s ioctl EIOCGNAME",dev);
 		strcpy(d->name,"unknown");
 	}
-	if(ioctl(fd,EVIOCGBIT(0,sizeof(mask)),mask)<0)telog_warn("failed to %s ioctl EVIOCGBIT",dev);
+	if(ioctl(fd,EVIOCGBIT(0,sizeof(mask)),mask)<0)
+		telog_warn("failed to %s ioctl EVIOCGBIT",dev);
 	else for(int j=0;j<EV_MAX;j++)if(mask[j/8]&(1<<(j%8)))switch(j){
-		case EV_ABS:
+		case EV_ABS:abs=true;//fallthrough
+		case EV_REL:
 			support=true;
 			d->indrv.type=LV_INDEV_TYPE_POINTER;
 		break;
@@ -205,6 +219,16 @@ static int input_init(char*dev,int fd){
 		break;
 	}
 	if(!support)return -1;
+	d->xmax=65536,d->ymax=65536;
+	if(abs){
+		struct input_absinfo info;
+		memset(&info,0,sizeof(info));
+		if(ioctl(fd,EVIOCGABS(ABS_X),&info)>=0&&info.maximum>0)
+			d->xmax=info.maximum;
+		memset(&info,0,sizeof(info));
+		if(ioctl(fd,EVIOCGABS(ABS_Y),&info)>=0&&info.maximum>0)
+			d->ymax=info.maximum;
+	}
 	tlog_debug("found input device %s (%s)",dev,d->name);
 	d->indrv.read_cb=input_read;
 	d->indrv.user_data=d;

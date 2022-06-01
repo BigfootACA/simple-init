@@ -31,6 +31,7 @@
   TSMLib
   MiniXML
   RegexLib
+  HivexLib
   SimpleInitLua
   SimpleInitLib
   SimpleInitBoot
@@ -180,6 +181,8 @@
   interface/apps/picture.c
   interface/apps/pointer_test.c
   interface/apps/ramdisk.c
+  interface/regedit/regedit.c
+  interface/regedit/string.c
   filesystem/lv_fs_string.c
   filesystem/fsext.c
   filesystem/uefi.c

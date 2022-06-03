@@ -70,6 +70,9 @@ weak_decl int printf(const char*format,...){
 	FreePool(content);
 	return r;
 }
+weak_decl void perror(const char *s){
+	printf(errno==0?"%s\n":"%s: %m\n",s);
+}
 weak_decl int feof(FILE *stream){
 	errno=ENOSYS;
 	return EOF;

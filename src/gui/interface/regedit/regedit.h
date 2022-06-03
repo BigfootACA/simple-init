@@ -12,7 +12,10 @@
 #define REGEDIT_H
 #include<hivex.h>
 #include"gui.h"
+#include"gui/activity.h"
 #include"list.h"
+extern struct gui_register guireg_regedit;
+extern struct gui_register guireg_regedit_value;
 struct regedit{
 	bool changed;
 	lv_obj_t*view,*scr,*info,*lbl_path,*last_btn;
@@ -22,6 +25,12 @@ struct regedit{
 	lv_style_t img_s;
 	hive_h*hive;
 	hive_node_h root,node;
+};
+struct regedit_value{
+	struct regedit*reg;
+	hive_h*hive;
+	hive_node_h node;
+	hive_value_h value;
 };
 extern const char*hivex_type_to_string(hive_type type);
 extern char*hivex_value_to_string(char*buf,size_t len,hive_h*h,hive_value_h val);

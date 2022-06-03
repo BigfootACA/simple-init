@@ -2780,3 +2780,80 @@ msgstr "分配设备失败"
 
 msgid "Fetch input devices events"
 msgstr "获取输入设备事件"
+
+msgid "Edit registry value"
+msgstr "编辑注册表值"
+
+msgid "Value name:"
+msgstr "值名称:"
+
+msgid "Digital base:"
+msgstr "数字进制:"
+
+msgid "Octal (8)"
+msgstr "八进制"
+
+msgid "Decimal (10)"
+msgstr "十进制"
+
+msgid "Hexadecimal (16)"
+msgstr "十六进制"
+
+msgid "Select type to add"
+msgstr "选择要添加的类型"
+
+msgid "Registry Key"
+msgstr "注册表项"
+
+msgid "String Value"
+msgstr "字符串值"
+
+msgid "Multi String Value"
+msgstr "多个字符串值"
+
+msgid "DWORD Value (int32)"
+msgstr "DWORD值(int32)"
+
+msgid "QWORD Value (int64)"
+msgstr "QWORD值(int32)"
+
+msgid "Binary Data Value"
+msgstr "二进制数据值"
+
+msgid "One or more items failed to delete"
+msgstr "有一个或多个项目删除失败"
+
+msgid "Are you sure you want to delete selected items?"
+msgstr "你确定要删除选中的项目吗？"
+
+msgid "Parse value failed: %s"
+msgstr "解析值失败: %s"
+
+msgid "Set value failed: %s"
+msgstr "设置值失败: %s"
+
+msgid ""
+"Notice: Registry Editor is currently in an early beta version, "
+"it MAY DAMAGE YOUR REGISTRY, please backup and use it with caution."
+msgstr ""
+"注意：注册表编辑器目前处于早期测试版本，"
+"有可能会损坏你的注册表，请备份并谨慎使用"
+
+msgid ""
+"Notice: Registry Editor is currently in an early beta version, "
+"it MAY DAMAGE YOUR REGISTRY, are you sure you want to continue save?"
+msgstr ""
+"注意：注册表编辑器目前处于早期测试版本，"
+"有可能会损坏你的注册表，确定要继续保存吗？"
+
+msgid "Registry has changed, do you want to discard any changes?"
+msgstr "注册表已经修改，确定要丢弃所有更改吗？"
+
+msgid "Add registry value failed: %m"
+msgstr "添加注册表值失败: %m"
+
+msgid "Add registry key failed: %m"
+msgstr "添加注册表项失败: %m"
+
+msgid "Edit Registry Value"
+msgstr "编辑注册表值"

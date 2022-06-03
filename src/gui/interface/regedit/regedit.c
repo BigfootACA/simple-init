@@ -21,6 +21,7 @@
 #include"gui/fsext.h"
 #include"gui/msgbox.h"
 #include"gui/activity.h"
+#include"gui/inputbox.h"
 #include"gui/filepicker.h"
 #define TAG "regedit"
 #define MIME_EXT ".svg"
@@ -30,6 +31,7 @@ struct reg_item{
 	bool parent;
 	char name[255];
 	hive_node_h node;
+	hive_value_h dir;
 	hive_value_h value;
 	hive_type type;
 	lv_obj_t*btn,*chk,*img,*val,*xtype;
@@ -116,6 +118,15 @@ static void click_item(lv_obj_t*obj,lv_event_t e){
 			ci->reg->node=ci->node;
 			load_view(ci->reg);
 		}
+	}else{
+		static struct regedit_value value;
+		value.hive=ci->reg->hive;
+		value.value=ci->value;
+		value.node=ci->dir;
+		value.reg=ci->reg;
+		guiact_start_activity(
+			&guireg_regedit_value,&value
+		);
 	}
 }
 
@@ -234,7 +245,7 @@ static void add_item(struct reg_item*ci){
 	}
 }
 
-static void add_node_item(struct regedit*reg,bool parent,hive_node_h n){
+static void add_node_item(struct regedit*reg,bool parent,hive_node_h dir,hive_node_h n){
 	if(!reg)return;
 	char*key;
 	struct reg_item*ci=malloc(sizeof(struct reg_item));
@@ -244,11 +255,14 @@ static void add_node_item(struct regedit*reg,bool parent,hive_node_h n){
 		strncpy(ci->name,key,sizeof(ci->name)-1);
 		free(key);
 	}
-	ci->parent=parent,ci->node=n,ci->reg=reg;
+	ci->parent=parent;
+	ci->node=n;
+	ci->reg=reg;
+	ci->dir=dir;
 	add_item(ci);
 }
 
-static void add_value_item(struct regedit*reg,hive_value_h v){
+static void add_value_item(struct regedit*reg,hive_node_h dir,hive_value_h v){
 	if(!reg)return;
 	char*key=hivex_value_key(reg->hive,v);
 	struct reg_item*ci=malloc(sizeof(struct reg_item));
@@ -258,7 +272,10 @@ static void add_value_item(struct regedit*reg,hive_value_h v){
 	if(hivex_value_type(reg->hive,v,&ci->type,&len)==-1)goto fail;
 	strncpy(ci->name,key,sizeof(ci->name)-1);
 	free(key);
-	ci->parent=false,ci->value=v,ci->reg=reg;
+	ci->parent=false;
+	ci->value=v;
+	ci->reg=reg;
+	ci->dir=dir;
 	add_item(ci);
 	return;
 	fail:
@@ -280,15 +297,15 @@ static void load_view(struct regedit*reg){
 	clean_view(reg);
 	if(reg->hive&&reg->node){
 		hive_node_h pa=hivex_node_parent(reg->hive,reg->node);
-		if(pa)add_node_item(reg,true,pa);
+		if(pa)add_node_item(reg,true,0,pa);
 		hive_node_h*cs=hivex_node_children(reg->hive,reg->node);
 		if(cs){
-			for(i=0;cs[i];i++)add_node_item(reg,false,cs[i]);
+			for(i=0;cs[i];i++)add_node_item(reg,false,reg->node,cs[i]);
 			free(cs);
 		}
 		hive_value_h*vs=hivex_node_values(reg->hive,reg->node);
 		if(vs){
-			for(i=0;vs[i];i++)add_value_item(reg,vs[i]);
+			for(i=0;vs[i];i++)add_value_item(reg,reg->node,vs[i]);
 			free(vs);
 		}
 	}else set_info(reg,_("nothing here"));
@@ -305,6 +322,7 @@ static int regedit_get_focus(struct gui_activity*d){
 	lv_group_add_obj(gui_grp,reg->btn_home);
 	lv_group_add_obj(gui_grp,reg->btn_save);
 	lv_group_add_obj(gui_grp,reg->btn_load);
+	lv_obj_set_enabled(reg->btn_save,reg->changed);
 	return 0;
 }
 
@@ -381,32 +399,204 @@ static bool reg_load_cb(bool ok,const char**p,uint16_t cnt,void*user_data){
 	return false;
 }
 
+struct create_data{
+	uint16_t id;
+	struct regedit*reg;
+};
+
+static bool reg_create_input_cb(bool ok,const char*content,void*user_data){
+	if(!ok)return false;
+	if(!content||!content[0])return true;
+	bool b;
+	struct hive_set_value sv;
+	struct create_data*data=user_data;
+	sv.len=1,sv.key=(char*)content;
+	sv.value=(char[]){0,0,0,0,0,0,0,0};
+	switch(data->id){
+		case 0:{
+			b=hivex_node_add_child(
+				data->reg->hive,
+				data->reg->node,
+				content
+			)==0;
+			if(b)msgbox_alert("Add registry key failed: %m");
+			return b;
+		}break;
+		case 1:sv.t=hive_t_REG_SZ;break;
+		case 2:sv.t=hive_t_REG_MULTI_SZ;break;
+		case 3:sv.t=hive_t_REG_DWORD,sv.len=sizeof(int32_t);break;
+		case 4:sv.t=hive_t_REG_QWORD,sv.len=sizeof(int64_t);break;
+		case 5:sv.t=hive_t_REG_BINARY;break;
+		default:return true;
+	}
+	b=hivex_node_set_value(
+		data->reg->hive,
+		data->reg->node,
+		&sv,0
+	)!=0;
+	if(b)msgbox_alert("Add registry value failed: %m");
+	data->reg->changed=true;
+	return b;
+}
+
+static bool reg_create_cb(uint16_t id,const char*btn __attribute__((unused)),void*user_data){
+	if(id>5)return false;
+	static struct create_data data;
+	data.id=id,data.reg=user_data;
+	inputbox_set_user_data(inputbox_create(
+		reg_create_input_cb,
+		"Input new name"
+	),&data);
+	return false;
+}
+
+static bool reg_save_cb(uint16_t id,const char*btn __attribute__((unused)),void*user_data){
+	if(id!=0)return false;
+	struct regedit*reg=user_data;
+	if(hivex_commit(reg->hive,NULL,0)==0){
+		reg->changed=false;
+		lv_obj_set_enabled(reg->btn_save,reg->changed);
+		tlog_debug("file saved");
+	}else{
+		msgbox_alert("Save registry file failed: %m");
+		tlog_warn("save registry failed: %m");
+	}
+	return false;
+}
+
+static bool reg_delete_cb(uint16_t id,const char*btn __attribute__((unused)),void*user_data){
+	list*l;
+	if(id!=0)return false;
+	struct regedit*reg=user_data;
+	bool failed=false,change_value=false;
+	size_t len=hivex_node_nr_values(reg->hive,reg->node);
+	hive_value_h*vs=hivex_node_values(reg->hive,reg->node);
+	if(!vs){
+		telog_warn("get values failed");
+		failed=true;
+	}else if((l=list_first(reg->items)))do{
+		LIST_DATA_DECLARE(item,l,struct reg_item*);
+		if(!lv_checkbox_is_checked(item->chk))continue;
+		if(
+			item->node&&!item->value&&item->type==hive_t_REG_NONE&&
+			hivex_node_delete_child(reg->hive,item->node)!=0
+		){
+			telog_warn(
+				"delete child key %zu(%s) failed",
+				item->node,item->name
+			);
+			failed=true;
+		}
+		if(!item->node&&item->value&&item->type!=hive_t_REG_NONE){
+			bool found=false;
+			for(size_t i=0;i<len;i++){
+				if(vs[i]!=item->value)continue;
+				vs[i]=0,found=true;
+			}
+			if(found)change_value=true;
+			else{
+				telog_warn(
+					"search child value %zu(%s) failed",
+					item->node,item->name
+				);
+				failed=true;
+			}
+		}
+		reg->changed=true;
+	}while((l=l->next));
+	if(change_value&&!failed){
+		size_t new_len=0;
+		struct hive_set_value*sv;
+		size_t size=(len+1)*sizeof(struct hive_set_value);
+		if(!(sv=malloc(size))){
+			telog_warn("failed to allocate set values");
+			failed=true;
+		}else{
+			memset(sv,0,size);
+			for(size_t i=0;i<len;i++){
+				if(!vs[i])continue;
+				if(!(sv[new_len].key=hivex_value_key(
+					reg->hive,vs[i]
+				))||!(sv[new_len].value=hivex_value_value(
+					reg->hive,vs[i],
+					&sv[new_len].t,
+					&sv[new_len].len
+				))){
+					telog_warn("failed to get value %zu",vs[i]);
+					failed=true;
+					break;
+				}
+				new_len++;
+			}
+			if(!failed&&hivex_node_set_values(
+				reg->hive,reg->node,new_len,sv,0
+			)!=0){
+				telog_warn("failed to set values");
+				failed=true;
+			}
+			for(size_t i=0;i<len;i++){
+				if(sv[i].value)free(sv[i].value);
+				if(sv[i].key)free(sv[i].key);
+			}
+			free(sv);
+		}
+	}
+	if(failed)msgbox_alert("One or more items failed to delete");
+	return false;
+}
+
 static void btns_cb(lv_obj_t*obj,lv_event_t e){
+	list*l;
+	static struct regedit_value value;
+	static const char*create_buttons[]={
+		"Registry Key",
+		"String Value",
+		"Multi String Value",
+		"DWORD Value (int32)",
+		"QWORD Value (int64)",
+		"Binary Data Value",
+		"Cancel",
+		""
+	};
 	if(!obj||e!=LV_EVENT_CLICKED)return;
 	struct regedit*reg=lv_obj_get_user_data(obj);
 	if(!reg||strcmp(guiact_get_last()->name,"regedit")!=0)return;
+	value.hive=reg->hive,value.reg=reg;
+	value.value=0,value.node=0;
 	if(obj==reg->btn_add){
-		msgbox_alert("This function does not implemented");
+		msgbox_set_user_data(msgbox_create_custom(
+			reg_create_cb,
+			create_buttons,
+			"Select type to add"
+		),reg);
 	}else if(obj==reg->btn_reload){
 		load_view(reg);
 	}else if(obj==reg->btn_delete){
-		msgbox_alert("This function does not implemented");
+		msgbox_set_user_data(msgbox_create_yesno(
+			reg_delete_cb,
+			"Are you sure you want to delete selected items?"
+		),reg);
 	}else if(obj==reg->btn_edit){
-		msgbox_alert("This function does not implemented");
+		if((l=list_first(reg->items)))do{
+			LIST_DATA_DECLARE(item,l,struct reg_item*);
+			if(lv_checkbox_is_checked(item->chk)){
+				value.value=item->value;
+				value.node=item->dir;
+			}
+		}while((l=l->next));
+		if(value.value)guiact_start_activity(
+			&guireg_regedit_value,&value
+		);
 	}else if(obj==reg->btn_home){
 		list_free_all_def(reg->path);
 		reg->path=NULL,reg->node=reg->root;
 		load_view(reg);
 	}else if(obj==reg->btn_save){
-		if(reg->changed){
-			if(hivex_commit(reg->hive,NULL,0)==0){
-				reg->changed=true;
-				tlog_debug("file saved");
-			}else{
-				msgbox_alert("Save registry file failed: %m");
-				tlog_warn("save registry failed: %m");
-			}
-		}
+		if(reg->changed)msgbox_set_user_data(msgbox_create_yesno(
+			reg_save_cb,
+			"Notice: Registry Editor is currently in an early beta version, "
+			"it MAY DAMAGE YOUR REGISTRY, are you sure you want to continue save?"
+		),reg);
 	}else if(obj==reg->btn_load){
 		struct filepicker*fp=filepicker_create(reg_load_cb,"Select registry file to load");
 		filepicker_set_max_item(fp,1);
@@ -510,6 +700,10 @@ static int regedit_draw(struct gui_activity*act){
 	lv_label_set_text(lv_label_create(reg->btn_load,NULL),LV_SYMBOL_UPLOAD);
 
 	if(act->args)load_file(reg,act->args);
+	msgbox_alert(
+		"Notice: Registry Editor is currently in an early beta version, "
+		"it MAY DAMAGE YOUR REGISTRY, please backup and use it with caution."
+	);
 	return 0;
 }
 
@@ -526,6 +720,17 @@ static int do_clean(struct gui_activity*d){
 	return 0;
 }
 
+static bool back_cb(uint16_t id,const char*btn __attribute__((unused)),void*user_data){
+	struct regedit*reg=user_data;
+	if(id==0){
+		reg->changed=false;
+		guiact_do_back();
+		guiact_do_back();
+		return true;
+	}
+	return false;
+}
+
 static int do_back(struct gui_activity*d){
 	struct regedit*reg=d->data;
 	if(!reg)return 0;
@@ -533,7 +738,13 @@ static int do_back(struct gui_activity*d){
 		go_back(reg);
 		return 1;
 	}
-	return 0;
+	if(!reg->changed)return 0;
+	msgbox_set_user_data(msgbox_create_yesno(
+		back_cb,
+		"Registry has changed, "
+		"do you want to discard any changes?"
+	),reg);
+	return 1;
 }
 
 static int do_init(struct gui_activity*d){

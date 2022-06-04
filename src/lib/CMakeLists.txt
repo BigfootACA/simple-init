@@ -22,4 +22,5 @@ add_library(init_lib STATIC
 	language.c
 	fdtparser.c
 	aboot.c
+	random.c
 )

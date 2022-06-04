@@ -212,4 +212,13 @@ extern size_t _strlcpy(char*buf,const char*src,size_t len);
 // src/lib/base64.c: base64 encode
 extern int b64_pton(char const*src,unsigned char*target,size_t targsize);
 
+// src/lib/random.c: get random number in range
+extern int rand_get_number(int low_n,int high_n);
+
+// src/lib/random.c: open random device
+extern int random_get_fd(void);
+
+// src/lib/random.c: generate random bytes
+extern int random_get_bytes(void *buf, size_t nbytes);
+
 #endif

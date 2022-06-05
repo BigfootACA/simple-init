@@ -6,6 +6,7 @@ set(CONFIG_H "${CMAKE_CURRENT_BINARY_DIR}/config.h")
 add_definitions(
 	"-Wall "
 	"-Wextra "
+	"-Wno-clobbered "
 	"-Wno-frame-address "
 	"-Wno-unused-parameter "
 	"-Wno-format-truncation "
@@ -42,6 +43,7 @@ option(ENABLE_STB         "Enable stb"                                        ON
 option(ENABLE_LIBTSM      "Enable Terminal-emulator State Machine"            ON)
 option(ENABLE_HIVEX       "Enable hivex for windows registry/bcd edit"        ON)
 option(ENABLE_VNCSERVER   "Enable VNC Server for remote GUI"                  OFF)
+option(BUILD_SHARED       "Build as shared library"                           OFF)
 option(SYSTEM_FREETYPE2   "Use system FreeType 2 library"                     OFF)
 
 configure_file(src/config.h.in "${CONFIG_H}")
@@ -124,6 +126,10 @@ endif()
 
 if("${ENABLE_STRIP}" STREQUAL "ON")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -s")
+endif()
+
+if("${BUILD_SHARED}" STREQUAL "ON")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -shared -fPIC")
 endif()
 
 include(libs/regex/regex.cmake)

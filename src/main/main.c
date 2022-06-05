@@ -20,7 +20,7 @@
 extern void _mxml_global(void);
 
 // simple-init linux entry point
-int main(int argc,char**argv){
+int _simple_init_primary_main(int argc,char**argv){
 
 	// init proctitle
 	spt_init(argc,argv);

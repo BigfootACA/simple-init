@@ -68,7 +68,14 @@ add_custom_command(
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(DEPS REQUIRED IMPORTED_TARGET ${DEPENDS})
 include_directories(${DEPS_INCLUDE_DIRS} include)
-add_executable(simple-init src/main/main.c)
+if("${BUILD_SHARED}" STREQUAL "ON")
+	add_library(simple-init SHARED src/main/main.c)
+else()
+	add_library(simple-init STATIC src/main/main.c)
+endif()
+add_executable(simple-init-bin src/main/wrapper.c)
+target_link_libraries(simple-init-bin simple-init)
+set_target_properties(simple-init-bin PROPERTIES OUTPUT_NAME simple-init)
 set(SUBDIRS
 	src/assets
 	src/boot

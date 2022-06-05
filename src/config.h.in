@@ -24,3 +24,4 @@
 #cmakedefine ENABLE_STB         1
 #cmakedefine ENABLE_LUA         1
 #cmakedefine ENABLE_LIBTSM      1
+#cmakedefine BUILD_SHARED       1

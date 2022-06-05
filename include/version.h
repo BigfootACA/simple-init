@@ -20,12 +20,6 @@
 #define _FEATURE_ASAN
 #endif
 
-#ifdef ENABLE_BLKID
-#define _FEATURE_BLKID "BLKID "
-#else
-#define _FEATURE_BLKID
-#endif
-
 #ifdef ENABLE_KMOD
 #define _FEATURE_KMOD "KMOD "
 #else
@@ -42,12 +36,6 @@
 #define _FEATURE_FREETYPE2 "FREETYPE2 "
 #else
 #define _FEATURE_FREETYPE2
-#endif
-
-#ifdef ENABLE_FDISK
-#define _FEATURE_FDISK "FDISK "
-#else
-#define _FEATURE_FDISK
 #endif
 
 #ifdef ENABLE_GUI
@@ -72,12 +60,6 @@
 #define _FEATURE_SDL2 "SDL2 "
 #else
 #define _FEATURE_SDL2
-#endif
-
-#ifdef ENABLE_UUID
-#define _FEATURE_UUID "UUID "
-#else
-#define _FEATURE_UUID
 #endif
 
 #ifdef ENABLE_LODEPNG
@@ -134,20 +116,15 @@
 #define _FEATURE_LUA
 #endif
 
-#define _FEATURE_MOUNT "MOUNT"
-
 #define FEATURES \
 	_FEATURE_ASAN \
-	_FEATURE_BLKID \
 	_FEATURE_KMOD \
 	_FEATURE_READLINE \
 	_FEATURE_FREETYPE2 \
-	_FEATURE_FDISK \
 	_FEATURE_GUI \
 	_FEATURE_DRM \
 	_FEATURE_GTK \
 	_FEATURE_SDL2 \
-	_FEATURE_UUID \
 	_FEATURE_LODEPNG \
 	_FEATURE_LIBJPEG \
 	_FEATURE_NANOSVG \
@@ -156,8 +133,7 @@
 	_FEATURE_VNCSERVER \
 	_FEATURE_HIVEX \
 	_FEATURE_STB \
-	_FEATURE_LUA \
-	_FEATURE_MOUNT
+	_FEATURE_LUA
 
 #define VERSION_INFO \
 	PRODUCT "\n"\

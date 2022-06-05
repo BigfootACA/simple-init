@@ -6,7 +6,6 @@
  *
  */
 
-#ifdef ENABLE_BLKID
 #include<stdio.h>
 #include<stdlib.h>
 #include<blkid/blkid.h>
@@ -38,4 +37,3 @@ int findfs_main(int argc,char**argv){
 	free(dev);
 	return 0;
 }
-#endif

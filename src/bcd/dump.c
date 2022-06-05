@@ -7,7 +7,6 @@
  */
 
 #ifdef ENABLE_HIVEX
-#ifdef ENABLE_UUID
 #define _GNU_SOURCE
 #include<hivex.h>
 #include<string.h>
@@ -160,5 +159,4 @@ void bcd_dump_all(struct bcd_store*bcd){
 		putchar('\n');
 	}
 }
-#endif
 #endif

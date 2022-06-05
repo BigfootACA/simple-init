@@ -7,7 +7,6 @@
  */
 
 #ifdef ENABLE_HIVEX
-#ifdef ENABLE_UUID
 #define _GNU_SOURCE
 #include<string.h>
 #include<endian.h>
@@ -52,5 +51,4 @@ const char*bcd_get_name_by_guid(uuid_t uuid){
 	return NULL;
 }
 
-#endif
 #endif

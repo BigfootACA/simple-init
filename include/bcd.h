@@ -7,7 +7,6 @@
  */
 
 #ifdef ENABLE_HIVEX
-#ifdef ENABLE_UUID
 #ifndef _BCD_H
 #define _BCD_H
 #include<stdint.h>
@@ -195,6 +194,5 @@ extern char*bcd_device_get_disk_uuid_string(bcd_device dev,char*uuid);
 extern bool bcd_device_get_part_uuid(bcd_device dev,uuid_t*uuid);
 extern char*bcd_device_get_part_uuid_string(bcd_device dev,char*uuid);
 extern void bcd_device_free(bcd_device dev);
-#endif
 #endif
 #endif

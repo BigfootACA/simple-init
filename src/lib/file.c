@@ -18,9 +18,7 @@
 #include<sys/ioctl.h>
 #include<sys/sysmacros.h>
 #include<linux/loop.h>
-#ifdef ENABLE_BLKID
 #include<blkid/blkid.h>
-#endif
 #include"str.h"
 #include"logger.h"
 #include"system.h"
@@ -160,28 +158,21 @@ int remove_folders(int dfd,int flags){
 
 int has_block(char*block){
 	char*p=block;
-	#ifdef ENABLE_BLKID
 	if(
 		block[0]!='/'&&
 		!(p=blkid_evaluate_tag(block,NULL,NULL))
 	)return false;
-	#endif
 	struct stat st;
 	if(stat(p,&st)<0)return errno==ENOENT?false:-1;
 	if(!S_ISBLK(st.st_mode)){
 		errno=ENOTBLK;
 		return -1;
 	}
-	#ifdef ENABLE_BLKID
 	free(p);
-	#endif
 	return true;
 }
 
 int wait_block(char*block,long time,char*tag){
-	#ifndef ENABLE_BLKID
-	if(block[0]!='/')return elog_alert(tag,"evaluate tag support is disabled");
-	#endif
 	bool msg=false;
 	long t=0;
 	while(time==0||t++<time)switch(has_block(block)){

@@ -1,5 +1,3 @@
-set(DEPENDS mount)
-
 if("${ENABLE_READLINE}" STREQUAL "ON")
 	set(DEPENDS ${DEPENDS} readline)
 endif()
@@ -14,18 +12,6 @@ endif()
 
 if(("${ENABLE_FREETYPE2}" STREQUAL "ON") AND ("${SYSTEM_FREETYPE2}" STREQUAL "ON"))
 	set(DEPENDS ${DEPENDS} freetype2)
-endif()
-
-if("${ENABLE_FDISK}" STREQUAL "ON")
-	set(DEPENDS ${DEPENDS} fdisk)
-endif()
-
-if("${ENABLE_BLKID}" STREQUAL "ON")
-	set(DEPENDS ${DEPENDS} blkid)
-endif()
-
-if("${ENABLE_UUID}" STREQUAL "ON")
-	set(DEPENDS ${DEPENDS} uuid)
 endif()
 
 if("${ENABLE_VNCSERVER}" STREQUAL "ON")
@@ -65,9 +51,12 @@ add_custom_command(
 		"${CMAKE_SOURCE_DIR}/root/usr/share/locale"
 )
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(DEPS REQUIRED IMPORTED_TARGET ${DEPENDS})
-include_directories(${DEPS_INCLUDE_DIRS} include)
+if(NOT "${DEPENDS}" STREQUAL "")
+	find_package(PkgConfig REQUIRED)
+	pkg_check_modules(DEPS REQUIRED IMPORTED_TARGET ${DEPENDS})
+	include_directories(${DEPS_INCLUDE_DIRS} include)
+endif()
+
 if("${BUILD_SHARED}" STREQUAL "ON")
 	add_library(simple-init SHARED src/main/main.c)
 else()
@@ -150,12 +139,16 @@ if("${ENABLE_HIVEX}" STREQUAL "ON")
 	target_link_libraries(simple-init hivex)
 endif()
 
+target_link_libraries(simple-init mount uuid blkid fdisk smartcols)
+
 target_link_libraries(simple-init -Wl,--end-group)
 
-if("${ENABLE_STATIC}" STREQUAL "ON")
-	target_link_libraries(simple-init ${DEPS_STATIC_LIBRARIES})
-else()
-	target_link_libraries(simple-init ${DEPS_LIBRARIES})
+if(NOT "${DEPS_STATIC_LIBRARIES}" STREQUAL "" OR NOT "${DEPS_LIBRARIES}" STREQUAL "")
+	if("${ENABLE_STATIC}" STREQUAL "ON")
+		target_link_libraries(simple-init ${DEPS_STATIC_LIBRARIES})
+	else()
+		target_link_libraries(simple-init ${DEPS_LIBRARIES})
+	endif()
 endif()
 
 target_link_libraries(simple-init pthread crypt regex)

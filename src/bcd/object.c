@@ -7,7 +7,6 @@
  */
 
 #ifdef ENABLE_HIVEX
-#ifdef ENABLE_UUID
 #define _GNU_SOURCE
 #include<hivex.h>
 #include<string.h>
@@ -262,5 +261,4 @@ void bcd_objects_free(bcd_object*objs){
 	free(objs);
 }
 
-#endif
 #endif

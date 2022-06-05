@@ -9,14 +9,11 @@
 #cmakedefine ENABLE_GTK         1
 #cmakedefine ENABLE_SDL2        1
 #cmakedefine ENABLE_GUI         1
-#cmakedefine ENABLE_UUID        1
 #cmakedefine ENABLE_FREETYPE2   1
 #cmakedefine ENABLE_LODEPNG     1
 #cmakedefine ENABLE_LIBJPEG     1
 #cmakedefine ENABLE_NANOSVG     1
-#cmakedefine ENABLE_FDISK       1
 #cmakedefine ENABLE_KMOD        1
-#cmakedefine ENABLE_BLKID       1
 #cmakedefine ENABLE_JSONC       1
 #cmakedefine ENABLE_MXML        1
 #cmakedefine ENABLE_VNCSERVER   1

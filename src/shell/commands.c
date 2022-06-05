@@ -75,9 +75,7 @@ const struct shell_command*shell_cmds[]={
 	DECLARE_CMD(true,  modprobe,    "Add and remove modules from the Linux Kernel")
 	DECLARE_CMD(true,  rmmod,       "Remove a module from the Linux Kernel")
 	#endif
-	#ifdef ENABLE_BLKID
 	DECLARE_CMD(true,  findfs,      "Find a filesystem by label or UUID")
-	#endif
 	#ifdef ENABLE_GUI
 	DECLARE_CMD(true,  benchmark,   "GUI Benchmark")
 	DECLARE_CMD(true,  guiapp,      "GUI Application")

@@ -7,7 +7,6 @@
  */
 
 #ifdef ENABLE_HIVEX
-#ifdef ENABLE_UUID
 #define _GNU_SOURCE
 #include<hivex.h>
 #include<string.h>
@@ -202,5 +201,4 @@ size_t bcd_element_get_value_length(bcd_element ele){
 	return ele?ele->val_len:0;
 }
 
-#endif
 #endif

@@ -7,7 +7,6 @@
  */
 
 #ifdef ENABLE_HIVEX
-#ifdef ENABLE_UUID
 #define _GNU_SOURCE
 #include<hivex.h>
 #include<string.h>
@@ -62,5 +61,4 @@ void bcd_device_free(bcd_device dev){
 	if(dev)free(dev);
 }
 
-#endif
 #endif

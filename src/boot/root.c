@@ -15,9 +15,7 @@
 #include<sys/stat.h>
 #include<sys/ioctl.h>
 #include<linux/loop.h>
-#ifdef ENABLE_BLKID
 #include<blkid/blkid.h>
-#endif
 #include"str.h"
 #include"boot.h"
 #include"confd.h"
@@ -42,7 +40,6 @@ static char*get_block(char*path,int wait){
 	}
 
 	// resolve root block tag
-	#ifdef ENABLE_BLKID
 	if(block[0]!='/'){
 		char*x=blkid_evaluate_tag(block,NULL,NULL);
 		free(block);
@@ -52,7 +49,6 @@ static char*get_block(char*path,int wait){
 		}
 		block=x;
 	}
-	#endif
 
 	// stat root block
 	if(stat(block,&st)<0){
@@ -78,13 +74,11 @@ static char*get_fstype(boot_config*boot,const char*path,char*key,char*buf,size_t
 	memset(mod,0,sizeof(mod));
 	if(key&&(t1=confd_get_string_base(boot->key,key,NULL)))goto success;
 
-	#ifdef ENABLE_BLKID
 	// fstype not set, auto detect
 	errno=0;
 	if(!cache)blkid_get_cache(&cache,NULL);
 	if((t2=blkid_get_tag_value(cache,"TYPE",path)))goto success;
 	else telog_warn("cannot determine fstype in %s",path);
-	#endif
 
 	EPRET(ENOTSUP);
 	success:
@@ -340,9 +334,7 @@ int run_boot_root(boot_config*boot){
 
 	done:
 	if(path)free(path);
-	#ifdef ENABLE_BLKID
 	if(cache)blkid_put_cache(cache);
-	#endif
 	return e;
 	fail:
 	if(errno==0)errno=e==0?ENOTSUP:0;

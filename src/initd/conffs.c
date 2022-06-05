@@ -12,9 +12,7 @@
 #include<stdlib.h>
 #include<string.h>
 #include<pthread.h>
-#ifdef ENABLE_BLKID
 #include<blkid/blkid.h>
-#endif
 #include"init.h"
 #include"confd.h"
 #include"logger.h"
@@ -44,13 +42,9 @@ static int _setup_conffs(){
 	wait_block(conffs,10,TAG);
 
 	if(conffs[0]!='/'){
-	#ifdef ENABLE_BLKID
 		char*x=blkid_evaluate_tag(conffs,NULL,NULL);
 		free(conffs);
 		conffs=x;
-	#else
-		tlog_alert("evaluate tag support is disabled");
-	#endif
 	}
 	if(!conffs){
 		if(conffile)free(conffile);
@@ -58,7 +52,6 @@ static int _setup_conffs(){
 	}
 
 	char*type=NULL;
-	#ifdef ENABLE_BLKID
 	blkid_cache cache=NULL;
 	blkid_get_cache(&cache,NULL);
 	if(!(type=blkid_get_tag_value(cache,"TYPE",conffs))){
@@ -73,7 +66,6 @@ static int _setup_conffs(){
 	snprintf(mod,63,"fs-%s",type);
 	insmod(mod,false);
 	#endif
-	#endif
 
 	char point[PATH_MAX];
 	if((e=auto_mount(conffs,type,point,PATH_MAX))!=0)goto ex;
@@ -86,12 +78,10 @@ static int _setup_conffs(){
 	e=confd_set_default_config(path);
 	confd_load_file(path);
 	ex:
-	#ifdef ENABLE_BLKID
 	if(cache){
 		if(type)free(type);
 		blkid_put_cache(cache);
 	}
-	#endif
 	if(conffile)free(conffile);
 	free(conffs);
 	return e;

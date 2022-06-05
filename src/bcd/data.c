@@ -7,7 +7,6 @@
  */
 
 #ifdef ENABLE_HIVEX
-#ifdef ENABLE_UUID
 #include"array.h"
 #include"bcdstore.h"
 const char*bcd_type_debugger_type_name[]={
@@ -291,5 +290,4 @@ struct bcd_guid_table BcdGuidTable[]={
 	{NULL,{0}}
 
 };
-#endif
 #endif

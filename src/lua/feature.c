@@ -18,9 +18,6 @@ LUAMOD_API int lua_feature(lua_State*L){
 	#ifdef ENABLE_UEFI
 	if(strcasecmp(key,"uefi")==0)result=true;
 	#endif
-	#ifdef ENABLE_BLKID
-	if(strcasecmp(key,"blkid")==0)result=true;
-	#endif
 	#ifdef ENABLE_KMOD
 	if(strcasecmp(key,"kmod")==0)result=true;
 	#endif
@@ -29,9 +26,6 @@ LUAMOD_API int lua_feature(lua_State*L){
 	#endif
 	#ifdef ENABLE_FREETYPE2
 	if(strcasecmp(key,"freetype2")==0)result=true;
-	#endif
-	#ifdef ENABLE_FDISK
-	if(strcasecmp(key,"fdisk")==0)result=true;
 	#endif
 	#ifdef ENABLE_GUI
 	if(strcasecmp(key,"gui")==0)result=true;
@@ -44,9 +38,6 @@ LUAMOD_API int lua_feature(lua_State*L){
 	#endif
 	#ifdef ENABLE_SDL2
 	if(strcasecmp(key,"sdl2")==0)result=true;
-	#endif
-	#ifdef ENABLE_UUID
-	if(strcasecmp(key,"uuid")==0)result=true;
 	#endif
 	#ifdef ENABLE_LODEPNG
 	if(strcasecmp(key,"lodepng")==0)result=true;

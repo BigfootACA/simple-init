@@ -7,7 +7,6 @@
  */
 
 #ifdef ENABLE_HIVEX
-#ifdef ENABLE_UUID
 #define _GNU_SOURCE
 #include<hivex.h>
 #include<string.h>
@@ -54,5 +53,4 @@ void bcd_store_free(bcd_store store){
 	free(store);
 }
 
-#endif
 #endif

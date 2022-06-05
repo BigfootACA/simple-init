@@ -7,7 +7,7 @@
  */
 
 #define _GNU_SOURCE
-#ifdef ENABLE_INITSHELL
+#ifdef ENABLE_READLINE
 #include<errno.h>
 #include<stdio.h>
 #include<stdlib.h>

@@ -4,7 +4,7 @@
 #cmakedefine ENABLE_STATIC      1
 #cmakedefine ENABLE_PIE         1
 #cmakedefine ENABLE_ASAN        1
-#cmakedefine ENABLE_INITSHELL   1
+#cmakedefine ENABLE_READLINE    1
 #cmakedefine ENABLE_DRM         1
 #cmakedefine ENABLE_GTK         1
 #cmakedefine ENABLE_SDL2        1

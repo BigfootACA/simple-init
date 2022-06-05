@@ -151,7 +151,7 @@ static int create_subprocess(const char *cmd,const char *arg0,const char *arg1,p
 		if(!getenv("TERM"))setenv("TERM","xterm-256color",0);
 		if((g=getenv("HOME"))&&chdir(g)<0)telog_warn("chdir to %s failed",g);
 		char*exe=(char*)cmd,*name=(char*)cmd;
-		#ifdef ENABLE_INITSHELL
+		#ifdef ENABLE_READLINE
 		if(!cmd||strlen(cmd)==0)exe=_PATH_PROC_SELF"/exe",name="initshell";
 		#else
 		exe="/bin/sh",name="sh";

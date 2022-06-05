@@ -6,7 +6,7 @@
  *
  */
 
-#ifdef ENABLE_INITSHELL
+#ifdef ENABLE_READLINE
 #define _GNU_SOURCE
 #include<unistd.h>
 #include<string.h>

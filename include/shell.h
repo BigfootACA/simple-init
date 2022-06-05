@@ -22,7 +22,7 @@ struct shell_command{
 	cmd_main*main;
 };
 
-#ifdef ENABLE_INITSHELL
+#ifdef ENABLE_READLINE
 
 // src/shelld/shell.c: next status code
 extern unsigned char exit_code;

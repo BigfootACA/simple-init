@@ -88,7 +88,7 @@ static int tty_start_shell(struct tty_data*data){
 	tty_try_start_shell(data->shell);
 	tty_try_start_shell(getenv("SHELL"));
 	tty_try_start_shell("/bin/sh");
-	#ifdef ENABLE_INITSHELL
+	#ifdef ENABLE_READLINE
 	run_shell();
 	#endif
 	tlog_warn("no usable shell found");

@@ -18,7 +18,7 @@ extern int register_bootmenu();
 extern int register_ttyd();
 
 int(*register_services[])()={
-	#ifdef ENABLE_INITSHELL
+	#ifdef ENABLE_READLINE
 	&register_console_shell,
 	#endif
 	&register_default_boot,

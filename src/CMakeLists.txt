@@ -1,6 +1,6 @@
 set(DEPENDS mount)
 
-if("${ENABLE_INITSHELL}" STREQUAL "ON")
+if("${ENABLE_READLINE}" STREQUAL "ON")
 	set(DEPENDS ${DEPENDS} readline)
 endif()
 

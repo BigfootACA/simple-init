@@ -6,7 +6,7 @@
  *
  */
 
-#ifdef ENABLE_INITSHELL
+#ifdef ENABLE_READLINE
 #include<errno.h>
 #include<stdlib.h>
 #include<unistd.h>

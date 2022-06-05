@@ -35,6 +35,6 @@ add_library(lua STATIC
 )
 target_compile_definitions(lua PRIVATE LUA_USE_LINUX=1 main=lua_main)
 target_compile_options(lua PRIVATE -Wno-implicit-fallthrough)
-if ("${ENABLE_INITSHELL}" STREQUAL "ON")
+if ("${ENABLE_READLINE}" STREQUAL "ON")
 	target_compile_definitions(lua PRIVATE LUA_USE_READLINE=1)
 endif()

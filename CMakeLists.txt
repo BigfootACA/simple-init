@@ -23,7 +23,7 @@ option(ENABLE_STATIC      "Enable static link"                                OF
 option(ENABLE_PIE         "Enable Position-Independent-Executable"            OFF)
 option(ENABLE_ASAN        "Enable Address Sanitizer"                          OFF)
 
-option(ENABLE_INITSHELL   "Enable builtin shell"                              ON)
+option(ENABLE_READLINE    "Enable readline for  builtin shell"                ON)
 option(ENABLE_DRM         "Enable DRM"                                        ON)
 option(ENABLE_GTK         "Enable GTK"                                        OFF)
 option(ENABLE_SDL2        "Enable SDL2"                                       OFF)

@@ -65,7 +65,7 @@ DECLARE_MAIN(simple_init);
 DECLARE_MAIN(lua);
 
 const struct shell_command*shell_cmds[]={
-	#ifdef ENABLE_INITSHELL
+	#ifdef ENABLE_READLINE
 	DECLARE_CMD(false, exit,        "Exit shell")
 	DECLARE_CMD(true,  initshell,   "Simple init builtin shell")
 	#endif

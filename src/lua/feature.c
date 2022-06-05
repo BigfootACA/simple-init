@@ -24,7 +24,7 @@ LUAMOD_API int lua_feature(lua_State*L){
 	#ifdef ENABLE_KMOD
 	if(strcasecmp(key,"kmod")==0)result=true;
 	#endif
-	#ifdef ENABLE_INITSHELL
+	#ifdef ENABLE_READLINE
 	if(strcasecmp(key,"initshell")==0)result=true;
 	#endif
 	#ifdef ENABLE_FREETYPE2

@@ -7,7 +7,6 @@
  */
 
 #define _GNU_SOURCE
-#ifdef ENABLE_KMOD
 #include<ctype.h>
 #include<dirent.h>
 #include<stdlib.h>
@@ -92,4 +91,3 @@ int mods_conf_parse(){
 		mods_conf_parse_folder(path[i]);
 	return 0;
 }
-#endif

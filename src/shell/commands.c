@@ -69,12 +69,10 @@ const struct shell_command*shell_cmds[]={
 	DECLARE_CMD(false, exit,        "Exit shell")
 	DECLARE_CMD(true,  initshell,   "Simple init builtin shell")
 	#endif
-	#ifdef ENABLE_KMOD
 	DECLARE_CMD(true,  insmod,      "Insert a module into the Linux Kernel")
 	DECLARE_CMD(true,  lsmod,       "Show the status of modules in the Linux Kernel")
 	DECLARE_CMD(true,  modprobe,    "Add and remove modules from the Linux Kernel")
 	DECLARE_CMD(true,  rmmod,       "Remove a module from the Linux Kernel")
-	#endif
 	DECLARE_CMD(true,  findfs,      "Find a filesystem by label or UUID")
 	#ifdef ENABLE_GUI
 	DECLARE_CMD(true,  benchmark,   "GUI Benchmark")

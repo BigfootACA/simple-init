@@ -6,7 +6,6 @@
  *
  */
 
-#ifdef ENABLE_KMOD
 #include<stdio.h>
 #include<errno.h>
 #include<libkmod.h>
@@ -51,4 +50,3 @@ int lsmod_main(int argc,char**argv __attribute__((unused))){
 	kmod_unref(ctx);
 	return 0;
 }
-#endif

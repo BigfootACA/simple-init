@@ -71,10 +71,8 @@ extern char*get_commname(pid_t pid,char*buff,size_t size,bool with_pid);
 extern char*ucred2string(struct ucred*c,char*buff,size_t size,bool with_pid);
 #endif
 
-#ifdef ENABLE_KMOD
 // src/lib/modules.c: lookup and load module by alias
 extern int insmod(const char*alias,bool log);
-#endif
 #endif
 
 // src/lib/file.c: remove all sub folders (depth 1)

@@ -53,8 +53,6 @@ extern int devd_call_quit(void);
 // open default devd socket
 #define open_default_devd_socket(tag) open_devd_socket(tag,DEFAULT_DEVD)
 
-#ifdef ENABLE_KMOD
-
 // src/devd/modules_load.c: load modules from list config
 extern int mods_conf_parse_file(const char*name,const char*file);
 
@@ -66,8 +64,5 @@ extern int mods_conf_parse(void);
 
 // src/devd/modalias.c: search modalias in /sys/devices to load all modules
 extern int load_modalias(void);
-#else
-static inline int load_modalias(void){return 0;}
-#endif
 
 #endif

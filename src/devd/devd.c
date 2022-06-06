@@ -88,8 +88,6 @@ int process_uevent(uevent*event){
 		if(strcmp(event->subsystem,"module")==0)process_module(event);
 	}
 	if(event->major>=0&&event->minor>=0)process_new_node(0,event);
-	#ifdef ENABLE_KMOD
 	if(event->modalias)insmod(event->modalias,false);
-	#endif
 	return 0;
 }

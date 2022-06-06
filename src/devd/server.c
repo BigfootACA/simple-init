@@ -99,17 +99,13 @@ static void*process_thread(void*d){
 
 		// scan /sys/devices and load all modalias
 		case DEV_MODALIAS:
-			#ifdef ENABLE_KMOD
 			tlog_debug("receive modalias request");
 			if(load_modalias()<0)telog_warn("load_modalias failed");
-			#endif
 		break;
 
 		case DEV_MODLOAD:
-			#ifdef ENABLE_KMOD
 			tlog_debug("receive modules load request");
 			mods_conf_parse();
-			#endif
 		break;
 
 		// terminate devd

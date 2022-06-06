@@ -63,11 +63,9 @@ static int _setup_logfs(){
 		cache=NULL;
 	}
 
-	#ifdef ENABLE_KMOD
 	char mod[64]={0};
 	snprintf(mod,63,"fs-%s",type);
 	insmod(mod,false);
-	#endif
 
 	char point[PATH_MAX];
 	if((e=auto_mount(logfs,type,point,PATH_MAX))!=0)goto ex;

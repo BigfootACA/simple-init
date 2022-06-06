@@ -2,10 +2,6 @@ if("${ENABLE_READLINE}" STREQUAL "ON")
 	set(DEPENDS ${DEPENDS} readline)
 endif()
 
-if("${ENABLE_KMOD}" STREQUAL "ON")
-	set(DEPENDS ${DEPENDS} libkmod)
-endif()
-
 if("${ENABLE_DRM}" STREQUAL "ON")
 	set(DEPENDS ${DEPENDS} libdrm)
 endif()
@@ -139,7 +135,7 @@ if("${ENABLE_HIVEX}" STREQUAL "ON")
 	target_link_libraries(simple-init hivex)
 endif()
 
-target_link_libraries(simple-init mount uuid blkid fdisk smartcols)
+target_link_libraries(simple-init kmod mount uuid blkid fdisk smartcols)
 
 target_link_libraries(simple-init -Wl,--end-group)
 

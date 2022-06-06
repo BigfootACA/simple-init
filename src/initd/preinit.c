@@ -158,14 +158,11 @@ int preinit(){
 	chmod(dev_logger,0600);
 	chown(dev_logger,0,0);
 
-
-	#ifdef ENABLE_KMOD
 	// load modules from list config
 	devd_call_modload();
 
 	// load all modules
 	devd_call_modalias();
-	#endif
 
 	// setup logfs and save log
 	setup_logfs();

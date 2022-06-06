@@ -18,9 +18,6 @@ LUAMOD_API int lua_feature(lua_State*L){
 	#ifdef ENABLE_UEFI
 	if(strcasecmp(key,"uefi")==0)result=true;
 	#endif
-	#ifdef ENABLE_KMOD
-	if(strcasecmp(key,"kmod")==0)result=true;
-	#endif
 	#ifdef ENABLE_READLINE
 	if(strcasecmp(key,"initshell")==0)result=true;
 	#endif

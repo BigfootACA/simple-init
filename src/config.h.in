@@ -13,7 +13,6 @@
 #cmakedefine ENABLE_LODEPNG     1
 #cmakedefine ENABLE_LIBJPEG     1
 #cmakedefine ENABLE_NANOSVG     1
-#cmakedefine ENABLE_KMOD        1
 #cmakedefine ENABLE_JSONC       1
 #cmakedefine ENABLE_MXML        1
 #cmakedefine ENABLE_VNCSERVER   1

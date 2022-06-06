@@ -7,7 +7,6 @@
  */
 
 #define _GNU_SOURCE
-#ifdef ENABLE_KMOD
 #include<dirent.h>
 #include<unistd.h>
 #include<fcntl.h>
@@ -78,4 +77,3 @@ int load_modalias(){
 	close(dfd);
 	return r;
 }
-#endif

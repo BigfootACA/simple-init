@@ -20,12 +20,6 @@
 #define _FEATURE_ASAN
 #endif
 
-#ifdef ENABLE_KMOD
-#define _FEATURE_KMOD "KMOD "
-#else
-#define _FEATURE_KMOD
-#endif
-
 #ifdef ENABLE_READLINE
 #define _FEATURE_READLINE "READLINE "
 #else
@@ -118,7 +112,6 @@
 
 #define FEATURES \
 	_FEATURE_ASAN \
-	_FEATURE_KMOD \
 	_FEATURE_READLINE \
 	_FEATURE_FREETYPE2 \
 	_FEATURE_GUI \

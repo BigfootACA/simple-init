@@ -65,9 +65,7 @@ int open_usb_gadget(){
 		if(mount("configfs",c,"configfs",0,NULL)<0)
 			return terlog_error(-1,"failed to mount configfs");
 	}
-	#ifdef ENABLE_KMOD
 	insmod("libcomposite",false);
-	#endif
 	snprintf(p,PATH_MAX,"%s/usb_gadget",c);
 	if((o=open(p,O_DIR|O_CLOEXEC))<0)
 		return terlog_error(-1,"failed to open gadget configfs");
@@ -75,9 +73,7 @@ int open_usb_gadget(){
 }
 
 char*gadget_find_udc(){
-	#ifdef ENABLE_KMOD
 	insmod("udc-core",false);
-	#endif
 	DIR*d=opendir(_PATH_SYS_CLASS"/udc");
 	if(!d){
 		telog_error("cannot open UDC class");

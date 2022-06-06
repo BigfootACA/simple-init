@@ -8,7 +8,6 @@
  *
  */
 
-#ifdef ENABLE_KMOD
 #include<errno.h>
 #include<stdio.h>
 #include<libkmod.h>
@@ -118,4 +117,3 @@ int rmmod_main(int argc,char**argv){
 	done:
 	return r==0?0:1;
 }
-#endif

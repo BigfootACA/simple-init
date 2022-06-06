@@ -6,7 +6,6 @@
  *
  */
 
-#ifdef ENABLE_KMOD
 #include<errno.h>
 #include<stdio.h>
 #include<string.h>
@@ -115,4 +114,3 @@ int insmod(const char*alias,bool log){
 	kmod_unref(ctx);
 	return r;
 }
-#endif

@@ -84,11 +84,9 @@ static char*get_fstype(boot_config*boot,const char*path,char*key,char*buf,size_t
 	success:
 	strncpy(buf,t1?t1:t2,len-1);
 	if(t2)free(t2);
-	#ifdef ENABLE_KMOD
 	// load modules for filesystem
 	snprintf(mod,63,"fs-%s",buf);
 	insmod(mod,false);
-	#endif
 	errno=0;
 	return buf;
 }
@@ -134,9 +132,7 @@ static int setup_loop(boot_config*boot,bool ro,char*path,size_t len){
 	tlog_info("use loop image %s (size %zu)",loop,st.st_size);
 
 	// get a free loop device
-	#ifdef ENABLE_KMOD
 	insmod("loop",false);
-	#endif
 	if(loop_get_free(blk,sizeof(blk))<0)
 		EGOTO(terlog_error(-errno,"get free loop failed"));
 
@@ -249,9 +245,7 @@ static int setup_overlay(boot_config*boot,int wait,char*path,size_t len){
 	);
 
 	// mount overlay
-	#ifdef ENABLE_KMOD
 	insmod("fs-overlay",false);
-	#endif
 	if(!auto_mountpoint(overlay_point,sizeof(overlay_point)))
 		EGOTO(terlog_error(-errno,"cannot get new mountpoint"));
 	if(xmount(

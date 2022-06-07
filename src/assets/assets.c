@@ -80,7 +80,12 @@ int create_assets_file(int dfd,entry_file*file,bool pres,bool override){
 			r=symlinkat(file->content,dfd,file->info.name);
 		break;
 		case S_IFREG:
-			if((fd=openat(dfd,file->info.name,O_WRONLY|O_CREAT))<0)return -errno;
+			if((fd=openat(
+				dfd,
+				file->info.name,
+				O_WRONLY|O_CREAT,
+				file->info.mode
+			))<0)return -errno;
 			r=write_assets_file(fd,file,pres);
 			close(fd);
 		break;

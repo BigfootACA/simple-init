@@ -39,7 +39,11 @@ int open_log_file(char*path){
 		if(!(f=malloc(sizeof(struct open_file))))return -1;
 		memset(f,0,sizeof(struct open_file));
 		strncpy(f->file,path,sizeof(f->file)-1);
-		if((f->fd=open(path,O_WRONLY|O_SYNC|O_APPEND|O_CREAT))<0){
+		if((f->fd=open(
+			path,
+			O_WRONLY|O_SYNC|O_APPEND|O_CREAT,
+			0644
+		))<0){
 			free(f);
 			return -1;
 		}

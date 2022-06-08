@@ -57,16 +57,23 @@ bool contains_of(const char*source,size_t size,char x){
 	return false;
 }
 
-bool check_nvalid(const char*source,size_t size_source,const char*valid,size_t size_valid){
+bool check_nvalid(
+	const char*source,size_t size_source,
+	const char*valid,size_t size_valid
+){
 	size_t idx=0;
 	char c;
 	if(!source||!valid)return false;
-	while(idx<size_source&&(c=source[idx++])>0)if(!contains_of(valid,size_valid,c))return false;
+	while(idx<size_source&&(c=source[idx++])>0)
+		if(!contains_of(valid,size_valid,c))return false;
 	return true;
 }
 
 bool check_valid(char*source,const char*valid){
-	return check_nvalid(source,strlen(source),valid,strlen(valid));
+	return check_nvalid(
+		source,strlen(source),
+		valid,strlen(valid)
+	);
 }
 
 bool check_nvalid_default(char*source,size_t size){

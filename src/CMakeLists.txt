@@ -38,13 +38,13 @@ add_custom_command(
 		"${CMAKE_CURRENT_BINARY_DIR}/rootfs.c"
 		"${CMAKE_CURRENT_BINARY_DIR}/rootfs_data.o"
 	COMMAND env CC="${CMAKE_C_COMPILER}" bash
-		"${CMAKE_SOURCE_DIR}/scripts/gen-rootfs-source.sh"
-		"${CMAKE_SOURCE_DIR}"
+		"${CMAKE_CURRENT_SOURCE_DIR}/scripts/gen-rootfs-source.sh"
+		"${CMAKE_CURRENT_SOURCE_DIR}"
 		"${CMAKE_CURRENT_BINARY_DIR}"
-		"${CMAKE_SOURCE_DIR}/root"
+		"${CMAKE_CURRENT_SOURCE_DIR}/root"
 	DEPENDS
-		"${CMAKE_SOURCE_DIR}/root"
-		"${CMAKE_SOURCE_DIR}/root/usr/share/locale"
+		"${CMAKE_CURRENT_SOURCE_DIR}/root"
+		"${CMAKE_CURRENT_SOURCE_DIR}/root/usr/share/locale"
 )
 
 if(NOT "${DEPENDS}" STREQUAL "")
@@ -100,7 +100,11 @@ if(("${ENABLE_FREETYPE2}" STREQUAL "ON") AND ("${SYSTEM_FREETYPE2}" STREQUAL "OF
 	target_link_libraries(simple-init freetype2)
 endif()
 
-add_library(init_rootfs STATIC ${CMAKE_CURRENT_BINARY_DIR}/rootfs.c ${CMAKE_CURRENT_BINARY_DIR}/rootfs_data.o)
+add_library(
+	init_rootfs STATIC
+	${CMAKE_CURRENT_BINARY_DIR}/rootfs.c
+	${CMAKE_CURRENT_BINARY_DIR}/rootfs_data.o
+)
 target_link_libraries(simple-init init_rootfs)
 
 if("${ENABLE_LODEPNG}" STREQUAL "ON")

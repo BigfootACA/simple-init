@@ -114,6 +114,19 @@ char*strrep(char*str,char from,char to){
 	return str;
 }
 
+size_t strncnt(const char*str,size_t len,const char*chr){
+	size_t cnt=0;
+	if(!str||!chr)return 0;
+	if(len<=0)len=strlen(str);
+	for(size_t i=0;str[i]&&i<len;i++)
+		if(strchr(chr,str[i]))cnt++;
+	return cnt;
+}
+
+size_t strcnt(const char*str,const char*chr){
+	return strncnt(str,0,chr);
+}
+
 #ifndef ENABLE_UEFI
 int repeat(int fd,char c,size_t times){
 	char*buff=malloc((times+1)*sizeof(char));

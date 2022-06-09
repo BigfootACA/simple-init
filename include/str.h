@@ -106,6 +106,12 @@ extern char*gen_rand_hex(char*buff,int size,bool upper);
 // src/lib/strings.c: replace char 'from' to 'to' in 'str'
 extern char*strrep(char*str,char from,char to);
 
+// src/lib/strings.c: count chars in string
+extern size_t strcnt(const char*str,const char*chr);
+
+// src/lib/strings.c: count chars in string
+extern size_t strncnt(const char*str,size_t len,const char*chr);
+
 // src/lib/strings.c: repeat char 'c' to fd
 extern int repeat(int fd,char c,size_t times);
 

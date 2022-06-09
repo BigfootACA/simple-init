@@ -506,3 +506,14 @@ size_t _strlcat(char*buf,const char*src,size_t len){
 		(slen+strlen(src)):
 		(slen+_strlcpy(buf+slen,src,len-slen));
 }
+
+size_t lsnprintf(char*buf,size_t len,const char*fmt,...){
+	if(!buf||!fmt)return 0;
+	size_t l=strlen(buf);
+	if(l>=len)return 0;
+	va_list va;
+	va_start(va,fmt);
+	size_t r=vsnprintf(buf+l,len-l-1,fmt,va);
+	va_end(va);
+	return r;
+}

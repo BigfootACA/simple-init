@@ -230,4 +230,7 @@ extern int random_get_fd(void);
 // src/lib/random.c: generate random bytes
 extern int random_get_bytes(void *buf, size_t nbytes);
 
+// src/lib/strings.c: print and append string
+extern size_t lsnprintf(char*buf,size_t len,const char*fmt,...);
+
 #endif

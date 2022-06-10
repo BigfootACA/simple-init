@@ -23,4 +23,5 @@ add_library(init_lib STATIC
 	fdtparser.c
 	aboot.c
 	random.c
+	mime.c
 )

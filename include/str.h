@@ -230,6 +230,12 @@ extern int random_get_fd(void);
 // src/lib/random.c: generate random bytes
 extern int random_get_bytes(void *buf, size_t nbytes);
 
+// src/lib/mime.c: lookup by file ext name
+extern char*mime_get_by_ext(char*buff,size_t bs,const char*ext);
+
+// src/lib/mime.c: lookup by file name
+extern char*mime_get_by_filename(char*buff,size_t bs,const char*filename);
+
 // src/lib/strings.c: print and append string
 extern size_t lsnprintf(char*buf,size_t len,const char*fmt,...);
 

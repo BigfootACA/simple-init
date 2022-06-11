@@ -24,4 +24,5 @@ add_library(init_lib STATIC
 	aboot.c
 	random.c
 	mime.c
+	url.c
 )

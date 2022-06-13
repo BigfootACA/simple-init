@@ -64,7 +64,7 @@ static int scan_modalias(int dir){
 	struct dirent*r=NULL;
 	while((r=readdir(d)))e+=scan_modalias_dirent(dir,r);
 	closedir(d);
-	return 0;
+	return e;
 	er:
 	if(dir>=0)close(dir);
 	ERET(ENOMEM);

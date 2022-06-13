@@ -167,7 +167,7 @@ entry_dir*get_assets_dir(entry_dir*dir,const char*path){
 			continue;
 		}
 		if((x=_get_assets_subdir(d,xp))){d=x;continue;}
-		if(!(f=_get_assets_subfile(d,xp)))continue;
+		if(!(f=_get_assets_subfile(d,xp))){d=NULL,errno=ENOENT;break;}
 		if(!S_ISLNK(f->info.mode)){d=NULL,errno=ENOTDIR;break;}
 		if(cnt++>=40){d=NULL,errno=ELOOP;break;}
 		if(!f->content){d=NULL,errno=ENOENT;break;}

@@ -206,3 +206,15 @@ entry_file*get_assets_file(entry_dir*dir,const char*path){
 	if(f)errno=0;
 	return f;
 }
+
+bool asset_dir_check_out_bound(entry_dir*bound,entry_dir*target){
+	bool out_of_bound=true;
+	if(!bound||!target)return true;
+	for(entry_dir*p=target;p;p=p->info.parent)
+		if(p==bound)out_of_bound=false;
+	return out_of_bound;
+}
+
+bool asset_file_check_out_bound(entry_dir*bound,entry_file*target){
+	return target?asset_dir_check_out_bound(bound,target->info.parent):true;
+}

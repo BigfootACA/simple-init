@@ -151,4 +151,4 @@ if(NOT "${DEPS_STATIC_LIBRARIES}" STREQUAL "" OR NOT "${DEPS_LIBRARIES}" STREQUA
 	endif()
 endif()
 
-target_link_libraries(simple-init pthread crypt regex)
+target_link_libraries(simple-init pthread crypt regex z)

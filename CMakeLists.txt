@@ -6,15 +6,26 @@ set(CONFIG_H "${CMAKE_CURRENT_BINARY_DIR}/config.h")
 add_definitions(
 	"-Wall "
 	"-Wextra "
-	"-Wno-clobbered "
 	"-Wno-frame-address "
 	"-Wno-unused-parameter "
-	"-Wno-format-truncation "
-	"-Wno-stringop-truncation "
 	"-fdiagnostics-color=always "
-	"-rdynamic "
 	"-include ${CONFIG_H}"
 )
+
+if("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
+	add_definitions(
+		"-Wno-clobbered "
+		"-Wno-format-truncation "
+		"-Wno-stringop-truncation "
+		"-rdynamic "
+	)
+endif()
+if("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
+	add_definitions(
+		"-fblocks "
+		"-Wno-null-pointer-arithmetic "
+	)
+endif()
 
 option(DISABLE_WERROR     "Avoid treating compiler warnings as fatal errors"  OFF)
 option(DISABLE_DEBUG      "Disable debug infomation generate"                 OFF)
@@ -97,10 +108,6 @@ if("${DISABLE_DEBUG}" STREQUAL "OFF")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
 endif()
 
-if(NOT "${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
-	message(FATAL_ERROR "Need GNU/Linux and GCC")
-endif()
-
 if("${ENABLE_PIE}" STREQUAL "ON")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pie")
 endif()
@@ -118,7 +125,7 @@ if("${ENABLE_STRIP}" STREQUAL "ON")
 endif()
 
 if("${BUILD_SHARED}" STREQUAL "ON")
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -shared -fPIC")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
 endif()
 
 include(libs/libkmod/libkmod.cmake)

@@ -15,10 +15,12 @@ set -e
 	"${ROOT}" \
 	"${BUILD}" \
 	assets_rootfs
-pushd "${BUILD}" >/dev/null
-"${CC:-${CROSS_COMPILE}gcc}" \
-	${CFLAGS} \
-	-r -Wl,-b,binary \
-	-o rootfs_data.o \
-	rootfs.bin
-popd >/dev/null
+if [ -z "${NOBUILD}" ]
+then	pushd "${BUILD}" >/dev/null
+	"${CC:-${CROSS_COMPILE}gcc}" \
+		${CFLAGS} \
+		-r -Wl,-b,binary \
+		-o rootfs_data.o \
+		rootfs.bin
+	popd >/dev/null
+fi

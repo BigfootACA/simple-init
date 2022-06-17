@@ -36,8 +36,8 @@ endif()
 add_custom_command(
 	OUTPUT
 		"${CMAKE_CURRENT_BINARY_DIR}/rootfs.c"
-		"${CMAKE_CURRENT_BINARY_DIR}/rootfs_data.o"
-	COMMAND env CC="${CMAKE_C_COMPILER}" bash
+		"${CMAKE_CURRENT_BINARY_DIR}/rootfs.bin"
+	COMMAND env NOBUILD=1 USEASM=1 bash
 		"${CMAKE_CURRENT_SOURCE_DIR}/scripts/gen-rootfs-source.sh"
 		"${CMAKE_CURRENT_SOURCE_DIR}"
 		"${CMAKE_CURRENT_BINARY_DIR}"
@@ -45,6 +45,22 @@ add_custom_command(
 	DEPENDS
 		"${CMAKE_CURRENT_SOURCE_DIR}/root"
 		"${CMAKE_CURRENT_SOURCE_DIR}/root/usr/share/locale"
+)
+
+add_custom_command(
+	OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/rootfs_data.s"
+	COMMAND sed
+		-e "s@%DIR%@${CMAKE_CURRENT_BINARY_DIR}@"
+		"${CMAKE_CURRENT_SOURCE_DIR}/src/rootfs_data.s.in"
+		> "${CMAKE_CURRENT_BINARY_DIR}/rootfs_data.s"
+	DEPENDS
+		"${CMAKE_CURRENT_BINARY_DIR}/rootfs.bin"
+)
+
+add_library(
+	rootfs_data STATIC
+	"${CMAKE_CURRENT_BINARY_DIR}/rootfs_data.s"
+	"${CMAKE_CURRENT_BINARY_DIR}/rootfs.bin"
 )
 
 if(NOT "${DEPENDS}" STREQUAL "")
@@ -100,11 +116,8 @@ if(("${ENABLE_FREETYPE2}" STREQUAL "ON") AND ("${SYSTEM_FREETYPE2}" STREQUAL "OF
 	target_link_libraries(simple-init freetype2)
 endif()
 
-add_library(
-	init_rootfs STATIC
-	${CMAKE_CURRENT_BINARY_DIR}/rootfs.c
-	${CMAKE_CURRENT_BINARY_DIR}/rootfs_data.o
-)
+add_library(init_rootfs STATIC ${CMAKE_CURRENT_BINARY_DIR}/rootfs.c)
+target_link_libraries(init_rootfs rootfs_data)
 target_link_libraries(simple-init init_rootfs)
 
 if("${ENABLE_LODEPNG}" STREQUAL "ON")

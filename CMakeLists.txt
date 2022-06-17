@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.6)
-project(simple-init LANGUAGES C)
+project(simple-init LANGUAGES C ASM)
 
 include_directories(include)
 set(CONFIG_H "${CMAKE_CURRENT_BINARY_DIR}/config.h")

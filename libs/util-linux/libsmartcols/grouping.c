@@ -121,22 +121,6 @@ void scols_groups_fix_members_order(struct libscols_table *tb)
 	}
 }
 
-static inline const char *group_state_to_string(int state)
-{
-	static const char *grpstates[] = {
-		[SCOLS_GSTATE_NONE]		= "none",
-		[SCOLS_GSTATE_FIRST_MEMBER]	= "1st-member",
-		[SCOLS_GSTATE_MIDDLE_MEMBER]	= "middle-member",
-		[SCOLS_GSTATE_LAST_MEMBER]	= "last-member",
-		[SCOLS_GSTATE_MIDDLE_CHILD]	= "middle-child",
-		[SCOLS_GSTATE_LAST_CHILD]	= "last-child",
-		[SCOLS_GSTATE_CONT_MEMBERS]	= "continue-members",
-		[SCOLS_GSTATE_CONT_CHILDREN]	= "continue-children"
-	};
-
-	return grpstates[state];
-}
-
 static int group_state_for_line(struct libscols_group *gr, struct libscols_line *ln)
 {
 	if (gr->state == SCOLS_GSTATE_NONE &&

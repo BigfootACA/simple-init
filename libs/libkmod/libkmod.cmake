@@ -14,3 +14,6 @@ add_library(kmod STATIC
 )
 target_include_directories(kmod PRIVATE libs/libkmod/include)
 include_directories(libs/libkmod)
+if("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
+	target_compile_options(kmod PRIVATE -Wno-constant-conversion)
+endif()

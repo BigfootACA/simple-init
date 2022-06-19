@@ -6,3 +6,6 @@ target_compile_options(stb PRIVATE
 	-Wno-unused-variable
 	-Wno-unused-function
 )
+if("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
+	target_compile_options(stb PRIVATE -Wno-self-assign)
+endif()

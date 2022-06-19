@@ -16,7 +16,7 @@ add_library(libtsm STATIC
 	libs/libtsm/external/wcwidth/wcwidth.c
 )
 target_compile_definitions(libtsm PRIVATE _GNU_SOURCE)
-target_compile_options(libtsm PRIVATE
-	-Wno-sign-compare
-	-Wno-old-style-declaration
-)
+target_compile_options(libtsm PRIVATE -Wno-sign-compare)
+if("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
+	target_compile_options(libtsm PRIVATE -Wno-old-style-declaration)
+endif()

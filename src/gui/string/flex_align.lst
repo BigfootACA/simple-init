@@ -1,0 +1,8 @@
+STR(LV_FLEX_ALIGN_CENTER,        center)
+STR(LV_FLEX_ALIGN_START,         start)
+STR(LV_FLEX_ALIGN_END,           end)
+STR(LV_FLEX_ALIGN_START,         right)
+STR(LV_FLEX_ALIGN_END,           left)
+STR(LV_FLEX_ALIGN_SPACE_EVENLY,  space-evenly)
+STR(LV_FLEX_ALIGN_SPACE_AROUND,  space-around)
+STR(LV_FLEX_ALIGN_SPACE_BETWEEN, space-between)

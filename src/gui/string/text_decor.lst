@@ -1,0 +1,3 @@
+STR(LV_TEXT_DECOR_NONE,          none)
+STR(LV_TEXT_DECOR_UNDERLINE,     underline)
+STR(LV_TEXT_DECOR_STRIKETHROUGH, strikethrough)

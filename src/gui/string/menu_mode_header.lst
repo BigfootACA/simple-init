@@ -1,0 +1,3 @@
+STR(LV_MENU_HEADER_TOP_FIXED,    top-fixed)
+STR(LV_MENU_HEADER_TOP_UNFIXED,  top-unfixed)
+STR(LV_MENU_HEADER_BOTTOM_FIXED, bottom-fixed)

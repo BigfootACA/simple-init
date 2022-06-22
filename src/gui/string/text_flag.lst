@@ -1,0 +1,4 @@
+STR(LV_TEXT_FLAG_NONE,    none)
+STR(LV_TEXT_FLAG_RECOLOR, recolor)
+STR(LV_TEXT_FLAG_EXPAND,  expand)
+STR(LV_TEXT_FLAG_FIT,     fit)

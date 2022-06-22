@@ -1,0 +1,5 @@
+STR(LV_BASE_DIR_LTR,      ltr)
+STR(LV_BASE_DIR_RTL,      rtl)
+STR(LV_BASE_DIR_AUTO,     auto)
+STR(LV_BASE_DIR_NEUTRAL,  neutral)
+STR(LV_BASE_DIR_WEAK,     weak)

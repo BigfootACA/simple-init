@@ -115,6 +115,7 @@ add_library(init_gui STATIC
 	filesystem/lv_fs_string.c
 	filesystem/fsext.c
 	filesystem/unix.c
+	string/string.c
 	drivers.c
 	guidrv.c
 	activity.c

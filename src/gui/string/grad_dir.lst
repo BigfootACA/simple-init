@@ -1,0 +1,5 @@
+STR(LV_GRAD_DIR_NONE,  none)
+STR(LV_GRAD_DIR_VER,   ver)
+STR(LV_GRAD_DIR_VER,   vertical)
+STR(LV_GRAD_DIR_HOR,   hor)
+STR(LV_GRAD_DIR_HOR,   horizontal)

@@ -1,0 +1,4 @@
+STR(LV_CHART_AXIS_PRIMARY_Y,   primary-y)
+STR(LV_CHART_AXIS_SECONDARY_Y, secondary-y)
+STR(LV_CHART_AXIS_PRIMARY_X,   primary-x)
+STR(LV_CHART_AXIS_SECONDARY_X, secondary-x)

@@ -1,0 +1,3 @@
+STR(LV_DITHER_NONE,     none)
+STR(LV_DITHER_ORDERED,  ordered)
+STR(LV_DITHER_ERR_DIFF, err-diff)

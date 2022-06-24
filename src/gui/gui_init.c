@@ -34,7 +34,6 @@
 #include"defines.h"
 #include"hardware.h"
 #include"gui/font.h"
-#include"gui/tools.h"
 #include"gui/image.h"
 #include"gui/sysbar.h"
 #include"gui/guidrv.h"
@@ -58,7 +57,7 @@ lv_coord_t gui_sw,gui_sh,gui_sx,gui_sy;
 uint16_t gui_rotate;
 
 // gui fonts
-lv_font_t*gui_font=NULL,*gui_font_small=NULL,*symbol_font=NULL;
+const lv_font_t*gui_font=NULL,*gui_font_small=NULL,*symbol_font=NULL;
 
 // gui group (for buttons)
 lv_group_t*gui_grp=NULL;
@@ -128,7 +127,7 @@ void gui_quit_sleep(){
 	#ifndef ENABLE_UEFI
 	if(gui_sleep){
 		gui_sleep=false;
-		lv_tick_inc(LV_DISP_DEF_REFR_PERIOD);
+		lv_tick_elaps(LV_DISP_DEF_REFR_PERIOD);
 		lv_task_handler();
 		lv_disp_trig_activity(NULL);
 		sem_post(&gui_wait);
@@ -151,25 +150,8 @@ void guess_font_size(){
 	tlog_debug("select font size %d/%d based on dpi",gui_font_size,gui_font_size_small);
 }
 
-static void lvgl_logger(lv_log_level_t level,const char*file,uint32_t line,const char*func,const char*buf){
-	// translate lvgl log level
-	enum log_level lvl;
-	switch(level){
-		case LV_LOG_LEVEL_TRACE: lvl=LEVEL_DEBUG;break;
-		case LV_LOG_LEVEL_INFO:  lvl=LEVEL_INFO;break;
-		case LV_LOG_LEVEL_WARN:  lvl=LEVEL_WARNING;break;
-		case LV_LOG_LEVEL_ERROR: lvl=LEVEL_ERROR;break;
-		case LV_LOG_LEVEL_USER:  lvl=LEVEL_INFO;break;
-		default:                 lvl=LEVEL_DEBUG;break;
-	}
-
-	static char fn[PATH_MAX]={0};
-	strncpy(fn,file,PATH_MAX-1);
-	logger_printf(lvl,"lvgl","%s:%d@%s %s",basename(fn),line,func,buf);
-}
-
-static void scroll_on_focus(lv_group_t*grp){
-	lv_scroll_to(lv_group_get_focused(grp),false);
+static void lvgl_logger(const char*buf){
+	logger_print(LEVEL_INFO,"lvgl",(char*)buf);
 }
 
 int gui_pre_init(){
@@ -191,7 +173,6 @@ int gui_pre_init(){
 
 	// create group for buttons
 	gui_grp=lv_group_create();
-	lv_group_set_focus_cb(gui_grp,scroll_on_focus);
 
 	// parse backlight device
 	#ifndef ENABLE_UEFI
@@ -325,7 +306,7 @@ static VOID EFIAPI efi_timer(IN EFI_EVENT e,IN VOID*ctx){
 }
 
 extern bool conf_store_changed;
-static void conf_save_cb(lv_task_t*t __attribute__((unused))){
+static void conf_save_cb(lv_timer_t*t __attribute__((unused))){
 	if(!conf_store_changed)return;
 	int r=confd_save_file(NULL,NULL);
 	if(r!=0||errno!=0)return;
@@ -385,7 +366,8 @@ uint32_t custom_tick_get(void){
 
 int gui_screen_init(){
 	lv_obj_t*screen;
-	if(!(screen=lv_scr_act()))return trlog_error(-1,"failed to get screen");
+	if(!(screen=lv_scr_act()))
+		return trlog_error(-1,"failed to get screen");
 
 	#ifdef ENABLE_LUA
 	if(gui_global_lua)
@@ -393,12 +375,13 @@ int gui_screen_init(){
 	#endif
 
 	// set current fonts and themes
-	lv_theme_t*th=LV_THEME_DEFAULT_INIT(
-		LV_THEME_DEFAULT_COLOR_PRIMARY,LV_THEME_DEFAULT_COLOR_SECONDARY,
-		gui_dark?LV_THEME_MATERIAL_FLAG_DARK:LV_THEME_MATERIAL_FLAG_LIGHT,
-		gui_font_small,gui_font,gui_font,gui_font
+	lv_theme_t*th=lv_theme_default_init(
+		lv_disp_get_default(),
+		lv_palette_main(LV_PALETTE_BLUE),
+		lv_palette_main(LV_PALETTE_RED),
+		gui_dark,gui_font
 	);
-	lv_theme_set_act(th);
+	lv_disp_set_theme(lv_disp_get_default(),th);
 
 	// init gui activity
 	guiact_init();
@@ -409,19 +392,24 @@ int gui_screen_init(){
 	memset(&sysbar,0,sizeof(struct sysbar));
 
 	// add lvgl mouse pointer
-	char*cursor=confd_get_string("gui.cursor_image",NULL);
-	gui_cursor=lv_img_create(screen,NULL);
-	lv_img_set_src(gui_cursor,cursor?cursor:"\xef\x89\x85"); // mouse-pointer
-	lv_obj_set_pos(gui_cursor,-gui_w,-gui_h);
+	static char*cursor=NULL;
+	if(!cursor)cursor=confd_get_string(
+		"gui.cursor_image","\xef\x89\x85"
+	); // mouse-pointer
+	if(cursor){
+		gui_cursor=lv_img_create(screen);
+		lv_img_set_src(gui_cursor,cursor);
+		lv_obj_set_pos(gui_cursor,-gui_w,-gui_h);
+	}
+	if(!gui_cursor)abort();
 
 	char*k="gui.cursor_color";
 	bool color=confd_get_type(k)==TYPE_INTEGER;
-	if(color||!cursor)lv_obj_set_style_local_image_recolor(
+	if(color||!cursor)lv_obj_set_style_img_recolor(
 		gui_cursor,
-		LV_IMG_PART_MAIN,
-		LV_STATE_DEFAULT,
 		color?lv_color_hex((uint32_t)confd_get_integer(k,0)):
-		lv_obj_get_style_text_color(screen,LV_OBJ_PART_MAIN)
+		lv_obj_get_style_text_color(screen,LV_PART_MAIN),
+		LV_PART_MAIN
 	);
 	#ifdef ENABLE_LUA
 	if(gui_global_lua)
@@ -461,13 +449,13 @@ static void gui_quit_handler(int s __attribute((unused))){
 }
 #endif
 
-static void image_cache_cb(lv_task_t*t __attribute__((unused))){
+static void image_cache_cb(lv_timer_t*t __attribute__((unused))){
 	image_print_stat();
 }
 
 int gui_main(){
 	int64_t i=confd_get_integer("gui.image_cache_statistics",0);
-	if(i>0)lv_task_create(image_cache_cb,i,LV_TASK_PRIO_LOWEST,NULL);
+	if(i>0)lv_timer_create(image_cache_cb,i,NULL);
 	MUTEX_INIT(gui_lock);
 	#ifdef ENABLE_UEFI
 	EFI_STATUS st;
@@ -494,10 +482,9 @@ int gui_main(){
 	);
 	if(EFI_ERROR(st))return trlog_error(-1,"create timer failed");
 
-	lv_task_create(
+	lv_timer_create(
 		conf_save_cb,
 		confd_get_integer("confd.save_interval",10)*1000,
-		LV_TASK_PRIO_LOWEST,
 		NULL
 	);
 

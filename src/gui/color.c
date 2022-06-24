@@ -158,7 +158,7 @@ static struct _colors{
 	DECL_COLOR(WhiteSmoke           ,0xF5,0xF5,0xF5),
 	DECL_COLOR(Yellow               ,0xFF,0xFF,0x00),
 	DECL_COLOR(YellowGreen          ,0x9A,0xCD,0x32),
-	{false,"",LV_COLOR_BLACK}
+	{false,"",LV_COLOR_MAKE(0,0,0)}
 };
 
 static bool resolve_color_name(const char*val,lv_color_t*color){

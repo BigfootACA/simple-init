@@ -240,6 +240,9 @@ int gui_pre_init(){
 	#endif
 	if(!gui_font||!gui_font_small)return terlog_error(-1,"failed to load font");
 
+	((lv_font_t*)gui_font)->fallback=symbol_font;
+	((lv_font_t*)gui_font_small)->fallback=symbol_font;
+
 	#ifdef ENABLE_LUA
 	if(gui_global_lua)
 		xlua_run_confd(gui_global_lua,TAG,"lua.on_gui_pre_init");

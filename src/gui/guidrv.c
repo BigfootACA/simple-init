@@ -194,6 +194,11 @@ int guidrv_init(lv_coord_t*w,lv_coord_t*h,int*dpi){
 }
 
 void guidrv_exit(){
+	list*l=list_first(indrvs);
+	if(l)do{
+		LIST_DATA_DECLARE(d,l,struct input_driver*);
+		if(d&&d->drv_exit)d->drv_exit();
+	}while((l=l->next));
 	if(drv&&drv->drv_exit)drv->drv_exit();
 }
 

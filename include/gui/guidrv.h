@@ -36,6 +36,7 @@ struct input_driver{
 	char name[32];
 	char*compatible[32];
 	int(*drv_register)(void);
+	void(*drv_exit)(void);
 };
 
 // src/gui/drivers.c: builtin display modes

@@ -371,6 +371,7 @@ int gui_screen_init(){
 	lv_obj_t*screen;
 	if(!(screen=lv_scr_act()))
 		return trlog_error(-1,"failed to get screen");
+	lv_obj_set_scroll_dir(screen,LV_DIR_NONE);
 
 	#ifdef ENABLE_LUA
 	if(gui_global_lua)

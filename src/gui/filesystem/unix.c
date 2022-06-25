@@ -15,7 +15,6 @@
 #include<unistd.h>
 #include<dirent.h>
 #include<sys/stat.h>
-#include<sys/statfs.h>
 #include"lvgl.h"
 #include"logger.h"
 #include"defines.h"
@@ -97,7 +96,7 @@ static lv_res_t errno_to_lv_res(int err){
 	}
 }
 
-static bool fs_ready_cb(struct _lv_fs_drv_t*drv){
+static bool fs_ready_cb(lv_fs_drv_t*drv){
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
 	if(fs->fd>=0)return true;
@@ -116,22 +115,21 @@ static bool fs_ready_cb(struct _lv_fs_drv_t*drv){
 	return errno==0&&fs->fd>=0;
 }
 
-static lv_res_t fs_open_cb(
-	struct _lv_fs_drv_t*drv,
-	void*file_p,
+static void*fs_open_cb(
+	lv_fs_drv_t*drv,
 	const char*path,
 	lv_fs_mode_t mode
 ){
 	int flags,fd;
-	if(!drv||!file_p||!path)return LV_FS_RES_INV_PARAM;
+	if(!drv||!path)EPRET(EINVAL);
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
-	if(!fs)return LV_FS_RES_INV_PARAM;
+	if(!fs)EPRET(EINVAL);
 	flags=O_CLOEXEC;
 	switch(mode){
 		case LV_FS_MODE_RD:flags|=O_RDONLY;break;
 		case LV_FS_MODE_WR:flags|=O_RDWR|O_CREAT;break;
-		default:return LV_FS_RES_INV_PARAM;
+		default:EPRET(EINVAL);
 	}
 	do{errno=0;fd=openat(fs->fd,path,flags);}
 	while(fd<0&&errno==EINTR);
@@ -141,16 +139,15 @@ static lv_res_t fs_open_cb(
 		drv->letter,
 		path,mode
 	);
-	if(fd>=0)*(int*)((lv_fs_file_t*)file_p)=fd;
-	return errno_to_lv_res(errno);
+	return fd>=0?(void*)(intptr_t)fd:NULL;
 }
 
 static lv_res_t fs_close_cb(
-	struct _lv_fs_drv_t*drv,
+	lv_fs_drv_t*drv,
 	void*file_p
 ){
 	if(!drv||!file_p)return LV_FS_RES_INV_PARAM;
-	int fd=*(int*)((lv_fs_file_t*)file_p);
+	int fd=(intptr_t)file_p;
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
 	if(!fs)return LV_FS_RES_INV_PARAM;
@@ -164,7 +161,7 @@ static lv_res_t fs_close_cb(
 }
 
 static lv_res_t fs_remove_cb(
-	struct _lv_fs_drv_t*drv,
+	lv_fs_drv_t*drv,
 	const char*fn
 ){
 	if(!drv||!fn)return LV_FS_RES_INV_PARAM;
@@ -181,7 +178,7 @@ static lv_res_t fs_remove_cb(
 }
 
 static lv_res_t fs_get_type_cb(
-	struct _lv_fs_drv_t*drv,
+	lv_fs_drv_t*drv,
 	const char*fn,
 	enum item_type*type
 ){
@@ -213,7 +210,7 @@ static lv_res_t fs_get_type_cb(
 }
 
 static bool fs_is_dir_cb(
-	struct _lv_fs_drv_t*drv,
+	lv_fs_drv_t*drv,
 	const char*fn
 ){
 	if(!drv||!fn)return LV_FS_RES_INV_PARAM;
@@ -238,14 +235,14 @@ int lv_fs_file_to_fd(lv_fs_file_t*fp){
 }
 
 static lv_res_t fs_read_cb(
-	struct _lv_fs_drv_t*drv,
+	lv_fs_drv_t*drv,
 	void*file_p,
 	void*buf,
 	uint32_t btr,
 	uint32_t*br
 ){
 	if(!drv||!file_p||!buf||!br)return LV_FS_RES_INV_PARAM;
-	int fd=*(int*)((lv_fs_file_t*)file_p);
+	int fd=(intptr_t)file_p;
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
 	if(!fs)return LV_FS_RES_INV_PARAM;
@@ -261,14 +258,14 @@ static lv_res_t fs_read_cb(
 }
 
 static lv_res_t fs_write_cb(
-	struct _lv_fs_drv_t*drv,
+	lv_fs_drv_t*drv,
 	void*file_p,
 	const void*buf,
 	uint32_t btw,
 	uint32_t*bw
 ){
 	if(!drv||!file_p||!buf||!bw)return LV_FS_RES_INV_PARAM;
-	int fd=*(int*)((lv_fs_file_t*)file_p);
+	int fd=(intptr_t)file_p;
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
 	if(!fs)return LV_FS_RES_INV_PARAM;
@@ -284,16 +281,23 @@ static lv_res_t fs_write_cb(
 }
 
 static lv_res_t fs_seek_cb(
-	struct _lv_fs_drv_t*drv,
+	lv_fs_drv_t*drv,
 	void*file_p,
-	uint32_t pos
+	uint32_t pos,
+	lv_fs_whence_t whence
 ){
 	if(!drv||!file_p)return LV_FS_RES_INV_PARAM;
-	int fd=*(int*)((lv_fs_file_t*)file_p),ret;
+	int fd=(intptr_t)file_p,ret,wh;
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
 	if(!fs)return LV_FS_RES_INV_PARAM;
-	do{errno=0;ret=lseek(fd,pos,SEEK_SET);}
+	switch(whence){
+		case LV_FS_SEEK_SET:wh=SEEK_SET;break;
+		case LV_FS_SEEK_CUR:wh=SEEK_CUR;break;
+		case LV_FS_SEEK_END:wh=SEEK_END;break;
+		default:return LV_FS_RES_INV_PARAM;
+	}
+	do{errno=0;ret=lseek(fd,pos,wh);}
 	while(ret<0&&errno==EINTR);
 	if(fs->debug&&errno>0)telog_warn(
 		"%s: lseek %c:#%d %d",
@@ -303,12 +307,12 @@ static lv_res_t fs_seek_cb(
 }
 
 static lv_res_t fs_tell_cb(
-	struct _lv_fs_drv_t*drv,
+	lv_fs_drv_t*drv,
 	void*file_p,
 	uint32_t*pos_p
 ){
 	if(!drv||!file_p||!pos_p)return LV_FS_RES_INV_PARAM;
-	int fd=*(int*)((lv_fs_file_t*)file_p);
+	int fd=(intptr_t)file_p;
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
 	if(!fs)return LV_FS_RES_INV_PARAM;
@@ -323,34 +327,8 @@ static lv_res_t fs_tell_cb(
 	return errno_to_lv_res(errno);
 }
 
-static lv_res_t fs_trunc_cb(
-	struct _lv_fs_drv_t*drv,
-	void*file_p
-){
-	if(!drv||!file_p)return LV_FS_RES_INV_PARAM;
-	int fd=*(int*)((lv_fs_file_t*)file_p),ret;
-	struct fsext*fse=drv->user_data;
-	struct fs_root*fs=fse->user_data;
-	if(!fs)return LV_FS_RES_INV_PARAM;
-	off_t cur;
-	do{errno=0;cur=lseek(fd,0,SEEK_CUR);}
-	while(cur<0&&errno==EINTR);
-	if(fs->debug&&errno>0)telog_warn(
-		"%s: trunc tell %c:#%d",
-		fs->root,drv->letter,fd
-	);
-	if(cur<0)return errno_to_lv_res(errno);
-	do{errno=0;ret=ftruncate(fd,cur);}
-	while(ret<0&&errno==EINTR);
-	if(fs->debug&&errno>0)telog_warn(
-		"%s: trunc %c:#%d %ld",
-		fs->root,drv->letter,fd,cur
-	);
-	return errno_to_lv_res(errno);
-}
-
 static lv_res_t fs_size_cb(
-	struct _lv_fs_drv_t*drv,
+	lv_fs_drv_t*drv,
 	void*file_p,
 	uint32_t*size_p
 ){
@@ -358,7 +336,7 @@ static lv_res_t fs_size_cb(
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
 	if(!fs)return LV_FS_RES_INV_PARAM;
-	int fd=*(int*)((lv_fs_file_t*)file_p),ret;
+	int fd=(intptr_t)file_p,ret;
 	struct stat st;
 	do{errno=0;ret=fstat(fd,&st);}
 	while(ret<0&&errno==EINTR);
@@ -371,7 +349,7 @@ static lv_res_t fs_size_cb(
 }
 
 static lv_res_t fs_rename_cb(
-	struct _lv_fs_drv_t*drv,
+	lv_fs_drv_t*drv,
 	const char*oldname,
 	const char*newname
 ){
@@ -397,7 +375,7 @@ static lv_res_t fs_rename_cb(
 }
 
 static lv_res_t fs_mkdir_cb(
-	struct _lv_fs_drv_t*drv,
+	lv_fs_drv_t*drv,
 	const char*name
 ){
 	if(!drv||!name)return LV_FS_RES_INV_PARAM;
@@ -417,7 +395,7 @@ static lv_res_t fs_mkdir_cb(
 }
 
 static lv_res_t fs_creat_cb(
-	struct _lv_fs_drv_t*drv,
+	lv_fs_drv_t*drv,
 	const char*name
 ){
 	if(!drv||!name)return LV_FS_RES_INV_PARAM;
@@ -437,39 +415,14 @@ static lv_res_t fs_creat_cb(
 	return errno_to_lv_res(errno);
 }
 
-static lv_res_t fs_free_space_cb(
-	struct _lv_fs_drv_t*drv,
-	uint32_t*total_p,
-	uint32_t*free_p
-){
-	if(!drv||!total_p||!free_p)return LV_FS_RES_INV_PARAM;
-	struct fsext*fse=drv->user_data;
-	struct fs_root*fs=fse->user_data;
-	if(!fs)return LV_FS_RES_INV_PARAM;
-	int ret;
-	struct statfs st;
-	do{errno=0;ret=fstatfs(fs->fd,&st);}
-	while(ret<0&&errno==EINTR);
-	if(fs->debug&&errno>0)telog_warn(
-		"%s: statfs %c:",
-		fs->root,drv->letter
-	);
-	if(ret==0){
-		*total_p=st.f_bsize*st.f_frsize;
-		*free_p=st.f_bavail&st.f_frsize;
-	}
-	return errno_to_lv_res(errno);
-}
-
-static lv_res_t fs_dir_open_cb(
-	struct _lv_fs_drv_t*drv,
-	void*rddir_p,
+static void*fs_dir_open_cb(
+	lv_fs_drv_t*drv,
 	const char*path
 ){
-	if(!drv||!rddir_p||!path)return LV_FS_RES_INV_PARAM;
+	if(!drv||!path)EPRET(EINVAL);
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
-	if(!fs)return LV_FS_RES_INV_PARAM;
+	if(!fs)EPRET(EINVAL);
 	int fd;
 	DIR*d;
 	if(path[0]==0)path="/";
@@ -481,27 +434,26 @@ static lv_res_t fs_dir_open_cb(
 		"%s: dir open %c:%s",
 		fs->root,drv->letter,path
 	);
-	if(fd<0)return errno_to_lv_res(errno);
+	if(fd<0)return NULL;
 	do{errno=0;d=fdopendir(fd);}
 	while(!d&&errno==EINTR);
 	if(fs->debug&&errno>0)telog_warn(
 		"%s: fdopendir %c:%s(%d)",
 		fs->root,drv->letter,path,fd
 	);
-	if(d)((lv_fs_dir_t*)rddir_p)->dir_d=d;
-	else close(fd);
-	return errno_to_lv_res(errno);
+	if(!d)close(fd);
+	return d;
 }
 
 static lv_res_t fs_dir_read_cb(
-	struct _lv_fs_drv_t*drv,
+	lv_fs_drv_t*drv,
 	void*rddir_p,
 	char*fn
 ){
 	if(!drv||!rddir_p||!fn)return LV_FS_RES_INV_PARAM;
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
-	DIR*dp=(DIR*)((lv_fs_dir_t*)rddir_p)->dir_d;
+	DIR*dp=rddir_p;
 	if(!fs||!dp)return LV_FS_RES_INV_PARAM;
 	int ret;
 	struct dirent*d;
@@ -532,13 +484,13 @@ static lv_res_t fs_dir_read_cb(
 }
 
 static lv_res_t fs_dir_close_cb(
-	struct _lv_fs_drv_t*drv,
+	lv_fs_drv_t*drv,
 	void*rddir_p
 ){
 	if(!drv||!rddir_p)return LV_FS_RES_INV_PARAM;
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
-	DIR*dp=(DIR*)((lv_fs_dir_t*)rddir_p)->dir_d;
+	DIR*dp=rddir_p;
 	if(!fs||!dp)return LV_FS_RES_INV_PARAM;
 	int ret;
 	do{errno=0;ret=closedir(dp);}
@@ -575,23 +527,19 @@ int init_lvgl_fs(char letter,char*root,bool debug){
 	fse->is_dir_cb=fs_is_dir_cb;
 	fse->creat=fs_creat_cb;
 	fse->mkdir=fs_mkdir_cb;
+	fse->remove=fs_remove_cb;
+	fse->rename=fs_rename_cb;
+	fse->size=fs_size_cb;
 	fse->user_data=fs;
 	drv->user_data=fse;
 	drv->letter=letter;
-	drv->file_size=sizeof(int);
-	drv->rddir_size=sizeof(DIR*);
 	drv->ready_cb=fs_ready_cb;
 	drv->open_cb=fs_open_cb;
 	drv->close_cb=fs_close_cb;
-	drv->remove_cb=fs_remove_cb;
 	drv->read_cb=fs_read_cb;
 	drv->write_cb=fs_write_cb;
 	drv->seek_cb=fs_seek_cb;
 	drv->tell_cb=fs_tell_cb;
-	drv->trunc_cb=fs_trunc_cb;
-	drv->size_cb=fs_size_cb;
-	drv->rename_cb=fs_rename_cb;
-	drv->free_space_cb=fs_free_space_cb;
 	drv->dir_open_cb=fs_dir_open_cb;
 	drv->dir_read_cb=fs_dir_read_cb;
 	drv->dir_close_cb=fs_dir_close_cb;

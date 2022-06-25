@@ -156,7 +156,7 @@ static void lvgl_logger(const char*buf){
 
 int gui_pre_init(){
 	// initialize lvgl
-	lv_init();
+	if(!lv_is_initialized())lv_init();
 
 	#ifdef ENABLE_LUA
 	if(!gui_global_lua)

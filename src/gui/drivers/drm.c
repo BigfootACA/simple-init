@@ -46,6 +46,8 @@ static struct drm_dev{
 	int modes_cnt;
 	sem_t flush;
 	pthread_t tid;
+	lv_disp_draw_buf_t dbuf;
+	lv_disp_drv_t drv;
 }drm_dev;
 static void drm_exit(void){
 	if(drm_dev.fd<0)return;
@@ -482,32 +484,30 @@ static int _drm_register(){
 		return -1;
 	}
 	size_t s=drm_dev.width*drm_dev.height*sizeof(lv_color_t);
-	static lv_disp_buf_t disp_buf;
 	if(!(drm_dev.cbuf=malloc(s))){
 		telog_error("malloc display buffer");
 		drm_exit();
 		return -1;
 	}
 	memset(drm_dev.cbuf,0,s);
-	lv_disp_buf_init(&disp_buf,drm_dev.cbuf,NULL,s);
-	lv_disp_drv_t disp_drv;
-	lv_disp_drv_init(&disp_drv);
-	disp_drv.hor_res=drm_dev.width;
-	disp_drv.ver_res=drm_dev.height;
+	lv_disp_draw_buf_init(&drm_dev.dbuf,drm_dev.cbuf,NULL,s);
+	lv_disp_drv_init(&drm_dev.drv);
+	drm_dev.drv.hor_res=drm_dev.width;
+	drm_dev.drv.ver_res=drm_dev.height;
 	tlog_notice(
 		"screen resolution: %dx%d",
 		drm_dev.width,
 		drm_dev.height
 	);
-	disp_drv.buffer=&disp_buf;
-	disp_drv.flush_cb=drm_flush;
+	drm_dev.drv.draw_buf=&drm_dev.dbuf;
+	drm_dev.drv.flush_cb=drm_flush;
 	switch(gui_rotate){
 		case 0:break;
-		case 90:disp_drv.sw_rotate=1,disp_drv.rotated=LV_DISP_ROT_90;break;
-		case 180:disp_drv.sw_rotate=1,disp_drv.rotated=LV_DISP_ROT_180;break;
-		case 270:disp_drv.sw_rotate=1,disp_drv.rotated=LV_DISP_ROT_270;break;
+		case 90:drm_dev.drv.sw_rotate=1,drm_dev.drv.rotated=LV_DISP_ROT_90;break;
+		case 180:drm_dev.drv.sw_rotate=1,drm_dev.drv.rotated=LV_DISP_ROT_180;break;
+		case 270:drm_dev.drv.sw_rotate=1,drm_dev.drv.rotated=LV_DISP_ROT_270;break;
 	}
-	lv_disp_drv_register(&disp_drv);
+	lv_disp_drv_register(&drm_dev.drv);
 	pthread_create(&drm_dev.tid,NULL,flush_thread,NULL);
 	sem_init(&drm_dev.flush,0,0);
 	set_active_console(7);

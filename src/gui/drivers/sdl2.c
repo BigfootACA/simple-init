@@ -25,14 +25,12 @@ static bool left_button_down=false;
 static int16_t last_x=0,last_y=0,enc_diff=0;
 static uint32_t last_key;
 static lv_indev_state_t mw_state=LV_INDEV_STATE_REL,kbd_state;
-static bool mouse_read(lv_indev_drv_t*indev_drv __attribute__((unused)),lv_indev_data_t*data){
+static void mouse_read(lv_indev_drv_t*indev_drv __attribute__((unused)),lv_indev_data_t*data){
 	data->point.x=last_x,data->point.y=last_y;
 	data->state=left_button_down?LV_INDEV_STATE_PR:LV_INDEV_STATE_REL;
-	return false;
 }
-static bool mousewheel_read(lv_indev_drv_t*indev_drv __attribute__((unused)),lv_indev_data_t*data){
+static void mousewheel_read(lv_indev_drv_t*indev_drv __attribute__((unused)),lv_indev_data_t*data){
 	data->state=mw_state,data->enc_diff=enc_diff,enc_diff=0;
-	return false;
 }
 static uint32_t keycode_to_ascii(uint32_t sdl_key){
 	if(lv_group_get_editing(gui_grp))switch(sdl_key){
@@ -67,9 +65,8 @@ static uint32_t keycode_to_ascii(uint32_t sdl_key){
 		default:return sdl_key;
 	}
 }
-static bool keyboard_read(lv_indev_drv_t*indev_drv __attribute__((unused)),lv_indev_data_t*data){
+static void keyboard_read(lv_indev_drv_t*indev_drv __attribute__((unused)),lv_indev_data_t*data){
 	data->state=kbd_state,data->key=keycode_to_ascii(last_key);
-	return false;
 }
 static void window_update(){
 	SDL_UpdateTexture(monitor.texture,NULL,monitor.tft_fb,ww*sizeof(uint32_t));
@@ -95,7 +92,7 @@ static void sdl2_flush(lv_disp_drv_t*disp_drv,const lv_area_t*area,lv_color_t*co
 	}
 	lv_disp_flush_ready(disp_drv);
 }
-void sdl_event_handler(lv_task_t*t __attribute__((unused))){
+void sdl_event_handler(lv_timer_t*t __attribute__((unused))){
 	SDL_Event e;
 	while(SDL_PollEvent(&e))switch(e.type){
 		case SDL_MOUSEBUTTONUP:
@@ -209,21 +206,21 @@ static int monitor_init(){
 		return terlog_error(-1,"malloc framebuffer failed");
 	memset(monitor.tft_fb,0x44,ww*hh*sizeof(uint32_t));
 	monitor.sdl_refr_qry=true,sdl_inited=true;
-	lv_task_create(sdl_event_handler,10,LV_TASK_PRIO_HIGH,NULL);
+	lv_timer_create(sdl_event_handler,10,NULL);
 
 	// Display buffers
 	size_t s=ww*hh;
 	lv_color_t*buf=NULL;
-	static lv_disp_buf_t disp_buf;
+	static lv_disp_draw_buf_t disp_buf;
 	if(!(buf=malloc(s*sizeof(lv_color_t))))
 		return terlog_error(-1,"malloc display buffer failed");
 	memset(buf,0,s);
-	lv_disp_buf_init(&disp_buf,buf,NULL,s);
+	lv_disp_draw_buf_init(&disp_buf,buf,NULL,s);
 
 	// Display device
-	lv_disp_drv_t disp_drv;
+	static lv_disp_drv_t disp_drv;
 	lv_disp_drv_init(&disp_drv);
-	disp_drv.buffer=&disp_buf;
+	disp_drv.draw_buf=&disp_buf;
 	disp_drv.flush_cb=sdl2_flush;
 	disp_drv.hor_res=ww;
 	disp_drv.ver_res=hh;
@@ -240,7 +237,7 @@ static int monitor_init(){
 
 static int kbd_init(){
 	// Keyboard input device
-	lv_indev_drv_t kb_drv;
+	static lv_indev_drv_t kb_drv;
 	lv_indev_drv_init(&kb_drv);
 	kb_drv.type=LV_INDEV_TYPE_KEYPAD;
 	kb_drv.read_cb=keyboard_read;
@@ -250,7 +247,7 @@ static int kbd_init(){
 
 static int mse_init(){
 	// Mouse input device
-	lv_indev_drv_t indev_drv;
+	static lv_indev_drv_t indev_drv;
 	lv_indev_drv_init(&indev_drv);
 	indev_drv.type=LV_INDEV_TYPE_POINTER;
 	indev_drv.read_cb=mouse_read;
@@ -260,7 +257,7 @@ static int mse_init(){
 
 static int whl_init(){
 	// Mouse wheel input device
-	lv_indev_drv_t enc_drv;
+	static lv_indev_drv_t enc_drv;
 	lv_indev_drv_init(&enc_drv);
 	enc_drv.type=LV_INDEV_TYPE_ENCODER;
 	enc_drv.read_cb=mousewheel_read;

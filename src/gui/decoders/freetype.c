@@ -11,123 +11,237 @@
 #include FT_GLYPH_H
 #include FT_CACHE_H
 #include FT_SIZES_H
+#include FT_OUTLINE_H
 #define TAG "font"
 typedef struct{
-	char*name;
-	unsigned char*data;
-	long length;
-}lv_face_info_t;
-typedef struct{
-	void*face_id;
-	lv_font_t*font;
-	uint16_t style;
-	uint16_t height;
-}lv_font_fmt_ft_dsc_t;
-typedef struct{
 	const char*name;
-	unsigned char*data;
-	long length;
+	const void*mem;
+	size_t mem_size;
 	lv_font_t*font;
 	uint16_t weight;
 	uint16_t style;
 }lv_ft_info_t;
-static FT_Library lib;
-static FTC_Manager cmgr;
-static FTC_CMapCache cmc;
-static FTC_SBitCache sc;
-static FTC_SBit sb;
-
+typedef struct name_refer_t{
+	const char*name;
+	int32_t cnt;
+}name_refer_t;
+typedef struct{
+	const void*mem;
+	const char*name;
+	size_t mem_size;
+	lv_font_t*font;
+	uint16_t style;
+	uint16_t height;
+	FT_Face face;
+}lv_font_fmt_ft_dsc_t;
+static FT_Library library;
+static lv_ll_t names_ll;
+static FTC_Manager cache_manager;
+static FTC_CMapCache cmap_cache;
+static FTC_SBitCache sbit_cache;
+static FTC_SBit sbit;
 static FT_Error font_face_requester(
-	FTC_FaceID fid,
-	FT_Library lis __attribute__((unused)),
-	FT_Pointer rdata __attribute__((unused)),
-	FT_Face*af
+	FTC_FaceID face_id,
+	FT_Library library_is __attribute__((unused)),
+	FT_Pointer req_data __attribute__((unused)),
+	FT_Face*aface
 ){
-	lv_face_info_t*i=(lv_face_info_t*)fid;
-	FT_Error e;
-	if(i->name)e=FT_New_Face(lib,i->name,0,af);
-	else if(i->data)e=FT_New_Memory_Face(lib,i->data,i->length,0,af);
-	else{
-		tlog_error("font content not found");
-		abort();
-	}
-	if(e!=FT_Err_Ok)tlog_error("load font error: %d\n",e);
+	lv_font_fmt_ft_dsc_t*dsc=(lv_font_fmt_ft_dsc_t*)face_id;
+	FT_Error e=dsc->mem?
+		   FT_New_Memory_Face(library,dsc->mem,dsc->mem_size,0,aface):
+		   FT_New_Face(library,dsc->name,0,aface);
+	if(e)tlog_error("new face error: %s",FT_Error_String(e));
 	return e;
 }
 
 bool lv_freetype_init(uint16_t mf,uint16_t ms,uint32_t mb){
 	FT_Error e;
-	if((e=FT_Init_FreeType(&lib)))return trlog_error(
+	if((e=FT_Init_FreeType(&library)))return trlog_error(
 		false,
-		"init freeType error: %s",
+		"init freetype error: %s",
 		FT_Error_String(e)
 	);
-	if(FTC_Manager_New(
-		lib,mf,ms,mb,
+	_lv_ll_init(&names_ll,sizeof(name_refer_t));
+	;
+	if((e=FTC_Manager_New(
+		library,mf,ms,mb,
 		font_face_requester,
-		NULL,&cmgr
-	)){
-		FT_Done_FreeType(lib);
-		return trlog_error(false,"failed to open cache manager");
-	}
-	if(FTC_CMapCache_New(cmgr,&cmc)){
-		tlog_error("failed to open CMap Cache");
-		goto Fail;
-	}
-	if(FTC_SBitCache_New(cmgr,&sc)){
-		tlog_error("failed to open sbit cache");
-		goto Fail;
-	}
+		NULL,
+		&cache_manager
+	)))EDONE(tlog_error(
+		"failed to open cache manager: %s",
+		FT_Error_String(e)
+	));
+	if((e=FTC_CMapCache_New(
+		cache_manager,&cmap_cache
+	)))EDONE(tlog_error(
+		"failed to open CMap Cache: %s",
+		FT_Error_String(e)
+	));
+	if((e=FTC_SBitCache_New(
+		cache_manager,&sbit_cache
+	)))EDONE(tlog_error(
+		"failed to open SBit cache: %s",
+		FT_Error_String(e)
+	));
 	return true;
-	Fail:
-	FTC_Manager_Done(cmgr);
-	FT_Done_FreeType(lib);
+	done:
+	if(cache_manager)FTC_Manager_Done(cache_manager);
+	if(library)FT_Done_FreeType(library);
+	cache_manager=NULL,library=NULL;
 	return false;
 }
 
 void lv_freetype_destroy(void){
-	FTC_Manager_Done(cmgr);
-	FT_Done_FreeType(lib);
+	FTC_Manager_Done(cache_manager);
+	FT_Done_FreeType(library);
 }
 
-static FT_UInt cmapcache_lookup(const lv_font_t*f,FTC_ImageTypeRec*dst,uint32_t l){
-	lv_font_fmt_ft_dsc_t*dsc=(lv_font_fmt_ft_dsc_t*)(f->dsc);
-	FT_Face face;
-	FTC_FaceID fid=(FTC_FaceID)dsc->face_id;
-	FTC_Manager_LookupFace(cmgr,fid,&face);
-	dst->face_id=fid;
-	dst->flags=FT_LOAD_RENDER|FT_LOAD_TARGET_NORMAL;
-	dst->height=dsc->height,dst->width=dsc->height;
-	return FTC_CMapCache_Lookup(cmc,fid,FT_Get_Charmap_Index(face->charmap),l);
+static bool get_bold_glyph(
+	const lv_font_t*font,
+	FT_Face face,
+	FT_UInt glyph_index,
+	lv_font_glyph_dsc_t*dsc_out
+){
+	if(FT_Load_Glyph(face,glyph_index,FT_LOAD_DEFAULT))return false;
+	lv_font_fmt_ft_dsc_t*dsc=(lv_font_fmt_ft_dsc_t*)(font->dsc);
+	if(
+		face->glyph->format==FT_GLYPH_FORMAT_OUTLINE&&
+		dsc->style&FT_FONT_STYLE_BOLD
+	)FT_Outline_Embolden(&face->glyph->outline,1<<6);
+	if(FT_Render_Glyph(face->glyph,FT_RENDER_MODE_NORMAL))return false;
+	dsc_out->adv_w=(face->glyph->metrics.horiAdvance>>6);
+	dsc_out->box_h=face->glyph->bitmap.rows;
+	dsc_out->box_w=face->glyph->bitmap.width;
+	dsc_out->ofs_x=face->glyph->bitmap_left;
+	dsc_out->ofs_y=face->glyph->bitmap_top-face->glyph->bitmap.rows;
+	dsc_out->bpp=8;
+	return true;
 }
 
 static bool get_glyph_dsc_cb(
-	const lv_font_t*f,
-	lv_font_glyph_dsc_t*d,
-	uint32_t l,
-	uint32_t ln __attribute__((unused))
+	const lv_font_t*font,
+	lv_font_glyph_dsc_t*dsc_out,
+	uint32_t unicode_letter,
+	uint32_t unicode_letter_next __attribute__((unused))
 ){
-	if(l<0x20){
-		d->ofs_x=0,d->ofs_y=0;
-		d->box_w=0,d->box_h=0;
-		d->adv_w=0,d->bpp=0;
+	FT_Error e;
+	if(unicode_letter<0x20){
+		dsc_out->adv_w=0;
+		dsc_out->box_h=0;
+		dsc_out->box_w=0;
+		dsc_out->ofs_x=0;
+		dsc_out->ofs_y=0;
+		dsc_out->bpp=0;
 		return true;
 	}
-	FTC_ImageTypeRec dst;
-	FT_UInt gi=cmapcache_lookup(f,&dst,l);
-	if(gi<=0&&(f==gui_font||f==gui_font_small)&&symbol_font)gi=cmapcache_lookup(symbol_font,&dst,l);
-	if(FTC_SBitCache_Lookup(sc,&dst,gi,&sb,NULL)!=0)telog_error("SBitCache_Lookup error");
-	d->box_h=sb->height,d->box_w=sb->width;
-	d->ofs_x=sb->left,d->ofs_y=sb->top-sb->height;
-	d->adv_w=sb->xadvance,d->bpp=8;
+	lv_font_fmt_ft_dsc_t*dsc=
+		(lv_font_fmt_ft_dsc_t*)(font->dsc);
+	FTC_FaceID face_id=(FTC_FaceID)dsc;
+	FT_Size face_size;
+	struct FTC_ScalerRec_ scaler;
+	scaler.face_id=face_id;
+	scaler.width=dsc->height;
+	scaler.height=dsc->height;
+	scaler.pixel=1;
+	if(FTC_Manager_LookupSize(
+		cache_manager,
+		&scaler,&face_size
+	))return false;
+	FT_Face face=face_size->face;
+	FT_UInt charmap_index=FT_Get_Charmap_Index(face->charmap);
+	FT_UInt glyph_index=FTC_CMapCache_Lookup(
+		cmap_cache,face_id,
+		charmap_index,unicode_letter
+	);
+	dsc_out->is_placeholder=glyph_index==0;
+	if(dsc->style&FT_FONT_STYLE_ITALIC){
+		FT_Matrix italic_matrix;
+		italic_matrix.xx=1<<16;
+		italic_matrix.xy=0x5800;
+		italic_matrix.yx=0;
+		italic_matrix.yy=1<<16;
+		FT_Set_Transform(face,&italic_matrix,NULL);
+	}
+	if(dsc->style&FT_FONT_STYLE_BOLD){
+		dsc->face=face;
+		if(!get_bold_glyph(font,face,glyph_index,dsc_out)){
+			dsc->face=NULL;
+			return false;
+		}
+		goto end;
+	}
+	FTC_ImageTypeRec desc_type;
+	desc_type.face_id=face_id;
+	desc_type.flags=FT_LOAD_RENDER|FT_LOAD_TARGET_NORMAL;
+	desc_type.height=dsc->height;
+	desc_type.width=dsc->height;
+	if((e=FTC_SBitCache_Lookup(
+		sbit_cache,&desc_type,
+		glyph_index,&sbit,NULL
+	))){
+		tlog_error(
+			"S-Bit cache lookup error: %s",
+			FT_Error_String(e)
+		);
+		return false;
+	}
+	dsc_out->adv_w=sbit->xadvance;
+	dsc_out->box_h=sbit->height;
+	dsc_out->box_w=sbit->width;
+	dsc_out->ofs_x=sbit->left;
+	dsc_out->ofs_y=sbit->top-sbit->height;
+	dsc_out->bpp=8;
+	end:
+	if(
+		(dsc->style&FT_FONT_STYLE_ITALIC)&&
+		(unicode_letter_next=='\0')
+	)dsc_out->adv_w=dsc_out->box_w+dsc_out->ofs_x;
 	return true;
 }
 
 static const uint8_t*get_glyph_bitmap_cb(
-	const lv_font_t*f __attribute__((unused)),
-	uint32_t l __attribute__((unused))
+	const lv_font_t*font,
+	uint32_t ul __attribute__((unused))
 ){
-	return (const uint8_t*)sb->buffer;
+	lv_font_fmt_ft_dsc_t*dsc=(lv_font_fmt_ft_dsc_t*)(font->dsc);
+	if(dsc->style&FT_FONT_STYLE_BOLD){
+		if(dsc->face&&dsc->face->glyph->format==FT_GLYPH_FORMAT_BITMAP)
+			return (const uint8_t*)(dsc->face->glyph->bitmap.buffer);
+		return NULL;
+	}
+	return (const uint8_t*)sbit->buffer;
+}
+static const char*name_refer_find(const char*name){
+	name_refer_t*refer=_lv_ll_get_head(&names_ll);
+	while(refer){
+		if(strcmp(refer->name,name)==0){
+			refer->cnt+=1;
+			return refer->name;
+		}
+		refer=_lv_ll_get_next(&names_ll,refer);
+	}
+	return NULL;
+}
+static const char*name_refer_save(const char*name){
+	const char*pos=name_refer_find(name);
+	if(pos)return pos;
+	name_refer_t*refer=_lv_ll_ins_tail(&names_ll);
+	if(refer){
+		uint32_t len=strlen(name)+1;
+		refer->name=lv_mem_alloc(len);
+		if(refer->name){
+			lv_memcpy(
+				(void*)refer->name,
+				name,len
+			);
+			refer->cnt=1;
+			return refer->name;
+		}
+		_lv_ll_remove(&names_ll,refer);
+		lv_mem_free(refer);
+	}
+	return "";
 }
 
 static lv_font_t*_lv_ft_init(
@@ -137,43 +251,76 @@ static lv_font_t*_lv_ft_init(
 	int weight,
 	lv_ft_style style
 ){
-	lv_font_fmt_ft_dsc_t*dsc=malloc(sizeof(lv_font_fmt_ft_dsc_t));
-	if(!dsc)return NULL;
-	if(!(dsc->font=malloc(sizeof(lv_font_t)))) {
-		free(dsc);
+	FT_Error e;
+	size_t need_size=
+		sizeof(lv_font_fmt_ft_dsc_t)+
+		sizeof(lv_font_t);
+	lv_font_fmt_ft_dsc_t*dsc=lv_mem_alloc(need_size);
+	if(!dsc)return false;
+	lv_memset_00(dsc,need_size);
+	dsc->font=
+		(lv_font_t*)(((char*)dsc)+
+		sizeof(lv_font_fmt_ft_dsc_t));
+	if(data)dsc->mem=data,dsc->mem_size=length;
+	else if(name)dsc->name=name_refer_save(name);
+	else{
+		lv_mem_free(dsc);
 		return NULL;
 	}
-	lv_face_info_t*fi=NULL;
-	if(!(fi=malloc(sizeof(lv_face_info_t))))goto fail;
-	memset(fi,0,sizeof(lv_face_info_t));
-	if(data)fi->data=data,fi->length=length;
-	else if(name)fi->name=name;
-	else goto fail;
-	dsc->face_id=fi,dsc->height=weight,dsc->style=style;
-	FT_Size fs;
-	struct FTC_ScalerRec_ s;
-	s.face_id=(FTC_FaceID)dsc->face_id;
-	s.width=weight,s.height=weight,s.pixel=1;
-	if(FTC_Manager_LookupSize(cmgr,&s,&fs)){
-		free(fi);
-		tlog_error("failed to LookupSize");
-		goto fail;
+	dsc->height=weight;
+	dsc->style=style;
+	FT_Size face_size;
+	struct FTC_ScalerRec_ scaler;
+	scaler.face_id=(FTC_FaceID)dsc;
+	scaler.width=weight;
+	scaler.height=weight;
+	scaler.pixel=1;
+	if((e=FTC_Manager_LookupSize(
+		cache_manager,&scaler,&face_size
+	))){
+		tlog_error(
+			"failed to lookup size: %s",
+			FT_Error_String(e)
+		);
+		lv_mem_free(dsc);
+		return NULL;
 	}
-	lv_font_t*f=dsc->font;
-	f->dsc=dsc;
-	f->get_glyph_dsc=get_glyph_dsc_cb;
-	f->get_glyph_bitmap=get_glyph_bitmap_cb;
-	f->subpx=LV_FONT_SUBPX_NONE;
-	f->line_height=(fs->face->size->metrics.height>>6);
-	f->base_line=-(fs->face->size->metrics.descender>>6);
-	f->underline_position=fs->face->underline_position;
-	f->underline_thickness=fs->face->underline_thickness;
-	return f;
-	fail:
-	free(dsc->font);
-	free(dsc);
-	if(name)free(name);
-	return NULL;
+	lv_font_t*font=dsc->font;
+	font->dsc=dsc;
+	font->get_glyph_dsc=get_glyph_dsc_cb;
+	font->get_glyph_bitmap=get_glyph_bitmap_cb;
+	font->subpx=LV_FONT_SUBPX_NONE;
+	font->line_height=(face_size->face->size->metrics.height>>6);
+	font->base_line=-(face_size->face->size->metrics.descender>>6);
+	FT_Fixed scale=face_size->face->size->metrics.y_scale;
+	int8_t thickness=FT_MulFix(scale,face_size->face->underline_thickness)>>6;
+	font->underline_position=FT_MulFix(scale,face_size->face->underline_position)>>6;
+	font->underline_thickness=thickness<1?1:thickness;
+	return font;
+}
+static void name_refer_del(const char*name){
+	name_refer_t*refer=_lv_ll_get_head(&names_ll);
+	while(refer){
+		if(strcmp(refer->name,name)==0){
+			refer->cnt-=1;
+			if(refer->cnt<=0){
+				_lv_ll_remove(&names_ll,refer);
+				lv_mem_free((void*)refer->name);
+				lv_mem_free(refer);
+			}
+			return;
+		}
+		refer=_lv_ll_get_next(&names_ll,refer);
+	}
+}
+void lv_ft_font_destroy(lv_font_t*font){
+	if(!font)return;
+	lv_font_fmt_ft_dsc_t*dsc=(lv_font_fmt_ft_dsc_t*)(font->dsc);
+	if(dsc){
+		FTC_Manager_RemoveFaceID(cache_manager,(FTC_FaceID)dsc);
+		name_refer_del(dsc->name);
+		lv_mem_free(dsc);
+	}
 }
 
 lv_font_t*lv_ft_init(const char*name,int weight,lv_ft_style style){
@@ -203,19 +350,5 @@ lv_font_t*lv_ft_init_rootfs(char*path,int weight,lv_ft_style style){
 	return lv_ft_init_assets(&assets_rootfs,path,weight,style);
 }
 
-void lv_ft_destroy(lv_font_t*font){
-	if(!font)return;
-	lv_font_fmt_ft_dsc_t*dsc=(lv_font_fmt_ft_dsc_t*)(font->dsc);
-	if(dsc){
-		lv_face_info_t*fi=dsc->face_id;
-		if(fi){
-			if(fi->name)free(fi->name);
-			free(fi);
-		}
-		free(dsc->face_id);
-		free(dsc->font);
-		free(dsc);
-	}
-}
 #endif
 #endif

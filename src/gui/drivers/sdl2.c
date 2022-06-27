@@ -186,7 +186,8 @@ static int monitor_init(){
 		SDL_WINDOWPOS_UNDEFINED,
 		SDL_WINDOWPOS_UNDEFINED,
 		ww*SDL2_Z,
-		hh*SDL2_Z,0
+		hh*SDL2_Z,
+		SDL_WINDOW_HIDDEN
 	);
 	monitor.renderer=SDL_CreateRenderer(
 		monitor.window,-1,
@@ -231,6 +232,8 @@ static int monitor_init(){
 		case 270:disp_drv.sw_rotate=1,disp_drv.rotated=LV_DISP_ROT_270;break;
 	}
 	lv_disp_drv_register(&disp_drv);
+	SDL_ShowWindow(monitor.window);
+	SDL_RaiseWindow(monitor.window);
 
 	return 0;
 }

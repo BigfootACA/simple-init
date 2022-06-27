@@ -8,6 +8,7 @@
 #include"confd.h"
 #include"logger.h"
 #include"version.h"
+#include"gui/tools.h"
 #include"gui/guidrv.h"
 #define TAG "sdl2"
 #define SDL2_Z 1
@@ -26,7 +27,9 @@ static int16_t last_x=0,last_y=0,enc_diff=0;
 static uint32_t last_key;
 static lv_indev_state_t mw_state=LV_INDEV_STATE_REL,kbd_state;
 static void mouse_read(lv_indev_drv_t*indev_drv __attribute__((unused)),lv_indev_data_t*data){
-	data->point.x=last_x,data->point.y=last_y;
+	data->point.x=lv_coord_border(last_x,gui_w-1,0);
+	data->point.y=lv_coord_border(last_y,gui_h-1,0);
+	if(last_x<0||last_y<0||last_x>=gui_w||last_y>=gui_h)left_button_down=false;
 	data->state=left_button_down?LV_INDEV_STATE_PR:LV_INDEV_STATE_REL;
 }
 static void mousewheel_read(lv_indev_drv_t*indev_drv __attribute__((unused)),lv_indev_data_t*data){

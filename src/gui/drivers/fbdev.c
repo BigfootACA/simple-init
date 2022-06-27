@@ -30,6 +30,9 @@ static int fbfd=-1;
 static sem_t flush;
 struct fb_var_screeninfo vinfo;
 struct fb_fix_screeninfo finfo;
+static lv_color_t buf[846000];
+static lv_disp_draw_buf_t disp_buf;
+static lv_disp_drv_t disp_drv;
 static void*fbdev_refresh(void*args __attribute__((unused))){
 	for(;;){
 		sem_wait(&flush);
@@ -160,10 +163,7 @@ static int _fbdev_register(){
 		fbdev_exit();
 		return -1;
 	}
-	static lv_color_t buf[846000];
-	static lv_disp_buf_t disp_buf;
-	lv_disp_buf_init(&disp_buf,buf,NULL,846000);
-	lv_disp_drv_t disp_drv;
+	lv_disp_draw_buf_init(&disp_buf,buf,NULL,sizeof(buf));
 	lv_disp_drv_init(&disp_drv);
 	disp_drv.hor_res=vinfo.xres;
 	disp_drv.ver_res=vinfo.yres;
@@ -174,7 +174,7 @@ static int _fbdev_register(){
 		case 270:disp_drv.sw_rotate=1,disp_drv.rotated=LV_DISP_ROT_270;break;
 	}
 	tlog_notice("screen resolution: %dx%d",vinfo.xres,vinfo.yres);
-	disp_drv.buffer=&disp_buf;
+	disp_drv.draw_buf=&disp_buf;
 	disp_drv.flush_cb=fbdev_flush;
 	set_active_console(7);
 	vtconsole_all_bind(0);
@@ -183,17 +183,18 @@ static int _fbdev_register(){
 	return 0;
 }
 static char*_fbdev_get_driver_name(int fd,char*buff,size_t len){
-	char buf[128]={0},*ret=NULL;
+	char str[128],*ret=NULL;
+	memset(str,0,sizeof(str));
 	if(!fd_is_link(fd,"device/driver")){
 		if(fd_is_file(fd,"msm_fb_type"))ret="msmfb";
-	}else if(readlinkat(fd,"device/driver",buf,127)>0)ret=basename(buf);
+	}else if(readlinkat(fd,"device/driver",str,127)>0)ret=basename(str);
 	if(ret)strncpy(buff,ret,len-1);
 	return ret;
 }
 static int _fbdev_scan(){
 	int sfd,dfd;
 	char*dfmt,*dgfmt,*sfmt,*driver;
-	char drbuff[128]={0},sdev[256]={0},ddev[256]={0};
+	char drbuff[128],sdev[256],ddev[256];
 	bool x=access(_PATH_DEV"/graphics",F_OK)==0;
 	if(!x&&errno!=ENOENT)return terlog_error(-1,"access "_PATH_DEV"/graphics");
 	dgfmt=_PATH_DEV"/graphics/fb%d";

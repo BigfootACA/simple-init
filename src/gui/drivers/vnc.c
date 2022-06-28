@@ -28,6 +28,9 @@ static lv_indev_state_t kbd_state=LV_INDEV_STATE_REL;
 static lv_indev_state_t ptr_state=LV_INDEV_STATE_REL;
 static lv_indev_t*kbd_dev,*ptr_dev;
 static uint32_t ww=540,hh=960;
+static lv_color_t buf[846000];
+static lv_disp_draw_buf_t disp_buf;
+static lv_disp_drv_t disp_drv;
 
 static inline uint32_t swap(uint32_t x){
 	return
@@ -37,7 +40,7 @@ static inline uint32_t swap(uint32_t x){
 	       ((x&0x000000ff)<<16);
 }
 
-static void fbdev_flush(lv_disp_drv_t*drv,const lv_area_t*area,lv_color_t*color_p){
+static void vnc_flush(lv_disp_drv_t*drv,const lv_area_t*area,lv_color_t*color_p){
 	for(int32_t y=area->y1;y<=area->y2;y++)
 		for(int32_t x=area->x1;x<=area->x2;x++)
 			fb[y*ww+x]=swap(*(uint32_t*)(color_p++));
@@ -45,8 +48,8 @@ static void fbdev_flush(lv_disp_drv_t*drv,const lv_area_t*area,lv_color_t*color_
 	lv_disp_flush_ready(drv);
 }
 
-static bool vnc_read(lv_indev_drv_t*drv,lv_indev_data_t*data){
-	if(!drv||!data)return false;
+static void vnc_read(lv_indev_drv_t*drv,lv_indev_data_t*data){
+	if(!drv||!data)return;
 	switch(drv->type){
 		case LV_INDEV_TYPE_POINTER:
 			if(!ptr_dev->cursor)lv_indev_set_cursor(ptr_dev,gui_cursor);
@@ -58,8 +61,8 @@ static bool vnc_read(lv_indev_drv_t*drv,lv_indev_data_t*data){
 			data->key=kbd_key;
 			data->state=kbd_state;
 		break;
+		default:;
 	}
-	return false;
 }
 
 static void vnc_key(rfbBool down,rfbKeySym k,rfbClientPtr cl __attribute__((unused))){
@@ -127,10 +130,7 @@ static void vnc_apply_mode(){
 }
 
 static int vnc_register(){
-	static lv_color_t buf[846000];
-	static lv_disp_buf_t disp_buf;
-	static lv_disp_drv_t disp_drv;
-	lv_disp_buf_init(&disp_buf,buf,NULL,846000);
+	lv_disp_draw_buf_init(&disp_buf,buf,NULL,sizeof(buf));
 	lv_disp_drv_init(&disp_drv);
 	size_t bpp=sizeof(*fb);
 	vnc_apply_mode();
@@ -152,8 +152,8 @@ static int vnc_register(){
 
 	disp_drv.hor_res=ww;
 	disp_drv.ver_res=hh;
-	disp_drv.buffer=&disp_buf;
-	disp_drv.flush_cb=fbdev_flush;
+	disp_drv.draw_buf=&disp_buf;
+	disp_drv.flush_cb=vnc_flush;
 	switch(gui_rotate){
 		case 0:break;
 		case 90:disp_drv.sw_rotate=1,disp_drv.rotated=LV_DISP_ROT_90;break;

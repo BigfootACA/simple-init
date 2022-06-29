@@ -200,29 +200,27 @@ static void gtkdrv_flush_cb(lv_disp_drv_t*disp_drv,const lv_area_t*area,lv_color
 	lv_disp_flush_ready(disp_drv);
 }
 
-static bool gtkdrv_mouse_read_cb(
+static void gtkdrv_mouse_read_cb(
 	lv_indev_drv_t*drv __attribute__((unused)),
 	lv_indev_data_t*data
 ){
 	data->point.x=mouse_x;
 	data->point.y=mouse_y;
 	data->state=mouse_btn;
-	return false;
 }
 
-static bool gtkdrv_keyboard_read_cb(
+static void gtkdrv_keyboard_read_cb(
 	lv_indev_drv_t*drv __attribute__((unused)),
 	lv_indev_data_t*data
 ){
 	data->key=last_key;
 	data->state=last_key_state;
-	return false;
 }
 
 static int gtkdrv_scan_init_register(){
 	size_t s=ww*hh;
 	lv_color_t*buf=NULL;
-	static lv_disp_buf_t disp_buf;
+	static lv_disp_draw_buf_t disp_buf;
 	if(!getenv("DISPLAY"))return -1;
 	gtk_apply_mode();
 	if(!(buf=malloc(s*sizeof(lv_color_t))))
@@ -230,12 +228,12 @@ static int gtkdrv_scan_init_register(){
 	if(!(fb=malloc(ww*hh*3)))
 		return terlog_error(-1,"malloc framebuffer failed");
 	memset(buf,0,s);
-	lv_disp_buf_init(&disp_buf,buf,NULL,s);
+	lv_disp_draw_buf_init(&disp_buf,buf,NULL,s);
 	gtkdrv_init();
 
-	lv_disp_drv_t disp;
+	static lv_disp_drv_t disp;
 	lv_disp_drv_init(&disp);
-	disp.buffer=&disp_buf;
+	disp.draw_buf=&disp_buf;
 	disp.flush_cb=gtkdrv_flush_cb;
 	disp.hor_res=ww;
 	disp.ver_res=hh;
@@ -250,7 +248,7 @@ static int gtkdrv_scan_init_register(){
 	return 0;
 }
 static int mse_init(){
-	lv_indev_drv_t mouse;
+	static lv_indev_drv_t mouse;
 	lv_indev_drv_init(&mouse);
 	mouse.type=LV_INDEV_TYPE_POINTER;
 	mouse.read_cb=gtkdrv_mouse_read_cb;
@@ -258,7 +256,7 @@ static int mse_init(){
 	return 0;
 }
 static int kbd_init(){
-	lv_indev_drv_t kbd;
+	static lv_indev_drv_t kbd;
 	lv_indev_drv_init(&kbd);
 	kbd.type=LV_INDEV_TYPE_KEYPAD;
 	kbd.read_cb=gtkdrv_keyboard_read_cb;

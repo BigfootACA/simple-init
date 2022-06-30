@@ -22,6 +22,7 @@
 #define TAG "input"
 #include"str.h"
 #include"gui.h"
+#include"array.h"
 #include"logger.h"
 #include"gui/guidrv.h"
 struct in_data{
@@ -38,7 +39,7 @@ struct in_data{
 };
 static bool mouse=false;
 static struct epoll_event*evs;
-static struct in_data*indatas[32]={0};
+static struct in_data*indatas[32];
 static size_t
 	es=sizeof(struct epoll_event),
 	is=sizeof(struct input_event),
@@ -127,16 +128,16 @@ static void*input_handler(void*args __attribute__((unused))){
 					break;
 					case EV_SW:;break;
 				}break;
+				default:;
 			}
 			gui_quit_sleep();
 		}
 	}
 	return NULL;
 }
-static bool input_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
+static void input_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
 	struct in_data*d=indev_drv->user_data;
-	if(!d->enabled)return false;
-	if(indev_drv->user_data!=d)return false;
+	if(!d->enabled||indev_drv->user_data!=d)return;
 	switch(indev_drv->type){
 		case LV_INDEV_TYPE_POINTER:
 			data->point.x=d->last_x;
@@ -147,19 +148,20 @@ static bool input_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
 			data->key=d->key;
 			data->state=d->down?LV_INDEV_STATE_PR:LV_INDEV_STATE_REL;
 		break;
+		default:;
 	}
 	if(gui_cursor&&symbol_font&&indev_drv->type==LV_INDEV_TYPE_POINTER){
 		static bool old=false;
 		if(!d->indev->cursor){
 			lv_indev_set_cursor(d->indev,gui_cursor);
-			lv_obj_set_hidden(gui_cursor,true);
+			lv_obj_clear_flag(gui_cursor,LV_OBJ_FLAG_HIDDEN);
 		}
 		if(old!=mouse){
 			old=mouse;
-			lv_obj_set_hidden(gui_cursor,!mouse);
+			if(mouse)lv_obj_clear_flag(gui_cursor,LV_OBJ_FLAG_HIDDEN);
+			else lv_obj_add_flag(gui_cursor,LV_OBJ_FLAG_HIDDEN);
 		}
 	}
-	return false;
 }
 static int init_epoll(){
 	if(efd>=0)return 0;
@@ -176,17 +178,15 @@ static int init_epoll(){
 	return 0;
 }
 static struct in_data*get_unused_in_data(){
-	int x;
+	size_t x;
 	struct in_data*d;
-	for(x=0;x<32;x++){
+	for(x=0;x<ARRLEN(indatas);x++){
 		d=indatas[x];
-		if(d){
-			if(d->enabled)continue;
-			memset(d,0,ds);
-		}else{
+		if(!d){
 			indatas[x]=d=malloc(ds);
 			if(!d)telog_error("malloc failed");
-		}
+		}else if(d->enabled)continue;
+		memset(d,0,ds);
 		return d;
 	}
 	telog_warn("too many input device open");
@@ -250,6 +250,7 @@ static int input_scan_init(void){
 	bool found=false;
 	char path[32]={0};
 	int fd;
+	memset(indatas,0,sizeof(indatas));
 	for(int i=0;i<32;i++){
 		memset(path,0,32);
 		snprintf(path,31,_PATH_DEV"/input/event%d",i);

@@ -41,23 +41,25 @@ static struct{
 
 static void sysbar_thread(struct sysbar*b){
 	#ifndef ENABLE_UEFI
-	int bats[64]={0};
+	int bats[64];
 	int bat,lvl;
 	char*sym=NULL;
 	#endif
-	char timestr[64]={0};
+	char timestr[64];
 	time_t t=time(NULL);
 	struct tm*tt=localtime(&t);
-	if(tt&&strftime(timestr,63,"%H:%M",tt)>0)
+	memset(timestr,0,sizeof(timestr));
+	if(tt&&strftime(timestr,sizeof(timestr)-1,"%H:%M",tt)>0)
 		lv_label_set_text(b->top.content.time,timestr);
 	#ifndef ENABLE_UEFI
-	bat=pwr_scan_device(bats,63,true);
+	memset(bats,0,sizeof(bats));
+	bat=pwr_scan_device(bats,sizeof(bats)-1,true);
 	if(bat>=0&&(lvl=pwr_multi_get_capacity(bats))>=0){
 		if(lvl<10)sym=LV_SYMBOL_BATTERY_EMPTY;
 		else if(lvl<25)sym=LV_SYMBOL_BATTERY_1;
 		else if(lvl<45)sym=LV_SYMBOL_BATTERY_2;
-		else if(lvl<65)sym=LV_SYMBOL_BATTERY_3;
-		else if(lvl>85)sym=LV_SYMBOL_BATTERY_FULL;
+		else if(lvl<80)sym=LV_SYMBOL_BATTERY_3;
+		else sym=LV_SYMBOL_BATTERY_FULL;
 		lv_label_set_text_fmt(b->top.content.level,"%d%%",lvl);
 		lv_label_set_text(b->top.content.battery,sym);
 	}else lv_label_set_text_fmt(b->top.content.level,"---");

@@ -23,7 +23,7 @@ struct sysbar{
 			#endif
 		}content;
 	}top;
-	lv_task_t*hide;
+	lv_timer_t*hide;
 	lv_obj_t*keyboard;
 	lv_obj_t*edit_menu;
 	lv_obj_t*edit_btns[11];
@@ -34,6 +34,7 @@ struct sysbar{
 		lv_obj_t*bar;
 		lv_style_t btn_style;
 		bool style_inited;
+		lv_obj_t*buttons;
 		struct{
 			lv_obj_t*back;
 			lv_obj_t*home;

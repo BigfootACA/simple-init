@@ -62,7 +62,13 @@ static void sysbar_thread(struct sysbar*b){
 		else sym=LV_SYMBOL_BATTERY_FULL;
 		lv_label_set_text_fmt(b->top.content.level,"%d%%",lvl);
 		lv_label_set_text(b->top.content.battery,sym);
-	}else lv_label_set_text_fmt(b->top.content.level,"---");
+		lv_obj_clear_flag(b->top.content.level,LV_OBJ_FLAG_HIDDEN);
+		lv_obj_clear_flag(b->top.content.battery,LV_OBJ_FLAG_HIDDEN);
+	}else{
+		lv_label_set_text_fmt(b->top.content.level,"---");
+		lv_obj_add_flag(b->top.content.level,LV_OBJ_FLAG_HIDDEN);
+		lv_obj_add_flag(b->top.content.battery,LV_OBJ_FLAG_HIDDEN);
+	}
 	pwr_close_device(bats);
 	#endif
 }

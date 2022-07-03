@@ -24,7 +24,7 @@ static enum clipboard_type clip_type=CLIP_NULL;
 static char*clip_cont=NULL;
 struct clipboard_item;
 struct clipboard_app{
-	lv_obj_t*list,*info;
+	lv_obj_t*list,*info,*btns;
 	lv_obj_t*add,*reload,*clear;
 	lv_obj_t*use,*delete,*edit;
 	list*items;
@@ -109,9 +109,8 @@ char*clipboard_get_content(void){
 	return clip_cont;
 }
 
-static void clipboard_item_click(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_CLICKED)return;
-	struct clipboard_item*item=lv_obj_get_user_data(obj);
+static void clipboard_item_click(lv_event_t*e){
+	struct clipboard_item*item=e->user_data;
 	if(!item||!item->clip)return;
 	bool found=false;
 	list*f=list_first(item->clip->items);
@@ -121,19 +120,19 @@ static void clipboard_item_click(lv_obj_t*obj,lv_event_t e){
 			found=true;
 			continue;
 		}
-		lv_checkbox_set_checked(i->chk,false);
+		lv_obj_set_checked(i->chk,false);
 		lv_obj_set_checked(i->btn,false);
 	}while((f=f->next));
 	if(!found)return;
-	lv_checkbox_set_checked(item->chk,true);
+	lv_obj_set_checked(item->chk,true);
 	lv_obj_set_checked(item->btn,true);
-	lv_style_set_action_button(item->clip->use,true);
-	lv_style_set_action_button(item->clip->edit,true);
-	lv_style_set_action_button(item->clip->delete,true);
+	lv_obj_set_enabled(item->clip->use,true);
+	lv_obj_set_enabled(item->clip->edit,true);
+	lv_obj_set_enabled(item->clip->delete,true);
 	item->clip->selected=item;
 }
 
-static void clipboard_add_item(struct clipboard_app*clip,lv_obj_t**last,char*key){
+static void clipboard_add_item(struct clipboard_app*clip,char*key){
 	char*str=confd_get_string_dict(BASE_HIST,key,"content",NULL);
 	if(!str)return;
 	struct clipboard_item*i=malloc(sizeof(struct clipboard_item));
@@ -144,31 +143,16 @@ static void clipboard_add_item(struct clipboard_app*clip,lv_obj_t**last,char*key
 	memset(i,0,sizeof(struct clipboard_item));
 	strncpy(i->key,key,sizeof(i->key)-1);
 	i->clip=clip;
-	lv_coord_t bw;
-	bw=lv_page_get_scrl_width(i->clip->list);
 
-	i->btn=lv_btn_create(i->clip->list,NULL);
-	lv_obj_set_size(i->btn,bw,gui_dpi/3);
-	lv_obj_align(
-		i->btn,*last,
-		*last?LV_ALIGN_OUT_BOTTOM_MID:LV_ALIGN_IN_TOP_MID,
-		0,*last?gui_dpi/8:0
-	);
+	i->btn=lv_btn_create(i->clip->list);
+	lv_obj_set_size(i->btn,lv_pct(100),gui_dpi/3);
 	lv_style_set_btn_item(i->btn);
-	lv_obj_set_click(i->btn,false);
-	*last=i->btn;
+	lv_obj_clear_flag(i->btn,LV_OBJ_FLAG_CLICKABLE);
 
-	i->chk=lv_checkbox_create(i->btn,NULL);
-	lv_checkbox_ext_t*e=lv_obj_get_ext_attr(i->chk);
-	lv_label_set_long_mode(e->label,confd_get_boolean("gui.text_scroll",true)?
-		LV_LABEL_LONG_SROLL_CIRC:
-		LV_LABEL_LONG_DOT
-	);
-	lv_obj_set_width(e->label,bw-gui_dpi/5*2);
+	i->chk=lv_checkbox_create(i->btn);
+	lv_obj_set_width(i->btn,lv_pct(100));
 	lv_checkbox_set_text(i->chk,str);
-	lv_obj_set_user_data(i->chk,i);
-	lv_obj_set_event_cb(i->chk,clipboard_item_click);
-	lv_style_set_focus_checkbox(i->chk);
+	lv_obj_add_event_cb(i->chk,clipboard_item_click,LV_EVENT_CLICKED,i);
 	lv_group_add_obj(gui_grp,i->chk);
 
 	i->item=list_new_notnull(i);
@@ -179,27 +163,26 @@ static void clipboard_add_item(struct clipboard_app*clip,lv_obj_t**last,char*key
 static void clipboard_reload(struct clipboard_app*clip){
 	if(clip->info)lv_obj_del(clip->info);
 	list_free_all_def(clip->items);
-	clip->items=NULL,clip->selected=NULL;
-	lv_list_clean(clip->list);
-	lv_style_set_action_button(clip->use,false);
-	lv_style_set_action_button(clip->edit,false);
-	lv_style_set_action_button(clip->delete,false);
-	lv_obj_t*last=NULL;
+	clip->items=NULL,clip->selected=NULL,clip->info=NULL;
+	lv_obj_set_enabled(clip->use,false);
+	lv_obj_set_enabled(clip->edit,false);
+	lv_obj_set_enabled(clip->delete,false);
+	lv_obj_clean(clip->list);
 	bool found=false;
 	char**cs=confd_ls(BASE_HIST);
 	if(cs){
 		for(size_t s=0;cs[s];s++){
 			found=true;
-			clipboard_add_item(clip,&last,cs[s]);
+			clipboard_add_item(clip,cs[s]);
 		}
 		if(cs[0])free(cs[0]);
 		free(cs);
 	}
 	if(!found){
-		clip->info=lv_label_create(clip->list,NULL);
-		lv_label_set_long_mode(clip->info,LV_LABEL_LONG_BREAK);
-		lv_obj_set_size(clip->info,lv_page_get_scrl_width(clip->list),gui_sh/16);
-		lv_label_set_align(clip->info,LV_LABEL_ALIGN_CENTER);
+		clip->info=lv_label_create(clip->list);
+		lv_label_set_long_mode(clip->info,LV_LABEL_LONG_WRAP);
+		lv_obj_set_size(clip->info,lv_pct(100),LV_SIZE_CONTENT);
+		lv_obj_set_style_text_align(clip->info,LV_TEXT_ALIGN_CENTER,0);
 		lv_label_set_text(clip->info,_("(none)"));
 	}
 }
@@ -209,24 +192,23 @@ static bool input_cb(bool ok,const char*content,void*user_data __attribute__((un
 	return false;
 }
 
-static void clipboard_click(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_CLICKED)return;
-	struct clipboard_app*clip=lv_obj_get_user_data(obj);
+static void clipboard_click(lv_event_t*e){
+	struct clipboard_app*clip=e->user_data;
 	if(!clip)return;
 	struct clipboard_item*sel=clip->selected;
-	if(obj==clip->add){
+	if(e->target==clip->add){
 		struct inputbox*in=inputbox_create(input_cb,"Add into clipboard");
 		inputbox_set_one_line(in,false);
-	}else if(obj==clip->reload){
+	}else if(e->target==clip->reload){
 		clipboard_reload(clip);
-	}else if(obj==clip->clear){
+	}else if(e->target==clip->clear){
 		clipboard_clear();
 		clipboard_reload(clip);
-	}else if(obj==clip->use){
+	}else if(e->target==clip->use){
 		if(!sel)return;
 		confd_set_string_base(BASE,"last",sel->key);
 		clipboard_load(sel->key);
-	}else if(obj==clip->delete){
+	}else if(e->target==clip->delete){
 		if(!sel)return;
 		char*last=confd_get_string_base(BASE,"last",NULL);
 		if(last){
@@ -244,7 +226,7 @@ static void clipboard_click(lv_obj_t*obj,lv_event_t e){
 		}
 		confd_delete_base(BASE_HIST,sel->key);
 		clipboard_reload(clip);
-	}else if(obj==clip->edit){
+	}else if(e->target==clip->edit){
 		if(!sel)return;
 		struct inputbox*in=inputbox_create(input_cb,"Edit clipboard item");
 		inputbox_set_one_line(in,false);
@@ -282,96 +264,78 @@ static int clipboard_lost_focus(struct gui_activity*act){
 }
 
 static int clipboard_exit(struct gui_activity*act){
-	free(act->data);
+	if(act->data)free(act->data);
 	act->data=NULL;
 	return 0;
 }
 
-static int clipboard_draw(struct gui_activity*act){
-	struct clipboard_app*clip=malloc(sizeof(struct clipboard_app));
-	if(!clip)return -ENOMEM;
-	memset(clip,0,sizeof(struct clipboard_app));
+static int clipboard_do_init(struct gui_activity*act){
+	static size_t s=sizeof(struct clipboard_app);
+	struct clipboard_app*clip;
+	if(!(clip=malloc(s)))return -ENOMEM;
+	memset(clip,0,s);
 	act->data=clip;
+	return 0;
+}
 
-	lv_coord_t btm=gui_dpi/10;
-	lv_coord_t btw=gui_sw/3-btm;
-	lv_coord_t bth=gui_font_size+gui_dpi/10;
+static lv_obj_t*add_button(struct clipboard_app*clip,const char*title,uint8_t col,uint8_t row){
+	lv_obj_t*btn=lv_btn_create(clip->btns);
+	lv_obj_add_event_cb(btn,clipboard_click,LV_EVENT_CLICKED,clip);
+	lv_obj_t*lbl=lv_label_create(btn);
+	lv_label_set_text(lbl,_(title));
+	lv_obj_center(lbl);
+	lv_obj_set_grid_cell(
+		btn,
+		LV_GRID_ALIGN_STRETCH,col,1,
+		LV_GRID_ALIGN_STRETCH,row,1
+	);
+	return btn;
+}
+
+static int clipboard_draw(struct gui_activity*act){
+	static lv_coord_t grid_col[]={
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_TEMPLATE_LAST
+	},grid_row[]={
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_TEMPLATE_LAST
+	};
+	struct clipboard_app*clip=act->data;
+	lv_obj_set_style_pad_all(act->page,gui_font_size/2,0);
+	lv_obj_set_flex_flow(act->page,LV_FLEX_FLOW_COLUMN);
 
 	// function title
-	lv_obj_t*title=lv_label_create(act->page,NULL);
-	lv_label_set_long_mode(title,LV_LABEL_LONG_BREAK);
-	lv_obj_set_y(title,gui_font_size);
-	lv_obj_set_size(title,gui_sw,gui_font_size*2);
-	lv_label_set_align(title,LV_LABEL_ALIGN_CENTER);
+	lv_obj_t*title=lv_label_create(act->page);
+	lv_label_set_long_mode(title,LV_LABEL_LONG_WRAP);
+	lv_obj_set_size(title,lv_pct(100),LV_SIZE_CONTENT);
+	lv_obj_set_style_text_align(title,LV_TEXT_ALIGN_CENTER,0);
 	lv_label_set_text(title,_("Clipboard"));
 
 	// options list
-	clip->list=lv_page_create(act->page,NULL);
-	lv_obj_set_pos(clip->list,gui_dpi/20,gui_font_size*3);
-	lv_obj_set_size(clip->list,gui_sw-gui_dpi/10,gui_sh-lv_obj_get_y(clip->list)-bth*2-btm*3);
-	lv_obj_set_style_local_border_width(clip->list,LV_LIST_PART_BG,LV_STATE_DEFAULT,0);
-	lv_obj_set_style_local_border_width(clip->list,LV_LIST_PART_BG,LV_STATE_FOCUSED,0);
-	lv_obj_set_style_local_border_width(clip->list,LV_LIST_PART_BG,LV_STATE_PRESSED,0);
+	clip->list=lv_obj_create(act->page);
+	lv_obj_set_width(clip->list,lv_pct(100));
+	lv_obj_set_flex_flow(clip->list,LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_flex_grow(clip->list,1);
 
-	// button style
-	static lv_style_t btn_style;
-	lv_style_init(&btn_style);
-	lv_style_set_radius(&btn_style,LV_STATE_DEFAULT,2);
-	lv_style_set_outline_width(&btn_style,LV_STATE_PRESSED,0);
+	clip->btns=lv_obj_create(act->page);
+	lv_obj_set_style_radius(clip->btns,0,0);
+	lv_obj_set_style_pad_all(clip->btns,gui_dpi/50,0);
+	lv_obj_set_scroll_dir(clip->btns,LV_DIR_NONE);
+	lv_obj_set_style_border_width(clip->btns,0,0);
+	lv_obj_set_style_bg_opa(clip->btns,LV_OPA_0,0);
+	lv_obj_clear_flag(clip->btns,LV_OBJ_FLAG_SCROLLABLE);
+	lv_obj_set_size(clip->btns,lv_pct(100),gui_font_size*5);
+	lv_obj_set_grid_dsc_array(clip->btns,grid_col,grid_row);
 
-	// add button
-	clip->add=lv_btn_create(act->page,NULL);
-	lv_obj_set_size(clip->add,btw,bth);
-	lv_obj_align(clip->add,NULL,LV_ALIGN_IN_BOTTOM_LEFT,btm,-(bth+btm*2));
-	lv_obj_set_user_data(clip->add,clip);
-	lv_obj_set_event_cb(clip->add,clipboard_click);
-	lv_style_set_action_button(clip->add,true);
-	lv_label_set_text(lv_label_create(clip->add,NULL),_("Add"));
-
-	// reload button
-	clip->reload=lv_btn_create(act->page,NULL);
-	lv_obj_set_size(clip->reload,btw,bth);
-	lv_obj_align(clip->reload,NULL,LV_ALIGN_IN_BOTTOM_MID,0,-(bth+btm*2));
-	lv_obj_set_user_data(clip->reload,clip);
-	lv_obj_set_event_cb(clip->reload,clipboard_click);
-	lv_style_set_action_button(clip->reload,true);
-	lv_label_set_text(lv_label_create(clip->reload,NULL),_("Reload"));
-
-	// clear button
-	clip->clear=lv_btn_create(act->page,NULL);
-	lv_obj_set_size(clip->clear,btw,bth);
-	lv_obj_align(clip->clear,NULL,LV_ALIGN_IN_BOTTOM_RIGHT,-btm,-(bth+btm*2));
-	lv_obj_set_user_data(clip->clear,clip);
-	lv_obj_set_event_cb(clip->clear,clipboard_click);
-	lv_style_set_action_button(clip->clear,true);
-	lv_label_set_text(lv_label_create(clip->clear,NULL),_("Clear"));
-
-	// use button
-	clip->use=lv_btn_create(act->page,NULL);
-	lv_obj_set_size(clip->use,btw,bth);
-	lv_obj_align(clip->use,NULL,LV_ALIGN_IN_BOTTOM_LEFT,btm,-btm);
-	lv_obj_set_user_data(clip->use,clip);
-	lv_obj_set_event_cb(clip->use,clipboard_click);
-	lv_style_set_action_button(clip->use,false);
-	lv_label_set_text(lv_label_create(clip->use,NULL),_("Use"));
-
-	// delete button
-	clip->delete=lv_btn_create(act->page,NULL);
-	lv_obj_set_size(clip->delete,btw,bth);
-	lv_obj_align(clip->delete,NULL,LV_ALIGN_IN_BOTTOM_MID,0,-btm);
-	lv_obj_set_user_data(clip->delete,clip);
-	lv_obj_set_event_cb(clip->delete,clipboard_click);
-	lv_style_set_action_button(clip->delete,false);
-	lv_label_set_text(lv_label_create(clip->delete,NULL),_("Delete"));
-
-	// edit button
-	clip->edit=lv_btn_create(act->page,NULL);
-	lv_obj_set_size(clip->edit,btw,bth);
-	lv_obj_align(clip->edit,NULL,LV_ALIGN_IN_BOTTOM_RIGHT,-btm,-btm);
-	lv_obj_set_user_data(clip->edit,clip);
-	lv_obj_set_event_cb(clip->edit,clipboard_click);
-	lv_style_set_action_button(clip->edit,false);
-	lv_label_set_text(lv_label_create(clip->edit,NULL),_("Edit"));
+	clip->add    = add_button(clip,"Add",    0,0);
+	clip->reload = add_button(clip,"Reload", 1,0);
+	clip->clear  = add_button(clip,"Clear",  2,0);
+	clip->use    = add_button(clip,"Use",    0,1);
+	clip->delete = add_button(clip,"Delete", 1,1);
+	clip->edit   = add_button(clip,"Edit",   2,1);
 
 	clipboard_reload(clip);
 	return 0;
@@ -382,6 +346,7 @@ struct gui_register guireg_clipboard={
 	.title="Clipboard",
 	.icon="clipboard.svg",
 	.show_app=true,
+	.init=clipboard_do_init,
 	.quiet_exit=clipboard_exit,
 	.get_focus=clipboard_get_focus,
 	.lost_focus=clipboard_lost_focus,

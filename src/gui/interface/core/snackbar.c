@@ -9,7 +9,6 @@
 #ifdef ENABLE_GUI
 #include<stddef.h>
 #include<stdint.h>
-#include<stdbool.h>
 #include"gui.h"
 #include"gui/snackbar.h"
 
@@ -21,8 +20,8 @@ static struct{
 	lv_anim_t show_anim;
 	lv_anim_t hide_anim;
 	lv_style_t style;
-	lv_task_t*hide_tsk;
-	lv_font_t*font;
+	lv_timer_t*hide_timer;
+	const lv_font_t*font;
 	lv_obj_t*bar;
 	lv_obj_t*content;
 	lv_obj_t*last_focus;
@@ -32,18 +31,18 @@ static struct{
 	void*data_dismiss;
 }sb;
 
-static void snackbar_hide_task(lv_task_t*tsk){
-	if(tsk==sb.hide_tsk)sb.hide_tsk=NULL;
+static void snackbar_hide_timer(lv_timer_t*timer){
+	if(timer==sb.hide_timer)sb.hide_timer=NULL;
 	snackbar_hide();
 }
 
 void snackbar_show(void){
 	lv_obj_t*par=lv_obj_get_parent(sb.bar);
-	lv_obj_set_hidden(sb.bar,false);
+	lv_obj_clear_flag(sb.bar,LV_OBJ_FLAG_HIDDEN);
 	lv_obj_set_size(sb.bar,lv_obj_get_width(par),sb.height);
-	if(sb.hide_tsk){
-		lv_task_del(sb.hide_tsk);
-		sb.hide_tsk=NULL;
+	if(sb.hide_timer){
+		lv_timer_del(sb.hide_timer);
+		sb.hide_timer=NULL;
 	}else{
 		lv_anim_set_values(
 			&sb.show_anim,
@@ -52,20 +51,19 @@ void snackbar_show(void){
 		);
 		lv_anim_start(&sb.show_anim);
 	}
-	sb.hide_tsk=lv_task_create(
-		snackbar_hide_task,
+	sb.hide_timer=lv_timer_create(
+		snackbar_hide_timer,
 		sb.show_time,
-		LV_TASK_PRIO_LOWEST,
 		NULL
 	);
-	lv_task_once(sb.hide_tsk);
+	lv_timer_set_repeat_count(sb.hide_timer,1);
 }
 
 void snackbar_hide(void){
 	lv_obj_t*par=lv_obj_get_parent(sb.bar);
-	if(sb.hide_tsk){
-		lv_task_del(sb.hide_tsk);
-		sb.hide_tsk=NULL;
+	if(sb.hide_timer){
+		lv_timer_del(sb.hide_timer);
+		sb.hide_timer=NULL;
 	}
 	lv_obj_set_size(sb.bar,lv_obj_get_width(par),sb.height);
 	lv_anim_set_values(
@@ -99,9 +97,9 @@ void snackbar_set_text(const char*text){
 	lv_coord_t th=lv_obj_get_height(sb.bar)-tx;
 	lv_obj_set_size(sb.content,tw,sb.font->line_height);
 	lv_label_set_text(sb.content,text?:"");
-	lv_obj_align(
+	lv_obj_align_to(
 		sb.content,NULL,
-		LV_ALIGN_IN_LEFT_MID,
+		LV_ALIGN_LEFT_MID,
 		tm,0
 	);
 	if(lv_obj_get_y(sb.content)<tm)
@@ -138,26 +136,26 @@ void snackbar_show_text(const char*text){
 }
 
 void snackbar_set_color(lv_color_t bg_color,lv_color_t txt_color){
-	lv_obj_remove_style(sb.bar,LV_OBJ_PART_MAIN,&sb.style);
-	lv_style_set_bg_color(&sb.style,LV_STATE_DEFAULT,bg_color);
-	lv_style_set_text_color(&sb.style,LV_STATE_DEFAULT,txt_color);
-	lv_style_set_shadow_color(&sb.style,LV_STATE_DEFAULT,bg_color);
-	lv_obj_add_style(sb.bar,LV_OBJ_PART_MAIN,&sb.style);
+	lv_obj_remove_style(sb.bar,&sb.style,LV_PART_MAIN);
+	lv_style_set_bg_color(&sb.style,bg_color);
+	lv_style_set_text_color(&sb.style,txt_color);
+	lv_style_set_shadow_color(&sb.style,bg_color);
+	lv_obj_add_style(sb.bar,&sb.style,LV_PART_MAIN);
 }
 
-void snackbar_set_font(lv_font_t*font){
+void snackbar_set_font(const lv_font_t*font){
 	if(!font)return;
-	lv_obj_remove_style(sb.bar,LV_OBJ_PART_MAIN,&sb.style);
-	lv_style_set_text_font(&sb.style,LV_STATE_DEFAULT,font);
-	lv_obj_add_style(sb.bar,LV_OBJ_PART_MAIN,&sb.style);
+	lv_obj_remove_style(sb.bar,&sb.style,LV_PART_MAIN);
+	lv_style_set_text_font(&sb.style,font);
+	lv_obj_add_style(sb.bar,&sb.style,LV_PART_MAIN);
 	sb.font=font;
 }
 
 void snackbar_set_height(lv_coord_t height){
-	lv_obj_remove_style(sb.bar,LV_OBJ_PART_MAIN,&sb.style);
-	lv_style_set_shadow_width(&sb.style,LV_STATE_DEFAULT,height);
-	lv_style_set_shadow_ofs_y(&sb.style,LV_STATE_DEFAULT,-height/10);
-	lv_obj_add_style(sb.bar,LV_OBJ_PART_MAIN,&sb.style);
+	lv_obj_remove_style(sb.bar,&sb.style,LV_PART_MAIN);
+	lv_style_set_shadow_width(&sb.style,height);
+	lv_style_set_shadow_ofs_y(&sb.style,-height/10);
+	lv_obj_add_style(sb.bar,&sb.style,LV_PART_MAIN);
 	sb.height=height;
 }
 
@@ -173,14 +171,13 @@ static void snackbar_defocus_cb(lv_anim_t*anim __attribute__((unused))){
 		lv_group_focus_obj(sb.last_focus);
 	sb.last_focus=NULL;
 	lv_group_remove_obj(sb.bar);
-	lv_obj_set_hidden(sb.bar,true);
+	lv_obj_add_flag(sb.bar,LV_OBJ_FLAG_HIDDEN);
 	snackbar_set_text(NULL);
 	if(sb.on_dismiss)sb.on_dismiss(sb.data_dismiss);
 	sb.on_dismiss=NULL,sb.data_dismiss=NULL;
 }
 
-static void snackbar_cb(lv_obj_t*obj,lv_event_t e){
-	if(obj!=sb.bar||e!=LV_EVENT_CLICKED)return;
+static void snackbar_cb(lv_event_t*e __attribute__((unused))){
 	if(
 		!sb.on_click||
 		sb.on_click(sb.data_click)==0
@@ -190,19 +187,17 @@ static void snackbar_cb(lv_obj_t*obj,lv_event_t e){
 
 void snackbar_draw(lv_obj_t*scr,lv_coord_t off,lv_coord_t height){
 	sb.off_btm=off;
-	sb.bar=lv_obj_create(scr,NULL);
-	lv_theme_apply(sb.bar,LV_THEME_SCR);
-	lv_obj_set_event_cb(sb.bar,snackbar_cb);
-	lv_obj_set_click(sb.bar,true);
-	lv_obj_set_hidden(sb.bar,true);
+	sb.bar=lv_obj_create(scr);
+	lv_obj_add_event_cb(sb.bar,snackbar_cb,LV_EVENT_CLICKED,NULL);
+	lv_obj_add_flag(sb.bar,LV_OBJ_FLAG_HIDDEN|LV_OBJ_FLAG_CLICKABLE);
 	lv_style_init(&sb.style);
-	lv_obj_add_style(sb.bar,LV_OBJ_PART_MAIN,&sb.style);
-	snackbar_set_color(lv_color_darken(LV_COLOR_GRAY,LV_OPA_30),LV_COLOR_WHITE);
+	lv_obj_add_style(sb.bar,&sb.style,LV_PART_MAIN);
+	snackbar_set_color(lv_palette_darken(LV_PALETTE_GREY,2),lv_color_white());
 	snackbar_set_font(gui_font_small);
 	snackbar_set_height(height);
 	snackbar_set_show_time(10000);
-	sb.content=lv_label_create(sb.bar,NULL);
-	lv_label_set_long_mode(sb.content,LV_LABEL_LONG_BREAK);
+	sb.content=lv_label_create(sb.bar);
+	lv_label_set_long_mode(sb.content,LV_LABEL_LONG_WRAP);
 	snackbar_set_text(NULL);
 	lv_anim_init(&sb.show_anim);
 	lv_anim_init(&sb.hide_anim);

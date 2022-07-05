@@ -19,7 +19,7 @@ extern void snackbar_set_on_click(runnable_t cb,void*data);
 extern void snackbar_set_on_dismiss(runnable_t cb,void*data);
 extern void snackbar_set_show_time(uint32_t time);
 extern void snackbar_set_anim_time(uint32_t time);
-extern void snackbar_set_font(lv_font_t*font);
+extern void snackbar_set_font(const lv_font_t*font);
 extern void snackbar_set_height(lv_coord_t height);
 extern void snackbar_set_color(lv_color_t bg_color,lv_color_t txt_color);
 extern void snackbar_draw(lv_obj_t*scr,lv_coord_t off,lv_coord_t height);

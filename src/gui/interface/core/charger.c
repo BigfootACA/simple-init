@@ -25,66 +25,63 @@ static int level=-1;
 static void set_battery_level(int lvl){
 	if(lvl<0||lvl>100)return;
 	lv_obj_set_height(bc,lv_obj_get_height(bb)*lvl/100);
-	lv_obj_align(bc,bb,LV_ALIGN_IN_BOTTOM_MID,0,0);
+	lv_obj_align_to(bc,bb,LV_ALIGN_BOTTOM_MID,0,0);
 	lv_label_set_text_fmt(bl,"%d%%",lvl);
 }
 
 static void draw_charger(){
 	lv_obj_t*bg=lv_scr_act();
-	lv_obj_set_style_local_bg_color(bg,LV_OBJ_PART_MAIN,LV_STATE_DEFAULT,LV_COLOR_BLACK);
-	lv_obj_set_style_local_image_recolor(gui_cursor,LV_IMG_PART_MAIN,LV_STATE_DEFAULT,LV_COLOR_WHITE);
+	lv_obj_set_style_bg_color(bg,lv_color_black(),0);
+	lv_obj_set_style_img_recolor(gui_cursor,lv_color_white(),0);
 
 	int line_size=gui_font_size/3*2;
 	int bbw=gui_w/5*2,bbh=gui_h/5*2;
 	int bhw=bbw/5*2,bhh=bbh/8;
 
 	// battery body
-	bb=lv_obj_create(bg,NULL);
+	bb=lv_obj_create(bg);
 	lv_obj_set_size(bb,bbw,bbh);
-	lv_obj_align(bb,NULL,LV_ALIGN_CENTER,0,0);
-	lv_theme_apply(bb,LV_THEME_SCR);
-	lv_obj_set_style_local_radius(bb,LV_OBJ_PART_MAIN,LV_STATE_DEFAULT,5);
-	lv_obj_set_style_local_bg_color(bb,LV_OBJ_PART_MAIN,LV_STATE_DEFAULT,LV_COLOR_BLACK);
-	lv_obj_set_style_local_border_width(bb,LV_OBJ_PART_MAIN,LV_STATE_DEFAULT,line_size);
-	lv_obj_set_style_local_border_color(bb,LV_OBJ_PART_MAIN,LV_STATE_DEFAULT,LV_COLOR_WHITE);
+	lv_obj_align_to(bb,NULL,LV_ALIGN_CENTER,0,0);
+	lv_obj_set_style_radius(bb,5,0);
+	lv_obj_set_style_bg_color(bb,lv_color_black(),0);
+	lv_obj_set_style_border_width(bb,line_size,0);
+	lv_obj_set_style_border_color(bb,lv_color_white(),0);
 
 	// battery head
-	bh=lv_obj_create(bg,NULL);
+	bh=lv_obj_create(bg);
 	lv_obj_set_size(bh,bhw,bhh);
-	lv_obj_align(bh,bb,LV_ALIGN_OUT_TOP_MID,0,line_size);
-	lv_theme_apply(bh,LV_THEME_SCR);
-	lv_obj_set_style_local_radius(bh,LV_OBJ_PART_MAIN,LV_STATE_DEFAULT,5);
-	lv_obj_set_style_local_bg_color(bh,LV_OBJ_PART_MAIN,LV_STATE_DEFAULT,LV_COLOR_WHITE);
+	lv_obj_align_to(bh,bb,LV_ALIGN_OUT_TOP_MID,0,line_size);
+	lv_obj_set_style_radius(bh,5,0);
+	lv_obj_set_style_bg_color(bh,lv_color_white(),0);
 
 	// battery content
-	bc=lv_obj_create(bg,NULL);
+	bc=lv_obj_create(bg);
 	lv_obj_set_size(bc,bbw,0);
-	lv_obj_align(bc,bb,LV_ALIGN_IN_BOTTOM_MID,0,0);
-	lv_theme_apply(bc,LV_THEME_SCR);
-	lv_obj_set_style_local_radius(bc,LV_OBJ_PART_MAIN,LV_STATE_DEFAULT,5);
-	lv_obj_set_style_local_bg_color(bc,LV_OBJ_PART_MAIN,LV_STATE_DEFAULT,LV_COLOR_WHITE);
+	lv_obj_align_to(bc,bb,LV_ALIGN_BOTTOM_MID,0,0);
+	lv_obj_set_style_radius(bc,5,0);
+	lv_obj_set_style_bg_color(bc,lv_color_white(),0);
 
 	// battery level label
-	bl=lv_label_create(bg,NULL);
-	lv_label_set_long_mode(bl,LV_LABEL_LONG_CROP);
-	lv_label_set_align(bl,LV_LABEL_ALIGN_CENTER);
+	bl=lv_label_create(bg);
+	lv_label_set_long_mode(bl,LV_LABEL_LONG_CLIP);
+	lv_obj_set_style_text_align(bl,LV_TEXT_ALIGN_CENTER,0);
 	lv_label_set_text(bl,"???");
 	lv_obj_set_width(bl,bbw);
-	lv_obj_align(bl,bb,LV_ALIGN_OUT_BOTTOM_MID,0,gui_font_size);
-	lv_obj_set_style_local_text_color(bl,LV_OBJ_PART_MAIN,LV_STATE_DEFAULT,LV_COLOR_WHITE);
+	lv_obj_align_to(bl,bb,LV_ALIGN_OUT_BOTTOM_MID,0,gui_font_size);
+	lv_obj_set_style_text_color(bl,lv_color_white(),0);
 
 	// charging icon
-	bi=lv_img_create(bg,NULL);
+	bi=lv_img_create(bg);
 	lv_obj_set_size(bi,bbw/5,bbw/5);
-	lv_obj_set_style_local_image_recolor(bi,LV_OBJ_PART_MAIN,LV_STATE_DEFAULT,LV_COLOR_WHITE);
+	lv_obj_set_style_img_recolor(bi,lv_color_white(),0);
 	lv_img_set_src(bi,LV_SYMBOL_CHARGE);
 }
 
-static void battery_watch(lv_task_t*t __attribute__((unused))){
+static void battery_watch(lv_timer_t*t __attribute__((unused))){
 	if(level>0)set_battery_level(level);
-	lv_obj_align(
+	lv_obj_align_to(
 		bi,NULL,
-		LV_ALIGN_IN_BOTTOM_MID,
+		LV_ALIGN_BOTTOM_MID,
 		0,charging?
 			-gui_font_size:
 			lv_obj_get_height(bi)
@@ -132,11 +129,9 @@ int charger_main(){
 	pthread_t bt;
 	pthread_create(&bt,NULL,battery_thread,NULL);
 	battery_read();
-	battery_watch(lv_task_create(
+	battery_watch(lv_timer_create(
 		battery_watch,
-		5000,
-		LV_TASK_PRIO_MID,
-		NULL
+		5000,NULL
 	));
 	gui_main();
 	return 0;

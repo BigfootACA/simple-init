@@ -18,35 +18,36 @@
 void lv_termview_resize(lv_obj_t*tv){
 	if(!tv)return;
 	uint32_t cols,rows;
-	lv_termview_ext_t*term=lv_obj_get_ext_attr(tv);
+	lv_termview_t*term=(lv_termview_t*)tv;
 	if(!term||!term->screen||!term->vte)return;
+	lv_obj_update_layout(tv);
 	term->width=lv_obj_get_width(tv);
 	term->height=lv_obj_get_height(tv);
 	size_t size=LV_CANVAS_BUF_SIZE_TRUE_COLOR(
 		term->width,
 		term->height
 	);
+	if(size<=0)return;
+	LV_LOG_INFO("new size %dx%d",term->width,term->height);
 	if(size!=term->mem_size){
-		if(term->buffer){
-			lv_img_cache_invalidate_src(
-				lv_canvas_get_img(tv)
-			);
-			lv_mem_free(term->buffer);
-		}
+		lv_color_t*old=term->buffer;
+		LV_LOG_INFO("new buffer size %zu bytes",size);
 		if(!(term->buffer=lv_mem_alloc(size))){
 			LV_LOG_ERROR("cannot allocate buffer for canvas");
 			return;
 		}
 		term->mem_size=size;
-		term->canvas.dsc.header.cf = LV_IMG_CF_TRUE_COLOR;
-		term->canvas.dsc.header.w  = term->width;
-		term->canvas.dsc.header.h  = term->height;
-		term->canvas.dsc.data      = (void*)term->buffer;
-		lv_img_set_src(tv,&term->canvas.dsc);
+		lv_canvas_set_buffer(
+			tv,term->buffer,
+			term->width,
+			term->height,
+			LV_IMG_CF_TRUE_COLOR
+		);
+		if(old)lv_mem_free(old);
 	}
 	if(!term->cust_font){
-		term->font_reg=(lv_font_t*)lv_obj_get_style_text_font(
-			tv,LV_TERMVIEW_PART_BG
+		term->font_reg=lv_obj_get_style_text_font(
+			tv,LV_PART_MAIN
 		);
 		term->font_bold=term->font_reg;
 		term->font_ital=term->font_reg;
@@ -63,6 +64,7 @@ void lv_termview_resize(lv_obj_t*tv){
 	}
 	cols=term->width/term->glyph_width;
 	rows=term->height/term->glyph_height;
+	LV_LOG_INFO("new terminal cols %d rows %d",cols,rows);
 	if(cols!=term->cols||rows!=term->rows){
 		term->cols=cols,term->rows=rows;
 		tsm_screen_resize(term->screen,cols,rows);
@@ -70,11 +72,10 @@ void lv_termview_resize(lv_obj_t*tv){
 			term->resize_cb(tv,cols,rows);
 	}
 	lv_color_t bg=lv_obj_get_style_bg_color(
-		tv,
-		LV_TERMVIEW_PART_BG
+		tv,LV_PART_MAIN
 	);
 	lv_canvas_fill_bg(tv,bg,LV_OPA_COVER);
-	term->max_sb=LV_MATH_MAX(
+	term->max_sb=LV_MAX(
 		term->max_sb,
 		(uint32_t)(cols*rows*128)
 	);
@@ -84,54 +85,6 @@ void lv_termview_resize(lv_obj_t*tv){
 	);
 	term->age=0;
 	lv_termview_update(tv);
-}
-
-static lv_res_t lv_termview_signal(
-	lv_obj_t*tv,
-	lv_signal_t sign,
-	void*param
-){
-	lv_termview_ext_t*term=lv_obj_get_ext_attr(tv);
-	lv_res_t res=term->sig(tv,sign,param);
-	if(res!=LV_RES_OK)return res;
-	switch(sign){
-		case LV_SIGNAL_GET_TYPE:
-			return lv_obj_handle_get_type_signal(
-				param,LV_OBJX_NAME
-			);
-		case LV_SIGNAL_CLEANUP:{
-			lv_img_cache_invalidate_src(lv_canvas_get_img(tv));
-			if(term->screen)tsm_screen_unref(term->screen);
-			if(term->vte)tsm_vte_unref(term->vte);
-			if(term->buffer)lv_mem_free(term->buffer);
-		}break;
-		case LV_SIGNAL_PRESSING:{
-			lv_point_t p;
-			lv_indev_t*act=lv_indev_get_act();
-			lv_indev_get_point(act,&p);
-			if(term->drag_y_last==0)term->drag_y_last=p.y;
-			else{
-				bool up=true;
-				lv_coord_t y=p.y-term->drag_y_last;
-				if(y<0)y=-y,up=false;
-				int ln=y/term->font_reg->line_height;
-				if(ln>0){
-					term->drag_y_last=p.y;
-					if(up)tsm_screen_sb_up(term->screen,ln);
-					else tsm_screen_sb_down(term->screen,ln);
-					lv_termview_update(tv);
-				}
-			}
-		};break;
-		case LV_SIGNAL_RELEASED:
-			term->drag_y_last=0;
-		break;
-		case LV_SIGNAL_STYLE_CHG:
-		case LV_SIGNAL_COORD_CHG:
-			lv_termview_resize(tv);
-		break;
-	}
-	return res;
 }
 
 static int term_draw_cell(
@@ -152,13 +105,13 @@ static int term_draw_cell(
 	lv_coord_t dw,dh,x,y;
 	lv_draw_rect_dsc_t rd;
 	lv_draw_label_dsc_t ld;
-	lv_termview_ext_t*term=lv_obj_get_ext_attr(tv);
+	lv_termview_t*term=(lv_termview_t*)tv;
 	if(!term||screen!=term->screen||cw<=0)return 0;
 	if(px>=term->cols||py>=term->rows)return 0;
 	if(age&&term->age&&age<=term->age)return 0;
 	lv_draw_rect_dsc_init(&rd);
-	fc=LV_COLOR_MAKE(a->fr,a->fg,a->fb);
-	bc=LV_COLOR_MAKE(a->br,a->bg,a->bb);
+	fc=(lv_color_t)LV_COLOR_MAKE(a->fr,a->fg,a->fb);
+	bc=(lv_color_t)LV_COLOR_MAKE(a->br,a->bg,a->bb);
 	rd.bg_color=a->inverse?fc:bc;
 	x=px*term->glyph_width,y=py*term->glyph_height;
 	dw=term->glyph_width*cw,dh=term->glyph_height;
@@ -179,10 +132,7 @@ static int term_draw_cell(
 		tsm_ucs4_to_utf8(cs[i],xs);
 		dw=term->glyph_width*cw;
 		if(x+dw>term->width)dw=term->width-x;
-		lv_canvas_draw_text(
-			tv,x,y,dw,&ld,xs,
-			LV_LABEL_ALIGN_LEFT
-		);
+		lv_canvas_draw_text(tv,x,y,dw,&ld,xs);
 		x+=dw;
 	}
 	return 0;
@@ -223,7 +173,7 @@ static void write_cb(
 	void*data
 ){
 	lv_obj_t*tv=data;
-	lv_termview_ext_t*term=lv_obj_get_ext_attr(tv);
+	lv_termview_t*term=(lv_termview_t*)tv;
 	if(!vte||!tv||!term||term->vte!=vte)return;
 	if(term->write_cb)term->write_cb(tv,u8,len);
 }
@@ -235,39 +185,36 @@ static void osc_cb(
 	void*data
 ){
 	lv_obj_t*tv=data;
-	lv_termview_ext_t*term=lv_obj_get_ext_attr(tv);
+	lv_termview_t*term=(lv_termview_t*)tv;
 	if(!vte||!tv||!term||term->vte!=vte)return;
 	if(term->osc_cb)term->osc_cb(tv,u8,len);
 }
 
-static void virt_input_cb(lv_obj_t*obj,lv_event_t e){
-	if(!obj||e==LV_EVENT_DELETE)return;
-	lv_obj_t*tv=lv_obj_get_user_data(obj);
-	lv_termview_ext_t*term=lv_obj_get_ext_attr(tv);
-	if(obj!=term->virt_input)return;
-	if(e==LV_EVENT_VALUE_CHANGED){
-		const char*txt=lv_textarea_get_text(term->virt_input);
-		size_t len=strlen(txt);
-		for(size_t i=0;i<len;i++)if(tsm_vte_handle_keyboard(
-			term->vte,0,txt[i],term->mods,txt[i]
-		))tsm_screen_sb_reset(term->screen);
-		if(len>0)lv_textarea_set_text(term->virt_input,"");
-	}
+static void virt_input_cb(lv_event_t*e){
+	lv_obj_t*tv=e->user_data;
+	lv_termview_t*term=(lv_termview_t*)tv;
+	if(e->target!=term->virt_input)return;
+	const char*txt=lv_textarea_get_text(term->virt_input);
+	size_t len=strlen(txt);
+	for(size_t i=0;i<len;i++)if(tsm_vte_handle_keyboard(
+		term->vte,0,txt[i],term->mods,txt[i]
+	))tsm_screen_sb_reset(term->screen);
+	if(len>0)lv_textarea_set_text(term->virt_input,"");
 	lv_termview_update(tv);
 }
 
 struct tsm_screen*lv_termview_get_screen(lv_obj_t*tv){
-	lv_termview_ext_t*term=lv_obj_get_ext_attr(tv);
+	lv_termview_t*term=(lv_termview_t*)tv;
 	return term->screen;
 }
 
 struct tsm_vte*lv_termview_get_vte(lv_obj_t*tv){
-	lv_termview_ext_t*term=lv_obj_get_ext_attr(tv);
+	lv_termview_t*term=(lv_termview_t*)tv;
 	return term->vte;
 }
 
 lv_obj_t*lv_termview_get_virtual_input(lv_obj_t*tv){
-	lv_termview_ext_t*term=lv_obj_get_ext_attr(tv);
+	lv_termview_t*term=(lv_termview_t*)tv;
 	return term->virt_input;
 }
 
@@ -275,7 +222,7 @@ void lv_termview_set_osc_cb(
 	lv_obj_t*tv,
 	termview_osc_cb cb
 ){
-	lv_termview_ext_t*term=lv_obj_get_ext_attr(tv);
+	lv_termview_t*term=(lv_termview_t*)tv;
 	term->osc_cb=cb;
 }
 
@@ -283,7 +230,7 @@ void lv_termview_set_write_cb(
 	lv_obj_t*tv,
 	termview_write_cb cb
 ){
-	lv_termview_ext_t*term=lv_obj_get_ext_attr(tv);
+	lv_termview_t*term=(lv_termview_t*)tv;
 	term->write_cb=cb;
 }
 
@@ -291,7 +238,7 @@ void lv_termview_set_resize_cb(
 	lv_obj_t*tv,
 	termview_resize_cb cb
 ){
-	lv_termview_ext_t*term=lv_obj_get_ext_attr(tv);
+	lv_termview_t*term=(lv_termview_t*)tv;
 	term->resize_cb=cb;
 }
 
@@ -299,7 +246,7 @@ void lv_termview_set_mods(
 	lv_obj_t*tv,
 	uint32_t mods
 ){
-	lv_termview_ext_t*term=lv_obj_get_ext_attr(tv);
+	lv_termview_t*term=(lv_termview_t*)tv;
 	term->mods=mods;
 }
 
@@ -307,13 +254,13 @@ void lv_termview_set_max_scroll_buffer_size(
 	lv_obj_t*tv,
 	uint32_t max_sb
 ){
-	lv_termview_ext_t*term=lv_obj_get_ext_attr(tv);
+	lv_termview_t*term=(lv_termview_t*)tv;
 	term->max_sb=max_sb;
 	tsm_screen_set_max_sb(term->screen,max_sb);
 }
 
-void lv_termview_set_font(lv_obj_t*tv,lv_font_t*font){
-	lv_termview_ext_t*term=lv_obj_get_ext_attr(tv);
+void lv_termview_set_font(lv_obj_t*tv,const lv_font_t*font){
+	lv_termview_t*term=(lv_termview_t*)tv;
 	if(!font||font->line_height<=0)return;
 	term->glyph_height=font->line_height;
 	term->glyph_width=font->line_height/2;
@@ -325,7 +272,7 @@ void lv_termview_set_font(lv_obj_t*tv,lv_font_t*font){
 }
 
 void lv_termview_set_font_regular(lv_obj_t*tv,lv_font_t*font){
-	lv_termview_ext_t*term=lv_obj_get_ext_attr(tv);
+	lv_termview_t*term=(lv_termview_t*)tv;
 	if(!font||font->line_height<=0)return;
 	term->glyph_height=font->line_height;
 	term->glyph_width=font->line_height/2;
@@ -334,28 +281,28 @@ void lv_termview_set_font_regular(lv_obj_t*tv,lv_font_t*font){
 }
 
 void lv_termview_set_font_bold(lv_obj_t*tv,lv_font_t*font){
-	lv_termview_ext_t*term=lv_obj_get_ext_attr(tv);
+	lv_termview_t*term=(lv_termview_t*)tv;
 	if(!font||font->line_height<=0)return;
 	term->font_bold=font;
 	term->cust_font=true;
 }
 
 void lv_termview_set_font_italic(lv_obj_t*tv,lv_font_t*font){
-	lv_termview_ext_t*term=lv_obj_get_ext_attr(tv);
+	lv_termview_t*term=(lv_termview_t*)tv;
 	if(!font||font->line_height<=0)return;
 	term->font_ital=font;
 	term->cust_font=true;
 }
 
 void lv_termview_set_font_bold_italic(lv_obj_t*tv,lv_font_t*font){
-	lv_termview_ext_t*term=lv_obj_get_ext_attr(tv);
+	lv_termview_t*term=(lv_termview_t*)tv;
 	if(!font)return;
 	term->font_bold_ital=font;
 	term->cust_font=true;
 }
 
 void lv_termview_update(lv_obj_t*tv){
-	lv_termview_ext_t*term=lv_obj_get_ext_attr(tv);
+	lv_termview_t*term=(lv_termview_t*)tv;
 	term->age=tsm_screen_draw(
 		term->screen,
 		term_draw_cell,
@@ -364,12 +311,12 @@ void lv_termview_update(lv_obj_t*tv){
 }
 
 uint32_t lv_termview_get_cols(lv_obj_t*tv){
-	lv_termview_ext_t*term=lv_obj_get_ext_attr(tv);
+	lv_termview_t*term=(lv_termview_t*)tv;
 	return term->cols;
 }
 
 uint32_t lv_termview_get_rows(lv_obj_t*tv){
-	lv_termview_ext_t*term=lv_obj_get_ext_attr(tv);
+	lv_termview_t*term=(lv_termview_t*)tv;
 	return term->rows;
 }
 
@@ -391,7 +338,7 @@ void lv_termview_input_fmt(lv_obj_t*tv,const char*fmt,...){
 }
 
 void lv_termview_line_printf(lv_obj_t*tv,const char*fmt,...){
-	lv_termview_ext_t*term=lv_obj_get_ext_attr(tv);
+	lv_termview_t*term=(lv_termview_t*)tv;
 	va_list args;
 	va_start(args,fmt);
 	char*cs=_lv_txt_set_text_vfmt(fmt,args);
@@ -404,36 +351,49 @@ void lv_termview_line_printf(lv_obj_t*tv,const char*fmt,...){
 	lv_termview_update(tv);
 }
 
-lv_obj_t*lv_termview_create(lv_obj_t*par,const lv_obj_t*copy){
-	if(copy){
-		LV_LOG_ERROR("unsupported terminal view copy");
-		return NULL;
+static void lv_termview_event(lv_event_t*e){
+	lv_termview_t*term=(lv_termview_t*)e->target;
+	switch(e->code){
+		case LV_EVENT_PRESSING:{
+			lv_point_t p;
+			lv_indev_t*act=lv_indev_get_act();
+			lv_indev_get_point(act,&p);
+			if(term->drag_y_last==0)term->drag_y_last=p.y;
+			else{
+				bool up=true;
+				lv_coord_t y=p.y-term->drag_y_last;
+				if(y<0)y=-y,up=false;
+				int ln=y/term->font_reg->line_height;
+				if(ln>0){
+					term->drag_y_last=p.y;
+					if(up)tsm_screen_sb_up(term->screen,ln);
+					else tsm_screen_sb_down(term->screen,ln);
+					lv_termview_update(e->target);
+				}
+			}
+		}break;
+		case LV_EVENT_SIZE_CHANGED:lv_termview_resize(e->target);break;
+		case LV_EVENT_RELEASED:term->drag_y_last=0;break;
+		default:;
 	}
-	lv_obj_t*ta=NULL,*canvas=NULL;
-	LV_LOG_TRACE("terminal view create started");
-	canvas=lv_canvas_create(par,copy);
-	LV_ASSERT_MEM(canvas);
-	if(!canvas)goto fail;
-	ta=lv_textarea_create(canvas,copy);
-	LV_ASSERT_MEM(ta);
-	if(!ta)goto fail;
-	lv_termview_ext_t*ext=lv_obj_allocate_ext_attr(
-		canvas,
-		sizeof(lv_termview_ext_t)
-	);
-	LV_ASSERT_MEM(ext);
-	if(!ext)goto fail;
-	ext->sig=lv_obj_get_signal_cb(canvas);
+}
+
+static void lv_termview_constructor(const lv_obj_class_t*class_p,lv_obj_t*obj){
+	LV_UNUSED(class_p);
+	LV_TRACE_OBJ_CREATE("begin");
+	lv_obj_t*ta=lv_textarea_create(obj);
+	lv_termview_t*ext=(lv_termview_t*)obj;
 	if(tsm_screen_new(
 		&ext->screen,
 		NULL,NULL
-	)!=0)goto fail;
+	)!=0)LV_LOG_ERROR("create tsm screen failed");
 	if(tsm_vte_new(
 		&ext->vte,ext->screen,
-		write_cb,canvas,
+		write_cb,obj,
 		log_cb,NULL
-	)<0)goto fail;
-	ext->virt_input=ta,ext->cust_font=false;
+	)<0)LV_LOG_ERROR("create vte screen failed");
+	ext->virt_input=ta;
+	ext->cust_font=false;
 	ext->glyph_height=0,ext->glyph_width=0;
 	ext->cols=0,ext->rows=0,ext->age=0;
 	ext->buffer=NULL,ext->mem_size=0;
@@ -441,37 +401,61 @@ lv_obj_t*lv_termview_create(lv_obj_t*par,const lv_obj_t*copy){
 	ext->resize_cb=NULL;
 	ext->write_cb=NULL;
 	ext->osc_cb=NULL;
-	lv_obj_t*p=lv_obj_get_parent(canvas);
+	lv_obj_clear_flag(obj,LV_OBJ_FLAG_SCROLLABLE);
+	lv_obj_set_scrollbar_mode(obj,LV_DIR_NONE);
+	lv_obj_t*p=lv_obj_get_parent(obj);
 	lv_obj_set_size(
-		canvas,
-		lv_obj_get_width_fit(p),
-		lv_obj_get_height_fit(p)
+		obj,
+		lv_obj_get_width(p),
+		lv_obj_get_height(p)
 	);
 	lv_textarea_set_text(ta,"");
-	lv_obj_set_event_cb(ta,virt_input_cb);
-	lv_obj_set_user_data(ta,canvas);
+	lv_obj_add_event_cb(
+		ta,virt_input_cb,
+		LV_EVENT_VALUE_CHANGED,obj
+	);
+	lv_obj_set_user_data(ta,obj);
 	lv_obj_set_pos(
 		ta,
 		-lv_obj_get_width(ta),
 		-lv_obj_get_height(ta)
 	);
-	lv_obj_set_click(canvas,true);
-	lv_obj_set_signal_cb(
-		canvas,
-		lv_termview_signal
-	);
+	lv_obj_add_flag(obj,LV_OBJ_FLAG_CLICKABLE);
 	tsm_vte_set_osc_cb(
 		ext->vte,
 		osc_cb,
-		canvas
+		obj
 	);
-	lv_termview_resize(canvas);
+	lv_termview_resize(obj);
+	lv_obj_add_event_cb(obj,lv_termview_event,LV_EVENT_ALL,NULL);
 	LV_LOG_INFO("terminal view created");
-	return canvas;
-	fail:
-	if(canvas)lv_obj_del(canvas);
-	if(ta)lv_obj_del(ta);
-	return NULL;
 }
+
+static void lv_termview_destructor(const lv_obj_class_t*class_p,lv_obj_t*obj){
+	LV_UNUSED(class_p);
+	LV_TRACE_OBJ_CREATE("begin");
+	lv_termview_t*term=(lv_termview_t *)obj;
+	if(term->screen)tsm_screen_unref(term->screen);
+	if(term->vte)tsm_vte_unref(term->vte);
+	if(term->buffer)lv_mem_free(term->buffer);
+	term->screen=NULL;
+	term->vte=NULL;
+	term->buffer=NULL;
+}
+
+const lv_obj_class_t lv_termview_class={
+	.constructor_cb = lv_termview_constructor,
+	.destructor_cb = lv_termview_destructor,
+	.instance_size = sizeof(lv_termview_t),
+	.base_class = &lv_canvas_class
+};
+
+lv_obj_t*lv_termview_create(lv_obj_t*parent){
+	LV_LOG_INFO("begin");
+	lv_obj_t*obj=lv_obj_class_create_obj(&lv_termview_class,parent);
+	lv_obj_class_init_obj(obj);
+	return obj;
+}
+
 #endif
 #endif

@@ -8,6 +8,7 @@
 
 #ifdef ENABLE_GUI
 #include<stdlib.h>
+#include <gui/tools.h>
 #include"gui.h"
 #include"logger.h"
 #include"gui/sysbar.h"
@@ -20,130 +21,100 @@ struct inputbox{
 	char content[BUFSIZ];
 	const char*accepts;
 	inputbox_callback callback;
-	lv_obj_t*box,*page;
+	lv_obj_t*box,*btns;
 	lv_obj_t*label,*input;
 	lv_obj_t*ok,*cancel;
 	lv_event_cb_t input_cb;
 	uint32_t max;
-	lv_label_align_t align;
+	lv_text_align_t align;
 	bool one_line,pwd,sel;
 	void*user_data;
 	struct gui_activity*act;
 };
 
-static void input_click(lv_obj_t*obj,lv_event_t e){
-	if(!obj||e!=LV_EVENT_CLICKED)return;
-	struct inputbox*box;
-	if(!(box=lv_obj_get_user_data(obj)))return;
+static void input_click(lv_event_t*e){
+	struct inputbox*box=e->user_data;
 	if(guiact_get_last()->args!=box)return;
 	sysbar_keyboard_close();
 	sysbar_focus_input(NULL);
 	const char*cont=lv_textarea_get_text(box->input);
-	if(box->callback&&box->callback(obj==box->ok,cont,box->user_data))return;
-	lv_obj_set_user_data(box->ok,NULL);
-	lv_obj_set_user_data(box->cancel,NULL);
+	if(box->callback&&box->callback(
+		e->target==box->ok,
+		cont,box->user_data
+	))return;
 	box->act->args=NULL;
 	free(box);
 	guiact_do_back();
 }
 
-static void text_cb(lv_obj_t*obj,lv_event_t e){
-	if(!obj)return;
-	struct inputbox*box;
-	if(!(box=lv_obj_get_user_data(obj)))return;
+static void text_cb(lv_event_t*e){
+	if(e->code==LV_EVENT_DELETE)return;
+	struct inputbox*box=e->user_data;
 	if(guiact_get_last()->args!=box)return;
-	if(e==LV_EVENT_CLICKED){
-		sysbar_focus_input(obj);
-		sysbar_keyboard_open();
-	}
-	if(box->input_cb)box->input_cb(obj,e);
-}
-
-static int inputbox_resize(struct gui_activity*act){
-	lv_coord_t box_h=0;
-	lv_coord_t max_w=gui_dpi*4,cur_w=gui_sw/4*3,xw=MIN(max_w,cur_w);
-	lv_coord_t max_h=gui_dpi*6,cur_h=gui_sh/3*2,xh=MIN(max_h,cur_h);
-	struct inputbox*box=act->args;
-	static bool style_init=false;
-	static lv_style_t style;
-	if(!style_init)lv_style_init(&style);
-	lv_obj_set_style_local_border_width(box->box,LV_PAGE_PART_BG,LV_STATE_FOCUSED,0);
-	lv_obj_set_width(box->page,xw);
-	xw=lv_page_get_scrl_width(box->page);
-	lv_obj_set_width(box->box,xw);
-
-	lv_coord_t
-		btn_m=gui_font_size/2,
-		btn_w=xw/2,
-		btn_h=gui_font_size+(gui_dpi/8);
-	box_h+=btn_m;
-
-	lv_obj_set_width(box->label,xw);
-	box_h+=lv_obj_get_height(box->label);
-
-	lv_style_set_margin_bottom(&style,LV_STATE_DEFAULT,btn_m);
-	lv_style_set_radius(&style,LV_STATE_DEFAULT,gui_dpi/15);
-
-	lv_obj_set_style_local_margin_bottom(box->input,LV_TEXTAREA_PART_BG,LV_STATE_DEFAULT,btn_m);
-	lv_obj_set_pos(box->input,btn_m/2,box_h);
-	lv_obj_set_width(box->input,xw-btn_m);
-	box_h+=lv_obj_get_height(box->input)+btn_m;
-
-	lv_obj_add_style(box->ok,LV_BTN_PART_MAIN,&style);
-	lv_obj_set_size(box->ok,btn_w-btn_m,btn_h);
-	lv_obj_set_pos(box->ok,btn_m/2,box_h);
-
-	lv_obj_add_style(box->cancel,LV_BTN_PART_MAIN,&style);
-	lv_obj_set_size(box->cancel,btn_w-btn_m,btn_h);
-	lv_obj_set_pos(box->cancel,btn_m/2+btn_w,box_h);
-
-	box_h+=btn_m+btn_h+gui_font_size/2;
-	lv_obj_set_height(box->box,box_h);
-	box_h+=lv_obj_get_style_pad_top(box->page,LV_PAGE_PART_BG);
-	box_h+=lv_obj_get_style_pad_bottom(box->page,LV_PAGE_PART_BG);
-	lv_obj_set_height(box->page,MIN(box_h,xh));
-	lv_obj_align(box->page,NULL,LV_ALIGN_CENTER,0,0);
-	return 0;
+	if(box->input_cb)box->input_cb(e);
 }
 
 static int inputbox_draw(struct gui_activity*act){
 	struct inputbox*box=act->args;
 	box->act=act;
 
-	box->page=lv_page_create(act->page,NULL);
-	lv_obj_set_click(box->page,false);
+	box->box=lv_obj_create(act->page);
+	lv_obj_set_style_pad_all(box->box,gui_font_size,0);
+	lv_obj_set_flex_flow(box->box,LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_style_pad_row(box->box,gui_font_size,0);
+	lv_obj_set_style_max_width(box->box,lv_pct(80),0);
+	lv_obj_set_style_max_height(box->box,lv_pct(80),0);
+	lv_obj_set_style_min_width(box->box,gui_dpi*2,0);
+	lv_obj_set_style_min_height(box->box,gui_font_size*2,0);
+	lv_obj_set_height(box->box,LV_SIZE_CONTENT);
+	lv_obj_center(box->box);
 
-	box->box=lv_obj_create(box->page,NULL);
-	lv_obj_set_click(box->box,false);
-	lv_obj_set_style_local_border_width(box->box,LV_PAGE_PART_BG,LV_STATE_DEFAULT,0);
-
-	box->label=lv_label_create(box->box,NULL);
-	lv_label_set_align(box->label,LV_LABEL_ALIGN_CENTER);
-	lv_label_set_long_mode(box->label,LV_LABEL_LONG_BREAK);
+	box->label=lv_label_create(box->box);
+	lv_obj_set_style_text_align(box->label,LV_TEXT_ALIGN_CENTER,0);
+	lv_label_set_long_mode(box->label,LV_LABEL_LONG_WRAP);
+	lv_obj_set_width(box->label,lv_pct(100));
 	lv_label_set_text(box->label,box->text);
 
-	box->input=lv_textarea_create(box->box,NULL);
+	box->input=lv_textarea_create(box->box);
 	lv_textarea_set_text(box->input,box->content);
-	lv_textarea_set_cursor_hidden(box->input,true);
-	lv_textarea_set_pwd_mode(box->input,box->pwd);
-	lv_textarea_set_text_sel(box->input,box->sel);
+	lv_textarea_set_password_mode(box->input,box->pwd);
+	lv_textarea_set_text_selection(box->input,box->sel);
 	lv_textarea_set_one_line(box->input,box->one_line);
-	if(box->align!=LV_LABEL_ALIGN_AUTO)lv_textarea_set_text_align(box->input,box->align);
+	if(box->align!=LV_TEXT_ALIGN_AUTO)lv_obj_set_style_text_align(box->input,box->align,0);
 	if(box->max>0)lv_textarea_set_max_length(box->input,box->max);
 	if(box->holder[0])lv_textarea_set_placeholder_text(box->input,box->holder);
 	if(box->accepts)lv_textarea_set_accepted_chars(box->input,box->accepts);
-	lv_obj_set_user_data(box->input,box);
-	lv_obj_set_event_cb(box->input,text_cb);
+	lv_obj_set_size(box->input,lv_pct(100),LV_SIZE_CONTENT);
+	lv_obj_set_style_max_height(box->input,lv_pct(60),0);
+	lv_obj_add_event_cb(box->input,lv_input_cb,LV_EVENT_CLICKED,NULL);
+	lv_obj_add_event_cb(box->input,text_cb,LV_EVENT_ALL,box);
 
-	box->ok=lv_btn_create(box->box,NULL);
-	lv_label_set_text(lv_label_create(box->ok,NULL),LV_SYMBOL_OK);
-	lv_obj_set_user_data(box->ok,box);
-	lv_obj_set_event_cb(box->ok,input_click);
+	box->btns=lv_obj_create(box->box);
+	lv_obj_set_style_radius(box->btns,0,0);
+	lv_obj_set_scroll_dir(box->btns,LV_DIR_NONE);
+	lv_obj_set_style_border_width(box->btns,0,0);
+	lv_obj_set_style_bg_opa(box->btns,LV_OPA_0,0);
+	lv_obj_set_style_pad_all(box->btns,gui_dpi/50,0);
+	lv_obj_set_flex_flow(box->btns,LV_FLEX_FLOW_ROW);
+	lv_obj_clear_flag(box->btns,LV_OBJ_FLAG_SCROLLABLE|LV_OBJ_FLAG_CLICKABLE);
+	lv_obj_set_style_pad_row(box->btns,gui_font_size/2,0);
+	lv_obj_set_style_pad_column(box->btns,gui_font_size/2,0);
+	lv_obj_set_size(box->btns,lv_pct(100),LV_SIZE_CONTENT);
+	lv_obj_center(box->btns);
 
-	box->cancel=lv_btn_create(box->box,NULL);
-	lv_label_set_text(lv_label_create(box->cancel,NULL),LV_SYMBOL_CLOSE);
-	lv_obj_set_user_data(box->cancel,box);
-	lv_obj_set_event_cb(box->cancel,input_click);
+	box->ok=lv_btn_create(box->btns);
+	lv_obj_add_event_cb(box->ok,input_click,LV_EVENT_CLICKED,box);
+	lv_obj_set_flex_grow(box->ok,1);
+	lv_obj_t*lbl_ok=lv_label_create(box->ok);
+	lv_label_set_text(lbl_ok,LV_SYMBOL_OK);
+	lv_obj_center(lbl_ok);
+
+	box->cancel=lv_btn_create(box->btns);
+	lv_obj_add_event_cb(box->cancel,input_click,LV_EVENT_CLICKED,box);
+	lv_obj_set_flex_grow(box->cancel,1);
+	lv_obj_t*lbl_cancel=lv_label_create(box->cancel);
+	lv_label_set_text(lbl_cancel,LV_SYMBOL_CLOSE);
+	lv_obj_center(lbl_cancel);
 
 	return 0;
 }
@@ -180,7 +151,6 @@ struct gui_register guireg_inputbox={
 	.title="Input Box",
 	.show_app=false,
 	.draw=inputbox_draw,
-	.resize=inputbox_resize,
 	.quiet_exit=inputbox_clean,
 	.get_focus=inputbox_get_focus,
 	.lost_focus=inputbox_lost_focus,
@@ -189,7 +159,7 @@ struct gui_register guireg_inputbox={
 	.allow_exclusive=true,
 };
 
-static void inputbox_cb(lv_task_t*t){
+static void inputbox_cb(lv_timer_t*t){
 	guiact_start_activity(&guireg_inputbox,t->user_data);
 }
 
@@ -205,8 +175,8 @@ struct inputbox*inputbox_create(inputbox_callback callback,const char*title,...)
 	}
 	input->callback=callback;
 	input->one_line=true;
-	input->align=LV_LABEL_ALIGN_AUTO;
-	lv_task_once(lv_task_create(inputbox_cb,0,LV_TASK_PRIO_LOWEST,input));
+	input->align=LV_TEXT_ALIGN_AUTO;
+	lv_timer_set_repeat_count(lv_timer_create(inputbox_cb,0,input),1);
 	return input;
 }
 
@@ -225,7 +195,7 @@ void inputbox_set_pwd_mode(struct inputbox*input,bool pwd){
 	input->pwd=pwd;
 }
 
-void inputbox_set_input_align(struct inputbox*input,lv_label_align_t align){
+void inputbox_set_input_align(struct inputbox*input,lv_text_align_t align){
 	if(!input)return;
 	input->align=align;
 }

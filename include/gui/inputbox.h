@@ -37,7 +37,7 @@ extern void inputbox_set_text_select(struct inputbox*input,bool sel);
 extern void inputbox_set_pwd_mode(struct inputbox*input,bool pwd);
 
 // src/gui/interface/widgets/inputbox.c: set inputbox textarea text align
-extern void inputbox_set_input_align(struct inputbox*input,lv_label_align_t align);
+extern void inputbox_set_input_align(struct inputbox*input,lv_text_align_t align);
 
 // src/gui/interface/widgets/inputbox.c: set inputbox textarea max length
 extern void inputbox_set_max_length(struct inputbox*input,uint32_t max);

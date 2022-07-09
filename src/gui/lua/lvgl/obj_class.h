@@ -1,0 +1,129 @@
+LV_CLS(LV_OBJ_OBJ,obj)
+#if LV_USE_ANIMIMG
+LV_CLS(LV_OBJ_ANIMIMG,animimg)
+#endif
+#if LV_USE_ARC
+LV_CLS(LV_OBJ_ARC,arc)
+#endif
+#if LV_USE_BAR
+LV_CLS(LV_OBJ_BAR,bar)
+#endif
+#if LV_USE_BTN
+LV_CLS(LV_OBJ_BTN,btn)
+#endif
+#if LV_USE_BTNMATRIX
+LV_CLS(LV_OBJ_BTNMATRIX,btnmatrix)
+#endif
+#if LV_USE_CALENDAR
+LV_CLS(LV_OBJ_CALENDAR,calendar)
+#endif
+#if LV_USE_CALENDAR_HEADER_ARROW
+LV_CLS(LV_OBJ_CALENDAR_HEADER_ARROW,calendar_header_arrow)
+#endif
+#if LV_USE_CALENDAR_HEADER_DROPDOWN
+LV_CLS(LV_OBJ_CALENDAR_HEADER_DROPDOWN,calendar_header_dropdown)
+#endif
+#if LV_USE_CANVAS
+LV_CLS(LV_OBJ_CANVAS,canvas)
+#endif
+#if LV_USE_CHART
+LV_CLS(LV_OBJ_CHART,chart)
+#endif
+#if LV_USE_CHECKBOX
+LV_CLS(LV_OBJ_CHECKBOX,checkbox)
+#endif
+#if LV_USE_COLORWHEEL
+LV_CLS(LV_OBJ_COLORWHEEL,colorwheel)
+#endif
+#if LV_USE_DROPDOWN
+LV_CLS(LV_OBJ_DROPDOWN,dropdown)
+LV_CLS(LV_OBJ_DROPDOWNLIST,dropdownlist)
+#endif
+#if LV_USE_FFMPEG
+LV_CLS(LV_OBJ_FFMPEG_PLAYER,ffmpeg_player)
+#endif
+#if LV_USE_GIF
+LV_CLS(LV_OBJ_GIF,gif)
+#endif
+#if LV_USE_IMGBTN
+LV_CLS(LV_OBJ_IMGBTN,imgbtn)
+#endif
+#if LV_USE_IMG
+LV_CLS(LV_OBJ_IMG,img)
+#endif
+#if LV_USE_KEYBOARD
+LV_CLS(LV_OBJ_KEYBOARD,keyboard)
+#endif
+#if LV_USE_LABEL
+LV_CLS(LV_OBJ_LABEL,label)
+#endif
+#if LV_USE_LED
+LV_CLS(LV_OBJ_LED,led)
+#endif
+#if LV_USE_LINE
+LV_CLS(LV_OBJ_LINE,line)
+#endif
+#if LV_USE_LIST
+LV_CLS(LV_OBJ_LIST,list)
+LV_CLS(LV_OBJ_LIST_BTN,list_btn)
+LV_CLS(LV_OBJ_LIST_TEXT,list_text)
+#endif
+#if LV_USE_MENU
+LV_CLS(LV_OBJ_MENU,menu)
+LV_CLS(LV_OBJ_MENU_CONT,menu_cont)
+LV_CLS(LV_OBJ_MENU_MAIN_CONT,menu_main_cont)
+LV_CLS(LV_OBJ_MENU_MAIN_HEADER_CONT,menu_main_header_cont)
+LV_CLS(LV_OBJ_MENU_PAGE,menu_page)
+LV_CLS(LV_OBJ_MENU_SECTION,menu_section)
+LV_CLS(LV_OBJ_MENU_SEPARATOR,menu_separator)
+LV_CLS(LV_OBJ_MENU_SIDEBAR_CONT,menu_sidebar_cont)
+LV_CLS(LV_OBJ_MENU_SIDEBAR_HEADER_CONT,menu_sidebar_header_cont)
+#endif
+#if LV_USE_METER
+LV_CLS(LV_OBJ_METER,meter)
+#endif
+#if LV_USE_MSGBOX
+LV_CLS(LV_OBJ_MSGBOX,msgbox)
+LV_CLS(LV_OBJ_MSGBOX_BACKDROP,msgbox_backdrop)
+LV_CLS(LV_OBJ_MSGBOX_CONTENT,msgbox_content)
+#endif
+#if LV_USE_QRCODE
+LV_CLS(LV_OBJ_QRCODE,qrcode)
+#endif
+#if LV_USE_RLOTTIE
+LV_CLS(LV_OBJ_RLOTTIE,rlottie)
+#endif
+#if LV_USE_ROLLER
+LV_CLS(LV_OBJ_ROLLER,roller)
+#endif
+#if LV_USE_SLIDER
+LV_CLS(LV_OBJ_SLIDER,slider)
+#endif
+#if LV_USE_SPAN
+LV_CLS(LV_OBJ_SPANGROUP,spangroup)
+#endif
+#if LV_USE_SPINBOX
+LV_CLS(LV_OBJ_SPINBOX,spinbox)
+#endif
+#if LV_USE_SPINNER
+LV_CLS(LV_OBJ_SPINNER,spinner)
+#endif
+#if LV_USE_SWITCH
+LV_CLS(LV_OBJ_SWITCH,switch)
+#endif
+#if LV_USE_TABLE
+LV_CLS(LV_OBJ_TABLE,table)
+#endif
+#if LV_USE_TABVIEW
+LV_CLS(LV_OBJ_TABVIEW,tabview)
+#endif
+#if LV_USE_TEXTAREA
+LV_CLS(LV_OBJ_TEXTAREA,textarea)
+#endif
+#if LV_USE_TILEVIEW
+LV_CLS(LV_OBJ_TILEVIEW,tileview)
+LV_CLS(LV_OBJ_TILEVIEW_TILE,tileview_tile)
+#endif
+#if LV_USE_WIN
+LV_CLS(LV_OBJ_WIN,win)
+#endif

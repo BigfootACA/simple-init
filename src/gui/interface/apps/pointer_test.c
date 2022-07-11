@@ -24,7 +24,7 @@ struct pointer_indev{
 };
 
 struct pointer_test{
-	lv_task_t*tsk;
+	lv_timer_t*tsk;
 	lv_obj_t*canvas;
 	lv_color_t*buffer;
 	size_t size;
@@ -32,8 +32,7 @@ struct pointer_test{
 	list*indevs;
 };
 
-static void task_cb(lv_task_t*tsk){
-	bool mtr;
+static void timer_cb(lv_timer_t*tsk){
 	list*l=NULL;
 	lv_draw_line_dsc_t dsc;
 	struct pointer_test*pv=tsk->user_data;
@@ -42,26 +41,26 @@ static void task_cb(lv_task_t*tsk){
 	dsc.width=gui_dpi/80;
 	if((l=list_first(pv->indevs)))do{
 		LIST_DATA_DECLARE(p,l,struct pointer_indev*);
-		if(p->indev->driver.type!=LV_INDEV_TYPE_POINTER)continue;
-		do{
-			mtr=_lv_indev_read(p->indev,&p->data);
-			if(p->data.point.x<0||p->data.point.x>pv->w)continue;
-			if(p->data.point.y<0||p->data.point.y>pv->h)continue;
-			if(p->last.x!=0&&p->last.y!=0){
-				switch(p->data.state){
-					case LV_INDEV_STATE_PR:dsc.color=LV_COLOR_RED;break;
-					case LV_INDEV_STATE_REL:dsc.color=LV_COLOR_BLUE;break;
-					default:dsc.color=LV_COLOR_GRAY;break;
-				}
-				lv_canvas_draw_line(
-					pv->canvas,
-					(lv_point_t[]){p->last,p->data.point},
-					2,&dsc
-				);
+		if(p->indev->driver->type!=LV_INDEV_TYPE_POINTER)continue;
+		_lv_indev_read(p->indev,&p->data);
+		if(p->data.point.x<0||p->data.point.x>pv->w)continue;
+		if(p->data.point.y<0||p->data.point.y>pv->h)continue;
+		if(p->last.x!=0&&p->last.y!=0){
+			lv_palette_t pa;
+			switch(p->data.state){
+				case LV_INDEV_STATE_PR:pa=LV_PALETTE_RED;break;
+				case LV_INDEV_STATE_REL:pa=LV_PALETTE_BLUE;break;
+				default:pa=LV_PALETTE_GREY;break;
 			}
-			p->last.x=p->data.point.x;
-			p->last.y=p->data.point.y;
-		}while(mtr);
+			dsc.color=lv_palette_main(pa);
+			lv_canvas_draw_line(
+				pv->canvas,
+				(lv_point_t[]){p->last,p->data.point},
+				2,&dsc
+			);
+		}
+		p->last.x=p->data.point.x;
+		p->last.y=p->data.point.y;
 	}while((l=l->next));
 }
 
@@ -71,7 +70,7 @@ static void block_indev(struct pointer_test*pv,bool state){
 	list_free_all_def(pv->indevs);
 	pv->indevs=NULL;
 	while((indev=lv_indev_get_next(indev))){
-		if(indev->driver.type!=LV_INDEV_TYPE_POINTER)continue;
+		if(indev->driver->type!=LV_INDEV_TYPE_POINTER)continue;
 		if(state){
 			memset(&in,0,sizeof(in));
 			in.indev=indev;
@@ -84,7 +83,7 @@ static void block_indev(struct pointer_test*pv,bool state){
 static int do_clean(struct gui_activity*act){
 	struct pointer_test*pv=act->data;
 	if(!pv)return 0;
-	if(pv->tsk)lv_task_del(pv->tsk);
+	if(pv->tsk)lv_timer_del(pv->tsk);
 	block_indev(pv,false);
 	memset(pv,0,sizeof(struct pointer_test));
 	free(pv);
@@ -114,9 +113,8 @@ static int pointer_test_init(struct gui_activity*act){
 
 static int pointer_test_resize(struct gui_activity*act){
 	size_t size;
-	lv_canvas_ext_t*ext;
 	struct pointer_test*pv=act->data;
-	if(!pv||!(ext=lv_obj_get_ext_attr(pv->canvas)))return -1;
+	lv_canvas_t*ext=(lv_canvas_t*)pv->canvas;
 	lv_obj_set_pos(pv->canvas,0,0);
 	lv_obj_set_size(pv->canvas,act->w,act->h);
 	size=LV_CANVAS_BUF_SIZE_TRUE_COLOR(act->w,act->h);
@@ -144,10 +142,9 @@ static bool msgbox_cb(uint16_t id,const char*btn __attribute__((unused)),void*us
 	switch(id){
 		case 0:
 			if(pv->tsk)break;
-			pv->tsk=lv_task_create(
-				task_cb,
+			pv->tsk=lv_timer_create(
+				timer_cb,
 				LV_INDEV_DEF_READ_PERIOD,
-				LV_TASK_PRIO_HIGH,
 				pv
 			);
 		break;
@@ -162,7 +159,8 @@ static bool msgbox_cb(uint16_t id,const char*btn __attribute__((unused)),void*us
 static int pointer_test_draw(struct gui_activity*act){
 	struct pointer_test*pv=act->data;
 	if(!pv)return -1;
-	pv->canvas=lv_canvas_create(act->page,NULL);
+	lv_obj_set_style_pad_all(act->page,0,0);
+	pv->canvas=lv_canvas_create(act->page);
 	msgbox_set_user_data(msgbox_create_yesno(
 		msgbox_cb,
 		"This app will have exclusive pointer input,"

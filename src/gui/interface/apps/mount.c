@@ -9,9 +9,7 @@
 #ifdef ENABLE_GUI
 #include<stdlib.h>
 #include<sys/mount.h>
-#ifdef ENABLE_BLKID
 #include<blkid/blkid.h>
-#endif
 #include"str.h"
 #include"gui.h"
 #include"logger.h"
@@ -22,14 +20,12 @@
 #include"gui/activity.h"
 #define TAG "mounts"
 
-#ifdef ENABLE_BLKID
-blkid_cache cache=NULL;
-#endif
-static lv_obj_t*lst=NULL,*last=NULL,*show_all;
+static blkid_cache cache=NULL;
+static lv_obj_t*lst=NULL,*show_all;
 static lv_obj_t*info,*btn_mount,*btn_umount,*btn_refresh;
 struct mount_info{
 	bool enable;
-	lv_obj_t*btn,*chk;
+	lv_obj_t*btn;
 	lv_obj_t*source,*type;
 	lv_obj_t*target,*partlabel;
 	struct mount_item*item;
@@ -38,14 +34,11 @@ static bool is_show_all=false;
 static list*mounts=NULL;
 static struct mount_info*selected=NULL;
 
-static void item_check(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_VALUE_CHANGED)return;
-	lv_checkbox_set_checked(obj,true);
-	if(selected&&obj!=selected->chk){
-		lv_checkbox_set_checked(selected->chk,false);
+static void item_check(lv_event_t*e){
+	lv_obj_set_checked(e->target,true);
+	if(selected&&e->target!=selected->btn)
 		lv_obj_set_checked(selected->btn,false);
-	}
-	selected=lv_obj_get_user_data(obj);
+	selected=e->user_data;
 	lv_obj_set_checked(selected->btn,true);
 	lv_obj_set_enabled(btn_umount,true);
 }
@@ -75,92 +68,74 @@ static void mount_clear(){
 	lv_obj_set_enabled(btn_umount,false);
 	if(info)lv_obj_del(info);
 	list_free_all(mounts,item_free_del);
-	info=NULL,last=NULL,mounts=NULL;
+	info=NULL,mounts=NULL;
 }
 
 static void mount_set_info(char*text){
 	mount_clear();
-	info=lv_label_create(lst,NULL);
-	lv_label_set_long_mode(info,LV_LABEL_LONG_BREAK);
-	lv_obj_set_size(info,lv_page_get_scrl_width(lst),gui_sh/16);
-	lv_label_set_align(info,LV_LABEL_ALIGN_CENTER);
+	info=lv_label_create(lst);
+	lv_label_set_long_mode(info,LV_LABEL_LONG_WRAP);
+	lv_obj_set_size(info,lv_obj_get_width(lst),gui_sh/16);
 	lv_label_set_text(info,text);
 }
 
 static void mount_add_item(struct mount_info*k){
-	lv_coord_t bw,bm;
-	bw=lv_page_get_scrl_width(lst);
-	bm=gui_dpi/20;
+	static lv_coord_t grid_col[]={
+		LV_GRID_FR(1),
+		LV_GRID_CONTENT,
+		LV_GRID_TEMPLATE_LAST
+	},grid_row[]={
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_TEMPLATE_LAST
+	};
 
 	// mount button
-	k->btn=lv_btn_create(lst,NULL);
-	lv_obj_set_size(k->btn,bw,gui_dpi/2);
-	lv_obj_align(
-		k->btn,last,
-		last?LV_ALIGN_OUT_BOTTOM_MID:LV_ALIGN_IN_TOP_MID,
-		0,last?gui_dpi/8:0
-	);
+	k->btn=lv_btn_create(lst);
+	lv_obj_set_size(k->btn,lv_pct(100),gui_dpi/2);
 	lv_style_set_btn_item(k->btn);
-	lv_obj_set_click(k->btn,false);
-	last=k->btn;
-
-	lv_obj_t*line=lv_line_create(k->btn,NULL);
-	lv_obj_set_width(line,bw);
-
-	// checkbox
-	k->chk=lv_checkbox_create(line,NULL);
-	lv_checkbox_set_text(k->chk,"");
-	lv_obj_set_event_cb(k->chk,item_check);
-	lv_obj_set_user_data(k->chk,k);
-	lv_style_set_focus_checkbox(k->chk);
-	lv_obj_align(k->chk,k->btn,LV_ALIGN_IN_TOP_LEFT,bm,bm);
-	lv_group_add_obj(gui_grp,k->chk);
+	lv_obj_set_grid_dsc_array(k->btn,grid_col,grid_row);
+	lv_obj_add_event_cb(k->btn,item_check,LV_EVENT_CLICKED,k);
+	lv_group_add_obj(gui_grp,k->btn);
 
 	// source
-	k->source=lv_label_create(line,NULL);
-	lv_obj_align(k->source,k->chk,LV_ALIGN_OUT_RIGHT_MID,0,0);
+	k->source=lv_label_create(k->btn);
 	lv_label_set_long_mode(k->source,LV_LABEL_LONG_DOT);
 	lv_label_set_text(k->source,k->item->source);
+	lv_obj_set_grid_cell(k->source,LV_GRID_ALIGN_START,0,1,LV_GRID_ALIGN_CENTER,0,1);
 
 	// type
-	k->type=lv_label_create(line,NULL);
+	k->type=lv_label_create(k->btn);
 	lv_label_set_text(k->type,k->item->type);
-	lv_obj_set_small_text_font(k->type,LV_LABEL_PART_MAIN);
-	if(lv_obj_get_width(k->type)>bw/3){
-		lv_label_set_long_mode(k->type,LV_LABEL_LONG_DOT);
-		lv_obj_set_width(k->type,bw/3);
-	}
-	lv_obj_align(k->type,k->btn,LV_ALIGN_IN_TOP_RIGHT,-bm,gui_dpi/15);
-	lv_obj_set_width(k->source,lv_obj_get_x(k->type)-lv_obj_get_x(k->source)-bm);
+	lv_obj_set_small_text_font(k->type,LV_PART_MAIN);
+	lv_obj_set_grid_cell(k->type,LV_GRID_ALIGN_END,1,1,LV_GRID_ALIGN_CENTER,0,1);
 
 	// target
-	k->target=lv_label_create(line,NULL);
+	k->target=lv_label_create(k->btn);
 	lv_label_set_long_mode(k->target,LV_LABEL_LONG_DOT);
-	lv_obj_set_small_text_font(k->target,LV_LABEL_PART_MAIN);
+	lv_obj_set_small_text_font(k->target,LV_PART_MAIN);
 	lv_label_set_text(k->target,k->item->target);
-	lv_obj_align(k->target,k->btn,LV_ALIGN_IN_BOTTOM_LEFT,bm,-bm);
-	lv_obj_set_width(k->target,bw-(bm*2));
+	lv_obj_set_grid_cell(k->target,LV_GRID_ALIGN_START,0,1,LV_GRID_ALIGN_CENTER,1,1);
 
-	#ifdef ENABLE_BLKID
 	char*partlabel=NULL;
 	if(!cache)blkid_get_cache(&cache,NULL);
-	if(strncmp(k->item->source,"/dev/",5)==0)
-		partlabel=blkid_get_tag_value(cache,"PARTLABEL",k->item->source);
+	if(strncmp(
+		k->item->source,
+		_PATH_DEV,
+		strlen(_PATH_DEV)
+	)==0)partlabel=blkid_get_tag_value(
+		cache,"PARTLABEL",
+		k->item->source
+	);
 	if(partlabel){
 		// part label
-		k->partlabel=lv_label_create(line,NULL);
-		lv_label_set_align(k->partlabel,LV_LABEL_ALIGN_RIGHT);
+		k->partlabel=lv_label_create(k->btn);
+		lv_obj_set_style_text_align(k->partlabel,LV_TEXT_ALIGN_RIGHT,0);
 		lv_label_set_text(k->partlabel,partlabel);
-		lv_obj_set_small_text_font(k->partlabel,LV_LABEL_PART_MAIN);
-		if(lv_obj_get_width(k->partlabel)>bw/4-(bm*3)){
-			lv_label_set_long_mode(k->partlabel,LV_LABEL_LONG_DOT);
-			lv_obj_set_width(k->partlabel,bw/4-(bm*3));
-		}
-		lv_obj_align(k->partlabel,k->btn,LV_ALIGN_IN_BOTTOM_RIGHT,-bm,-bm);
-		lv_obj_set_width(k->target,bw-lv_obj_get_width(k->partlabel)-(bm*3));
+		lv_obj_set_small_text_font(k->partlabel,LV_PART_MAIN);
+		lv_obj_set_grid_cell(k->partlabel,LV_GRID_ALIGN_END,1,1,LV_GRID_ALIGN_CENTER,1,1);
 		free(partlabel);
 	}
-	#endif
 }
 
 static void mount_reload(){
@@ -171,7 +146,11 @@ static void mount_reload(){
 		return;
 	}
 	for(size_t i=0;ms[i];i++){
-		if(strncmp(ms[i]->source,"/dev/",5)!=0&&!is_show_all){
+		if(strncmp(
+			ms[i]->source,
+			_PATH_DEV,
+			strlen(_PATH_DEV)
+		)!=0&&!is_show_all){
 			free_mount_item(ms[i]);
 			continue;
 		}
@@ -189,20 +168,17 @@ static void mount_reload(){
 	free(ms);
 }
 
-static void refresh_click(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_CLICKED||obj!=btn_refresh)return;
+static void refresh_click(lv_event_t*e __attribute__((unused))){
 	tlog_debug("request refresh");
 	mount_reload();
 }
 
-static void mount_click(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_CLICKED||obj!=btn_mount)return;
+static void mount_click(lv_event_t*e __attribute__((unused))){
 	guiact_start_activity_by_name("add-mount",NULL);
 }
 
-static void show_all_click(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_VALUE_CHANGED||obj!=show_all)return;
-	is_show_all=lv_checkbox_is_checked(obj);
+static void show_all_click(lv_event_t*e){
+	is_show_all=lv_obj_is_checked(e->target);
 	tlog_debug("request show all %s",BOOL2STR(is_show_all));
 	mount_reload();
 }
@@ -217,8 +193,9 @@ static bool umount_cb(uint16_t id,const char*btn __attribute__((unused)),void*us
 	}
 	return false;
 }
-static void umount_click(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_CLICKED||obj!=btn_umount||!selected)return;
+
+static void umount_click(lv_event_t*e __attribute__((unused))){
+	if(!selected)return;
 	msgbox_set_user_data(msgbox_create_yesno(
 		umount_cb,
 		"Are you sure you want to unmount '%s'?",
@@ -228,7 +205,8 @@ static void umount_click(lv_obj_t*obj,lv_event_t e){
 
 static int do_cleanup(struct gui_activity*d __attribute__((unused))){
 	list_free_all(mounts,item_free);
-	info=NULL,last=NULL,mounts=NULL;
+	if(cache)blkid_put_cache(cache);
+	info=NULL,mounts=NULL,cache=NULL;
 	return 0;
 }
 
@@ -238,6 +216,12 @@ static int do_load(struct gui_activity*d __attribute__((unused))){
 }
 
 static int mount_get_focus(struct gui_activity*d __attribute__((unused))){
+	list*o=list_first(mounts);
+	if(o)do{
+		LIST_DATA_DECLARE(item,o,struct mount_info*);
+		lv_group_add_obj(gui_grp,item->btn);
+	}while((o=o->next));
+	lv_group_add_obj(gui_grp,show_all);
 	lv_group_add_obj(gui_grp,btn_mount);
 	lv_group_add_obj(gui_grp,btn_umount);
 	lv_group_add_obj(gui_grp,btn_refresh);
@@ -248,8 +232,9 @@ static int mount_lost_focus(struct gui_activity*d __attribute__((unused))){
 	list*o=list_first(mounts);
 	if(o)do{
 		LIST_DATA_DECLARE(item,o,struct mount_info*);
-		lv_group_remove_obj(item->chk);
+		lv_group_remove_obj(item->btn);
 	}while((o=o->next));
+	lv_group_remove_obj(show_all);
 	lv_group_remove_obj(btn_mount);
 	lv_group_remove_obj(btn_umount);
 	lv_group_remove_obj(btn_refresh);
@@ -257,67 +242,88 @@ static int mount_lost_focus(struct gui_activity*d __attribute__((unused))){
 }
 
 static int mount_draw(struct gui_activity*act){
-
-	lv_coord_t btm=gui_dpi/10;
-	lv_coord_t btw=gui_sw/3-btm;
-	lv_coord_t bth=gui_font_size+gui_dpi/10;
+	static lv_coord_t grid_col[]={
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_TEMPLATE_LAST
+	},grid_row[]={
+		LV_GRID_CONTENT,
+		LV_GRID_FR(1),
+		LV_GRID_CONTENT,
+		LV_GRID_CONTENT,
+		LV_GRID_TEMPLATE_LAST
+	};
+	lv_obj_set_style_pad_all(act->page,gui_font_size/2,0);
+	lv_obj_set_grid_dsc_array(act->page,grid_col,grid_row);
 
 	// function title
-	lv_obj_t*title=lv_label_create(act->page,NULL);
-	lv_label_set_long_mode(title,LV_LABEL_LONG_BREAK);
-	lv_obj_set_y(title,gui_sh/16);
-	lv_obj_set_size(title,gui_sw,gui_sh/16);
-	lv_label_set_align(title,LV_LABEL_ALIGN_CENTER);
+	lv_obj_t*title=lv_label_create(act->page);
+	lv_label_set_long_mode(title,LV_LABEL_LONG_WRAP);
+	lv_obj_set_style_text_align(title,LV_TEXT_ALIGN_CENTER,0);
 	lv_label_set_text(title,_("Mount Manager"));
+	lv_obj_set_grid_cell(
+		title,
+		LV_GRID_ALIGN_CENTER,0,3,
+		LV_GRID_ALIGN_CENTER,0,1
+	);
 
 	// options list
-	static lv_style_t lst_style;
-	lv_style_init(&lst_style);
-	lv_style_set_border_width(&lst_style,LV_STATE_DEFAULT,0);
-	lv_style_set_border_width(&lst_style,LV_STATE_FOCUSED,0);
-	lv_style_set_border_width(&lst_style,LV_STATE_PRESSED,0);
-	lst=lv_page_create(act->page,NULL);
-	lv_obj_add_style(lst,LV_PAGE_PART_BG,&lst_style);
-	lv_obj_set_pos(lst,gui_dpi/20,gui_sh/8);
-	lv_obj_set_size(lst,gui_sw-gui_dpi/10,gui_sh-lv_obj_get_y(lst)-bth*2-btm*3);
+	lst=lv_obj_create(act->page);
+	lv_obj_set_flex_flow(lst,LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_width(lst,lv_pct(100));
+	lv_obj_set_grid_cell(
+		lst,
+		LV_GRID_ALIGN_STRETCH,0,3,
+		LV_GRID_ALIGN_STRETCH,1,1
+	);
 
 	// show all checkbox
-	show_all=lv_checkbox_create(act->page,NULL);
-	lv_obj_set_size(show_all,bth,bth);
-	lv_obj_align(show_all,lst,LV_ALIGN_OUT_BOTTOM_LEFT,btm,btm);
-	lv_obj_set_event_cb(show_all,show_all_click);
-	lv_style_set_focus_checkbox(show_all);
+	show_all=lv_checkbox_create(act->page);
+	lv_obj_add_event_cb(show_all,show_all_click,LV_EVENT_VALUE_CHANGED,NULL);
 	lv_checkbox_set_text(show_all,_("Show all mountpoints"));
-
-	// button style
-	static lv_style_t btn_style;
-	lv_style_init(&btn_style);
-	lv_style_set_radius(&btn_style,LV_STATE_DEFAULT,2);
-	lv_style_set_outline_width(&btn_style,LV_STATE_PRESSED,0);
+	lv_obj_set_grid_cell(
+		show_all,
+		LV_GRID_ALIGN_START,0,3,
+		LV_GRID_ALIGN_CENTER,2,1
+	);
 
 	// mount button
-	btn_mount=lv_btn_create(act->page,NULL);
-	lv_obj_set_size(btn_mount,btw,bth);
-	lv_obj_align(btn_mount,NULL,LV_ALIGN_IN_BOTTOM_LEFT,btm,-btm);
-	lv_obj_set_event_cb(btn_mount,mount_click);
-	lv_style_set_action_button(btn_mount,true);
-	lv_label_set_text(lv_label_create(btn_mount,NULL),_("Mount"));
+	btn_mount=lv_btn_create(act->page);
+	lv_obj_add_event_cb(btn_mount,mount_click,LV_EVENT_CLICKED,NULL);
+	lv_obj_t*lbl_mount=lv_label_create(btn_mount);
+	lv_label_set_text(lbl_mount,_("Mount"));
+	lv_obj_center(lbl_mount);
+	lv_obj_set_grid_cell(
+		btn_mount,
+		LV_GRID_ALIGN_STRETCH,0,1,
+		LV_GRID_ALIGN_CENTER,3,1
+	);
 
 	// umount button
-	btn_umount=lv_btn_create(act->page,NULL);
-	lv_obj_set_size(btn_umount,btw,bth);
-	lv_obj_align(btn_umount,NULL,LV_ALIGN_IN_BOTTOM_MID,0,-btm);
-	lv_obj_set_event_cb(btn_umount,umount_click);
-	lv_style_set_action_button(btn_umount,false);
-	lv_label_set_text(lv_label_create(btn_umount,NULL),_("Unmount"));
+	btn_umount=lv_btn_create(act->page);
+	lv_obj_add_event_cb(btn_umount,umount_click,LV_EVENT_CLICKED,NULL);
+	lv_obj_set_enabled(btn_umount,false);
+	lv_obj_t*lbl_umount=lv_label_create(btn_umount);
+	lv_label_set_text(lbl_umount,_("Unmount"));
+	lv_obj_center(lbl_umount);
+	lv_obj_set_grid_cell(
+		btn_umount,
+		LV_GRID_ALIGN_STRETCH,1,1,
+		LV_GRID_ALIGN_CENTER,3,1
+	);
 
 	// refresh button
-	btn_refresh=lv_btn_create(act->page,NULL);
-	lv_obj_set_size(btn_refresh,btw,bth);
-	lv_obj_align(btn_refresh,NULL,LV_ALIGN_IN_BOTTOM_RIGHT,-btm,-btm);
-	lv_obj_set_event_cb(btn_refresh,refresh_click);
-	lv_style_set_action_button(btn_refresh,true);
-	lv_label_set_text(lv_label_create(btn_refresh,NULL),_("Refresh"));
+	btn_refresh=lv_btn_create(act->page);
+	lv_obj_add_event_cb(btn_refresh,refresh_click,LV_EVENT_CLICKED,NULL);
+	lv_obj_t*lbl_refresh=lv_label_create(btn_refresh);
+	lv_label_set_text(lbl_refresh,_("Refresh"));
+	lv_obj_center(lbl_refresh);
+	lv_obj_set_grid_cell(
+		btn_refresh,
+		LV_GRID_ALIGN_STRETCH,2,1,
+		LV_GRID_ALIGN_CENTER,3,1
+	);
 
 	return 0;
 }

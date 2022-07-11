@@ -15,32 +15,29 @@ struct screen_test{
 	struct gui_activity*act;
 	bool text_top;
 	lv_obj_t*text;
-	lv_task_t*task;
+	lv_timer_t*timer;
 	uint32_t color;
 	bool init;
 };
 
-static void color_swap_task(lv_task_t*task);
-static void reinit_task(struct screen_test*scr,bool create){
-	if(scr->task)lv_task_del(scr->task);
-	scr->task=NULL;
+static void color_swap_timer(lv_timer_t*timer);
+static void reinit_timer(struct screen_test*scr,bool create){
+	if(scr->timer)lv_timer_del(scr->timer);
+	scr->timer=NULL;
 	if(create){
-		scr->task=lv_task_create(
-			color_swap_task,
-			5000,
-			LV_TASK_PRIO_LOWEST,
-			scr
+		scr->timer=lv_timer_create(
+			color_swap_timer,
+			5000,scr
 		);
-		lv_task_once(scr->task);
+		lv_timer_set_repeat_count(scr->timer,1);
 	}
 }
 
 static void move_text(struct screen_test*scr){
-	lv_coord_t of=gui_dpi/3;
-	lv_obj_set_x(scr->text,(gui_sw-lv_obj_get_width(scr->text))/2);
-	lv_obj_set_y(
-		scr->text,scr->text_top?
-		of:(lv_coord_t)gui_sh-of-lv_obj_get_height(scr->text)
+	lv_obj_align(
+		scr->text,
+		scr->text_top?LV_ALIGN_TOP_MID:LV_ALIGN_BOTTOM_MID,
+		0,scr->text_top?gui_dpi/3:-gui_dpi/3
 	);
 }
 
@@ -59,50 +56,43 @@ static void color_swap(struct screen_test*scr){
 	else if(scr->color==0x00FFFFFF)scr->color=0x007F7F7F,text="gray";   // WHITE  -> GRAY
 	else{
 		guiact_do_back();
-		reinit_task(scr,false);
+		reinit_timer(scr,false);
 		return;
 	}
 	lv_label_set_text(scr->text,_(text));
 	move_text(scr);
-	lv_obj_set_style_local_bg_color(
+	lv_obj_set_style_bg_color(
 		scr->act->page,
-		LV_PAGE_PART_BG,
-		LV_STATE_DEFAULT,
-		lv_color_hex(scr->color)
+		lv_color_hex(scr->color),0
 	);
-	reinit_task(scr,true);
+	reinit_timer(scr,true);
 }
 
-static void color_swap_task(lv_task_t*task){
-	if(!task)return;
-	struct screen_test*scr=task->user_data;
-	if(!scr||scr->task!=task)return;
+static void color_swap_timer(lv_timer_t*timer){
+	if(!timer)return;
+	struct screen_test*scr=timer->user_data;
+	if(!scr||scr->timer!=timer)return;
 	color_swap(scr);
 }
 
 static int scr_test_get_focus(struct gui_activity*act){
 	struct screen_test*scr=act->data;
-	if(scr)reinit_task(scr,true);
+	if(scr)reinit_timer(scr,true);
 	return 0;
 }
 
 static int scr_test_lost_focus(struct gui_activity*act){
 	struct screen_test*scr=act->data;
-	if(scr)reinit_task(scr,false);
+	if(scr)reinit_timer(scr,false);
 	return 0;
 }
 
-static void click_cb(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_CLICKED)return;
-	struct screen_test*scr=lv_obj_get_user_data(obj);
-	if(!scr||!scr->act||scr->act->page!=obj)return;
-	color_swap(scr);
+static void click_cb(lv_event_t*e){
+	color_swap(e->user_data);
 }
 
-static void text_click_cb(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_CLICKED)return;
-	struct screen_test*scr=lv_obj_get_user_data(obj);
-	if(!scr||!scr->act||scr->text!=obj)return;
+static void text_click_cb(lv_event_t*e){
+	struct screen_test*scr=e->user_data;
 	scr->text_top=!scr->text_top;
 	move_text(scr);
 }
@@ -112,27 +102,25 @@ static int scr_test_draw(struct gui_activity*act){
 	if(!scr)return -ENOMEM;
 	memset(scr,0,sizeof(struct screen_test));
 	act->data=scr,scr->act=act;
-	lv_obj_set_click(act->page,true);
-	lv_obj_set_user_data(act->page,scr);
-	lv_obj_set_event_cb(act->page,click_cb);
-	scr->text=lv_label_create(act->page,NULL);
-	lv_obj_set_click(scr->text,true);
-	lv_obj_set_event_cb(scr->text,text_click_cb);
-	lv_obj_set_user_data(scr->text,scr);
-	lv_obj_set_style_local_radius(scr->text,LV_LABEL_PART_MAIN,LV_STATE_DEFAULT,gui_font_size);
-	lv_obj_set_style_local_bg_color(scr->text,LV_LABEL_PART_MAIN,LV_STATE_DEFAULT,LV_COLOR_WHITE);
-	lv_obj_set_style_local_bg_opa(scr->text,LV_LABEL_PART_MAIN,LV_STATE_DEFAULT,LV_OPA_100);
-	lv_obj_set_style_local_pad_hor(scr->text,LV_LABEL_PART_MAIN,LV_STATE_DEFAULT,gui_font_size);
-	lv_obj_set_style_local_pad_ver(scr->text,LV_LABEL_PART_MAIN,LV_STATE_DEFAULT,gui_font_size/2);
-	lv_obj_set_style_local_shadow_color(scr->text,LV_LABEL_PART_MAIN,LV_STATE_DEFAULT,LV_COLOR_GRAY);
-	lv_obj_set_style_local_shadow_width(scr->text,LV_LABEL_PART_MAIN,LV_STATE_DEFAULT,gui_font_size);
+	lv_obj_add_flag(act->page,LV_OBJ_FLAG_CLICKABLE);
+	lv_obj_add_event_cb(act->page,click_cb,LV_EVENT_CLICKED,scr);
+	scr->text=lv_label_create(act->page);
+	lv_obj_add_flag(scr->text,LV_OBJ_FLAG_CLICKABLE);
+	lv_obj_add_event_cb(scr->text,text_click_cb,LV_EVENT_CLICKED,scr);
+	lv_obj_set_style_radius(scr->text,gui_font_size,0);
+	lv_obj_set_style_bg_color(scr->text,lv_color_white(),0);
+	lv_obj_set_style_bg_opa(scr->text,LV_OPA_100,0);
+	lv_obj_set_style_pad_hor(scr->text,gui_font_size,0);
+	lv_obj_set_style_pad_ver(scr->text,gui_font_size/2,0);
+	lv_obj_set_style_shadow_color(scr->text,lv_palette_main(LV_PALETTE_GREY),0);
+	lv_obj_set_style_shadow_width(scr->text,gui_font_size,0);
 	color_swap(scr);
 	return 0;
 }
 
 static int cleanup(struct gui_activity*act){
 	struct screen_test*scr=act->data;
-	if(scr->task)lv_task_del(scr->task);
+	if(scr->timer)lv_timer_del(scr->timer);
 	free(scr);
 	act->data=NULL;
 	return 0;

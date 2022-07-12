@@ -5,7 +5,7 @@
 #include"gui.h"
 #include"logger.h"
 #include"pathnames.h"
-#include"gui/image.h"
+#include"gui/sysbar.h"
 #include"gui/guidrv.h"
 #include"gui/activity.h"
 #undef time
@@ -15,30 +15,30 @@
 #define ANIM_TIME_MIN        ((2*SCENE_TIME)/10)
 #define ANIM_TIME_MAX        (SCENE_TIME)
 #define OBJ_NUM              8
-#define OBJ_SIZE_MIN         (LV_MATH_MAX(LV_DPI/20,5))
+#define OBJ_SIZE_MIN         (LV_MAX(LV_DPI/20,5))
 #define OBJ_SIZE_MAX         ((int)gui_sw/2)
-#define RADIUS               LV_MATH_MAX(LV_DPI/15,2)
-#define BORDER_WIDTH         LV_MATH_MAX(LV_DPI/40,1)
-#define SHADOW_WIDTH_SMALL   LV_MATH_MAX(LV_DPI/15,5)
-#define SHADOW_OFS_X_SMALL   LV_MATH_MAX(LV_DPI/20,2)
-#define SHADOW_OFS_Y_SMALL   LV_MATH_MAX(LV_DPI/20,2)
-#define SHADOW_SPREAD_SMALL  LV_MATH_MAX(LV_DPI/30,2)
-#define SHADOW_WIDTH_LARGE   LV_MATH_MAX(LV_DPI/5,10)
-#define SHADOW_OFS_X_LARGE   LV_MATH_MAX(LV_DPI/10,5)
-#define SHADOW_OFS_Y_LARGE   LV_MATH_MAX(LV_DPI/10,5)
-#define SHADOW_SPREAD_LARGE  LV_MATH_MAX(LV_DPI/30,2)
+#define RADIUS               LV_MAX(LV_DPI/15,2)
+#define BORDER_WIDTH         LV_MAX(LV_DPI/40,1)
+#define SHADOW_WIDTH_SMALL   LV_MAX(LV_DPI/15,5)
+#define SHADOW_OFS_X_SMALL   LV_MAX(LV_DPI/20,2)
+#define SHADOW_OFS_Y_SMALL   LV_MAX(LV_DPI/20,2)
+#define SHADOW_SPREAD_SMALL  LV_MAX(LV_DPI/30,2)
+#define SHADOW_WIDTH_LARGE   LV_MAX(LV_DPI/5, 10)
+#define SHADOW_OFS_X_LARGE   LV_MAX(LV_DPI/10,5)
+#define SHADOW_OFS_Y_LARGE   LV_MAX(LV_DPI/10,5)
+#define SHADOW_SPREAD_LARGE  LV_MAX(LV_DPI/30,2)
 #define IMG_WIDTH            100
 #define IMG_HEIGHT           100
-#define IMG_NUM              LV_MATH_MAX((int)(gui_sw*gui_sh)/5/IMG_WIDTH/IMG_HEIGHT,1)
+#define IMG_NUM              LV_MAX((int)(gui_sw*gui_sh)/5/IMG_WIDTH/IMG_HEIGHT,1)
 #define IMG_ZOOM_MIN         128
 #define IMG_ZOOM_MAX         (256+64)
 #define TXT                  "hello world\nit is a multi line text to test\nthe performance of text rendering"
-#define LINE_WIDTH           LV_MATH_MAX(LV_DPI/50,2)
+#define LINE_WIDTH           LV_MAX(LV_DPI/50,2)
 #define LINE_POINT_NUM       16
 #define LINE_POINT_DIFF_MIN  (LV_DPI/10)
-#define LINE_POINT_DIFF_MAX  LV_MATH_MAX((int)gui_sw/(LINE_POINT_NUM+2),LINE_POINT_DIFF_MIN*2)
-#define ARC_WIDTH_THIN       LV_MATH_MAX(LV_DPI/50,2)
-#define ARC_WIDTH_THICK      LV_MATH_MAX(LV_DPI/10,5)
+#define LINE_POINT_DIFF_MAX  LV_MAX((int)gui_sw/(LINE_POINT_NUM+2),LINE_POINT_DIFF_MIN*2)
+#define ARC_WIDTH_THIN       LV_MAX(LV_DPI/50,2)
+#define ARC_WIDTH_THICK      LV_MAX(LV_DPI/10,5)
 typedef struct{
 	const char*name;
 	void (*create_cb)(void);
@@ -66,6 +66,7 @@ static uint32_t rnd_map[]={
 };
 static void rnd_reset(void){rnd_act=0;}
 static int32_t rnd_next(int32_t min,int32_t max){
+	if(min==max)return min;
 	if(min>max){
 		int32_t t=min;
 		min=max,max=t;
@@ -76,6 +77,8 @@ static int32_t rnd_next(int32_t min,int32_t max){
 	return r;
 }
 static void fall_anim(lv_obj_t*obj){
+	lv_obj_update_layout(scene_bg);
+	lv_obj_update_layout(obj);
 	lv_obj_set_x(obj,rnd_next(0,lv_obj_get_width(scene_bg)-lv_obj_get_width(obj)));
 	uint32_t t=rnd_next(ANIM_TIME_MIN,ANIM_TIME_MAX);
 	lv_anim_t a;
@@ -90,31 +93,24 @@ static void fall_anim(lv_obj_t*obj){
 	lv_anim_start(&a);
 }
 static void rect_create(lv_style_t*style){
-	uint32_t i;
-	for(i=0;i<OBJ_NUM;i++){
-		lv_obj_t*obj=lv_obj_create(scene_bg,NULL);
-		lv_obj_reset_style_list(obj,LV_OBJ_PART_MAIN);
-		lv_obj_add_style(obj,LV_OBJ_PART_MAIN,style);
-		lv_obj_set_style_local_bg_color(obj,LV_OBJ_PART_MAIN,LV_STATE_DEFAULT,lv_color_hex(rnd_next(0,0xFFFFF0)));
-		lv_obj_set_style_local_border_color(obj,LV_OBJ_PART_MAIN,LV_STATE_DEFAULT,lv_color_hex(rnd_next(0,0xFFFFF0)));
-		lv_obj_set_style_local_shadow_color(obj,LV_OBJ_PART_MAIN,LV_STATE_DEFAULT,lv_color_hex(rnd_next(0,0xFFFFF0)));
+	for(uint32_t i=0;i<OBJ_NUM;i++){
+		lv_obj_t*obj=lv_obj_create(scene_bg);
+		lv_obj_remove_style_all(obj);
+		lv_obj_add_style(obj,style,0);
+		lv_obj_set_style_bg_color(obj,lv_color_hex(rnd_next(0,0xFFFFF0)),0);
+		lv_obj_set_style_border_color(obj,lv_color_hex(rnd_next(0,0xFFFFF0)),0);
+		lv_obj_set_style_shadow_color(obj,lv_color_hex(rnd_next(0,0xFFFFF0)),0);
 		lv_obj_set_size(obj,rnd_next(OBJ_SIZE_MIN,OBJ_SIZE_MAX),rnd_next(OBJ_SIZE_MIN,OBJ_SIZE_MAX));
 		fall_anim(obj);
 	}
 }
 static void img_create(lv_style_t*style,const void*src,bool rotate,bool zoom,bool aa){
-	uint32_t i;
-	for(i=0;i<(uint32_t)IMG_NUM;i++){
-		lv_obj_t*obj=lv_img_create(scene_bg,NULL);
-		lv_obj_reset_style_list(obj,LV_OBJ_PART_MAIN);
-		lv_obj_add_style(obj,LV_OBJ_PART_MAIN,style);
+	for(uint32_t i=0;i<(uint32_t)IMG_NUM;i++){
+		lv_obj_t*obj=lv_img_create(scene_bg);
+		lv_obj_remove_style_all(obj);
+		lv_obj_add_style(obj,style,0);
 		lv_img_set_src(obj,src);
-		lv_img_ext_t*e=lv_obj_get_ext_attr(obj);
-		if(e->w<=0||e->h<=0){
-			tlog_error("loading image %s failed",(char*)src);
-			exit(1);
-		}
-		lv_obj_set_style_local_image_recolor(obj,LV_OBJ_PART_MAIN,LV_STATE_DEFAULT,lv_color_hex(rnd_next(0,0xFFFFF0)));
+		lv_obj_set_style_img_recolor(obj,lv_color_hex(rnd_next(0,0xFFFFF0)),0);
 		if(rotate)lv_img_set_angle(obj,rnd_next(0,3599));
 		if(zoom)lv_img_set_zoom(obj,rnd_next(IMG_ZOOM_MIN,IMG_ZOOM_MAX));
 		lv_img_set_antialias(obj,aa);
@@ -122,44 +118,38 @@ static void img_create(lv_style_t*style,const void*src,bool rotate,bool zoom,boo
 	}
 }
 static void txt_create(lv_style_t*style){
-	uint32_t i;
-	for(i=0;i<OBJ_NUM;i++){
-		lv_obj_t*obj=lv_label_create(scene_bg,NULL);
-		lv_obj_reset_style_list(obj,LV_OBJ_PART_MAIN);
-		lv_obj_add_style(obj,LV_OBJ_PART_MAIN,style);
-		lv_obj_set_style_local_text_color(obj,LV_OBJ_PART_MAIN,LV_STATE_DEFAULT,lv_color_hex(rnd_next(0,0xFFFFF0)));
+	for(uint32_t i=0;i<OBJ_NUM;i++){
+		lv_obj_t*obj=lv_label_create(scene_bg);
+		lv_obj_remove_style_all(obj);
+		lv_obj_add_style(obj,style,0);
+		lv_obj_set_style_text_color(obj,lv_color_hex(rnd_next(0,0xFFFFF0)),0);
 		lv_label_set_text(obj,TXT);
 		fall_anim(obj);
 	}
 }
 static void line_create(lv_style_t*style){
 	static lv_point_t points[OBJ_NUM][LINE_POINT_NUM];
-	uint32_t i;
-	for(i=0;i<OBJ_NUM;i++){
+	for(uint32_t i=0;i<OBJ_NUM;i++){
 		points[i][0].x=0,points[i][0].y=0;
-		uint32_t j;
-		for(j=1;j<LINE_POINT_NUM;j++){
+		for(uint32_t j=1;j<LINE_POINT_NUM;j++){
 			points[i][j].x=points[i][j-1].x+rnd_next(LINE_POINT_DIFF_MIN,LINE_POINT_DIFF_MAX);
 			points[i][j].y=rnd_next(LINE_POINT_DIFF_MIN,LINE_POINT_DIFF_MAX);
 		}
-		lv_obj_t*obj=lv_line_create(scene_bg,NULL);
-		lv_obj_reset_style_list(obj,LV_OBJ_PART_MAIN);
-		lv_obj_add_style(obj,LV_OBJ_PART_MAIN,style);
-		lv_obj_set_style_local_line_color(obj,LV_OBJ_PART_MAIN,LV_STATE_DEFAULT,lv_color_hex(rnd_next(0,0xFFFFF0)));
+		lv_obj_t*obj=lv_line_create(scene_bg);
+		lv_obj_remove_style_all(obj);
+		lv_obj_add_style(obj,style,0);
+		lv_obj_set_style_line_color(obj,lv_color_hex(rnd_next(0,0xFFFFF0)),0);
 		lv_line_set_points(obj,points[i],LINE_POINT_NUM);
-		lv_line_set_auto_size(obj,true);
 		fall_anim(obj);
 	}
 }
 static void arc_create(lv_style_t*style){
-	uint32_t i;
-	for(i=0;i<OBJ_NUM;i++){
-		lv_obj_t*obj=lv_arc_create(scene_bg,NULL);
-		lv_obj_reset_style_list(obj,LV_ARC_PART_BG);
-		lv_obj_reset_style_list(obj,LV_ARC_PART_INDIC);
+	for(uint32_t i=0;i<OBJ_NUM;i++){
+		lv_obj_t*obj=lv_arc_create(scene_bg);
+		lv_obj_remove_style_all(obj);
 		lv_obj_set_size(obj,rnd_next(OBJ_SIZE_MIN,OBJ_SIZE_MAX),rnd_next(OBJ_SIZE_MIN,OBJ_SIZE_MAX));
-		lv_obj_add_style(obj,LV_ARC_PART_INDIC,style);
-		lv_obj_set_style_local_line_color(obj,LV_ARC_PART_INDIC,LV_STATE_DEFAULT,lv_color_hex(rnd_next(0,0xFFFFF0)));
+		lv_obj_add_style(obj,style,LV_PART_INDICATOR);
+		lv_obj_set_style_arc_color(obj,lv_color_hex(rnd_next(0,0xFFFFF0)),LV_PART_INDICATOR);
 		lv_arc_set_start_angle(obj,0);
 		uint32_t t=rnd_next(ANIM_TIME_MIN/4,ANIM_TIME_MAX/4);
 		lv_anim_t a;
@@ -176,290 +166,276 @@ static void arc_create(lv_style_t*style){
 }
 static void rectangle_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_bg_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_bg_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
 	rect_create(&style_common);
 }
 static void rectangle_rounded_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_radius(&style_common,LV_STATE_DEFAULT,RADIUS);
-	lv_style_set_bg_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_radius(&style_common,RADIUS);
+	lv_style_set_bg_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
 	rect_create(&style_common);
 }
 static void rectangle_circle_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_radius(&style_common,LV_STATE_DEFAULT,LV_RADIUS_CIRCLE);
-	lv_style_set_bg_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_radius(&style_common,LV_RADIUS_CIRCLE);
+	lv_style_set_bg_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
 	rect_create(&style_common);
 }
 static void border_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_border_width(&style_common,LV_STATE_DEFAULT,BORDER_WIDTH);
-	lv_style_set_border_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_border_width(&style_common,BORDER_WIDTH);
+	lv_style_set_border_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
 	rect_create(&style_common);
 }
 static void border_rounded_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_radius(&style_common,LV_STATE_DEFAULT,RADIUS);
-	lv_style_set_border_width(&style_common,LV_STATE_DEFAULT,BORDER_WIDTH);
-	lv_style_set_border_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_radius(&style_common,RADIUS);
+	lv_style_set_border_width(&style_common,BORDER_WIDTH);
+	lv_style_set_border_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
 	rect_create(&style_common);
 }
 static void border_circle_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_radius(&style_common,LV_STATE_DEFAULT,LV_RADIUS_CIRCLE);
-	lv_style_set_border_width(&style_common,LV_STATE_DEFAULT,BORDER_WIDTH);
-	lv_style_set_border_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_radius(&style_common,LV_RADIUS_CIRCLE);
+	lv_style_set_border_width(&style_common,BORDER_WIDTH);
+	lv_style_set_border_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
 	rect_create(&style_common);
 }
 static void border_top_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_radius(&style_common,LV_STATE_DEFAULT,RADIUS);
-	lv_style_set_border_width(&style_common,LV_STATE_DEFAULT,BORDER_WIDTH);
-	lv_style_set_border_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
-	lv_style_set_border_side(&style_common,LV_STATE_DEFAULT,LV_BORDER_SIDE_TOP);
+	lv_style_set_radius(&style_common,RADIUS);
+	lv_style_set_border_width(&style_common,BORDER_WIDTH);
+	lv_style_set_border_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_border_side(&style_common,LV_BORDER_SIDE_TOP);
 	rect_create(&style_common);
 }
 static void border_left_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_radius(&style_common,LV_STATE_DEFAULT,RADIUS);
-	lv_style_set_border_width(&style_common,LV_STATE_DEFAULT,BORDER_WIDTH);
-	lv_style_set_border_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
-	lv_style_set_border_side(&style_common,LV_STATE_DEFAULT,LV_BORDER_SIDE_LEFT);
+	lv_style_set_radius(&style_common,RADIUS);
+	lv_style_set_border_width(&style_common,BORDER_WIDTH);
+	lv_style_set_border_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_border_side(&style_common,LV_BORDER_SIDE_LEFT);
 	rect_create(&style_common);
 }
 static void border_top_left_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_radius(&style_common,LV_STATE_DEFAULT,RADIUS);
-	lv_style_set_border_width(&style_common,LV_STATE_DEFAULT,BORDER_WIDTH);
-	lv_style_set_border_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
-	lv_style_set_border_side(&style_common,LV_STATE_DEFAULT,LV_BORDER_SIDE_LEFT|LV_BORDER_SIDE_TOP);
+	lv_style_set_radius(&style_common,RADIUS);
+	lv_style_set_border_width(&style_common,BORDER_WIDTH);
+	lv_style_set_border_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_border_side(&style_common,LV_BORDER_SIDE_LEFT | LV_BORDER_SIDE_TOP);
 	rect_create(&style_common);
 }
 static void border_left_right_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_radius(&style_common,LV_STATE_DEFAULT,RADIUS);
-	lv_style_set_border_width(&style_common,LV_STATE_DEFAULT,BORDER_WIDTH);
-	lv_style_set_border_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
-	lv_style_set_border_side(&style_common,LV_STATE_DEFAULT,LV_BORDER_SIDE_LEFT|LV_BORDER_SIDE_RIGHT);
+	lv_style_set_radius(&style_common,RADIUS);
+	lv_style_set_border_width(&style_common,BORDER_WIDTH);
+	lv_style_set_border_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_border_side(&style_common,LV_BORDER_SIDE_LEFT | LV_BORDER_SIDE_RIGHT);
 	rect_create(&style_common);
 }
 static void border_top_bottom_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_radius(&style_common,LV_STATE_DEFAULT,RADIUS);
-	lv_style_set_border_width(&style_common,LV_STATE_DEFAULT,BORDER_WIDTH);
-	lv_style_set_border_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
-	lv_style_set_border_side(&style_common,LV_STATE_DEFAULT,LV_BORDER_SIDE_TOP|LV_BORDER_SIDE_BOTTOM);
+	lv_style_set_radius(&style_common,RADIUS);
+	lv_style_set_border_width(&style_common,BORDER_WIDTH);
+	lv_style_set_border_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_border_side(&style_common,LV_BORDER_SIDE_TOP | LV_BORDER_SIDE_BOTTOM);
 	rect_create(&style_common);
 }
 static void shadow_small_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_radius(&style_common,LV_STATE_DEFAULT,RADIUS);
-	lv_style_set_bg_opa(&style_common,LV_STATE_DEFAULT,LV_OPA_COVER);
-	lv_style_set_shadow_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_80:LV_OPA_COVER);
-	lv_style_set_shadow_width(&style_common,LV_STATE_DEFAULT,SHADOW_WIDTH_SMALL);
+	lv_style_set_radius(&style_common,RADIUS);
+	lv_style_set_bg_opa(&style_common,LV_OPA_COVER);
+	lv_style_set_shadow_opa(&style_common,opa_mode?LV_OPA_80:LV_OPA_COVER);
+	lv_style_set_shadow_width(&style_common,SHADOW_WIDTH_SMALL);
 	rect_create(&style_common);
 }
 static void shadow_small_ofs_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_radius(&style_common,LV_STATE_DEFAULT,RADIUS);
-	lv_style_set_bg_opa(&style_common,LV_STATE_DEFAULT,LV_OPA_COVER);
-	lv_style_set_shadow_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_80:LV_OPA_COVER);
-	lv_style_set_shadow_width(&style_common,LV_STATE_DEFAULT,SHADOW_WIDTH_SMALL);
-	lv_style_set_shadow_ofs_x(&style_common,LV_STATE_DEFAULT,SHADOW_OFS_X_SMALL);
-	lv_style_set_shadow_ofs_y(&style_common,LV_STATE_DEFAULT,SHADOW_OFS_Y_SMALL);
-	lv_style_set_shadow_spread(&style_common,LV_STATE_DEFAULT,SHADOW_SPREAD_SMALL);
+	lv_style_set_radius(&style_common,RADIUS);
+	lv_style_set_bg_opa(&style_common,LV_OPA_COVER);
+	lv_style_set_shadow_opa(&style_common,opa_mode?LV_OPA_80:LV_OPA_COVER);
+	lv_style_set_shadow_width(&style_common,SHADOW_WIDTH_SMALL);
+	lv_style_set_shadow_ofs_x(&style_common,SHADOW_OFS_X_SMALL);
+	lv_style_set_shadow_ofs_y(&style_common,SHADOW_OFS_Y_SMALL);
+	lv_style_set_shadow_spread(&style_common,SHADOW_SPREAD_SMALL);
 	rect_create(&style_common);
 }
 static void shadow_large_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_radius(&style_common,LV_STATE_DEFAULT,RADIUS);
-	lv_style_set_bg_opa(&style_common,LV_STATE_DEFAULT,LV_OPA_COVER);
-	lv_style_set_shadow_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_80:LV_OPA_COVER);
-	lv_style_set_shadow_width(&style_common,LV_STATE_DEFAULT,SHADOW_WIDTH_LARGE);
+	lv_style_set_radius(&style_common,RADIUS);
+	lv_style_set_bg_opa(&style_common,LV_OPA_COVER);
+	lv_style_set_shadow_opa(&style_common,opa_mode?LV_OPA_80:LV_OPA_COVER);
+	lv_style_set_shadow_width(&style_common,SHADOW_WIDTH_LARGE);
 	rect_create(&style_common);
 }
 static void shadow_large_ofs_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_radius(&style_common,LV_STATE_DEFAULT,RADIUS);
-	lv_style_set_bg_opa(&style_common,LV_STATE_DEFAULT,LV_OPA_COVER);
-	lv_style_set_shadow_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_80:LV_OPA_COVER);
-	lv_style_set_shadow_width(&style_common,LV_STATE_DEFAULT,SHADOW_WIDTH_LARGE);
-	lv_style_set_shadow_ofs_x(&style_common,LV_STATE_DEFAULT,SHADOW_OFS_X_LARGE);
-	lv_style_set_shadow_ofs_y(&style_common,LV_STATE_DEFAULT,SHADOW_OFS_Y_LARGE);
-	lv_style_set_shadow_spread(&style_common,LV_STATE_DEFAULT,SHADOW_SPREAD_LARGE);
+	lv_style_set_radius(&style_common,RADIUS);
+	lv_style_set_bg_opa(&style_common,LV_OPA_COVER);
+	lv_style_set_shadow_opa(&style_common,opa_mode?LV_OPA_80:LV_OPA_COVER);
+	lv_style_set_shadow_width(&style_common,SHADOW_WIDTH_LARGE);
+	lv_style_set_shadow_ofs_x(&style_common,SHADOW_OFS_X_LARGE);
+	lv_style_set_shadow_ofs_y(&style_common,SHADOW_OFS_Y_LARGE);
+	lv_style_set_shadow_spread(&style_common,SHADOW_SPREAD_LARGE);
 	rect_create(&style_common);
 }
 static void img_rgb_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_img_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
 	img_create(&style_common,"img_cogwheel_rgb.png",false,false,false);
 }
 static void img_argb_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_img_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
 	img_create(&style_common,"img_cogwheel_argb.png",false,false,false);
 }
 static void img_ckey_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_img_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
 	img_create(&style_common,"img_cogwheel_chroma_keyed.png",false,false,false);
 }
 static void img_index_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_img_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
 	img_create(&style_common,"img_cogwheel_indexed16.png",false,false,false);
 }
 static void img_rgb_recolor_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
-	lv_style_set_image_recolor_opa(&style_common,LV_STATE_DEFAULT,LV_OPA_50);
+	lv_style_set_img_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_img_recolor_opa(&style_common,LV_OPA_50);
 	img_create(&style_common,"img_cogwheel_rgb.png",false,false,false);
 }
 static void img_argb_recolor_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
-	lv_style_set_image_recolor_opa(&style_common,LV_STATE_DEFAULT,LV_OPA_50);
+	lv_style_set_img_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_img_recolor_opa(&style_common,LV_OPA_50);
 	img_create(&style_common,"img_cogwheel_argb.png",false,false,false);
 }
 static void img_ckey_recolor_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
-	lv_style_set_image_recolor_opa(&style_common,LV_STATE_DEFAULT,LV_OPA_50);
+	lv_style_set_img_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_img_recolor_opa(&style_common,LV_OPA_50);
 	img_create(&style_common,"img_cogwheel_chroma_keyed.png",false,false,false);
 }
 static void img_index_recolor_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
-	lv_style_set_image_recolor_opa(&style_common,LV_STATE_DEFAULT,LV_OPA_50);
+	lv_style_set_img_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_img_recolor_opa(&style_common,LV_OPA_50);
 	img_create(&style_common,"img_cogwheel_indexed16.png",false,false,false);
 }
 static void img_rgb_rot_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_img_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
 	img_create(&style_common,"img_cogwheel_rgb.png",true,false,false);
 }
 static void img_rgb_rot_aa_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_img_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
 	img_create(&style_common,"img_cogwheel_rgb.png",true,false,true);
 }
 static void img_argb_rot_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_img_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
 	img_create(&style_common,"img_cogwheel_argb.png",true,false,false);
 }
 static void img_argb_rot_aa_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_img_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
 	img_create(&style_common,"img_cogwheel_argb.png",true,false,true);
 }
 static void img_rgb_zoom_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_img_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
 	img_create(&style_common,"img_cogwheel_rgb.png",false,true,false);
 }
 static void img_rgb_zoom_aa_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_img_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
 	img_create(&style_common,"img_cogwheel_rgb.png",false,true,true);
 }
 static void img_argb_zoom_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_img_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
 	img_create(&style_common,"img_cogwheel_argb.png",false,true,false);
 }
 static void img_argb_zoom_aa_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_img_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
 	img_create(&style_common,"img_cogwheel_argb.png",false,true,true);
 }
 static void txt_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_text_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_text_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
 	txt_create(&style_common);
 }
 static void line_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_line_width(&style_common,LV_STATE_DEFAULT,LINE_WIDTH);
-	lv_style_set_line_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_line_width(&style_common,LINE_WIDTH);
+	lv_style_set_line_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
 	line_create(&style_common);
 }
 static void arc_think_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_line_width(&style_common,LV_STATE_DEFAULT,ARC_WIDTH_THIN);
-	lv_style_set_line_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_arc_width(&style_common,ARC_WIDTH_THIN);
+	lv_style_set_arc_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
 	arc_create(&style_common);
 }
 static void arc_thick_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_line_width(&style_common,LV_STATE_DEFAULT,ARC_WIDTH_THICK);
-	lv_style_set_line_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_arc_width(&style_common,ARC_WIDTH_THICK);
+	lv_style_set_arc_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
 	arc_create(&style_common);
 }
 static void sub_rectangle_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_radius(&style_common,LV_STATE_DEFAULT,RADIUS);
-	lv_style_set_bg_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
-	#if LV_USE_BLEND_MODES
-	lv_style_set_bg_blend_mode(&style_common,LV_STATE_DEFAULT,LV_BLEND_MODE_SUBTRACTIVE);
-	#endif
+	lv_style_set_radius(&style_common,RADIUS);
+	lv_style_set_bg_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_blend_mode(&style_common,LV_BLEND_MODE_SUBTRACTIVE);
 	rect_create(&style_common);
 }
 static void sub_border_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_radius(&style_common,LV_STATE_DEFAULT,RADIUS);
-	lv_style_set_border_width(&style_common,LV_STATE_DEFAULT,BORDER_WIDTH);
-	lv_style_set_border_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
-	#if LV_USE_BLEND_MODES
-	lv_style_set_border_blend_mode(&style_common,LV_STATE_DEFAULT,LV_BLEND_MODE_SUBTRACTIVE);
-	#endif
+	lv_style_set_radius(&style_common,RADIUS);
+	lv_style_set_border_width(&style_common,BORDER_WIDTH);
+	lv_style_set_border_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_blend_mode(&style_common,LV_BLEND_MODE_SUBTRACTIVE);
 	rect_create(&style_common);
 }
 static void sub_shadow_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_radius(&style_common,LV_STATE_DEFAULT,RADIUS);
-	lv_style_set_bg_opa(&style_common,LV_STATE_DEFAULT,LV_OPA_COVER);
-	lv_style_set_shadow_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_80:LV_OPA_COVER);
-	lv_style_set_shadow_width(&style_common,LV_STATE_DEFAULT,SHADOW_WIDTH_SMALL);
-	lv_style_set_shadow_spread(&style_common,LV_STATE_DEFAULT,SHADOW_WIDTH_SMALL);
-	#if LV_USE_BLEND_MODES
-	lv_style_set_shadow_blend_mode(&style_common,LV_STATE_DEFAULT,LV_BLEND_MODE_SUBTRACTIVE);
-	#endif
+	lv_style_set_radius(&style_common,RADIUS);
+	lv_style_set_bg_opa(&style_common,LV_OPA_COVER);
+	lv_style_set_shadow_opa(&style_common,opa_mode?LV_OPA_80:LV_OPA_COVER);
+	lv_style_set_shadow_width(&style_common,SHADOW_WIDTH_SMALL);
+	lv_style_set_shadow_spread(&style_common,SHADOW_WIDTH_SMALL);
+	lv_style_set_blend_mode(&style_common,LV_BLEND_MODE_SUBTRACTIVE);
 	rect_create(&style_common);
 }
 static void sub_img_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_image_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
-	#if LV_USE_BLEND_MODES
-	lv_style_set_image_blend_mode(&style_common,LV_STATE_DEFAULT,LV_BLEND_MODE_SUBTRACTIVE);
-	#endif
+	lv_style_set_img_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_blend_mode(&style_common,LV_BLEND_MODE_SUBTRACTIVE);
 	img_create(&style_common,"img_cogwheel_argb.png",false,false,false);
 }
 static void sub_line_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_line_width(&style_common,LV_STATE_DEFAULT,LINE_WIDTH);
-	lv_style_set_line_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
-	#if LV_USE_BLEND_MODES
-	lv_style_set_line_blend_mode(&style_common,LV_STATE_DEFAULT,LV_BLEND_MODE_SUBTRACTIVE);
-	#endif
+	lv_style_set_line_width(&style_common,LINE_WIDTH);
+	lv_style_set_line_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_blend_mode(&style_common,LV_BLEND_MODE_SUBTRACTIVE);
 	line_create(&style_common);
 }
 static void sub_arc_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_line_width(&style_common,LV_STATE_DEFAULT,ARC_WIDTH_THICK);
-	lv_style_set_line_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
-	#if LV_USE_BLEND_MODES
-	lv_style_set_line_blend_mode(&style_common,LV_STATE_DEFAULT,LV_BLEND_MODE_SUBTRACTIVE);
-	#endif
+	lv_style_set_arc_width(&style_common,ARC_WIDTH_THICK);
+	lv_style_set_arc_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_blend_mode(&style_common,LV_BLEND_MODE_SUBTRACTIVE);
 	arc_create(&style_common);
 }
 static void sub_text_cb(void){
 	lv_style_reset(&style_common);
-	lv_style_set_text_font(&style_common,LV_STATE_DEFAULT,LV_THEME_DEFAULT_FONT_NORMAL);
-	lv_style_set_text_opa(&style_common,LV_STATE_DEFAULT,opa_mode?LV_OPA_50:LV_OPA_COVER);
-	#if LV_USE_BLEND_MODES
-	lv_style_set_text_blend_mode(&style_common,LV_STATE_DEFAULT,LV_BLEND_MODE_SUBTRACTIVE);
-	#endif
+	lv_style_set_text_font(&style_common,lv_theme_get_font_normal(NULL));
+	lv_style_set_text_opa(&style_common,opa_mode?LV_OPA_50:LV_OPA_COVER);
+	lv_style_set_blend_mode(&style_common,LV_BLEND_MODE_SUBTRACTIVE);
 	txt_create(&style_common);
 }
 static scene_dsc_t scenes[]={
@@ -522,7 +498,7 @@ static void result_out(bool opa){
 		name,opa?" + opa":"",fps
 	);
 }
-static void scene_next_task_cb(lv_task_t*task __attribute__((unused))){
+static void scene_next_task_cb(lv_timer_t*timer __attribute__((unused))){
 	if(!run)return;
 	lv_disp_trig_activity(NULL);
 	lv_obj_clean(scene_bg);
@@ -541,7 +517,7 @@ static void scene_next_task_cb(lv_task_t*task __attribute__((unused))){
 	if(scenes[scene_act].create_cb){
 		lv_label_set_text_fmt(
 			title,
-			"%d/%d: %s%s",
+			"%d/%zu: %s%s",
 			scene_act*2+(opa_mode?1:0),
 			(sizeof(scenes)/sizeof(scene_dsc_t)*2)-2,
 			scenes[scene_act].name,
@@ -552,15 +528,20 @@ static void scene_next_task_cb(lv_task_t*task __attribute__((unused))){
 		else lv_label_set_text(subtitle,"");
 		rnd_reset();
 		scenes[scene_act].create_cb();
-		lv_task_t*t=lv_task_create(scene_next_task_cb,SCENE_TIME,LV_TASK_PRIO_HIGHEST,NULL);
-		lv_task_set_repeat_count(t,1);
+		lv_timer_t*t=lv_timer_create(scene_next_task_cb,SCENE_TIME,NULL);
+		lv_timer_set_repeat_count(t,1);
 	}else{
-		uint32_t weight_sum,weight_normal_sum=0,weight_opa_sum=0;
-		uint32_t fps_sum,fps_normal_sum=0,fps_opa_sum=0;
-		for(uint32_t i=0;scenes[i].create_cb;i++){
+		uint32_t weight_sum=0;
+		uint32_t weight_normal_sum=0;
+		uint32_t weight_opa_sum=0;
+		uint32_t fps_sum=0;
+		uint32_t fps_normal_sum=0;
+		uint32_t fps_opa_sum=0;
+		uint32_t i;
+		for(i=0;scenes[i].create_cb;i++){
 			fps_normal_sum+=scenes[i].fps_normal*scenes[i].weight;
 			weight_normal_sum+=scenes[i].weight;
-			uint32_t w=LV_MATH_MAX(scenes[i].weight/2,1);
+			uint32_t w=LV_MAX(scenes[i].weight/2,1);
 			fps_opa_sum+=scenes[i].fps_opa*w;
 			weight_opa_sum+=w;
 		}
@@ -578,99 +559,61 @@ static void scene_next_task_cb(lv_task_t*task __attribute__((unused))){
 		if(fps_opa_unweighted<=0)fps_opa_unweighted=1;
 		uint32_t opa_speed_pct=(fps_opa_unweighted*100)/fps_normal_unweighted;
 		lv_obj_clean(screen);
+		sysbar_set_full_screen(false);
+		lv_obj_update_layout(screen);
 		scene_bg=NULL;
-		static lv_style_t lst_style;
-		lv_style_init(&lst_style);
-		lv_style_set_border_width(&lst_style,LV_STATE_DEFAULT,0);
-		lv_style_set_border_width(&lst_style,LV_STATE_FOCUSED,0);
-		lv_style_set_border_width(&lst_style,LV_STATE_PRESSED,0);
-		lv_obj_t*page=lv_page_create(screen,NULL);
-		lv_obj_add_style(page,LV_PAGE_PART_BG,&lst_style);
-		lv_obj_set_size(page,gui_sw,gui_sh);
-		title=lv_label_create(page,NULL);
+		lv_obj_set_flex_flow(screen,LV_FLEX_FLOW_COLUMN);
+		title=lv_label_create(screen);
 		lv_label_set_text_fmt(title,"Weighted FPS: %d",fps_weighted);
 		tlog_info("opa speed: %d%%",opa_speed_pct);
-		subtitle=lv_label_create(page,NULL);
+		subtitle=lv_label_create(screen);
 		lv_label_set_text_fmt(subtitle,"Opa. speed: %d%%",opa_speed_pct);
 		tlog_info("weighted fps: %d",fps_weighted);
-		lv_coord_t w=lv_page_get_width_fit(page)- 10;
-		lv_obj_t*table=lv_table_create(page,NULL);
-		lv_obj_clean_style_list(table,LV_TABLE_PART_BG);
-		lv_obj_set_click(table,false);
+		lv_coord_t w=lv_obj_get_content_width(screen);
+		lv_obj_t*table=lv_table_create(screen);
 		lv_table_set_col_cnt(table,2);
-		lv_table_set_col_width(table,0,(w*3)/4);
-		lv_table_set_col_width(table,1,w/4);
-		static lv_style_t style_cell_slow,style_cell_very_slow,style_cell_title;
-		lv_style_init(&style_cell_title);
-		lv_style_set_bg_color(&style_cell_title,LV_STATE_DEFAULT,LV_COLOR_GRAY);
-		lv_style_set_bg_opa(&style_cell_title,LV_STATE_DEFAULT,LV_OPA_50);
-		lv_style_init(&style_cell_slow);
-		lv_style_set_text_color(&style_cell_slow,LV_STATE_DEFAULT,LV_COLOR_ORANGE);
-		lv_style_init(&style_cell_very_slow);
-		lv_style_set_text_color(&style_cell_very_slow,LV_STATE_DEFAULT,LV_COLOR_RED);
-		lv_obj_add_style(table,LV_TABLE_PART_CELL2,&style_cell_slow);
-		lv_obj_add_style(table,LV_TABLE_PART_CELL3,&style_cell_very_slow);
-		lv_obj_add_style(table,LV_TABLE_PART_CELL4,&style_cell_title);
+		lv_table_set_col_width(table,0,(w*3)/4-3);
+		lv_table_set_col_width(table,1,w/4-3);
+		lv_obj_set_width(table,lv_pct(100));
 		uint16_t row=0;
-		lv_table_set_cell_merge_right(table,row,0,true);
+		lv_table_add_cell_ctrl(table,row,0,LV_TABLE_CELL_CTRL_MERGE_RIGHT);
 		lv_table_set_cell_value(table,row,0,"Slow but common cases");
-		lv_table_set_cell_type(table,row,0,4);
 		row++;
 		char buf[256];
-		for(uint32_t i=0;i<sizeof(scenes)/sizeof(scene_dsc_t)- 1;i++){
-			if(scenes[i].fps_normal<fps_weighted/3&&scenes[i].weight>=10){
+		for(i=0;i<sizeof(scenes)/sizeof(scene_dsc_t)-1;i++){
+			if(scenes[i].fps_normal<20&&scenes[i].weight>=10){
 				lv_table_set_cell_value(table,row,0,scenes[i].name);
 				lv_snprintf(buf,sizeof(buf),"%d",scenes[i].fps_normal);
 				lv_table_set_cell_value(table,row,1,buf);
-				lv_table_set_cell_type(table,row,0,2);
-				lv_table_set_cell_type(table,row,1,2);
 				row++;
 			}
-			if(scenes[i].fps_opa<20&&LV_MATH_MAX(scenes[i].weight/2,1)>=10){
+			if(scenes[i].fps_opa<20&&LV_MAX(scenes[i].weight/2,1)>=10){
 				lv_snprintf(buf,sizeof(buf),"%s + opa",scenes[i].name);
 				lv_table_set_cell_value(table,row,0,buf);
 				lv_snprintf(buf,sizeof(buf),"%d",scenes[i].fps_opa);
 				lv_table_set_cell_value(table,row,1,buf);
-				lv_table_set_cell_type(table,row,0,2);
-				lv_table_set_cell_type(table,row,1,2);
 				row++;
 			}
 		}
 		if(row==1){
-			lv_table_set_cell_merge_right(table,row,0,true);
+			lv_table_add_cell_ctrl(table,row,0,LV_TABLE_CELL_CTRL_MERGE_RIGHT);
 			lv_table_set_cell_value(table,row,0,"All good");
 			row++;
 		}
-		lv_table_set_cell_merge_right(table,row,0,true);
+		lv_table_add_cell_ctrl(table,row,0,LV_TABLE_CELL_CTRL_MERGE_RIGHT);
 		lv_table_set_cell_value(table,row,0,"All cases");
-		lv_table_set_cell_type(table,row,0,4);
 		row++;
-		for(uint32_t i=0;i<sizeof(scenes)/sizeof(scene_dsc_t)-1;i++){
+		for(i=0;i<sizeof(scenes)/sizeof(scene_dsc_t)-1;i++){
 			lv_table_set_cell_value(table,row,0,scenes[i].name);
 			lv_snprintf(buf,sizeof(buf),"%d",scenes[i].fps_normal);
 			lv_table_set_cell_value(table,row,1,buf);
-			if(scenes[i].fps_normal<10){
-				lv_table_set_cell_type(table,row,0,3);
-				lv_table_set_cell_type(table,row,1,3);
-			}else if(scenes[i].fps_normal<20){
-				lv_table_set_cell_type(table,row,0,2);
-				lv_table_set_cell_type(table,row,1,2);
-			}
 			row++;
 			lv_snprintf(buf,sizeof(buf),"%s + opa",scenes[i].name);
 			lv_table_set_cell_value(table,row,0,buf);
 			lv_snprintf(buf,sizeof(buf),"%d",scenes[i].fps_opa);
 			lv_table_set_cell_value(table,row,1,buf);
-			if(scenes[i].fps_opa<10){
-				lv_table_set_cell_type(table,row,0,3);
-				lv_table_set_cell_type(table,row,1,3);
-			}else if(scenes[i].fps_opa<20){
-				lv_table_set_cell_type(table,row,0,2);
-				lv_table_set_cell_type(table,row,1,2);
-			}
 			row++;
 		}
-		lv_page_set_scrl_layout(page,LV_LAYOUT_COLUMN_LEFT);
 	}
 }
 
@@ -690,20 +633,20 @@ static void monitor_cb(
 
 static void benchmark_draw(lv_obj_t*scr){
 	screen=scr;
-	lv_disp_get_next(NULL)->driver.monitor_cb=monitor_cb;
-	lv_obj_reset_style_list(scr,LV_OBJ_PART_MAIN);
-	lv_obj_set_style_local_bg_opa(scr,LV_OBJ_PART_MAIN,LV_STATE_DEFAULT,LV_OPA_COVER);
-	title=lv_label_create(scr,NULL);
-	lv_obj_set_style_local_text_color(title,LV_LABEL_PART_MAIN,LV_STATE_DEFAULT,LV_COLOR_BLACK);
-	lv_obj_set_pos(title,LV_DPI/30,LV_DPI/30);
-	subtitle=lv_label_create(scr,NULL);
-	lv_obj_set_style_local_text_color(subtitle,LV_LABEL_PART_MAIN,LV_STATE_DEFAULT,LV_COLOR_BLACK);
-	lv_obj_align(subtitle,title,LV_ALIGN_OUT_BOTTOM_LEFT,0,0);
-	scene_bg=lv_obj_create(scr,NULL);
-	lv_obj_reset_style_list(scene_bg,LV_OBJ_PART_MAIN);
-	lv_obj_set_size(scene_bg,lv_obj_get_width(scr),lv_obj_get_height(scr)-subtitle->coords.y2-LV_DPI/30);
-	lv_obj_align(scene_bg,NULL,LV_ALIGN_IN_BOTTOM_MID,0,0);
+	lv_disp_get_next(NULL)->driver->monitor_cb=monitor_cb;
+	lv_obj_set_style_pad_all(scr,0,0);
+	lv_obj_set_flex_flow(scr,LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_style_bg_opa(scr,LV_OPA_COVER,0);
+	title=lv_label_create(scr);
+	lv_obj_set_width(title,lv_pct(100));
+	subtitle=lv_label_create(scr);
+	lv_obj_set_width(subtitle,lv_pct(100));
+	scene_bg=lv_obj_create(scr);
+	lv_obj_remove_style_all(scene_bg);
+	lv_obj_set_flex_grow(scene_bg,1);
+	lv_obj_set_width(scene_bg,lv_pct(100));
 	lv_style_init(&style_common);
+	lv_obj_update_layout(scr);
 	scene_next_task_cb(NULL);
 }
 
@@ -721,13 +664,13 @@ int benchmark_main(int argc __attribute__((unused)),char**argv __attribute__((un
 }
 
 static int benchmark_cleanup(struct gui_activity*act __attribute__((unused))){
-	lv_disp_get_next(NULL)->driver.monitor_cb=NULL;
+	lv_disp_get_next(NULL)->driver->monitor_cb=NULL;
 	scene_act=-1,run=false,opa_mode=true;
 	return 0;
 }
 
 static int benchmark_init(struct gui_activity*act __attribute__((unused))){
-	return (lv_disp_get_next(NULL)->driver.monitor_cb)?-1:0;
+	return (lv_disp_get_next(NULL)->driver->monitor_cb)?-1:0;
 }
 
 static int benchmark_wrapper_draw(struct gui_activity*act){

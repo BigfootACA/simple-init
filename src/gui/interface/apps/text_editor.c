@@ -10,6 +10,7 @@
 #ifdef ENABLE_GUI
 #include<string.h>
 #include"gui.h"
+#include"array.h"
 #include"logger.h"
 #include"gui/tools.h"
 #include"gui/fsext.h"
@@ -24,9 +25,21 @@
 static char*cur_path=NULL;
 static char*last_search=NULL;
 static bool changed=false;
-static lv_obj_t*text;
-static lv_obj_t*btn_open,*btn_new,*btn_save,*btn_copy,*btn_paste,*btn_menu;
-static lv_coord_t btx,btm,btw,bth;
+static lv_obj_t*text,*btns;
+static struct te_button{
+	char*name;
+	char*symbol;
+	bool enabled;
+	lv_obj_t*btn;
+	lv_obj_t*lbl;
+}te_btns[]={
+	{ .name="open",  .symbol=LV_SYMBOL_UPLOAD, .enabled=true,  .btn=NULL, .lbl=NULL },
+	{ .name="new",   .symbol=LV_SYMBOL_PLUS,   .enabled=true,  .btn=NULL, .lbl=NULL },
+	{ .name="save",  .symbol=LV_SYMBOL_SAVE,   .enabled=false, .btn=NULL, .lbl=NULL },
+	{ .name="copy",  .symbol=LV_SYMBOL_COPY,   .enabled=false, .btn=NULL, .lbl=NULL },
+	{ .name="paste", .symbol=LV_SYMBOL_PASTE,  .enabled=false, .btn=NULL, .lbl=NULL },
+	{ .name="menu",  .symbol=LV_SYMBOL_LIST,   .enabled=true,  .btn=NULL, .lbl=NULL },
+};
 
 static const char*adv_menu[]={
 	"Copy selected",
@@ -40,15 +53,17 @@ static const char*adv_menu[]={
 	""
 };
 
+static void set_btn_enabled(char*name,bool enabled){
+	for(size_t i=0;i<ARRLEN(te_btns);i++)
+		if(strcmp(te_btns[i].name,name)==0)
+			lv_obj_set_enabled(te_btns[i].btn,enabled);
+}
+
 static int editor_get_focus(struct gui_activity*act __attribute__((unused))){
 	lv_group_add_obj(gui_grp,text);
-	lv_group_add_obj(gui_grp,btn_open);
-	lv_group_add_obj(gui_grp,btn_new);
-	lv_group_add_obj(gui_grp,btn_save);
-	lv_group_add_obj(gui_grp,btn_copy);
-	lv_group_add_obj(gui_grp,btn_paste);
-	lv_group_add_obj(gui_grp,btn_menu);
-	lv_obj_set_enabled(btn_paste,clipboard_get_type()==CLIP_TEXT);
+	for(size_t i=0;i<ARRLEN(te_btns);i++)
+		lv_group_add_obj(gui_grp,te_btns[i].btn);
+	set_btn_enabled("paste",clipboard_get_type()==CLIP_TEXT);
 	sysbar_focus_input(text);
 	ctrl_pad_set_target(text);
 	return 0;
@@ -56,12 +71,8 @@ static int editor_get_focus(struct gui_activity*act __attribute__((unused))){
 
 static int editor_lost_focus(struct gui_activity*act __attribute__((unused))){
 	lv_group_remove_obj(text);
-	lv_group_remove_obj(btn_open);
-	lv_group_remove_obj(btn_new);
-	lv_group_remove_obj(btn_save);
-	lv_group_remove_obj(btn_copy);
-	lv_group_remove_obj(btn_paste);
-	lv_group_remove_obj(btn_menu);
+	for(size_t i=0;i<ARRLEN(te_btns);i++)
+		lv_group_remove_obj(te_btns[i].btn);
 	sysbar_focus_input(NULL);
 	ctrl_pad_set_target(NULL);
 	return 0;
@@ -69,34 +80,34 @@ static int editor_lost_focus(struct gui_activity*act __attribute__((unused))){
 
 static void set_changed(bool v){
 	changed=v;
-	lv_obj_set_enabled(btn_save,v);
+	set_btn_enabled("save",v);
 }
 
 static void do_copy(){
 	const char*cont=lv_textarea_get_text(text);
-	lv_textarea_ext_t*ext=lv_obj_get_ext_attr(text);
+	lv_textarea_t*ext=(lv_textarea_t*)text;
 	uint32_t i=ext->sel_end-ext->sel_start;
 	if(i==0)return;
 	clipboard_set(CLIP_TEXT,cont+ext->sel_start,i);
-	lv_obj_set_enabled(btn_paste,true);
+	set_btn_enabled("paste",true);
 }
 
 static void do_cut(){
 	do_copy();
-	lv_textarea_ext_t*ext=lv_obj_get_ext_attr(text);
+	lv_textarea_t*ext=(lv_textarea_t*)text;
 	uint32_t ss=ext->sel_start,sl=ext->sel_end-ss;
 	lv_textarea_remove_text(text,ss,sl);
-	lv_obj_set_enabled(btn_copy,false);
+	set_btn_enabled("copy",false);
 	lv_textarea_set_cursor_pos(text,ss);
 }
 
 static void do_paste(){
 	if(clipboard_get_type()!=CLIP_TEXT)return;
-	lv_textarea_ext_t*ext=lv_obj_get_ext_attr(text);
+	lv_textarea_t*ext=(lv_textarea_t*)text;
 	uint32_t ss=ext->sel_start,se=ext->sel_end,sl=se-ss;
 	if(sl>0){
 		lv_textarea_remove_text(text,ss,sl);
-		lv_obj_set_enabled(btn_copy,false);
+		set_btn_enabled("copy",false);
 		lv_textarea_set_cursor_pos(text,ss);
 	}
 	lv_textarea_add_text(text,clipboard_get_content());
@@ -119,9 +130,9 @@ static bool open_read_cb(uint16_t id,const char*name __attribute__((unused)),voi
 		set_changed(false);
 		lv_textarea_clear_selection(text);
 		lv_textarea_set_text(text,"");
-		lv_textarea_ext_t*ext=lv_obj_get_ext_attr(text);
+		lv_textarea_t*ext=(lv_textarea_t*)text;
 		ext->sel_start=ext->sel_end=0;
-		lv_obj_set_enabled(btn_copy,false);
+		set_btn_enabled("copy",false);
 		if(od->size==0){
 			size_t bs=BUFSIZ,cs=bs;
 			if(!(buf=malloc(bs)))goto e_buf;
@@ -168,7 +179,7 @@ static bool open_read_cb(uint16_t id,const char*name __attribute__((unused)),voi
 	goto fail;
 }
 
-static void open_start_read(lv_task_t*t){
+static void open_start_read(lv_timer_t*t){
 	open_read_cb(0,NULL,t->user_data);
 }
 
@@ -194,7 +205,7 @@ static bool read_file(const char*path){
 		free(od->path);
 		return false;
 	}
-	if(od->size<0x10000)lv_task_once(lv_task_create(open_start_read,20,LV_TASK_PRIO_LOWEST,od));
+	if(od->size<0x10000)lv_timer_set_repeat_count(lv_timer_create(open_start_read,20,od),1);
 	else msgbox_set_user_data(msgbox_create_yesno(
 		open_read_cb,
 		"This file is bigger than 64 KiB (%d bytes), "
@@ -229,9 +240,9 @@ static bool new_cb(uint16_t id,const char*name __attribute__((unused)),void*user
 		cur_path=NULL;
 		lv_textarea_set_text(text,"");
 		lv_textarea_clear_selection(text);
-		lv_textarea_ext_t*ext=lv_obj_get_ext_attr(text);
+		lv_textarea_t*ext=(lv_textarea_t*)text;
 		ext->sel_start=ext->sel_end=0;
-		lv_obj_set_enabled(btn_copy,false);
+		set_btn_enabled("copy",false);
 		set_changed(false);
 	}
 	return false;
@@ -337,40 +348,36 @@ static bool menu_cb(uint16_t id,const char*name __attribute__((unused)),void*dat
 	return false;
 }
 
-static void btns_cb(lv_obj_t*obj,lv_event_t e){
-	if(!obj||e!=LV_EVENT_CLICKED)return;
+static void btns_cb(lv_event_t*e){
 	if(strcmp(guiact_get_last()->name,"text-editor")!=0)return;
-	tlog_info("click button %s",(char*)lv_obj_get_user_data(obj));
-	if(obj==btn_open)do_open();
-	else if(obj==btn_new)do_new();
-	else if(obj==btn_save)do_save();
-	else if(obj==btn_copy)do_copy();
-	else if(obj==btn_paste)do_paste();
-	else if(obj==btn_menu)msgbox_create_custom(menu_cb,adv_menu,"Menu");
+	char*btn=(char*)e->user_data;
+	tlog_info("click button %s",btn);
+	if(strcmp(btn,"open")==0)do_open();
+	else if(strcmp(btn,"new")==0)do_new();
+	else if(strcmp(btn,"save")==0)do_save();
+	else if(strcmp(btn,"copy")==0)do_copy();
+	else if(strcmp(btn,"paste")==0)do_paste();
+	else if(strcmp(btn,"menu")==0)msgbox_create_custom(menu_cb,adv_menu,"Menu");
 }
 
-static void input_cb(lv_obj_t*obj,lv_event_t e){
-	if(e==LV_EVENT_DELETE)return;
-	if(obj!=text||strcmp(guiact_get_last()->name,"text-editor")!=0)return;
-	lv_textarea_ext_t*ext=lv_obj_get_ext_attr(text);
+static void text_changed_cb(lv_event_t*e __attribute__((unused))){
+	lv_textarea_t*ext=(lv_textarea_t*)text;
+	set_btn_enabled("copy",ext->sel_end-ext->sel_start>0);
+	set_changed(true);
+}
+
+static void click_input_cb(lv_event_t*e){
+	sysbar_focus_input(e->target);
+}
+
+static void insert_cb(lv_event_t*e){
+	lv_textarea_t*ext=(lv_textarea_t*)text;
 	uint32_t ss=ext->sel_start,se=ext->sel_end,sl=se-ss;
-	lv_obj_set_enabled(btn_copy,sl>0);
-	lv_textarea_set_cursor_hidden(text,false);
-	switch(e){
-		case LV_EVENT_CLICKED:
-			sysbar_focus_input(obj);
-		break;
-		case LV_EVENT_VALUE_CHANGED:
-			set_changed(true);
-		break;
-		case LV_EVENT_INSERT:
-			if(*(char*)lv_event_get_data()==127&&sl>0){
-				lv_textarea_set_insert_replace(text,"");
-				lv_textarea_remove_text(text,ss,sl);
-				lv_obj_set_enabled(btn_copy,false);
-				lv_textarea_set_cursor_pos(text,ss);
-			}
-		break;
+	if(*(char*)e->param==127&&sl>0){
+		lv_textarea_set_insert_replace(text,"");
+		lv_textarea_remove_text(text,ss,sl);
+		set_btn_enabled("copy",false);
+		lv_textarea_set_cursor_pos(text,ss);
 	}
 }
 
@@ -401,76 +408,63 @@ static int do_clean(struct gui_activity*act __attribute__((unused))){
 }
 
 static int editor_resize(struct gui_activity*act __attribute__((unused))){
-	btw=(gui_sw-btm)/6-btm,bth=btx*2;
-	lv_coord_t ts=gui_sh;
-	if(!sysbar.keyboard)ts-=bth+(btm*2);
-	lv_obj_set_size(text,gui_sw,ts);
-	lv_obj_set_size(btn_open,btw,bth);
-	lv_obj_align(btn_open,text,LV_ALIGN_OUT_BOTTOM_LEFT,btm,btm);
-	lv_obj_set_size(btn_new,btw,bth);
-	lv_obj_align(btn_new,btn_open,LV_ALIGN_OUT_RIGHT_MID,btm,0);
-	lv_obj_set_size(btn_save,btw,bth);
-	lv_obj_align(btn_save,btn_new,LV_ALIGN_OUT_RIGHT_MID,btm,0);
-	lv_obj_set_size(btn_copy,btw,bth);
-	lv_obj_align(btn_copy,btn_save,LV_ALIGN_OUT_RIGHT_MID,btm,0);
-	lv_obj_set_size(btn_paste,btw,bth);
-	lv_obj_align(btn_paste,btn_copy,LV_ALIGN_OUT_RIGHT_MID,btm,0);
-	lv_obj_set_size(btn_menu,btw,bth);
-	lv_obj_align(btn_menu,btn_paste,LV_ALIGN_OUT_RIGHT_MID,btm,0);
+	if(sysbar.keyboard)lv_obj_add_flag(btns,LV_OBJ_FLAG_HIDDEN);
+	else lv_obj_clear_flag(btns,LV_OBJ_FLAG_HIDDEN);
 	return 0;
 }
 
 static int editor_draw(struct gui_activity*act){
-	btx=gui_font_size,btm=btx/2;
+	static lv_coord_t grid_col[]={
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_TEMPLATE_LAST
+	},grid_row[]={
+		LV_GRID_FR(1),
+		LV_GRID_TEMPLATE_LAST
+	};
+	lv_obj_set_style_pad_all(act->page,0,0);
+	lv_obj_set_flex_flow(act->page,LV_FLEX_FLOW_COLUMN);
 
-	text=lv_textarea_create(act->page,NULL);
+	text=lv_textarea_create(act->page);
 	lv_textarea_clear_selection(text);
 	lv_textarea_set_text(text,"");
 	lv_textarea_set_one_line(text,false);
-	lv_textarea_set_text_sel(text,true);
-	lv_obj_set_event_cb(text,input_cb);
-	lv_obj_set_style_local_border_width(text,LV_TEXTAREA_PART_BG,LV_STATE_DEFAULT,0);
-	lv_obj_set_style_local_radius(text,LV_TEXTAREA_PART_BG,LV_STATE_DEFAULT,0);
-	lv_obj_set_small_text_font(text,LV_TEXTAREA_PART_BG);
+	lv_textarea_set_text_selection(text,true);
+	lv_obj_add_event_cb(text,insert_cb,LV_EVENT_INSERT,NULL);
+	lv_obj_add_event_cb(text,text_changed_cb,LV_EVENT_VALUE_CHANGED,NULL);
+	lv_obj_add_event_cb(text,click_input_cb,LV_EVENT_CLICKED,NULL);
+	lv_obj_set_width(text,lv_pct(100));
+	lv_obj_set_flex_grow(text,1);
+	lv_obj_set_style_border_width(text,0,0);
+	lv_obj_set_style_radius(text,0,0);
+	lv_obj_set_small_text_font(text,0);
 
-	btn_open=lv_btn_create(act->page,NULL);
-	lv_obj_set_event_cb(btn_open,btns_cb);
-	lv_obj_set_user_data(btn_open,"open");
-	lv_obj_set_style_local_radius(btn_open,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
-	lv_label_set_text(lv_label_create(btn_open,NULL),LV_SYMBOL_UPLOAD);
-
-	btn_new=lv_btn_create(act->page,NULL);
-	lv_obj_set_event_cb(btn_new,btns_cb);
-	lv_obj_set_user_data(btn_new,"new");
-	lv_obj_set_style_local_radius(btn_new,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
-	lv_label_set_text(lv_label_create(btn_new,NULL),LV_SYMBOL_PLUS);
-
-	btn_save=lv_btn_create(act->page,NULL);
-	lv_obj_set_enabled(btn_save,false);
-	lv_obj_set_event_cb(btn_save,btns_cb);
-	lv_obj_set_user_data(btn_save,"save");
-	lv_obj_set_style_local_radius(btn_save,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
-	lv_label_set_text(lv_label_create(btn_save,NULL),LV_SYMBOL_SAVE);
-
-	btn_copy=lv_btn_create(act->page,NULL);
-	lv_obj_set_enabled(btn_copy,false);
-	lv_obj_set_event_cb(btn_copy,btns_cb);
-	lv_obj_set_user_data(btn_copy,"copy");
-	lv_obj_set_style_local_radius(btn_copy,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
-	lv_label_set_text(lv_label_create(btn_copy,NULL),LV_SYMBOL_COPY);
-
-	btn_paste=lv_btn_create(act->page,NULL);
-	lv_obj_set_enabled(btn_paste,clipboard_get_type()==CLIP_TEXT);
-	lv_obj_set_event_cb(btn_paste,btns_cb);
-	lv_obj_set_user_data(btn_paste,"paste");
-	lv_obj_set_style_local_radius(btn_paste,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
-	lv_label_set_text(lv_label_create(btn_paste,NULL),LV_SYMBOL_PASTE);
-
-	btn_menu=lv_btn_create(act->page,NULL);
-	lv_obj_set_event_cb(btn_menu,btns_cb);
-	lv_obj_set_user_data(btn_menu,"menu");
-	lv_obj_set_style_local_radius(btn_menu,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
-	lv_label_set_text(lv_label_create(btn_menu,NULL),LV_SYMBOL_LIST);
+	btns=lv_obj_create(act->page);
+	lv_obj_set_style_radius(btns,0,0);
+	lv_obj_set_scroll_dir(btns,LV_DIR_NONE);
+	lv_obj_set_style_border_width(btns,0,0);
+	lv_obj_set_style_bg_opa(btns,LV_OPA_0,0);
+	lv_obj_clear_flag(btns,LV_OBJ_FLAG_SCROLLABLE);
+	lv_obj_set_width(btns,lv_pct(100));
+	lv_obj_set_content_height(btns,gui_font_size*2);
+	lv_obj_set_grid_dsc_array(btns,grid_col,grid_row);
+	for(size_t i=0;i<ARRLEN(te_btns);i++){
+		te_btns[i].btn=lv_btn_create(btns);
+		lv_obj_set_enabled(te_btns[i].btn,te_btns[i].enabled);
+		lv_obj_add_event_cb(te_btns[i].btn,btns_cb,LV_EVENT_CLICKED,te_btns[i].name);
+		te_btns[i].lbl=lv_label_create(te_btns[i].btn);
+		lv_label_set_text(te_btns[i].lbl,te_btns[i].symbol);
+		lv_obj_center(te_btns[i].lbl);
+		lv_obj_set_grid_cell(
+			te_btns[i].btn,
+			LV_GRID_ALIGN_STRETCH,i,1,
+			LV_GRID_ALIGN_STRETCH,0,1
+		);
+	}
 
 	set_changed(false);
 	if(act->args){

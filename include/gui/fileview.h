@@ -34,12 +34,6 @@ extern void fileview_set_path(struct fileview*view,char*path);
 // src/gui/interface/filemgr/fileview.c: set fileview show verbose info
 extern void fileview_set_verbose(struct fileview*view,bool verbose);
 
-// src/gui/interface/filemgr/fileview.c: set fileview file item height
-extern void fileview_set_item_height(struct fileview*view,lv_coord_t height);
-
-// src/gui/interface/filemgr/fileview.c: set fileview file item margin
-extern void fileview_set_margin(struct fileview*view,lv_coord_t margin);
-
 // src/gui/interface/filemgr/fileview.c: set fileview show parent item
 extern void fileview_set_show_parent(struct fileview*view,bool parent);
 

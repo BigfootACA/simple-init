@@ -46,8 +46,7 @@ static void pad_key_cb(struct alt_pad_btn*btn){
 }
 
 static void pad_toggle_cb(struct alt_pad_btn*btn){
-	bool checked=lv_btn_get_state(btn->btn)==
-		LV_BTN_STATE_CHECKED_RELEASED;
+	bool checked=lv_obj_is_checked(btn->btn);
 	if(checked)btn->con->mods|=btn->map->attr;
 	else btn->con->mods&=~btn->map->attr;
 	lv_termview_set_mods(
@@ -58,8 +57,8 @@ static void pad_toggle_cb(struct alt_pad_btn*btn){
 
 static void pad_close_cb(struct alt_pad_btn*btn){
 	size_t x,y;
-	lv_obj_set_hidden(btn->con->alt_btns,true);
-	lv_obj_set_hidden(btn->con->toggle_btn,false);
+	lv_obj_add_flag(btn->con->alt_btns,LV_OBJ_FLAG_HIDDEN);
+	lv_obj_clear_flag(btn->con->toggle_btn,LV_OBJ_FLAG_HIDDEN);
 	for(x=0;x<ARRLEN(btns);x++)for(y=0;y<ARRLEN(btns[x]);y++)
 		lv_group_remove_obj(btn->con->btns[x][y].btn);
 	lv_group_add_obj(gui_grp,btn->con->toggle_btn);
@@ -197,11 +196,11 @@ static void hand_key(struct console*con,uint32_t k){
 	lv_termview_update(con->termview);
 }
 
-static void hand_key_event(struct console*con){
-	hand_key(con,get_key());
+static void hand_key_event(lv_event_t*e){
+	hand_key(e->user_data,get_key());
 }
 
-static void hand_no_ctrl_key_event(struct console*con){
+static void hand_no_ctrl_key_event(lv_event_t*e){
 	uint32_t k=get_key();
 	switch(k){
 		case LV_KEY_UP:
@@ -211,34 +210,23 @@ static void hand_no_ctrl_key_event(struct console*con){
 		case LV_KEY_ENTER:
 		case LV_KEY_NEXT:
 		case LV_KEY_PREV:break;
-		default:hand_key(con,k);
+		default:hand_key(e->user_data,k);
 	}
 }
 
-static void btns_drag_cb(lv_obj_t*obj,lv_event_t e){
-	struct console*con=lv_obj_get_user_data(obj);
-	switch(e){
-		case LV_EVENT_KEY:hand_no_ctrl_key_event(con);break;
-		case LV_EVENT_DRAG_END:lv_drag_border(
-			obj,
-			con->act->w,
-			con->act->h,
-			gui_font_size
-		);break;
-		default:;
-	}
+static void con_drag_cb(lv_event_t*e){
+	struct console*con=e->user_data;
+	lv_drag_border(
+		e->target,
+		con->act->w,
+		con->act->h,
+		gui_font_size
+	);
 }
 
-static void alt_pad_btn_cb(lv_obj_t*obj,lv_event_t e){
-	if(e==LV_EVENT_DELETE)return;
-	struct alt_pad_btn*btn=lv_obj_get_user_data(obj);
-	if(!btn||!btn->con||!btn->map)return;
-	if(guiact_get_last()!=btn->con->act)return;
-	switch(e){
-		case LV_EVENT_KEY:hand_no_ctrl_key_event(btn->con);break;
-		case LV_EVENT_CLICKED:btn->map->callback(btn);break;
-		default:;
-	}
+static void alt_pad_btn_cb(lv_event_t*e){
+	struct alt_pad_btn*btn=e->user_data;
+	btn->map->callback(btn);
 }
 
 static void alt_pad_draw_button(struct console*con){
@@ -248,24 +236,9 @@ static void alt_pad_draw_button(struct console*con){
 	lv_coord_t pw=0,ph=0,bw,px,py;
 	static lv_style_t btn_style;
 	lv_style_init(&btn_style);
-	lv_style_set_radius(&btn_style,LV_STATE_DEFAULT,0);
-	lv_style_set_pad_all(&btn_style,LV_STATE_DEFAULT,0);
-	lv_style_set_pad_inner(&btn_style,LV_STATE_DEFAULT,0);
-	lv_style_set_bg_opa(&btn_style,LV_STATE_DEFAULT,LV_OPA_30);
-	lv_style_set_bg_opa(&btn_style,LV_STATE_PRESSED,LV_OPA_COVER);
-	lv_style_set_bg_opa(&btn_style,LV_STATE_CHECKED,LV_OPA_COVER);
-	lv_style_set_bg_color(&btn_style,LV_STATE_DEFAULT,LV_COLOR_GRAY);
-	lv_style_set_bg_color(&btn_style,LV_STATE_PRESSED,LV_COLOR_GRAY);
-	lv_style_set_bg_color(&btn_style,LV_STATE_CHECKED,LV_COLOR_GRAY);
-	lv_style_set_text_color(&btn_style,LV_STATE_DEFAULT,LV_COLOR_WHITE);
-	lv_style_set_text_color(&btn_style,LV_STATE_PRESSED,LV_COLOR_WHITE);
-	lv_style_set_text_color(&btn_style,LV_STATE_CHECKED,LV_COLOR_WHITE);
-	lv_style_set_border_color(&btn_style,LV_STATE_DEFAULT,LV_COLOR_GRAY);
-	lv_style_set_border_color(&btn_style,LV_STATE_FOCUSED,lv_theme_get_color_primary());
-	lv_style_set_border_color(&btn_style,LV_STATE_PRESSED,lv_theme_get_color_primary());
-	lv_style_set_outline_color(&btn_style,LV_STATE_DEFAULT,LV_COLOR_GRAY);
-	lv_style_set_outline_color(&btn_style,LV_STATE_FOCUSED,lv_theme_get_color_primary());
-	lv_style_set_outline_color(&btn_style,LV_STATE_PRESSED,lv_theme_get_color_primary());
+	lv_style_set_radius(&btn_style,0);
+	lv_style_set_pad_all(&btn_style,0);
+	lv_style_set_bg_opa(&btn_style,LV_OPA_30);
 	for(x=0;x<ARRLEN(btns);x++){
 		cw=1;
 		for(y=0;y<ARRLEN(btns[x]);y++)
@@ -275,24 +248,27 @@ static void alt_pad_draw_button(struct console*con){
 			px=0,py=0;
 			con->btns[x][y].con=con;
 			con->btns[x][y].map=&btns[x][y];
-			con->btns[x][y].btn=lv_btn_create(con->alt_btns,NULL);
+			con->btns[x][y].btn=lv_btn_create(con->alt_btns);
 			if(x>0)lo=con->btns[x-1][y].btn,
 				px=lv_obj_get_x(lo)+lv_obj_get_width(lo);
 			if(y>0)lo=con->btns[x][y-1].btn,
 				py=lv_obj_get_y(lo)+lv_obj_get_height(lo);
-			lv_obj_add_style(con->btns[x][y].btn,LV_BTN_PART_MAIN,&btn_style);
+			lv_obj_add_style(con->btns[x][y].btn,&btn_style,LV_PART_MAIN);
 			lv_obj_set_user_data(con->btns[x][y].btn,&con->btns[x][y]);
-			lv_btn_set_checkable(con->btns[x][y].btn,btns[x][y].hold);
-			lv_obj_set_event_cb(con->btns[x][y].btn,alt_pad_btn_cb);
-			lv_obj_set_drag_parent(con->btns[x][y].btn,true);
+			if(btns[x][y].hold)lv_obj_add_flag(con->btns[x][y].btn,LV_OBJ_FLAG_CHECKABLE);
+			lv_obj_add_event_cb(con->btns[x][y].btn,alt_pad_btn_cb,LV_EVENT_CLICKED,&con->btns[x][y]);
+			lv_obj_add_event_cb(con->btns[x][y].btn,hand_no_ctrl_key_event,LV_EVENT_KEY,con);
 			lv_obj_set_size(con->btns[x][y].btn,bw,bh);
 			lv_obj_set_pos(con->btns[x][y].btn,px,py);
-			con->btns[x][y].lbl=lv_label_create(con->btns[x][y].btn,NULL);
+			con->btns[x][y].lbl=lv_label_create(con->btns[x][y].btn);
 			lv_label_set_text(con->btns[x][y].lbl,btns[x][y].title);
+			lv_obj_center(con->btns[x][y].lbl);
+			lv_obj_update_layout(con->btns[x][y].btn);
 			pw=MAX(pw,px+bw),ph=MAX(ph,py+bh);
 		}
 	}
-	lv_obj_set_size(con->alt_btns,pw,ph);
+	lv_obj_set_content_width(con->alt_btns,pw);
+	lv_obj_set_content_height(con->alt_btns,ph);
 }
 
 int console_init(struct gui_activity*act){
@@ -303,98 +279,80 @@ int console_init(struct gui_activity*act){
 	return 0;
 }
 
-static void term_cb(lv_obj_t*obj,lv_event_t e){
-	if(e==LV_EVENT_DELETE)return;
-	struct console*con=lv_obj_get_user_data(obj);
-	switch(e){
-		case LV_EVENT_KEY:hand_key_event(con);break;
-		case LV_EVENT_CLICKED:
-			if(guiact_get_last()!=con->act)break;
-			sysbar_focus_input(lv_termview_get_virtual_input(
-				con->termview
-			));
-		break;
-	}
+static void term_cb(lv_event_t*e){
+	struct console*con=e->user_data;
+	if(guiact_get_last()!=con->act)return;
+	sysbar_focus_input(lv_termview_get_virtual_input(
+		con->termview
+	));
 }
 
-static void toggle_cb(lv_obj_t*obj,lv_event_t e){
+static void toggle_cb(lv_event_t*e){
 	size_t x,y;
-	if(e==LV_EVENT_DELETE)return;
-	struct console*con=lv_obj_get_user_data(obj);
-	if(obj!=con->toggle_btn)return;
+	struct console*con=e->user_data;
 	if(guiact_get_last()!=con->act)return;
-	switch(e){
-		case LV_EVENT_KEY:hand_no_ctrl_key_event(con);break;
-		case LV_EVENT_CLICKED:{
-			lv_obj_set_hidden(con->toggle_btn,true);
-			lv_obj_set_hidden(con->alt_btns,false);
-			for(x=0;x<ARRLEN(btns);x++)for(y=0;y<ARRLEN(btns[x]);y++)
-				lv_group_add_obj(gui_grp,con->btns[x][y].btn);
-			lv_group_remove_obj(con->toggle_btn);
-		}break;
-		case LV_EVENT_DRAG_END:lv_drag_border(
-			obj,
-			con->act->w,
-			con->act->h,
-			gui_font_size
-		);
-	}
+	lv_obj_add_flag(con->toggle_btn,LV_OBJ_FLAG_HIDDEN);
+	lv_obj_clear_flag(con->alt_btns,LV_OBJ_FLAG_HIDDEN);
+	for(x=0;x<ARRLEN(btns);x++)for(y=0;y<ARRLEN(btns[x]);y++)
+		lv_group_add_obj(gui_grp,con->btns[x][y].btn);
+	lv_group_remove_obj(con->toggle_btn);
 }
 
 int console_draw(struct gui_activity*act){
 	struct console*con=act->data;
-	con->termview=lv_termview_create(act->page,NULL);
+	lv_obj_set_scrollbar_mode(act->page,LV_DIR_NONE);
+	lv_obj_clear_flag(act->page,LV_OBJ_FLAG_SCROLLABLE);
+	lv_obj_set_style_pad_all(act->page,0,0);
+	con->termview=lv_termview_create(act->page);
 	lv_obj_set_user_data(con->termview,con);
-	lv_obj_set_event_cb(con->termview,term_cb);
+	lv_obj_add_event_cb(con->termview,term_cb,LV_EVENT_CLICKED,con);
+	lv_obj_add_event_cb(con->termview,hand_key_event,LV_EVENT_KEY,con);
 	lv_termview_set_font(con->termview,gui_font_small);
-	con->alt_btns=lv_obj_create(act->page,NULL);
-	lv_obj_set_event_cb(con->alt_btns,btns_drag_cb);
-	lv_obj_set_user_data(con->alt_btns,con);
-	lv_obj_set_drag(con->alt_btns,true);
-	lv_obj_set_hidden(con->alt_btns,true);
-	lv_theme_apply(con->alt_btns,LV_THEME_SCR);
-	lv_obj_set_style_local_bg_opa(
+	lv_obj_set_style_bg_color(con->termview,lv_color_black(),0);
+	con->alt_btns=lv_obj_create(act->page);
+	lv_obj_set_style_pad_all(con->alt_btns,0,0);
+	lv_obj_set_scrollbar_mode(con->alt_btns,LV_DIR_NONE);
+	lv_obj_add_event_cb(con->alt_btns,hand_no_ctrl_key_event,LV_EVENT_KEY,con);
+	lv_obj_add_event_cb(con->alt_btns,con_drag_cb,LV_EVENT_SCROLL_END,con);
+	lv_obj_add_flag(con->alt_btns,LV_OBJ_FLAG_HIDDEN);
+	lv_obj_clear_flag(con->alt_btns,LV_OBJ_FLAG_SCROLLABLE);
+	lv_obj_set_style_bg_opa(
 		con->alt_btns,
-		LV_OBJ_PART_MAIN,
-		LV_STATE_DEFAULT,
-		LV_OPA_0
+		LV_OPA_0,0
 	);
 	alt_pad_draw_button(con);
-	con->toggle_btn=lv_btn_create(act->page,NULL);
-	lv_obj_set_event_cb(con->toggle_btn,toggle_cb);
-	lv_obj_set_user_data(con->toggle_btn,con);
+	lv_obj_add_drag(con->alt_btns);
+	con->toggle_btn=lv_btn_create(act->page);
+	lv_obj_add_drag(con->toggle_btn);
+	lv_obj_add_event_cb(con->toggle_btn,toggle_cb,LV_EVENT_CLICKED,con);
+	lv_obj_add_event_cb(con->toggle_btn,hand_no_ctrl_key_event,LV_EVENT_KEY,con);
+	lv_obj_set_style_radius(con->toggle_btn,LV_RADIUS_CIRCLE,0);
 	lv_obj_set_checked(con->toggle_btn,true);
-	lv_obj_set_drag(con->toggle_btn,true);
-	lv_obj_set_style_local_shadow_color(
+	lv_obj_set_style_shadow_color(
 		con->toggle_btn,
-		LV_BTN_PART_MAIN,
-		LV_STATE_DEFAULT,
-		LV_COLOR_BLACK
+		lv_color_black(),0
 	);
-	lv_obj_set_style_local_shadow_width(
+	lv_obj_set_style_shadow_width(
 		con->toggle_btn,
-		LV_BTN_PART_MAIN,
-		LV_STATE_DEFAULT,
-		gui_font_size
+		gui_font_size,0
 	);
-	lv_label_set_text(
-		lv_label_create(con->toggle_btn,NULL),
-		LV_SYMBOL_KEYBOARD
+	lv_obj_set_style_size(con->toggle_btn,gui_font_size*3,0);
+	lv_obj_align_to(
+		con->toggle_btn,NULL,
+		LV_ALIGN_BOTTOM_RIGHT,
+		-gui_font_size,-gui_font_size
 	);
+	lv_obj_t*lbl=lv_label_create(con->toggle_btn);
+	lv_label_set_text(lbl,LV_SYMBOL_KEYBOARD);
+	lv_obj_center(lbl);
 	return 0;
 }
 
 int console_resize(struct gui_activity*d){
-	lv_coord_t bs=gui_font_size*3;
-	lv_coord_t bm=gui_font_size*4;
 	struct console*con=d->data;
 	if(!con)return 0;
 	lv_obj_set_pos(con->termview,0,0);
 	lv_obj_set_size(con->termview,d->w,d->h);
-	lv_obj_set_size(con->toggle_btn,bs,bs);
-	lv_obj_set_pos(con->toggle_btn,d->w-bm,d->h-bm);
-	lv_drag_border(con->toggle_btn,d->w,d->h,gui_font_size);
-	lv_drag_border(con->alt_btns,d->w,d->h,gui_font_size);
 	lv_termview_resize(con->termview);
 	return 0;
 }
@@ -427,7 +385,7 @@ int console_lost_focus(struct gui_activity*d){
 
 int console_clean(struct gui_activity*d){
 	struct console*con=d->data;
-	if(con->termview)lv_obj_set_event_cb(con->termview,NULL);
+	if(con->termview)lv_obj_remove_event_cb(con->termview,NULL);
 	memset(con,0,sizeof(struct console));
 	free(con);
 	d->data=NULL;

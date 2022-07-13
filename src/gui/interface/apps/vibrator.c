@@ -33,7 +33,7 @@ enum vibrate_type{
 struct vibrate_step{
 	enum vibrate_type type;
 	int time;
-	lv_obj_t*btn,*chk;
+	lv_obj_t*btn,*lbl;
 };
 
 static struct vibrate_step*selected;
@@ -45,7 +45,7 @@ static int vibrator_get_focus(struct gui_activity*d __attribute__((unused))){
 	list*o=list_first(steps);
 	if(o)do{
 		LIST_DATA_DECLARE(vs,o,struct vibrate_step*);
-		if(vs->chk)lv_group_add_obj(gui_grp,vs->chk);
+		if(vs->btn)lv_group_add_obj(gui_grp,vs->btn);
 	}while((o=o->next));
 	MUTEX_UNLOCK(lock);
 	lv_group_add_obj(gui_grp,btn_prev);
@@ -62,7 +62,7 @@ static int vibrator_lost_focus(struct gui_activity*d __attribute__((unused))){
 	list*o=list_first(steps);
 	if(o)do{
 		LIST_DATA_DECLARE(vs,o,struct vibrate_step*);
-		if(vs->chk)lv_group_add_obj(gui_grp,vs->chk);
+		if(vs->btn)lv_group_remove_obj(vs->btn);
 	}while((o=o->next));
 	MUTEX_UNLOCK(lock);
 	lv_group_remove_obj(btn_prev);
@@ -74,14 +74,11 @@ static int vibrator_lost_focus(struct gui_activity*d __attribute__((unused))){
 	return 0;
 }
 
-static void chk_click(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_VALUE_CHANGED)return;
-	lv_checkbox_set_checked(obj,true);
-	if(selected&&obj!=selected->chk){
-		lv_checkbox_set_checked(selected->chk,false);
+static void item_check(lv_event_t*e){
+	lv_obj_set_checked(e->target,true);
+	if(selected&&e->target!=selected->btn)
 		lv_obj_set_checked(selected->btn,false);
-	}
-	selected=lv_obj_get_user_data(obj);
+	selected=e->user_data;
 	lv_obj_set_checked(selected->btn,true);
 	lv_obj_set_enabled(btn_prev,true);
 	lv_obj_set_enabled(btn_next,true);
@@ -95,15 +92,13 @@ static void clean_view(){
 		LIST_DATA_DECLARE(vs,o,struct vibrate_step*);
 		if(!vs->btn)continue;
 		lv_obj_del(vs->btn);
-		vs->btn=NULL,vs->chk=NULL;
+		vs->btn=NULL,vs->lbl=NULL;
 	}while((o=o->next));
 	MUTEX_UNLOCK(lock);
 }
 
 static void redraw_view(){
 	char string[256]={0};
-	lv_obj_t*last=NULL;
-	lv_coord_t bw=lv_page_get_scrl_width(view);
 	MUTEX_LOCK(lock);
 	list*o=list_first(steps);
 	if(o)do{
@@ -117,35 +112,14 @@ static void redraw_view(){
 		}
 
 		// option select button
-		vs->btn=lv_btn_create(view,NULL);
-		lv_obj_set_size(vs->btn,bw,gui_font_size*3);
-		lv_obj_align(
-			vs->btn,last,
-			last?LV_ALIGN_OUT_BOTTOM_MID:LV_ALIGN_IN_TOP_MID,
-			0,last?gui_dpi/8:0
-		);
+		vs->btn=lv_btn_create(view);
+		lv_obj_set_width(vs->btn,lv_pct(100));
+		lv_obj_add_event_cb(vs->btn,item_check,LV_EVENT_CLICKED,vs);
 		lv_style_set_btn_item(vs->btn);
-		lv_obj_set_click(vs->btn,false);
-		last=vs->btn;
 
-		// line for button text
-		lv_obj_t*line=lv_line_create(vs->btn,NULL);
-		lv_obj_set_width(line,bw);
-
-		// function name and checkbox
-		vs->chk=lv_checkbox_create(line,NULL);
-		lv_obj_set_user_data(vs->chk,vs);
-		lv_obj_set_event_cb(vs->chk,chk_click);
-		lv_checkbox_set_text(vs->chk,string);
-		lv_style_set_focus_checkbox(vs->chk);
-		lv_obj_align(vs->chk,NULL,LV_ALIGN_IN_LEFT_MID,gui_font_size/2,0);
-		lv_checkbox_ext_t*e=lv_obj_get_ext_attr(vs->chk);
-
-		lv_coord_t lbl_w=bw-gui_font_size*2-lv_obj_get_width(e->bullet);
-		if(lv_obj_get_width(e->label)>lbl_w){
-			lv_label_set_long_mode(e->label,LV_LABEL_LONG_CROP);
-			lv_obj_set_width(e->label,lbl_w);
-		}
+		// function name
+		vs->lbl=lv_label_create(vs->btn);
+		lv_label_set_text(vs->lbl,string);
 	}while((o=o->next));
 	MUTEX_UNLOCK(lock);
 }
@@ -184,8 +158,7 @@ static bool create_type_cb(uint16_t id,const char*text __attribute__((unused)),v
 	return false;
 }
 
-static void create_cb(lv_obj_t*obj,lv_event_t e){
-	if(obj!=btn_create||e!=LV_EVENT_CLICKED)return;
+static void create_cb(lv_event_t*e __attribute__((unused))){
 	static const char*btns[]={"Vibrate","Sleep",""};
 	struct vibrate_step*vs=malloc(sizeof(struct vibrate_step));
 	if(!vs)return;
@@ -220,8 +193,7 @@ static bool clean_confirm_cb(
 	return false;
 }
 
-static void clean_cb(lv_obj_t*obj,lv_event_t e){
-	if(obj!=btn_clean||e!=LV_EVENT_CLICKED)return;
+static void clean_cb(lv_event_t*e __attribute__((unused))){
 	if(list_count(steps)<=0)return;
 	msgbox_create_yesno(clean_confirm_cb,"Clean all items?");
 }
@@ -233,8 +205,8 @@ static int do_clean(struct gui_activity*act __attribute__((unused))){
 	return 0;
 }
 
-static void delete_cb(lv_obj_t*obj,lv_event_t e){
-	if(obj!=btn_delete||e!=LV_EVENT_CLICKED||!selected)return;
+static void delete_cb(lv_event_t*e __attribute__((unused))){
+	if(!selected)return;
 	clean_view();
 	MUTEX_LOCK(lock);
 	list_obj_del_data(&steps,selected,_datafree);
@@ -246,26 +218,23 @@ static void delete_cb(lv_obj_t*obj,lv_event_t e){
 	redraw_view();
 }
 
-static void move_cb(lv_obj_t*obj,lv_event_t e){
-	if(!obj||e!=LV_EVENT_CLICKED||!selected)return;
+static void move_cb(lv_event_t*e){
+	if(!selected)return;
 	int r;
 	MUTEX_LOCK(lock);
 	list*l=list_lookup_data(steps,selected);
 	MUTEX_UNLOCK(lock);
 	if(!l)return;
 	MUTEX_LOCK(lock);
-	if(obj==btn_prev)r=list_swap_prev(l);
-	else if(obj==btn_next)r=list_swap_next(l);
+	if(e->target==btn_prev)r=list_swap_prev(l);
+	else if(e->target==btn_next)r=list_swap_next(l);
 	else r=-1;
 	MUTEX_UNLOCK(lock);
 	if(r!=0)return;
-	lv_obj_t*scrl=lv_page_get_scrl(view);
-	lv_coord_t y=lv_obj_get_y(scrl);
 	clean_view();
 	redraw_view();
-	lv_obj_set_y(scrl,y);
-	lv_scroll_to(selected->chk,false);
-	chk_click(selected->chk,LV_EVENT_VALUE_CHANGED);
+	lv_obj_set_checked(selected->btn,true);
+	lv_obj_scroll_to_view(selected->btn,false);
 }
 
 static void*worker_thread(void*data  __attribute__((unused))){
@@ -295,8 +264,7 @@ static void*worker_thread(void*data  __attribute__((unused))){
 	return NULL;
 }
 
-static void start_cb(lv_obj_t*obj,lv_event_t e){
-	if(obj!=btn_start||e!=LV_EVENT_CLICKED)return;
+static void start_cb(lv_event_t*e __attribute__((unused))){
 	if(!thread_run){
 		if(list_count(steps)<=0){
 			msgbox_alert("No any steps configured");
@@ -317,72 +285,73 @@ static void start_cb(lv_obj_t*obj,lv_event_t e){
 	thread_run=!thread_run;
 }
 
+static struct btn{
+	lv_obj_t**tgt;
+	bool enabled;
+	lv_event_cb_t cb;
+	void*data;
+	const char*title;
+}buttons[]={
+	{&btn_prev,   false, move_cb,   "move up",    LV_SYMBOL_UP},
+	{&btn_next,   false, move_cb,   "move down",  LV_SYMBOL_DOWN},
+	{&btn_delete, false, delete_cb, "delete",     LV_SYMBOL_CLOSE},
+	{&btn_create, true,  create_cb, "create",     LV_SYMBOL_PLUS},
+	{&btn_clean,  true,  clean_cb,  "clean",      LV_SYMBOL_TRASH},
+	{&btn_start,  true,  start_cb,  "start/stop", LV_SYMBOL_OK},
+	{NULL,false,NULL,NULL,NULL}
+};
+
 static int vibrator_draw(struct gui_activity*act){
-	lv_obj_t*txt=lv_label_create(act->page,NULL);
+	static lv_coord_t grid_col[]={
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_TEMPLATE_LAST
+	},grid_row[]={
+		LV_GRID_FR(1),
+		LV_GRID_TEMPLATE_LAST
+	};
+	lv_obj_set_flex_flow(act->page,LV_FLEX_FLOW_COLUMN);
+
+	lv_obj_t*txt=lv_label_create(act->page);
+	lv_obj_set_width(txt,lv_pct(100));
+	lv_obj_set_style_pad_all(txt,gui_font_size,0);
+	lv_obj_set_style_text_align(txt,LV_TEXT_ALIGN_CENTER,0);
 	lv_label_set_text(txt,_("Vibrator Tester"));
-	lv_obj_set_width(txt,gui_sw);
-	lv_obj_align(txt,NULL,LV_ALIGN_IN_TOP_MID,0,gui_font_size);
 
-	lv_coord_t btx=gui_font_size,bts=gui_sw/6-btx,btm=btx/2,bth=btx*2;
+	view=lv_obj_create(act->page);
+	lv_obj_set_width(view,lv_pct(100));
+	lv_obj_set_flex_flow(view,LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_flex_grow(view,1);
 
-	view=lv_page_create(act->page,NULL);
-	lv_obj_set_width(view,gui_sw-gui_font_size);
-	lv_obj_set_style_local_border_width(view,LV_PAGE_PART_BG,LV_STATE_DEFAULT,0);
-	lv_obj_set_style_local_border_width(view,LV_PAGE_PART_BG,LV_STATE_FOCUSED,0);
-	lv_obj_set_style_local_border_width(view,LV_PAGE_PART_BG,LV_STATE_PRESSED,0);
-	lv_obj_align(view,txt,LV_ALIGN_OUT_BOTTOM_MID,0,gui_font_size);
-	lv_obj_set_height(view,gui_sh-bth-btx-lv_obj_get_y(view));
+	lv_obj_t*btns=lv_obj_create(act->page);
+	lv_obj_set_style_radius(btns,0,0);
+	lv_obj_set_scroll_dir(btns,LV_DIR_NONE);
+	lv_obj_set_style_border_width(btns,0,0);
+	lv_obj_set_style_bg_opa(btns,LV_OPA_0,0);
+	lv_obj_clear_flag(btns,LV_OBJ_FLAG_SCROLLABLE);
+	lv_obj_set_grid_dsc_array(btns,grid_col,grid_row);
+	lv_obj_set_size(btns,lv_pct(100),LV_SIZE_CONTENT);
 
-	btn_prev=lv_btn_create(act->page,NULL);
-	lv_obj_set_enabled(btn_prev,false);
-	lv_obj_set_size(btn_prev,bts,bth);
-	lv_obj_set_event_cb(btn_prev,move_cb);
-	lv_obj_set_user_data(btn_prev,"move up");
-	lv_obj_align(btn_prev,NULL,LV_ALIGN_IN_BOTTOM_LEFT,btm,-btm);
-	lv_obj_set_style_local_radius(btn_prev,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
-	lv_label_set_text(lv_label_create(btn_prev,NULL),LV_SYMBOL_UP);
-
-	btn_next=lv_btn_create(act->page,NULL);
-	lv_obj_set_enabled(btn_next,false);
-	lv_obj_set_size(btn_next,bts,bth);
-	lv_obj_set_event_cb(btn_next,move_cb);
-	lv_obj_set_user_data(btn_next,"move down");
-	lv_obj_align(btn_next,btn_prev,LV_ALIGN_OUT_RIGHT_MID,btx,0);
-	lv_obj_set_style_local_radius(btn_next,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
-	lv_label_set_text(lv_label_create(btn_next,NULL),LV_SYMBOL_DOWN);
-
-	btn_delete=lv_btn_create(act->page,NULL);
-	lv_obj_set_enabled(btn_delete,false);
-	lv_obj_set_size(btn_delete,bts,bth);
-	lv_obj_set_event_cb(btn_delete,delete_cb);
-	lv_obj_set_user_data(btn_delete,"delete");
-	lv_obj_align(btn_delete,btn_next,LV_ALIGN_OUT_RIGHT_MID,btx,0);
-	lv_obj_set_style_local_radius(btn_delete,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
-	lv_label_set_text(lv_label_create(btn_delete,NULL),LV_SYMBOL_CLOSE);
-
-	btn_create=lv_btn_create(act->page,NULL);
-	lv_obj_set_size(btn_create,bts,bth);
-	lv_obj_set_event_cb(btn_create,create_cb);
-	lv_obj_set_user_data(btn_create,"create");
-	lv_obj_align(btn_create,btn_delete,LV_ALIGN_OUT_RIGHT_MID,btx,0);
-	lv_obj_set_style_local_radius(btn_create,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
-	lv_label_set_text(lv_label_create(btn_create,NULL),LV_SYMBOL_PLUS);
-
-	btn_clean=lv_btn_create(act->page,NULL);
-	lv_obj_set_size(btn_clean,bts,bth);
-	lv_obj_set_event_cb(btn_clean,clean_cb);
-	lv_obj_set_user_data(btn_clean,"clean");
-	lv_obj_align(btn_clean,btn_create,LV_ALIGN_OUT_RIGHT_MID,btx,0);
-	lv_obj_set_style_local_radius(btn_clean,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
-	lv_label_set_text(lv_label_create(btn_clean,NULL),LV_SYMBOL_TRASH);
-
-	btn_start=lv_btn_create(act->page,NULL);
-	lv_obj_set_size(btn_start,bts,bth);
-	lv_obj_set_event_cb(btn_start,start_cb);
-	lv_obj_set_user_data(btn_start,"start/stop");
-	lv_obj_align(btn_start,btn_clean,LV_ALIGN_OUT_RIGHT_MID,btx,0);
-	lv_obj_set_style_local_radius(btn_start,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
-	lv_label_set_text(lv_label_create(btn_start,NULL),LV_SYMBOL_OK);
+	for(size_t i=0;buttons[i].tgt;i++){
+		*buttons[i].tgt=lv_btn_create(btns);
+		lv_obj_add_event_cb(
+			*buttons[i].tgt,buttons[i].cb,
+			LV_EVENT_CLICKED,buttons[i].data
+		);
+		lv_obj_set_enabled(*buttons[i].tgt,buttons[i].enabled);
+		lv_obj_set_grid_cell(
+			*buttons[i].tgt,
+			LV_GRID_ALIGN_STRETCH,i,1,
+			LV_GRID_ALIGN_STRETCH,0,1
+		);
+		lv_obj_t*lbl=lv_label_create(*buttons[i].tgt);
+		lv_label_set_text(lbl,buttons[i].title);
+		lv_obj_center(lbl);
+	}
 
 	MUTEX_INIT(lock);
 	return 0;

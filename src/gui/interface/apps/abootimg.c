@@ -14,12 +14,12 @@
 #include"gui.h"
 #include"aboot.h"
 #include"logger.h"
-#include"gui/fsext.h"
 #include"gui/tools.h"
-#include"gui/sysbar.h"
 #include"gui/msgbox.h"
 #include"gui/activity.h"
-#include"gui/filepicker.h"
+#ifdef ENABLE_UEFI
+#include"gui/fsext.h"
+#endif
 #define TAG "abootimg"
 
 struct abootimg{
@@ -123,7 +123,7 @@ static int auto_open_image(struct abootimg*am){
 			lv_textarea_set_text(am->name,abootimg_get_name(am->img));
 		if(!lv_textarea_get_text(am->cmdline)[0])
 			lv_textarea_set_text(am->cmdline,abootimg_get_cmdline(am->img));
-		if(lv_checkbox_is_checked(am->opt_extract)){
+		if(lv_obj_is_checked(am->opt_extract)){
 			lv_textarea_set_text(am->name,abootimg_get_name(am->img));
 			lv_textarea_set_text(am->cmdline,abootimg_get_cmdline(am->img));
 			memset(path,0,sizeof(path));
@@ -153,12 +153,8 @@ static int auto_open_image(struct abootimg*am){
 	return r;
 }
 
-static void abootimg_cb(lv_obj_t*obj,lv_event_t e){
-	struct abootimg*am=lv_obj_get_user_data(obj);
-	lv_input_cb(obj,e);
-	if(e!=LV_EVENT_DEFOCUSED)return;
-	if(!am||obj!=am->image)return;
-	auto_open_image(am);
+static void abootimg_cb(lv_event_t*e){
+	auto_open_image(e->user_data);
 }
 
 #define DO_SAVE_FILE(tag,type)\
@@ -244,19 +240,14 @@ static void image_extract(struct abootimg*am){
 	msgbox_alert("Operation done");
 }
 
-static void ok_cb(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_CLICKED)return;
-	struct abootimg*am=lv_obj_get_user_data(obj);
-	if(!am||obj!=am->ok)return;
-	if(lv_checkbox_is_checked(am->opt_create))image_create(am);
-	else if(lv_checkbox_is_checked(am->opt_update))image_update(am);
-	else if(lv_checkbox_is_checked(am->opt_extract))image_extract(am);
+static void ok_cb(lv_event_t*e){
+	struct abootimg*am=e->user_data;
+	if(lv_obj_has_flag(am->opt_create,LV_STATE_CHECKED))image_create(am);
+	else if(lv_obj_has_flag(am->opt_update,LV_STATE_CHECKED))image_update(am);
+	else if(lv_obj_has_flag(am->opt_extract,LV_STATE_CHECKED))image_extract(am);
 }
 
-static void cancel_cb(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_CLICKED)return;
-	struct abootimg*am=lv_obj_get_user_data(obj);
-	if(!am||obj!=am->cancel)return;
+static void cancel_cb(lv_event_t*e __attribute__((unused))){
 	guiact_do_back();
 }
 
@@ -275,14 +266,12 @@ static int init(struct gui_activity*act){
 	return 0;
 }
 
-static void chk_cb(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_VALUE_CHANGED)return;
-	struct abootimg*am=lv_obj_get_user_data(obj);
-	if(!am)return;
-	lv_checkbox_set_checked(am->opt_create,false);
-	lv_checkbox_set_checked(am->opt_update,false);
-	lv_checkbox_set_checked(am->opt_extract,false);
-	lv_checkbox_set_checked(obj,true);
+static void chk_cb(lv_event_t*e){
+	struct abootimg*am=e->user_data;
+	lv_obj_set_checked(am->opt_create,false);
+	lv_obj_set_checked(am->opt_update,false);
+	lv_obj_set_checked(am->opt_extract,false);
+	lv_obj_set_checked(e->target,true);
 }
 
 static int do_cleanup(struct gui_activity*act){
@@ -295,116 +284,81 @@ static int do_cleanup(struct gui_activity*act){
 }
 
 static int draw_abootimg(struct gui_activity*act){
+	static lv_coord_t grid_col[]={
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_TEMPLATE_LAST
+	},grid_row[]={
+		LV_GRID_CONTENT,
+		LV_GRID_TEMPLATE_LAST
+	};
 	struct abootimg*am=act->data;
 
-	am->box=lv_page_create(act->page,NULL);
-	lv_obj_set_style_local_pad_all(am->box,LV_PAGE_PART_BG,LV_STATE_DEFAULT,gui_font_size);
-	lv_obj_set_width(am->box,gui_sw/8*7);
-	lv_obj_set_click(am->box,false);
-	lv_coord_t h=0;
-	lv_coord_t w=lv_page_get_scrl_width(am->box);
+	am->box=lv_obj_create(act->page);
+	lv_obj_set_flex_flow(am->box,LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_style_pad_all(am->box,gui_font_size/2,0);
+	lv_obj_set_style_max_width(am->box,lv_pct(80),0);
+	lv_obj_set_style_max_height(am->box,lv_pct(80),0);
+	lv_obj_set_style_min_width(am->box,gui_dpi*2,0);
+	lv_obj_set_style_min_height(am->box,gui_font_size*2,0);
+	lv_obj_set_height(am->box,LV_SIZE_CONTENT);
+	lv_obj_center(am->box);
 
 	// Title
-	lv_obj_t*title=lv_label_create(am->box,NULL);
+	lv_obj_t*title=lv_label_create(am->box);
 	lv_label_set_text(title,_("Android Boot Image Tools"));
-	lv_label_set_long_mode(title,LV_LABEL_LONG_BREAK);
-	lv_obj_set_width(title,w);
-	lv_obj_set_y(title,h);
-	lv_label_set_align(title,LV_LABEL_ALIGN_CENTER);
-	h+=lv_obj_get_height(title);
+	lv_label_set_long_mode(title,LV_LABEL_LONG_WRAP);
+	lv_obj_set_width(title,lv_pct(100));
+	lv_obj_set_style_text_align(title,LV_TEXT_ALIGN_CENTER,0);
 
-	h+=gui_font_size;
-	am->opt_create=lv_checkbox_create(am->box,NULL);
+	am->opt_create=lv_checkbox_create(am->box);
 	lv_checkbox_set_text(am->opt_create,_("Create"));
-	lv_checkbox_set_checked(am->opt_create,false);
-	lv_obj_set_user_data(am->opt_create,am);
-	lv_obj_set_event_cb(am->opt_create,chk_cb);
-	lv_style_set_focus_radiobox(am->opt_create);
-	lv_obj_align(am->opt_create,NULL,LV_ALIGN_IN_TOP_LEFT,gui_font_size/2,0);
-	lv_obj_set_y(am->opt_create,h);
+	lv_obj_set_checked(am->opt_create,false);
+	lv_obj_add_event_cb(am->opt_create,chk_cb,LV_EVENT_VALUE_CHANGED,am);
 
-	am->opt_update=lv_checkbox_create(am->box,NULL);
+	am->opt_update=lv_checkbox_create(am->box);
 	lv_checkbox_set_text(am->opt_update,_("Update"));
-	lv_checkbox_set_checked(am->opt_update,false);
-	lv_obj_set_user_data(am->opt_update,am);
-	lv_obj_set_event_cb(am->opt_update,chk_cb);
-	lv_style_set_focus_radiobox(am->opt_update);
-	lv_obj_align(am->opt_update,NULL,LV_ALIGN_IN_TOP_RIGHT,-(gui_font_size*2),0);
-	lv_obj_set_y(am->opt_update,h);
-	h+=lv_obj_get_height(am->opt_update);
+	lv_obj_set_checked(am->opt_update,false);
+	lv_obj_add_event_cb(am->opt_update,chk_cb,LV_EVENT_VALUE_CHANGED,am);
 
-	h+=gui_font_size/2;
-	am->opt_extract=lv_checkbox_create(am->box,NULL);
+	am->opt_extract=lv_checkbox_create(am->box);
 	lv_checkbox_set_text(am->opt_extract,_("Extract"));
-	lv_checkbox_set_checked(am->opt_extract,true);
-	lv_obj_set_user_data(am->opt_extract,am);
-	lv_obj_set_event_cb(am->opt_extract,chk_cb);
-	lv_style_set_focus_radiobox(am->opt_extract);
-	lv_obj_align(am->opt_extract,NULL,LV_ALIGN_IN_TOP_LEFT,gui_font_size/2,0);
-	lv_obj_set_y(am->opt_extract,h);
-	h+=lv_obj_get_height(am->opt_extract);
+	lv_obj_set_checked(am->opt_extract,true);
+	lv_obj_add_event_cb(am->opt_extract,chk_cb,LV_EVENT_VALUE_CHANGED,am);
 
-	// Image name
-	lv_obj_t*name=lv_draw_title(am->box,"Name:",&h);
+	lv_draw_input(am->box, "Name",                    NULL, NULL,             &am->name,    NULL);
+	lv_draw_input(am->box, "Android Boot Image",      NULL, &am->clr_image,   &am->image,   &am->btn_image);
+	lv_draw_input(am->box, "Linux Kernel",            NULL, &am->clr_kernel,  &am->kernel,  &am->btn_kernel);
+	lv_draw_input(am->box, "Ramdisk (initramfs)",     NULL, &am->clr_initrd,  &am->initrd,  &am->btn_initrd);
+	lv_draw_input(am->box, "Second Stage Bootloader", NULL, &am->clr_second,  &am->second,  &am->btn_second);
+	lv_draw_input(am->box, "Kernel Commandline",      NULL, &am->clr_cmdline, &am->cmdline, NULL);
 
-	am->name=lv_textarea_create(am->box,NULL);
-	lv_textarea_set_text(am->name,"");
-	lv_textarea_set_one_line(am->name,true);
-	lv_textarea_set_cursor_hidden(am->name,true);
-	lv_obj_set_user_data(am->name,am);
-	lv_obj_set_event_cb(am->name,lv_input_cb);
-	lv_obj_set_width(am->name,w-lv_obj_get_width(name)-gui_font_size);
-	lv_obj_align(am->name,name,LV_ALIGN_OUT_RIGHT_MID,gui_font_size/2,0);
-	lv_obj_set_y(am->name,h);
-	lv_obj_align(name,am->name,LV_ALIGN_OUT_LEFT_MID,-gui_font_size/2,0);
-	h+=lv_obj_get_height(am->name);
+	lv_obj_add_event_cb(am->image,abootimg_cb,LV_EVENT_DEFOCUSED,am);
+	lv_textarea_set_one_line(am->cmdline,false);
 
-	lv_draw_file_input(am->box,"Android Boot Image",     &h,&am->clr_image, &am->image, &am->btn_image);
-	lv_draw_file_input(am->box,"Linux Kernel",           &h,&am->clr_kernel,&am->kernel,&am->btn_kernel);
-	lv_draw_file_input(am->box,"Ramdisk (initramfs)",    &h,&am->clr_initrd,&am->initrd,&am->btn_initrd);
-	lv_draw_file_input(am->box,"Second Stage Bootloader",&h,&am->clr_second,&am->second,&am->btn_second);
-
-	lv_obj_set_user_data(am->image,am);
-	lv_obj_set_event_cb(am->image,abootimg_cb);
-
-	// Commandline
-	lv_obj_t*cmdline=lv_draw_title(am->box,"Kernel Commandline",&h);
-	am->clr_cmdline=lv_draw_side_clear_btn(am->box,&h,lv_obj_get_height(cmdline));
-
-	h+=gui_font_size/2;
-	am->cmdline=lv_textarea_create(am->box,NULL);
-	lv_obj_set_user_data(am->clr_cmdline,am->cmdline);
-	lv_textarea_set_text(am->cmdline,"");
-	lv_textarea_set_cursor_hidden(am->cmdline,true);
-	lv_obj_set_user_data(am->cmdline,am);
-	lv_obj_set_event_cb(am->cmdline,lv_input_cb);
-	lv_obj_set_width(am->cmdline,w);
-	lv_obj_set_pos(am->cmdline,0,h);
-	h+=lv_obj_get_height(am->cmdline);
+	lv_obj_t*btns=lv_obj_create(am->box);
+	lv_obj_set_style_border_width(btns,0,0);
+	lv_obj_set_style_pad_all(btns,gui_font_size/4,0);
+	lv_obj_set_grid_dsc_array(btns,grid_col,grid_row);
+	lv_obj_set_size(btns,lv_pct(100),LV_SIZE_CONTENT);
 
 	// OK Button
-	h+=gui_font_size;
-	am->ok=lv_btn_create(am->box,NULL);
-	lv_style_set_action_button(am->ok,true);
-	lv_obj_set_size(am->ok,w/2-gui_font_size,gui_font_size*2);
-	lv_obj_align(am->ok,NULL,LV_ALIGN_IN_TOP_LEFT,(gui_font_size/2),h);
-	lv_obj_set_user_data(am->ok,am);
-	lv_obj_set_event_cb(am->ok,ok_cb);
-	lv_label_set_text(lv_label_create(am->ok,NULL),_("OK"));
+	am->ok=lv_btn_create(btns);
+	lv_obj_set_enabled(am->ok,true);
+	lv_obj_add_event_cb(am->ok,ok_cb,LV_EVENT_CLICKED,am);
+	lv_obj_set_grid_cell(am->ok,LV_GRID_ALIGN_STRETCH,0,1,LV_GRID_ALIGN_STRETCH,0,1);
+	lv_obj_t*lbl_ok=lv_label_create(am->ok);
+	lv_label_set_text(lbl_ok,_("OK"));
+	lv_obj_center(lbl_ok);
 
 	// Cancel Button
-	am->cancel=lv_btn_create(am->box,NULL);
-	lv_style_set_action_button(am->cancel,true);
-	lv_obj_set_size(am->cancel,w/2-gui_font_size,gui_font_size*2);
-	lv_obj_align(am->cancel,NULL,LV_ALIGN_IN_TOP_RIGHT,-(gui_font_size/2),h);
-	lv_obj_set_user_data(am->cancel,am);
-	lv_obj_set_event_cb(am->cancel,cancel_cb);
-	lv_label_set_text(lv_label_create(am->cancel,NULL),_("Cancel"));
-	h+=lv_obj_get_height(am->cancel);
-
-	h+=gui_font_size*3;
-	lv_obj_set_height(am->box,MIN(h,(lv_coord_t)gui_sh/6*5));
-	lv_obj_align(am->box,NULL,LV_ALIGN_CENTER,0,0);
+	am->cancel=lv_btn_create(btns);
+	lv_obj_set_enabled(am->cancel,true);
+	lv_obj_add_event_cb(am->cancel,cancel_cb,LV_EVENT_CLICKED,am);
+	lv_obj_set_grid_cell(am->cancel,LV_GRID_ALIGN_STRETCH,1,1,LV_GRID_ALIGN_STRETCH,0,1);
+	lv_obj_t*lbl_cancel=lv_label_create(am->cancel);
+	lv_label_set_text(lbl_cancel,_("Cancel"));
+	lv_obj_center(lbl_cancel);
 
 	if(act->args){
 		lv_textarea_set_text(am->image,act->args);

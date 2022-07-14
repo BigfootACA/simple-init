@@ -48,7 +48,7 @@ struct serial_port{
 	unsigned int speed;
 	char port[256];
 	#ifdef ENABLE_UEFI
-	lv_task_t*task;
+	lv_timer_t*task;
 	EFI_SERIAL_IO_PROTOCOL*proto;
 	#else
 	pthread_t tid;
@@ -58,7 +58,7 @@ struct serial_port{
 
 static void serial_port_close(struct serial_port*port){
 	#ifdef ENABLE_UEFI
-	if(port->task)lv_task_del(port->task);
+	if(port->task)lv_timer_del(port->task);
 	port->proto=NULL,port->task=NULL;
 	#else
 	if(port->tid!=0)pthread_cancel(port->tid);
@@ -72,7 +72,7 @@ static void serial_port_close(struct serial_port*port){
 }
 
 #ifdef ENABLE_UEFI
-static void serial_port_read_task(lv_task_t*tsk){
+static void serial_port_read_task(lv_timer_t*tsk){
 	UINTN bs;
 	EFI_STATUS st;
 	char buf[256];
@@ -250,10 +250,7 @@ static int serial_port_launch(struct gui_activity*act){
 	if(!port->proto)FAIL(_("[no serial port specified]"));
 	serial_set_speed(port);
 	port->open=true;
-	port->task=lv_task_create(
-		serial_port_read_task,50,
-		LV_TASK_PRIO_LOW,port
-	);
+	port->task=lv_timer_create(serial_port_read_task,50,port);
 	#else
 	if(port->port[0]){
 		errno=0;

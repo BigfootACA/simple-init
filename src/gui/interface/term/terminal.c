@@ -55,8 +55,8 @@ static void terminal_pty_clean(struct terminal*term){
 	term->pty=NULL,term->pid=0;
 }
 
-static void pty_dispatch_task(lv_task_t*tsk){
-	struct terminal*term=tsk->user_data;
+static void pty_dispatch_task(lv_timer_t*timer){
+	struct terminal*term=timer->user_data;
 	shl_pty_bridge_dispatch(term->pty_bridge,0);
 	lv_termview_update(term->con->termview);
 	sem_post(&term->cont);
@@ -114,11 +114,9 @@ static void*pty_dispatch_thread(void*data){
 				continue;
 		}
 		MUTEX_LOCK(gui_lock);
-		lv_task_once(lv_task_create(
-			pty_dispatch_task,0,
-			LV_TASK_PRIO_HIGHEST,
-			term
-		));
+		lv_timer_set_repeat_count(lv_timer_create(
+			pty_dispatch_task,0,term
+		),1);
 		MUTEX_UNLOCK(gui_lock);
 		sem_wait(&term->cont);
 	}
@@ -191,7 +189,7 @@ static int terminal_launch(struct gui_activity*act){
 		setenv("COLORTERM","tsm",1);
 		exec_shell(getenv("SHELL"));
 		exec_shell(_PATH_BIN"/sh");
-		#ifdef ENABLE_INITSHELL
+		#ifdef ENABLE_READLINE
 		run_shell();
 		#endif
 		telog_error("run shell failed");

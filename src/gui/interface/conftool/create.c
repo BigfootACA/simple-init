@@ -29,20 +29,6 @@ struct create_box{
 	lv_obj_t*ok,*cancel;
 };
 
-static void createbox_repos(struct create_box*box){
-	lv_coord_t px=gui_sw,py=gui_sh,bs;
-	bs=lv_obj_get_y(box->val)+lv_obj_get_height(box->val);
-	bs+=gui_font_size/2;
-	lv_obj_set_y(box->ok,bs);
-	lv_obj_set_y(box->cancel,bs);
-	bs+=lv_obj_get_height(box->ok);
-	bs+=gui_font_size/2;
-	lv_obj_set_height(box->box,bs);
-	px-=lv_obj_get_width(box->box),py-=bs;
-	px/=2,py/=2;
-	lv_obj_set_pos(box->box,px,py);
-}
-
 static int createbox_get_focus(struct gui_activity*d){
 	struct create_box*box=(struct create_box*)d->data;
 	if(!box)return 0;
@@ -69,72 +55,57 @@ static int createbox_lost_focus(struct gui_activity*d){
 	return 0;
 }
 
-static void radio_cb(lv_obj_t*obj,lv_event_t e){
-	if(!obj||e!=LV_EVENT_VALUE_CHANGED)return;
-	struct create_box*box=(struct create_box*)lv_obj_get_user_data(obj);
+static void radio_cb(lv_event_t*e){
+	struct create_box*box=e->user_data;
 	if(!box)return;
 	sysbar_focus_input(NULL);
 	sysbar_keyboard_close();
-	if(obj==box->chk_string){
-		lv_checkbox_set_checked(box->chk_integer,false);
-		lv_checkbox_set_checked(box->chk_boolean,false);
+	if(e->target==box->chk_string){
+		lv_obj_set_checked(box->chk_integer,false);
+		lv_obj_set_checked(box->chk_boolean,false);
 		lv_textarea_set_accepted_chars(box->val,NULL);
 		lv_textarea_set_max_length(box->val,0);
 		lv_textarea_set_text(box->val,"");
 		lv_textarea_set_one_line(box->val,false);
-	}else if(obj==box->chk_integer){
-		lv_checkbox_set_checked(box->chk_string,false);
-		lv_checkbox_set_checked(box->chk_boolean,false);
+	}else if(e->target==box->chk_integer){
+		lv_obj_set_checked(box->chk_string,false);
+		lv_obj_set_checked(box->chk_boolean,false);
 		lv_textarea_set_accepted_chars(box->val,NUMBER"-");
 		lv_textarea_set_max_length(box->val,20);
 		lv_textarea_set_text(box->val,"0");
 		lv_textarea_set_one_line(box->val,true);
-	}else if(obj==box->chk_boolean){
-		lv_checkbox_set_checked(box->chk_string,false);
-		lv_checkbox_set_checked(box->chk_integer,false);
+	}else if(e->target==box->chk_boolean){
+		lv_obj_set_checked(box->chk_string,false);
+		lv_obj_set_checked(box->chk_integer,false);
 		lv_textarea_set_accepted_chars(box->val,"01");
 		lv_textarea_set_max_length(box->val,1);
 		lv_textarea_set_text(box->val,"0");
 		lv_textarea_set_one_line(box->val,true);
 	}
-	createbox_repos(box);
 }
 
-static void input_cb(lv_obj_t*obj,lv_event_t e){
-	if(!obj||e==LV_EVENT_DELETE)return;
-	struct create_box*box=(struct create_box*)lv_obj_get_user_data(obj);
+static void input_cb(lv_event_t*e){
+	struct create_box*box=e->user_data;
 	if(!box||guiact_get_last()->data!=box)return;
 	const char*buf=lv_textarea_get_text(box->key);
-	switch(e){
-		case LV_EVENT_CLICKED:
-			sysbar_focus_input(obj);
-			sysbar_keyboard_open();
-			//fallthrough
-		case LV_EVENT_DEFOCUSED:
-		case LV_EVENT_FOCUSED:
-			createbox_repos(box);
-		break;
-		case LV_EVENT_VALUE_CHANGED:
-			if(obj!=box->key)break;
-			lv_obj_set_enabled(box->ok,buf[0]!=0);
-		break;
-	}
+	lv_obj_set_enabled(box->ok,buf[0]!=0);
 }
+
 static void do_save(const char*key,const char*val,struct create_box*box){
 	size_t s=0;
 	errno=0;
 	confd_delete(key);
-	if(lv_checkbox_is_checked(box->chk_string)){
+	if(lv_obj_is_checked(box->chk_string)){
 		s=strlen(val);
 		confd_set_string(key,(char*)val);
-	}else if(lv_checkbox_is_checked(box->chk_integer)){
+	}else if(lv_obj_is_checked(box->chk_integer)){
 		s=sizeof(int64_t);
 		char*end;
 		int64_t num;
 		errno=0,num=strtol(val,&end,10);
 		if(errno==0&&end!=val&&*end==0)confd_set_integer(key,num);
 		else if(errno==0)errno=EINVAL;
-	}else if(lv_checkbox_is_checked(box->chk_boolean)){
+	}else if(lv_obj_is_checked(box->chk_boolean)){
 		s=sizeof(bool);
 		if(strcmp(val,"0")==0)confd_set_boolean(key,false);
 		else if(strcmp(val,"1")==0)confd_set_boolean(key,true);
@@ -159,14 +130,12 @@ static bool overwrite_cb(uint16_t id,const char*text __attribute__((unused)),voi
 	return false;
 }
 
-static void btn_cb(lv_obj_t*obj,lv_event_t e){
-	if(!obj||e!=LV_EVENT_CLICKED)return;
-	struct create_box*box=(struct create_box*)lv_obj_get_user_data(obj);
+static void btn_cb(lv_event_t*e){
+	struct create_box*box=e->user_data;
 	if(!box||guiact_get_last()->data!=box)return;
 	sysbar_focus_input(NULL);
 	sysbar_keyboard_close();
-	createbox_repos(box);
-	if(obj==box->ok){
+	if(e->target==box->ok){
 		const char*key=lv_textarea_get_text(box->key);
 		const char*val=lv_textarea_get_text(box->val);
 		if(confd_get_type(key)!=TYPE_KEY)do_save(key,val,box);
@@ -175,7 +144,7 @@ static void btn_cb(lv_obj_t*obj,lv_event_t e){
 			"'%s' is an exists key, do you want to overwrite it?",
 			key
 		),box);
-	}else if(obj==box->cancel)guiact_do_back();
+	}else if(e->target==box->cancel)guiact_do_back();
 }
 
 static int createbox_init(struct gui_activity*act){
@@ -192,161 +161,139 @@ static int createbox_clean(struct gui_activity*act){
 	return 0;
 }
 
-static int createbox_resize(struct gui_activity*act){
-	struct create_box*box=act->data;
-	lv_coord_t
-		box_h=0,
-		max_w=gui_dpi*4,
-		cur_w=act->w/4*3,
-		xw=MIN(max_w,cur_w),
-		btn_m=gui_font_size/2,
-		xm=btn_m/2+gui_font_size/2,
-		btn_w=xw/2,
-		btn_h=gui_font_size+(gui_dpi/8);
-
-	lv_obj_set_width(box->box,xw+gui_font_size);
-	box_h+=gui_font_size/2;
-	lv_obj_set_pos(box->label,gui_font_size/2,box_h);
-	lv_obj_set_width(box->label,xw);
-	box_h+=lv_obj_get_height(box->label)+btn_m;
-	lv_obj_set_pos(box->lbl_key,xm,box_h);
-	lv_obj_set_width(box->lbl_key,xw-btn_m);
-	box_h+=lv_obj_get_height(box->lbl_key)+gui_dpi/20;
-	lv_obj_set_style_local_margin_bottom(
-		box->key,
-		LV_TEXTAREA_PART_BG,
-		LV_STATE_DEFAULT,
-		btn_m
-	);
-	lv_obj_set_pos(box->key,xm,box_h);
-	lv_obj_set_width(box->key,xw-btn_m);
-	box_h+=lv_obj_get_height(box->key)+btn_m;
-	lv_obj_set_pos(box->chk_string,xm,box_h);
-	lv_obj_set_pos(
-		box->chk_integer,
-		xw-btn_m/2-
-		lv_obj_get_width(box->chk_integer),
-		box_h
-	);
-	box_h+=lv_obj_get_height(box->chk_integer)+btn_m;
-	lv_obj_set_pos(box->chk_boolean,xm,box_h);
-	box_h+=lv_obj_get_height(box->chk_boolean)+btn_m;
-	lv_obj_set_pos(box->lbl_val,xm,box_h);
-	lv_obj_set_width(box->lbl_val,xw-btn_m);
-	box_h+=lv_obj_get_height(box->lbl_val)+gui_dpi/20;
-	lv_obj_set_style_local_margin_bottom(
-		box->val,
-		LV_TEXTAREA_PART_BG,
-		LV_STATE_DEFAULT,
-		btn_m
-	);
-	lv_obj_set_pos(box->val,xm,box_h);
-	lv_obj_set_width(box->val,xw-btn_m);
-	box_h+=lv_obj_get_height(box->val)+btn_m;
-	lv_obj_set_style_local_margin_bottom(
-		box->ok,
-		LV_BTN_PART_MAIN,
-		LV_STATE_DEFAULT,
-		btn_m
-	);
-	lv_obj_set_style_local_radius(
-		box->ok,
-		LV_BTN_PART_MAIN,
-		LV_STATE_DEFAULT,
-		gui_dpi/15
-	);
-	lv_obj_set_size(box->ok,btn_w-btn_m,btn_h);
-	lv_obj_set_x(box->ok,xm);
-	lv_obj_set_style_local_margin_bottom(
-		box->cancel,
-		LV_BTN_PART_MAIN,
-		LV_STATE_DEFAULT,
-		btn_m
-	);
-	lv_obj_set_style_local_radius(
-		box->cancel,
-		LV_BTN_PART_MAIN,
-		LV_STATE_DEFAULT,
-		gui_dpi/15
-	);
-	lv_obj_set_size(box->cancel,btn_w-btn_m,btn_h);
-	lv_obj_set_x(box->cancel,xm+btn_w);
-	createbox_repos(box);
-	return 0;
-}
-
 static int createbox_draw(struct gui_activity*act){
+	static lv_coord_t grid_col[]={
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_TEMPLATE_LAST
+	},grid_row[]={
+		LV_GRID_FR(1),
+		LV_GRID_CONTENT,
+		LV_GRID_CONTENT,
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_CONTENT,
+		LV_DPI_DEF,
+		LV_GRID_FR(1),
+		LV_GRID_TEMPLATE_LAST
+	};
 	struct create_box*box=act->data;
 	if(!act->args||!box)return -1;
 	char*p=act->args+1;
 	if(strcmp(p,"/")==0)p="";
 
-	box->box=lv_obj_create(act->page,NULL);
-	lv_obj_set_style_local_border_width(box->box,LV_OBJ_PART_MAIN,LV_STATE_DEFAULT,0);
-	lv_obj_set_style_local_border_width(box->box,LV_OBJ_PART_MAIN,LV_STATE_PRESSED,0);
-	lv_obj_set_style_local_border_width(box->box,LV_OBJ_PART_MAIN,LV_STATE_FOCUSED,0);
+	box->box=lv_obj_create(act->page);
+	lv_obj_set_style_max_width(box->box,lv_pct(85),0);
+	lv_obj_set_style_max_height(box->box,lv_pct(85),0);
+	lv_obj_set_style_min_width(box->box,gui_dpi*2,0);
+	lv_obj_set_height(box->box,LV_SIZE_CONTENT);
+	lv_obj_set_grid_dsc_array(box->box,grid_col,grid_row);
+	lv_obj_set_style_pad_row(box->box,gui_font_size/2,0);
+	lv_obj_center(box->box);
 
-	box->label=lv_label_create(box->box,NULL);
-	lv_label_set_align(box->label,LV_LABEL_ALIGN_CENTER);
-	lv_label_set_long_mode(box->label,LV_LABEL_LONG_BREAK);
+	box->label=lv_label_create(box->box);
 	lv_label_set_text(
 		box->label,((char*)act->args)[0]?
 		_("Edit config item"):
 		_("Create config item")
 	);
+	lv_obj_set_grid_cell(
+		box->label,
+		LV_GRID_ALIGN_CENTER,0,2,
+		LV_GRID_ALIGN_CENTER,0,1
+	);
 
-	box->lbl_key=lv_label_create(box->box,NULL);
-	lv_obj_set_small_text_font(box->lbl_key,LV_LABEL_PART_MAIN);
+	box->lbl_key=lv_label_create(box->box);
+	lv_obj_set_small_text_font(box->lbl_key,LV_PART_MAIN);
 	lv_label_set_text(box->lbl_key,_("Config item path:"));
+	lv_obj_set_grid_cell(
+		box->lbl_key,
+		LV_GRID_ALIGN_START,0,1,
+		LV_GRID_ALIGN_CENTER,1,1
+	);
 
-	box->key=lv_textarea_create(box->box,NULL);
+	box->key=lv_textarea_create(box->box);
 	lv_textarea_set_text(box->key,p);
-	lv_textarea_set_cursor_hidden(box->key,true);
 	lv_textarea_set_one_line(box->key,true);
 	lv_textarea_set_accepted_chars(box->key,VALID"-.");
-	lv_obj_set_event_cb(box->key,input_cb);
-	lv_obj_set_user_data(box->key,box);
+	lv_obj_add_event_cb(box->key,lv_input_cb,LV_EVENT_CLICKED,NULL);
+	lv_obj_add_event_cb(box->key,input_cb,LV_EVENT_VALUE_CHANGED,box);
+	lv_obj_set_grid_cell(
+		box->key,
+		LV_GRID_ALIGN_STRETCH,0,2,
+		LV_GRID_ALIGN_STRETCH,2,1
+	);
 
-	box->chk_string=lv_checkbox_create(box->box,NULL);
+	box->chk_string=lv_checkbox_create(box->box);
 	lv_checkbox_set_text(box->chk_string,_("String"));
-	lv_checkbox_set_checked(box->chk_string,true);
-	lv_obj_set_event_cb(box->chk_string,radio_cb);
-	lv_obj_set_user_data(box->chk_string,box);
-	lv_style_set_focus_radiobox(box->chk_string);
+	lv_obj_set_checked(box->chk_string,true);
+	lv_obj_add_event_cb(box->chk_string,radio_cb,LV_EVENT_VALUE_CHANGED,box);
+	lv_obj_set_grid_cell(
+		box->chk_string,
+		LV_GRID_ALIGN_START,0,1,
+		LV_GRID_ALIGN_CENTER,3,1
+	);
 
-	box->chk_integer=lv_checkbox_create(box->box,NULL);
+	box->chk_integer=lv_checkbox_create(box->box);
 	lv_checkbox_set_text(box->chk_integer,_("Integer"));
-	lv_obj_set_event_cb(box->chk_integer,radio_cb);
+	lv_obj_add_event_cb(box->chk_integer,radio_cb,LV_EVENT_VALUE_CHANGED,box);
 	lv_obj_set_user_data(box->chk_integer,box);
-	lv_style_set_focus_radiobox(box->chk_integer);
+	lv_obj_set_grid_cell(
+		box->chk_integer,
+		LV_GRID_ALIGN_START,1,1,
+		LV_GRID_ALIGN_CENTER,3,1
+	);
 
-	box->chk_boolean=lv_checkbox_create(box->box,NULL);
+	box->chk_boolean=lv_checkbox_create(box->box);
 	lv_checkbox_set_text(box->chk_boolean,_("Boolean"));
-	lv_obj_set_event_cb(box->chk_boolean,radio_cb);
+	lv_obj_add_event_cb(box->chk_boolean,radio_cb,LV_EVENT_VALUE_CHANGED,box);
 	lv_obj_set_user_data(box->chk_boolean,box);
-	lv_style_set_focus_radiobox(box->chk_boolean);
+	lv_obj_set_grid_cell(
+		box->chk_boolean,
+		LV_GRID_ALIGN_START,0,1,
+		LV_GRID_ALIGN_CENTER,4,1
+	);
 
-	box->lbl_val=lv_label_create(box->box,NULL);
-	lv_obj_set_small_text_font(box->lbl_val,LV_LABEL_PART_MAIN);
+	box->lbl_val=lv_label_create(box->box);
+	lv_obj_set_small_text_font(box->lbl_val,LV_PART_MAIN);
 	lv_label_set_text(box->lbl_val,_("Value:"));
+	lv_obj_set_grid_cell(
+		box->lbl_val,
+		LV_GRID_ALIGN_START,0,1,
+		LV_GRID_ALIGN_CENTER,5,1
+	);
 
-	box->val=lv_textarea_create(box->box,NULL);
+	box->val=lv_textarea_create(box->box);
 	lv_textarea_set_text(box->val,"");
-	lv_textarea_set_cursor_hidden(box->val,true);
-	lv_obj_set_event_cb(box->val,input_cb);
-	lv_obj_set_user_data(box->val,box);
+	lv_obj_add_event_cb(box->val,lv_input_cb,LV_EVENT_CLICKED,NULL);
+	lv_obj_set_grid_cell(
+		box->val,
+		LV_GRID_ALIGN_STRETCH,0,2,
+		LV_GRID_ALIGN_STRETCH,6,1
+	);
 
-	box->ok=lv_btn_create(box->box,NULL);
+	box->ok=lv_btn_create(box->box);
 	lv_obj_set_enabled(box->ok,*p);
-	lv_label_set_text(lv_label_create(box->ok,NULL),LV_SYMBOL_OK);
-	lv_obj_set_user_data(box->ok,box);
-	lv_obj_set_event_cb(box->ok,btn_cb);
+	lv_obj_t*lbl_ok=lv_label_create(box->ok);
+	lv_label_set_text(lbl_ok,LV_SYMBOL_OK);
+	lv_obj_center(lbl_ok);
+	lv_obj_add_event_cb(box->ok,btn_cb,LV_EVENT_CLICKED,box);
+	lv_obj_set_grid_cell(
+		box->ok,
+		LV_GRID_ALIGN_STRETCH,0,1,
+		LV_GRID_ALIGN_CENTER,7,1
+	);
 
-	box->cancel=lv_btn_create(box->box,NULL);
-	lv_label_set_text(lv_label_create(box->cancel,NULL),LV_SYMBOL_CLOSE);
-
-	lv_obj_set_user_data(box->cancel,box);
-	lv_obj_set_event_cb(box->cancel,btn_cb);
+	box->cancel=lv_btn_create(box->box);
+	lv_obj_t*lbl_cancel=lv_label_create(box->cancel);
+	lv_label_set_text(lbl_cancel,LV_SYMBOL_CLOSE);
+	lv_obj_center(lbl_cancel);
+	lv_obj_add_event_cb(box->cancel,btn_cb,LV_EVENT_CLICKED,box);
+	lv_obj_set_grid_cell(
+		box->cancel,
+		LV_GRID_ALIGN_STRETCH,1,1,
+		LV_GRID_ALIGN_CENTER,7,1
+	);
 
 	lv_event_send(box->chk_string,LV_EVENT_VALUE_CHANGED,NULL);
 	if(((char*)act->args)[0]){
@@ -359,13 +306,13 @@ static int createbox_draw(struct gui_activity*act){
 				if(s)free(s);
 			break;
 			case TYPE_INTEGER:
-				lv_checkbox_set_checked(box->chk_integer,true);
+				lv_obj_set_checked(box->chk_integer,true);
 				lv_event_send(box->chk_integer,LV_EVENT_VALUE_CHANGED,NULL);
 				snprintf(val,127,"%lld",(long long int)confd_get_integer(p,0));
 				lv_textarea_set_text(box->val,val);
 			break;
 			case TYPE_BOOLEAN:
-				lv_checkbox_set_checked(box->chk_boolean,true);
+				lv_obj_set_checked(box->chk_boolean,true);
 				lv_event_send(box->chk_boolean,LV_EVENT_VALUE_CHANGED,NULL);
 				snprintf(val,127,"%d",confd_get_boolean(p,false));
 				lv_textarea_set_text(box->val,val);
@@ -383,7 +330,6 @@ struct gui_register guireg_conftool_create={
 	.show_app=false,
 	.init=createbox_init,
 	.quiet_exit=createbox_clean,
-	.resize=createbox_resize,
 	.get_focus=createbox_get_focus,
 	.lost_focus=createbox_lost_focus,
 	.draw=createbox_draw,

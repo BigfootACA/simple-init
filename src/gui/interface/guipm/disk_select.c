@@ -7,7 +7,6 @@
  */
 
 #ifdef ENABLE_GUI
-#ifdef ENABLE_FDISK
 #define _GNU_SOURCE
 #include<stdlib.h>
 #include<libfdisk/libfdisk.h>
@@ -21,29 +20,31 @@
 #include"gui/activity.h"
 #define TAG "guipm"
 
-static char*get_model(struct disks_disk_info*d){return d->model[0]==0?"Unknown":d->model;}
-static char*get_layout(struct disks_disk_info*d){return d->layout[0]==0?"Unknown":d->layout;}
+static char*get_model(struct disks_disk_info*d){
+	return d->model[0]==0?"Unknown":d->model;
+}
 
-static void disk_click(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_VALUE_CHANGED)return;
-	struct disks_info*di=lv_obj_get_user_data(obj);
+static char*get_layout(struct disks_disk_info*d){
+	return d->layout[0]==0?"Unknown":d->layout;
+}
+
+static void disk_click(lv_event_t*e){
+	struct disks_info*di=e->user_data;
 	if(!di)return;
-	lv_checkbox_set_checked(obj,true);
+	lv_obj_set_checked(e->target,true);
 	if(di->selected){
-		if(obj==di->selected->chk)return;
-		else{
-			lv_checkbox_set_checked(di->selected->chk,false);
-			lv_obj_set_checked(di->selected->btn,false);
-		}
+		if(e->target==di->selected->btn)return;
+		else lv_obj_set_checked(di->selected->btn,false);
 	}
 	di->selected=NULL;
 	for(int i=0;i<32&&!di->selected;i++)
-		if(di->disks[i].enable&&di->disks[i].chk==obj)
+		if(di->disks[i].enable&&di->disks[i].btn==e->target)
 			di->selected=&di->disks[i];
 	if(!di->selected)return;
 	lv_obj_set_checked(di->selected->btn,true);
 	tlog_debug("selected disk %s",di->selected->name);
 	lv_obj_set_enabled(di->btn_ok,true);
+	lv_group_focus_obj(di->btn_ok);
 }
 
 static void guipm_disk_clear(struct disks_info*di,bool ui){
@@ -65,10 +66,10 @@ static void guipm_disk_clear(struct disks_info*di,bool ui){
 static void guipm_set_disks_info(struct disks_info*di,char*text){
 	if(!di)return;
 	guipm_disk_clear(di,true);
-	di->disks_info=lv_label_create(di->lst,NULL);
-	lv_label_set_long_mode(di->disks_info,LV_LABEL_LONG_BREAK);
-	lv_obj_set_size(di->disks_info,lv_page_get_scrl_width(di->lst),gui_sh/16);
-	lv_label_set_align(di->disks_info,LV_LABEL_ALIGN_CENTER);
+	di->disks_info=lv_label_create(di->lst);
+	lv_label_set_long_mode(di->disks_info,LV_LABEL_LONG_WRAP);
+	lv_obj_set_size(di->disks_info,lv_obj_get_width(di->lst),gui_sh/16);
+	lv_obj_set_style_text_align(di->disks_info,LV_TEXT_ALIGN_CENTER,0);
 	lv_label_set_text(di->disks_info,text);
 }
 
@@ -155,65 +156,73 @@ static int get_block_model(struct disks_disk_info*k){
 	return 0;
 }
 
-static void disks_add_item(int blk,struct disks_disk_info*k){
-	lv_coord_t c1w,c2w,c1l,c2l,bw;
-	bw=lv_page_get_scrl_width(k->di->lst);
+static void disks_add_item(struct disks_disk_info*k){
+	char buf[64];
+	static lv_coord_t grid_row[]={
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_TEMPLATE_LAST,
+	},grid_col[]={
+		LV_GRID_FR(2),
+		LV_GRID_FR(1),
+		LV_GRID_TEMPLATE_LAST,
+	};
 
 	// disk select button
-	k->btn=lv_btn_create(k->di->lst,NULL);
-	lv_obj_set_y(k->btn,(gui_dpi/2+32)*blk);
-	lv_obj_set_size(k->btn,bw,gui_dpi/2);
+	k->btn=lv_btn_create(k->di->lst);
 	lv_style_set_btn_item(k->btn);
-	lv_obj_set_click(k->btn,false);
+	lv_obj_set_size(k->btn,lv_pct(100),gui_font_size*5);
+	lv_obj_set_grid_dsc_array(k->btn,grid_col,grid_row);
+	lv_obj_add_event_cb(k->btn,disk_click,LV_EVENT_CLICKED,k->di);
+	lv_group_add_obj(gui_grp,k->btn);
 
-	// line for button text
-	lv_obj_t*line=lv_line_create(k->btn,NULL);
-	lv_obj_set_width(line,bw);
-
-	c1l=16,c2w=(bw-c1l)/4;
-	c2l=c2w*3,c1w=c2l-(c1l*2);
-
-	// disk name and checkbox
-	k->chk=lv_checkbox_create(line,NULL);
-	lv_obj_align(k->chk,NULL,LV_ALIGN_IN_LEFT_MID,c1l,-(gui_dpi/10));
-	lv_obj_set_width(k->chk,c1w);
-	lv_checkbox_set_text(k->chk,k->name);
-	lv_obj_set_user_data(k->chk,k->di);
-	lv_obj_set_event_cb(k->chk,disk_click);
-	lv_style_set_focus_checkbox(k->chk);
-	lv_group_add_obj(gui_grp,k->chk);
+	// disk name
+	lv_obj_t*lbl=lv_label_create(k->btn);
+	lv_label_set_text(lbl,k->name);
+	lv_obj_set_grid_cell(
+		lbl,
+		LV_GRID_ALIGN_START,0,1,
+		LV_GRID_ALIGN_CENTER,0,1
+	);
 
 	lv_label_long_mode_t lm=confd_get_boolean("gui.text_scroll",true)?
-		LV_LABEL_LONG_SROLL_CIRC:
+		LV_LABEL_LONG_SCROLL_CIRCULAR:
 		LV_LABEL_LONG_DOT;
 
 	// disk model name
-	lv_obj_t*d_model=lv_label_create(line,NULL);
-	lv_obj_align(d_model,NULL,LV_ALIGN_IN_LEFT_MID,c1l,(gui_dpi/10));
+	lv_obj_t*d_model=lv_label_create(k->btn);
 	lv_label_set_long_mode(d_model,lm);
-	lv_obj_set_width(d_model,c1w);
-	lv_label_set_align(d_model,LV_LABEL_ALIGN_LEFT);
+	lv_obj_set_style_text_align(d_model,LV_TEXT_ALIGN_LEFT,0);
 	lv_label_set_text(d_model,_(get_model(k)));
-	if(!k->model[0])lv_obj_set_gray240_text_color(d_model,LV_LABEL_PART_MAIN);
+	lv_obj_set_grid_cell(
+		d_model,
+		LV_GRID_ALIGN_STRETCH,0,1,
+		LV_GRID_ALIGN_CENTER,1,1
+	);
 
 	// disk size
-	lv_obj_t*d_size=lv_label_create(line,NULL);
-	lv_obj_align(d_size,NULL,LV_ALIGN_IN_LEFT_MID,c2l,-(gui_dpi/10));
+	lv_obj_t*d_size=lv_label_create(k->btn);
 	lv_label_set_long_mode(d_size,lm);
-	lv_obj_set_width(d_size,c2w);
-	lv_label_set_align(d_size,LV_LABEL_ALIGN_RIGHT);
-	const char*ss=make_readable_str(k->size,512,0);
-	lv_label_set_text(d_size,ss);
-	free((char*)ss);
+	lv_obj_set_style_text_align(d_size,LV_TEXT_ALIGN_RIGHT,0);
+	lv_label_set_text(d_size,make_readable_str_buf(
+		buf,sizeof(buf),k->size,512,0
+	));
+	lv_obj_set_grid_cell(
+		d_size,
+		LV_GRID_ALIGN_STRETCH,1,1,
+		LV_GRID_ALIGN_CENTER,0,1
+	);
 
 	// disk layout type
-	lv_obj_t*d_layout=lv_label_create(line,NULL);
-	lv_obj_align(d_layout,NULL,LV_ALIGN_IN_LEFT_MID,c2l,(gui_dpi/10));
+	lv_obj_t*d_layout=lv_label_create(k->btn);
 	lv_label_set_long_mode(d_layout,lm);
-	lv_obj_set_width(d_layout,c2w);
-	lv_label_set_align(d_layout,LV_LABEL_ALIGN_RIGHT);
+	lv_obj_set_style_text_align(d_layout,LV_TEXT_ALIGN_RIGHT,0);
 	lv_label_set_text(d_layout,_(get_layout(k)));
-	if(!k->lbl)lv_obj_set_gray240_text_color(d_layout,LV_LABEL_PART_MAIN);
+	lv_obj_set_grid_cell(
+		d_layout,
+		LV_GRID_ALIGN_STRETCH,1,1,
+		LV_GRID_ALIGN_CENTER,1,1
+	);
 }
 
 static void guipm_disk_reload(struct disks_info*di){
@@ -263,7 +272,7 @@ static void guipm_disk_reload(struct disks_info*di){
 
 		get_fdisk_ctx(k);
 		get_block_model(k);
-		disks_add_item(blk,k);
+		disks_add_item(k);
 
 		tlog_debug("scan block device %s (%s)",k->path,get_layout(k));
 
@@ -277,35 +286,27 @@ static void guipm_disk_reload(struct disks_info*di){
 	close(i);
 }
 
-static void refresh_click(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_CLICKED)return;
-	struct disks_info*di=lv_obj_get_user_data(obj);
-	if(!di||obj!=di->btn_refresh)return;
+static void refresh_click(lv_event_t*e){
+	struct disks_info*di=e->user_data;
 	tlog_debug("request refresh");
 	guipm_disk_reload(di);
 }
 
-static void ok_click(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_CLICKED)return;
-	struct disks_info*di=lv_obj_get_user_data(obj);
-	if(!di||obj!=di->btn_ok||!di->selected)return;
+static void ok_click(lv_event_t*e){
+	struct disks_info*di=e->user_data;
+	if(!di->selected)return;
 	tlog_debug("ok clicked");
 	guiact_start_activity_by_name("guipm-partitions",di->selected->name);
 }
 
-static void cancel_click(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_CLICKED)return;
-	struct disks_info*di=lv_obj_get_user_data(obj);
-	if(!di||obj!=di->btn_cancel)return;
+static void cancel_click(lv_event_t*e __attribute__((unused))){
 	tlog_debug("cancel clicked");
 	guiact_do_back();
 }
 
-static void show_all_click(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_VALUE_CHANGED)return;
-	struct disks_info*di=lv_obj_get_user_data(obj);
-	if(!di||obj!=di->show_all)return;
-	di->is_show_all=lv_checkbox_is_checked(obj);
+static void show_all_click(lv_event_t*e){
+	struct disks_info*di=e->user_data;
+	di->is_show_all=lv_obj_is_checked(di->show_all);
 	tlog_debug("request show all %s",BOOL2STR(di->is_show_all));
 	guipm_disk_reload(di);
 }
@@ -341,7 +342,7 @@ static int guipm_disk_lost_focus(struct gui_activity*d){
 	if(!di)return 0;
 	for(int i=0;i<32;i++){
 		if(!di->disks[i].enable)continue;
-		lv_group_remove_obj(di->disks[i].chk);
+		lv_group_remove_obj(di->disks[i].btn);
 	}
 	lv_group_remove_obj(di->show_all);
 	lv_group_remove_obj(di->btn_ok);
@@ -349,74 +350,76 @@ static int guipm_disk_lost_focus(struct gui_activity*d){
 	lv_group_remove_obj(di->btn_cancel);
 	return 0;
 }
-
-static int guipm_draw_disk_sel(struct gui_activity*act){
-
-	lv_coord_t mar=(gui_dpi/20);
-	lv_coord_t btw=gui_sw/3-gui_dpi/5;
-	lv_coord_t bth=gui_font_size+gui_dpi/10;
-	lv_coord_t btt=gui_sh-bth-gui_dpi/10;
+static int guipm_init(struct gui_activity*act){
 	struct disks_info*di=malloc(sizeof(struct disks_info));
 	if(!di)return -ENOMEM;
 	memset(di,0,sizeof(struct disks_info));
 	act->data=di;
+	return 0;
+}
+
+static int guipm_draw_disk_sel(struct gui_activity*act){
+	struct disks_info*di=act->data;
+	lv_obj_set_style_pad_all(act->page,gui_font_size/2,0);
+	lv_obj_set_flex_flow(act->page,LV_FLEX_FLOW_COLUMN);
 
 	guipm_draw_title(act->page);
 
 	// function title
-	lv_obj_t*title=lv_label_create(act->page,NULL);
-	lv_label_set_long_mode(title,LV_LABEL_LONG_BREAK);
-	lv_obj_set_y(title,gui_sh/16);
-	lv_obj_set_size(title,gui_sw,gui_sh/16);
-	lv_label_set_align(title,LV_LABEL_ALIGN_CENTER);
+	lv_obj_t*title=lv_label_create(act->page);
+	lv_obj_set_width(title,lv_pct(100));
+	lv_label_set_long_mode(title,LV_LABEL_LONG_WRAP);
+	lv_obj_set_style_text_align(title,LV_TEXT_ALIGN_CENTER,0);
 	lv_label_set_text(title,_("Select a disk to process"));
 
 	// disk list
-	static lv_style_t lst_style;
-	lv_style_init(&lst_style);
-	lv_style_set_border_width(&lst_style,LV_STATE_DEFAULT,0);
-	lv_style_set_border_width(&lst_style,LV_STATE_FOCUSED,0);
-	lv_style_set_border_width(&lst_style,LV_STATE_PRESSED,0);
-	di->lst=lv_page_create(act->page,NULL);
-	lv_obj_add_style(di->lst,LV_PAGE_PART_BG,&lst_style);
-	lv_obj_set_size(di->lst,gui_sw-gui_dpi/10,gui_sh-(gui_sh/16*2)-(bth*2)-(gui_dpi/10*3));
-	lv_obj_set_pos(di->lst,mar,gui_sh/16*2);
+	di->lst=lv_obj_create(act->page);
+	lv_obj_set_width(di->lst,lv_pct(100));
+	lv_obj_set_flex_flow(di->lst,LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_flex_grow(di->lst,1);
 
 	// show all checkbox
-	di->show_all=lv_checkbox_create(act->page,NULL);
-	lv_obj_set_pos(di->show_all,gui_dpi/10,gui_sh-(bth*2)-(gui_dpi/5));
-	lv_obj_set_size(di->show_all,gui_sw/3-(gui_dpi/5),bth);
-	lv_obj_set_user_data(di->show_all,di);
-	lv_obj_set_event_cb(di->show_all,show_all_click);
-	lv_style_set_focus_checkbox(di->show_all);
+	di->show_all=lv_checkbox_create(act->page);
+	lv_obj_set_style_pad_hor(di->show_all,gui_font_size/2,0);
+	lv_obj_add_event_cb(di->show_all,show_all_click,LV_EVENT_CLICKED,di);
 	lv_checkbox_set_text(di->show_all,_("Show all blocks"));
 
+	lv_obj_t*btns=lv_obj_create(act->page);
+	lv_obj_set_style_radius(btns,0,0);
+	lv_obj_set_style_pad_all(btns,gui_dpi/50,0);
+	lv_obj_set_scroll_dir(btns,LV_DIR_NONE);
+	lv_obj_set_style_border_width(btns,0,0);
+	lv_obj_set_style_bg_opa(btns,LV_OPA_0,0);
+	lv_obj_clear_flag(btns,LV_OBJ_FLAG_SCROLLABLE);
+	lv_obj_set_flex_flow(btns,LV_FLEX_FLOW_ROW);
+	lv_obj_set_size(btns,lv_pct(100),LV_SIZE_CONTENT);
+
 	// ok button
-	di->btn_ok=lv_btn_create(act->page,NULL);
-	lv_obj_set_pos(di->btn_ok,gui_dpi/10,btt);
-	lv_obj_set_size(di->btn_ok,btw,bth);
-	lv_style_set_action_button(di->btn_ok,false);
-	lv_obj_set_user_data(di->btn_ok,di);
-	lv_obj_set_event_cb(di->btn_ok,ok_click);
-	lv_label_set_text(lv_label_create(di->btn_ok,NULL),_("OK"));
+	di->btn_ok=lv_btn_create(btns);
+	lv_obj_set_enabled(di->btn_ok,false);
+	lv_obj_add_event_cb(di->btn_ok,ok_click,LV_EVENT_CLICKED,di);
+	lv_obj_t*lbl_ok=lv_label_create(di->btn_ok);
+	lv_label_set_text(lbl_ok,_("OK"));
+	lv_obj_center(lbl_ok);
+	lv_obj_set_flex_grow(di->btn_ok,1);
 
 	// refresh button
-	di->btn_refresh=lv_btn_create(act->page,NULL);
-	lv_obj_set_pos(di->btn_refresh,gui_sw/3+(gui_dpi/10),btt);
-	lv_obj_set_size(di->btn_refresh,btw,bth);
-	lv_style_set_action_button(di->btn_refresh,true);
-	lv_obj_set_user_data(di->btn_refresh,di);
-	lv_obj_set_event_cb(di->btn_refresh,refresh_click);
-	lv_label_set_text(lv_label_create(di->btn_refresh,NULL),_("Refresh"));
+	di->btn_refresh=lv_btn_create(btns);
+	lv_obj_set_enabled(di->btn_refresh,true);
+	lv_obj_add_event_cb(di->btn_refresh,refresh_click,LV_EVENT_CLICKED,di);
+	lv_obj_t*lbl_refresh=lv_label_create(di->btn_refresh);
+	lv_label_set_text(lbl_refresh,_("Refresh"));
+	lv_obj_center(lbl_refresh);
+	lv_obj_set_flex_grow(di->btn_refresh,1);
 
 	// cancel button
-	di->btn_cancel=lv_btn_create(act->page,NULL);
-	lv_obj_set_pos(di->btn_cancel,gui_sw/3*2+(gui_dpi/10),btt);
-	lv_obj_set_size(di->btn_cancel,btw,bth);
-	lv_style_set_action_button(di->btn_cancel,true);
-	lv_obj_set_user_data(di->btn_cancel,di);
-	lv_obj_set_event_cb(di->btn_cancel,cancel_click);
-	lv_label_set_text(lv_label_create(di->btn_cancel,NULL),_("Cancel"));
+	di->btn_cancel=lv_btn_create(btns);
+	lv_obj_set_enabled(di->btn_cancel,true);
+	lv_obj_add_event_cb(di->btn_cancel,cancel_click,LV_EVENT_CLICKED,di);
+	lv_obj_t*lbl_cancel=lv_label_create(di->btn_cancel);
+	lv_label_set_text(lbl_cancel,_("Cancel"));
+	lv_obj_center(lbl_cancel);
+	lv_obj_set_flex_grow(di->btn_cancel,1);
 	return 0;
 }
 
@@ -426,11 +429,11 @@ struct gui_register guireg_guipm_disk_select={
 	.icon="guipm.svg",
 	.show_app=true,
 	.quiet_exit=do_cleanup,
+	.init=guipm_init,
 	.get_focus=guipm_disk_get_focus,
 	.lost_focus=guipm_disk_lost_focus,
 	.draw=guipm_draw_disk_sel,
 	.data_load=do_reload,
 	.back=true
 };
-#endif
 #endif

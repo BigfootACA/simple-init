@@ -7,7 +7,6 @@
  */
 
 #ifdef ENABLE_GUI
-#ifdef ENABLE_FDISK
 #define _GNU_SOURCE
 #include<stdlib.h>
 #include<libfdisk/libfdisk.h>
@@ -89,12 +88,9 @@ static int fill_partition_info(struct part_disk_info*di,struct part_partition_in
 	}else{
 		part->no=fdisk_partition_get_partno(part->part);
 		part->type=fdisk_partition_get_type(part->part);
-		char*pname=(char*)fdisk_partition_get_name(part->part);
-		if(pname){
-			if(pname[0])strcpy(part->name,pname);
-			free(pname);
-		}
-		char*partname=(char*)fdisk_partname(di->target,part->no+1);
+		const char*pname=fdisk_partition_get_name(part->part);
+		if(pname&&pname[0])strcpy(part->name,pname);
+		char*partname=fdisk_partname(di->target,part->no+1);
 		if(partname){
 			if(partname[0])strcpy(part->partname,partname);
 			free(partname);
@@ -113,23 +109,22 @@ static int fill_partition_info(struct part_disk_info*di,struct part_partition_in
 	return 0;
 }
 
-static void partition_click(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_VALUE_CHANGED)return;
-	struct part_disk_info*di=lv_obj_get_user_data(obj);
+static void partition_click(lv_event_t*e){
+	struct part_disk_info*di=e->user_data;
 	if(di->selected){
 		lv_obj_set_checked(di->selected->btn,false);
 		lv_obj_set_enabled(di->btn_part,false);
 		lv_obj_set_enabled(di->btn_new,false);
-		if(obj==di->selected->chk){
+		if(e->target==di->selected->btn){
 			tlog_debug("clear selected");
 			di->selected=NULL;
 			return;
-		}else lv_checkbox_set_checked(di->selected->chk,false);
+		}else lv_obj_set_checked(di->selected->btn,false);
 	}
 	di->selected=NULL;
 	int i;
 	for(i=0;i<1024&&!di->selected;i++)
-		if(di->partitions[i]&&di->partitions[i]->chk==obj)
+		if(di->partitions[i]&&di->partitions[i]->btn==e->target)
 			di->selected=di->partitions[i];
 	if(!di->selected)return;
 	lv_obj_set_checked(di->selected->btn,true);
@@ -142,96 +137,101 @@ static void partition_click(lv_obj_t*obj,lv_event_t e){
 	}
 }
 
-static void partitions_add_item(int i,struct part_partition_info*p){
+static void partitions_add_item(struct part_partition_info*p){
 	struct part_disk_info*di=p->di;
-	lv_coord_t bw=lv_page_get_scrl_width(di->page),m;
+	static lv_coord_t grid_row[]={
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_TEMPLATE_LAST,
+	},grid_col[]={
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_TEMPLATE_LAST,
+	};
 
 	// disk select button
-	p->btn=lv_btn_create(di->page,NULL);
-	if(i>0)lv_obj_align(p->btn,di->partitions[i-1]->btn,LV_ALIGN_OUT_BOTTOM_LEFT,0,gui_dpi/10);
-	lv_obj_set_size(p->btn,bw,gui_dpi/3*2);
+	p->btn=lv_btn_create(di->page);
 	lv_style_set_btn_item(p->btn);
-	if(p->free)lv_obj_set_gray240_text_color(p->btn,LV_BTN_PART_MAIN);
-	lv_obj_set_click(p->btn,false);
-
-	// line for button text
-	lv_obj_t*line=lv_line_create(p->btn,NULL);
-	lv_obj_set_width(line,bw);
+	lv_obj_set_size(p->btn,lv_pct(100),gui_font_size*(p->free?4:5));
+	lv_obj_set_grid_dsc_array(p->btn,grid_col,grid_row);
+	lv_obj_add_event_cb(p->btn,partition_click,LV_EVENT_CLICKED,di);
+	lv_group_add_obj(gui_grp,p->btn);
 
 	// partition name and checkbox
-	m=gui_dpi/20;
-	p->chk=lv_checkbox_create(line,NULL);
-	lv_checkbox_set_text(p->chk,p->free?_("Free Space"):p->partname);
-	if(p->free)lv_obj_set_gray160_text_color(p->chk,LV_LABEL_PART_MAIN);
-	lv_style_set_focus_checkbox(p->chk);
-	lv_obj_set_user_data(p->chk,di);
-	lv_obj_set_event_cb(p->chk,partition_click);
-	lv_group_add_obj(gui_grp,p->chk);
-	lv_obj_align(p->chk,NULL,LV_ALIGN_IN_TOP_LEFT,m,lv_obj_get_height(p->chk)+m);
+	lv_obj_t*lbl=lv_label_create(p->btn);
+	lv_label_set_text(lbl,p->free?_("Free Space"):p->partname);
+	lv_obj_set_grid_cell(
+		lbl,
+		LV_GRID_ALIGN_START,0,1,
+		LV_GRID_ALIGN_CENTER,0,1
+	);
 
 	// partition size
-	m=gui_dpi/10;
-	lv_obj_t*size=lv_label_create(line,NULL);
+	lv_obj_t*size=lv_label_create(p->btn);
+	lv_label_set_long_mode(size,LV_LABEL_LONG_CLIP);
 	lv_label_set_text_fmt(size,"%s(%lu)",p->size_str,p->size_sec);
-	lv_label_set_align(size,LV_LABEL_ALIGN_RIGHT);
-	lv_obj_align(size,NULL,LV_ALIGN_IN_TOP_RIGHT,-m,lv_obj_get_height(size)+m);
+	lv_obj_set_style_text_align(size,LV_TEXT_ALIGN_RIGHT,0);
+	lv_obj_set_small_text_font(size,LV_PART_MAIN);
+	lv_obj_set_grid_cell(
+		size,
+		LV_GRID_ALIGN_END,1,1,
+		LV_GRID_ALIGN_CENTER,0,1
+	);
 
 	lv_label_long_mode_t lm=confd_get_boolean("gui.text_scroll",true)?
-		LV_LABEL_LONG_SROLL_CIRC:
+		LV_LABEL_LONG_SCROLL_CIRCULAR:
 		LV_LABEL_LONG_DOT;
 
 	// partition position
-	lv_obj_t*pos=lv_label_create(line,NULL);
+	lv_obj_t*pos=lv_label_create(p->btn);
 	lv_label_set_long_mode(pos,lm);
 	lv_label_set_text_fmt(
 		pos,_("Start: %s(%lu) End %s(%lu)"),
 		p->start_str,p->start_sec,
 		p->end_str,p->end_sec
 	);
-	lv_obj_set_width(pos,bw-gui_dpi/5);
-	lv_label_set_align(pos,LV_LABEL_ALIGN_LEFT);
-	lv_obj_set_small_text_font(pos,LV_LABEL_PART_MAIN);
-	lv_obj_align(pos,NULL,LV_ALIGN_IN_LEFT_MID,gui_dpi/10,gui_dpi/20);
+	lv_obj_set_style_text_align(pos,LV_TEXT_ALIGN_LEFT,0);
+	lv_obj_set_small_text_font(pos,LV_PART_MAIN);
+	lv_obj_set_grid_cell(
+		pos,
+		LV_GRID_ALIGN_START,0,2,
+		LV_GRID_ALIGN_CENTER,1,p->free?2:1
+	);
 
 	if(!p->free){
-		// partition name
-		lv_obj_t*name=lv_label_create(line,NULL);
-		lv_label_set_long_mode(name,lm);
-		lv_obj_set_small_text_font(name,LV_LABEL_PART_MAIN);
-		if(!p->name[0])lv_obj_set_gray160_text_color(name,LV_LABEL_PART_MAIN);
-		lv_label_set_text(name,p->name[0]?p->name:_("(none)"));
-		lv_obj_set_width(name,bw/8*3-gui_dpi/10);
-		lv_label_set_align(name,LV_LABEL_ALIGN_LEFT);
-		lv_obj_align(
-			name,NULL,
-			LV_ALIGN_IN_BOTTOM_LEFT,
-			gui_dpi/10,
-			-lv_obj_get_height(p->chk)-gui_dpi/25
+		// partition type
+		lv_obj_t*type=lv_label_create(p->btn);
+		lv_label_set_long_mode(type,lm);
+		lv_obj_set_small_text_font(type,LV_PART_MAIN);
+		lv_label_set_text(type,p->type_str[0]?p->type_str:_("(unknown)"));
+		lv_obj_set_style_text_align(type,LV_TEXT_ALIGN_LEFT,0);
+		lv_obj_set_grid_cell(
+			type,
+			LV_GRID_ALIGN_START,0,1,
+			LV_GRID_ALIGN_CENTER,2,1
 		);
 
 		// partition name
-		lv_obj_t*type=lv_label_create(line,NULL);
-		lv_label_set_long_mode(type,lm);
-		lv_obj_set_small_text_font(type,LV_LABEL_PART_MAIN);
-		if(!p->type_str[0])lv_obj_set_gray160_text_color(type,LV_LABEL_PART_MAIN);
-		lv_label_set_text(type,p->type_str[0]?p->type_str:_("(unknown)"));
-		lv_obj_set_width(type,bw/8*5-gui_dpi/5);
-		lv_label_set_align(type,LV_LABEL_ALIGN_LEFT);
-		lv_obj_align(
-			type,name,
-			LV_ALIGN_OUT_RIGHT_MID,
-			gui_dpi/10,
-			0
+		lv_obj_t*name=lv_label_create(p->btn);
+		lv_label_set_long_mode(name,lm);
+		lv_obj_set_small_text_font(name,LV_PART_MAIN);
+		lv_label_set_text(name,p->name[0]?p->name:_("(none)"));
+		lv_obj_set_style_text_align(name,LV_TEXT_ALIGN_RIGHT,0);
+		lv_obj_set_grid_cell(
+			name,
+			LV_GRID_ALIGN_END,1,1,
+			LV_GRID_ALIGN_CENTER,2,1
 		);
 	}
 }
 
 static void set_disks_info(struct part_disk_info*di,char*text){
 	if(di->disk_info)lv_obj_del(di->disk_info);
-	di->disk_info=lv_label_create(di->page,NULL);
-	lv_label_set_long_mode(di->disk_info,LV_LABEL_LONG_BREAK);
-	lv_obj_set_size(di->disk_info,lv_page_get_scrl_width(di->page),gui_sh/16);
-	lv_label_set_align(di->disk_info,LV_LABEL_ALIGN_CENTER);
+	di->disk_info=lv_label_create(di->page);
+	lv_label_set_long_mode(di->disk_info,LV_LABEL_LONG_WRAP);
+	lv_obj_set_width(di->disk_info,lv_pct(100));
+	lv_obj_set_style_text_align(di->disk_info,LV_TEXT_ALIGN_CENTER,0);
 	lv_label_set_text(di->disk_info,text);
 }
 
@@ -258,7 +258,7 @@ static int reload_partitions(struct part_disk_info*di){
 			break;
 		}
 		di->partitions[i]=p;
-		partitions_add_item(i,p);
+		partitions_add_item(p);
 	}
 	fdisk_free_iter(itr);
 	return 0;
@@ -311,42 +311,35 @@ static int init_disk(struct part_disk_info*di){
 	return -1;
 }
 
-static void reload_click(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_CLICKED)return;
-	struct part_disk_info*di=lv_obj_get_user_data(obj);
-	if(obj!=di->btn_reload)return;
+static void reload_click(lv_event_t*e){
+	struct part_disk_info*di=e->user_data;
 	tlog_debug("request reload");
 	reload_partitions(di);
 }
 
-static void save_click(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_CLICKED)return;
-	struct part_disk_info*di=lv_obj_get_user_data(obj);
-	if(obj!=di->btn_save)return;
+static void save_click(lv_event_t*e){
+	struct part_disk_info*di=e->user_data;
 	tlog_debug("request save");
-	if(guipm_save_label(di->ctx))lv_obj_set_enabled(obj,false);
+	if(guipm_save_label(di->ctx))
+		lv_obj_set_enabled(e->target,false);
 }
 
-static void new_click(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_CLICKED)return;
-	struct part_disk_info*di=lv_obj_get_user_data(obj);
-	if(obj!=di->btn_new||!di->selected||!di->selected->free)return;
+static void new_click(lv_event_t*e){
+	struct part_disk_info*di=e->user_data;
+	if(!di->selected||!di->selected->free)return;
 	tlog_debug("request new");
 	guiact_start_activity(&guireg_guipm_new_partition,di->selected);
 }
 
-static void disk_click(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_CLICKED)return;
-	struct part_disk_info*di=lv_obj_get_user_data(obj);
-	if(obj!=di->btn_disk)return;
+static void disk_click(lv_event_t*e){
+	struct part_disk_info*di=e->user_data;
 	tlog_debug("request disk submenu");
 	guipm_disk_operation_menu(di->ctx);
 }
 
-static void part_click(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_CLICKED)return;
-	struct part_disk_info*di=lv_obj_get_user_data(obj);
-	if(obj!=di->btn_part||!di->selected||di->selected->free)return;
+static void part_click(lv_event_t*e){
+	struct part_disk_info*di=e->user_data;
+	if(!di->selected||di->selected->free)return;
 	tlog_debug("request partition submenu");
 	guipm_part_operation_menu(di->selected);
 }
@@ -376,7 +369,7 @@ static int guipm_part_lost_focus(struct gui_activity*d){
 	if(!di)return 0;
 	for(int i=0;i<1024;i++){
 		if(!di->partitions[i])continue;
-		lv_group_remove_obj(di->partitions[i]->chk);
+		lv_group_remove_obj(di->partitions[i]->btn);
 	}
 	lv_group_remove_obj(di->btn_new);
 	lv_group_remove_obj(di->btn_disk);
@@ -419,87 +412,116 @@ static int init(struct gui_activity*act){
 }
 
 static int guipm_draw_partitions(struct gui_activity*act){
+	static lv_coord_t grid_row[]={
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_TEMPLATE_LAST,
+	},grid_col[]={
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_TEMPLATE_LAST,
+	};
 	struct part_disk_info*di=act->data;
 	if(act->mask){
 		msgbox_alert("init disk context failed");
 		free(di);
 		return -1;
 	}else{
-		lv_coord_t btw1=gui_sw/2-(gui_dpi/5);
-		lv_coord_t btw2=gui_sw/3-(gui_dpi/8);
-		lv_coord_t bth=gui_font_size+(gui_dpi/10);
-
+		lv_obj_set_style_pad_all(act->page,gui_font_size/2,0);
+		lv_obj_set_flex_flow(act->page,LV_FLEX_FLOW_COLUMN);
 		guipm_draw_title(act->page);
 
 		// function title
-		lv_obj_t*title=lv_label_create(act->page,NULL);
-		lv_label_set_long_mode(title,LV_LABEL_LONG_BREAK);
-		lv_obj_set_y(title,gui_sh/16);
-		lv_obj_set_size(title,gui_sw,gui_sh/16);
-		lv_label_set_align(title,LV_LABEL_ALIGN_CENTER);
+		lv_obj_t*title=lv_label_create(act->page);
+		lv_obj_set_width(title,lv_pct(100));
+		lv_label_set_long_mode(title,LV_LABEL_LONG_WRAP);
+		lv_obj_set_style_text_align(title,LV_TEXT_ALIGN_CENTER,0);
 		lv_label_set_text(title,_("Partition a disk"));
 
 		// partitions list
-		static lv_style_t lst_style;
-		lv_style_init(&lst_style);
-		lv_style_set_border_width(&lst_style,LV_STATE_DEFAULT,0);
-		lv_style_set_border_width(&lst_style,LV_STATE_FOCUSED,0);
-		lv_style_set_border_width(&lst_style,LV_STATE_PRESSED,0);
-		di->page=lv_page_create(act->page,NULL);
-		lv_obj_add_style(di->page,LV_PAGE_PART_BG,&lst_style);
-		lv_obj_set_width(di->page,gui_sw-gui_dpi/10);
-		lv_obj_align(di->page,title,LV_ALIGN_OUT_BOTTOM_MID,0,gui_dpi/10);
-		lv_obj_set_height(di->page,gui_sh-bth*2-gui_font_size*3-gui_sh/16*2);
+		di->page=lv_obj_create(act->page);
+		lv_obj_set_width(di->page,lv_pct(100));
+		lv_obj_set_flex_flow(di->page,LV_FLEX_FLOW_COLUMN);
+		lv_obj_set_flex_grow(di->page,1);
+
+		lv_obj_t*btns=lv_obj_create(act->page);
+		lv_obj_set_style_radius(btns,0,0);
+		lv_obj_set_style_pad_all(btns,gui_dpi/50,0);
+		lv_obj_set_scroll_dir(btns,LV_DIR_NONE);
+		lv_obj_set_style_border_width(btns,0,0);
+		lv_obj_set_style_bg_opa(btns,LV_OPA_0,0);
+		lv_obj_clear_flag(btns,LV_OBJ_FLAG_SCROLLABLE);
+		lv_obj_set_grid_dsc_array(btns,grid_col,grid_row);
+		lv_obj_set_size(btns,lv_pct(100),gui_font_size*5);
 
 		// disk operate button
-		di->btn_disk=lv_btn_create(act->page,NULL);
-		lv_obj_set_size(di->btn_disk,btw1,bth);
-		lv_style_set_action_button(di->btn_disk,true);
-		lv_obj_set_user_data(di->btn_disk,di);
-		lv_obj_set_event_cb(di->btn_disk,disk_click);
-		lv_label_set_text(lv_label_create(di->btn_disk,NULL),_("Disk..."));
-		lv_obj_align(di->btn_disk,di->page,LV_ALIGN_OUT_BOTTOM_LEFT,gui_font_size/2,gui_font_size);
-		lv_group_add_obj(gui_grp,di->btn_disk);
+		di->btn_disk=lv_btn_create(btns);
+		lv_obj_set_enabled(di->btn_disk,true);
+		lv_obj_add_event_cb(di->btn_disk,disk_click,LV_EVENT_CLICKED,di);
+		lv_obj_t*lbl_disk=lv_label_create(di->btn_disk);
+		lv_label_set_text(lbl_disk,_("Disk..."));
+		lv_obj_center(lbl_disk);
+		lv_obj_set_grid_cell(
+			di->btn_disk,
+			LV_GRID_ALIGN_STRETCH,0,3,
+			LV_GRID_ALIGN_STRETCH,0,1
+		);
 
 		// partition operate button
-		di->btn_part=lv_btn_create(act->page,NULL);
-		lv_obj_set_size(di->btn_part,btw1,bth);
-		lv_obj_set_user_data(di->btn_part,di);
-		lv_obj_set_event_cb(di->btn_part,part_click);
-		lv_style_set_action_button(di->btn_part,false);
-		lv_label_set_text(lv_label_create(di->btn_part,NULL),_("Partition..."));
-		lv_obj_align(di->btn_part,di->page,LV_ALIGN_OUT_BOTTOM_RIGHT,-gui_font_size/2,gui_font_size);
-		lv_group_add_obj(gui_grp,di->btn_part);
+		di->btn_part=lv_btn_create(btns);
+		lv_obj_add_event_cb(di->btn_part,part_click,LV_EVENT_CLICKED,di);
+		lv_obj_set_enabled(di->btn_part,false);
+		lv_obj_t*lbl_part=lv_label_create(di->btn_part);
+		lv_label_set_text(lbl_part,_("Partition..."));
+		lv_obj_center(lbl_part);
+		lv_obj_set_grid_cell(
+			di->btn_part,
+			LV_GRID_ALIGN_STRETCH,3,3,
+			LV_GRID_ALIGN_STRETCH,0,1
+		);
 
 		// reload button
-		di->btn_reload=lv_btn_create(act->page,NULL);
-		lv_obj_set_size(di->btn_reload,btw2,bth);
-		lv_obj_align(di->btn_reload,di->page,LV_ALIGN_OUT_BOTTOM_LEFT,gui_font_size/2,gui_font_size*2+bth);
-		lv_obj_set_user_data(di->btn_reload,di);
-		lv_style_set_action_button(di->btn_reload,true);
-		lv_obj_set_event_cb(di->btn_reload,reload_click);
-		lv_label_set_text(lv_label_create(di->btn_reload,NULL),_("Reload"));
-		lv_group_add_obj(gui_grp,di->btn_reload);
+		di->btn_reload=lv_btn_create(btns);
+		lv_obj_set_enabled(di->btn_reload,true);
+		lv_obj_add_event_cb(di->btn_reload,reload_click,LV_EVENT_CLICKED,di);
+		lv_obj_t*lbl_reload=lv_label_create(di->btn_reload);
+		lv_label_set_text(lbl_reload,_("Reload"));
+		lv_obj_center(lbl_reload);
+		lv_obj_set_grid_cell(
+			di->btn_reload,
+			LV_GRID_ALIGN_STRETCH,0,2,
+			LV_GRID_ALIGN_STRETCH,1,1
+		);
 
 		// save button
-		di->btn_save=lv_btn_create(act->page,NULL);
-		lv_obj_set_size(di->btn_save,btw2,bth);
-		lv_obj_align(di->btn_save,di->page,LV_ALIGN_OUT_BOTTOM_MID,0,gui_font_size*2+bth);
-		lv_obj_set_user_data(di->btn_save,di);
-		lv_style_set_action_button(di->btn_save,true);
-		lv_obj_set_event_cb(di->btn_save,save_click);
-		lv_label_set_text(lv_label_create(di->btn_save,NULL),_("Save"));
-		lv_group_add_obj(gui_grp,di->btn_save);
+		di->btn_save=lv_btn_create(btns);
+		lv_obj_set_enabled(di->btn_save,true);
+		lv_obj_add_event_cb(di->btn_save,save_click,LV_EVENT_CLICKED,di);
+		lv_obj_t*lbl_save=lv_label_create(di->btn_save);
+		lv_label_set_text(lbl_save,_("Save"));
+		lv_obj_center(lbl_save);
+		lv_obj_set_grid_cell(
+			di->btn_save,
+			LV_GRID_ALIGN_STRETCH,2,2,
+			LV_GRID_ALIGN_STRETCH,1,1
+		);
 
 		// new partition button
-		di->btn_new=lv_btn_create(act->page,NULL);
-		lv_obj_set_size(di->btn_new,btw2,bth);
-		lv_obj_align(di->btn_new,di->page,LV_ALIGN_OUT_BOTTOM_RIGHT,-gui_font_size/2,gui_font_size*2+bth);
-		lv_obj_set_user_data(di->btn_new,di);
-		lv_style_set_action_button(di->btn_new,false);
-		lv_obj_set_event_cb(di->btn_new,new_click);
-		lv_label_set_text(lv_label_create(di->btn_new,NULL),_("New"));
-		lv_group_add_obj(gui_grp,di->btn_new);
+		di->btn_new=lv_btn_create(btns);
+		lv_obj_set_enabled(di->btn_new,false);
+		lv_obj_add_event_cb(di->btn_new,new_click,LV_EVENT_CLICKED,di);
+		lv_obj_t*lbl_new=lv_label_create(di->btn_new);
+		lv_label_set_text(lbl_new,_("New"));
+		lv_obj_center(lbl_new);
+		lv_obj_set_grid_cell(
+			di->btn_new,
+			LV_GRID_ALIGN_STRETCH,4,2,
+			LV_GRID_ALIGN_STRETCH,1,1
+		);
 	}
 	return 0;
 }
@@ -525,5 +547,4 @@ struct gui_register guireg_guipm_partitions={
 	.data_load=do_reload,
 	.back=true
 };
-#endif
 #endif

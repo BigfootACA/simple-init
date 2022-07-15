@@ -7,7 +7,6 @@
  */
 
 #ifdef ENABLE_GUI
-#ifdef ENABLE_FDISK
 #define _GNU_SOURCE
 #ifndef GUIPM_H
 #define GUIPM_H
@@ -35,11 +34,11 @@ extern bool guipm_save_label(struct fdisk_context*ctx);
 extern void guipm_ask_save_label(struct fdisk_context*ctx,msgbox_callback cb,void*user_data);
 extern void guipm_disk_operation_menu(struct fdisk_context*ctx);
 extern void guipm_part_operation_menu(struct part_partition_info*pi);
-extern void guipm_init_size_block(lv_coord_t*h,lv_coord_t w,lv_obj_t*box,void*pi,fdisk_sector_t lsec,struct size_block*blk,char*title);
+extern void guipm_init_size_block(lv_obj_t*box,void*pi,fdisk_sector_t lsec,struct size_block*blk,char*title);
 
 struct disks_disk_info{
 	bool enable;
-	lv_obj_t*btn,*chk;
+	lv_obj_t*btn;
 	struct fdisk_context*ctx;
 	struct fdisk_label*lbl;
 	long size;
@@ -80,13 +79,15 @@ struct part_partition_info{
 	unsigned long start,end,size;
 	char start_str[64],end_str[64],size_str[64];
 	char type_str[128];
-	lv_obj_t*btn,*chk;
+	lv_obj_t*btn;
 	struct part_disk_info*di;
 };
 
 struct size_block{
 	void*par;
 	lv_obj_t*unit;
+	lv_obj_t*box;
+	lv_obj_t*lbl;
 	lv_obj_t*txt;
 	lv_obj_t*txt_sec;
 	lv_obj_t*slider;
@@ -119,6 +120,7 @@ struct size_block{
 	SB_PCALL((_blk),update_value)
 
 struct part_new_info{
+	struct gui_activity*act;
 	struct fdisk_context*ctx;
 	struct part_partition_info*part;
 	lv_obj_t*box,*ok,*cancel,*part_type,*part_num,*bar;
@@ -128,16 +130,17 @@ struct part_new_info{
 };
 
 struct part_type_info{
+	struct gui_activity*act;
 	struct part_partition_info*part;
 	lv_obj_t*box,*ok,*cancel,*part_type;
 };
 
 struct part_resize_info{
+	struct gui_activity*act;
 	struct part_partition_info*part;
 	lv_obj_t*box,*ok,*cancel,*bar;
 	struct size_block size;
 };
 
-#endif
 #endif
 #endif

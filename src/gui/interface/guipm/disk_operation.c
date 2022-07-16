@@ -63,6 +63,8 @@ static bool mk_label_cb(
 		telog_warn("create disk label failed");
 		msgbox_alert("Create disk label failed: %m");
 	}
+	struct gui_activity*act=guiact_get_last();
+	if(act)act->data_changed=true;
 	return false;
 }
 

@@ -7,7 +7,6 @@
  */
 
 #ifdef ENABLE_GUI
-#ifdef ENABLE_FDISK
 #define _GNU_SOURCE
 #include<stdio.h>
 #include<stddef.h>
@@ -107,10 +106,8 @@ static int guipm_part_lost_focus(struct gui_activity*d){
 	return 0;
 }
 
-static void ok_cb(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_CLICKED)return;
-	struct part_new_info*pi=lv_obj_get_user_data(obj);
-	if(!pi||obj!=pi->ok)return;
+static void ok_cb(lv_event_t*e){
+	struct part_new_info*pi=e->user_data;
 	char*fs=NULL;
 	size_t pn=0;
 	struct fdisk_partition*fp;
@@ -139,7 +136,9 @@ static void ok_cb(lv_obj_t*obj,lv_event_t e){
 		goto end;
 	}
 	tlog_debug("partition size sectors %lu",pi->size.sec);
-	struct fdisk_parttype*p=fdisk_label_get_parttype(pi->part->di->label,type-1);
+	struct fdisk_parttype*p=fdisk_label_get_parttype(
+		pi->part->di->label,type-1
+	);
 	if(!p){
 		telog_error("fdisk lookup partition type failed");
 		msgbox_alert("Lookup partition type failed");
@@ -169,132 +168,128 @@ static void ok_cb(lv_obj_t*obj,lv_event_t e){
 		goto end;
 	}
 	tlog_debug("partition %zu created",pn+1);
+	pi->act->data_changed=true;
 	guiact_do_back();
 	end:
 	if(fp)fdisk_unref_partition(fp);
 	if(fs)free(fs);
 }
 
-static void cancel_cb(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_CLICKED)return;
-	struct part_new_info*pi=lv_obj_get_user_data(obj);
-	if(!pi||obj!=pi->cancel)return;
+static void cancel_cb(lv_event_t*e __attribute__((unused))){
 	guiact_do_back();
 }
 
-static void init_size_block(
-	lv_coord_t*h,
-	lv_coord_t w,
-	struct part_new_info*pi,
-	struct size_block*blk,
-	char*title
-){
-	guipm_init_size_block(h,w,pi->box,pi,pi->part->di->lsec_size,blk,title);
-	blk->on_change_value=update_data_secs;
+static int guipm_part_init(struct gui_activity*act){
+	struct part_new_info*pi;
+	struct part_partition_info*info=act->args;
+	if(!info||!info->free||!info->di)return -EINVAL;
+	if(!(pi=malloc(sizeof(struct part_new_info))))return -ENOMEM;
+	memset(pi,0,sizeof(struct part_new_info));
+	pi->ctx=info->di->ctx,act->data=pi;
+	pi->part=info,pi->act=act;
+	return 0;
+}
+
+static int guipm_part_exit(struct gui_activity*act){
+	if(act->data)free(act->data);
+	act->data=NULL;
+	return 0;
 }
 
 static int guipm_draw_new_partition(struct gui_activity*act){
-	struct part_partition_info*info=act->args;
-	if(!info||!info->free||!info->di)return -EINVAL;
-	struct part_new_info*pi=malloc(sizeof(struct part_new_info));
-	if(!pi)return -ENOMEM;
-	memset(pi,0,sizeof(struct part_new_info));
-	pi->part=info,pi->ctx=info->di->ctx,act->data=pi;
+	struct part_new_info*pi=act->data;
 
-	pi->box=lv_page_create(act->page,NULL);
-	lv_obj_set_style_local_pad_all(pi->box,LV_PAGE_PART_BG,LV_STATE_DEFAULT,gui_font_size);
-	lv_obj_set_width(pi->box,gui_sw/8*7);
-	lv_obj_set_click(pi->box,false);
-	lv_coord_t h=0;
-	lv_coord_t w=lv_page_get_scrl_width(pi->box);
+	pi->box=lv_obj_create(act->page);
+	lv_obj_set_style_max_width(pi->box,lv_pct(80),0);
+	lv_obj_set_style_max_height(pi->box,lv_pct(80),0);
+	lv_obj_set_style_min_width(pi->box,gui_dpi*2,0);
+	lv_obj_set_style_min_height(pi->box,gui_dpi,0);
+	lv_obj_set_height(pi->box,LV_SIZE_CONTENT);
+	lv_obj_set_flex_flow(pi->box,LV_FLEX_FLOW_COLUMN);
+	lv_obj_center(pi->box);
 
 	// Title
-	lv_obj_t*title=lv_label_create(pi->box,NULL);
+	lv_obj_t*title=lv_label_create(pi->box);
+	lv_obj_set_width(title,lv_pct(100));
 	lv_label_set_text(title,_("New Partition"));
-	lv_label_set_long_mode(title,LV_LABEL_LONG_BREAK);
-	lv_obj_set_width(title,w);
-	lv_obj_set_y(title,h);
-	lv_label_set_align(title,LV_LABEL_ALIGN_CENTER);
-	h+=lv_obj_get_height(title);
+	lv_label_set_long_mode(title,LV_LABEL_LONG_WRAP);
+	lv_obj_set_style_text_align(title,LV_TEXT_ALIGN_CENTER,0);
 
 	// Partition Bar
-	h+=gui_font_size;
-	pi->bar=lv_bar_create(pi->box,NULL);
-	lv_bar_set_type(pi->bar,LV_BAR_TYPE_SYMMETRICAL);
+	pi->bar=lv_bar_create(pi->box);
+	lv_obj_set_size(pi->bar,lv_pct(100),gui_font_size);
+	lv_bar_set_mode(pi->bar,LV_BAR_MODE_RANGE);
 	lv_bar_set_range(pi->bar,0,MIN(gui_sw/2,32767));
-	lv_obj_set_width(pi->bar,w);
-	lv_obj_set_y(pi->bar,h);
-	h+=lv_obj_get_height(pi->bar);
+	lv_obj_set_grid_cell(pi->bar,LV_GRID_ALIGN_STRETCH,0,2,LV_GRID_ALIGN_STRETCH,0,1);
+	lv_obj_set_style_bg_color(pi->bar,lv_palette_main(LV_PALETTE_GREY),0);
 
-	init_size_block(&h,w,pi,&pi->start,"Start:");
-	init_size_block(&h,w,pi,&pi->end,"End:");
-	init_size_block(&h,w,pi,&pi->size,"Size:");
+	guipm_init_size_block(pi->box,pi,pi->part->di->lsec_size,&pi->start,"Start:");
+	guipm_init_size_block(pi->box,pi,pi->part->di->lsec_size,&pi->end,"End:");
+	guipm_init_size_block(pi->box,pi,pi->part->di->lsec_size,&pi->size,"Size:");
+	pi->start.on_change_value=update_data_secs;
+	pi->end.on_change_value=update_data_secs;
+	pi->size.on_change_value=update_data_secs;
 
 	// Partition Type
-	h+=gui_font_size;
-	lv_obj_t*lbl_type=lv_label_create(pi->box,NULL);
+	lv_obj_t*lbl_type=lv_label_create(pi->box);
 	lv_label_set_text(lbl_type,_("Partition Type:"));
-	lv_obj_set_y(lbl_type,h);
-	h+=lv_obj_get_height(lbl_type);
 
-	h+=(gui_font_size/2);
-	pi->part_type=lv_dropdown_create(pi->box,NULL);
-	lv_obj_set_event_cb(pi->part_type,lv_default_dropdown_cb);
-	lv_obj_set_width(pi->part_type,w);
-	lv_obj_set_y(pi->part_type,h);
-	h+=lv_obj_get_height(pi->part_type);
+	pi->part_type=lv_dropdown_create(pi->box);
+	lv_obj_add_event_cb(pi->part_type,lv_default_dropdown_cb,LV_EVENT_ALL,NULL);
+	lv_obj_set_width(pi->part_type,lv_pct(100));
 
 	// Partition Number
-	h+=gui_font_size;
-	lv_obj_t*lbl_partno=lv_label_create(pi->box,NULL);
+	lv_obj_t*lbl_partno=lv_label_create(pi->box);
 	lv_label_set_text(lbl_partno,_("Partition Number:"));
-	lv_obj_set_y(lbl_partno,h);
 
-	pi->part_num=lv_dropdown_create(pi->box,NULL);
-	lv_obj_align(pi->part_num,lbl_partno,LV_ALIGN_OUT_RIGHT_MID,gui_font_size/2,0);
-	lv_obj_set_y(pi->part_num,h);
-	lv_obj_align(lbl_partno,pi->part_num,LV_ALIGN_OUT_LEFT_MID,-gui_font_size/2,0);
-	lv_obj_set_width(pi->part_num,w-lv_obj_get_width(lbl_partno)-gui_font_size/2);
-	h+=lv_obj_get_height(pi->part_num);
+	pi->part_num=lv_dropdown_create(pi->box);
+	lv_obj_add_event_cb(pi->part_num,lv_default_dropdown_cb,LV_EVENT_ALL,NULL);
+	lv_obj_set_width(pi->part_num,lv_pct(100));
+
+	lv_obj_t*btns=lv_obj_create(pi->box);
+	lv_obj_set_style_radius(btns,0,0);
+	lv_obj_set_scroll_dir(btns,LV_DIR_NONE);
+	lv_obj_set_style_border_width(btns,0,0);
+	lv_obj_set_style_bg_opa(btns,LV_OPA_0,0);
+	lv_obj_set_style_pad_all(btns,gui_dpi/50,0);
+	lv_obj_set_flex_flow(btns,LV_FLEX_FLOW_ROW);
+	lv_obj_clear_flag(btns,LV_OBJ_FLAG_SCROLLABLE|LV_OBJ_FLAG_CLICKABLE);
+	lv_obj_set_style_pad_row(btns,gui_font_size/2,0);
+	lv_obj_set_style_pad_column(btns,gui_font_size/2,0);
+	lv_obj_set_size(btns,lv_pct(100),LV_SIZE_CONTENT);
 
 	// OK Button
-	h+=gui_font_size;
-	pi->ok=lv_btn_create(pi->box,NULL);
-	lv_style_set_action_button(pi->ok,true);
-	lv_obj_set_size(pi->ok,w/2-gui_font_size,gui_font_size*2);
-	lv_obj_align(pi->ok,NULL,LV_ALIGN_IN_TOP_LEFT,(gui_font_size/2),h);
-	lv_obj_set_user_data(pi->ok,pi);
-	lv_obj_set_event_cb(pi->ok,ok_cb);
-	lv_label_set_text(lv_label_create(pi->ok,NULL),_("OK"));
+	pi->ok=lv_btn_create(btns);
+	lv_obj_add_event_cb(pi->ok,ok_cb,LV_EVENT_CLICKED,pi);
+	lv_obj_t*lbl_ok=lv_label_create(pi->ok);
+	lv_label_set_text(lbl_ok,_("OK"));
+	lv_obj_center(lbl_ok);
+	lv_obj_set_flex_grow(pi->ok,1);
 
 	// Cancel Button
-	pi->cancel=lv_btn_create(pi->box,NULL);
-	lv_style_set_action_button(pi->cancel,true);
-	lv_obj_set_size(pi->cancel,w/2-gui_font_size,gui_font_size*2);
-	lv_obj_align(pi->cancel,NULL,LV_ALIGN_IN_TOP_RIGHT,-(gui_font_size/2),h);
-	lv_obj_set_user_data(pi->cancel,pi);
-	lv_obj_set_event_cb(pi->cancel,cancel_cb);
-	lv_label_set_text(lv_label_create(pi->cancel,NULL),_("Cancel"));
-	h+=lv_obj_get_height(pi->cancel);
-
-	h+=gui_font_size*3;
-	lv_obj_set_height(pi->box,MIN(h,(lv_coord_t)gui_sh/6*5));
-	lv_obj_align(pi->box,NULL,LV_ALIGN_CENTER,0,0);
+	pi->cancel=lv_btn_create(btns);
+	lv_obj_add_event_cb(pi->cancel,cancel_cb,LV_EVENT_CLICKED,pi);
+	lv_obj_t*lbl_cancel=lv_label_create(pi->cancel);
+	lv_label_set_text(lbl_cancel,_("Cancel"));
+	lv_obj_center(lbl_cancel);
+	lv_obj_set_flex_grow(pi->cancel,1);
 
 	reload_info(pi);
 	return 0;
 }
+
 struct gui_register guireg_guipm_new_partition={
 	.name="guipm-new-partition",
 	.title="Partition Manager",
 	.icon="guipm.svg",
 	.show_app=false,
 	.open_file=false,
+	.init=guipm_part_init,
+	.quiet_exit=guipm_part_exit,
 	.get_focus=guipm_part_get_focus,
 	.lost_focus=guipm_part_lost_focus,
 	.draw=guipm_draw_new_partition,
 	.back=true,
 	.mask=true,
 };
-#endif
 #endif

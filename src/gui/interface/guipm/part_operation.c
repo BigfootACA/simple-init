@@ -7,7 +7,6 @@
  */
 
 #ifdef ENABLE_GUI
-#ifdef ENABLE_FDISK
 #define _GNU_SOURCE
 #include<stdbool.h>
 #include<libfdisk/libfdisk.h>
@@ -17,13 +16,50 @@
 #include"gui/inputbox.h"
 #define TAG "guipm"
 
-static bool delete_cb(uint16_t id,const char*btn __attribute__((unused)),void*user_data){
+enum part_operation{
+	PART_OPER_CANCEL,
+	PART_OPER_MOUNT,
+	PART_OPER_DELETE,
+	PART_OPER_RESIZE,
+	PART_OPER_CHANGE_TYPE,
+	PART_OPER_CHANGE_NAME,
+	PART_OPER_WIPE,
+	PART_OPER_ERASE,
+	PART_OPER_SAVE_IMAGE,
+	PART_OPER_RESTORE_IMAGE,
+	PART_OPER_USB_MASS,
+	PART_OPER_LAST,
+};
+
+static const char*part_operations[]={
+	[PART_OPER_CANCEL]        = "Cancel",
+	[PART_OPER_MOUNT]         = "Mount partition",
+	[PART_OPER_DELETE]        = "Delete partition",
+	[PART_OPER_RESIZE]        = "Resize partition",
+	[PART_OPER_CHANGE_TYPE]   = "Change partition type",
+	[PART_OPER_CHANGE_NAME]   = "Change partition name",
+	[PART_OPER_WIPE]          = "Wipe partition label",
+	[PART_OPER_ERASE]         = "Erase partition",
+	[PART_OPER_SAVE_IMAGE]    = "Save partition image",
+	[PART_OPER_RESTORE_IMAGE] = "Restore partition image",
+	[PART_OPER_USB_MASS]      = "USB Gadget Mass Storage",
+	[PART_OPER_LAST]          = ""
+};
+
+static bool delete_cb(
+	uint16_t id,
+	const char*btn __attribute__((unused)),
+	void*user_data
+){
 	struct part_partition_info*pi=user_data;
 	struct fdisk_context*ctx=pi->di->ctx;
 	struct fdisk_partition*pa=pi->part;
 	size_t pn=fdisk_partition_get_partno(pa);
 	if(id!=0)return false;
-	tlog_debug("delete partition %zu on disk %s",pn+1,fdisk_get_devname(ctx));
+	tlog_debug(
+		"delete partition %zu on disk %s",
+		pn+1,fdisk_get_devname(ctx)
+	);
 	if((errno=fdisk_delete_partition(ctx,pn))!=0){
 		if(errno<0)errno=-(errno);
 		telog_warn("delete partition failed");
@@ -32,13 +68,20 @@ static bool delete_cb(uint16_t id,const char*btn __attribute__((unused)),void*us
 	return false;
 }
 
-static bool wipe_cb(uint16_t id,const char*btn __attribute__((unused)),void*user_data){
+static bool wipe_cb(
+	uint16_t id,
+	const char*btn __attribute__((unused)),
+	void*user_data
+){
 	struct part_partition_info*pi=user_data;
 	struct fdisk_context*ctx=pi->di->ctx;
 	struct fdisk_partition*pa=pi->part;
 	size_t pn=fdisk_partition_get_partno(pa);
 	if(id!=0)return false;
-	tlog_debug("wipe partition label %zu on disk %s",pn+1,fdisk_get_devname(ctx));
+	tlog_debug(
+		"wipe partition label %zu on disk %s",
+		pn+1,fdisk_get_devname(ctx)
+	);
 	if((errno=fdisk_wipe_partition(ctx,pn,true))!=0){
 		if(errno<0)errno=-(errno);
 		telog_warn("wipe partition label failed");
@@ -61,7 +104,11 @@ static char*get_part_path(struct part_partition_info*pi){
 	return dev;
 }
 
-static bool add_mass_cb(uint16_t id,const char*btn __attribute__((unused)),void*user_data){
+static bool add_mass_cb(
+	uint16_t id,
+	const char*btn __attribute__((unused)),
+	void*user_data
+){
 	struct part_partition_info*pi=user_data;
 	if(id==0){
 		if(!guipm_save_label(pi->di->ctx))return false;
@@ -72,7 +119,11 @@ static bool add_mass_cb(uint16_t id,const char*btn __attribute__((unused)),void*
 	return false;
 }
 
-static bool add_mount_cb(uint16_t id,const char*btn __attribute__((unused)),void*user_data){
+static bool add_mount_cb(
+	uint16_t id,
+	const char*btn __attribute__((unused)),
+	void*user_data
+){
 	struct part_partition_info*pi=user_data;
 	if(id==0){
 		if(!guipm_save_label(pi->di->ctx))return false;
@@ -83,7 +134,11 @@ static bool add_mount_cb(uint16_t id,const char*btn __attribute__((unused)),void
 	return false;
 }
 
-static bool change_name_cb(bool ok,const char*content,void*user_data){
+static bool change_name_cb(
+	bool ok,
+	const char*content,
+	void*user_data
+){
 	struct part_partition_info*pi=user_data;
 	if(!ok||!content)return false;
 	size_t pn=fdisk_partition_get_partno(pi->part);
@@ -116,16 +171,20 @@ void do_change_name(struct part_partition_info*pi){
 	inputbox_set_user_data(in,pi);
 }
 
-static bool part_menu_cb(uint16_t id,const char*btn __attribute__((unused)),void*user_data){
+static bool part_menu_cb(
+	uint16_t id,
+	const char*btn __attribute__((unused)),
+	void*user_data
+){
 	struct part_partition_info*pi=user_data;
 	struct fdisk_context*ctx=pi->di->ctx;
 	bool ro=fdisk_is_readonly(ctx);
 	switch(id){
-		case 0:break;
-		case 1:
+		case PART_OPER_CANCEL:break;
+		case PART_OPER_MOUNT:
 			guipm_ask_save_label(ctx,add_mount_cb,user_data);
 		break;
-		case 2:
+		case PART_OPER_DELETE:
 			if(ro)goto readonly;
 			msgbox_set_user_data(msgbox_create_yesno(
 				delete_cb,
@@ -134,19 +193,25 @@ static bool part_menu_cb(uint16_t id,const char*btn __attribute__((unused)),void
 				"Are you sure you want to continue?"
 			),user_data);
 		break;
-		case 3:
+		case PART_OPER_RESIZE:
 			if(ro)goto readonly;
-			guiact_start_activity(&guireg_guipm_resize_partition,user_data);
+			guiact_start_activity(
+				&guireg_guipm_resize_partition,
+				user_data
+			);
 		break;
-		case 4:
+		case PART_OPER_CHANGE_TYPE:
 			if(ro)goto readonly;
-			guiact_start_activity(&guireg_guipm_change_partition_type,user_data);
+			guiact_start_activity(
+				&guireg_guipm_change_partition_type,
+				user_data
+			);
 		break;
-		case 5:
+		case PART_OPER_CHANGE_NAME:
 			if(ro)goto readonly;
 			do_change_name(pi);
 		break;
-		case 6:
+		case PART_OPER_WIPE:
 			if(ro)goto readonly;
 			msgbox_set_user_data(msgbox_create_yesno(
 				wipe_cb,
@@ -155,7 +220,7 @@ static bool part_menu_cb(uint16_t id,const char*btn __attribute__((unused)),void
 				"Are you sure you want to continue?"
 			),user_data);
 		break;
-		case 10:
+		case PART_OPER_USB_MASS:
 			guipm_ask_save_label(ctx,add_mass_cb,user_data);
 		break;
 		default:msgbox_alert("This function does not implemented");break;
@@ -166,22 +231,10 @@ static bool part_menu_cb(uint16_t id,const char*btn __attribute__((unused)),void
 }
 
 void guipm_part_operation_menu(struct part_partition_info*pi){
-	static const char*btns[]={
-		"Cancel",
-		"Mount partition",
-		"Delete partition",
-		"Resize partition",
-		"Change partition type",
-		"Change partition name",
-		"Wipe partition label",
-		"Erase partition",
-		"Save partition image",
-		"Restore partition image",
-		"USB Gadget Mass Storage",
-		""
-	};
 	if(pi->free)return;
-	msgbox_set_user_data(msgbox_create_custom(part_menu_cb,btns,"Select operation"),pi);
+	msgbox_set_user_data(msgbox_create_custom(
+		part_menu_cb,part_operations,
+		"Select operation"
+	),pi);
 }
-#endif
 #endif

@@ -76,6 +76,7 @@ static void ok_cb(lv_event_t*e){
 			msgbox_alert("Set partition type failed: %m");
 			return;
 		}
+		pi->act->data_changed=true;
 	}
 	guiact_do_back();
 }

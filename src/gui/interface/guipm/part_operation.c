@@ -65,6 +65,8 @@ static bool delete_cb(
 		telog_warn("delete partition failed");
 		msgbox_alert("Delete partition failed: %m");
 	}
+	struct gui_activity*act=guiact_get_last();
+	if(act)act->data_changed=true;
 	return false;
 }
 
@@ -88,6 +90,8 @@ static bool wipe_cb(
 		msgbox_alert("Wipe partition label failed: %m");
 	}
 	fdisk_label_set_changed(fdisk_get_label(ctx,NULL),true);
+	struct gui_activity*act=guiact_get_last();
+	if(act)act->data_changed=true;
 	return false;
 }
 
@@ -160,6 +164,8 @@ static bool change_name_cb(
 	}
 	tlog_debug("change partition %zu name to %s",pn+1,content);
 	fdisk_unref_partition(np);
+	struct gui_activity*act=guiact_get_last();
+	if(act)act->data_changed=true;
 	return false;
 }
 

@@ -1136,8 +1136,11 @@ msgstr "确定要重启USB工具服务？"
 msgid "Are you sure to delete function %s?"
 msgstr "确定删除功能%s?"
 
-msgid "Invalid idVendor or idProduct number"
-msgstr "无效的idVendor或idProduct数字"
+msgid "Invalid vendor id number"
+msgstr "无效的厂商(Vendor)ID数字"
+
+msgid "Invalid product id number"
+msgstr "无效的产品(Product)ID数字"
 
 msgid "USB Gadget Base Info Edit"
 msgstr "USB工具基本信息编辑"

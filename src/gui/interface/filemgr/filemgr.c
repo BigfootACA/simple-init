@@ -22,41 +22,45 @@
 #include"gui/activity.h"
 #define TAG "filemgr"
 
+static struct fm_button{
+	char*name;
+	char*symbol;
+	bool enabled;
+	lv_obj_t*btn;
+	lv_obj_t*lbl;
+}fm_btns[]={
+	{ .name="prev",    .symbol=LV_SYMBOL_LEFT,      .enabled=true,  .btn=NULL, .lbl=NULL },
+	{ .name="refresh", .symbol=LV_SYMBOL_REFRESH,   .enabled=true,  .btn=NULL, .lbl=NULL },
+	{ .name="edit",    .symbol=LV_SYMBOL_EDIT,      .enabled=false, .btn=NULL, .lbl=NULL },
+	{ .name="home",    .symbol=LV_SYMBOL_HOME,      .enabled=true,  .btn=NULL, .lbl=NULL },
+	{ .name="info",    .symbol=LV_SYMBOL_LIST,      .enabled=false, .btn=NULL, .lbl=NULL },
+	{ .name="next",    .symbol=LV_SYMBOL_RIGHT,     .enabled=true,  .btn=NULL, .lbl=NULL },
+	{ .name="paste",   .symbol=LV_SYMBOL_PASTE,     .enabled=false, .btn=NULL, .lbl=NULL },
+	{ .name="copy",    .symbol=LV_SYMBOL_COPY,      .enabled=false, .btn=NULL, .lbl=NULL },
+	{ .name="delete",  .symbol=LV_SYMBOL_TRASH,     .enabled=false, .btn=NULL, .lbl=NULL },
+	{ .name="new",     .symbol=LV_SYMBOL_PLUS,      .enabled=true,  .btn=NULL, .lbl=NULL },
+	{ .name="cut",     .symbol=LV_SYMBOL_CUT,       .enabled=false, .btn=NULL, .lbl=NULL },
+	{ .name="back",    .symbol=LV_SYMBOL_BACKSPACE, .enabled=true,  .btn=NULL, .lbl=NULL },
+};
 static lv_obj_t*tabview,*scr,*path;
-static lv_obj_t*btn_prev,*btn_refresh,*btn_edit,*btn_home,*btn_info,*btn_next;
-static lv_obj_t*btn_paste,*btn_copy,*btn_delete,*btn_new,*btn_cut,*btn_back;
 static struct filetab*tabs[4],*active=NULL;
 
+static void set_btn_enabled(char*name,bool enabled){
+	for(size_t i=0;i<ARRLEN(fm_btns);i++)
+		if(strcmp(fm_btns[i].name,name)==0)
+			lv_obj_set_enabled(fm_btns[i].btn,enabled);
+}
+
 static int filemgr_get_focus(struct gui_activity*d __attribute__((unused))){
-	lv_group_add_obj(gui_grp,btn_prev);
-	lv_group_add_obj(gui_grp,btn_refresh);
-	lv_group_add_obj(gui_grp,btn_edit);
-	lv_group_add_obj(gui_grp,btn_home);
-	lv_group_add_obj(gui_grp,btn_info);
-	lv_group_add_obj(gui_grp,btn_next);
-	lv_group_add_obj(gui_grp,btn_paste);
-	lv_group_add_obj(gui_grp,btn_copy);
-	lv_group_add_obj(gui_grp,btn_delete);
-	lv_group_add_obj(gui_grp,btn_new);
-	lv_group_add_obj(gui_grp,btn_cut);
-	lv_group_add_obj(gui_grp,btn_back);
+	for(size_t i=0;i<ARRLEN(fm_btns);i++)
+		lv_group_add_obj(gui_grp,fm_btns[i].btn);
 	if(active)filetab_add_group(active,gui_grp);
 	return 0;
 }
 
 static int filemgr_lost_focus(struct gui_activity*d __attribute__((unused))){
-	lv_group_remove_obj(btn_prev);
-	lv_group_remove_obj(btn_refresh);
-	lv_group_remove_obj(btn_edit);
-	lv_group_remove_obj(btn_home);
-	lv_group_remove_obj(btn_info);
-	lv_group_remove_obj(btn_next);
-	lv_group_remove_obj(btn_paste);
-	lv_group_remove_obj(btn_copy);
-	lv_group_remove_obj(btn_delete);
-	lv_group_remove_obj(btn_new);
-	lv_group_remove_obj(btn_cut);
-	lv_group_remove_obj(btn_back);
+	for(size_t i=0;i<ARRLEN(fm_btns);i++)
+		lv_group_remove_obj(fm_btns[i].btn);
 	if(active)filetab_remove_group(active);
 	return 0;
 }
@@ -86,8 +90,7 @@ int do_cleanup(struct gui_activity*d __attribute__((unused))){
 	return 0;
 }
 
-static void tabview_cb(lv_obj_t*obj,lv_event_t e){
-	if(!obj||e!=LV_EVENT_VALUE_CHANGED)return;
+static void tabview_cb(lv_event_t*e __attribute__((unused))){
 	update_active();
 }
 
@@ -120,20 +123,20 @@ static void on_item_select(
 	if(fv!=active)return;
 	if(fsext_is_multi&&filetab_is_top(fv))return;
 	if(cnt==1){
-		lv_obj_set_enabled(btn_edit,true);
-		lv_obj_set_enabled(btn_info,true);
+		set_btn_enabled("edit",true);
+		set_btn_enabled("info",true);
 	}else{
-		lv_obj_set_enabled(btn_edit,false);
-		lv_obj_set_enabled(btn_info,false);
+		set_btn_enabled("edit",false);
+		set_btn_enabled("info",false);
 	}
 	if(cnt>0){
-		lv_obj_set_enabled(btn_cut,true);
-		lv_obj_set_enabled(btn_copy,true);
-		lv_obj_set_enabled(btn_delete,true);
+		set_btn_enabled("cut",true);
+		set_btn_enabled("copy",true);
+		set_btn_enabled("delete",true);
 	}else{
-		lv_obj_set_enabled(btn_cut,false);
-		lv_obj_set_enabled(btn_copy,false);
-		lv_obj_set_enabled(btn_delete,false);
+		set_btn_enabled("cut",false);
+		set_btn_enabled("copy",false);
+		set_btn_enabled("delete",false);
 	}
 }
 
@@ -152,7 +155,7 @@ static void tabview_create(){
 		filetab_set_path(tabs[i],p?p:"/");
 		if(p)free(p);
 	}
-	lv_tabview_set_tab_act(
+	lv_tabview_set_act(
 		tabview,
 		confd_get_integer("gui.filemgr.active",0),
 		LV_ANIM_OFF
@@ -163,8 +166,8 @@ static void tabview_create(){
 static int do_back(struct gui_activity*d __attribute__((unused))){
 	lv_obj_t*tab=filetab_get_tab(active);
 	if(!tab)return 0;
-	if(!lv_page_is_top(tab)){
-		lv_page_go_top(tab);
+	if(lv_obj_get_scroll_y(tab)!=0){
+		lv_obj_scroll_to_y(tab,0,LV_ANIM_ON);
 		return 1;
 	}
 	if(!filetab_is_top(active)){
@@ -232,18 +235,18 @@ static bool rename_cb(bool ok,const char*name,void*user_data __attribute__((unus
 	return false;
 }
 
-static void btns_cb(lv_obj_t*obj,lv_event_t e){
-	if(!obj||e!=LV_EVENT_CLICKED)return;
+static void btns_cb(lv_event_t*e){
 	if(strcmp(guiact_get_last()->name,"file-manager")!=0)return;
-	tlog_info("click button %s",(char*)lv_obj_get_user_data(obj));
-	if(obj==btn_prev){
+	char*btn=(char*)e->user_data;
+	tlog_info("click button %s",btn);
+	if(strcmp(btn,"prev")==0){
 		uint16_t act=lv_tabview_get_tab_act(tabview);
-		if(act<=0)act=lv_tabview_get_tab_count(tabview);
-		lv_tabview_set_tab_act(tabview,act-1,LV_ANIM_ON);
+		if(act<=0)act=4;
+		lv_tabview_set_act(tabview,act-1,LV_ANIM_ON);
 		update_active();
-	}else if(obj==btn_refresh){
+	}else if(strcmp(btn,"refresh")==0){
 		filetab_set_path(active,NULL);
-	}else if(obj==btn_edit){
+	}else if(strcmp(btn,"edit")==0){
 		if(filetab_get_checked_count(active)!=1)return;
 		struct inputbox*in=inputbox_create(rename_cb,"Item rename");
 		char**sel=filetab_get_checked(active);
@@ -254,22 +257,22 @@ static void btns_cb(lv_obj_t*obj,lv_event_t e){
 		}
 		inputbox_set_content(in,"%s",sel[0]);
 		free(sel);
-	}else if(obj==btn_home){
+	}else if(strcmp(btn,"home")==0){
 		filetab_set_path(active,"/");
-	}else if(obj==btn_info){
+	}else if(strcmp(btn,"info")==0){
 		msgbox_alert("This function does not implemented");
-	}else if(obj==btn_next){
-		uint16_t act=lv_tabview_get_tab_act(tabview);
-		if(act>=lv_tabview_get_tab_count(tabview)-1)act=-1;
-		lv_tabview_set_tab_act(tabview,act+1,LV_ANIM_ON);
+	}else if(strcmp(btn,"next")==0){
+		uint16_t act=lv_tabview_get_tab_act(tabview)+1;
+		if(act>=4)act=0;
+		lv_tabview_set_act(tabview,act,LV_ANIM_ON);
 		update_active();
-	}else if(obj==btn_paste){
+	}else if(strcmp(btn,"paste")==0){
 		msgbox_alert("This function does not implemented");
-	}else if(obj==btn_copy){
+	}else if(strcmp(btn,"copy")==0){
 		msgbox_alert("This function does not implemented");
-	}else if(obj==btn_delete){
+	}else if(strcmp(btn,"delete")==0){
 		msgbox_alert("This function does not implemented");
-	}else if(obj==btn_new){
+	}else if(strcmp(btn,"new")==0){
 		static const char*types[]={
 			LV_SYMBOL_FILE,
 			LV_SYMBOL_DIRECTORY,
@@ -277,158 +280,69 @@ static void btns_cb(lv_obj_t*obj,lv_event_t e){
 		};
 		if(fsext_is_multi&&filetab_is_top(active))return;
 		msgbox_create_custom(create_cb,types,"Choose type to create");
-	}else if(obj==btn_cut){
+	}else if(strcmp(btn,"cut")==0){
 		msgbox_alert("This function does not implemented");
-	}else if(obj==btn_back){
+	}else if(strcmp(btn,"back")==0){
 		if(!filetab_is_top(active)){
 			lv_obj_t*tab=filetab_get_tab(active);
-			if(tab&&!lv_page_is_top(tab))lv_page_go_top(tab);
+			if(tab&&lv_obj_get_scroll_y(tab)!=0)
+				lv_obj_scroll_to_y(tab,0,LV_ANIM_OFF);
 			filetab_go_back(active);
 		}
 	}
 }
 
 static int filemgr_draw(struct gui_activity*act){
-	lv_coord_t btx=gui_font_size,btm=btx/2,btw=(gui_sw-btm)/(gui_sw>gui_sh?12:6)-btm,bth=btx*2;
 	scr=act->page;
-
-	static lv_style_t s;
-	lv_style_init(&s);
-	lv_style_set_pad_all(&s,LV_STATE_DEFAULT,gui_font_size/2);
+	lv_obj_set_flex_flow(scr,LV_FLEX_FLOW_COLUMN);
 
 	// file view
-	tabview=lv_tabview_create(scr,NULL);
-	lv_obj_set_event_cb(tabview,tabview_cb);
-	lv_obj_add_style(tabview,LV_TABVIEW_PART_TAB_BTN,&s);
-
-	static lv_style_t btn;
-	lv_style_init(&btn);
-	lv_style_set_radius(&btn,LV_STATE_DEFAULT,0);
-	lv_style_set_border_width(&btn,LV_STATE_DEFAULT,0);
+	tabview=lv_tabview_create(scr,LV_DIR_TOP,gui_font_size*2);
+	lv_obj_set_width(tabview,lv_pct(100));
+	lv_obj_add_event_cb(tabview,tabview_cb,LV_EVENT_VALUE_CHANGED,NULL);
+	lv_obj_set_flex_grow(tabview,1);
 
 	// current path
-	path=lv_label_create(scr,NULL);
-	lv_label_set_align(path,LV_LABEL_ALIGN_CENTER);
+	path=lv_label_create(scr);
+	lv_obj_set_style_text_align(path,LV_TEXT_ALIGN_CENTER,0);
 	lv_label_set_long_mode(path,confd_get_boolean("gui.text_scroll",true)?
-		LV_LABEL_LONG_SROLL_CIRC:
+		LV_LABEL_LONG_SCROLL_CIRCULAR:
 		LV_LABEL_LONG_DOT
 	);
-	lv_obj_set_size(path,gui_sw,gui_dpi/7);
-	lv_obj_align(path,NULL,LV_ALIGN_IN_BOTTOM_LEFT,0,-bth*(gui_sw>gui_sh?1:2)-btm*3);
-	lv_obj_set_size(tabview,gui_sw,lv_obj_get_y(path));
+	lv_obj_set_size(path,lv_pct(100),gui_font_size*1.2);
 
-	lv_obj_t*line=lv_obj_create(act->page,NULL);
-	lv_obj_set_size(line,gui_sw,gui_dpi/100);
-	lv_obj_align(line,path,LV_ALIGN_OUT_BOTTOM_MID,0,0);
-	lv_theme_apply(line,LV_THEME_SCR);
-	lv_obj_set_style_local_bg_color(
-		line,LV_OBJ_PART_MAIN,LV_STATE_DEFAULT,
-		lv_color_darken(lv_obj_get_style_bg_color(line,LV_OBJ_PART_MAIN),LV_OPA_20)
-	);
+	lv_obj_t*btns=lv_obj_create(act->page);
+	lv_obj_set_style_radius(btns,0,0);
+	lv_obj_set_scroll_dir(btns,LV_DIR_NONE);
+	lv_obj_set_style_border_width(btns,0,0);
+	lv_obj_set_style_bg_opa(btns,LV_OPA_0,0);
+	lv_obj_clear_flag(btns,LV_OBJ_FLAG_SCROLLABLE);
+	lv_obj_set_width(btns,lv_pct(100));
 
-	btn_prev=lv_btn_create(act->page,NULL);
-	lv_obj_set_size(btn_prev,btw,bth);
-	lv_obj_set_event_cb(btn_prev,btns_cb);
-	lv_obj_set_user_data(btn_prev,"prev");
-	lv_obj_align(btn_prev,NULL,LV_ALIGN_IN_BOTTOM_LEFT,btm,-btm*2-(gui_sw>gui_sh?0:bth));
-	lv_obj_set_style_local_radius(btn_prev,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
-	lv_label_set_text(lv_label_create(btn_prev,NULL),LV_SYMBOL_LEFT);
-
-	btn_refresh=lv_btn_create(act->page,NULL);
-	lv_obj_set_size(btn_refresh,btw,bth);
-	lv_obj_set_event_cb(btn_refresh,btns_cb);
-	lv_obj_set_user_data(btn_refresh,"refresh");
-	lv_obj_align(btn_refresh,btn_prev,LV_ALIGN_OUT_RIGHT_MID,btm,0);
-	lv_obj_set_style_local_radius(btn_refresh,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
-	lv_label_set_text(lv_label_create(btn_refresh,NULL),LV_SYMBOL_REFRESH);
-
-	btn_edit=lv_btn_create(act->page,NULL);
-	lv_obj_set_enabled(btn_edit,false);
-	lv_obj_set_size(btn_edit,btw,bth);
-	lv_obj_set_event_cb(btn_edit,btns_cb);
-	lv_obj_set_user_data(btn_edit,"edit");
-	lv_obj_align(btn_edit,btn_refresh,LV_ALIGN_OUT_RIGHT_MID,btm,0);
-	lv_obj_set_style_local_radius(btn_edit,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
-	lv_label_set_text(lv_label_create(btn_edit,NULL),LV_SYMBOL_EDIT);
-
-	btn_home=lv_btn_create(act->page,NULL);
-	lv_obj_set_size(btn_home,btw,bth);
-	lv_obj_set_event_cb(btn_home,btns_cb);
-	lv_obj_set_user_data(btn_home,"home");
-	lv_obj_align(btn_home,btn_edit,LV_ALIGN_OUT_RIGHT_MID,btm,0);
-	lv_obj_set_style_local_radius(btn_home,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
-	lv_label_set_text(lv_label_create(btn_home,NULL),LV_SYMBOL_HOME);
-
-	btn_info=lv_btn_create(act->page,NULL);
-	lv_obj_set_enabled(btn_info,false);
-	lv_obj_set_size(btn_info,btw,bth);
-	lv_obj_set_event_cb(btn_info,btns_cb);
-	lv_obj_set_user_data(btn_info,"info");
-	lv_obj_align(btn_info,btn_home,LV_ALIGN_OUT_RIGHT_MID,btm,0);
-	lv_obj_set_style_local_radius(btn_info,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
-	lv_label_set_text(lv_label_create(btn_info,NULL),LV_SYMBOL_LIST);
-
-	btn_next=lv_btn_create(act->page,NULL);
-	lv_obj_set_size(btn_next,btw,bth);
-	lv_obj_set_event_cb(btn_next,btns_cb);
-	lv_obj_set_user_data(btn_next,"next");
-	lv_obj_align(btn_next,btn_info,LV_ALIGN_OUT_RIGHT_MID,btm,0);
-	lv_obj_set_style_local_radius(btn_next,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
-	lv_label_set_text(lv_label_create(btn_next,NULL),LV_SYMBOL_RIGHT);
-
-	btn_paste=lv_btn_create(act->page,NULL);
-	lv_obj_set_enabled(btn_paste,false);
-	lv_obj_set_size(btn_paste,btw,bth);
-	lv_obj_set_event_cb(btn_paste,btns_cb);
-	lv_obj_set_user_data(btn_paste,"paste");
-	if(gui_sw>gui_sh)lv_obj_align(btn_paste,btn_next,LV_ALIGN_OUT_RIGHT_MID,btm,0);
-	else lv_obj_align(btn_paste,NULL,LV_ALIGN_IN_BOTTOM_LEFT,btm,-btm);
-	lv_obj_set_style_local_radius(btn_paste,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
-	lv_label_set_text(lv_label_create(btn_paste,NULL),LV_SYMBOL_PASTE);
-
-	btn_copy=lv_btn_create(act->page,NULL);
-	lv_obj_set_enabled(btn_copy,false);
-	lv_obj_set_size(btn_copy,btw,bth);
-	lv_obj_set_event_cb(btn_copy,btns_cb);
-	lv_obj_set_user_data(btn_copy,"copy");
-	lv_obj_align(btn_copy,btn_paste,LV_ALIGN_OUT_RIGHT_MID,btm,0);
-	lv_obj_set_style_local_radius(btn_copy,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
-	lv_label_set_text(lv_label_create(btn_copy,NULL),LV_SYMBOL_COPY);
-
-	btn_delete=lv_btn_create(act->page,NULL);
-	lv_obj_set_enabled(btn_delete,false);
-	lv_obj_set_size(btn_delete,btw,bth);
-	lv_obj_set_event_cb(btn_delete,btns_cb);
-	lv_obj_set_user_data(btn_delete,"delete");
-	lv_obj_align(btn_delete,btn_copy,LV_ALIGN_OUT_RIGHT_MID,btm,0);
-	lv_obj_set_style_local_radius(btn_delete,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
-	lv_label_set_text(lv_label_create(btn_delete,NULL),LV_SYMBOL_TRASH);
-
-	btn_new=lv_btn_create(act->page,NULL);
-	lv_obj_set_size(btn_new,btw,bth);
-	lv_obj_set_event_cb(btn_new,btns_cb);
-	lv_obj_set_user_data(btn_new,"new");
-	lv_obj_align(btn_new,btn_delete,LV_ALIGN_OUT_RIGHT_MID,btm,0);
-	lv_obj_set_style_local_radius(btn_new,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
-	lv_label_set_text(lv_label_create(btn_new,NULL),LV_SYMBOL_PLUS);
-
-	btn_cut=lv_btn_create(act->page,NULL);
-	lv_obj_set_enabled(btn_cut,false);
-	lv_obj_set_size(btn_cut,btw,bth);
-	lv_obj_set_event_cb(btn_cut,btns_cb);
-	lv_obj_set_user_data(btn_cut,"cut");
-	lv_obj_align(btn_cut,btn_new,LV_ALIGN_OUT_RIGHT_MID,btm,0);
-	lv_obj_set_style_local_radius(btn_cut,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
-	lv_label_set_text(lv_label_create(btn_cut,NULL),LV_SYMBOL_CUT);
-
-	btn_back=lv_btn_create(act->page,NULL);
-	lv_obj_set_size(btn_back,btw,bth);
-	lv_obj_set_event_cb(btn_back,btns_cb);
-	lv_obj_set_user_data(btn_back,"back");
-	lv_obj_align(btn_back,btn_cut,LV_ALIGN_OUT_RIGHT_MID,btm,0);
-	lv_obj_set_style_local_radius(btn_back,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
-	lv_label_set_text(lv_label_create(btn_back,NULL),LV_SYMBOL_BACKSPACE);
-
+	bool lb=gui_sw>gui_sh;
+	size_t cs=ARRLEN(fm_btns);
+	if(!lb)cs/=2;
+	static lv_coord_t grid_col[16],grid_row[4];
+	grid_row[0]=LV_GRID_FR(1);
+	grid_row[1]=lb?LV_GRID_TEMPLATE_LAST:LV_GRID_FR(1);
+	grid_row[2]=LV_GRID_TEMPLATE_LAST;
+	for(size_t i=0;i<cs;i++)grid_col[i]=LV_GRID_FR(1);
+	grid_col[cs]=LV_GRID_TEMPLATE_LAST;
+	lv_obj_set_content_height(btns,gui_font_size*(lb?2:4));
+	lv_obj_set_grid_dsc_array(btns,grid_col,grid_row);
+	for(size_t i=0;i<ARRLEN(fm_btns);i++){
+		fm_btns[i].btn=lv_btn_create(btns);
+		lv_obj_set_enabled(fm_btns[i].btn,fm_btns[i].enabled);
+		lv_obj_add_event_cb(fm_btns[i].btn,btns_cb,LV_EVENT_CLICKED,fm_btns[i].name);
+		fm_btns[i].lbl=lv_label_create(fm_btns[i].btn);
+		lv_label_set_text(fm_btns[i].lbl,fm_btns[i].symbol);
+		lv_obj_center(fm_btns[i].lbl);
+		lv_obj_set_grid_cell(
+			fm_btns[i].btn,
+			LV_GRID_ALIGN_STRETCH,i%cs,1,
+			LV_GRID_ALIGN_STRETCH,i/cs,1
+		);
+	}
 	tabview_create();
 	return 0;
 }

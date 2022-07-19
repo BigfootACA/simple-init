@@ -36,7 +36,15 @@ static void on_change_dir(struct fileview*fv,char*old,char*new){
 	if(!p)p=strrchr(path,'\\');
 	if(!p)p=path;
 	else if(cnt>1)p++;
-	lv_tabview_set_tab_name(ft->view,ft->tab_id,p);
+	lv_tabview_t*tv=(lv_tabview_t*)ft->view;
+	lv_obj_t*btns=lv_tabview_get_tab_btns(ft->view);
+	lv_mem_free(tv->map[ft->tab_id]);
+	if(!(tv->map[ft->tab_id]=lv_mem_alloc(strlen(p)+1))){
+		tlog_error("alloc for button title failed");
+		abort();
+	}
+	strcpy(tv->map[ft->tab_id],p);
+	lv_btnmatrix_set_map(btns,(const char**)tv->map);
 	if(ft->on_change_dir)ft->on_change_dir(ft,old,new);
 }
 
@@ -68,8 +76,9 @@ struct filetab*filetab_create(lv_obj_t*view,char*path){
 	fileview_set_on_change_dir(tb->fv,on_change_dir);
 	fileview_set_on_item_click(tb->fv,on_item_click);
 	fileview_set_on_item_select(tb->fv,on_item_select);
-	for(uint16_t i=0;i<lv_tabview_get_tab_count(view);i++){
-		if(lv_tabview_get_tab(view,i)!=tb->tab)continue;
+	lv_obj_t*cont=lv_tabview_get_content(view);
+	for(uint32_t i=0;i<4;i++){
+		if(lv_obj_get_child(cont,i)!=tb->tab)continue;
 		tb->tab_id=i;
 		if(path)fileview_set_path(tb->fv,path);
 		return tb;
@@ -89,7 +98,6 @@ void filetab_remove_group(struct filetab*tab){
 void filetab_free(struct filetab*tab){
 	if(!tab)return;
 	if(tab->fv)fileview_free(tab->fv);
-	if(tab->tab)lv_tabview_clean_tab(tab->tab);
 	free(tab);
 }
 
@@ -151,6 +159,5 @@ void filetab_go_back(struct filetab*tab){
 void filetab_set_path(struct filetab*tab,char*path){
 	if(!tab)return;
 	fileview_set_path(tab->fv,path);
-
 }
 #endif

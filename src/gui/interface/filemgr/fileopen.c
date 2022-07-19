@@ -25,7 +25,6 @@ struct fileopen{
 	lv_obj_t*label,*view;
 	lv_obj_t*show_all;
 	lv_obj_t*ok,*cancel;
-	lv_obj_t*last_btn;
 	list*apps;
 	void*user_data;
 	struct gui_activity*act;
@@ -35,7 +34,7 @@ struct fileopen{
 struct fileopen_app{
 	struct fileopen*fo;
 	struct gui_register*reg;
-	lv_obj_t*btn,*img,*lbl;
+	lv_obj_t*btn,*w_img,*img,*lbl;
 };
 
 static int clean_app(void*d){
@@ -50,14 +49,12 @@ static int clean_app(void*d){
 static void clean_apps(struct fileopen*fo){
 	list_free_all(fo->apps,clean_app);
 	fo->apps=NULL,fo->selected=NULL;
-	fo->last_btn=NULL;
 	lv_obj_set_enabled(fo->ok,false);
 }
 
-static void img_click(lv_obj_t*obj,lv_event_t e){
-	if(!obj||e!=LV_EVENT_CLICKED)return;
-	struct fileopen_app*fa=lv_obj_get_user_data(obj);
-	if(!fa||!fa->fo||!fa->reg||fa->img!=obj)return;
+static void app_click(lv_event_t*e){
+	struct fileopen_app*fa=e->user_data;
+	if(!fa||!fa->fo||!fa->reg)return;
 	if(fa->fo->selected)lv_obj_set_checked(fa->fo->selected->btn,false);
 	lv_obj_set_checked(fa->btn,true);
 	fa->fo->selected=fa;
@@ -67,7 +64,7 @@ static void img_click(lv_obj_t*obj,lv_event_t e){
 
 static void add_app(struct fileopen*fo,struct gui_register*reg){
 	if(!reg||!reg->open_file)return;
-	if(reg->open_regex&&!lv_checkbox_is_checked(fo->show_all)){
+	if(reg->open_regex&&!lv_obj_is_checked(fo->show_all)){
 		Reprog*prog;
 		bool match=false;
 		for(size_t i=0;reg->open_regex[i];i++){
@@ -77,60 +74,62 @@ static void add_app(struct fileopen*fo,struct gui_register*reg){
 		}
 		if(!match)return;
 	}
-	struct fileopen_app*app=malloc(sizeof(struct fileopen_app));
-	if(!app)return;
+	static lv_coord_t grid_col[]={
+		0,
+		LV_GRID_FR(1),
+		LV_GRID_TEMPLATE_LAST
+	},grid_row[]={
+		LV_GRID_FR(1),
+		LV_GRID_TEMPLATE_LAST
+	};
+	struct fileopen_app*app;
+	if(!(app=malloc(sizeof(struct fileopen_app))))return;
 	memset(app,0,sizeof(struct fileopen_app));
 	app->reg=reg,app->fo=fo;
 	if(list_obj_add_new(&fo->apps,app)!=0)return;
+	if(grid_col[0]==0)grid_col[0]=gui_font_size*1.5;
 
 	// app item button
-	app->btn=lv_btn_create(fo->view,NULL);
-	lv_obj_set_size(app->btn,lv_page_get_scrl_width(fo->view),gui_dpi/3);
+	app->btn=lv_btn_create(fo->view);
+	lv_obj_set_width(app->btn,lv_pct(100));
+	lv_obj_set_content_height(app->btn,grid_col[0]);
 	lv_style_set_btn_item(app->btn);
-	lv_obj_set_click(app->btn,false);
-	lv_obj_align(
-		app->btn,fo->last_btn,fo->last_btn?
-			 LV_ALIGN_OUT_BOTTOM_LEFT:
-			 LV_ALIGN_IN_TOP_MID,
-		0,gui_font_size/8+(fo->last_btn?gui_dpi/20:0)
-	);
-	fo->last_btn=app->btn;
-
-	// line for button text
-	lv_obj_t*line=lv_line_create(app->btn,NULL);
-	lv_obj_set_width(line,lv_obj_get_width(app->btn));
+	lv_obj_add_event_cb(app->btn,app_click,LV_EVENT_CLICKED,app);
+	lv_obj_set_grid_dsc_array(app->btn,grid_col,grid_row);
+	lv_group_add_obj(gui_grp,app->btn);
 
 	// conf image
-	lv_coord_t si=lv_obj_get_height(app->btn)-gui_font_size;
-	app->img=lv_img_create(line,NULL);
-	lv_obj_set_size(app->img,si,si);
-	lv_obj_align(app->img,app->btn,LV_ALIGN_IN_LEFT_MID,gui_font_size/2,0);
-	lv_obj_set_click(app->img,true);
-	lv_obj_set_user_data(app->img,app);
-	lv_obj_set_event_cb(app->img,img_click);
-	lv_obj_set_style_local_outline_width(app->img,LV_IMG_PART_MAIN,LV_STATE_FOCUSED,gui_dpi/100);
-	lv_obj_set_style_local_outline_color(app->img,LV_IMG_PART_MAIN,LV_STATE_FOCUSED,lv_theme_get_color_primary());
-	lv_obj_set_style_local_radius(app->img,LV_IMG_PART_MAIN,LV_STATE_FOCUSED,gui_dpi/50);
-	lv_img_ext_t*ext=lv_obj_get_ext_attr(app->img);
+	app->w_img=lv_obj_create(app->btn);
+	lv_obj_set_size(app->w_img,grid_col[0],grid_col[0]);
+	lv_obj_clear_flag(app->w_img,LV_OBJ_FLAG_SCROLLABLE);
+	lv_obj_clear_flag(app->w_img,LV_OBJ_FLAG_CLICKABLE);
+	lv_obj_set_style_border_width(app->w_img,0,0);
+	lv_obj_set_style_bg_opa(app->w_img,LV_OPA_0,0);
+	lv_obj_set_grid_cell(
+		app->w_img,
+		LV_GRID_ALIGN_STRETCH,0,1,
+		LV_GRID_ALIGN_STRETCH,0,1
+	);
+	app->img=lv_img_create(app->w_img);
+	lv_img_t*ext=(lv_img_t*)app->img;
 	lv_img_set_src(app->img,reg->icon);
 	if(ext->w<=0||ext->h<=0)lv_img_set_src(app->img,"apps.svg");
-	if(ext->w>0&&ext->h>0)lv_img_set_zoom(app->img,(int)(((float)si/MAX(ext->w,ext->h))*256));
-	lv_img_set_pivot(app->img,0,0);
-	lv_group_add_obj(gui_grp,app->img);
+	lv_img_set_size_mode(app->img,LV_IMG_SIZE_MODE_REAL);
+	lv_img_fill_image(app->img,grid_col[0],grid_col[0]);
+	lv_obj_center(app->img);
 
 	// app name
-	app->lbl=lv_label_create(line,NULL);
+	app->lbl=lv_label_create(app->btn);
 	lv_label_set_text(app->lbl,_(reg->title));
-	lv_obj_align(
-		app->lbl,NULL,
-		LV_ALIGN_IN_LEFT_MID,
-		gui_font_size+si,0
-	);
 	lv_label_set_long_mode(app->lbl,confd_get_boolean("gui.text_scroll",true)?
-		LV_LABEL_LONG_SROLL_CIRC:
+		LV_LABEL_LONG_SCROLL_CIRCULAR:
 		LV_LABEL_LONG_DOT
 	);
-	lv_obj_set_width(app->lbl,lv_obj_get_width(app->btn)-si-gui_font_size*2);
+	lv_obj_set_grid_cell(
+		app->lbl,
+		LV_GRID_ALIGN_STRETCH,1,1,
+		LV_GRID_ALIGN_CENTER,0,1
+	);
 }
 
 static void redraw_apps(struct fileopen*fo){
@@ -141,12 +140,11 @@ static void redraw_apps(struct fileopen*fo){
 	}while((l=l->next));
 }
 
-static void fileopen_click(lv_obj_t*obj,lv_event_t e){
-	if(!obj||e!=LV_EVENT_CLICKED)return;
-	struct fileopen*fo=lv_obj_get_user_data(obj);
+static void fileopen_click(lv_event_t*e){
+	struct fileopen*fo=e->user_data;
 	if(!fo)return;
-	if(obj==fo->cancel)guiact_do_back();
-	else if(obj==fo->ok&&fo->selected){
+	if(e->target==fo->cancel)guiact_do_back();
+	else if(e->target==fo->ok&&fo->selected){
 		char*d=strdup(fo->path);
 		if(!d)return;
 		guiact_start_activity(fo->selected->reg,d);
@@ -154,91 +152,86 @@ static void fileopen_click(lv_obj_t*obj,lv_event_t e){
 	}
 }
 
-static void show_all_click(lv_obj_t*obj,lv_event_t e){
-	if(!obj||e!=LV_EVENT_VALUE_CHANGED)return;
-	struct fileopen*fo=lv_obj_get_user_data(obj);
-	if(obj!=fo->show_all)return;
-	redraw_apps(fo);
+static void show_all_click(lv_event_t*e){
+	redraw_apps(e->user_data);
 }
 
 static int fileopen_draw(struct gui_activity*act){
+	static lv_coord_t grid_col[]={
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_TEMPLATE_LAST
+	},grid_row[]={
+		0,LV_GRID_FR(1),
+		LV_GRID_CONTENT,0,
+		LV_GRID_TEMPLATE_LAST
+	};
 	struct fileopen*fo=act->args;
+	if(grid_row[0]==0)grid_row[0]=gui_font_size;
+	if(grid_row[3]==0)grid_row[3]=gui_font_size*2;
 	fo->act=act;
 
-	fo->box=lv_obj_create(act->page,NULL);
-	lv_obj_set_style_local_border_width(fo->box,LV_PAGE_PART_BG,LV_STATE_DEFAULT,0);
-	lv_obj_set_style_local_border_width(fo->box,LV_PAGE_PART_BG,LV_STATE_PRESSED,0);
-	lv_obj_set_style_local_border_width(fo->box,LV_PAGE_PART_BG,LV_STATE_FOCUSED,0);
+	fo->box=lv_obj_create(act->page);
+	lv_obj_set_style_pad_all(fo->box,gui_font_size,0);
+	lv_obj_set_style_pad_row(fo->box,gui_font_size,0);
+	lv_obj_set_style_max_width(fo->box,lv_pct(80),0);
+	lv_obj_set_style_max_height(fo->box,lv_pct(80),0);
+	lv_obj_set_style_min_width(fo->box,gui_dpi*2,0);
+	lv_obj_set_style_min_height(fo->box,gui_dpi*2,0);
+	lv_obj_set_grid_dsc_array(fo->box,grid_col,grid_row);
+	lv_obj_set_height(fo->box,LV_SIZE_CONTENT);
+	lv_obj_center(fo->box);
 
-	fo->label=lv_label_create(fo->box,NULL);
-	lv_label_set_long_mode(fo->label,LV_LABEL_LONG_BREAK);
-	lv_label_set_align(fo->label,LV_LABEL_ALIGN_CENTER);
+	fo->label=lv_label_create(fo->box);
+	lv_label_set_long_mode(fo->label,LV_LABEL_LONG_WRAP);
+	lv_obj_set_style_text_align(fo->label,LV_TEXT_ALIGN_CENTER,0);
 	lv_label_set_text(fo->label,_("Open file with"));
+	lv_obj_set_grid_cell(
+		fo->label,
+		LV_GRID_ALIGN_STRETCH,0,2,
+		LV_GRID_ALIGN_STRETCH,0,1
+	);
 
-	fo->view=lv_page_create(fo->box,NULL);
-	lv_color_t c=lv_obj_get_style_border_color(fo->view,LV_PAGE_PART_BG);
-	lv_obj_set_style_local_border_color(fo->view,LV_PAGE_PART_BG,LV_STATE_DEFAULT,c);
-	lv_obj_set_style_local_border_color(fo->view,LV_PAGE_PART_BG,LV_STATE_PRESSED,c);
-	lv_obj_set_style_local_border_color(fo->view,LV_PAGE_PART_BG,LV_STATE_FOCUSED,c);
+	fo->view=lv_obj_create(fo->box);
+	lv_obj_set_flex_flow(fo->view,LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_width(fo->view,lv_pct(100));
+	lv_obj_set_grid_cell(
+		fo->view,
+		LV_GRID_ALIGN_STRETCH,0,2,
+		LV_GRID_ALIGN_STRETCH,1,1
+	);
 
-	fo->show_all=lv_checkbox_create(fo->box,NULL);
+	fo->show_all=lv_checkbox_create(fo->box);
 	lv_checkbox_set_text(fo->show_all,_("Show all apps"));
-	lv_obj_set_user_data(fo->show_all,fo);
-	lv_obj_set_event_cb(fo->show_all,show_all_click);
+	lv_obj_add_event_cb(fo->show_all,show_all_click,LV_EVENT_CLICKED,fo);
+	lv_obj_set_grid_cell(
+		fo->show_all,
+		LV_GRID_ALIGN_START,0,2,
+		LV_GRID_ALIGN_STRETCH,2,1
+	);
 
-	fo->ok=lv_btn_create(fo->box,NULL);
+	fo->ok=lv_btn_create(fo->box);
 	lv_obj_set_enabled(fo->ok,false);
-	lv_label_set_text(lv_label_create(fo->ok,NULL),LV_SYMBOL_OK);
-	lv_obj_set_user_data(fo->ok,fo);
-	lv_obj_set_event_cb(fo->ok,fileopen_click);
+	lv_obj_t*lbl_ok=lv_label_create(fo->ok);
+	lv_label_set_text(lbl_ok,LV_SYMBOL_OK);
+	lv_obj_center(lbl_ok);
+	lv_obj_add_event_cb(fo->ok,fileopen_click,LV_EVENT_CLICKED,fo);
+	lv_obj_set_grid_cell(
+		fo->ok,
+		LV_GRID_ALIGN_STRETCH,0,1,
+		LV_GRID_ALIGN_STRETCH,3,1
+	);
 
-	fo->cancel=lv_btn_create(fo->box,NULL);
-	lv_label_set_text(lv_label_create(fo->cancel,NULL),LV_SYMBOL_CLOSE);
-	lv_obj_set_user_data(fo->cancel,fo);
-	lv_obj_set_event_cb(fo->cancel,fileopen_click);
-	return 0;
-}
-
-static int fileopen_resize(struct gui_activity*d){
-	struct fileopen*fo=d->args;
-	if(!fo)return 0;
-	lv_coord_t box_h=gui_dpi/8;
-	lv_coord_t max_w=gui_dpi*4,cur_w=d->w/4*3;
-	lv_coord_t max_h=gui_dpi*6,cur_h=d->h/5*2;
-	lv_obj_set_width(fo->box,MIN(max_w,cur_w));
-	lv_coord_t lh=d->h/8;
-	lv_obj_set_width(fo->label,lv_obj_get_width(fo->box));
-	lv_obj_set_pos(fo->label,0,box_h);
-	if(lv_obj_get_height(fo->label)>lh){
-		lv_label_set_long_mode(fo->label,LV_LABEL_LONG_DOT);
-		lv_obj_set_height(fo->label,lh);
-	}
-	box_h+=lv_obj_get_height(fo->label)+gui_dpi/12;
-	lv_obj_set_size(fo->view,lv_obj_get_width(fo->box)-gui_font_size,MIN(max_h,cur_h));
-	lv_obj_set_pos(fo->view,gui_font_size/2,box_h);
-	box_h+=lv_obj_get_height(fo->view);
-	lv_coord_t
-		bm=gui_font_size/2,
-		bw=lv_obj_get_width(fo->box)/2,
-		bh=gui_font_size+(gui_dpi/8);
-	box_h+=bm*2;
-	lv_obj_set_style_local_margin_bottom(fo->show_all,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,bm);
-	lv_obj_set_style_local_radius(fo->show_all,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,gui_dpi/15);
-	lv_obj_set_size(fo->show_all,lv_obj_get_width(fo->box)-bm,bh);
-	lv_obj_set_pos(fo->show_all,bm*2,box_h);
-	box_h+=bh+bm;
-	lv_obj_set_style_local_margin_bottom(fo->ok,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,bm);
-	lv_obj_set_style_local_radius(fo->ok,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,gui_dpi/15);
-	lv_obj_set_size(fo->ok,bw-bm,bh);
-	lv_obj_set_pos(fo->ok,bm/2,box_h);
-	lv_obj_set_style_local_margin_bottom(fo->cancel,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,bm);
-	lv_obj_set_style_local_radius(fo->cancel,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,gui_dpi/15);
-	lv_obj_set_size(fo->cancel,bw-bm,bh);
-	lv_obj_set_pos(fo->cancel,bm/2+bw,box_h);
-	box_h+=bh+bm;
-	lv_obj_set_height(fo->box,box_h);
-	lv_obj_align(fo->box,NULL,LV_ALIGN_CENTER,0,0);
-	redraw_apps(fo);
+	fo->cancel=lv_btn_create(fo->box);
+	lv_obj_t*lbl_cancel=lv_label_create(fo->cancel);
+	lv_label_set_text(lbl_cancel,LV_SYMBOL_CLOSE);
+	lv_obj_center(lbl_cancel);
+	lv_obj_add_event_cb(fo->cancel,fileopen_click,LV_EVENT_CLICKED,fo);
+	lv_obj_set_grid_cell(
+		fo->cancel,
+		LV_GRID_ALIGN_STRETCH,1,1,
+		LV_GRID_ALIGN_STRETCH,3,1
+	);
 	return 0;
 }
 
@@ -280,7 +273,6 @@ struct gui_register guireg_fileopen={
 	.title="File Open",
 	.show_app=false,
 	.draw=fileopen_draw,
-	.resize=fileopen_resize,
 	.quiet_exit=fileopen_clean,
 	.get_focus=fileopen_get_focus,
 	.lost_focus=fileopen_lost_focus,
@@ -288,7 +280,7 @@ struct gui_register guireg_fileopen={
 	.mask=true,
 };
 
-static void fileopen_cb(lv_task_t*t){
+static void fileopen_cb(lv_timer_t*t){
 	guiact_start_activity(&guireg_fileopen,t->user_data);
 }
 
@@ -297,7 +289,7 @@ void fileopen_open(const char*path){
 	if(!fo)return;
 	memset(fo,0,sizeof(struct fileopen));
 	strcpy(fo->path,path);
-	lv_task_once(lv_task_create(fileopen_cb,0,LV_TASK_PRIO_LOWEST,fo));
+	lv_timer_set_repeat_count(lv_timer_create(fileopen_cb,0,fo),1);
 }
 
 #endif

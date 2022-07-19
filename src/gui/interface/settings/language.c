@@ -24,10 +24,8 @@ struct language_menu{
 	lv_obj_t*arr_left,*btn_ok,*arr_right;
 };
 
-static void ok_action(lv_obj_t*obj,lv_event_t e){
-	if(e==LV_EVENT_DELETE)return;
-	struct language_menu*m=lv_obj_get_user_data(obj);
-	if(!m||obj!=m->btn_ok||e!=LV_EVENT_CLICKED)return;
+static void ok_action(lv_event_t*e){
+	struct language_menu*m=e->user_data;
 	uint16_t i=lv_dropdown_get_selected(m->sel);
 	if(!languages[i].lang)return;
 	const char*lang=lang_concat(&languages[i],true,true);
@@ -49,14 +47,12 @@ static void ok_action(lv_obj_t*obj,lv_event_t e){
 	guiact_do_back();
 }
 
-static void arrow_action(lv_obj_t*obj,lv_event_t e){
-	if(e==LV_EVENT_DELETE)return;
-	struct language_menu*m=lv_obj_get_user_data(obj);
-	if(!m||e!=LV_EVENT_CLICKED)return;
+static void arrow_action(lv_event_t*e){
+	struct language_menu*m=e->user_data;
 	uint16_t cnt=lv_dropdown_get_option_cnt(m->sel);
 	int16_t cur=lv_dropdown_get_selected(m->sel);
-	if(obj==m->arr_left)cur--;
-	else if(obj==m->arr_right)cur++;
+	if(e->target==m->arr_left)cur--;
+	else if(e->target==m->arr_right)cur++;
 	else return;
 	if(cur<=0)cur=0;
 	if(cur>=cnt-1)cur=cnt-1;
@@ -97,25 +93,6 @@ static int language_lost_focus(struct gui_activity*d){
 	return 0;
 }
 
-static int language_resize(struct gui_activity*d){
-	int bts=gui_font_size+(gui_dpi/8);
-	struct language_menu*m=d->data;
-	if(!m)return 0;
-	lv_obj_set_width(m->box,d->w/6*5);
-	lv_obj_set_width(m->txt,lv_page_get_scrl_width(m->box));
-	lv_obj_set_width(m->sel,lv_page_get_scrl_width(m->box)-gui_dpi/10);
-	lv_obj_align(m->sel,m->txt,LV_ALIGN_OUT_BOTTOM_MID,0,gui_dpi/10);
-	lv_obj_set_size(m->btn_ok,lv_page_get_scrl_width(m->box)-gui_dpi/10-bts*3,bts);
-	lv_obj_align(m->btn_ok,m->sel,LV_ALIGN_OUT_BOTTOM_MID,0,gui_dpi/10);
-	lv_obj_set_size(m->arr_left,bts,bts);
-	lv_obj_align(m->arr_left,m->btn_ok,LV_ALIGN_OUT_LEFT_MID,-bts/2,0);
-	lv_obj_set_size(m->arr_right,bts,bts);
-	lv_obj_align(m->arr_right,m->btn_ok,LV_ALIGN_OUT_RIGHT_MID,bts/2,0);
-	lv_obj_set_height(m->box,lv_obj_get_y(m->btn_ok)+lv_obj_get_height(m->btn_ok)+(gui_font_size*2)+gui_dpi/20);
-	lv_obj_align(m->box,NULL,LV_ALIGN_CENTER,0,0);
-	return 0;
-}
-
 static int language_init(struct gui_activity*act){
 	struct language_menu*m=malloc(sizeof(struct language_menu));
 	if(!m)ERET(ENOMEM);
@@ -134,36 +111,62 @@ static int language_menu_draw(struct gui_activity*act){
 	struct language_menu*m=act->data;
 	if(!m)return 0;
 
-	m->box=lv_page_create(act->page,NULL);
-	lv_obj_set_style_local_pad_all(m->box,LV_PAGE_PART_BG,LV_STATE_DEFAULT,gui_font_size);
-	lv_obj_set_click(m->box,false);
+	m->box=lv_obj_create(act->page);
+	lv_obj_set_style_pad_all(m->box,gui_font_size,0);
+	lv_obj_set_scroll_dir(m->box,LV_DIR_NONE);
+	lv_obj_set_style_min_width(m->box,gui_dpi*2,0);
+	lv_obj_set_style_min_height(m->box,gui_dpi,0);
+	lv_obj_set_style_max_width(m->box,lv_pct(80),0);
+	lv_obj_set_style_max_height(m->box,lv_pct(80),0);
+	lv_obj_set_height(m->box,LV_SIZE_CONTENT);
+	lv_obj_set_flex_flow(m->box,LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_style_pad_row(m->box,gui_font_size/2,0);
+	lv_obj_center(m->box);
 
-	m->txt=lv_label_create(m->box,NULL);
-	lv_label_set_long_mode(m->txt,LV_LABEL_LONG_BREAK);
-	lv_label_set_align(m->txt,LV_LABEL_ALIGN_CENTER);
+	m->txt=lv_label_create(m->box);
+	lv_label_set_long_mode(m->txt,LV_LABEL_LONG_CLIP);
+	lv_obj_set_style_text_align(m->txt,LV_TEXT_ALIGN_CENTER,0);
 	lv_label_set_text(m->txt,_("Select language"));
+	lv_obj_set_width(m->txt,lv_pct(100));
 
-	m->sel=lv_dropdown_create(m->box,NULL);
-	lv_obj_set_event_cb(m->sel,lv_default_dropdown_cb);
+	m->sel=lv_dropdown_create(m->box);
+	lv_obj_add_event_cb(m->sel,lv_default_dropdown_cb,LV_EVENT_ALL,NULL);
+	lv_obj_set_width(m->sel,lv_pct(100));
 	init_languages(m);
 
-	m->btn_ok=lv_btn_create(m->box,NULL);
-	lv_style_set_action_button(m->btn_ok,true);
-	lv_obj_set_event_cb(m->btn_ok,ok_action);
-	lv_obj_set_user_data(m->btn_ok,m);
-	lv_label_set_text(lv_label_create(m->btn_ok,NULL),_("OK"));
+	lv_obj_t*btns=lv_obj_create(m->box);
+	lv_obj_set_size(btns,lv_pct(100),LV_SIZE_CONTENT);
+	lv_obj_clear_flag(btns,LV_OBJ_FLAG_SCROLLABLE|LV_OBJ_FLAG_CLICKABLE);
+	lv_obj_set_style_radius(btns,0,0);
+	lv_obj_set_scroll_dir(btns,LV_DIR_NONE);
+	lv_obj_set_style_border_width(btns,0,0);
+	lv_obj_set_style_bg_opa(btns,LV_OPA_0,0);
+	lv_obj_set_style_pad_all(btns,gui_dpi/50,0);
+	lv_obj_set_flex_flow(btns,LV_FLEX_FLOW_ROW);
 
-	m->arr_left=lv_btn_create(m->box,NULL);
-	lv_obj_set_user_data(m->arr_left,m);
-	lv_obj_set_event_cb(m->arr_left,arrow_action);
-	lv_style_set_action_button(m->arr_left,true);
-	lv_label_set_text(lv_label_create(m->arr_left,NULL),LV_SYMBOL_LEFT);
+	m->arr_left=lv_btn_create(btns);
+	lv_obj_add_event_cb(m->arr_left,arrow_action,LV_EVENT_CLICKED,m);
+	lv_obj_set_enabled(m->arr_left,true);
+	lv_obj_set_flex_grow(m->arr_left,1);
+	lv_obj_t*txt_arr_left=lv_label_create(m->arr_left);
+	lv_label_set_text(txt_arr_left,LV_SYMBOL_LEFT);
+	lv_obj_center(txt_arr_left);
 
-	m->arr_right=lv_btn_create(m->box,NULL);
-	lv_obj_set_user_data(m->arr_right,m);
-	lv_obj_set_event_cb(m->arr_right,arrow_action);
-	lv_style_set_action_button(m->arr_right,true);
-	lv_label_set_text(lv_label_create(m->arr_right,NULL),LV_SYMBOL_RIGHT);
+	m->btn_ok=lv_btn_create(btns);
+	lv_obj_add_event_cb(m->btn_ok,ok_action,LV_EVENT_CLICKED,m);
+	lv_obj_set_enabled(m->btn_ok,true);
+	lv_obj_set_flex_grow(m->btn_ok,3);
+	lv_obj_t*txt_ok=lv_label_create(m->btn_ok);
+	lv_label_set_text(txt_ok,_("OK"));
+	lv_obj_center(txt_ok);
+
+	m->arr_right=lv_btn_create(btns);
+	lv_obj_add_event_cb(m->arr_right,arrow_action,LV_EVENT_CLICKED,m);
+	lv_obj_set_enabled(m->arr_right,true);
+	lv_obj_set_flex_grow(m->arr_right,1);
+	lv_obj_t*txt_arr_right=lv_label_create(m->arr_right);
+	lv_label_set_text(txt_arr_right,LV_SYMBOL_RIGHT);
+	lv_obj_center(txt_arr_right);
 
 	return 0;
 }
@@ -175,7 +178,6 @@ struct gui_register guireg_language={
 	.show_app=true,
 	.init=language_init,
 	.quiet_exit=language_clean,
-	.resize=language_resize,
 	.get_focus=language_get_focus,
 	.lost_focus=language_lost_focus,
 	.draw=language_menu_draw,

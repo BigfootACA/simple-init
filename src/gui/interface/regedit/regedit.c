@@ -34,7 +34,7 @@ struct reg_item{
 	hive_value_h dir;
 	hive_value_h value;
 	hive_type type;
-	lv_obj_t*btn,*chk,*img,*val,*xtype;
+	lv_obj_t*btn,*lbl,*w_img,*img,*val,*xtype;
 };
 
 static char*get_string_path(struct regedit*reg,char*sub){
@@ -90,16 +90,16 @@ static void set_info(struct regedit*reg,char*text){
 	if(!reg||!text)return;
 	clean_view(reg);
 	if(reg->info)lv_obj_del(reg->info);
-	reg->info=lv_label_create(reg->view,NULL);
-	lv_label_set_long_mode(reg->info,LV_LABEL_LONG_BREAK);
-	lv_obj_set_width(reg->info,lv_page_get_scrl_width(reg->view)-gui_font_size);
-	lv_label_set_align(reg->info,LV_LABEL_ALIGN_CENTER);
+	reg->info=lv_label_create(reg->view);
+	lv_label_set_long_mode(reg->info,LV_LABEL_LONG_WRAP);
+	lv_obj_set_width(reg->info,lv_pct(100));
+	lv_obj_set_style_text_align(reg->info,LV_TEXT_ALIGN_CENTER,0);
 	lv_label_set_text(reg->info,text);
 }
 
 static void load_view(struct regedit*reg);
 static void go_back(struct regedit*reg){
-	if(!reg)return;
+	if(!reg||!reg->path)return;
 	hive_node_h par=hivex_node_parent(reg->hive,reg->node);
 	if(par<=0)return;
 	reg->node=par;
@@ -107,9 +107,7 @@ static void go_back(struct regedit*reg){
 	load_view(reg);
 }
 
-static void click_item(lv_obj_t*obj,lv_event_t e){
-	if(!obj||e!=LV_EVENT_CLICKED)return;
-	struct reg_item*ci=(struct reg_item*)lv_obj_get_user_data(obj);
+static void click_item(struct reg_item*ci){
 	if(!ci||!ci->reg)return;
 	if(ci->type==hive_t_REG_NONE){
 		if(ci->parent)go_back(ci->reg);
@@ -130,21 +128,24 @@ static void click_item(lv_obj_t*obj,lv_event_t e){
 	}
 }
 
-static void check_item(lv_obj_t*obj,lv_event_t e){
-	if(!obj||e!=LV_EVENT_VALUE_CHANGED)return;
-	struct reg_item*ci=(struct reg_item*)lv_obj_get_user_data(obj);
+static size_t get_selected(struct regedit*reg){
+	size_t c=0;
+	list*o=list_first(reg->items);
+	if(o)do{
+		LIST_DATA_DECLARE(item,o,struct reg_item*);
+		if(item&&item->btn&&lv_obj_is_checked(item->btn))c++;
+	}while((o=o->next));
+	return c;
+}
+
+static void check_item(struct reg_item*ci,bool checked){
 	if(!ci||!ci->reg)return;
 	if(ci->parent){
 		go_back(ci->reg);
 		return;
 	}
-	lv_obj_set_checked(ci->btn,lv_checkbox_is_checked(obj));
-	size_t c=0;
-	list*o=list_first(ci->reg->items);
-	if(o)do{
-		LIST_DATA_DECLARE(item,o,struct reg_item*);
-		if(item&&item->chk&&lv_checkbox_is_checked(item->chk))c++;
-	}while((o=o->next));
+	lv_obj_set_checked(ci->btn,checked);
+	size_t c=get_selected(ci->reg);
 	if(c==0){
 		lv_obj_set_enabled(ci->reg->btn_delete,false);
 		lv_obj_set_enabled(ci->reg->btn_edit,false);
@@ -157,92 +158,105 @@ static void check_item(lv_obj_t*obj,lv_event_t e){
 	}
 }
 
+static void item_click(lv_event_t*e){
+	struct reg_item*ci=e->user_data;
+	lv_indev_t*i=lv_indev_get_act();
+	if(i&&i->proc.long_pr_sent)return;
+	size_t c=get_selected(ci->reg);
+	if(c>0)check_item(ci,!lv_obj_is_checked(ci->btn));
+	else click_item(ci);
+}
+
+static void item_check(lv_event_t*e){
+	struct reg_item*ci=e->user_data;
+	if(ci->parent)return;
+	e->stop_processing=1;
+	check_item(ci,!lv_obj_is_checked(ci->btn));
+}
+
 static void add_item(struct reg_item*ci){
+	char buf[256]={0};
+	static lv_coord_t grid_col[]={
+		0,
+		LV_GRID_FR(1),
+		LV_GRID_CONTENT,
+		LV_GRID_TEMPLATE_LAST
+	},grid_row[]={
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_TEMPLATE_LAST
+	};
 	if(!ci||!ci->reg)return;
+	if(grid_col[0]==0)grid_col[0]=gui_font_size*3;
 
 	// reg item button
-	ci->btn=lv_btn_create(ci->reg->view,NULL);
-	lv_obj_set_size(ci->btn,ci->reg->bw,ci->reg->bh);
+	ci->btn=lv_btn_create(ci->reg->view);
+	lv_obj_set_width(ci->btn,lv_pct(100));
+	lv_obj_set_content_height(ci->btn,grid_col[0]);
 	lv_style_set_btn_item(ci->btn);
-	lv_obj_set_click(ci->btn,false);
-	lv_obj_align(
-		ci->btn,ci->reg->last_btn,ci->reg->last_btn?
-			 LV_ALIGN_OUT_BOTTOM_LEFT:
-			 LV_ALIGN_IN_TOP_MID,
-		0,ci->reg->bm/8+(ci->reg->last_btn?gui_dpi/20:0)
-	);
-	ci->reg->last_btn=ci->btn;
+	lv_obj_set_grid_dsc_array(ci->btn,grid_col,grid_row);
+	lv_obj_add_event_cb(ci->btn,item_click,LV_EVENT_CLICKED,ci);
+	lv_obj_add_event_cb(ci->btn,item_check,LV_EVENT_LONG_PRESSED,ci);
+	lv_group_add_obj(gui_grp,ci->btn);
 	if(list_obj_add_new(&ci->reg->items,ci)!=0){
 		telog_error("cannot add reg item list");
 		abort();
 	}
 
-	// line for button text
-	lv_obj_t*line=lv_line_create(ci->btn,NULL);
-	lv_obj_set_width(line,ci->reg->bw);
-
 	// reg image
-	ci->img=lv_img_create(line,NULL);
-	lv_obj_set_size(ci->img,ci->reg->si,ci->reg->si);
-	lv_obj_align(ci->img,ci->btn,LV_ALIGN_IN_LEFT_MID,gui_font_size/2,0);
-	lv_obj_set_drag_parent(ci->img,true);
-	lv_obj_set_click(ci->img,true);
-	lv_obj_set_event_cb(ci->img,click_item);
-	lv_obj_set_user_data(ci->img,ci);
-	lv_obj_add_style(ci->img,LV_IMG_PART_MAIN,&ci->reg->img_s);
-	lv_img_ext_t*ext=lv_obj_get_ext_attr(ci->img);
+	ci->w_img=lv_obj_create(ci->btn);
+	lv_obj_set_size(ci->w_img,grid_col[0],grid_col[0]);
+	lv_obj_clear_flag(ci->w_img,LV_OBJ_FLAG_SCROLLABLE);
+	lv_obj_clear_flag(ci->w_img,LV_OBJ_FLAG_CLICKABLE);
+	lv_obj_set_style_border_width(ci->w_img,0,0);
+	lv_obj_set_style_bg_opa(ci->w_img,LV_OPA_0,0);
+	lv_obj_set_grid_cell(
+		ci->w_img,
+		LV_GRID_ALIGN_STRETCH,0,1,
+		LV_GRID_ALIGN_STRETCH,0,2
+	);
+	ci->img=lv_img_create(ci->w_img);
+	lv_img_t*ext=(lv_img_t*)ci->img;
 	lv_img_set_src(ci->img,get_icon(ci));
-	if((ext->w<=0||ext->h<=0))
+	if(ext->w<=0||ext->h<=0)
 		lv_img_set_src(ci->img,"inode-file"MIME_EXT);
-	if(ext->w>0&&ext->h>0)lv_img_set_zoom(ci->img,(int)(((float)ci->reg->si/MAX(ext->w,ext->h))*256));
-	lv_img_set_pivot(ci->img,0,0);
-	lv_group_add_obj(gui_grp,ci->img);
+	lv_img_set_size_mode(ci->img,LV_IMG_SIZE_MODE_REAL);
+	lv_img_fill_image(ci->img,grid_col[0],grid_col[0]);
+	lv_obj_center(ci->img);
 
 	// reg name and checkbox
-	ci->chk=lv_checkbox_create(line,NULL);
-	lv_checkbox_set_text(ci->chk,ci->parent?_("Parent key"):ci->name);
-	lv_style_set_focus_checkbox(ci->chk);
-	lv_obj_set_drag_parent(ci->chk,true);
-	lv_obj_set_event_cb(ci->chk,check_item);
-	lv_obj_set_user_data(ci->chk,ci);
-	lv_obj_align(
-		ci->chk,NULL,
-		LV_ALIGN_IN_LEFT_MID,
-		gui_font_size+ci->reg->si,
-		ci->type==hive_t_REG_NONE?0:-gui_font_size
-	);
-	lv_group_add_obj(gui_grp,ci->chk);
-	lv_checkbox_ext_t*e=lv_obj_get_ext_attr(ci->chk);
-	lv_label_set_long_mode(e->label,LV_LABEL_LONG_DOT);
-
-	lv_coord_t lbl_w=ci->reg->bw-ci->reg->si-gui_font_size*2-lv_obj_get_width(e->bullet);
-	if(lv_obj_get_width(e->label)>lbl_w)lv_obj_set_width(e->label,lbl_w);
+	ci->lbl=lv_label_create(ci->btn);
+	lv_label_set_text(ci->lbl,ci->parent?_("Parent key"):ci->name);
 	if(ci->type!=hive_t_REG_NONE){
-		ci->val=lv_label_create(line,NULL);
-		lv_label_set_long_mode(ci->val,LV_LABEL_LONG_DOT);
-		lv_obj_set_width(ci->val,ci->reg->bw-ci->reg->si-(gui_font_size*2));
-		lv_obj_set_small_text_font(ci->val,LV_LABEL_PART_MAIN);
-		lv_obj_align(
-			ci->val,NULL,LV_ALIGN_IN_LEFT_MID,
-			gui_font_size+ci->reg->si,gui_font_size
+		lv_obj_set_grid_cell(
+			ci->lbl,
+			LV_GRID_ALIGN_START,1,1,
+			LV_GRID_ALIGN_CENTER,0,1
 		);
-		char buf[256]={0};
+		ci->val=lv_label_create(ci->btn);
+		lv_label_set_long_mode(ci->val,LV_LABEL_LONG_DOT);
+		lv_obj_set_small_text_font(ci->val,LV_PART_MAIN);
+		lv_obj_set_grid_cell(
+			ci->val,
+			LV_GRID_ALIGN_STRETCH,1,2,
+			LV_GRID_ALIGN_CENTER,1,1
+		);
 		hivex_value_to_string(buf,256,ci->reg->hive,ci->value);
 		lv_label_set_text(ci->val,buf);
-		ci->xtype=lv_label_create(line,NULL);
-		lv_label_set_align(ci->xtype,LV_LABEL_ALIGN_RIGHT);
-		lv_label_set_long_mode(ci->xtype,LV_LABEL_LONG_EXPAND);
+		ci->xtype=lv_label_create(ci->btn);
+		lv_obj_set_style_text_align(ci->xtype,LV_TEXT_ALIGN_RIGHT,0);
+		lv_label_set_long_mode(ci->xtype,LV_LABEL_LONG_CLIP);
 		lv_label_set_text(ci->xtype,hivex_type_to_string(ci->type));
-		lv_obj_set_small_text_font(ci->xtype,LV_LABEL_PART_MAIN);
-		lv_coord_t xs=lv_obj_get_width(ci->xtype);
-		lv_obj_align(
-			ci->xtype,ci->btn,LV_ALIGN_IN_TOP_RIGHT,
-			-gui_font_size/2,gui_font_size/2
+		lv_obj_set_grid_cell(
+			ci->xtype,
+			LV_GRID_ALIGN_STRETCH,2,1,
+			LV_GRID_ALIGN_CENTER,0,1
 		);
-		lbl_w-=xs+gui_dpi/20;
-		if(lv_obj_get_width(e->label)>lbl_w)
-			lv_obj_set_width(e->label,lbl_w);
-	}
+	}else lv_obj_set_grid_cell(
+		ci->lbl,
+		LV_GRID_ALIGN_START,1,2,
+		LV_GRID_ALIGN_CENTER,0,2
+	);
 }
 
 static void add_node_item(struct regedit*reg,bool parent,hive_node_h dir,hive_node_h n){
@@ -286,18 +300,11 @@ static void add_value_item(struct regedit*reg,hive_node_h dir,hive_value_h v){
 static void load_view(struct regedit*reg){
 	if(!reg)return;
 	size_t i=0;
-	reg->bm=gui_font_size;
-	reg->bw=lv_page_get_scrl_width(reg->view)-reg->bm;
-	reg->bh=gui_dpi/2,reg->si=reg->bh-gui_font_size;
-	lv_style_init(&reg->img_s);
-	lv_style_set_outline_width(&reg->img_s,LV_STATE_FOCUSED,gui_dpi/100);
-	lv_style_set_outline_color(&reg->img_s,LV_STATE_FOCUSED,lv_theme_get_color_primary());
-	lv_style_set_radius(&reg->img_s,LV_STATE_FOCUSED,gui_dpi/50);
 	lv_label_set_text(reg->lbl_path,get_string_path(reg,NULL));
 	clean_view(reg);
 	if(reg->hive&&reg->node){
 		hive_node_h pa=hivex_node_parent(reg->hive,reg->node);
-		if(pa)add_node_item(reg,true,0,pa);
+		if(pa&&reg->path)add_node_item(reg,true,0,pa);
 		hive_node_h*cs=hivex_node_children(reg->hive,reg->node);
 		if(cs){
 			for(i=0;cs[i];i++)add_node_item(reg,false,reg->node,cs[i]);
@@ -332,8 +339,7 @@ static int regedit_lost_focus(struct gui_activity*d){
 	list*o=list_first(reg->items);
 	if(o)do{
 		LIST_DATA_DECLARE(item,o,struct reg_item*);
-		if(item->img)lv_group_remove_obj(item->img);
-		if(item->chk)lv_group_remove_obj(item->chk);
+		if(item->btn)lv_group_remove_obj(item->btn);
 	}while((o=o->next));
 	lv_group_remove_obj(reg->btn_add);
 	lv_group_remove_obj(reg->btn_reload);
@@ -476,7 +482,7 @@ static bool reg_delete_cb(uint16_t id,const char*btn __attribute__((unused)),voi
 		failed=true;
 	}else if((l=list_first(reg->items)))do{
 		LIST_DATA_DECLARE(item,l,struct reg_item*);
-		if(!lv_checkbox_is_checked(item->chk))continue;
+		if(!lv_obj_is_checked(item->btn))continue;
 		if(
 			item->node&&!item->value&&item->type==hive_t_REG_NONE&&
 			hivex_node_delete_child(reg->hive,item->node)!=0
@@ -545,7 +551,7 @@ static bool reg_delete_cb(uint16_t id,const char*btn __attribute__((unused)),voi
 	return false;
 }
 
-static void btns_cb(lv_obj_t*obj,lv_event_t e){
+static void btns_cb(lv_event_t*e){
 	list*l;
 	static struct regedit_value value;
 	static const char*create_buttons[]={
@@ -558,28 +564,27 @@ static void btns_cb(lv_obj_t*obj,lv_event_t e){
 		"Cancel",
 		""
 	};
-	if(!obj||e!=LV_EVENT_CLICKED)return;
-	struct regedit*reg=lv_obj_get_user_data(obj);
+	struct regedit*reg=e->user_data;
 	if(!reg||strcmp(guiact_get_last()->name,"regedit")!=0)return;
 	value.hive=reg->hive,value.reg=reg;
 	value.value=0,value.node=0;
-	if(obj==reg->btn_add){
+	if(e->target==reg->btn_add){
 		msgbox_set_user_data(msgbox_create_custom(
 			reg_create_cb,
 			create_buttons,
 			"Select type to add"
 		),reg);
-	}else if(obj==reg->btn_reload){
+	}else if(e->target==reg->btn_reload){
 		load_view(reg);
-	}else if(obj==reg->btn_delete){
+	}else if(e->target==reg->btn_delete){
 		msgbox_set_user_data(msgbox_create_yesno(
 			reg_delete_cb,
 			"Are you sure you want to delete selected items?"
 		),reg);
-	}else if(obj==reg->btn_edit){
+	}else if(e->target==reg->btn_edit){
 		if((l=list_first(reg->items)))do{
 			LIST_DATA_DECLARE(item,l,struct reg_item*);
-			if(lv_checkbox_is_checked(item->chk)){
+			if(lv_obj_is_checked(item->btn)){
 				value.value=item->value;
 				value.node=item->dir;
 			}
@@ -587,17 +592,17 @@ static void btns_cb(lv_obj_t*obj,lv_event_t e){
 		if(value.value)guiact_start_activity(
 			&guireg_regedit_value,&value
 		);
-	}else if(obj==reg->btn_home){
+	}else if(e->target==reg->btn_home){
 		list_free_all_def(reg->path);
 		reg->path=NULL,reg->node=reg->root;
 		load_view(reg);
-	}else if(obj==reg->btn_save){
+	}else if(e->target==reg->btn_save){
 		if(reg->changed)msgbox_set_user_data(msgbox_create_yesno(
 			reg_save_cb,
 			"Notice: Registry Editor is currently in an early beta version, "
 			"it MAY DAMAGE YOUR REGISTRY, are you sure you want to continue save?"
 		),reg);
-	}else if(obj==reg->btn_load){
+	}else if(e->target==reg->btn_load){
 		struct filepicker*fp=filepicker_create(reg_load_cb,"Select registry file to load");
 		filepicker_set_max_item(fp,1);
 		filepicker_set_user_data(fp,reg);
@@ -605,99 +610,77 @@ static void btns_cb(lv_obj_t*obj,lv_event_t e){
 }
 
 static int regedit_draw(struct gui_activity*act){
-	lv_coord_t btx=gui_font_size,btm=btx/2,btw=(gui_sw-btm)/7-btm,bth=btx*2;
+	static lv_coord_t grid_col[]={
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_TEMPLATE_LAST
+	},grid_row[]={
+		LV_GRID_FR(1),
+		LV_GRID_TEMPLATE_LAST
+	};
 	struct regedit*reg=(struct regedit*)act->data;
 	if(!reg)return 0;
 	reg->scr=act->page;
+	struct btn{
+		lv_obj_t**tgt;
+		bool enabled;
+		const char*title;
+	}buttons[]={
+		{&reg->btn_add,    false, LV_SYMBOL_PLUS},
+		{&reg->btn_reload, false, LV_SYMBOL_REFRESH},
+		{&reg->btn_delete, false, LV_SYMBOL_TRASH},
+		{&reg->btn_edit,   false, LV_SYMBOL_EDIT},
+		{&reg->btn_home,   false, LV_SYMBOL_HOME},
+		{&reg->btn_save,   false, LV_SYMBOL_SAVE},
+		{&reg->btn_load,   true,  LV_SYMBOL_UPLOAD},
+		{NULL,false,NULL}
+	};
 
-	reg->view=lv_page_create(reg->scr,NULL);
-	lv_obj_set_style_local_border_width(reg->view,LV_PAGE_PART_BG,LV_STATE_DEFAULT,0);
-	lv_obj_set_style_local_border_width(reg->view,LV_PAGE_PART_BG,LV_STATE_FOCUSED,0);
-	lv_obj_set_style_local_border_width(reg->view,LV_PAGE_PART_BG,LV_STATE_PRESSED,0);
-	lv_obj_set_width(reg->view,gui_sw);
+	lv_obj_set_flex_flow(reg->scr,LV_FLEX_FLOW_COLUMN);
+
+	reg->view=lv_obj_create(reg->scr);
+	lv_obj_set_width(reg->view,lv_pct(100));
+	lv_obj_set_style_border_width(reg->view,0,0);
+	lv_obj_set_flex_flow(reg->view,LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_flex_grow(reg->view,1);
 
 	// current path
-	reg->lbl_path=lv_label_create(reg->scr,NULL);
-	lv_label_set_align(reg->lbl_path,LV_LABEL_ALIGN_CENTER);
+	reg->lbl_path=lv_label_create(reg->scr);
+	lv_obj_set_width(reg->lbl_path,lv_pct(100));
+	lv_obj_set_style_text_align(reg->lbl_path,LV_TEXT_ALIGN_CENTER,0);
 	lv_label_set_long_mode(reg->lbl_path,confd_get_boolean("gui.text_scroll",true)?
-		LV_LABEL_LONG_SROLL_CIRC:
+		LV_LABEL_LONG_SCROLL_CIRCULAR:
 		LV_LABEL_LONG_DOT
 	);
-	lv_obj_set_size(reg->lbl_path,gui_sw,gui_dpi/7);
-	lv_obj_align(reg->lbl_path,NULL,LV_ALIGN_IN_BOTTOM_LEFT,0,-bth-btm*3);
-	lv_obj_set_size(reg->view,gui_sw,lv_obj_get_y(reg->lbl_path));
 	lv_label_set_text(reg->lbl_path,get_string_path(reg,NULL));
 
-	lv_obj_t*line=lv_obj_create(act->page,NULL);
-	lv_obj_set_size(line,gui_sw,gui_dpi/100);
-	lv_obj_align(line,reg->lbl_path,LV_ALIGN_OUT_BOTTOM_MID,0,0);
-	lv_theme_apply(line,LV_THEME_SCR);
-	lv_obj_set_style_local_bg_color(
-		line,LV_OBJ_PART_MAIN,LV_STATE_DEFAULT,
-		lv_color_darken(lv_obj_get_style_bg_color(line,LV_OBJ_PART_MAIN),LV_OPA_20)
-	);
+	lv_obj_t*btns=lv_obj_create(act->page);
+	lv_obj_set_style_radius(btns,0,0);
+	lv_obj_set_scroll_dir(btns,LV_DIR_NONE);
+	lv_obj_set_style_border_width(btns,0,0);
+	lv_obj_set_style_bg_opa(btns,LV_OPA_0,0);
+	lv_obj_clear_flag(btns,LV_OBJ_FLAG_SCROLLABLE);
+	lv_obj_set_grid_dsc_array(btns,grid_col,grid_row);
+	lv_obj_set_size(btns,lv_pct(100),LV_SIZE_CONTENT);
 
-	reg->btn_add=lv_btn_create(act->page,NULL);
-	lv_obj_set_enabled(reg->btn_add,false);
-	lv_obj_set_size(reg->btn_add,btw,bth);
-	lv_obj_set_event_cb(reg->btn_add,btns_cb);
-	lv_obj_set_user_data(reg->btn_add,reg);
-	lv_obj_align(reg->btn_add,NULL,LV_ALIGN_IN_BOTTOM_LEFT,btm,-btm);
-	lv_obj_set_style_local_radius(reg->btn_add,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
-	lv_label_set_text(lv_label_create(reg->btn_add,NULL),LV_SYMBOL_PLUS);
-
-	reg->btn_reload=lv_btn_create(act->page,NULL);
-	lv_obj_set_enabled(reg->btn_reload,false);
-	lv_obj_set_size(reg->btn_reload,btw,bth);
-	lv_obj_set_event_cb(reg->btn_reload,btns_cb);
-	lv_obj_set_user_data(reg->btn_reload,reg);
-	lv_obj_align(reg->btn_reload,reg->btn_add,LV_ALIGN_OUT_RIGHT_MID,btm,0);
-	lv_obj_set_style_local_radius(reg->btn_reload,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
-	lv_label_set_text(lv_label_create(reg->btn_reload,NULL),LV_SYMBOL_REFRESH);
-
-	reg->btn_delete=lv_btn_create(act->page,NULL);
-	lv_obj_set_enabled(reg->btn_delete,false);
-	lv_obj_set_size(reg->btn_delete,btw,bth);
-	lv_obj_set_event_cb(reg->btn_delete,btns_cb);
-	lv_obj_set_user_data(reg->btn_delete,reg);
-	lv_obj_align(reg->btn_delete,reg->btn_reload,LV_ALIGN_OUT_RIGHT_MID,btm,0);
-	lv_obj_set_style_local_radius(reg->btn_delete,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
-	lv_label_set_text(lv_label_create(reg->btn_delete,NULL),LV_SYMBOL_TRASH);
-
-	reg->btn_edit=lv_btn_create(act->page,NULL);
-	lv_obj_set_enabled(reg->btn_edit,false);
-	lv_obj_set_size(reg->btn_edit,btw,bth);
-	lv_obj_set_event_cb(reg->btn_edit,btns_cb);
-	lv_obj_set_user_data(reg->btn_edit,reg);
-	lv_obj_align(reg->btn_edit,reg->btn_delete,LV_ALIGN_OUT_RIGHT_MID,btm,0);
-	lv_obj_set_style_local_radius(reg->btn_edit,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
-	lv_label_set_text(lv_label_create(reg->btn_edit,NULL),LV_SYMBOL_EDIT);
-
-	reg->btn_home=lv_btn_create(act->page,NULL);
-	lv_obj_set_enabled(reg->btn_home,false);
-	lv_obj_set_size(reg->btn_home,btw,bth);
-	lv_obj_set_event_cb(reg->btn_home,btns_cb);
-	lv_obj_set_user_data(reg->btn_home,reg);
-	lv_obj_align(reg->btn_home,reg->btn_edit,LV_ALIGN_OUT_RIGHT_MID,btm,0);
-	lv_obj_set_style_local_radius(reg->btn_home,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
-	lv_label_set_text(lv_label_create(reg->btn_home,NULL),LV_SYMBOL_HOME);
-
-	reg->btn_save=lv_btn_create(act->page,NULL);
-	lv_obj_set_enabled(reg->btn_save,false);
-	lv_obj_set_size(reg->btn_save,btw,bth);
-	lv_obj_set_event_cb(reg->btn_save,btns_cb);
-	lv_obj_set_user_data(reg->btn_save,reg);
-	lv_obj_align(reg->btn_save,reg->btn_home,LV_ALIGN_OUT_RIGHT_MID,btm,0);
-	lv_obj_set_style_local_radius(reg->btn_save,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
-	lv_label_set_text(lv_label_create(reg->btn_save,NULL),LV_SYMBOL_SAVE);
-
-	reg->btn_load=lv_btn_create(act->page,NULL);
-	lv_obj_set_size(reg->btn_load,btw,bth);
-	lv_obj_set_event_cb(reg->btn_load,btns_cb);
-	lv_obj_set_user_data(reg->btn_load,reg);
-	lv_obj_align(reg->btn_load,reg->btn_save,LV_ALIGN_OUT_RIGHT_MID,btm,0);
-	lv_obj_set_style_local_radius(reg->btn_load,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,btm);
-	lv_label_set_text(lv_label_create(reg->btn_load,NULL),LV_SYMBOL_UPLOAD);
+	for(size_t i=0;buttons[i].tgt;i++){
+		*buttons[i].tgt=lv_btn_create(btns);
+		lv_obj_set_enabled(*buttons[i].tgt,buttons[i].enabled);
+		lv_obj_add_event_cb(*buttons[i].tgt,btns_cb,LV_EVENT_CLICKED,reg);
+		lv_obj_t*lbl=lv_label_create(*buttons[i].tgt);
+		lv_label_set_text(lbl,buttons[i].title);
+		lv_obj_set_grid_cell(
+			*buttons[i].tgt,
+			LV_GRID_ALIGN_STRETCH,i,1,
+			LV_GRID_ALIGN_STRETCH,0,1
+		);
+		lv_obj_center(lbl);
+	}
 
 	if(act->args)load_file(reg,act->args);
 	msgbox_alert(

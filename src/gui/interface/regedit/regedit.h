@@ -21,8 +21,6 @@ struct regedit{
 	lv_obj_t*view,*scr,*info,*lbl_path,*last_btn;
 	lv_obj_t*btn_add,*btn_reload,*btn_delete,*btn_edit,*btn_home,*btn_load,*btn_save;
 	list*path,*items;
-	lv_coord_t bm,bw,bh,si;
-	lv_style_t img_s;
 	hive_h*hive;
 	hive_node_h root,node;
 };

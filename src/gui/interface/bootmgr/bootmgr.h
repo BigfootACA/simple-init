@@ -30,9 +30,9 @@ struct bootmgr;
 struct bootmgr_item;
 
 struct bootmgr{
-	lv_coord_t bm,bw,bh,bi,si;
+	lv_coord_t si;
 	lv_label_long_mode_t lm;
-	lv_obj_t*last_btn,*page,*title;
+	lv_obj_t*page,*title;
 	lv_obj_t*btn_open,*btn_default,*btn_edit,*btn_delete;
 	lv_obj_t*btn_create,*btn_reload,*btn_setting;
 	list*items;
@@ -44,7 +44,7 @@ struct bootmgr_item{
 	struct bootmgr*bm;
 	bool parent;
 	boot_config cfg;
-	lv_obj_t*btn,*img,*title;
+	lv_obj_t*btn,*w_img,*img,*title;
 };
 
 struct bootitem{

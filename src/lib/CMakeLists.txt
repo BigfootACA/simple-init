@@ -25,5 +25,6 @@ add_library(init_lib STATIC
 	random.c
 	mime.c
 	websocket.c
+	http.c
 	url.c
 )

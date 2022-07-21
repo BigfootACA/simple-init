@@ -105,6 +105,11 @@ add_library(init_gui STATIC
 	drivers/gtk.c
 	drivers/sdl2.c
 	drivers/modes.c
+	drivers/http.c
+	drivers/http_frame.c
+	drivers/http_ffmpeg.c
+	drivers/http_image.c
+	drivers/http_input.c
 	drivers/stdin.c
 	decoders/freetype.c
 	decoders/stb.c

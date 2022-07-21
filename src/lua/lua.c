@@ -71,7 +71,7 @@ int xlua_return_string(lua_State*L,const char*expr){
 	if(!code)return -1;
 	memset(code,0,len);
 	snprintf(code,len-1,"return (%s)",expr);
-	int r=luaL_loadstring(L,code);
+	int r=luaL_loadbuffer(L,code,strlen(code),expr);
 	free(code);
 	return r;
 }

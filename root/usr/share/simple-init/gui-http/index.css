@@ -1,0 +1,8 @@
+body{
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+}
+canvas#canvas{
+    background-color: black;
+}

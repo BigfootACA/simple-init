@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<link rel="stylesheet" href="index.css" />
+		<script src="web_gui_render.min.js" type="text/javascript"></script>
+		<title>Simple Init Web Frame Buffer</title>
+	</head>
+	<body>
+		<p>
+			Speed: <span id="speed">0B/s</span>&nbsp;
+			Transferred: <span id="trans">0B</span>&nbsp;
+			FPS: <span id="fps">0</span>&nbsp;
+		</p>
+		<canvas class="emscripten" id="canvas"></canvas>
+		<div>
+			<button id="disconnect">Disconnect</button>
+			<button id="reconnect">Reconnect</button>
+			<button id="refresh">Refresh</button>
+			<button id="resume">Resume</button>
+			<button id="pause">Pause</button>
+			<label><input type="checkbox" id="compressed" checked/>Compressed</label>
+		</div>
+	</body>
+	<script src="index.js" type="text/javascript"></script>
+</html>

@@ -24,5 +24,6 @@ add_library(init_lib STATIC
 	aboot.c
 	random.c
 	mime.c
+	websocket.c
 	url.c
 )

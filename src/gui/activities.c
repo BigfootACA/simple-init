@@ -63,10 +63,8 @@ struct gui_register*guiact_register[]={
 	&guireg_acpi_load,
 	&guireg_fdt_load,
 	#else
-	#ifdef ENABLE_FDISK
 	&guireg_guipm_disk_select,
 	&guireg_guipm_partitions,
-	#endif
 	#ifdef ENABLE_LIBTSM
 	&guireg_terminal,
 	#endif

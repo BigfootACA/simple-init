@@ -49,7 +49,7 @@ struct bootmgr_item{
 
 struct bootitem{
 	struct gui_activity*act;
-	lv_obj_t*title,*page,*box,*ok,*cancel;
+	lv_obj_t*title,*box,*ok,*cancel;
 	lv_obj_t*lbl_name,*txt_name;
 	lv_obj_t*lbl_icon,*txt_icon,*img_icon;
 	lv_obj_t*lbl_desc,*txt_desc;

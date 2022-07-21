@@ -11,7 +11,6 @@
 #include"str.h"
 #include"gui.h"
 #include"logger.h"
-#include"gui/tools.h"
 #include"gui/sysbar.h"
 #include"gui/activity.h"
 #include"gui/xmlrender.h"
@@ -195,7 +194,7 @@ int guiact_remove_last(bool focus){
 	return 0;
 }
 
-static void guiact_back_task(lv_task_t*t __attribute__((unused))){
+static void guiact_back_task(lv_timer_t*t __attribute__((unused))){
 	if(sysbar.keyboard){
 		sysbar_keyboard_close();
 		return;
@@ -215,11 +214,11 @@ static void guiact_back_task(lv_task_t*t __attribute__((unused))){
 }
 
 int guiact_do_back(){
-	lv_task_once(lv_task_create(guiact_back_task,0,LV_TASK_PRIO_LOWEST,NULL));
+	lv_timer_set_repeat_count(lv_timer_create(guiact_back_task,0,NULL),1);
 	return 0;
 }
 
-static void guiact_home_task(lv_task_t*t __attribute__((unused))){
+static void guiact_home_task(lv_timer_t*t __attribute__((unused))){
 	sysbar_keyboard_close();
 	list*d;
 	bool proc=false;
@@ -238,7 +237,7 @@ static void guiact_home_task(lv_task_t*t __attribute__((unused))){
 }
 
 int guiact_do_home(){
-	lv_task_once(lv_task_create(guiact_home_task,0,LV_TASK_PRIO_LOWEST,NULL));
+	lv_timer_set_repeat_count(lv_timer_create(guiact_home_task,0,NULL),1);
 	return 0;
 }
 
@@ -324,7 +323,7 @@ struct guiact_data{
 	void*args;
 };
 
-static void guiact_start_task(lv_task_t*t){
+static void guiact_start_task(lv_timer_t*t){
 	int r;
 	struct guiact_data*d=t->user_data;
 	if(!d)return;
@@ -353,12 +352,13 @@ static void guiact_start_task(lv_task_t*t){
 	if(!reg->draw)EDONE(tlog_error("invalid activity"));
 	if(reg->init&&(r=reg->init(act))<0)
 		EDONE(tlog_warn("activity %s init failed: %d",act->name,r));
+	act->page=lv_obj_create(sysbar.content);
+	lv_obj_set_style_radius(act->page,0,0);
+	lv_obj_set_style_pad_all(act->page,gui_font_size/2,0);
+	lv_obj_set_style_border_width(act->page,0,0);
 	if(act->mask){
-		act->page=lv_objmask_create(sysbar.content,NULL);
-		lv_obj_add_style(act->page,LV_OBJMASK_PART_MAIN,lv_style_opa_mask());
-	}else{
-		act->page=lv_obj_create(sysbar.content,NULL);
-		lv_theme_apply(act->page,LV_THEME_SCR);
+		lv_obj_set_style_bg_color(act->page,lv_color_black(),0);
+		lv_obj_set_style_bg_opa(act->page,LV_OPA_50,0);
 	}
 	lv_obj_set_size(act->page,act->w,act->h);
 	lv_obj_set_pos(act->page,gui_sx,gui_sy);
@@ -396,7 +396,7 @@ int guiact_start_activity(struct gui_register*reg,void*args){
 	if(!d)ERET(ENOMEM);
 	memset(d,0,sizeof(struct guiact_data));
 	d->reg=reg,d->args=args;
-	lv_task_once(lv_task_create(guiact_start_task,0,LV_TASK_PRIO_LOWEST,d));
+	lv_timer_set_repeat_count(lv_timer_create(guiact_start_task,0,d),1);
 	return 0;
 }
 

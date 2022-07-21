@@ -53,6 +53,7 @@ option(ENABLE_HIVEX       "Enable hivex for windows registry/bcd edit"        ON
 option(ENABLE_VNCSERVER   "Enable VNC Server for remote GUI"                  OFF)
 option(ENABLE_MICROHTTPD  "Enable HTTP Server"                                OFF)
 option(ENABLE_WEBSOCKET   "Enable WebSocket for HTTP Server"                  OFF)
+option(ENABLE_FFMPEG      "Enable FFMPEG"                                     OFF)
 option(BUILD_SHARED       "Build as shared library"                           OFF)
 option(SYSTEM_FREETYPE2   "Use system FreeType 2 library"                     OFF)
 

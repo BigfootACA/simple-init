@@ -22,4 +22,5 @@
 #cmakedefine ENABLE_LIBTSM      1
 #cmakedefine ENABLE_MICROHTTPD  1
 #cmakedefine ENABLE_WEBSOCKET   1
+#cmakedefine ENABLE_FFMPEG      1
 #cmakedefine BUILD_SHARED       1

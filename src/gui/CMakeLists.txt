@@ -11,7 +11,6 @@ add_library(init_gui STATIC
 	engine/app.c
 	engine/lib.c
 	engine/code.c
-	engine/size.c
 	engine/event.c
 	engine/style.c
 	engine/struct.c

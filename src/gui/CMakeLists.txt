@@ -26,18 +26,10 @@ add_library(init_gui STATIC
 	engine/attributes/input.c
 	engine/attributes/image.c
 	engine/attributes/generic.c
-	engine/data/align.c
-	engine/data/event.c
-	engine/data/theme.c
-	engine/data/layout.c
 	engine/data/attr_hands.c
 	engine/data/obj_hands.c
-	engine/data/style_parts.c
 	engine/data/style_props.c
 	engine/data/style_set_type.c
-	engine/data/style_states.c
-	engine/data/label_align.c
-	engine/data/label_mode.c
 	interface/guipm/guipm.c
 	interface/guipm/disk_select.c
 	interface/guipm/disk_operation.c

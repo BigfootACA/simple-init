@@ -94,6 +94,7 @@
   decoders/jpeg.c
   decoders/image.c
   decoders/freetype.c
+  lua/lua.c
   lua/render.c
   lua/render_obj.c
   lua/render_event.c

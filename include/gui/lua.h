@@ -94,4 +94,5 @@ extern enum lvgl_obj_type lvgl_string_to_type(const char*name);
 extern void lvgl_obj_to_lua(lua_State*L,lv_obj_t*obj);
 extern void guiact_to_lua(lua_State*L,struct gui_activity*act);
 extern void guireg_to_lua(lua_State*L,struct gui_register*reg);
+extern void lua_gui_init(lua_State*L);
 #endif

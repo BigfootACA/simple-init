@@ -8,6 +8,7 @@ add_library(init_gui STATIC
 	lua/lvgl/lib.c
 	lua/activity.c
 	lua/sysbar.c
+	lua/lua.c
 	engine/app.c
 	engine/lib.c
 	engine/code.c

@@ -25,6 +25,7 @@ add_library(init_gui STATIC
 	engine/attributes/size.c
 	engine/attributes/input.c
 	engine/attributes/image.c
+	engine/attributes/layout.c
 	engine/attributes/generic.c
 	engine/data/attr_hands.c
 	engine/data/obj_hands.c

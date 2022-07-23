@@ -62,9 +62,8 @@ int render_activity_get_focus(struct gui_activity*act){
 	if((l=list_first(render->objects)))do{
 		LIST_DATA_DECLARE(d,l,xml_render_obj*);
 		if(
-			!d||!d->hand||
-			!d->id[0]||
-			!d->clickable
+			!d||!d->hand||!d->id[0]||
+			!lv_obj_has_flag(d->obj,LV_OBJ_FLAG_CLICKABLE)
 		)continue;
 		lv_group_add_obj(gui_grp,d->obj);
 	}while((l=l->next));
@@ -81,9 +80,8 @@ int render_activity_lost_focus(struct gui_activity*act){
 	if((l=list_first(render->objects)))do{
 		LIST_DATA_DECLARE(d,l,xml_render_obj*);
 		if(
-			!d||!d->hand||
-			!d->id[0]||
-			!d->clickable
+			!d||!d->hand||!d->id[0]||
+			!lv_obj_has_flag(d->obj,LV_OBJ_FLAG_CLICKABLE)
 		)continue;
 		lv_group_remove_obj(d->obj);
 	}while((l=l->next));

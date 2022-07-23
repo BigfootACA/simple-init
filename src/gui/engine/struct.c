@@ -10,9 +10,9 @@
 #ifdef ENABLE_MXML
 #include<stdlib.h>
 #include"str.h"
-#include"array.h"
 #include"assets.h"
 #include"defines.h"
+#include"gui/lua.h"
 #include"render_internal.h"
 
 void render_obj_attr_free(xml_render_obj_attr*o){
@@ -34,6 +34,7 @@ void render_doc_free(xml_render_doc*o){
 	free(o);
 }
 
+static int list_render_style_free(void*r);
 void render_obj_free(xml_render_obj*o){
 	if(!o)return;
 	if(o->attrs)list_free_all(
@@ -44,10 +45,7 @@ void render_obj_free(xml_render_obj*o){
 		o->callbacks,
 		list_default_free
 	);
-	for(size_t i=0;i<ARRLEN(o->style);i++){
-		if(!o->has_style[i])continue;
-		lv_style_reset(&o->style[i]);
-	}
+	list_free_item(o->styles,list_render_style_free);
 	if(o->obj)lv_obj_set_user_data(o->obj,NULL);
 	memset(o,0,sizeof(xml_render_obj));
 	free(o);
@@ -124,6 +122,7 @@ xml_render*render_create(void*user_data){
 	#ifdef ENABLE_LUA
 	if(!(render->lua=xlua_init()))
 		EDONE(tlog_error("initialize lua failed"));
+	lua_gui_init(render->lua);
 	#endif
 	MUTEX_INIT(render->lock);
 	return render;
@@ -145,8 +144,6 @@ xml_render_obj*render_obj_new(
 	obj->node=node;
 	obj->render=render;
 	obj->parent=parent;
-	obj->auto_height=true;
-	obj->auto_width=true;
 	obj->translate=true;
 	list_obj_add_new(&render->objects,obj);
 	return obj;
@@ -180,6 +177,11 @@ bool list_render_obj_cmp(list*l,void*d){
 bool list_render_style_cmp(list*l,void*d){
 	LIST_DATA_DECLARE(x,l,xml_render_style*);
 	return x&&d&&strcasecmp(x->id,(char*)d)==0;
+}
+
+bool list_render_style_class_cmp(list*l,void*d){
+	LIST_DATA_DECLARE(x,l,xml_render_style*);
+	return x&&d&&strcasecmp(x->class,(char*)d)==0;
 }
 
 bool list_render_code_cmp(list*l,void*d){

@@ -29,7 +29,6 @@
 
 DECL_OBJ_HANDLER(obj);
 DECL_OBJ_HANDLER(label);
-DECL_OBJ_HANDLER(page);
 DECL_OBJ_HANDLER(text);
 DECL_OBJ_HANDLER(btn);
 DECL_OBJ_HANDLER(checkbox);
@@ -38,7 +37,6 @@ DECL_OBJ_HANDLER(arc);
 DECL_OBJ_HANDLER(bar);
 DECL_OBJ_HANDLER(canvas);
 DECL_OBJ_HANDLER(calendar);
-DECL_OBJ_HANDLER(gauge);
 DECL_OBJ_HANDLER(keyboard);
 DECL_OBJ_HANDLER(led);
 DECL_OBJ_HANDLER(img);
@@ -51,32 +49,32 @@ DECL_OBJ_HANDLER(spinbox);
 DECL_OBJ_HANDLER(switch);
 DECL_OBJ_HANDLER(spinner);
 DECL_OBJ_HANDLER(btnmatrix);
-DECL_OBJ_HANDLER(cpicker);
 DECL_OBJ_HANDLER(chart);
 
 xml_obj_handle xml_obj_handles[]={
-	DECL_OBJ_CHAND(VerticalContainer,   OBJ_VER_BOX,  obj),
-	DECL_OBJ_CHAND(HorizontalContainer, OBJ_HOR_BOX,  obj),
-	DECL_OBJ_SCHAND(Container,          OBJ_OBJ,      obj),
-	DECL_OBJ_CHAND(VerticalBox,         OBJ_VER_BOX,  obj),
-	DECL_OBJ_CHAND(HorizontalBox,       OBJ_HOR_BOX,  obj),
-	DECL_OBJ_CHAND(VerBox,              OBJ_VER_BOX,  obj),
-	DECL_OBJ_CHAND(HorBox,              OBJ_HOR_BOX,  obj),
-	DECL_OBJ_SCHAND(Box,                OBJ_OBJ,      obj),
-	DECL_OBJ_SCHAND(Object,             OBJ_OBJ,      obj),
+	DECL_OBJ_SCHAND(VerticalContainer,   OBJ_VER_BOX,  obj),
+	DECL_OBJ_SCHAND(HorizontalContainer, OBJ_HOR_BOX,  obj),
+	DECL_OBJ_SCHAND(Container,           OBJ_OBJ,      obj),
+	DECL_OBJ_SCHAND(VerticalBox,         OBJ_VER_BOX,  obj),
+	DECL_OBJ_SCHAND(HorizontalBox,       OBJ_HOR_BOX,  obj),
+	DECL_OBJ_SCHAND(VerBox,              OBJ_VER_BOX,  obj),
+	DECL_OBJ_SCHAND(HorBox,              OBJ_HOR_BOX,  obj),
+	DECL_OBJ_SCHAND(Wrapper,             OBJ_WRAPPER,  obj),
+	DECL_OBJ_SCHAND(Wrap,                OBJ_WRAPPER,  obj),
+	DECL_OBJ_SCHAND(Box,                 OBJ_OBJ,      obj),
+	DECL_OBJ_SCHAND(Object,              OBJ_OBJ,      obj),
+	DECL_OBJ_SCHAND(Page,                OBJ_OBJ,      obj),
+	DECL_OBJ_SCHAND(View,                OBJ_OBJ,      obj),
 
 	#if LV_USE_LABEL
 	DECL_OBJ_SCHAND(Label, OBJ_LABEL, label),
 	#endif
 
-	#if LV_USE_PAGE
-	DECL_OBJ_SCHAND(Page, OBJ_PAGE, page),
-	DECL_OBJ_SCHAND(View, OBJ_PAGE, page),
-	#endif
-
 	#if LV_USE_BTN
-	DECL_OBJ_SCHAND(Btn, OBJ_BTN, btn),
-	DECL_OBJ_SCHAND(Button, OBJ_BTN, btn),
+	DECL_OBJ_SCHAND(Btn,        OBJ_BTN,      btn),
+	DECL_OBJ_SCHAND(Button,     OBJ_BTN,      btn),
+	DECL_OBJ_SCHAND(BtnItem,    OBJ_BTN_ITEM, btn),
+	DECL_OBJ_SCHAND(ButtonItem, OBJ_BTN_ITEM, btn),
 	#endif
 
 	#if LV_USE_CHECKBOX
@@ -131,10 +129,6 @@ xml_obj_handle xml_obj_handles[]={
 	DECL_OBJ_SCHAND(Canvas, OBJ_CANVAS, canvas),
 	#endif
 
-	#if LV_USE_GAUGE
-	DECL_OBJ_SCHAND(Gauge, OBJ_GAUGE, gauge),
-	#endif
-
 	#if LV_USE_KEYBOARD
 	DECL_OBJ_SCHAND(KBD,      OBJ_KEYBOARD, keyboard),
 	DECL_OBJ_SCHAND(KeyBoard, OBJ_KEYBOARD, keyboard),
@@ -172,11 +166,6 @@ xml_obj_handle xml_obj_handles[]={
 
 	#if LV_USE_SPINNER
 	DECL_OBJ_SCHAND(Spinner, OBJ_SPINNER, spinner),
-	#endif
-
-	#if LV_USE_CPICKER
-	DECL_OBJ_SCHAND(ColorPicker, OBJ_CPICKER, cpicker),
-	DECL_OBJ_SCHAND(CPicker,     OBJ_CPICKER, cpicker),
 	#endif
 
 	#if LV_USE_CHART

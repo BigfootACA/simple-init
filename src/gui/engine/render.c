@@ -27,8 +27,6 @@ bool render_resize(xml_render*render){
 			d->hand->post_hand&&
 			!d->hand->post_hand(d)
 		)result=false;
-		render_expand_parent(d);
-		render_apply_size(d);
 	}while((l=l->next));
 	MUTEX_UNLOCK(render->lock);
 	return result;

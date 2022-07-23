@@ -56,8 +56,8 @@ xml_render_obj*render_event_get_object(xml_render_event*event){
 	return (event&&event->info)?event->info->obj:NULL;
 }
 
-lv_event_t render_event_get_event(xml_render_event*event){
-	return event?event->event:(lv_event_t)-1;
+lv_event_t*render_event_get_event(xml_render_event*event){
+	return event?event->event:NULL;
 }
 
 void*render_event_get_initial_data(xml_render_event*event){

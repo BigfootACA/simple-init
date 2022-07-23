@@ -38,11 +38,25 @@ bool xml_attr_handle_apply_fill(
 	xml_render_obj_attr*obj
 ){
 	CHECK_TYPE(obj,OBJ_IMG)
-	lv_img_fill_image(
-		obj->obj->obj,
-		obj->obj->width,
-		obj->obj->height
-	);
+	lv_obj_update_layout(obj->obj->obj);
+	lv_coord_t w=0,h=0;
+	if(string_is_false(obj->value))return true;
+	if(string_is_true(obj->value)){
+		lv_obj_update_layout(obj->obj->obj);
+		w=lv_obj_get_width(obj->obj->obj);
+		h=lv_obj_get_height(obj->obj->obj);
+	}else{
+		char buff[256],*pw=buff,*ph=NULL,*c;
+		memset(buff,0,sizeof(buff));
+		strncpy(buff,obj->value,sizeof(buff));
+		if((c=strchr(buff,'@')))*c=0,ph=c+1;
+		if(pw[0])w=render_resolve_coord(obj->obj,0,pw);
+		h=ph&&ph[0]?render_resolve_coord(obj->obj,0,ph):w;
+		if(w==0||h==0)return false;
+	}
+	if(w!=0&&h!=0){
+		lv_img_fill_image(obj->obj->obj,w,h);
+	}
 	return true;
 }
 

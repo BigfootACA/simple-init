@@ -58,7 +58,7 @@ static xml_event_info*get_listener(
 
 static int trigger_event(
 	xml_event_info*info,
-	lv_event_t event,
+	lv_event_t*event,
 	void*data
 ){
 	int r=0;
@@ -67,8 +67,8 @@ static int trigger_event(
 	if(info->callback&&info->code)return -1;
 	if(!info||!info->obj)return -1;
 	if(
-		info->event!=event&&
-		info->event!=LV_EVENT_ALL
+		info->event!=_LV_EVENT_LAST&&
+		info->event!=lv_event_get_code(event)
 	)return 0;
 	memset(&e,0,sizeof(e));
 	e.info=info;
@@ -92,7 +92,7 @@ static int trigger_event(
 static xml_event_info*list_add_listener(
 	list**lst,
 	const char*evt_id,
-	lv_event_t event,
+	lv_event_code_t event,
 	xml_render_event_cb callback,
 	xml_render_code*code,
 	void*data
@@ -122,7 +122,7 @@ static xml_event_info*list_add_listener(
 int render_obj_add_code_event_listener(
 	xml_render_obj*obj,
 	const char*evt_id,
-	lv_event_t event,
+	lv_event_code_t event,
 	xml_render_code*code,
 	void*data
 ){
@@ -133,6 +133,9 @@ int render_obj_add_code_event_listener(
 		event,NULL,code,data
 	);
 	if(!info)return -1;
+	if(obj->obj)lv_obj_add_event_cb(
+		obj->obj,lv_render_event_cb,event,info
+	);
 	info->obj=obj;
 	strncpy(
 		info->obj_name,obj->id,
@@ -144,7 +147,7 @@ int render_obj_add_code_event_listener(
 int render_obj_add_event_listener(
 	xml_render_obj*obj,
 	const char*evt_id,
-	lv_event_t event,
+	lv_event_code_t event,
 	xml_render_event_cb callback,
 	void*data
 ){
@@ -155,6 +158,9 @@ int render_obj_add_event_listener(
 		event,callback,NULL,data
 	);
 	if(!info)return -1;
+	if(obj->obj)lv_obj_add_event_cb(
+		obj->obj,lv_render_event_cb,event,info
+	);
 	info->obj=obj;
 	strncpy(
 		info->obj_name,obj->id,
@@ -167,7 +173,7 @@ int render_add_event_listener(
 	xml_render*render,
 	const char*obj_id,
 	const char*evt_id,
-	lv_event_t event,
+	lv_event_code_t event,
 	xml_render_event_cb callback,
 	void*data
 ){
@@ -249,12 +255,12 @@ int render_del_event_listener(
 int render_obj_trigger_listener(
 	xml_render_obj*obj,
 	const char*evt_id,
-	lv_event_t event,
+	lv_event_t*event,
 	void*data
 ){
 	xml_event_info*info;
 	if(!obj||!evt_id||!evt_id[0])return -1;
-	if(event>=LV_EVENT_ALL)return -1;
+	if(lv_event_get_code(event)>=_LV_EVENT_LAST)return -1;
 	if(!(info=obj_get_listener(obj,evt_id)))return -1;
 	return trigger_event(info,event,data);
 }
@@ -263,7 +269,7 @@ int render_trigger_listener(
 	xml_render*render,
 	const char*obj_id,
 	const char*evt_id,
-	lv_event_t event,
+	lv_event_t*event,
 	void*data
 ){
 	if(!render||!render->initialized)return -1;
@@ -277,12 +283,11 @@ int render_trigger_listener(
 
 int render_obj_trigger_event(
 	xml_render_obj*obj,
-	lv_event_t event,
+	lv_event_t*event,
 	void*data
 ){
 	list*l;
 	if(!obj)return -1;
-	if(event>=LV_EVENT_ALL)return -1;
 	if((l=list_first(obj->callbacks)))do{
 		LIST_DATA_DECLARE(d,l,xml_event_info*);
 		if(d)trigger_event(d,event,data);
@@ -293,7 +298,7 @@ int render_obj_trigger_event(
 int render_trigger_event(
 	xml_render*render,
 	const char*obj_id,
-	lv_event_t event,
+	lv_event_t*event,
 	void*data
 ){
 	list*l;
@@ -332,11 +337,12 @@ bool render_move_callbacks(xml_render*render){
 	return result;
 }
 
-void lv_render_event_cb(lv_obj_t*obj,lv_event_t event){
-	xml_render_obj*o;
-	if(!obj||!(o=lv_obj_get_user_data(obj)))return;
-	if(event==LV_EVENT_DELETE)o->obj=NULL;
-	else render_obj_trigger_event(o,event,NULL);
+void lv_render_event_cb(lv_event_t*event){
+	xml_event_info*info;
+	if(!(info=lv_event_get_user_data(event)))return;
+	if(!info->obj||info->obj->obj!=lv_event_get_target(event))return;
+	if(lv_event_get_code(event)==LV_EVENT_DELETE)info->obj->obj=NULL;
+	else render_obj_trigger_event(info->obj,event,NULL);
 }
 #endif
 #endif

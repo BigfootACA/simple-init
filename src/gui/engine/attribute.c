@@ -10,6 +10,8 @@
 #ifdef ENABLE_MXML
 #include<stdlib.h>
 #include"str.h"
+#include"gui/tools.h"
+#include"gui/string.h"
 #include"render_internal.h"
 
 static bool parse_attrs(xml_render_obj*obj){
@@ -110,29 +112,19 @@ static bool setup_attr_attr(xml_render_obj_attr*d,bool resize){
 static bool setup_attr_event(xml_render_obj_attr*d,bool resize){
 	list*l;
 	char evt[256];
-	bool match=false;
-	lv_event_t event;
+	lv_event_code_t event=LV_EVENT_ALL;
 	if(resize)return true;
-	for(size_t i=0;xml_event_specs[i].valid;i++){
-		if(strcasecmp(
-			xml_event_specs[i].name,
-			d->key
-		)!=0)continue;
-		event=xml_event_specs[i].event;
-		memset(evt,0,sizeof(evt));
-		snprintf(
-			evt,sizeof(evt)-1,
-			"event-%s-%s",
-			d->obj->id,
-			xml_event_specs[i].name
-		);
-		match=true;
-		break;
-	}
-	if(!match){
+	if(!lv_name_to_event_code(d->key,&event)){
 		tlog_error("unknown event: %s",d->key);
 		return false;
 	}
+	memset(evt,0,sizeof(evt));
+	snprintf(
+		evt,sizeof(evt)-1,
+		"event-%s-%s",
+		d->obj->id,
+		lv_event_code_to_name(event)
+	);
 	if(!(l=list_search_one(
 		d->obj->render->codes,
 		list_render_code_cmp,
@@ -157,31 +149,30 @@ static bool setup_attr_style(xml_render_obj_attr*d,bool resize){
 
 static bool setup_attr_ref_style(xml_render_obj_attr*d,bool resize){
 	list*l;
-	xml_style_part*part=NULL;
+	bool found=false;
+	lv_part_t part=LV_PART_MAIN;
 	if(resize)return true;
-	if(!(l=list_search_one(
+	if(!lv_name_to_part(d->key,&part)){
+		tlog_error("unknown style part %s",d->key);
+		return false;
+	}
+	if((l=list_search_one(
 		d->obj->render->styles,
 		list_render_style_cmp,
 		(void*)d->value
 	))){
-		tlog_error("style %s not found",d->value);
-		return false;
+		LIST_DATA_DECLARE(style,l,xml_render_style*);
+		lv_obj_add_style(d->obj->obj,&style->style,style->selector|part);
+		return true;
 	}
-	for(size_t i=0;xml_style_parts[i].valid;i++){
-		if(d->obj->type!=xml_style_parts[i].type)continue;
-		if(strcasecmp(xml_style_parts[i].name,d->key)!=0)continue;
-		part=&xml_style_parts[i];
-		break;
-	}
-	if(!part){
-		tlog_error("unknown style part %s",d->key);
-		return false;
-	}
-	lv_obj_add_style(
-		d->obj->obj,part->part,
-		&LIST_DATA(l,xml_render_style*)->style
-	);
-	return true;
+	if((l=list_first(d->obj->render->styles)))do{
+		LIST_DATA_DECLARE(style,l,xml_render_style*);
+		if(!list_render_style_class_cmp(l,d->value))continue;
+		lv_obj_add_style(d->obj->obj,&style->style,style->selector|part);
+		found=true;
+	}while((l=l->next));
+	if(!found)tlog_error("style %s not found",d->value);
+	return found;
 }
 
 bool render_init_attributes(xml_render_obj*obj,bool resize){
@@ -212,8 +203,20 @@ bool render_init_attributes(xml_render_obj*obj,bool resize){
 	}while((l=l->next));
 	if(!result)tlog_error("attribute apply failed");
 	if(!obj->id[0]){
-		tlog_error("id not set");
-		result=false;
+		size_t i=0;
+		char name[sizeof(obj->id)];
+		do{
+			memset(name,0,sizeof(name));
+			snprintf(
+				name,sizeof(name),
+				"auto-obj-%zu",i++
+			);
+		}while(list_search_one(
+			obj->render->objects,
+			list_render_obj_cmp,
+			name
+		));
+		strncpy(obj->id,name,sizeof(obj->id)-1);
 	}
 	return result;
 }

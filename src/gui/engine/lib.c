@@ -16,41 +16,61 @@
 
 lv_coord_t render_resolve_coord(
 	xml_render_obj*obj,
-	lv_coord_t parent,
+	lv_coord_t max,
 	const char*name
 ){
 	size_t len=0;
+	bool grid=false;
+	bool grid_fr=false;
 	bool percent=false;
 	char*val,*end=NULL;
 	lv_coord_t result=0;
 	if(!obj||!name)return 0;
 	if(!(val=strdup(name)))goto done;
+	trim(val);
 	if((len=strlen(val))<=0)goto done;
+	if(max==LV_GRID_TEMPLATE_LAST)grid=true,max=0;
+	if(val[0]=='#'&&grid)grid_fr=true;
 	if(val[len-1]=='%')percent=true,val[len-1]=0;
-	if(val[0]=='?'){
+	if(strcasecmp(val,"auto")==0)result=grid?
+		LV_GRID_CONTENT:LV_SIZE_CONTENT;
+	else if(val[0]=='?'){
 		if(percent||len<=1)
 			EDONE(tlog_error("invalid expression: %s",name));
 		#ifdef ENABLE_LUA
 		if(xlua_eval_string(obj->render->lua,val+1)!=LUA_OK){
-			tlog_error("error while running lua expression %s",name);
+			tlog_error("error while running lua expression %s",name+1);
 			xlua_show_error(obj->render->lua,TAG);
+			result=0;
+		}else{
+			result=lua_tointeger(obj->render->lua,-1);
+			lua_pop(obj->render->lua,1);
 		}
-		result=lua_tointeger(obj->render->lua,-1);
-		lua_pop(obj->render->lua,1);
 		#else
 		EDONE(tlog_error("lua is disabled"));
 		#endif
 	}else{
-		if(strcmp(val,"0")!=0){
+		char*v=val;
+		if(grid_fr)v++;
+		if(strcmp(v,"0")!=0){
 			errno=0;
-			result=(lv_coord_t)strtol(val,&end,0);
-			if(*end||val==end||errno!=0){
+			result=(lv_coord_t)strtol(v,&end,0);
+			if(*end||v==end||errno!=0){
 				tlog_error("invalid value: %s",name);
 				result=0;
 				goto done;
 			}
 		}
-		if(percent)result=result*parent/100;
+		if(grid_fr){
+			if(result<=0){
+				tlog_error("invalid grid fr: %s",name);
+				result=0;
+				goto done;
+			}
+			result=lv_grid_fr(result);
+		}else if(percent)result=max>0?
+			(result*max/100):
+			lv_pct(result);
 	}
 	done:
 	if(val)free(val);

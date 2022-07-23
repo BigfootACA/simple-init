@@ -8,27 +8,19 @@
 
 #ifdef ENABLE_GUI
 #ifdef ENABLE_MXML
+#include"gui/tools.h"
+#include"gui/string.h"
 #include"../render_internal.h"
 
 bool xml_attr_handle_pre_align(xml_render_obj_attr*obj){
-	bool match=false;
 	if(!obj->obj->obj->parent)return false;
-	for(size_t i=0;xml_align_specs[i].valid;i++){
-		if(strcasecmp(
-			xml_align_specs[i].name,
-			obj->value
-		)!=0)continue;
-		obj->fields.align_val=
-			xml_align_specs[i].align;
-		match=true;
-		break;
-	}
+	bool match=lv_name_to_align(obj->value,&obj->fields.align_val);
 	if(!match)tlog_warn("invalid align: %s",obj->value);
 	return match;
 }
 
 bool xml_attr_handle_apply_align(xml_render_obj_attr*obj){
-	lv_obj_align(
+	lv_obj_align_to(
 		obj->obj->cont?
 		obj->obj->cont:
 		obj->obj->obj,
@@ -36,49 +28,57 @@ bool xml_attr_handle_apply_align(xml_render_obj_attr*obj){
 		obj->fields.align_val,
 		0,0
 	);
-	render_reload_pos(obj->obj);
+	return true;
+}
+
+bool xml_attr_handle_apply_x(xml_render_obj_attr*obj){
+	if(!obj->obj->parent)return false;
+	lv_obj_set_x(obj->obj->obj,render_resolve_coord(obj->obj,0,obj->value));
+	return true;
+}
+
+bool xml_attr_handle_apply_y(xml_render_obj_attr*obj){
+	if(!obj->obj->parent)return false;
+	lv_obj_set_y(obj->obj->obj,render_resolve_coord(obj->obj,0,obj->value));
+	return true;
+}
+
+bool xml_attr_handle_apply_pos(xml_render_obj_attr*obj){
+	if(!obj->obj->parent)return false;
+	lv_coord_t pos=render_resolve_coord(obj->obj,0,obj->value);
+	lv_obj_set_pos(obj->obj->obj,pos,pos);
 	return true;
 }
 
 bool xml_attr_handle_pre_top(xml_render_obj_attr*obj){
 	if(!obj->obj->parent)return false;
-	obj->obj->y=render_resolve_coord(
-		obj->obj,
-		obj->obj->parent->height,
-		obj->value
-	);
+	lv_obj_set_y(obj->obj->obj,render_resolve_coord(obj->obj,0,obj->value));
 	return true;
 }
 
 bool xml_attr_handle_pre_bottom(xml_render_obj_attr*obj){
 	if(!obj->obj->parent)return false;
-	obj->obj->y=obj->obj->parent->height-
-		render_resolve_coord(
-			obj->obj,
-			obj->obj->parent->height,
-			obj->value
-		);
+	lv_coord_t y=render_resolve_coord(obj->obj,0,obj->value);
+	lv_obj_update_layout(obj->obj->parent->obj);
+	lv_coord_t ph=lv_obj_get_height(obj->obj->parent->obj);
+	lv_coord_t ch=lv_obj_get_height(obj->obj->obj);
+	lv_obj_set_y(obj->obj->obj,ph-ch-y);
 	return true;
 }
 
 bool xml_attr_handle_pre_left(xml_render_obj_attr*obj){
 	if(!obj->obj->parent)return false;
-	obj->obj->x=render_resolve_coord(
-		obj->obj,
-		obj->obj->parent->width,
-		obj->value
-	);
+	lv_obj_set_x(obj->obj->obj,render_resolve_coord(obj->obj,0,obj->value));
 	return true;
 }
 
 bool xml_attr_handle_pre_right(xml_render_obj_attr*obj){
 	if(!obj->obj->parent)return false;
-	obj->obj->x=obj->obj->parent->width-
-		render_resolve_coord(
-			obj->obj,
-			obj->obj->parent->width,
-			obj->value
-		);
+	lv_coord_t x=render_resolve_coord(obj->obj,0,obj->value);
+	lv_obj_update_layout(obj->obj->parent->obj);
+	lv_coord_t pw=lv_obj_get_width(obj->obj->parent->obj);
+	lv_coord_t cw=lv_obj_get_width(obj->obj->obj);
+	lv_obj_set_y(obj->obj->obj,pw-cw-x);
 	return true;
 }
 
@@ -104,12 +104,8 @@ static inline xml_render_obj*_lookup(
 	)))tlog_warn("object %s not found",n);
 	else{
 		of=LIST_DATA(l,xml_render_obj*);
-		if(cx&&x)*x=render_resolve_coord(
-			of,lv_obj_get_width(of->obj),cx
-		);
-		if(cy&&y)*y=render_resolve_coord(
-			of,lv_obj_get_height(of->obj),cy
-		);
+		if(cx&&x)*x=render_resolve_coord(of,0,cx);
+		if(cy&&y)*y=render_resolve_coord(of,0,cy);
 	}
 	free(n);
 	return of;
@@ -132,11 +128,7 @@ bool xml_attr_handle_apply_top_of(xml_render_obj_attr*obj){
 	xml_render_obj*of=_lookup(obj->obj,obj->value,&x,&y);
 	if(!of)return false;
 	if(check_skip(obj))return true;
-	y+=lv_obj_get_style_pad_inner(obj->obj->parent->obj,LV_OBJ_PART_MAIN);
-	y+=lv_obj_get_style_margin_bottom(obj->obj->obj,LV_OBJ_PART_MAIN);
-	y+=lv_obj_get_style_margin_top(of->obj,LV_OBJ_PART_MAIN);
-	lv_obj_align(obj->obj->obj,of->obj,LV_ALIGN_OUT_TOP_MID,x,y);
-	render_reload_pos(obj->obj);
+	lv_obj_align_to(obj->obj->obj,of->obj,LV_ALIGN_OUT_TOP_MID,x,y);
 	return true;
 }
 
@@ -145,11 +137,7 @@ bool xml_attr_handle_apply_left_of(xml_render_obj_attr*obj){
 	xml_render_obj*of=_lookup(obj->obj,obj->value,&x,&y);
 	if(!of)return false;
 	if(check_skip(obj))return true;
-	x+=lv_obj_get_style_pad_inner(obj->obj->parent->obj,LV_OBJ_PART_MAIN);
-	x+=lv_obj_get_style_margin_right(obj->obj->obj,LV_OBJ_PART_MAIN);
-	x+=lv_obj_get_style_margin_left(of->obj,LV_OBJ_PART_MAIN);
-	lv_obj_align(obj->obj->obj,of->obj,LV_ALIGN_OUT_LEFT_MID,x,y);
-	render_reload_pos(obj->obj);
+	lv_obj_align_to(obj->obj->obj,of->obj,LV_ALIGN_OUT_LEFT_MID,x,y);
 	return true;
 }
 
@@ -158,11 +146,7 @@ bool xml_attr_handle_apply_bottom_of(xml_render_obj_attr*obj){
 	xml_render_obj*of=_lookup(obj->obj,obj->value,&x,&y);
 	if(!of)return false;
 	if(check_skip(obj))return true;
-	y+=lv_obj_get_style_pad_inner(obj->obj->parent->obj,LV_OBJ_PART_MAIN);
-	y+=lv_obj_get_style_margin_top(obj->obj->obj,LV_OBJ_PART_MAIN);
-	y+=lv_obj_get_style_margin_bottom(of->obj,LV_OBJ_PART_MAIN);
-	lv_obj_align(obj->obj->obj,of->obj,LV_ALIGN_OUT_BOTTOM_MID,x,y);
-	render_reload_pos(obj->obj);
+	lv_obj_align_to(obj->obj->obj,of->obj,LV_ALIGN_OUT_BOTTOM_MID,x,y);
 	return true;
 }
 
@@ -171,11 +155,7 @@ bool xml_attr_handle_apply_right_of(xml_render_obj_attr*obj){
 	xml_render_obj*of=_lookup(obj->obj,obj->value,&x,&y);
 	if(!of)return false;
 	if(check_skip(obj))return true;
-	x+=lv_obj_get_style_pad_inner(obj->obj->parent->obj,LV_OBJ_PART_MAIN);
-	x+=lv_obj_get_style_margin_left(obj->obj->obj,LV_OBJ_PART_MAIN);
-	x+=lv_obj_get_style_margin_right(of->obj,LV_OBJ_PART_MAIN);
-	lv_obj_align(obj->obj->obj,of->obj,LV_ALIGN_OUT_RIGHT_MID,x,y);
-	render_reload_pos(obj->obj);
+	lv_obj_align_to(obj->obj->obj,of->obj,LV_ALIGN_OUT_RIGHT_MID,x,y);
 	return true;
 }
 #endif

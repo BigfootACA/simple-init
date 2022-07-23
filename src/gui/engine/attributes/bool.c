@@ -9,7 +9,6 @@
 #ifdef ENABLE_GUI
 #ifdef ENABLE_MXML
 #include"str.h"
-#include"gui/tools.h"
 #include"../render_internal.h"
 
 static bool xml_attr_handle_pre_boolean(
@@ -24,6 +23,16 @@ static bool xml_attr_handle_pre_boolean(
 	}
 	return true;
 }
+
+static void hand_flag(xml_render_obj_attr*obj,lv_obj_flag_t flag){(obj->fields.bool_val?lv_obj_add_flag:lv_obj_clear_flag)(obj->obj->obj,flag);}
+static void hand_state(xml_render_obj_attr*obj,lv_state_t state){(obj->fields.bool_val?lv_obj_add_state:lv_obj_clear_state)(obj->obj->obj,state);}
+static void hand_flag_r(xml_render_obj_attr*obj,lv_obj_flag_t flag){(obj->fields.bool_val?lv_obj_clear_flag:lv_obj_add_flag)(obj->obj->obj,flag);}
+static void hand_state_r(xml_render_obj_attr*obj,lv_state_t state){(obj->fields.bool_val?lv_obj_clear_state:lv_obj_add_state)(obj->obj->obj,state);}
+
+#define DECL_FLAG(_name,flag) bool xml_attr_handle_apply_##_name(xml_render_obj_attr*obj){hand_flag(obj,flag);return true;}
+#define DECL_STATE(_name,state) bool xml_attr_handle_apply_##_name(xml_render_obj_attr*obj){hand_state(obj,state);return true;}
+#define DECL_FLAG_R(_name,flag) bool xml_attr_handle_apply_##_name(xml_render_obj_attr*obj){hand_flag_r(obj,flag);return true;}
+#define DECL_STATE_R(_name,state) bool xml_attr_handle_apply_##_name(xml_render_obj_attr*obj){hand_state_r(obj,state);return true;}
 #define XDECL_BOOL(_name,_expr) bool xml_attr_handle_pre_##_name(xml_render_obj_attr*obj){\
 	bool r=xml_attr_handle_pre_boolean(obj);\
 	if(r){_expr;}\
@@ -32,10 +41,6 @@ static bool xml_attr_handle_pre_boolean(
 #define DECL_BOOL(_name)XDECL_BOOL(_name,)
 
 XDECL_BOOL(translate,obj->obj->translate=obj->fields.bool_val)
-XDECL_BOOL(auto_width,obj->obj->auto_width=obj->fields.bool_val)
-XDECL_BOOL(auto_height,obj->obj->auto_height=obj->fields.bool_val)
-DECL_BOOL(drag_parent)
-DECL_BOOL(drag_throw)
 DECL_BOOL(bind_input)
 DECL_BOOL(clickable)
 DECL_BOOL(password)
@@ -45,28 +50,23 @@ DECL_BOOL(oneline)
 DECL_BOOL(recolor)
 DECL_BOOL(visible)
 DECL_BOOL(hidden)
+DECL_BOOL(center)
 DECL_BOOL(drag)
-DECL_BOOL(fill)
 
-bool xml_attr_handle_apply_checked(
-	xml_render_obj_attr*obj
-){
-	switch(obj->obj->type){
-		case OBJ_CHECKBOX:
-			lv_checkbox_set_checked(
-				obj->obj->obj,
-				obj->fields.bool_val
-			);
-		break;
-		default:
-			lv_obj_set_checked(
-				obj->obj->obj,
-				obj->fields.bool_val
-			);
-		break;
-	}
-	return true;
-}
+DECL_FLAG(hidden,LV_OBJ_FLAG_HIDDEN)
+DECL_FLAG_R(visible,LV_OBJ_FLAG_HIDDEN)
+DECL_FLAG(clickable,LV_OBJ_FLAG_CLICKABLE)
+DECL_FLAG(floating,LV_OBJ_FLAG_FLOATING)
+DECL_FLAG(scrollable,LV_OBJ_FLAG_SCROLLABLE)
+DECL_FLAG(snappable,LV_OBJ_FLAG_SNAPPABLE)
+DECL_STATE(edited,LV_STATE_EDITED)
+DECL_STATE(hoverd,LV_STATE_HOVERED)
+DECL_STATE(checked,LV_STATE_CHECKED)
+DECL_STATE(focused,LV_STATE_FOCUSED)
+DECL_STATE(pressed,LV_STATE_PRESSED)
+DECL_STATE(scrolled,LV_STATE_SCROLLED)
+DECL_STATE(disabled,LV_STATE_DISABLED)
+DECL_STATE_R(enabled,LV_STATE_DISABLED)
 
 bool xml_attr_handle_apply_recolor(
 	xml_render_obj_attr*obj
@@ -79,75 +79,13 @@ bool xml_attr_handle_apply_recolor(
 	return true;
 }
 
-bool xml_attr_handle_apply_enabled(
+bool xml_attr_handle_apply_center(
 	xml_render_obj_attr*obj
 ){
-	lv_obj_set_enabled(
-		obj->obj->obj,
-		obj->fields.bool_val
-	);
+	if(obj->fields.bool_val)
+		lv_obj_center(obj->obj->obj);
 	return true;
 }
 
-bool xml_attr_handle_apply_visible(
-	xml_render_obj_attr*obj
-){
-	lv_obj_set_hidden(
-		obj->obj->obj,
-		!obj->fields.
-	bool_val);
-	return true;
-}
-
-bool xml_attr_handle_apply_hidden(
-	xml_render_obj_attr*obj
-){
-	lv_obj_set_hidden(
-		obj->obj->obj,
-		obj->fields.bool_val
-	);
-	return true;
-}
-
-bool xml_attr_handle_apply_drag(
-	xml_render_obj_attr*obj
-){
-	lv_obj_set_drag(
-		obj->obj->obj,
-		obj->fields.bool_val
-	);
-	return true;
-}
-
-bool xml_attr_handle_apply_drag_throw(
-	xml_render_obj_attr*obj
-){
-	lv_obj_set_drag_throw(
-		obj->obj->obj,
-		obj->fields.bool_val
-	);
-	return true;
-}
-
-bool xml_attr_handle_apply_drag_parent(
-	xml_render_obj_attr*obj
-){
-	lv_obj_set_drag_parent(
-		obj->obj->obj,
-		obj->fields.bool_val
-	);
-	return true;
-}
-
-bool xml_attr_handle_apply_clickable(
-	xml_render_obj_attr*obj
-){
-	lv_obj_set_click(
-		obj->obj->obj,
-		obj->fields.bool_val
-	);
-	obj->obj->clickable=obj->fields.bool_val;
-	return true;
-}
 #endif
 #endif

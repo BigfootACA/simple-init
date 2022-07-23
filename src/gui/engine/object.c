@@ -8,14 +8,11 @@
 
 #ifdef ENABLE_GUI
 #ifdef ENABLE_MXML
-#include"array.h"
 #include"render_internal.h"
 
 static bool render_init_object(xml_render_obj*obj){
 	const char*type;
 	xml_obj_handle*hand;
-	for(size_t i=0;i<ARRLEN(obj->style);i++)
-		lv_style_init(&obj->style[i]);
 	if(!obj->parent){
 		strcpy(obj->id,"root");
 		obj->obj=obj->render->root_obj;
@@ -38,15 +35,7 @@ static bool render_init_object(xml_render_obj*obj){
 			return false;
 		}
 		if(!obj->obj)return false;
-		obj->clickable=lv_obj_get_click(obj->obj);
 		lv_obj_set_user_data(obj->obj,obj);
-		lv_obj_set_event_cb(obj->obj,lv_render_event_cb);
-		if(OBJ_IS_CONTAINER(obj)){
-			lv_coord_t p=lv_obj_get_style_pad_inner(obj->parent->obj,LV_OBJ_PART_MAIN);
-			lv_style_set_pad_inner(&obj->style[LV_OBJ_PART_MAIN],LV_STATE_DEFAULT,p);
-			lv_style_set_pad_all(&obj->style[LV_OBJ_PART_MAIN],LV_STATE_DEFAULT,5);
-		}
-		obj->has_style[LV_OBJ_PART_MAIN]=true;
 		return true;
 	}
 	tlog_error("unsupported object type: %s",type);
@@ -70,6 +59,10 @@ static int style_set_id(
 		style->render->styles,
 		list_render_style_cmp,
 		(void*)value
+	)||list_search_one(
+		style->render->styles,
+		list_render_style_class_cmp,
+		(void*)value
 	))return trlog_error(
 		-1,"style %s already exists",
 		value
@@ -77,6 +70,34 @@ static int style_set_id(
 	strncpy(
 		style->id,value,
 		sizeof(style->id)-1
+	);
+	return 0;
+}
+
+static int style_set_class(
+	xml_render_style*style,
+	const char*value
+){
+	if(!value[0])return trlog_error(
+		-1,"invalid style class"
+	);
+	if(style->class[0])return trlog_error(
+		-1,"style class %s already set",
+		style->class
+	);
+	if(strlen(value)>=sizeof(style->class)-1)
+		return trlog_error(-1,"style class too long");
+	if(list_search_one(
+		style->render->styles,
+		list_render_style_cmp,
+		(void*)value
+	))return trlog_error(
+		-1,"style %s already exists",
+		value
+	);
+	strncpy(
+		style->class,value,
+		sizeof(style->class)-1
 	);
 	return 0;
 }
@@ -98,13 +119,33 @@ static bool render_parse_style(
 			if(style_set_id(style,value)!=0)goto done;
 			continue;
 		}
+		if(strcasecmp(key,"class")==0){
+			if(style_set_class(style,value)!=0)goto done;
+			continue;
+		}
 		if(!xml_style_apply_style(style,key,value)){
 			tlog_error("add style %s failed",key);
 			goto done;
 		}
 	}
-	if(!style->id[0])
-		EDONE(tlog_error("style id not set"));
+	if(!style->id[0]){
+		if(style->class[0]){
+			size_t i=0;
+			char name[sizeof(style->id)];
+			do{
+				memset(name,0,sizeof(name));
+				snprintf(
+					name,sizeof(name),
+					"%s-%zu",style->class,i++
+				);
+			}while(list_search_one(
+				style->render->styles,
+				list_render_style_cmp,
+				name
+			));
+			strncpy(style->id,name,sizeof(style->id)-1);
+		}else EDONE(tlog_error("style id not set"));
+	}
 	return true;
 	done:
 	if(style){
@@ -247,26 +288,18 @@ bool render_parse_object(
 	xml_render_obj*parent,
 	mxml_node_t*node
 ){
+	list*l;
 	bool result=true;
 	xml_render_obj*obj;
 	if(!(obj=render_obj_new(render,parent,node)))
 		return false;
 	if(!render_init_object(obj))goto done;
-	render_reload_size(obj);
-	render_reload_pos(obj);
 	if(!render_init_attributes(obj,false))goto done;
 	if(!obj->id[0])EDONE(tlog_error("id does not set"));
-	for(size_t i=0;i<ARRLEN(obj->style);i++){
-		if(!obj->has_style[i])continue;
-		if(obj->cont)lv_obj_add_style(
-			obj->cont,(uint8_t)i,
-			&obj->style[i]
-		);
-		lv_obj_add_style(
-			obj->obj,(uint8_t)i,
-			&obj->style[i]
-		);
-	}
+	if((l=list_first(obj->styles)))do{
+		LIST_DATA_DECLARE(style,l,xml_render_style*);
+		lv_obj_add_style(obj->obj,&style->style,style->selector);
+	}while((l=l->next));
 	if(!render_parse_children(obj,node))
 		result=false;
 	if(
@@ -277,8 +310,6 @@ bool render_parse_object(
 		"post init object %s failed",
 		obj->id
 	));
-	render_expand_parent(obj);
-	render_apply_size(obj);
 	return result;
 	done:
 	if(obj->obj&&!parent)lv_obj_del(obj->obj);

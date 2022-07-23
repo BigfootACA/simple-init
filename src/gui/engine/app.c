@@ -46,6 +46,7 @@ bool xml_string_load_activity(const char*content){
 	const char*val=NULL;
 	mxml_node_t*doc,*root,*x;
 	struct gui_register reg;
+	memset(&reg,0,sizeof(struct gui_register));
 	if(!(doc=mxmlLoadString(
 		NULL,content,
 		MXML_OPAQUE_CALLBACK
@@ -65,7 +66,6 @@ bool xml_string_load_activity(const char*content){
 		EDONE(tlog_error("incompatible new version xml"));
 	if(cl<ACTIVITY_COMPATIBLE_LEVEL)
 		tlog_warn("found an old version of xml, need to upgrade");
-	memset(&reg,0,sizeof(struct gui_register));
 	LOAD_STR(Name,name);
 	LOAD_STR(Title,title);
 	LOAD_STR(Icon,icon);

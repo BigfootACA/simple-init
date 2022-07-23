@@ -19,7 +19,6 @@ bool xml_attr_handle_apply_oneline(
 		obj->obj->obj,
 		obj->fields.bool_val
 	);
-	render_reload_size(obj->obj);
 	return true;
 }
 
@@ -27,7 +26,7 @@ bool xml_attr_handle_apply_password(
 	xml_render_obj_attr*obj
 ){
 	CHECK_TYPE(obj,OBJ_TEXTAREA)
-	lv_textarea_set_pwd_mode(
+	lv_textarea_set_password_mode(
 		obj->obj->obj,
 		obj->fields.bool_val
 	);

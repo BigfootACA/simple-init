@@ -10,9 +10,8 @@
 #define _XMLRENDER_H
 #include"gui.h"
 #include"gui/activity.h"
-#define RENDER_COMPATIBLE_LEVEL   0x00000001
-#define ACTIVITY_COMPATIBLE_LEVEL 0x00000001
-#define LV_EVENT_ALL _LV_EVENT_LAST
+#define RENDER_COMPATIBLE_LEVEL   0x00000002
+#define ACTIVITY_COMPATIBLE_LEVEL 0x00000002
 typedef enum xml_obj_type xml_obj_type;
 typedef struct xml_render xml_render;
 typedef struct xml_render_obj xml_render_obj;
@@ -27,8 +26,10 @@ enum xml_obj_type{
 	OBJ_OBJ,
 	OBJ_VER_BOX,
 	OBJ_HOR_BOX,
+	OBJ_WRAPPER,
 	OBJ_PAGE,
 	OBJ_BTN,
+	OBJ_BTN_ITEM,
 	OBJ_LABEL,
 	OBJ_TEXTAREA,
 	OBJ_IMG,
@@ -86,7 +87,7 @@ extern const char*render_event_get_event_id(xml_render_event*event);
 extern const char*render_event_get_obj_id(xml_render_event*event);
 extern lv_obj_t*render_event_get_lvgl_object(xml_render_event*event);
 extern xml_render_obj*render_event_get_object(xml_render_event*event);
-extern lv_event_t render_event_get_event(xml_render_event*event);
+extern lv_event_t*render_event_get_event(xml_render_event*event);
 extern void*render_event_get_initial_data(xml_render_event*event);
 extern void*render_event_get_trigger_data(xml_render_event*event);
 extern bool render_set_content_sstring(
@@ -121,7 +122,7 @@ extern xml_render_style*render_lookup_style(
 extern int render_obj_add_event_listener(
 	xml_render_obj*obj,
 	const char*evt_id,
-	lv_event_t event,
+	lv_event_code_t event,
 	xml_render_event_cb callback,
 	void*data
 );
@@ -129,14 +130,14 @@ extern int render_add_event_listener(
 	xml_render*render,
 	const char*obj_id,
 	const char*evt_id,
-	lv_event_t event,
+	lv_event_code_t event,
 	xml_render_event_cb callback,
 	void*data
 );
 extern int render_obj_add_code_event_listener(
 	xml_render_obj*obj,
 	const char*evt_id,
-	lv_event_t event,
+	lv_event_code_t event,
 	xml_render_code*code,
 	void*data
 );
@@ -152,25 +153,25 @@ extern int render_del_event_listener(
 extern int render_obj_trigger_listener(
 	xml_render_obj*obj,
 	const char*evt_id,
-	lv_event_t event,
+	lv_event_t*event,
 	void*data
 );
 extern int render_trigger_listener(
 	xml_render*render,
 	const char*obj_id,
 	const char*evt_id,
-	lv_event_t event,
+	lv_event_t*event,
 	void*data
 );
 extern int render_obj_trigger_event(
 	xml_render_obj*obj,
-	lv_event_t event,
+	lv_event_t*event,
 	void*data
 );
 extern int render_trigger_event(
 	xml_render*render,
 	const char*obj_id,
-	lv_event_t event,
+	lv_event_t*event,
 	void*data
 );
 #endif

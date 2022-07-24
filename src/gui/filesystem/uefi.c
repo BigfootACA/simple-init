@@ -6,6 +6,7 @@
  *
  */
 
+#include "src/misc/lv_fs.h"
 #ifdef ENABLE_GUI
 #ifdef ENABLE_UEFI
 #include<stdlib.h>
@@ -107,7 +108,7 @@ static EFI_HANDLE get_fs_proto(UINTN*bs){
 	return hb;
 }
 
-static lv_res_t fs_get_volume_label(struct _lv_fs_drv_t*drv,char*label,size_t len){
+static lv_res_t fs_get_volume_label(lv_fs_drv_t*drv,char*label,size_t len){
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
 	EFI_FILE_SYSTEM_VOLUME_LABEL*fi=NULL;
@@ -128,22 +129,21 @@ static lv_res_t fs_get_volume_label(struct _lv_fs_drv_t*drv,char*label,size_t le
 	return LV_FS_RES_OK;
 }
 
-static bool fs_ready_cb(struct _lv_fs_drv_t*drv){
+static bool fs_ready_cb(lv_fs_drv_t*drv){
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
 	return fs->proto!=NULL;
 }
 
-static lv_res_t fs_open_cb(
-	struct _lv_fs_drv_t*drv,
-	void*file_p,
+static void*fs_open_cb(
+	lv_fs_drv_t*drv,
 	const char*path,
 	lv_fs_mode_t mode
 ){
-	if(!drv||!file_p||!path)return LV_FS_RES_INV_PARAM;
+	if(!drv||!path)EPRET(EINVAL);
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
-	if(!fs)return LV_FS_RES_INV_PARAM;
+	if(!fs)EPRET(EINVAL);
 	UINT64 flags=EFI_FILE_MODE_READ;
 	switch(mode){
 		case LV_FS_MODE_RD:break;
@@ -151,10 +151,10 @@ static lv_res_t fs_open_cb(
 			flags|=EFI_FILE_MODE_CREATE;
 			flags|=EFI_FILE_MODE_WRITE;
 		break;
-		default:return LV_FS_RES_INV_PARAM;
+		default:EPRET(EINVAL);
 	}
 	EFI_STATUS st=EFI_OUT_OF_RESOURCES;
-	EFI_FILE_PROTOCOL*fh;
+	EFI_FILE_PROTOCOL*fh=NULL;
 	UINTN xs=PATH_MAX*sizeof(CHAR16);
 	char*ep=NULL,*cp;
 	CHAR16*xpath=NULL;
@@ -168,19 +168,18 @@ static lv_res_t fs_open_cb(
 		"open %c:%s mode %d failed: %s",
 		drv->letter,path,mode,efi_status_to_string(st)
 	);
-	if(fh)*(EFI_FILE_PROTOCOL**)((lv_fs_file_t*)file_p)=fh;
 	done:
 	if(ep)FreePool(ep);
 	if(xpath)FreePool(xpath);
-	return efi_status_to_lv_res(st);
+	return fh;
 }
 
 static lv_res_t fs_close_cb(
-	struct _lv_fs_drv_t*drv,
+	lv_fs_drv_t*drv,
 	void*file_p
 ){
 	if(!drv||!file_p)return LV_FS_RES_INV_PARAM;
-	EFI_FILE_PROTOCOL*fh=*(EFI_FILE_PROTOCOL**)((lv_fs_file_t*)file_p);
+	EFI_FILE_PROTOCOL*fh=file_p;
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
 	if(!fs)return LV_FS_RES_INV_PARAM;
@@ -193,7 +192,7 @@ static lv_res_t fs_close_cb(
 }
 
 static lv_res_t fs_remove_cb(
-	struct _lv_fs_drv_t*drv,
+	lv_fs_drv_t*drv,
 	const char*fn
 ){
 	if(!drv||!fn)return LV_FS_RES_INV_PARAM;
@@ -230,7 +229,7 @@ static lv_res_t fs_remove_cb(
 }
 
 static lv_res_t fs_get_type_cb(
-	struct _lv_fs_drv_t*drv,
+	lv_fs_drv_t*drv,
 	const char*fn,
 	enum item_type*type
 ){
@@ -273,7 +272,7 @@ static lv_res_t fs_get_type_cb(
 }
 
 static bool fs_is_dir_cb(
-	struct _lv_fs_drv_t*drv,
+	lv_fs_drv_t*drv,
 	const char*fn
 ){
 	if(!drv||!fn)return false;
@@ -315,18 +314,18 @@ static bool fs_is_dir_cb(
 }
 
 EFI_FILE_PROTOCOL*lv_fs_file_to_fp(lv_fs_file_t*fp){
-	return fp?*(EFI_FILE_PROTOCOL**)((lv_fs_file_t*)fp->file_d):NULL;
+	return fp?fp->file_d:NULL;
 }
 
 static lv_res_t fs_read_cb(
-	struct _lv_fs_drv_t*drv,
+	lv_fs_drv_t*drv,
 	void*file_p,
 	void*buf,
 	uint32_t btr,
 	uint32_t*br
 ){
 	if(!drv||!file_p||!buf||!br)return LV_FS_RES_INV_PARAM;
-	EFI_FILE_PROTOCOL*fh=*(EFI_FILE_PROTOCOL**)((lv_fs_file_t*)file_p);
+	EFI_FILE_PROTOCOL*fh=file_p;
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
 	if(!fs||!fs->proto)return LV_FS_RES_INV_PARAM;
@@ -341,14 +340,14 @@ static lv_res_t fs_read_cb(
 }
 
 static lv_res_t fs_write_cb(
-	struct _lv_fs_drv_t*drv,
+	lv_fs_drv_t*drv,
 	void*file_p,
 	const void*buf,
 	uint32_t btw,
 	uint32_t*bw
 ){
 	if(!drv||!file_p||!buf||!bw)return LV_FS_RES_INV_PARAM;
-	EFI_FILE_PROTOCOL*fh=*(EFI_FILE_PROTOCOL**)((lv_fs_file_t*)file_p);
+	EFI_FILE_PROTOCOL*fh=file_p;
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
 	if(!fs||!fs->proto)return LV_FS_RES_INV_PARAM;
@@ -363,16 +362,40 @@ static lv_res_t fs_write_cb(
 }
 
 static lv_res_t fs_seek_cb(
-	struct _lv_fs_drv_t*drv,
+	lv_fs_drv_t*drv,
 	void*file_p,
-	uint32_t pos
+	uint32_t pos,
+	lv_fs_whence_t whence
 ){
 	if(!drv||!file_p)return LV_FS_RES_INV_PARAM;
-	EFI_FILE_PROTOCOL*fh=*(EFI_FILE_PROTOCOL**)((lv_fs_file_t*)file_p);
+	EFI_STATUS st;
+	EFI_FILE_PROTOCOL*fh=file_p;
+	EFI_FILE_INFO*info=NULL;
+	UINT64 cp=0,p=pos;
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
 	if(!fs||!fs->proto)return LV_FS_RES_INV_PARAM;
-	EFI_STATUS st=fh->SetPosition(fh,(UINTN)pos);
+	switch(whence){
+		case LV_FS_SEEK_SET:break;
+		case LV_FS_SEEK_CUR:
+			st=fh->GetPosition(fh,&cp);
+			if(EFI_ERROR(st))XWARN(
+				"get position %c:#%p failed: %s",
+				drv->letter,fh,efi_status_to_string(st)
+			);
+			p=cp+pos;
+		break;
+		case LV_FS_SEEK_END:
+			st=efi_file_get_file_info(fh,NULL,&info);
+			if(EFI_ERROR(st))XWARN(
+				"get file info %c:#%p failed: %s",
+				drv->letter,fh,efi_status_to_string(st)
+			);
+			p=info->FileSize+pos;
+		break;
+		default:return LV_FS_RES_INV_PARAM;
+	}
+	st=fh->SetPosition(fh,p);
 	if(EFI_ERROR(st))XWARN(
 		"set position %c:#%p failed: %s",
 		drv->letter,fh,efi_status_to_string(st)
@@ -381,12 +404,12 @@ static lv_res_t fs_seek_cb(
 }
 
 static lv_res_t fs_tell_cb(
-	struct _lv_fs_drv_t*drv,
+	lv_fs_drv_t*drv,
 	void*file_p,
 	uint32_t*pos_p
 ){
 	if(!drv||!file_p||!pos_p)return LV_FS_RES_INV_PARAM;
-	EFI_FILE_PROTOCOL*fh=*(EFI_FILE_PROTOCOL**)((lv_fs_file_t*)file_p);
+	EFI_FILE_PROTOCOL*fh=file_p;
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
 	if(!fs||!fs->proto)return LV_FS_RES_INV_PARAM;
@@ -400,25 +423,18 @@ static lv_res_t fs_tell_cb(
 	return efi_status_to_lv_res(st);
 }
 
-static lv_res_t fs_trunc_cb(
-	struct _lv_fs_drv_t*drv,
-	void*file_p
-){
-	return LV_FS_RES_NOT_IMP;
-}
-
 static lv_res_t fs_size_cb(
-	struct _lv_fs_drv_t*drv,
+	lv_fs_drv_t*drv,
 	void*file_p,
 	uint32_t*size_p
 ){
 	if(!drv||!file_p||!size_p)return LV_FS_RES_INV_PARAM;
-	EFI_FILE_PROTOCOL*fh=*(EFI_FILE_PROTOCOL**)((lv_fs_file_t*)file_p);
+	EFI_FILE_PROTOCOL*fh=(EFI_FILE_PROTOCOL*)file_p;
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
 	if(!fs||!fs->proto)return LV_FS_RES_INV_PARAM;
 	EFI_FILE_INFO*info=NULL;
-	EFI_STATUS st=st=efi_file_get_file_info(fh,NULL,&info);
+	EFI_STATUS st=efi_file_get_file_info(fh,NULL,&info);
 	if(info&&!EFI_ERROR(st))*size_p=(uint32_t)info->FileSize;
 	else XWARN(
 		"size %c:#%p failed: %s",
@@ -429,32 +445,23 @@ static lv_res_t fs_size_cb(
 }
 
 static lv_res_t fs_rename_cb(
-	struct _lv_fs_drv_t*drv,
+	lv_fs_drv_t*drv,
 	const char*oldname,
 	const char*newname
 ){
 	return LV_FS_RES_NOT_IMP;
 }
 
-static lv_res_t fs_free_space_cb(
-	struct _lv_fs_drv_t*drv,
-	uint32_t*total_p,
-	uint32_t*free_p
-){
-	return LV_FS_RES_NOT_IMP;
-}
-
-static lv_res_t fs_dir_open_cb(
-	struct _lv_fs_drv_t*drv,
-	void*rddir_p,
+static void*fs_dir_open_cb(
+	lv_fs_drv_t*drv,
 	const char*path
 ){
-	if(!drv||!rddir_p||!path)return LV_FS_RES_INV_PARAM;
+	if(!drv||!path)return NULL;
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
-	if(!fs||!fs->proto)return LV_FS_RES_INV_PARAM;
+	if(!fs||!fs->proto)return NULL;
 	EFI_STATUS st=EFI_OUT_OF_RESOURCES;
-	EFI_FILE_PROTOCOL*fh;
+	EFI_FILE_PROTOCOL*fh=NULL;
 	UINTN xs=PATH_MAX*sizeof(CHAR16);
 	char*ep=NULL,*cp;
 	CHAR16*xpath=NULL;
@@ -473,15 +480,14 @@ static lv_res_t fs_dir_open_cb(
 			drv->letter,path,efi_status_to_string(st)
 		);
 	}
-	if(fh)((lv_fs_dir_t*)rddir_p)->dir_d=fh;
 	done:
 	if(ep)FreePool(ep);
 	if(xpath)FreePool(xpath);
-	return efi_status_to_lv_res(st);
+	return fh;
 }
 
 static lv_res_t fs_dir_read_cb(
-	struct _lv_fs_drv_t*drv,
+	lv_fs_drv_t*drv,
 	void*rddir_p,
 	char*fn
 ){
@@ -489,7 +495,7 @@ static lv_res_t fs_dir_read_cb(
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
 	if(!fs||!fs->proto)return LV_FS_RES_INV_PARAM;
-	EFI_FILE_PROTOCOL*dh=(EFI_FILE_PROTOCOL*)((lv_fs_dir_t*)rddir_p)->dir_d;
+	EFI_FILE_PROTOCOL*dh=rddir_p;
 	UINTN infos=0,si;
 	EFI_FILE_INFO*info=NULL;
 	EFI_STATUS st;
@@ -525,11 +531,11 @@ static lv_res_t fs_dir_read_cb(
 }
 
 static lv_res_t fs_dir_close_cb(
-	struct _lv_fs_drv_t*drv,
+	lv_fs_drv_t*drv,
 	void*rddir_p
 ){
 	if(!drv||!rddir_p)return LV_FS_RES_INV_PARAM;
-	EFI_FILE_PROTOCOL*dh=(EFI_FILE_PROTOCOL*)((lv_fs_dir_t*)rddir_p)->dir_d;
+	EFI_FILE_PROTOCOL*dh=rddir_p;
 	struct fsext*fse=drv->user_data;
 	struct fs_root*fs=fse->user_data;
 	if(!fs)return LV_FS_RES_INV_PARAM;
@@ -543,7 +549,7 @@ static lv_res_t fs_dir_close_cb(
 }
 
 static lv_res_t fs_mkdir_cb(
-	struct _lv_fs_drv_t*drv,
+	lv_fs_drv_t*drv,
 	const char*name
 ){
 	if(!drv||!name||!*name)return LV_FS_RES_INV_PARAM;
@@ -579,7 +585,7 @@ static lv_res_t fs_mkdir_cb(
 }
 
 static lv_res_t fs_creat_cb(
-	struct _lv_fs_drv_t*drv,
+	lv_fs_drv_t*drv,
 	const char*name
 ){
 	if(!drv||!name||!*name)return LV_FS_RES_INV_PARAM;
@@ -637,23 +643,19 @@ int init_lvgl_uefi_fs(char letter,EFI_HANDLE hand,EFI_FILE_PROTOCOL*proto,bool d
 	fse->is_dir_cb=fs_is_dir_cb;
 	fse->creat=fs_creat_cb;
 	fse->mkdir=fs_mkdir_cb;
+	fse->remove=fs_remove_cb;
+	fse->size=fs_size_cb;
+	fse->rename=fs_rename_cb;
 	fse->user_data=fs;
 	drv->user_data=fse;
 	drv->letter=letter;
-	drv->file_size=sizeof(EFI_FILE_PROTOCOL*);
-	drv->rddir_size=sizeof(EFI_FILE_PROTOCOL*);
 	drv->ready_cb=fs_ready_cb;
 	drv->open_cb=fs_open_cb;
 	drv->close_cb=fs_close_cb;
-	drv->remove_cb=fs_remove_cb;
 	drv->read_cb=fs_read_cb;
 	drv->write_cb=fs_write_cb;
 	drv->seek_cb=fs_seek_cb;
 	drv->tell_cb=fs_tell_cb;
-	drv->trunc_cb=fs_trunc_cb;
-	drv->size_cb=fs_size_cb;
-	drv->rename_cb=fs_rename_cb;
-	drv->free_space_cb=fs_free_space_cb;
 	drv->dir_open_cb=fs_dir_open_cb;
 	drv->dir_read_cb=fs_dir_read_cb;
 	drv->dir_close_cb=fs_dir_close_cb;

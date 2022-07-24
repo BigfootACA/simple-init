@@ -26,6 +26,7 @@
 #endif
 #ifdef ENABLE_LUA
 #include"xlua.h"
+#include"gui/lua.h"
 #endif
 #include"gui.h"
 #include"confd.h"
@@ -161,6 +162,8 @@ int gui_pre_init(){
 	#ifdef ENABLE_LUA
 	if(!gui_global_lua)
 		gui_global_lua=xlua_init();
+	if(gui_global_lua)
+		lua_gui_init(gui_global_lua);
 	#endif
 
 	#ifdef ENABLE_UEFI

@@ -27,34 +27,43 @@
 #include"gui/guidrv.h"
 static void*event_reg=NULL;
 static list*touchs;
+static lv_indev_drv_t drv;
+static lv_indev_t*dev;
+static INT64 lx=0,ly=0;
 struct input_data{
 	INT64 lx,ly,rx,ry;
 	EFI_ABSOLUTE_POINTER_PROTOCOL*touch;
-	lv_indev_drv_t drv;
-	lv_indev_t*dev;
 	void*pd;
 };
-static bool touch_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
-	bool r=false;
+
+static void touch_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
+	list*l,*n;
 	EFI_ABSOLUTE_POINTER_STATE p;
-	struct input_data*d=indev_drv->user_data;
-	if(!d)return false;
-	if(!d->pd)d->pd=d->touch->GetState;
-	else if(d->touch->GetState!=d->pd){
-		tlog_warn("GetState changed, disable touch device");
-		indev_drv->user_data=NULL;
-		list_obj_del_data(&touchs,d,NULL);
-		memset(d,0,sizeof(struct input_data));
-		free(d);
-		return false;
-	}
-	if(EFI_ERROR(d->touch->GetState(d->touch,&p)))return false;
-	if(p.CurrentX==d->lx&&p.CurrentY==d->ly)return false;
-	data->point.x=((double)p.CurrentX/(double)d->rx)*gui_w;
-	data->point.y=((double)p.CurrentY/(double)d->ry)*gui_h;
-	d->lx=p.CurrentX,d->ly=p.CurrentY;
-	data->state=LV_INDEV_STATE_PR;
-	return r;
+	if(indev_drv!=&drv||!dev||dev->driver!=indev_drv)return;
+	if(!(l=list_first(touchs))){
+		tlog_warn("no available touch screen devices");
+		lv_indev_enable(dev,false);
+		return;
+	}else do{
+		n=l->next;
+		LIST_DATA_DECLARE(d,l,struct input_data*);
+		if(!d->pd)d->pd=d->touch->GetState;
+		else if(d->touch->GetState!=d->pd){
+			tlog_warn("GetState changed, disable touch device");
+			list_obj_del(&touchs,l,list_default_free);
+			continue;
+		}
+		if(EFI_ERROR(d->touch->GetState(d->touch,&p)))continue;
+		if(p.CurrentX==d->lx&&p.CurrentY==d->ly)continue;
+		lx=((double)p.CurrentX/(double)d->rx)*gui_w;
+		ly=((double)p.CurrentY/(double)d->ry)*gui_h;
+		d->lx=p.CurrentX,d->ly=p.CurrentY;
+		data->state=LV_INDEV_STATE_PR;
+		data->continue_reading=true;
+		break;
+	}while((l=n));
+	data->point.x=lx;
+	data->point.y=ly;
 }
 static bool proto_cmp(list*f,void*data){
 	LIST_DATA_DECLARE(d,f,struct input_data*);
@@ -73,15 +82,11 @@ static int _touch_register(EFI_ABSOLUTE_POINTER_PROTOCOL*touch){
 	if(!(data=malloc(sizeof(struct input_data))))return -1;
 	memset(data,0,sizeof(struct input_data));
 	data->touch=touch;
-	lv_indev_drv_init(&data->drv);
-	data->drv.type=LV_INDEV_TYPE_POINTER;
-	data->drv.read_cb=touch_read;
-	data->drv.user_data=data;
-	data->dev=lv_indev_drv_register(&data->drv);
 	data->rx=data->touch->Mode->AbsoluteMaxX;
 	data->ry=data->touch->Mode->AbsoluteMaxY;
 	tlog_debug("found new uefi absolute %p",data->touch);
 	list_obj_add_new(&touchs,data);
+	if(dev)lv_indev_enable(dev,true);
 	return 0;
 }
 STATIC EFIAPI VOID touch_event(IN EFI_EVENT ev,IN VOID*ctx){
@@ -121,7 +126,14 @@ static int touch_register(){
 		(EFI_EVENT_NOTIFY)touch_event,
 		NULL,&event_reg
 	);
-	return found?0:trlog_warn(-1,"no uefi touch found");
+	if(found){
+		lv_indev_drv_init(&drv);
+		drv.type=LV_INDEV_TYPE_POINTER;
+		drv.read_cb=touch_read;
+		dev=lv_indev_drv_register(&drv);
+		return 0;
+	}
+	return trlog_warn(-1,"no uefi touch found");
 }
 struct input_driver indrv_uefi_touch={
 	.name="uefi-touch",

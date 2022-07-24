@@ -315,12 +315,16 @@ list*list_search_one(list*lst,list_comparator comparator,void*data){
 	return NULL;
 }
 
-static bool list_string_comparator(list*f,void*v){
+bool list_pointer_comparator(list*f,void*v){
+	return LIST_DATA(f,void*)==v;
+}
+
+bool list_string_comparator(list*f,void*v){
 	LIST_DATA_DECLARE(str,f,char*);
 	return str&&v&&strcmp(str,(char*)v)==0;
 }
 
-static bool list_string_case_comparator(list*f,void*v){
+bool list_string_case_comparator(list*f,void*v){
 	LIST_DATA_DECLARE(str,f,char*);
 	return str&&v&&strcasecmp(str,(char*)v)==0;
 }

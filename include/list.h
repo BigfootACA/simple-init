@@ -118,6 +118,15 @@ extern int list_sort(list*lst,list_sorter sorter);
 // src/lib/list.c: search a list object
 extern list*list_search_one(list*lst,list_comparator comparator,void*data);
 
+// src/lib/list.c: compare pointer
+extern bool list_pointer_comparator(list*f,void*v);
+
+// src/lib/list.c: compare string
+extern bool list_string_comparator(list*f,void*v);
+
+// src/lib/list.c: compare string without case
+extern bool list_string_case_comparator(list*f,void*v);
+
 // src/lib/list.c: search a string
 extern list*list_search_string(list*lst,const char*str);
 

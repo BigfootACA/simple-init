@@ -31,27 +31,31 @@
 static list*kbds;
 static void*event_reg=NULL;
 static bool has_lr=false;
+static lv_indev_drv_t drv;
+static lv_indev_t*dev;
 struct keyboard_data{
 	EFI_SIMPLE_TEXT_INPUT_PROTOCOL*kbd;
-	lv_indev_drv_t drv;
-	lv_indev_t*dev;
 	void*pd;
 };
-static bool keyboard_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
+static void keyboard_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
+	list*l,*n;
 	EFI_INPUT_KEY p;
-	struct keyboard_data*kd=indev_drv->user_data;
-	if(!kd)return false;
 	data->state=LV_INDEV_STATE_REL;
-	if(!kd->pd)kd->pd=kd->kbd->ReadKeyStroke;
-	else if(kd->kbd->ReadKeyStroke!=kd->pd){
-		tlog_warn("ReadKeyStroke changed, disable keyboard device");
-		indev_drv->user_data=NULL;
-		list_obj_del_data(&kbds,kd,NULL);
-		memset(kd,0,sizeof(struct keyboard_data));
-		free(kd);
-		return false;
-	}
-	if(!EFI_ERROR(kd->kbd->ReadKeyStroke(kd->kbd,&p))){
+	if(indev_drv!=&drv||!dev||dev->driver!=indev_drv)return;
+	if(!(l=list_first(kbds))){
+		tlog_warn("no available keyboard devices");
+		lv_indev_enable(dev,false);
+		return;
+	}else do{
+		n=l->next;
+		LIST_DATA_DECLARE(kd,l,struct keyboard_data*);
+		if(!kd->pd)kd->pd=kd->kbd->ReadKeyStroke;
+		else if(kd->kbd->ReadKeyStroke!=kd->pd){
+			tlog_warn("ReadKeyStroke changed, disable keyboard device");
+			list_obj_del(&kbds,l,list_default_free);
+			continue;
+		}
+		if(EFI_ERROR(kd->kbd->ReadKeyStroke(kd->kbd,&p)))continue;
 		data->state=0;
 		if(p.ScanCode!=0){
 			if(lv_group_get_editing(gui_grp))switch(p.ScanCode){
@@ -72,7 +76,6 @@ static bool keyboard_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
 					if(guiact_get_activities())
 						guiact_do_back();
 					data->key=0;
-				return true;
 			}else switch(p.ScanCode){
 				case SCAN_UP:
 				case SCAN_LEFT:
@@ -89,15 +92,16 @@ static bool keyboard_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
 					if(guiact_get_activities())
 						guiact_do_back();
 					data->key=0;
-				return true;
 			}
 		}else if(p.UnicodeChar!=0)switch(p.UnicodeChar){
 			case ' ':case '\n':case '\r':data->key=LV_KEY_ENTER;break;
 			default:data->key=p.UnicodeChar;
-		}else return false;
+		}else continue;
 		data->state=LV_INDEV_STATE_PR;
-	};
-	return false;
+		data->continue_reading=true;
+		return;
+	}while((l=n));
+	data->continue_reading=false;
 }
 static bool proto_cmp(list*f,void*data){
 	LIST_DATA_DECLARE(d,f,struct keyboard_data*);
@@ -109,14 +113,9 @@ static int _keyboard_register(EFI_SIMPLE_TEXT_INPUT_PROTOCOL*k){
 	if(!(kbd=malloc(sizeof(struct keyboard_data))))return -1;
 	memset(kbd,0,sizeof(struct keyboard_data));
 	kbd->kbd=k;
-	lv_indev_drv_init(&kbd->drv);
-	kbd->drv.type=LV_INDEV_TYPE_KEYPAD;
-	kbd->drv.read_cb=keyboard_read;
-	kbd->drv.user_data=kbd;
-	kbd->dev=lv_indev_drv_register(&kbd->drv);
-	lv_indev_set_group(kbd->dev,gui_grp);
 	tlog_debug("found new uefi keyboard %p",kbd->kbd);
 	list_obj_add_new(&kbds,kbd);
+	if(dev)lv_indev_enable(dev,true);
 	return 0;
 }
 STATIC EFIAPI VOID keyboard_event(IN EFI_EVENT ev,IN VOID*ctx){
@@ -156,7 +155,15 @@ static int keyboard_register(){
 		(EFI_EVENT_NOTIFY)keyboard_event,
 		NULL,&event_reg
 	);
-	return found?0:trlog_warn(-1,"no uefi keyboard found");
+	if(found){
+		lv_indev_drv_init(&drv);
+		drv.type=LV_INDEV_TYPE_KEYPAD;
+		drv.read_cb=keyboard_read;
+		dev=lv_indev_drv_register(&drv);
+		lv_indev_set_group(dev,gui_grp);
+		return 0;
+	}
+	return trlog_warn(-1,"no uefi keyboard found");
 }
 
 struct input_driver indrv_uefi_kbd={

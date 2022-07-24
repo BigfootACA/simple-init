@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<SimpleInitActivity compatible="1">
+<SimpleInitActivity compatible="2">
 	<Name>reboot-menu</Name>
 	<Title>Reboot Menu</Title>
 	<Icon>reboot.svg</Icon>

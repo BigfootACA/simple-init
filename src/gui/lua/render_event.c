@@ -10,14 +10,13 @@
 #ifdef ENABLE_LUA
 #ifdef ENABLE_MXML
 #include"gui/lua.h"
+#include"gui/tools.h"
+#include"gui/string.h"
 #include"../engine/render_internal.h"
 
 static int lua_render_event_get_type(lua_State*L){
-	const char*event=NULL;
 	struct lua_render_event_data*e=luaL_checkudata(L,1,LUA_RENDER_EVENT);
-	for(size_t i=0;xml_event_specs[i].valid;i++)
-		if(xml_event_specs[i].event==e->event->event)
-			event=xml_event_specs[i].name;
+	const char*event=lv_event_code_to_name(e->event->event->code);
 	if(event)lua_pushstring(L,event);
 	else lua_pushnil(L);
 	return 1;

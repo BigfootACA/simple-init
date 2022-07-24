@@ -6,7 +6,6 @@
  *
  */
 
-#include "list.h"
 #ifdef ENABLE_GUI
 #include<stdlib.h>
 #include<Library/UefiLib.h>
@@ -36,30 +35,28 @@
 struct acpi_mgr{
 	list*acpis;
 	struct acpi_info*selected;
-	lv_obj_t*lst,*last,*title;
+	lv_obj_t*lst,*title;
 	lv_obj_t*info,*btn_load,*btn_refresh,*btn_save;
 };
 
 struct acpi_info{
 	struct acpi_mgr*am;
 	bool enable;
-	lv_obj_t*btn,*chk;
+	lv_obj_t*btn;
 	lv_obj_t*name,*info;
 	EFI_ACPI_DESCRIPTION_HEADER*table;
 	CHAR8 type[8],oem[8];
 };
 
-static void item_check(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_VALUE_CHANGED)return;
-	struct acpi_info*ai=lv_obj_get_user_data(obj);
-	lv_checkbox_set_checked(obj,true);
-	if(ai->am->selected&&obj!=ai->am->selected->chk){
-		lv_checkbox_set_checked(ai->am->selected->chk,false);
-		lv_obj_set_checked(ai->am->selected->btn,false);
-	}
-	ai->am->selected=lv_obj_get_user_data(obj);
-	lv_obj_set_checked(ai->am->selected->btn,true);
-	lv_obj_set_enabled(ai->am->btn_save,true);
+static void item_check(lv_event_t*e){
+	struct acpi_info*ai=e->user_data;
+	struct acpi_mgr*am=ai->am;
+	lv_obj_set_checked(e->target,true);
+	if(am->selected&&e->target!=am->selected->btn)
+		lv_obj_set_checked(am->selected->btn,false);
+	am->selected=ai;
+	lv_obj_set_checked(am->selected->btn,true);
+	lv_obj_set_enabled(am->btn_save,true);
 }
 
 static void free_acpi_info(struct acpi_info*m){
@@ -76,8 +73,8 @@ static int item_free(void*d){
 
 static int item_free_del(void*d){
 	struct acpi_info*mi=d;
+	lv_group_remove_obj(mi->btn);
 	lv_obj_del(mi->btn);
-	lv_group_remove_obj(mi->chk);
 	free_acpi_info(mi);
 	return 0;
 }
@@ -87,21 +84,27 @@ static void acpi_clear(struct acpi_mgr*am){
 	lv_obj_set_enabled(am->btn_save,false);
 	if(am->info)lv_obj_del(am->info);
 	list_free_all(am->acpis,item_free_del);
-	am->info=NULL,am->last=NULL,am->acpis=NULL;
+	am->info=NULL,am->acpis=NULL;
 }
 
-void acpi_set_info(struct acpi_mgr*am,char*text){
+static void acpi_set_info(struct acpi_mgr*am,char*text){
 	acpi_clear(am);
-	am->info=lv_label_create(am->lst,NULL);
-	lv_label_set_long_mode(am->info,LV_LABEL_LONG_BREAK);
-	lv_obj_set_size(am->info,lv_page_get_scrl_width(am->lst),gui_sh/16);
-	lv_label_set_align(am->info,LV_LABEL_ALIGN_CENTER);
+	am->info=lv_label_create(am->lst);
+	lv_label_set_long_mode(am->info,LV_LABEL_LONG_WRAP);
+	lv_obj_set_width(am->info,lv_pct(100));
+	lv_obj_set_style_text_align(am->info,LV_TEXT_ALIGN_CENTER,0);
 	lv_label_set_text(am->info,text);
 }
 
 static bool acpi_add_item(struct acpi_mgr*am,EFI_ACPI_DESCRIPTION_HEADER*table){
-	lv_coord_t bw=lv_page_get_scrl_width(am->lst);
-	lv_coord_t bm=gui_dpi/20;
+	static lv_coord_t grid_col[]={
+		LV_GRID_FR(1),
+		LV_GRID_TEMPLATE_LAST
+	},grid_row[]={
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_TEMPLATE_LAST
+	};
 	if(!table)return false;
 	struct acpi_info*k=malloc(sizeof(struct acpi_info));
 	if(!k)return false;
@@ -111,44 +114,28 @@ static bool acpi_add_item(struct acpi_mgr*am,EFI_ACPI_DESCRIPTION_HEADER*table){
 	CopyMem(k->oem,&table->OemId,sizeof(table->OemId));
 
 	// button
-	k->btn=lv_btn_create(am->lst,NULL);
-	lv_obj_set_size(k->btn,bw,gui_dpi/2);
-	lv_obj_align(
-		k->btn,am->last,
-		am->last?LV_ALIGN_OUT_BOTTOM_MID:LV_ALIGN_IN_TOP_MID,
-		0,am->last?gui_dpi/8:0
-	);
+	k->btn=lv_btn_create(am->lst);
+	lv_obj_set_size(k->btn,lv_pct(100),gui_dpi/2);
 	lv_style_set_btn_item(k->btn);
-	lv_obj_set_click(k->btn,false);
-	am->last=k->btn;
-
-	lv_obj_t*line=lv_line_create(k->btn,NULL);
-	lv_obj_set_width(line,bw);
-
-	// checkbox
-	k->chk=lv_checkbox_create(line,NULL);
-	lv_checkbox_set_text(k->chk,"");
-	lv_obj_set_event_cb(k->chk,item_check);
-	lv_obj_set_user_data(k->chk,k);
-	lv_style_set_focus_checkbox(k->chk);
-	lv_obj_align(k->chk,k->btn,LV_ALIGN_IN_TOP_LEFT,bm,bm);
-	lv_group_add_obj(gui_grp,k->chk);
+	lv_obj_set_grid_dsc_array(k->btn,grid_col,grid_row);
+	lv_obj_add_event_cb(k->btn,item_check,LV_EVENT_CLICKED,k);
+	lv_group_add_obj(gui_grp,k->btn);
 
 	// name
-	k->name=lv_label_create(line,NULL);
-	lv_obj_align(k->name,k->chk,LV_ALIGN_OUT_RIGHT_MID,0,0);
+	k->name=lv_label_create(k->btn);
 	lv_label_set_text_fmt(k->name,"%s v%d",k->type,table->Revision);
 	lv_label_set_long_mode(k->name,LV_LABEL_LONG_DOT);
+	lv_obj_set_grid_cell(k->name,LV_GRID_ALIGN_START,0,1,LV_GRID_ALIGN_CENTER,0,1);
 
 	// info
-	k->info=lv_label_create(line,NULL);
-	lv_obj_set_small_text_font(k->info,LV_LABEL_PART_MAIN);
-	lv_obj_align(k->info,k->btn,LV_ALIGN_IN_BOTTOM_LEFT,bm,-bm);
+	k->info=lv_label_create(k->btn);
+	lv_obj_set_small_text_font(k->info,LV_PART_MAIN);
 	lv_label_set_text_fmt(
 		k->info,
 		_("Address: 0x%llx Size: %d OEM ID: %s"),
 		(long long)(UINTN)table,table->Length,table->OemId
 	);
+	lv_obj_set_grid_cell(k->info,LV_GRID_ALIGN_START,0,1,LV_GRID_ALIGN_CENTER,1,1);
 
 	list_obj_add_new(&am->acpis,k);
 	return true;
@@ -321,26 +308,26 @@ static bool save_cb(bool ok,const char**path,uint16_t cnt,void*user_data){
 	return false;
 }
 
-static void load_click(lv_obj_t*obj,lv_event_t e){
-	struct acpi_mgr*am=lv_obj_get_user_data(obj);
-	if(e!=LV_EVENT_CLICKED||obj!=am->btn_load)return;
+static void load_click(lv_event_t*e){
+	struct acpi_mgr*am=e->user_data;
+	if(!am||e->target!=am->btn_load)return;
 	tlog_debug("request load");
 	struct filepicker*fp=filepicker_create(load_cb,"Select aml file to load");
 	filepicker_set_max_item(fp,1);
 }
 
-static void save_click(lv_obj_t*obj,lv_event_t e){
-	struct acpi_mgr*am=lv_obj_get_user_data(obj);
-	if(e!=LV_EVENT_CLICKED||obj!=am->btn_save||!am->selected)return;
+static void save_click(lv_event_t*e){
+	struct acpi_mgr*am=e->user_data;
+	if(!am||e->target!=am->btn_save||!am->selected)return;
 	tlog_debug("request save");
 	struct filepicker*fp=filepicker_create(save_cb,"Select aml file to save");
 	filepicker_set_max_item(fp,1);
 	filepicker_set_user_data(fp,am->selected);
 }
 
-static void refresh_click(lv_obj_t*obj,lv_event_t e){
-	struct acpi_mgr*am=lv_obj_get_user_data(obj);
-	if(e!=LV_EVENT_CLICKED||obj!=am->btn_refresh)return;
+static void refresh_click(lv_event_t*e){
+	struct acpi_mgr*am=e->user_data;
+	if(!am||e->target!=am->btn_refresh)return;
 	tlog_debug("request refresh");
 	acpi_reload(am);
 }
@@ -349,7 +336,7 @@ static int do_cleanup(struct gui_activity*d){
 	struct acpi_mgr*am=d->data;
 	if(!am)return 0;
 	list_free_all(am->acpis,item_free);
-	am->info=NULL,am->last=NULL,am->acpis=NULL;
+	am->info=NULL,am->acpis=NULL;
 	free(am);
 	d->data=NULL;
 	return 0;
@@ -376,37 +363,11 @@ static int acpi_lost_focus(struct gui_activity*d){
 	list*o=list_first(am->acpis);
 	if(o)do{
 		LIST_DATA_DECLARE(item,o,struct acpi_info*);
-		lv_group_remove_obj(item->chk);
+		lv_group_remove_obj(item->btn);
 	}while((o=o->next));
 	lv_group_remove_obj(am->btn_load);
 	lv_group_remove_obj(am->btn_refresh);
 	lv_group_remove_obj(am->btn_save);
-	return 0;
-}
-
-static int acpi_resize(struct gui_activity*act){
-	lv_coord_t btm=gui_dpi/10;
-	lv_coord_t btw=act->w/3-btm;
-	lv_coord_t bth=gui_font_size+gui_dpi/10;
-	struct acpi_mgr*am=act->data;
-
-	lv_obj_set_pos(am->title,0,gui_font_size);
-	lv_obj_set_width(am->title,act->w);
-
-	lv_obj_align(am->lst,am->title,LV_ALIGN_OUT_BOTTOM_MID,0,gui_font_size);
-	lv_obj_set_x(am->lst,gui_font_size/2);
-	lv_obj_set_size(am->lst,act->w-gui_font_size,act->h-lv_obj_get_y(am->lst)-bth-btm*2);
-
-	lv_obj_set_size(am->btn_load,btw,bth);
-	lv_obj_align(am->btn_load,am->lst,LV_ALIGN_OUT_BOTTOM_LEFT,0,btm);
-
-	lv_obj_set_size(am->btn_refresh,btw,bth);
-	lv_obj_align(am->btn_refresh,am->lst,LV_ALIGN_OUT_BOTTOM_MID,0,btm);
-
-	lv_obj_set_size(am->btn_save,btw,bth);
-	lv_obj_align(am->btn_save,am->lst,LV_ALIGN_OUT_BOTTOM_RIGHT,0,btm);
-
-	acpi_reload(am);
 	return 0;
 }
 
@@ -419,41 +380,81 @@ static int acpi_init(struct gui_activity*act){
 }
 
 static int acpi_draw(struct gui_activity*act){
+	static lv_coord_t grid_col[]={
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_TEMPLATE_LAST
+	},grid_row[]={
+		LV_GRID_CONTENT,
+		LV_GRID_FR(1),
+		LV_GRID_CONTENT,
+		LV_GRID_TEMPLATE_LAST
+	};
 	struct acpi_mgr*am=act->data;
 	if(!am)return -1;
+	lv_obj_set_style_pad_all(act->page,gui_font_size/2,0);
+	lv_obj_set_grid_dsc_array(act->page,grid_col,grid_row);
 
 	// function title
-	am->title=lv_label_create(act->page,NULL);
-	lv_label_set_long_mode(am->title,LV_LABEL_LONG_BREAK);
-	lv_label_set_align(am->title,LV_LABEL_ALIGN_CENTER);
+	am->title=lv_label_create(act->page);
+	lv_label_set_long_mode(am->title,LV_LABEL_LONG_WRAP);
+	lv_obj_set_style_text_align(am->title,LV_TEXT_ALIGN_CENTER,0);
 	lv_label_set_text(am->title,_("ACPI Manager"));
+	lv_obj_set_grid_cell(
+		am->title,
+		LV_GRID_ALIGN_CENTER,0,3,
+		LV_GRID_ALIGN_CENTER,0,1
+	);
 
 	// options list
-	am->lst=lv_page_create(act->page,NULL);
-	lv_obj_set_style_local_border_width(am->lst,LV_PAGE_PART_BG,LV_STATE_DEFAULT,0);
-	lv_obj_set_style_local_border_width(am->lst,LV_PAGE_PART_BG,LV_STATE_FOCUSED,0);
-	lv_obj_set_style_local_border_width(am->lst,LV_PAGE_PART_BG,LV_STATE_PRESSED,0);
+	am->lst=lv_obj_create(act->page);
+	lv_obj_set_flex_flow(am->lst,LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_width(am->lst,lv_pct(100));
+	lv_obj_set_grid_cell(
+		am->lst,
+		LV_GRID_ALIGN_STRETCH,0,3,
+		LV_GRID_ALIGN_STRETCH,1,1
+	);
 
 	// load button
-	am->btn_load=lv_btn_create(act->page,NULL);
+	am->btn_load=lv_btn_create(act->page);
 	lv_obj_set_user_data(am->btn_load,am);
-	lv_obj_set_event_cb(am->btn_load,load_click);
-	lv_style_set_action_button(am->btn_load,true);
-	lv_label_set_text(lv_label_create(am->btn_load,NULL),_("Load"));
+	lv_obj_add_event_cb(am->btn_load,load_click,LV_EVENT_CLICKED,am);
+	lv_obj_t*lbl_load=lv_label_create(am->btn_load);
+	lv_label_set_text(lbl_load,_("Load"));
+	lv_obj_center(lbl_load);
+	lv_obj_set_grid_cell(
+		am->btn_load,
+		LV_GRID_ALIGN_STRETCH,0,1,
+		LV_GRID_ALIGN_CENTER,2,1
+	);
 
 	// refresh button
-	am->btn_refresh=lv_btn_create(act->page,NULL);
+	am->btn_refresh=lv_btn_create(act->page);
 	lv_obj_set_user_data(am->btn_refresh,am);
-	lv_obj_set_event_cb(am->btn_refresh,refresh_click);
-	lv_style_set_action_button(am->btn_refresh,true);
-	lv_label_set_text(lv_label_create(am->btn_refresh,NULL),_("Refresh"));
+	lv_obj_add_event_cb(am->btn_refresh,refresh_click,LV_EVENT_CLICKED,am);
+	lv_obj_t*lbl_refresh=lv_label_create(am->btn_refresh);
+	lv_label_set_text(lbl_refresh,_("Refresh"));
+	lv_obj_center(lbl_refresh);
+	lv_obj_set_grid_cell(
+		am->btn_refresh,
+		LV_GRID_ALIGN_STRETCH,1,1,
+		LV_GRID_ALIGN_CENTER,2,1
+	);
 
 	// save button
-	am->btn_save=lv_btn_create(act->page,NULL);
+	am->btn_save=lv_btn_create(act->page);
 	lv_obj_set_user_data(am->btn_save,am);
-	lv_obj_set_event_cb(am->btn_save,save_click);
-	lv_style_set_action_button(am->btn_save,true);
-	lv_label_set_text(lv_label_create(am->btn_save,NULL),_("Save"));
+	lv_obj_add_event_cb(am->btn_save,save_click,LV_EVENT_CLICKED,am);
+	lv_obj_t*lbl_save=lv_label_create(am->btn_save);
+	lv_label_set_text(lbl_save,_("Save"));
+	lv_obj_center(lbl_save);
+	lv_obj_set_grid_cell(
+		am->btn_save,
+		LV_GRID_ALIGN_STRETCH,2,1,
+		LV_GRID_ALIGN_CENTER,2,1
+	);
 
 	return 0;
 }
@@ -501,7 +502,6 @@ struct gui_register guireg_acpi_manager={
 	.show_app=true,
 	.init=acpi_init,
 	.draw=acpi_draw,
-	.resize=acpi_resize,
 	.quiet_exit=do_cleanup,
 	.get_focus=acpi_get_focus,
 	.lost_focus=acpi_lost_focus,

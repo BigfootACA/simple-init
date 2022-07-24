@@ -129,16 +129,16 @@ static int uefigop_register(){
 	if(uefigop_init()!=0)return -1;
 	size_t s=ww*hh;
 	static lv_color_t*buf=NULL;
-	static lv_disp_buf_t disp_buf;
+	static lv_disp_draw_buf_t disp_buf;
 	if(!(buf=malloc(s*sizeof(lv_color_t)))){
 		telog_error("malloc display buffer");
 		return -1;
 	}
 	memset(buf,0,s);
-	lv_disp_buf_init(&disp_buf,buf,NULL,s);
-	lv_disp_drv_t disp_drv;
+	lv_disp_draw_buf_init(&disp_buf,buf,NULL,s);
+	static lv_disp_drv_t disp_drv;
 	lv_disp_drv_init(&disp_drv);
-	disp_drv.buffer=&disp_buf;
+	disp_drv.draw_buf=&disp_buf;
 	disp_drv.flush_cb=uefigop_flush;
 	disp_drv.hor_res=ww;
 	disp_drv.ver_res=hh;

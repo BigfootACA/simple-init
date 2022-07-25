@@ -7,58 +7,171 @@
  */
 
 #ifdef ENABLE_GUI
+#include<math.h>
+#include"str.h"
 #include"gui.h"
 #include"list.h"
+#include"confd.h"
 #include"logger.h"
 #include"defines.h"
-#include<sys/stat.h>
 #include"gui/sysbar.h"
 #include"gui/activity.h"
 #define TAG "logviewer"
 
 struct log_viewer{
-	lv_obj_t*txt,*view,*content,*btns;
-	lv_obj_t*btn_ctrl,*btn_reload;
+	bool load;
+	list*file;
+	uint16_t per_page,page_cnt,page_cur;
+	lv_obj_t*txt,*view,*content;
+	lv_obj_t*pager,*arr_top,*arr_left;
+	lv_obj_t*page,*slider,*arr_right,*arr_bottom;
+	lv_obj_t*btns,*btn_ctrl,*btn_reload;
 };
 
-static void load_log_task(lv_timer_t*t __attribute__((unused))){
-	struct log_viewer*v=t->user_data;
+static void update_slider(struct log_viewer*v){
+	int16_t val=lv_slider_get_value(v->slider);
+	lv_label_set_text_fmt(
+		v->page,"%d/%d",
+		MIN(v->page_cnt,val+1),
+		v->page_cnt
+	);
+}
+
+static void calc_pages(struct log_viewer*v){
+	int cnt;
+	int32_t max;
+	uint16_t p=0;
+	lv_obj_update_layout(v->view);
+	const lv_font_t*f=lv_obj_get_style_text_font(v->content,0);
+	if(f)p=lv_obj_get_content_height(v->view)/lv_font_get_line_height(f);
+	if(p<=0)p=64;
+	v->per_page=confd_get_integer("gui.logviewer.per_page",p*3);
+	if(v->per_page<64)v->per_page=64;
+	if((cnt=list_count(v->file))>=0){
+		v->page_cnt=ceil((double)cnt/(double)v->per_page);
+		max=MIN(MAX(v->page_cnt-1,1),INT16_MAX);
+	}else max=1,v->page_cnt=0;
+	if(v->page_cur>v->page_cnt)v->page_cur=v->page_cnt;
+	if(v->page_cur<1)v->page_cur=1;
+	lv_slider_set_range(v->slider,0,max);
+	update_slider(v);
+}
+
+static bool load_file(struct log_viewer*v){
 	#ifdef ENABLE_UEFI
-	list*l=list_first(logbuffer);
-	if(l){
-		lv_textarea_set_text(v->content,"");
-		do{
-			bool changed=false;
-			LIST_DATA_DECLARE(b,l,struct log_buff*);
-			if(!b)continue;
-			if(b->tag&&b->tag[0]){
-				lv_textarea_add_text(v->content,b->tag);
-				changed=true;
-			}
-			if(b->content&&b->content[0]){
-				if(changed)lv_textarea_add_text(v->content,": ");
-				lv_textarea_add_text(v->content,b->content);
-				changed=true;
-			}
-			if(changed)lv_textarea_add_text(v->content,"\n");
-		}while((l=l->next));
-	}else lv_label_set_text(v->content,_("No buffer found"));
+	list*l=NULL;
 	#else
-	char*buff=NULL;
-	struct stat st;
-	int fd=open(_PATH_DEV"/logger.log",O_RDONLY);
-	if(fd<0){
-		telog_warn("open logger.log failed");
-		goto fail;
+	FILE*f=NULL;
+	size_t bs=0,len;
+	#endif
+	size_t xs=8192,s;
+	char*buff=NULL,*xb=NULL;
+	if(v->load)return true;
+	if(v->file){
+		list_free_all_def(v->file);
+		v->file=NULL;
 	}
-	if(fstat(fd,&st)!=0)goto fail;
-	if(!(buff=malloc(st.st_size+2)))goto fail;
-	ssize_t r=read(fd,buff,st.st_size);
-	if(r<=0)goto fail;
-	buff[r++]='\n',buff[r]=0;
+	if(!(xb=malloc(xs)))EDONE();
+	#ifdef ENABLE_UEFI
+	if((l=list_first(logbuffer)))do{
+		bool changed=false;
+		LIST_DATA_DECLARE(b,l,struct log_buff*);
+		if(!b||!b->tag||!b->content)continue;
+		s=8;
+		if(b->tag[0])s+=strlen(b->tag);
+		if(b->content[0])s+=strlen(b->content);
+		if(s>xs){
+			xs=s,free(xb);
+			if(!(xb=malloc(xs)))EDONE();
+		}
+		memset(xb,0,xs);
+		if(b->tag[0]){
+			strlcat(xb,b->tag,xs-1);
+			strlcat(xb,": ",xs-1);
+			changed=true;
+		}
+		if(b->content[0]){
+			strlcat(xb,b->content,xs-1);
+			changed=true;
+		}
+		if(changed)list_obj_add_new_strdup(
+			&v->file,xb
+		);
+	}while((l=l->next));
+	#else
+	if(!(f=fopen(_PATH_DEV"/logger.log","r")))
+		EDONE(telog_warn("open logger.log failed"));
+	while(getline(&buff,&bs,f)>=0){
+		if(!buff)continue;
+		len=strlen(buff),s=len+(strcnt(buff,"\t")*8)+1;
+		if(s>xs){
+			xs=s,free(xb);
+			if(!(xb=malloc(xs)))EDONE();
+		}
+		memset(xb,0,xs);
+		tlog_debug("new line");
+		for(size_t i=0,p=0;i<len&&p<xs;i++)switch(buff[i]){
+			case '\t':
+				for(size_t x=8,t=p;x>t%8;x--)
+					xb[p++]=' ';
+			break;
+			case '\n':case '\r':break;
+			default:xb[p++]=buff[i];
+		}
+		if(buff)free(buff);
+		buff=NULL,bs=0;
+		if(xb[0])list_obj_add_new_strdup(
+			&v->file,xb
+		);
+
+	}
+	fclose(f);
+	#endif
+	v->load=true;
+	calc_pages(v);
+	return true;
+	done:
+	#ifndef ENABLE_UEFI
+	if(f)fclose(f);
+	#endif
+	if(xb)free(xb);
+	if(buff)free(buff);
+	list_free_all_def(v->file);
+	v->file=NULL;
+	return false;
+}
+
+static void load_log_task(lv_timer_t*t){
+	list*l=NULL;
+	char*buff=NULL;
+	size_t start=0,end=0,i,size;
+	struct log_viewer*v=t->user_data;
+	if(!load_file(v))goto fail;
+	if(v->per_page<=0||v->page_cur<=0)goto fail;
+	if(v->page_cur>v->page_cnt)v->page_cur=v->page_cnt;
+	if(v->page_cur<1)v->page_cur=1;
+	start=(v->page_cur-1)*v->per_page;
+	end=v->page_cur*v->per_page;
+	size=4,i=0;
+	if((l=list_first(v->file)))do{
+		LIST_DATA_DECLARE(b,l,char*);
+		if(b&&i>=start&&i<end)
+			size+=strlen(b)+4;
+		i++;
+	}while((l=l->next));
+	if(!(buff=malloc(size)))goto fail;
+	memset(buff,0,size);
+	i=0;
+	if((l=list_first(v->file)))do{
+		LIST_DATA_DECLARE(b,l,char*);
+		if(b&&i>=start&&i<end){
+			strlcat(buff,b,size-1);
+			strlcat(buff,"\n",size-1);
+		}
+		i++;
+	}while((l=l->next));
+	lv_obj_scroll_to(v->view,0,0,LV_ANIM_OFF);
 	lv_label_set_text(v->content,buff);
-	free(buff);
-	close(fd);
 	return;
 	fail:
 	lv_label_set_text_fmt(
@@ -66,18 +179,36 @@ static void load_log_task(lv_timer_t*t __attribute__((unused))){
 		_("Load log failed: %s"),
 		_(strerror(errno))
 	);
-	if(buff)free(buff);
-	close(fd);
-	#endif
 }
 
 static void load_log(struct log_viewer*v){
-	lv_label_set_text(v->content,_("Loading..."));
 	lv_timer_set_repeat_count(lv_timer_create(load_log_task,20,v),1);
 }
 
+static void pager_change(lv_event_t*e){
+	struct log_viewer*v=e->user_data;
+	v->page_cur=lv_slider_get_value(v->slider)+1;
+	update_slider(v);
+	load_log(v);
+}
+
+static void pager_click(lv_event_t*e){
+	struct log_viewer*v=e->user_data;
+	int16_t val=lv_slider_get_value(v->slider);
+	int16_t max=lv_slider_get_max_value(v->slider);
+	if(e->target==v->arr_left)val--;
+	else if(e->target==v->arr_right)val++;
+	else if(e->target==v->arr_top)val=0;
+	else if(e->target==v->arr_bottom)val=max;
+	else return;
+	lv_slider_set_value(v->slider,val,LV_ANIM_ON);
+	pager_change(e);
+}
+
 static void reload_click(lv_event_t*e){
-	load_log(lv_event_get_user_data(e));
+	struct log_viewer*v=e->user_data;
+	v->load=false;
+	load_log(v);
 }
 
 static void ctrl_click(lv_event_t*e __attribute__((unused))){
@@ -87,6 +218,11 @@ static void ctrl_click(lv_event_t*e __attribute__((unused))){
 static int logviewer_get_focus(struct gui_activity*d){
 	struct log_viewer*v=d->data;
 	if(!v)return 0;
+	lv_group_add_obj(gui_grp,v->arr_top);
+	lv_group_add_obj(gui_grp,v->arr_left);
+	lv_group_add_obj(gui_grp,v->slider);
+	lv_group_add_obj(gui_grp,v->arr_right);
+	lv_group_add_obj(gui_grp,v->arr_bottom);
 	lv_group_add_obj(gui_grp,v->btn_ctrl);
 	lv_group_add_obj(gui_grp,v->btn_reload);
 	ctrl_pad_set_target(v->view);
@@ -96,37 +232,60 @@ static int logviewer_get_focus(struct gui_activity*d){
 static int logviewer_lost_focus(struct gui_activity*d){
 	struct log_viewer*v=d->data;
 	if(!v)return 0;
+	lv_group_remove_obj(v->arr_top);
+	lv_group_remove_obj(v->arr_left);
+	lv_group_remove_obj(v->slider);
+	lv_group_remove_obj(v->arr_right);
+	lv_group_remove_obj(v->arr_bottom);
 	lv_group_remove_obj(v->btn_ctrl);
 	lv_group_remove_obj(v->btn_reload);
 	ctrl_pad_set_target(NULL);
 	return 0;
 }
 
+static int logviewer_resize(struct gui_activity*d){
+	struct log_viewer*v=d->data;
+	if(!v)return 0;
+	calc_pages(v);
+	return 0;
+}
+
 static int do_clean(struct gui_activity*act){
-	if(act->data)free(act->data);
+	struct log_viewer*v=act->data;
+	if(!v)return 0;
+	list_free_all_def(v->file);
+	free(v);
 	act->data=NULL;
 	return 0;
 }
 
 static int logviewer_init(struct gui_activity*act){
-	act->data=malloc(sizeof(struct log_viewer));
-	if(!act->data)return -1;
-	memset(act->data,0,sizeof(struct log_viewer));
+	struct log_viewer*v;
+	static size_t s=sizeof(struct log_viewer);
+	if(!(v=malloc(s)))return -1;
+	memset(v,0,s);
+	act->data=v;
 	return 0;
 }
 
 static int logviewer_draw(struct gui_activity*act){
 	static lv_coord_t grid_col[]={
+		LV_GRID_CONTENT,
+		LV_GRID_CONTENT,
+		LV_GRID_FR(2),
 		LV_GRID_FR(1),
 		LV_GRID_FR(1),
+		LV_GRID_FR(2),
+		LV_GRID_CONTENT,
+		LV_GRID_CONTENT,
 		LV_GRID_TEMPLATE_LAST
 	},grid_row[]={
-		LV_GRID_FR(1),
+		LV_GRID_CONTENT,
+		LV_GRID_CONTENT,
 		LV_GRID_TEMPLATE_LAST
 	};
 	struct log_viewer*v=act->data;
 	if(!v)return -1;
-	lv_obj_set_style_pad_all(act->page,gui_font_size/2,0);
 	lv_obj_set_flex_flow(act->page,LV_FLEX_FLOW_COLUMN);
 
 	v->txt=lv_label_create(act->page);
@@ -138,49 +297,76 @@ static int logviewer_draw(struct gui_activity*act){
 	v->view=lv_obj_create(act->page);
 	lv_obj_set_width(v->view,lv_pct(100));
 	lv_obj_set_flex_grow(v->view,1);
+
 	v->content=lv_label_create(v->view);
 	lv_obj_set_style_text_font(v->content,gui_font_small,0);
 	lv_obj_set_size(v->content,LV_SIZE_CONTENT,LV_SIZE_CONTENT);
+	lv_label_set_text(v->content,_("Loading..."));
 
-	v->btns=lv_obj_create(act->page);
-	lv_obj_set_style_radius(v->btns,0,0);
-	lv_obj_set_style_pad_all(v->btns,gui_dpi/50,0);
-	lv_obj_set_scroll_dir(v->btns,LV_DIR_NONE);
-	lv_obj_set_style_border_width(v->btns,0,0);
-	lv_obj_set_style_bg_opa(v->btns,LV_OPA_0,0);
-	lv_obj_clear_flag(v->btns,LV_OBJ_FLAG_SCROLLABLE);
-	lv_obj_set_size(v->btns,lv_pct(100),LV_SIZE_CONTENT);
-	lv_obj_set_grid_dsc_array(v->btns,grid_col,grid_row);
+	v->pager=lv_obj_create(act->page);
+	lv_obj_set_style_radius(v->pager,0,0);
+	lv_obj_set_style_pad_all(v->pager,gui_dpi/50,0);
+	lv_obj_set_style_pad_column(v->pager,gui_font_size,0);
+	lv_obj_set_scroll_dir(v->pager,LV_DIR_NONE);
+	lv_obj_set_style_border_width(v->pager,0,0);
+	lv_obj_set_style_bg_opa(v->pager,LV_OPA_0,0);
+	lv_obj_clear_flag(v->pager,LV_OBJ_FLAG_SCROLLABLE);
+	lv_obj_set_size(v->pager,lv_pct(100),LV_SIZE_CONTENT);
+	lv_obj_set_grid_dsc_array(v->pager,grid_col,grid_row);
 
-	v->btn_ctrl=lv_btn_create(v->btns);
+	struct btn{
+		lv_obj_t**obj;
+		const char*txt;
+		lv_event_cb_t cb;
+		uint8_t cp,cs,rp;
+	}btns[]={
+		{&v->arr_top,    LV_SYMBOL_PREV,  pager_click,  0,1,0},
+		{&v->arr_left,   LV_SYMBOL_LEFT,  pager_click,  1,1,0},
+		{&v->arr_right,  LV_SYMBOL_RIGHT, pager_click,  6,1,0},
+		{&v->arr_bottom, LV_SYMBOL_NEXT,  pager_click,  7,1,0},
+		{&v->btn_ctrl,   _("Control"),    ctrl_click,   0,3,1},
+		{&v->btn_reload, _("Reload"),     reload_click, 5,3,1},
+		{NULL,NULL,NULL,0,0,0}
+	};
+
+	for(size_t i=0;btns[i].obj;i++){
+		*btns[i].obj=lv_btn_create(v->pager);
+		lv_obj_add_event_cb(
+			*btns[i].obj,btns[i].cb,
+			LV_EVENT_CLICKED,v
+		);
+		lv_obj_t*lbl=lv_label_create(*btns[i].obj);
+		lv_label_set_text(lbl,btns[i].txt);
+		lv_obj_center(lbl);
+		lv_obj_set_grid_cell(
+			*btns[i].obj,
+			LV_GRID_ALIGN_STRETCH,
+			btns[i].cp,btns[i].cs,
+			LV_GRID_ALIGN_STRETCH,
+			btns[i].rp,1
+		);
+	}
+
+	v->slider=lv_slider_create(v->pager);
 	lv_obj_add_event_cb(
-		v->btn_ctrl,ctrl_click,
-		LV_EVENT_CLICKED,NULL
+		v->slider,pager_change,
+		LV_EVENT_VALUE_CHANGED,v
 	);
-	lv_obj_set_style_radius(v->btn_ctrl,gui_font_size/2,0);
-	lv_obj_t*txt_ctrl=lv_label_create(v->btn_ctrl);
-	lv_label_set_text(txt_ctrl,_("Control"));
-	lv_obj_center(txt_ctrl);
+	lv_slider_set_range(v->slider,0,1);
 	lv_obj_set_grid_cell(
-		v->btn_ctrl,
-		LV_GRID_ALIGN_STRETCH,0,1,
-		LV_GRID_ALIGN_STRETCH,0,1
+		v->slider,
+		LV_GRID_ALIGN_STRETCH,2,4,
+		LV_GRID_ALIGN_CENTER,0,1
 	);
 
-	v->btn_reload=lv_btn_create(v->btns);
-	lv_obj_add_event_cb(
-		v->btn_reload,reload_click,
-		LV_EVENT_CLICKED,v
-	);
-	lv_obj_set_style_radius(v->btn_reload,gui_font_size/2,0);
-	lv_obj_t*txt_reload=lv_label_create(v->btn_reload);
-	lv_label_set_text(txt_reload,_("Reload"));
-	lv_obj_center(txt_reload);
+	v->page=lv_label_create(v->pager);
+	lv_label_set_text(v->page,"0/0");
 	lv_obj_set_grid_cell(
-		v->btn_reload,
-		LV_GRID_ALIGN_STRETCH,1,1,
-		LV_GRID_ALIGN_STRETCH,0,1
+		v->page,
+		LV_GRID_ALIGN_CENTER,3,2,
+		LV_GRID_ALIGN_CENTER,1,1
 	);
+
 	return 0;
 }
 
@@ -197,6 +383,7 @@ struct gui_register guireg_logviewer={
 	.quiet_exit=do_clean,
 	.init=logviewer_init,
 	.draw=logviewer_draw,
+	.resize=logviewer_resize,
 	.lost_focus=logviewer_lost_focus,
 	.get_focus=logviewer_get_focus,
 	.data_load=do_load,

@@ -25,47 +25,51 @@
 #include"confd.h"
 #include"logger.h"
 #include"defines.h"
+#include"gui/tools.h"
 #include"gui/guidrv.h"
 int gui_mouse_scale=0;
 static void*event_reg=NULL;
 static list*mouses;
+static lv_indev_drv_t drv;
+static lv_indev_t*dev;
+static bool lp=false;
+static INT64 lx=0,ly=0;
 struct input_data{
-	bool lp;
-	INT64 rx,lx;
-	INT64 ry,ly;
+	INT64 rx,ry;
 	EFI_SIMPLE_POINTER_PROTOCOL*mouse;
-	lv_indev_drv_t drv;
-	lv_indev_t*dev;
 	void*pd;
 };
-static bool pointer_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
+static void pointer_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
+	list*l,*n;
 	EFI_SIMPLE_POINTER_STATE p;
-	struct input_data*d=indev_drv->user_data;
-	if(!d)return false;
-	if(
-		!d->dev->cursor&&
-		(d->lx>0||d->ly>0)
-	)lv_indev_set_cursor(d->dev,gui_cursor);
-	if(!d->pd)d->pd=d->mouse->GetState;
-	else if(d->mouse->GetState!=d->pd){
-		tlog_warn("GetState changed, disable mouse device");
-		indev_drv->user_data=NULL;
-		list_obj_del_data(&mouses,d,NULL);
-		memset(d,0,sizeof(struct input_data));
-		free(d);
-		return false;
-	}
-	if(!EFI_ERROR(d->mouse->GetState(d->mouse,&p))){
-		INT64 ix=d->lx+(p.RelativeMovementX*gui_mouse_scale/d->rx);
-		INT64 iy=d->ly+(p.RelativeMovementY*gui_mouse_scale/d->ry);
-		d->lx=MIN(MAX(ix,0),gui_w);
-		d->ly=MIN(MAX(iy,0),gui_h);
-		d->lp=p.LeftButton==1;
-	}
-	data->point.x=d->lx;
-	data->point.y=d->ly;
-	data->state=d->lp?LV_INDEV_STATE_PR:LV_INDEV_STATE_REL;
-	return false;
+	if(indev_drv!=&drv||!dev||dev->driver!=indev_drv)return;
+	if(!dev->cursor&&(lx>0||ly>0))
+		lv_indev_set_cursor(dev,gui_cursor);
+	if(!(l=list_first(mouses))){
+		tlog_warn("no available mouse devices");
+		lv_indev_enable(dev,false);
+		return;
+	}else do{
+		n=l->next;
+		LIST_DATA_DECLARE(d,l,struct input_data*);
+		if(!d->pd)d->pd=d->mouse->GetState;
+		else if(d->mouse->GetState!=d->pd){
+			tlog_warn("GetState changed, disable mouse device");
+			list_obj_del(&mouses,l,list_default_free);
+			continue;
+		}
+		if(EFI_ERROR(d->mouse->GetState(d->mouse,&p)))continue;
+		INT64 ix=lx+(p.RelativeMovementX*gui_mouse_scale/d->rx);
+		INT64 iy=ly+(p.RelativeMovementY*gui_mouse_scale/d->ry);
+		lx=lv_coord_border(ix,gui_w-1,0);
+		ly=lv_coord_border(iy,gui_h-1,0);
+		lp=p.LeftButton==1;
+		if(ix<0||iy<0||ix>=gui_w||iy>=gui_h)lp=false;
+		data->continue_reading=true;
+		break;
+	}while((l=n));
+	data->point.x=lx,data->point.y=ly;
+	data->state=lp?LV_INDEV_STATE_PR:LV_INDEV_STATE_REL;
 }
 static bool proto_cmp(list*f,void*data){
 	LIST_DATA_DECLARE(d,f,struct input_data*);
@@ -84,15 +88,11 @@ static int _pointer_register(EFI_SIMPLE_POINTER_PROTOCOL*mouse){
 	if(!(data=malloc(sizeof(struct input_data))))return -1;
 	memset(data,0,sizeof(struct input_data));
 	data->mouse=mouse;
-	lv_indev_drv_init(&data->drv);
-	data->drv.type=LV_INDEV_TYPE_POINTER;
-	data->drv.read_cb=pointer_read;
-	data->drv.user_data=data;
-	data->dev=lv_indev_drv_register(&data->drv);
 	data->rx=data->mouse->Mode->ResolutionX;
 	data->ry=data->mouse->Mode->ResolutionY;
 	tlog_debug("found new uefi pointer %p",data->mouse);
 	list_obj_add_new(&mouses,data);
+	if(dev)lv_indev_enable(dev,true);
 	return 0;
 }
 STATIC EFIAPI VOID pointer_event(IN EFI_EVENT ev,IN VOID*ctx){
@@ -136,7 +136,14 @@ static int pointer_register(){
 		(EFI_EVENT_NOTIFY)pointer_event,
 		NULL,&event_reg
 	);
-	return found?0:trlog_warn(-1,"no uefi pointer found");
+	if(found){
+		lv_indev_drv_init(&drv);
+		drv.type=LV_INDEV_TYPE_POINTER;
+		drv.read_cb=pointer_read;
+		dev=lv_indev_drv_register(&drv);
+		return 0;
+	}
+	return trlog_warn(-1,"no uefi pointer found");
 }
 
 struct input_driver indrv_uefi_pointer={

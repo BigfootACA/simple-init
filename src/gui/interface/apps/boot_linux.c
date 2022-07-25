@@ -137,11 +137,9 @@ static bool set_path(lv_obj_t*ta,linux_load_from*from,const char*key){
 	return true;
 }
 
-
-static void ok_cb(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_CLICKED)return;
-	struct boot_linux*am=lv_obj_get_user_data(obj);
-	if(!am||obj!=am->ok)return;
+static void ok_cb(lv_event_t*e){
+	struct boot_linux*am=e->user_data;
+	if(!am||e->target!=am->ok)return;
 	linux_load_from*f=malloc(sizeof(linux_load_from));
 	linux_config*cfg=linux_config_new();
 	if(!cfg||!f){
@@ -161,7 +159,7 @@ static void ok_cb(lv_obj_t*obj,lv_event_t e){
 		confd_set_string_base(base,"cmdline",(char*)cmdline);
 		strncpy(cfg->cmdline,cmdline,sizeof(cfg->cmdline)-1);
 	}
-	cfg->use_uefi=lv_checkbox_is_checked(am->use_uefi);
+	cfg->use_uefi=lv_obj_is_checked(am->use_uefi);
 	confd_set_boolean_base(base,"use_uefi",cfg->use_uefi);
 	if(!cfg->abootimg.enabled&&!cfg->kernel.enabled){
 		msgbox_alert("No kernel specified");
@@ -177,10 +175,9 @@ static void ok_cb(lv_obj_t*obj,lv_event_t e){
 	gui_run_and_exit(after_exit);
 }
 
-static void cancel_cb(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_CLICKED)return;
-	struct boot_linux*am=lv_obj_get_user_data(obj);
-	if(!am||obj!=am->cancel)return;
+static void cancel_cb(lv_event_t*e){
+	struct boot_linux*am=e->user_data;
+	if(!am||e->target!=am->cancel)return;
 	guiact_do_back();
 }
 
@@ -192,88 +189,72 @@ static int do_cleanup(struct gui_activity*act){
 	return 0;
 }
 
-static lv_obj_t*draw_title(struct boot_linux*am,char*title,lv_coord_t*h){
-	(*h)+=gui_font_size;
-	lv_obj_t*label=lv_label_create(am->box,NULL);
-	lv_label_set_text(label,_(title));
-	lv_obj_set_y(label,(*h));
-	return label;
-}
-
 static int draw_boot_linux(struct gui_activity*act){
+	static lv_coord_t grid_col[]={
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_TEMPLATE_LAST
+	},grid_row[]={
+		LV_GRID_CONTENT,
+		LV_GRID_TEMPLATE_LAST
+	};
 	char path[PATH_MAX];
 	struct boot_linux*am=malloc(sizeof(struct boot_linux));
 	if(!am)return -ENOMEM;
 	memset(am,0,sizeof(struct boot_linux));
 	act->data=am;
 
-	am->box=lv_page_create(act->page,NULL);
-	lv_obj_set_style_local_pad_all(am->box,LV_PAGE_PART_BG,LV_STATE_DEFAULT,gui_font_size);
-	lv_obj_set_width(am->box,gui_sw/8*7);
-	lv_obj_set_click(am->box,false);
-	lv_coord_t h=0;
-	lv_coord_t w=lv_page_get_scrl_width(am->box);
+	am->box=lv_obj_create(act->page);
+	lv_obj_set_flex_flow(am->box,LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_style_pad_all(am->box,gui_font_size/2,0);
+	lv_obj_set_style_max_width(am->box,lv_pct(80),0);
+	lv_obj_set_style_max_height(am->box,lv_pct(80),0);
+	lv_obj_set_style_min_width(am->box,gui_dpi*2,0);
+	lv_obj_set_style_min_height(am->box,gui_font_size*2,0);
+	lv_obj_set_height(am->box,LV_SIZE_CONTENT);
+	lv_obj_center(am->box);
 
 	// Title
-	lv_obj_t*title=lv_label_create(am->box,NULL);
+	lv_obj_t*title=lv_label_create(am->box);
 	lv_label_set_text(title,_("Boot Linux"));
-	lv_label_set_long_mode(title,LV_LABEL_LONG_BREAK);
-	lv_obj_set_width(title,w);
-	lv_obj_set_y(title,h);
-	lv_label_set_align(title,LV_LABEL_ALIGN_CENTER);
-	h+=lv_obj_get_height(title);
+	lv_label_set_long_mode(title,LV_LABEL_LONG_WRAP);
+	lv_obj_set_width(title,lv_pct(100));
+	lv_obj_set_style_text_align(title,LV_TEXT_ALIGN_CENTER,0);
 
-	lv_draw_file_input(am->box,"Android Boot Image",     &h,&am->clr_abootimg,&am->abootimg,&am->btn_abootimg);
-	lv_draw_file_input(am->box,"Linux Kernel",           &h,&am->clr_kernel,  &am->kernel,  &am->btn_kernel);
-	lv_draw_file_input(am->box,"Ramdisk (initramfs)",    &h,&am->clr_initrd,  &am->initrd,  &am->btn_initrd);
-	lv_draw_file_input(am->box,"Device Tree Blob (dtb)", &h,&am->clr_dtb,     &am->dtb,     &am->btn_dtb);
+	lv_draw_input(am->box,"Android Boot Image",     NULL,&am->clr_abootimg,&am->abootimg,&am->btn_abootimg);
+	lv_draw_input(am->box,"Linux Kernel",           NULL,&am->clr_kernel,  &am->kernel,  &am->btn_kernel);
+	lv_draw_input(am->box,"Ramdisk (initramfs)",    NULL,&am->clr_initrd,  &am->initrd,  &am->btn_initrd);
+	lv_draw_input(am->box,"Device Tree Blob (dtb)", NULL,&am->clr_dtb,     &am->dtb,     &am->btn_dtb);
+	lv_draw_input(am->box,"Kernel Commandline",     NULL,&am->clr_cmdline, &am->cmdline, NULL);
 
-	// Commandline
-	lv_obj_t*cmdline=draw_title(am,"Kernel Commandline",&h);
-	am->clr_cmdline=lv_draw_side_clear_btn(am->box,&h,lv_obj_get_height(cmdline));
+	lv_textarea_set_one_line(am->cmdline,false);
 
-	h+=gui_font_size/2;
-	am->cmdline=lv_textarea_create(am->box,NULL);
-	lv_obj_set_user_data(am->clr_cmdline,am->cmdline);
-	lv_textarea_set_text(am->cmdline,"");
-	lv_textarea_set_cursor_hidden(am->cmdline,true);
-	lv_obj_set_user_data(am->cmdline,am);
-	lv_obj_set_event_cb(am->cmdline,lv_input_cb);
-	lv_obj_set_width(am->cmdline,w);
-	lv_obj_set_pos(am->cmdline,0,h);
-	h+=lv_obj_get_height(am->cmdline);
-
-	h+=gui_font_size;
-	am->use_uefi=lv_checkbox_create(am->box,NULL);
-	lv_style_set_focus_checkbox(am->use_uefi);
-	lv_obj_align(am->use_uefi,NULL,LV_ALIGN_IN_TOP_LEFT,(gui_font_size/2),h);
-	lv_obj_set_user_data(am->use_uefi,am);
+	am->use_uefi=lv_checkbox_create(am->box);
 	lv_checkbox_set_text(am->use_uefi,_("Boot with UEFI runtime"));
-	h+=lv_obj_get_height(am->use_uefi);
+
+	lv_obj_t*btns=lv_obj_create(am->box);
+	lv_obj_set_style_border_width(btns,0,0);
+	lv_obj_set_style_pad_all(btns,gui_font_size/4,0);
+	lv_obj_set_grid_dsc_array(btns,grid_col,grid_row);
+	lv_obj_set_size(btns,lv_pct(100),LV_SIZE_CONTENT);
 
 	// OK Button
-	h+=gui_font_size;
-	am->ok=lv_btn_create(am->box,NULL);
-	lv_style_set_action_button(am->ok,true);
-	lv_obj_set_size(am->ok,w/2-gui_font_size,gui_font_size*2);
-	lv_obj_align(am->ok,NULL,LV_ALIGN_IN_TOP_LEFT,(gui_font_size/2),h);
-	lv_obj_set_user_data(am->ok,am);
-	lv_obj_set_event_cb(am->ok,ok_cb);
-	lv_label_set_text(lv_label_create(am->ok,NULL),_("OK"));
+	am->ok=lv_btn_create(btns);
+	lv_obj_set_enabled(am->ok,true);
+	lv_obj_add_event_cb(am->ok,ok_cb,LV_EVENT_CLICKED,am);
+	lv_obj_set_grid_cell(am->ok,LV_GRID_ALIGN_STRETCH,0,1,LV_GRID_ALIGN_STRETCH,0,1);
+	lv_obj_t*lbl_ok=lv_label_create(am->ok);
+	lv_label_set_text(lbl_ok,_("OK"));
+	lv_obj_center(lbl_ok);
 
 	// Cancel Button
-	am->cancel=lv_btn_create(am->box,NULL);
-	lv_style_set_action_button(am->cancel,true);
-	lv_obj_set_size(am->cancel,w/2-gui_font_size,gui_font_size*2);
-	lv_obj_align(am->cancel,NULL,LV_ALIGN_IN_TOP_RIGHT,-(gui_font_size/2),h);
-	lv_obj_set_user_data(am->cancel,am);
-	lv_obj_set_event_cb(am->cancel,cancel_cb);
-	lv_label_set_text(lv_label_create(am->cancel,NULL),_("Cancel"));
-	h+=lv_obj_get_height(am->cancel);
-
-	h+=gui_font_size*3;
-	lv_obj_set_height(am->box,MIN(h,(lv_coord_t)gui_sh/6*5));
-	lv_obj_align(am->box,NULL,LV_ALIGN_CENTER,0,0);
+	am->cancel=lv_btn_create(btns);
+	lv_obj_set_enabled(am->cancel,true);
+	lv_obj_add_event_cb(am->cancel,cancel_cb,LV_EVENT_CLICKED,am);
+	lv_obj_set_grid_cell(am->cancel,LV_GRID_ALIGN_STRETCH,1,1,LV_GRID_ALIGN_STRETCH,0,1);
+	lv_obj_t*lbl_cancel=lv_label_create(am->cancel);
+	lv_label_set_text(lbl_cancel,_("Cancel"));
+	lv_obj_center(lbl_cancel);
 
 	#define set_text(tag) \
 	lv_textarea_set_text(\
@@ -288,7 +269,7 @@ static int draw_boot_linux(struct gui_activity*act){
 	set_text(initrd);
 	set_text(dtb);
 	set_text(cmdline);
-	lv_checkbox_set_checked(
+	lv_obj_set_checked(
 		am->use_uefi,
 		confd_get_boolean_base(
 			base,"use_uefi",false

@@ -37,8 +37,8 @@
 
 struct add_ramdisk{
 	bool size_changed;
-	lv_obj_t*page,*box,*ok,*cancel;
-	lv_obj_t*btn_source,*btn_size;
+	lv_obj_t*box,*ok,*cancel;
+	lv_obj_t*btn_source;
 	lv_obj_t*lbl_title,*lbl_source;
 	lv_obj_t*lbl_size,*lbl_mem_type,*lbl_type;
 	lv_obj_t*source,*size,*mem_type,*type;
@@ -50,7 +50,6 @@ static int add_ramdisk_get_focus(struct gui_activity*d){
 	lv_group_add_obj(gui_grp,am->source);
 	lv_group_add_obj(gui_grp,am->btn_source);
 	lv_group_add_obj(gui_grp,am->size);
-	lv_group_add_obj(gui_grp,am->btn_size);
 	lv_group_add_obj(gui_grp,am->mem_type);
 	lv_group_add_obj(gui_grp,am->type);
 	lv_group_add_obj(gui_grp,am->ok);
@@ -64,7 +63,6 @@ static int add_ramdisk_lost_focus(struct gui_activity*d){
 	lv_group_remove_obj(am->source);
 	lv_group_remove_obj(am->btn_source);
 	lv_group_remove_obj(am->size);
-	lv_group_remove_obj(am->btn_size);
 	lv_group_remove_obj(am->mem_type);
 	lv_group_remove_obj(am->type);
 	lv_group_remove_obj(am->ok);
@@ -97,30 +95,14 @@ static void load_size(struct add_ramdisk*am){
 	lv_fs_close(&file);
 }
 
-static bool select_cb(bool ok,const char**path,uint16_t cnt,void*user_data){
-	if(!ok)return false;
-	if(!path||!path[0]||path[1]||cnt!=1)return true;
-	lv_textarea_set_text(user_data,path[0]);
-	load_size(lv_obj_get_user_data(user_data));
-	return false;
-}
-
-static void sel_cb(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_CLICKED)return;
-	struct filepicker*fp=filepicker_create(select_cb,"Select item");
-	filepicker_set_user_data(fp,lv_obj_get_user_data(obj));
-	filepicker_set_max_item(fp,1);
-}
-
-static void ok_cb(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_CLICKED)return;
+static void ok_cb(lv_event_t*e){
 	EFI_GUID*dt;
 	EFI_STATUS st;
 	EFI_MEMORY_TYPE mt;
 	EFI_DEVICE_PATH_PROTOCOL*dp=NULL;
 	EFI_RAM_DISK_PROTOCOL*ramdisk=NULL;
-	struct add_ramdisk*am=lv_obj_get_user_data(obj);
-	if(!am||obj!=am->ok)return;
+	struct add_ramdisk*am=e->user_data;
+	if(!am||e->target!=am->ok)return;
 	uint8_t type=lv_dropdown_get_selected(am->type);
 	uint8_t mem_type=lv_dropdown_get_selected(am->mem_type);
 	const char*source=lv_textarea_get_text(am->source);
@@ -231,10 +213,9 @@ static void ok_cb(lv_obj_t*obj,lv_event_t e){
 	guiact_do_back();
 }
 
-static void cancel_cb(lv_obj_t*obj,lv_event_t e){
-	if(e!=LV_EVENT_CLICKED)return;
-	struct add_ramdisk*am=lv_obj_get_user_data(obj);
-	if(!am||obj!=am->cancel)return;
+static void cancel_cb(lv_event_t*e){
+	struct add_ramdisk*am=e->user_data;
+	if(!am||e->target!=am->cancel)return;
 	guiact_do_back();
 }
 
@@ -246,19 +227,15 @@ static int init(struct gui_activity*act){
 	return 0;
 }
 
-static void source_cb(lv_obj_t*obj,lv_event_t e){
-	lv_input_cb(obj,e);
-	if(e!=LV_EVENT_DEFOCUSED)return;
-	struct add_ramdisk*am=lv_obj_get_user_data(obj);
-	if(!am||obj!=am->source)return;
+static void source_cb(lv_event_t*e){
+	struct add_ramdisk*am=e->user_data;
+	if(!am||e->target!=am->source)return;
 	load_size(am);
 }
 
-static void size_cb(lv_obj_t*obj,lv_event_t e){
-	lv_input_cb(obj,e);
-	if(e!=LV_EVENT_DEFOCUSED)return;
-	struct add_ramdisk*am=lv_obj_get_user_data(obj);
-	if(!am||obj!=am->size)return;
+static void size_cb(lv_event_t*e){
+	struct add_ramdisk*am=e->user_data;
+	if(!am||e->target!=am->size)return;
 	am->size_changed=true;
 }
 
@@ -270,228 +247,76 @@ static int do_cleanup(struct gui_activity*act){
 	return 0;
 }
 
-static int add_ramdisk_resize(struct gui_activity*act){
-	lv_coord_t w=act->w/8*7,h=0;
-	struct add_ramdisk*am=act->data;
-	lv_obj_set_style_local_pad_all(
-		am->box,
-		LV_PAGE_PART_BG,
-		LV_STATE_DEFAULT,
-		gui_font_size
-	);
-	lv_obj_set_width(am->page,w);
-	w=lv_page_get_scrl_width(am->page);
-	lv_obj_set_width(am->box,w);
-
-	lv_obj_align_x(am->lbl_title,NULL,LV_ALIGN_CENTER,0);
-	lv_obj_set_y(am->lbl_title,h);
-	h+=lv_obj_get_height(am->lbl_title)+(gui_font_size/2);
-	lv_obj_set_y(am->lbl_source,h);
-	lv_obj_align_x(
-		am->source,am->lbl_source,
-		LV_ALIGN_OUT_RIGHT_MID,
-		gui_font_size/2
-	);
-	lv_obj_set_y(am->source,h);
-	lv_obj_align(
-		am->lbl_source,am->source,
-		LV_ALIGN_OUT_LEFT_MID,
-		-gui_font_size/2,0
-	);
-	lv_obj_set_style_local_radius(
-		am->btn_source,
-		LV_BTN_PART_MAIN,
-		LV_STATE_DEFAULT,
-		gui_font_size/2
-	);
-	lv_obj_set_size(
-		am->btn_source,
-		gui_font_size*3,
-		lv_obj_get_height(am->source)
-	);
-	lv_obj_set_width(
-		am->source,
-		w-lv_obj_get_width(am->btn_source)-
-		lv_obj_get_width(am->lbl_source)-
-		gui_font_size
-	);
-	lv_obj_align(
-		am->btn_source,am->source,
-		LV_ALIGN_OUT_RIGHT_MID,
-		gui_font_size/4,0
-	);
-	h+=lv_obj_get_height(am->btn_source)+gui_font_size;
-	lv_obj_set_y(am->lbl_size,h);
-	lv_obj_align_x(
-		am->size,am->lbl_size,
-		LV_ALIGN_OUT_RIGHT_MID,
-		gui_font_size/2
-	);
-	lv_obj_set_y(am->size,h);
-	lv_obj_align(
-		am->lbl_size,am->size,
-		LV_ALIGN_OUT_LEFT_MID,
-		-gui_font_size/2,0
-	);
-	lv_obj_set_style_local_radius(
-		am->btn_size,
-		LV_BTN_PART_MAIN,
-		LV_STATE_DEFAULT,
-		gui_font_size/2
-	);
-	lv_obj_set_size(
-		am->btn_size,
-		gui_font_size*3,
-		lv_obj_get_height(am->size)
-	);
-	lv_obj_set_width(
-		am->size,
-		w-lv_obj_get_width(am->btn_size)-
-		lv_obj_get_width(am->lbl_size)-
-		gui_font_size
-	);
-	lv_obj_align(
-		am->btn_size,am->size,
-		LV_ALIGN_OUT_RIGHT_MID,
-		gui_font_size/4,0
-	);
-	h+=lv_obj_get_height(am->btn_size)+gui_font_size;
-	lv_obj_set_y(am->lbl_mem_type,h);
-	lv_obj_set_width(
-		am->mem_type,
-		w-lv_obj_get_width(am->lbl_mem_type)-
-		gui_font_size
-	);
-	lv_obj_align_x(
-		am->mem_type,am->lbl_mem_type,
-		LV_ALIGN_OUT_RIGHT_MID,
-		gui_font_size/2
-	);
-	lv_obj_set_y(am->mem_type,h);
-	lv_obj_align(
-		am->lbl_mem_type,am->mem_type,
-		LV_ALIGN_OUT_LEFT_MID,
-		-gui_font_size/2,0
-	);
-	h+=lv_obj_get_height(am->mem_type)+gui_font_size;
-	lv_obj_set_y(am->lbl_type,h);
-	lv_obj_set_width(
-		am->type,
-		w-lv_obj_get_width(am->lbl_type)-
-		gui_font_size
-	);
-	lv_obj_align_x(
-		am->type,am->lbl_type,
-		LV_ALIGN_OUT_RIGHT_MID,
-		gui_font_size/2
-	);
-	lv_obj_set_y(am->type,h);
-	lv_obj_align(
-		am->lbl_type,am->type,
-		LV_ALIGN_OUT_LEFT_MID,
-		-gui_font_size/2,0
-	);
-	h+=lv_obj_get_height(am->type)+gui_font_size;
-	lv_obj_set_size(
-		am->ok,
-		w/2-gui_font_size,
-		gui_font_size*2
-	);
-	lv_obj_align(
-		am->ok,NULL,
-		LV_ALIGN_IN_TOP_LEFT,
-		(gui_font_size/2),h
-	);
-	lv_obj_set_size(
-		am->cancel,
-		w/2-gui_font_size,
-		gui_font_size*2
-	);
-	lv_obj_align(
-		am->cancel,NULL,
-		LV_ALIGN_IN_TOP_RIGHT,
-		-(gui_font_size/2),h
-	);
-	h+=lv_obj_get_height(am->cancel)+(gui_font_size*2);
-	lv_obj_set_height(am->box,h);
-	h+=gui_font_size*2;
-	lv_obj_set_height(am->page,MIN(h,(lv_coord_t)gui_sh/6*5));
-	lv_obj_align(am->page,NULL,LV_ALIGN_CENTER,0,0);
-	return 0;
-}
-
 static int draw_add_ramdisk(struct gui_activity*act){
-	char point[256];
+	static lv_coord_t grid_2fr[]={
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_TEMPLATE_LAST
+	},grid_row[]={
+		LV_GRID_CONTENT,
+		LV_GRID_TEMPLATE_LAST
+	},grid_dropdown[]={
+		LV_GRID_CONTENT,
+		LV_GRID_FR(1),
+		LV_GRID_TEMPLATE_LAST
+	};
 	struct add_ramdisk*am=act->data;
 
-	am->page=lv_page_create(act->page,NULL);
-	lv_obj_set_click(am->page,false);
-
-	am->box=lv_obj_create(am->page,NULL);
-	lv_obj_set_click(am->box,false);
-	lv_obj_set_style_local_border_width(am->box,LV_PAGE_PART_BG,LV_STATE_DEFAULT,0);
+	am->box=lv_obj_create(act->page);
+	lv_obj_set_flex_flow(am->box,LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_style_pad_all(am->box,gui_font_size/2,0);
+	lv_obj_set_style_max_width(am->box,lv_pct(80),0);
+	lv_obj_set_style_max_height(am->box,lv_pct(80),0);
+	lv_obj_set_style_min_width(am->box,gui_dpi*2,0);
+	lv_obj_set_style_min_height(am->box,gui_font_size*2,0);
+	lv_obj_set_height(am->box,LV_SIZE_CONTENT);
+	lv_obj_center(am->box);
 
 	// Title
-	am->lbl_title=lv_label_create(am->box,NULL);
+	am->lbl_title=lv_label_create(am->box);
+	lv_obj_set_width(am->lbl_title,lv_pct(100));
 	lv_label_set_text(am->lbl_title,_("Add Ramdisk"));
-	lv_label_set_long_mode(am->lbl_title,LV_LABEL_LONG_BREAK);
-	lv_label_set_align(am->lbl_title,LV_LABEL_ALIGN_CENTER);
+	lv_label_set_long_mode(am->lbl_title,LV_LABEL_LONG_WRAP);
+	lv_obj_set_style_text_align(am->lbl_title,LV_TEXT_ALIGN_CENTER,0);
 
-	// Source
-	am->lbl_source=lv_label_create(am->box,NULL);
-	lv_label_set_text(am->lbl_source,_("Image:"));
+	lv_draw_input(am->box,"Image:",NULL,NULL,&am->source,&am->btn_source);
+	lv_draw_input(am->box,"Size:",NULL,NULL,&am->size,NULL);
 
-	am->source=lv_textarea_create(am->box,NULL);
 	lv_textarea_set_text(am->source,act->args?(char*)act->args:"");
-	lv_textarea_set_one_line(am->source,true);
-	lv_textarea_set_cursor_hidden(am->source,true);
-	lv_obj_set_user_data(am->source,am);
-	lv_obj_set_event_cb(am->source,source_cb);
-
-	am->btn_source=lv_btn_create(am->box,NULL);
-	lv_style_set_action_button(am->btn_source,true);
-	lv_obj_set_user_data(am->btn_source,am->source);
-	lv_obj_set_event_cb(am->btn_source,sel_cb);
-	lv_label_set_text(lv_label_create(am->btn_source,NULL),"...");
-
-	// Size
-	am->lbl_size=lv_label_create(am->box,NULL);
-	lv_label_set_text(am->lbl_size,_("Memory Size:"));
-
-	am->size=lv_textarea_create(am->box,NULL);
-	lv_textarea_set_text(am->size,point);
-	lv_textarea_set_one_line(am->size,true);
-	lv_textarea_set_cursor_hidden(am->size,true);
+	lv_obj_add_event_cb(am->source,source_cb,LV_EVENT_DEFOCUSED,am);
+	lv_obj_add_event_cb(am->size,size_cb,LV_EVENT_DEFOCUSED,am);
 	lv_textarea_set_accepted_chars(am->size,HEX"x");
 	lv_textarea_set_text(am->size,"0");
-	lv_obj_set_user_data(am->size,am);
-	lv_obj_set_event_cb(am->size,size_cb);
 
-	am->btn_size=lv_btn_create(am->box,NULL);
-	lv_style_set_action_button(am->btn_size,true);
-	lv_obj_set_user_data(am->btn_size,am->size);
-	lv_obj_set_event_cb(am->btn_size,sel_cb);
-	lv_label_set_text(lv_label_create(am->btn_size,NULL),"...");
+	lv_obj_t*fields=lv_obj_create(am->box);
+	lv_obj_set_style_border_width(fields,0,0);
+	lv_obj_set_style_pad_all(fields,gui_font_size/4,0);
+	lv_obj_set_grid_dsc_array(fields,grid_dropdown,grid_2fr);
+	lv_obj_set_size(fields,lv_pct(100),LV_SIZE_CONTENT);
 
 	// Memory Type
-	am->lbl_mem_type=lv_label_create(am->box,NULL);
+	am->lbl_mem_type=lv_label_create(fields);
 	lv_label_set_text(am->lbl_mem_type,_("Memory Type:"));
+	lv_obj_set_grid_cell(am->lbl_mem_type,LV_GRID_ALIGN_START,0,1,LV_GRID_ALIGN_CENTER,0,1);
 
-	am->mem_type=lv_dropdown_create(am->box,NULL);
+	am->mem_type=lv_dropdown_create(fields);
 	lv_obj_set_user_data(am->mem_type,am);
-	lv_obj_set_event_cb(am->mem_type,lv_default_dropdown_cb);
+	lv_obj_add_event_cb(am->mem_type,lv_default_dropdown_cb,LV_EVENT_ALL,NULL);
+	lv_obj_set_grid_cell(am->mem_type,LV_GRID_ALIGN_STRETCH,1,1,LV_GRID_ALIGN_CENTER,0,1);
 	lv_dropdown_clear_options(am->mem_type);
 	lv_dropdown_add_option(am->mem_type,_("Boot Services Data"),0);
 	lv_dropdown_add_option(am->mem_type,_("Reserved Memory"),1);
 	lv_dropdown_add_option(am->mem_type,_("Conventional Memory"),2);
 
 	// Disk Type
-	am->lbl_type=lv_label_create(am->box,NULL);
+	am->lbl_type=lv_label_create(fields);
 	lv_label_set_text(am->lbl_type,_("Disk Type:"));
+	lv_obj_set_grid_cell(am->lbl_type,LV_GRID_ALIGN_START,0,1,LV_GRID_ALIGN_CENTER,1,1);
 
-	am->type=lv_dropdown_create(am->box,NULL);
+	am->type=lv_dropdown_create(fields);
 	lv_obj_set_user_data(am->type,am);
-	lv_obj_set_event_cb(am->type,lv_default_dropdown_cb);
+	lv_obj_add_event_cb(am->type,lv_default_dropdown_cb,LV_EVENT_ALL,NULL);
+	lv_obj_set_grid_cell(am->type,LV_GRID_ALIGN_STRETCH,1,1,LV_GRID_ALIGN_CENTER,1,1);
 	lv_dropdown_clear_options(am->type);
 	lv_dropdown_add_option(am->type,_("Virtual CD"),0);
 	lv_dropdown_add_option(am->type,_("Virtual Disk"),1);
@@ -499,19 +324,29 @@ static int draw_add_ramdisk(struct gui_activity*act){
 	lv_dropdown_add_option(am->type,_("Persistent Virtual Disk"),3);
 	lv_dropdown_set_selected(am->type,1);
 
+	lv_obj_t*btns=lv_obj_create(am->box);
+	lv_obj_set_style_border_width(btns,0,0);
+	lv_obj_set_style_pad_all(btns,gui_font_size/4,0);
+	lv_obj_set_grid_dsc_array(btns,grid_2fr,grid_row);
+	lv_obj_set_size(btns,lv_pct(100),LV_SIZE_CONTENT);
+
 	// OK Button
-	am->ok=lv_btn_create(am->box,NULL);
-	lv_style_set_action_button(am->ok,true);
-	lv_obj_set_user_data(am->ok,am);
-	lv_obj_set_event_cb(am->ok,ok_cb);
-	lv_label_set_text(lv_label_create(am->ok,NULL),_("OK"));
+	am->ok=lv_btn_create(btns);
+	lv_obj_set_enabled(am->ok,true);
+	lv_obj_add_event_cb(am->ok,ok_cb,LV_EVENT_CLICKED,am);
+	lv_obj_set_grid_cell(am->ok,LV_GRID_ALIGN_STRETCH,0,1,LV_GRID_ALIGN_STRETCH,0,1);
+	lv_obj_t*lbl_ok=lv_label_create(am->ok);
+	lv_label_set_text(lbl_ok,_("OK"));
+	lv_obj_center(lbl_ok);
 
 	// Cancel Button
-	am->cancel=lv_btn_create(am->box,NULL);
-	lv_style_set_action_button(am->cancel,true);
-	lv_obj_set_user_data(am->cancel,am);
-	lv_obj_set_event_cb(am->cancel,cancel_cb);
-	lv_label_set_text(lv_label_create(am->cancel,NULL),_("Cancel"));
+	am->cancel=lv_btn_create(btns);
+	lv_obj_set_enabled(am->cancel,true);
+	lv_obj_add_event_cb(am->cancel,cancel_cb,LV_EVENT_CLICKED,am);
+	lv_obj_set_grid_cell(am->cancel,LV_GRID_ALIGN_STRETCH,1,1,LV_GRID_ALIGN_STRETCH,0,1);
+	lv_obj_t*lbl_cancel=lv_label_create(am->cancel);
+	lv_label_set_text(lbl_cancel,_("Cancel"));
+	lv_obj_center(lbl_cancel);
 
 	if(act->args){
 		load_size(am);
@@ -536,7 +371,6 @@ struct gui_register guireg_add_ramdisk={
 	},
 	.quiet_exit=do_cleanup,
 	.init=init,
-	.resize=add_ramdisk_resize,
 	.get_focus=add_ramdisk_get_focus,
 	.lost_focus=add_ramdisk_lost_focus,
 	.draw=draw_add_ramdisk,

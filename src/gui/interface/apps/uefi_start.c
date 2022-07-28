@@ -36,7 +36,7 @@ static int after_exit(void*d __attribute__((unused))){
 	return r;
 }
 
-static void start_cb(lv_task_t*t){
+static void start_cb(lv_timer_t*t){
 	char*full_path=t->user_data;
 	EFI_STATUS st;
 	EFI_LOADED_IMAGE_PROTOCOL*li;
@@ -73,7 +73,7 @@ static void start_cb(lv_task_t*t){
 }
 
 static bool confirm_click(uint16_t id,const char*text __attribute__((unused)),void*user_data){
-	if(id==0)lv_task_once(lv_task_create(start_cb,1,LV_TASK_PRIO_LOWEST,user_data));
+	if(id==0)lv_timer_set_repeat_count(lv_timer_create(start_cb,1,user_data),1);
 	return false;
 }
 

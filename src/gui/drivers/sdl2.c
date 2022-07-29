@@ -108,7 +108,7 @@ static void sdl2_flush(lv_disp_drv_t*disp_drv,const lv_area_t*area,lv_color_t*co
 		window_update();
 	lv_disp_flush_ready(disp_drv);
 }
-void sdl_event_handler(lv_timer_t*t __attribute__((unused))){
+static void sdl_event_handler(lv_timer_t*t __attribute__((unused))){
 	SDL_Event e;
 	while(SDL_PollEvent(&e))switch(e.type){
 		case SDL_MOUSEBUTTONUP:
@@ -146,13 +146,13 @@ void sdl_event_handler(lv_timer_t*t __attribute__((unused))){
 		break;
 		default:break;
 	}
-	if(sdl_quit_qry){
-		SDL_DestroyTexture(monitor.texture);
-		SDL_DestroyRenderer(monitor.renderer);
-		SDL_DestroyWindow(monitor.window);
-		SDL_Quit();
-		exit(0);
-	}
+	if(sdl_quit_qry)gui_run=false;
+}
+static void sdl2_exit(){
+	if(monitor.texture)SDL_DestroyTexture(monitor.texture);
+	if(monitor.renderer)SDL_DestroyRenderer(monitor.renderer);
+	if(monitor.window)SDL_DestroyWindow(monitor.window);
+	SDL_Quit();
 }
 static int quit_filter(void*userdata __attribute__((unused)),SDL_Event*e){
 	if(
@@ -367,6 +367,7 @@ struct gui_driver guidrv_sdl2={
 	.drv_getdpi=sdl2_get_dpi,
 	.drv_cansleep=sdl2_can_sleep,
 	.drv_get_modes=sdl2_get_modes,
+	.drv_exit=sdl2_exit,
 	#ifdef SDL2_VIRTUAL_BACKLIGHT
 	.drv_getbrightness=sdl2_get_brightness,
 	.drv_setbrightness=sdl2_set_brightness,

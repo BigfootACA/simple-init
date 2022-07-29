@@ -24,6 +24,7 @@
 #include"gui.h"
 #include"array.h"
 #include"logger.h"
+#include"gui/tools.h"
 #include"gui/guidrv.h"
 struct in_data{
 	bool enabled,mouse;
@@ -98,13 +99,13 @@ static void*input_handler(void*args __attribute__((unused))){
 					case EV_REL:switch(event.code){
 						case REL_X:
 							d->last_x+=event.value;
-							if(d->last_x>gui_w)d->last_x=gui_w;
+							if(d->last_x>=gui_w)d->last_x=gui_w-1;
 							if(d->last_x<0)d->last_x=0;
 							mouse=true;
 						break;
 						case REL_Y:
 							d->last_y+=event.value;
-							if(d->last_y>gui_h)d->last_y=gui_h;
+							if(d->last_y>=gui_h)d->last_y=gui_h-1;
 							if(d->last_y<0)d->last_y=0;
 							mouse=true;
 						break;
@@ -140,8 +141,8 @@ static void input_read(lv_indev_drv_t*indev_drv,lv_indev_data_t*data){
 	if(!d->enabled||indev_drv->user_data!=d)return;
 	switch(indev_drv->type){
 		case LV_INDEV_TYPE_POINTER:
-			data->point.x=d->last_x;
-			data->point.y=d->last_y;
+			data->point.x=lv_coord_border(d->last_x,gui_w-1,0);
+			data->point.y=lv_coord_border(d->last_y,gui_h-1,0);
 			data->state=d->down?LV_INDEV_STATE_PR:LV_INDEV_STATE_REL;
 		break;
 		case LV_INDEV_TYPE_KEYPAD:

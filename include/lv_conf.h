@@ -51,6 +51,9 @@ extern uint32_t custom_tick_get(void);
 #define LV_USE_GROUP                        1
 #define LV_USE_GPU                          1
 #define LV_USE_GPU_STM32_DMA2D              0
+#ifdef ENABLE_SDL2
+#define LV_USE_GPU_SDL                      1
+#endif
 #define LV_USE_FILESYSTEM                   1
 #define LV_USE_USER_DATA                    1
 #define LV_USE_PERF_MONITOR                 0

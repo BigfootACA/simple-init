@@ -10,9 +10,11 @@
 #include"version.h"
 #include"gui/tools.h"
 #include"gui/guidrv.h"
+#include"src/draw/sw/lv_draw_sw.h"
+#include"src/draw/sdl/lv_draw_sdl.h"
 #define TAG "sdl2"
-#define SDL2_Z 1
 typedef struct{
+	lv_draw_sdl_drv_param_t param;
 	SDL_Window*window;
 	SDL_Renderer*renderer;
 	SDL_Texture*texture;
@@ -22,6 +24,7 @@ typedef struct{
 static uint32_t ww=540,hh=960;
 static monitor_t monitor;
 static volatile bool sdl_inited=false,sdl_quit_qry=false;
+static bool accelerated;
 static bool left_button_down=false;
 static int16_t last_x=0,last_y=0,enc_diff=0;
 static uint32_t last_key;
@@ -72,10 +75,21 @@ static void keyboard_read(lv_indev_drv_t*indev_drv __attribute__((unused)),lv_in
 	data->state=kbd_state,data->key=keycode_to_ascii(last_key);
 }
 static void window_update(){
-	SDL_UpdateTexture(monitor.texture,NULL,monitor.tft_fb,ww*sizeof(uint32_t));
+	if(accelerated)SDL_SetRenderTarget(monitor.renderer,NULL);
+	else SDL_UpdateTexture(monitor.texture,NULL,monitor.tft_fb,ww*sizeof(uint32_t));
 	SDL_RenderClear(monitor.renderer);
+	lv_disp_t*d=_lv_refr_get_disp_refreshing();
+	if(d->driver->screen_transp){
+		SDL_SetRenderDrawColor(monitor.renderer,0xFF,0,0,0xFF);
+		SDL_RenderDrawRect(monitor.renderer,&(SDL_Rect){.x=0,.y=0,.w=ww,.h=hh});
+	}
+	if(accelerated){
+		SDL_SetTextureBlendMode(monitor.texture,SDL_BLENDMODE_BLEND);
+		SDL_RenderSetClipRect(monitor.renderer,NULL);
+	}
 	SDL_RenderCopy(monitor.renderer,monitor.texture,NULL,NULL);
 	SDL_RenderPresent(monitor.renderer);
+	if(accelerated)SDL_SetRenderTarget(monitor.renderer,monitor.texture);
 }
 static void sdl2_flush(lv_disp_drv_t*disp_drv,const lv_area_t*area,lv_color_t*color_p){
 	lv_coord_t hres=disp_drv->hor_res,vres=disp_drv->ver_res;
@@ -83,16 +97,15 @@ static void sdl2_flush(lv_disp_drv_t*disp_drv,const lv_area_t*area,lv_color_t*co
 		lv_disp_flush_ready(disp_drv);
 		return;
 	}
-	uint32_t w=lv_area_get_width(area);
-	for(int32_t y=area->y1;y<=area->y2&&y<disp_drv->ver_res;y++){
-		memcpy(&monitor.tft_fb[y*hres+area->x1],color_p,w*sizeof(lv_color_t));
-		color_p+=w;
+	if(!accelerated){
+		uint32_t w=lv_area_get_width(area);
+		for(int32_t y=area->y1;y<=area->y2&&y<disp_drv->ver_res;y++){
+			memcpy(&monitor.tft_fb[y*hres+area->x1],color_p,w*sizeof(lv_color_t));
+			color_p+=w;
+		}
 	}
-	monitor.sdl_refr_qry=true;
-	if(lv_disp_flush_is_last(disp_drv)&&monitor.sdl_refr_qry){
-		monitor.sdl_refr_qry=false;
+	if(lv_disp_flush_is_last(disp_drv))
 		window_update();
-	}
 	lv_disp_flush_ready(disp_drv);
 }
 void sdl_event_handler(lv_timer_t*t __attribute__((unused))){
@@ -111,21 +124,14 @@ void sdl_event_handler(lv_timer_t*t __attribute__((unused))){
 				break;
 				case SDL_BUTTON_LEFT:
 					left_button_down=true;
-					last_x=e.motion.x/SDL2_Z;
-					last_y=e.motion.y/SDL2_Z;
+					last_x=e.motion.x,last_y=e.motion.y;
 				break;
 			}
 		break;
-		case SDL_MOUSEMOTION:
-			last_x=e.motion.x/SDL2_Z;
-			last_y=e.motion.y/SDL2_Z;
-		break;
+		case SDL_MOUSEMOTION:last_x=e.motion.x,last_y=e.motion.y;break;
 		case SDL_FINGERUP:
 		case SDL_FINGERDOWN:left_button_down=e.type==SDL_FINGERDOWN;//FALLTHROUGH
-		case SDL_FINGERMOTION:
-			last_x=ww*e.tfinger.x/SDL2_Z;
-			last_y=hh*e.tfinger.y/SDL2_Z;
-		break;
+		case SDL_FINGERMOTION:last_x=ww*e.tfinger.x,last_y=hh*e.tfinger.y;break;
 		case SDL_MOUSEWHEEL:enc_diff=-e.wheel.y;break;
 		case SDL_KEYDOWN:kbd_state=LV_INDEV_STATE_PR,last_key=e.key.keysym.sym;break;
 		case SDL_KEYUP:kbd_state=LV_INDEV_STATE_REL;break;
@@ -181,31 +187,40 @@ static void sdl_apply_mode(){
 }
 static int monitor_init(){
 	if(!getenv("DISPLAY")&&!getenv("WAYLAND_DISPLAY"))return -1;
+	memset(&monitor,0,sizeof(monitor));
 	sdl_apply_mode();
 	SDL_Init(SDL_INIT_VIDEO);
 	SDL_SetEventFilter(quit_filter,NULL);
+	accelerated=confd_get_boolean("gui.sdl2.accelerated",false);
 	monitor.window=SDL_CreateWindow(
 		PRODUCT,
 		SDL_WINDOWPOS_UNDEFINED,
 		SDL_WINDOWPOS_UNDEFINED,
-		ww*SDL2_Z,
-		hh*SDL2_Z,
-		SDL_WINDOW_HIDDEN
+		ww,hh,SDL_WINDOW_HIDDEN
 	);
 	monitor.renderer=SDL_CreateRenderer(
-		monitor.window,-1,
-		SDL_RENDERER_ACCELERATED
+		monitor.window,-1,accelerated?
+		SDL_RENDERER_ACCELERATED:
+		SDL_RENDERER_SOFTWARE
 	);
-	monitor.texture=SDL_CreateTexture(
-		monitor.renderer,
-		SDL_PIXELFORMAT_ARGB8888,
-		SDL_TEXTUREACCESS_STATIC,
-		ww,hh
-	);
-	SDL_SetTextureBlendMode(
-		monitor.texture,
-		SDL_BLENDMODE_BLEND
-	);
+	if(accelerated){
+		monitor.texture=lv_draw_sdl_create_screen_texture(
+			monitor.renderer,ww,hh
+		);
+		SDL_SetRenderTarget(monitor.renderer,monitor.texture);
+		monitor.param.renderer=monitor.renderer;
+	}else{
+		monitor.texture=SDL_CreateTexture(
+			monitor.renderer,
+			SDL_PIXELFORMAT_ARGB8888,
+			SDL_TEXTUREACCESS_STATIC,
+			ww,hh
+		);
+		SDL_SetTextureBlendMode(
+			monitor.texture,
+			SDL_BLENDMODE_BLEND
+		);
+	}
 	if(!(monitor.tft_fb=malloc(ww*hh*sizeof(uint32_t))))
 		return terlog_error(-1,"malloc framebuffer failed");
 	memset(monitor.tft_fb,0x44,ww*hh*sizeof(uint32_t));
@@ -214,11 +229,14 @@ static int monitor_init(){
 
 	// Display buffers
 	size_t s=ww*hh;
-	lv_color_t*buf=NULL;
+	void*buf=NULL;
 	static lv_disp_draw_buf_t disp_buf;
-	if(!(buf=malloc(s*sizeof(lv_color_t))))
-		return terlog_error(-1,"malloc display buffer failed");
-	memset(buf,0,s);
+	if(accelerated)buf=monitor.texture;
+	else{
+		if(!(buf=malloc(s*sizeof(lv_color_t))))
+			return terlog_error(-1,"malloc display buffer failed");
+		memset(buf,0,s);
+	}
 	lv_disp_draw_buf_init(&disp_buf,buf,NULL,s);
 
 	// Display device
@@ -228,6 +246,18 @@ static int monitor_init(){
 	disp_drv.flush_cb=sdl2_flush;
 	disp_drv.hor_res=ww;
 	disp_drv.ver_res=hh;
+	if(accelerated){
+		disp_drv.direct_mode=1;
+		disp_drv.antialiasing=1;
+		disp_drv.user_data=&monitor.param;
+		disp_drv.draw_ctx_init=lv_draw_sdl_init_ctx;
+		disp_drv.draw_ctx_deinit=lv_draw_sdl_deinit_ctx;
+		disp_drv.draw_ctx_size=sizeof(lv_draw_sdl_ctx_t);
+	}else{
+		disp_drv.draw_ctx_init=lv_draw_sw_init_ctx;
+		disp_drv.draw_ctx_deinit=lv_draw_sw_init_ctx;
+		disp_drv.draw_ctx_size=sizeof(lv_draw_sw_ctx_t);
+	}
 	switch(gui_rotate){
 		case 0:break;
 		case 90:disp_drv.sw_rotate=1,disp_drv.rotated=LV_DISP_ROT_90;break;
@@ -237,6 +267,7 @@ static int monitor_init(){
 	lv_disp_drv_register(&disp_drv);
 	SDL_ShowWindow(monitor.window);
 	SDL_RaiseWindow(monitor.window);
+	SDL_StartTextInput();
 
 	return 0;
 }
@@ -281,7 +312,7 @@ static void sdl2_get_sizes(lv_coord_t*width,lv_coord_t*height){
 	if(height)*height=h;
 }
 static void sdl2_get_dpi(int*dpi){
-	if(dpi)*dpi=200/SDL2_Z;
+	if(dpi)*dpi=200;
 }
 static bool sdl2_can_sleep(){
 	return false;

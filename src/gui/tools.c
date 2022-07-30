@@ -11,6 +11,7 @@
 #include"logger.h"
 #include"gui/tools.h"
 #include"gui/sysbar.h"
+#include"gui/activity.h"
 #include"gui/filepicker.h"
 
 lv_style_t*lv_style_opa_mask(){
@@ -133,19 +134,274 @@ static void clr_cb(lv_event_t*e){
 }
 
 lv_obj_t*lv_draw_side_clear_btn(lv_obj_t*box,lv_obj_t*txt,lv_coord_t size){
-	lv_obj_t*clr=lv_btn_create(box);
-	lv_obj_set_style_size(clr,size,size);
-	lv_obj_add_event_cb(clr,clr_cb,LV_EVENT_CLICKED,txt);
+	lv_obj_t*clr=lv_draw_button(box,LV_SYMBOL_CLOSE,true,clr_cb,txt);
 	lv_obj_set_style_radius(clr,LV_RADIUS_CIRCLE,0);
-	lv_obj_t*lbl=lv_label_create(clr);
-	lv_label_set_text(lbl,LV_SYMBOL_CLOSE);
-	lv_obj_center(lbl);
+	lv_obj_set_style_size(clr,size,size);
 	return clr;
+}
+
+lv_obj_t*lv_draw_button(
+	lv_obj_t*parent,const char*title,
+	bool enabled,lv_event_cb_t cb,void*user_data
+){
+	lv_obj_t*btn=lv_btn_create(parent);
+	if(cb)lv_obj_add_event_cb(btn,cb,LV_EVENT_CLICKED,user_data);
+	lv_obj_set_enabled(btn,enabled);
+	lv_obj_t*lbl=lv_label_create(btn);
+	lv_label_set_text(lbl,title);
+	lv_obj_center(lbl);
+	return btn;
+}
+
+static bool btn_dsc_va(struct button_dsc**dsc,size_t s,va_list va){
+	if(!dsc)return false;
+	size_t cnt=0;
+	struct button_dsc*d;
+	memset(dsc,0,sizeof(struct button_dsc*)*s);
+	while((d=va_arg(va,struct button_dsc*))){
+		if(cnt>=s){
+			LV_LOG_WARN("too many buttons");
+			return false;
+		}
+		dsc[cnt++]=d;
+	}
+	return true;
+}
+
+void lv_draw_buttons(
+	lv_obj_t*parent,
+	struct button_dsc**btns
+){
+	for(size_t i=0;btns[i];i++){
+		lv_obj_t*btn=lv_draw_button_grid(
+			parent,
+			_(btns[i]->title),
+			btns[i]->enabled,
+			btns[i]->cb,
+			btns[i]->user_data,
+			btns[i]->col_pos,
+			btns[i]->col_span,
+			btns[i]->row_pos,
+			btns[i]->row_span
+		);
+		if(btns[i]->style)lv_obj_add_style(
+			btn,btns[i]->style,0
+		);
+		if(btns[i]->tgt)*btns[i]->tgt=btn;
+	}
+}
+
+lv_obj_t*lv_draw_buttons_grid(
+	lv_obj_t*parent,
+	lv_coord_t*grid_col,
+	lv_coord_t*grid_row,
+	struct button_dsc**btns
+){
+	if(!parent||!grid_row||!grid_col)return NULL;
+	lv_obj_t*box=lv_draw_line_wrapper(parent,grid_col,grid_row);
+	lv_draw_buttons(box,btns);
+	return box;
+}
+
+static void auto_free_cb(lv_event_t*e){
+	lv_mem_free(e->user_data);
+}
+
+lv_obj_t*lv_draw_buttons_auto(
+	lv_obj_t*parent,
+	struct button_dsc**btns
+){
+	void*buf;
+	size_t xs,ys;
+	lv_coord_t x=0,y=0,*grid_col,*grid_row;
+	if(!parent||!btns)return NULL;
+	for(size_t i=0;btns[i];i++){
+		x=lv_coord_max(x,btns[i]->col_pos+btns[i]->col_span);
+		y=lv_coord_max(y,btns[i]->row_pos+btns[i]->row_span);
+	}
+	if(x<=0||y<=0)return NULL;
+	xs=(x+2)*sizeof(lv_coord_t);
+	ys=(y+2)*sizeof(lv_coord_t);
+	if(!(buf=lv_mem_alloc(xs+ys)))return NULL;
+	lv_memset_00(buf,xs+ys);
+	grid_col=buf,grid_row=buf+xs;
+	for(lv_coord_t i=0;i<x;i++)grid_col[i]=LV_GRID_FR(1);
+	for(lv_coord_t i=0;i<y;i++)grid_row[i]=LV_SIZE_CONTENT;
+	grid_col[x]=LV_GRID_TEMPLATE_LAST;
+	grid_row[y]=LV_GRID_TEMPLATE_LAST;
+	lv_obj_t*obj=lv_draw_buttons_grid(
+		parent,grid_col,grid_row,btns
+	);
+	if(obj)lv_obj_add_event_cb(
+		obj,auto_free_cb,
+		LV_EVENT_DELETE,buf
+	);
+	return obj;
+}
+
+void lv_draw_buttons_va(lv_obj_t*parent,va_list va){
+	struct button_dsc*btns[128];
+	if(btn_dsc_va(btns,128,va))
+		lv_draw_buttons(parent,btns);
+}
+
+void lv_draw_buttons_arg(lv_obj_t*parent,...){
+	va_list va;
+	va_start(va,parent);
+	lv_draw_buttons_va(parent,va);
+	va_end(va);
+}
+
+lv_obj_t*lv_draw_buttons_grid_va(
+	lv_obj_t*parent,
+	lv_coord_t*grid_col,
+	lv_coord_t*grid_row,
+	va_list va
+){
+	struct button_dsc*btns[128];
+	return btn_dsc_va(btns,128,va)?
+		lv_draw_buttons_grid(
+			parent,grid_col,grid_row,btns
+		):NULL;
+}
+
+lv_obj_t*lv_draw_buttons_grid_arg(
+	lv_obj_t*parent,
+	lv_coord_t*grid_col,
+	lv_coord_t*grid_row,
+	...
+){
+	va_list va;
+	va_start(va,grid_row);
+	lv_obj_t*r=lv_draw_buttons_grid_va(
+		parent,grid_col,grid_row,va
+	);
+	va_end(va);
+	return r;
+}
+
+lv_obj_t*lv_draw_buttons_auto_va(lv_obj_t*parent,va_list va){
+	struct button_dsc*btns[128];
+	return btn_dsc_va(btns,128,va)?
+	       lv_draw_buttons_auto(parent,btns):NULL;
+}
+
+lv_obj_t*lv_draw_buttons_auto_arg(lv_obj_t*parent,...){
+	va_list va;
+	va_start(va,parent);
+	lv_obj_t*r=lv_draw_buttons_auto_va(parent,va);
+	va_end(va);
+	return r;
+}
+
+lv_obj_t*lv_draw_button_grid(
+	lv_obj_t*parent,
+	const char*title,
+	bool enabled,
+	lv_event_cb_t cb,
+	void*user_data,
+	uint8_t col_pos,
+	uint8_t col_span,
+	uint8_t row_pos,
+	uint8_t row_span
+){
+	lv_obj_t*btn=lv_draw_button(
+		parent,title,enabled,
+		cb,user_data
+	);
+	lv_obj_set_grid_cell(
+		btn,
+		LV_GRID_ALIGN_STRETCH,
+		col_pos,col_span,
+		LV_GRID_ALIGN_CENTER,
+		row_pos,row_span
+	);
+	return btn;
+}
+
+lv_obj_t*lv_draw_checkbox(
+	lv_obj_t*parent,
+	const char*title,
+	bool checked,
+	lv_event_cb_t cb,
+	void*user_data
+){
+	lv_obj_t*chk=lv_checkbox_create(parent);
+	lv_checkbox_set_text(chk,_(title));
+	lv_obj_set_checked(chk,checked);
+	if(cb)lv_obj_add_event_cb(
+		chk,cb,
+		LV_EVENT_VALUE_CHANGED,
+		user_data
+	);
+	return chk;
+}
+
+lv_obj_t*lv_draw_checkbox_grid(
+	lv_obj_t*parent,
+	const char*title,
+	bool checked,
+	lv_event_cb_t cb,
+	void*user_data,
+	lv_grid_align_t x_align,
+	uint8_t col_pos,
+	uint8_t col_span,
+	lv_grid_align_t y_align,
+	uint8_t row_pos,
+	uint8_t row_span
+){
+	lv_obj_t*chk=lv_draw_checkbox(
+		parent,title,checked,
+		cb,user_data
+	);
+	lv_obj_set_grid_cell(
+		chk,
+		x_align,col_pos,col_span,
+		y_align,row_pos,row_span
+	);
+	return chk;
+}
+
+lv_obj_t*lv_draw_dropdown(
+	lv_obj_t*parent,
+	char*title,
+	lv_obj_t**dd
+){
+	static lv_coord_t grid_col[]={
+		LV_GRID_CONTENT,
+		LV_GRID_FR(1),
+		LV_GRID_TEMPLATE_LAST
+	},grid_row[]={
+		LV_GRID_CONTENT,
+		LV_GRID_TEMPLATE_LAST
+	};
+	lv_obj_t*box=lv_draw_line_wrapper(
+		parent,grid_col,grid_row
+	);
+	lv_obj_t*lbl=lv_label_create(box);
+	lv_label_set_text(lbl,_(title));
+	lv_obj_set_grid_cell(
+		lbl,
+		LV_GRID_ALIGN_START,0,1,
+		LV_GRID_ALIGN_CENTER,0,1
+	);
+	lv_obj_t*sel=lv_dropdown_create(box);
+	lv_obj_add_event_cb(
+		sel,lv_default_dropdown_cb,
+		LV_EVENT_ALL,NULL
+	);
+	lv_obj_set_grid_cell(
+		sel,
+		LV_GRID_ALIGN_STRETCH,1,1,
+		LV_GRID_ALIGN_STRETCH,0,1
+	);
+	if(dd)*dd=sel;
+	return box;
 }
 
 lv_obj_t*lv_draw_input(
 	lv_obj_t*parent,
-	char*title,
+	const char*title,
 	lv_obj_t**chk,
 	lv_obj_t**clr,
 	lv_obj_t**txt,
@@ -168,12 +424,8 @@ lv_obj_t*lv_draw_input(
 		LV_GRID_TEMPLATE_LAST
 	};
 	bool oneline=title&&!chk&&!clr&&!btn;
-	lv_obj_t*box=lv_obj_create(parent);
-	lv_obj_set_style_border_width(box,0,0);
-	lv_obj_set_style_pad_all(box,gui_font_size/4,0);
-	lv_obj_set_size(box,lv_pct(100),LV_SIZE_CONTENT);
-	lv_obj_set_grid_dsc_array(
-		box,
+	lv_obj_t*box=lv_draw_line_wrapper(
+		parent,
 		oneline?grid_col_r:grid_col,
 		oneline?grid_row_r:grid_row
 	);
@@ -221,19 +473,86 @@ lv_obj_t*lv_draw_input(
 		}
 	}
 
-	if(btn){
-		*btn=lv_btn_create(box);
-		lv_obj_add_event_cb(*btn,sel_cb,LV_EVENT_CLICKED,t);
-		lv_obj_set_grid_cell(
-			*btn,
-			LV_GRID_ALIGN_STRETCH,1,1,
-			LV_GRID_ALIGN_STRETCH,title?1:0,title?1:2
-		);
-		lv_obj_t*sel=lv_label_create(*btn);
-		lv_label_set_text(sel,"...");
-		lv_obj_center(sel);
+	if(btn)*btn=lv_draw_button_grid(
+		box,"...",true,sel_cb,t,
+		1,1,title?1:0,title?1:2
+	);
+	return box;
+}
+
+lv_obj_t*lv_draw_dialog_box(lv_obj_t*parent,lv_obj_t**lbl,const char*title){
+	lv_obj_t*box=lv_obj_create(parent);
+	lv_obj_set_flex_flow(box,LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_style_pad_all(box,gui_font_size/2,0);
+	lv_obj_set_style_max_width(box,lv_pct(80),0);
+	lv_obj_set_style_max_height(box,lv_pct(80),0);
+	lv_obj_set_style_min_width(box,gui_dpi*2,0);
+	lv_obj_set_style_min_height(box,gui_font_size*2,0);
+	lv_obj_set_height(box,LV_SIZE_CONTENT);
+	lv_obj_center(box);
+	if(title){
+		lv_obj_t*x=lv_label_create(box);
+		lv_label_set_text(x,_(title));
+		lv_label_set_long_mode(x,LV_LABEL_LONG_WRAP);
+		lv_obj_set_style_text_align(x,LV_TEXT_ALIGN_CENTER,0);
+		lv_obj_set_width(x,lv_pct(100));
+		if(lbl)*lbl=x;
 	}
 	return box;
+}
+
+lv_obj_t*lv_draw_wrapper(
+	lv_obj_t*parent,
+	lv_coord_t*grid_col,
+	lv_coord_t*grid_row,
+	lv_coord_t width,
+	lv_coord_t height
+){
+	lv_obj_t*wrapper=lv_obj_create(parent);
+	lv_obj_set_style_radius(wrapper,0,0);
+	lv_obj_set_scroll_dir(wrapper,LV_DIR_NONE);
+	lv_obj_set_style_border_width(wrapper,0,0);
+	lv_obj_set_style_bg_opa(wrapper,LV_OPA_0,0);
+	lv_obj_set_style_pad_all(wrapper,gui_dpi/50,0);
+	if(grid_col&&grid_row)lv_obj_set_grid_dsc_array(wrapper,grid_col,grid_row);
+	lv_obj_clear_flag(wrapper,LV_OBJ_FLAG_SCROLLABLE|LV_OBJ_FLAG_CLICKABLE);
+	lv_obj_set_size(wrapper,width,height);
+	return wrapper;
+}
+
+static void cancel_cb(lv_event_t*e __attribute__((unused))){
+	sysbar_focus_input(NULL);
+	sysbar_keyboard_close();
+	guiact_do_back();
+}
+
+lv_obj_t*lv_draw_btns_ok_cancel(
+	lv_obj_t*parent,
+	lv_obj_t**btn_ok,
+	lv_obj_t**btn_cancel,
+	lv_event_cb_t ok_cb,
+	void*user_data
+){
+	static lv_coord_t grid_col[]={
+		LV_GRID_FR(1),
+		LV_GRID_FR(1),
+		LV_GRID_TEMPLATE_LAST
+	},grid_row[]={
+		LV_GRID_FR(1),
+		LV_GRID_TEMPLATE_LAST
+	};
+	lv_obj_t*btns=lv_draw_line_wrapper(parent,grid_col,grid_row);
+	lv_draw_buttons_grid_arg(
+		btns,grid_col,grid_row,
+		#define BTN(tgt,title,cb,x)&(struct button_dsc){\
+			tgt,true,_(title),cb,user_data,x,1,0,1,NULL\
+		}
+		BTN(btn_ok,     "OK",     ok_cb,    0),
+		BTN(btn_cancel, "Cancel", cancel_cb,1),
+		NULL
+		#undef BTN
+	);
+	return btns;
 }
 
 static void lv_drag_event_handler(lv_event_t*e){

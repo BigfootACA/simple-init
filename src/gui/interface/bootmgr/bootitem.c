@@ -241,10 +241,6 @@ static void ok_cb(lv_event_t*e){
 	if(do_save(e->user_data))guiact_do_back();
 }
 
-static void cancel_cb(lv_event_t*e __attribute__((unused))){
-	guiact_do_back();
-}
-
 static bool arg_cb(bool ok,const char*content,void*user_data){
 	struct bootitem*bi=user_data;
 	if(ok)confd_set_string_dict(
@@ -313,180 +309,34 @@ static void icon_cb(lv_event_t*e){
 }
 
 static int draw_bootitem(struct gui_activity*act){
-	static lv_coord_t grid_1_col[]={
-		LV_GRID_CONTENT,
-		LV_GRID_FR(1),
-		LV_GRID_CONTENT,
-		LV_GRID_TEMPLATE_LAST
-	},grid_1_row[]={
-		LV_GRID_CONTENT,
-		LV_GRID_CONTENT,
-		LV_GRID_CONTENT,
-		LV_GRID_CONTENT,
-		LV_GRID_CONTENT,
-		LV_GRID_TEMPLATE_LAST
-	},grid_2_col[]={
-		LV_GRID_FR(1),
-		LV_GRID_FR(1),
-		LV_GRID_TEMPLATE_LAST
-	},grid_2_row[]={
-		LV_GRID_CONTENT,
-		LV_GRID_CONTENT,
-		LV_GRID_TEMPLATE_LAST
-	};
 	struct bootitem*bi=act->data;
-
-	bi->box=lv_obj_create(act->page);
-	lv_obj_set_flex_flow(bi->box,LV_FLEX_FLOW_COLUMN);
-	lv_obj_set_style_pad_all(bi->box,gui_font_size/2,0);
-	lv_obj_set_style_max_width(bi->box,lv_pct(80),0);
-	lv_obj_set_style_max_height(bi->box,lv_pct(80),0);
-	lv_obj_set_style_min_width(bi->box,gui_dpi*2,0);
-	lv_obj_set_style_min_height(bi->box,gui_font_size*2,0);
-	lv_obj_set_height(bi->box,LV_SIZE_CONTENT);
-	lv_obj_center(bi->box);
-
-	// Title
-	bi->title=lv_label_create(bi->box);
-	lv_label_set_text(bi->title,_("Boot Item Editor"));
-	lv_label_set_long_mode(bi->title,LV_LABEL_LONG_WRAP);
-	lv_obj_set_style_text_align(bi->title,LV_TEXT_ALIGN_CENTER,0);
-	lv_obj_set_width(bi->title,lv_pct(100));
-
-	lv_obj_t*fields=lv_obj_create(bi->box);
-	lv_obj_set_style_radius(fields,0,0);
-	lv_obj_set_scroll_dir(fields,LV_DIR_NONE);
-	lv_obj_set_style_border_width(fields,0,0);
-	lv_obj_set_style_bg_opa(fields,LV_OPA_0,0);
-	lv_obj_set_style_pad_all(fields,gui_dpi/50,0);
-	lv_obj_set_grid_dsc_array(fields,grid_1_col,grid_1_row);
-	lv_obj_clear_flag(fields,LV_OBJ_FLAG_SCROLLABLE|LV_OBJ_FLAG_CLICKABLE);
-	lv_obj_set_style_pad_row(fields,gui_font_size/2,0);
-	lv_obj_set_style_pad_column(fields,gui_font_size/2,0);
-	lv_obj_set_size(fields,lv_pct(100),LV_SIZE_CONTENT);
-	lv_obj_center(fields);
-
-	bi->lbl_name=lv_label_create(fields);
-	lv_label_set_text(bi->lbl_name,_("Name:"));
-	lv_obj_set_grid_cell(bi->lbl_name,LV_GRID_ALIGN_START,0,1,LV_GRID_ALIGN_CENTER,0,1);
-
-	bi->txt_name=lv_textarea_create(fields);
-	lv_textarea_set_text(bi->txt_name,"");
-	lv_textarea_set_one_line(bi->txt_name,true);
-	lv_obj_add_event_cb(bi->txt_name,lv_input_cb,LV_EVENT_CLICKED,NULL);
-	lv_obj_set_grid_cell(bi->txt_name,LV_GRID_ALIGN_STRETCH,1,2,LV_GRID_ALIGN_STRETCH,0,1);
-
-	bi->lbl_icon=lv_label_create(fields);
-	lv_label_set_text(bi->lbl_icon,_("Icon:"));
-	lv_obj_set_grid_cell(bi->lbl_icon,LV_GRID_ALIGN_START,0,1,LV_GRID_ALIGN_CENTER,1,1);
-
-	bi->txt_icon=lv_textarea_create(fields);
-	lv_textarea_set_text(bi->txt_icon,"");
-	lv_textarea_set_one_line(bi->txt_icon,true);
-	lv_obj_add_event_cb(bi->txt_icon,lv_input_cb,LV_EVENT_CLICKED,NULL);
+	bi->box=lv_draw_dialog_box(act->page,&bi->title,"Boot Item Editor");
+	lv_draw_input(bi->box,"Name:",        NULL,NULL,&bi->txt_name,NULL);
+	lv_draw_input(bi->box,"Icon:",        NULL,NULL,&bi->txt_icon,NULL);
+	lv_draw_input(bi->box,"Description:", NULL,NULL,&bi->txt_desc,NULL);
+	lv_draw_dropdown(bi->box,"Mode:",   &bi->sel_mode);
+	lv_draw_dropdown(bi->box,"Parent:", &bi->sel_parent);
 	lv_obj_add_event_cb(bi->txt_icon,icon_cb,LV_EVENT_DEFOCUSED,bi);
-	lv_obj_set_grid_cell(bi->txt_icon,LV_GRID_ALIGN_STRETCH,1,1,LV_GRID_ALIGN_STRETCH,1,1);
-
-	lv_obj_t*w_img=lv_obj_create(fields);
-	lv_obj_set_size(w_img,gui_font_size*2,gui_font_size*2);
-	lv_obj_clear_flag(w_img,LV_OBJ_FLAG_CLICKABLE);
-	lv_obj_clear_flag(w_img,LV_OBJ_FLAG_SCROLLABLE);
-	lv_obj_set_style_border_width(w_img,0,0);
-	lv_obj_set_style_bg_opa(w_img,LV_OPA_0,0);
+	lv_obj_t*w_img=lv_draw_wrapper(bi->box,NULL,NULL,lv_pct(100),gui_font_size*2);
 	lv_obj_set_grid_cell(w_img,LV_GRID_ALIGN_STRETCH,2,1,LV_GRID_ALIGN_STRETCH,1,1);
+	lv_obj_set_style_pad_all(w_img,0,0);
 	bi->img_icon=lv_img_create(w_img);
 	lv_img_set_size_mode(bi->img_icon,LV_IMG_SIZE_MODE_REAL);
 	lv_obj_center(bi->img_icon);
-
-	bi->lbl_desc=lv_label_create(fields);
-	lv_label_set_text(bi->lbl_desc,_("Description:"));
-	lv_obj_set_grid_cell(bi->lbl_desc,LV_GRID_ALIGN_START,0,1,LV_GRID_ALIGN_CENTER,2,1);
-
-	bi->txt_desc=lv_textarea_create(fields);
-	lv_textarea_set_text(bi->txt_desc,"");
-	lv_textarea_set_one_line(bi->txt_desc,true);
-	lv_obj_add_event_cb(bi->txt_desc,lv_input_cb,LV_EVENT_CLICKED,NULL);
-	lv_obj_set_grid_cell(bi->txt_desc,LV_GRID_ALIGN_STRETCH,1,2,LV_GRID_ALIGN_STRETCH,2,1);
-
-	bi->lbl_mode=lv_label_create(fields);
-	lv_label_set_text(bi->lbl_mode,_("Mode:"));
-	lv_obj_set_grid_cell(bi->lbl_mode,LV_GRID_ALIGN_START,0,1,LV_GRID_ALIGN_CENTER,3,1);
-
-	bi->sel_mode=lv_dropdown_create(fields);
-	lv_obj_add_event_cb(bi->sel_mode,lv_default_dropdown_cb,LV_EVENT_ALL,NULL);
-	lv_obj_set_grid_cell(bi->sel_mode,LV_GRID_ALIGN_STRETCH,1,2,LV_GRID_ALIGN_STRETCH,3,1);
-
-	bi->lbl_parent=lv_label_create(fields);
-	lv_label_set_text(bi->lbl_parent,_("Parent:"));
-	lv_obj_set_grid_cell(bi->lbl_parent,LV_GRID_ALIGN_START,0,1,LV_GRID_ALIGN_CENTER,4,1);
-
-	bi->sel_parent=lv_dropdown_create(fields);
-	lv_obj_set_user_data(bi->sel_parent,bi);
-	lv_obj_add_event_cb(bi->sel_parent,lv_default_dropdown_cb,LV_EVENT_ALL,NULL);
-	lv_obj_set_grid_cell(bi->sel_parent,LV_GRID_ALIGN_STRETCH,1,2,LV_GRID_ALIGN_STRETCH,4,1);
-
-	bi->chk_enable=lv_checkbox_create(bi->box);
-	lv_obj_set_user_data(bi->chk_enable,bi);
-	lv_checkbox_set_text(bi->chk_enable,_("Enable boot item"));
-	lv_obj_set_checked(bi->chk_enable,true);
-
-	bi->chk_show=lv_checkbox_create(bi->box);
-	lv_obj_set_user_data(bi->chk_show,bi);
-	lv_checkbox_set_text(bi->chk_show,_("Show in boot menu"));
-	lv_obj_set_checked(bi->chk_show,true);
-
-	bi->chk_save=lv_checkbox_create(bi->box);
-	lv_checkbox_set_text(bi->chk_save,_("Persist boot item"));
-	lv_obj_set_checked(bi->chk_save,true);
-
-	lv_obj_t*btns=lv_obj_create(bi->box);
-	lv_obj_set_style_radius(btns,0,0);
-	lv_obj_set_scroll_dir(btns,LV_DIR_NONE);
-	lv_obj_set_style_border_width(btns,0,0);
-	lv_obj_set_style_bg_opa(btns,LV_OPA_0,0);
-	lv_obj_set_style_pad_all(btns,gui_dpi/50,0);
-	lv_obj_set_grid_dsc_array(btns,grid_2_col,grid_2_row);
-	lv_obj_clear_flag(btns,LV_OBJ_FLAG_SCROLLABLE|LV_OBJ_FLAG_CLICKABLE);
-	lv_obj_set_style_pad_row(btns,gui_font_size/2,0);
-	lv_obj_set_style_pad_column(btns,gui_font_size/2,0);
-	lv_obj_set_size(btns,lv_pct(100),LV_SIZE_CONTENT);
-	lv_obj_center(btns);
-
-	// Extra Data Editor
-	bi->btn_extra=lv_btn_create(btns);
-	lv_obj_set_enabled(bi->btn_extra,true);
-	lv_obj_add_event_cb(bi->btn_extra,extra_cb,LV_EVENT_CLICKED,bi);
-	lv_obj_set_grid_cell(bi->btn_extra,LV_GRID_ALIGN_STRETCH,0,1,LV_GRID_ALIGN_STRETCH,0,1);
-	lv_obj_t*lbl_extra=lv_label_create(bi->btn_extra);
-	lv_label_set_text(lbl_extra,_("Extra Items"));
-	lv_obj_center(lbl_extra);
-
-	// Open via Config Tool
-	bi->btn_conf=lv_btn_create(btns);
-	lv_obj_set_enabled(bi->btn_conf,true);
-	lv_obj_add_event_cb(bi->btn_conf,conf_cb,LV_EVENT_CLICKED,bi);
-	lv_obj_set_grid_cell(bi->btn_conf,LV_GRID_ALIGN_STRETCH,1,1,LV_GRID_ALIGN_STRETCH,0,1);
-	lv_obj_t*lbl_conf=lv_label_create(bi->btn_conf);
-	lv_label_set_text(lbl_conf,_("Config Tool"));
-	lv_obj_center(lbl_conf);
-
-	// OK Button
-	bi->ok=lv_btn_create(btns);
-	lv_obj_set_enabled(bi->ok,true);
-	lv_obj_add_event_cb(bi->ok,ok_cb,LV_EVENT_CLICKED,bi);
-	lv_obj_set_grid_cell(bi->ok,LV_GRID_ALIGN_STRETCH,0,1,LV_GRID_ALIGN_STRETCH,1,1);
-	lv_obj_t*lbl_ok=lv_label_create(bi->ok);
-	lv_label_set_text(lbl_ok,_("OK"));
-	lv_obj_center(lbl_ok);
-
-	// Cancel Button
-	bi->cancel=lv_btn_create(btns);
-	lv_obj_set_enabled(bi->cancel,true);
-	lv_obj_add_event_cb(bi->cancel,cancel_cb,LV_EVENT_CLICKED,bi);
-	lv_obj_set_grid_cell(bi->cancel,LV_GRID_ALIGN_STRETCH,1,1,LV_GRID_ALIGN_STRETCH,1,1);
-	lv_obj_t*lbl_cancel=lv_label_create(bi->cancel);
-	lv_label_set_text(lbl_cancel,_("Cancel"));
-	lv_obj_center(lbl_cancel);
+	bi->chk_enable=lv_draw_checkbox(bi->box,_("Enable boot item"),true,NULL,NULL);
+	bi->chk_show=lv_draw_checkbox(bi->box,_("Show in boot menu"),true,NULL,NULL);
+	bi->chk_save=lv_draw_checkbox(bi->box,_("Persist boot item"),true,NULL,NULL);
+	lv_draw_buttons_auto_arg(
+		bi->box,
+		#define BTN(tgt,title,cb,x)&(struct button_dsc){\
+			&tgt,true,_(title),cb,bi,x,1,0,1,NULL\
+		}
+		BTN(bi->btn_extra, "Extra Items", extra_cb, 0),
+		BTN(bi->btn_conf,  "Config Tool", conf_cb,  1),
+		NULL
+		#undef BTN
+	);
+	lv_draw_btns_ok_cancel(bi->box,&bi->ok,&bi->cancel,ok_cb,bi);
 	return 0;
 }
 

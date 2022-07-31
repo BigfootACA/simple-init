@@ -121,12 +121,7 @@ static void bootmgr_add(struct bootmgr*bm,char*c){
 	}
 
 	// boot item image
-	bi->w_img=lv_obj_create(bi->btn);
-	lv_obj_set_size(bi->w_img,bm->si,bm->si);
-	lv_obj_clear_flag(bi->w_img,LV_OBJ_FLAG_CLICKABLE);
-	lv_obj_clear_flag(bi->w_img,LV_OBJ_FLAG_SCROLLABLE);
-	lv_obj_set_style_border_width(bi->w_img,0,0);
-	lv_obj_set_style_bg_opa(bi->w_img,LV_OPA_0,0);
+	bi->w_img=lv_draw_wrapper(bi->btn,NULL,NULL,bm->si,bm->si);
 	lv_obj_set_grid_cell(
 		bi->w_img,
 		LV_GRID_ALIGN_STRETCH,0,1,
@@ -238,62 +233,36 @@ static int init(struct gui_activity*act){
 }
 
 static int bootmgr_draw(struct gui_activity*act){
-	static lv_coord_t grid_col[]={
-		LV_GRID_FR(1),
-		LV_GRID_FR(1),
-		LV_GRID_FR(1),
-		LV_GRID_TEMPLATE_LAST
-	},grid_row[]={
-		LV_GRID_CONTENT,
-		LV_GRID_FR(1),
-		LV_GRID_CONTENT,
-		LV_GRID_CONTENT,
-		LV_GRID_TEMPLATE_LAST
-	};
 	struct bootmgr*bm=act->data;
 	if(!bm)return -1;
-	struct btn{
-		lv_obj_t**tgt;
-		bool enabled;
-		const char*title;
-		lv_coord_t x,y;
-	}buttons[]={
-		{&bm->btn_default, false, "Default",  0,2},
-		{&bm->btn_open,    false, "Open",     0,2},
-		{&bm->btn_edit,    false, "Edit",     1,2},
-		{&bm->btn_delete,  false, "Delete",   2,2},
-		{&bm->btn_create,  true,  "Create",   0,3},
-		{&bm->btn_reload,  true,  "Reload",   1,3},
-		{&bm->btn_setting, true,  "Settings", 2,3},
-		{NULL,false,NULL,0,0}
-	};
-	lv_obj_set_grid_dsc_array(act->page,grid_col,grid_row);
+	lv_obj_set_flex_flow(act->page,LV_FLEX_FLOW_COLUMN);
 
 	bm->title=lv_label_create(act->page);
 	lv_obj_set_width(bm->title,lv_pct(100));
 	lv_obj_set_style_pad_all(bm->title,gui_font_size,0);
 	lv_obj_set_style_text_align(bm->title,LV_TEXT_ALIGN_CENTER,0);
 	lv_label_set_text(bm->title,_("Boot Manager"));
-	lv_obj_set_grid_cell(bm->title,LV_GRID_ALIGN_CENTER,0,3,LV_GRID_ALIGN_CENTER,0,1);
 
 	bm->page=lv_obj_create(act->page);
 	lv_obj_set_width(bm->page,lv_pct(100));
 	lv_obj_set_flex_flow(bm->page,LV_FLEX_FLOW_COLUMN);
-	lv_obj_set_grid_cell(bm->page,LV_GRID_ALIGN_STRETCH,0,3,LV_GRID_ALIGN_STRETCH,1,1);
+	lv_obj_set_flex_grow(bm->page,1);
 
-	for(size_t i=0;buttons[i].tgt;i++){
-		*buttons[i].tgt=lv_btn_create(act->page);
-		lv_obj_set_enabled(*buttons[i].tgt,buttons[i].enabled);
-		lv_obj_add_event_cb(*buttons[i].tgt,btn_click,LV_EVENT_CLICKED,bm);
-		lv_obj_t*lbl=lv_label_create(*buttons[i].tgt);
-		lv_label_set_text(lbl,_(buttons[i].title));
-		lv_obj_set_grid_cell(
-			*buttons[i].tgt,
-			LV_GRID_ALIGN_STRETCH,buttons[i].x,1,
-			LV_GRID_ALIGN_STRETCH,buttons[i].y,1
-		);
-		lv_obj_center(lbl);
-	}
+	lv_draw_buttons_auto_arg(
+		act->page,
+		#define BTN(tgt,en,title,x,y)&(struct button_dsc){\
+			&tgt,en,_(title),btn_click,bm,x,1,y,1,NULL\
+		}
+		BTN(bm->btn_default, false, "Default",  0,0),
+		BTN(bm->btn_open,    false, "Open",     0,0),
+		BTN(bm->btn_edit,    false, "Edit",     1,0),
+		BTN(bm->btn_delete,  false, "Delete",   2,0),
+		BTN(bm->btn_create,  true,  "Create",   0,1),
+		BTN(bm->btn_reload,  true,  "Reload",   1,1),
+		BTN(bm->btn_setting, true,  "Settings", 2,1),
+		#undef BTN
+		NULL
+	);
 	lv_obj_add_flag(bm->btn_open,LV_OBJ_FLAG_HIDDEN);
 
 	return 0;

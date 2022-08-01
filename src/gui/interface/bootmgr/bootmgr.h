@@ -63,10 +63,10 @@ struct bootitem{
 
 struct bootdata_efi{
 	struct gui_activity*act;
-	lv_obj_t*title,*page,*box,*ok,*cancel;
-	lv_obj_t*lbl_path,*txt_path;
-	lv_obj_t*lbl_guid,*txt_guid;
-	lv_obj_t*lbl_options,*txt_options;
+	lv_obj_t*title,*box,*ok,*cancel;
+	lv_obj_t*txt_path,*clr_path;
+	lv_obj_t*txt_guid,*clr_guid;
+	lv_obj_t*txt_options,*clr_options;
 	lv_obj_t*chk_char16;
 	char name[256];
 };

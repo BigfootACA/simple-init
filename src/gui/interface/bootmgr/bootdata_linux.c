@@ -14,12 +14,12 @@ static int bootdata_linux_get_focus(struct gui_activity*d){
 	if(!bi)return 0;
 	lv_group_add_obj(gui_grp,bi->txt_abootimg);
 	lv_group_add_obj(gui_grp,bi->txt_kernel);
-	lv_group_add_obj(gui_grp,bi->btn_initrd_edit);
-	lv_group_add_obj(gui_grp,bi->btn_initrd_del);
-	lv_group_add_obj(gui_grp,bi->sel_initrd);
-	lv_group_add_obj(gui_grp,bi->btn_dtbo_edit);
-	lv_group_add_obj(gui_grp,bi->btn_dtbo_del);
-	lv_group_add_obj(gui_grp,bi->sel_dtbo);
+	lv_group_add_obj(gui_grp,bi->initrd.btn_edit);
+	lv_group_add_obj(gui_grp,bi->initrd.btn_del);
+	lv_group_add_obj(gui_grp,bi->initrd.sel);
+	lv_group_add_obj(gui_grp,bi->dtbo.btn_edit);
+	lv_group_add_obj(gui_grp,bi->dtbo.btn_del);
+	lv_group_add_obj(gui_grp,bi->dtbo.sel);
 	lv_group_add_obj(gui_grp,bi->txt_dtb);
 	lv_group_add_obj(gui_grp,bi->txt_cmdline);
 	lv_group_add_obj(gui_grp,bi->btn_splash);
@@ -50,12 +50,12 @@ static int bootdata_linux_lost_focus(struct gui_activity*d){
 	if(!bi)return 0;
 	lv_group_remove_obj(bi->txt_abootimg);
 	lv_group_remove_obj(bi->txt_kernel);
-	lv_group_remove_obj(bi->btn_initrd_edit);
-	lv_group_remove_obj(bi->btn_initrd_del);
-	lv_group_remove_obj(bi->sel_initrd);
-	lv_group_remove_obj(bi->btn_dtbo_edit);
-	lv_group_remove_obj(bi->btn_dtbo_del);
-	lv_group_remove_obj(bi->sel_dtbo);
+	lv_group_remove_obj(bi->initrd.btn_edit);
+	lv_group_remove_obj(bi->initrd.btn_del);
+	lv_group_remove_obj(bi->initrd.sel);
+	lv_group_remove_obj(bi->dtbo.btn_edit);
+	lv_group_remove_obj(bi->dtbo.btn_del);
+	lv_group_remove_obj(bi->dtbo.sel);
 	lv_group_remove_obj(bi->txt_dtb);
 	lv_group_remove_obj(bi->txt_cmdline);
 	lv_group_remove_obj(bi->btn_splash);
@@ -182,19 +182,19 @@ static int do_load(struct gui_activity*act){
 	if(cmdline)lv_textarea_set_text(bi->txt_cmdline,cmdline);
 	if(kernel)lv_textarea_set_text(bi->txt_kernel,kernel);
 	if(dtb)lv_textarea_set_text(bi->txt_dtb,dtb);
-	lv_checkbox_set_checked(bi->chk_use_efi,use_uefi);
-	lv_checkbox_set_checked(bi->chk_skip_dtb,skip_dtb);
-	lv_checkbox_set_checked(bi->chk_skip_dtbo,skip_dtbo);
-	lv_checkbox_set_checked(bi->chk_skip_initrd,skip_initrd);
-	lv_checkbox_set_checked(bi->chk_skip_efi_memory_map,skip_mmap);
-	lv_checkbox_set_checked(bi->chk_skip_kernel_fdt_memory,skip_kfmem);
-	lv_checkbox_set_checked(bi->chk_skip_kernel_fdt_cmdline,skip_kfcmd);
-	lv_checkbox_set_checked(bi->chk_update_splash,upd_splash);
-	lv_checkbox_set_checked(bi->chk_load_custom_address,use_custom);
-	lv_checkbox_set_checked(bi->chk_match_kfdt_model,match_kfmodl);
-	lv_checkbox_set_checked(bi->chk_ignore_dtbo_error,ignore_dtbo_err);
-	init_dropdown(bi,bi->sel_initrd,"initrd");
-	init_dropdown(bi,bi->sel_dtbo,"dtbo");
+	lv_obj_set_checked(bi->chk_use_efi,use_uefi);
+	lv_obj_set_checked(bi->chk_skip_dtb,skip_dtb);
+	lv_obj_set_checked(bi->chk_skip_dtbo,skip_dtbo);
+	lv_obj_set_checked(bi->chk_skip_initrd,skip_initrd);
+	lv_obj_set_checked(bi->chk_skip_efi_memory_map,skip_mmap);
+	lv_obj_set_checked(bi->chk_skip_kernel_fdt_memory,skip_kfmem);
+	lv_obj_set_checked(bi->chk_skip_kernel_fdt_cmdline,skip_kfcmd);
+	lv_obj_set_checked(bi->chk_update_splash,upd_splash);
+	lv_obj_set_checked(bi->chk_load_custom_address,use_custom);
+	lv_obj_set_checked(bi->chk_match_kfdt_model,match_kfmodl);
+	lv_obj_set_checked(bi->chk_ignore_dtbo_error,ignore_dtbo_err);
+	init_dropdown(bi,bi->initrd.sel,"initrd");
+	init_dropdown(bi,bi->dtbo.sel,"dtbo");
 	init_memory_region(bi,bi->txt_splash,"splash");
 	init_memory_region(bi,bi->txt_memory,"memory");
 	init_memory_region(bi,bi->txt_address_load,"address.load");
@@ -218,24 +218,14 @@ static int do_cleanup(struct gui_activity*act){
 	return 0;
 }
 
-static void ok_cb(lv_obj_t*obj,lv_event_t e){
-	struct bootdata_linux*bi=lv_obj_get_user_data(obj);
-	if(!bi||obj!=bi->ok||e!=LV_EVENT_CLICKED)return;
-	if(do_save(bi))guiact_do_back();
+static void ok_cb(lv_event_t*e){
+	if(do_save(e->user_data))guiact_do_back();
 }
 
-static void cancel_cb(lv_obj_t*obj,lv_event_t e){
-	struct bootdata_linux*bi=lv_obj_get_user_data(obj);
-	if(!bi||obj!=bi->cancel||e!=LV_EVENT_CLICKED)return;
-	guiact_do_back();
-}
-
-static void delete_cb(lv_obj_t*obj,lv_event_t e){
-	lv_obj_t*sel;
+static void delete_cb(lv_event_t*e){
 	list**lst,*item;
 	char path[PATH_MAX];
-	if(!obj||e!=LV_EVENT_CLICKED)return;
-	if(!(sel=lv_obj_get_user_data(obj)))return;
+	lv_obj_t*sel=e->user_data;
 	if(!(lst=lv_obj_get_user_data(sel)))return;
 	memset(path,0,sizeof(path));
 	lv_dropdown_get_selected_str(sel,path,sizeof(path)-1);
@@ -268,10 +258,8 @@ static bool edit_apply_cb(bool ok,const char*content,void*user_data){
 	return false;
 }
 
-static void edit_cb(lv_obj_t*obj,lv_event_t e){
-	lv_obj_t*sel;
-	if(!obj||e!=LV_EVENT_CLICKED)return;
-	if(!(sel=lv_obj_get_user_data(obj)))return;
+static void edit_cb(lv_event_t*e){
+	lv_obj_t*sel=e->user_data;
 	struct inputbox*ib=inputbox_create(edit_apply_cb," ");
 	inputbox_set_user_data(ib,sel);
 	if(lv_dropdown_get_selected(sel)!=0){
@@ -283,16 +271,15 @@ static void edit_cb(lv_obj_t*obj,lv_event_t e){
 	}else inputbox_set_title(ib,_("Create new item"));
 }
 
-static void region_cb(lv_obj_t*obj,lv_event_t e){
+static void region_cb(lv_event_t*e){
 	static char path[PATH_MAX],*base;
-	struct bootdata_linux*bi=lv_obj_get_user_data(obj);
-	if(!bi||e!=LV_EVENT_CLICKED)return;
-	if(obj==bi->btn_address_load)base="address.load";
-	else if(obj==bi->btn_address_kernel)base="address.kernel";
-	else if(obj==bi->btn_address_initrd)base="address.initrd";
-	else if(obj==bi->btn_address_dtb)base="address.dtb";
-	else if(obj==bi->btn_splash)base="splash";
-	else if(obj==bi->btn_memory)base="memory";
+	struct bootdata_linux*bi=e->user_data;
+	if(e->target==bi->btn_address_load)base="address.load";
+	else if(e->target==bi->btn_address_kernel)base="address.kernel";
+	else if(e->target==bi->btn_address_initrd)base="address.initrd";
+	else if(e->target==bi->btn_address_dtb)base="address.dtb";
+	else if(e->target==bi->btn_splash)base="splash";
+	else if(e->target==bi->btn_memory)base="memory";
 	else return;
 	memset(path,0,sizeof(path));
 	snprintf(
@@ -303,595 +290,113 @@ static void region_cb(lv_obj_t*obj,lv_event_t e){
 	guiact_start_activity(&guireg_bootdata_memreg,path);
 }
 
-static int do_resize(struct gui_activity*act){
-	lv_coord_t h=0,w=act->w/8*7,x=0,s;
-	struct bootdata_linux*bi=act->data;
-	if(!bi)return 0;
-	lv_obj_set_style_local_pad_all(
-		bi->box,
-		LV_PAGE_PART_BG,
-		LV_STATE_DEFAULT,
-		gui_font_size
-	);
-	lv_obj_set_width(bi->page,w);
-	w=lv_page_get_scrl_width(bi->page);
-	lv_obj_set_width(bi->box,w);
+static lv_obj_t*draw_multi_item(lv_obj_t*parent,char*title,struct bootdata_multi_item*item){
+	static lv_coord_t grid_col[]={
+		LV_GRID_FR(1),
+		LV_GRID_CONTENT,
+		LV_GRID_CONTENT,
+		LV_GRID_TEMPLATE_LAST
+	},grid_row[]={
+		LV_GRID_CONTENT,
+		LV_GRID_CONTENT,
+		LV_GRID_TEMPLATE_LAST
+	};
+	if(!item)return NULL;
+	item->box=lv_draw_line_wrapper(parent,grid_col,grid_row);
 
-	lv_obj_set_width(bi->title,w);
-	lv_obj_set_pos(bi->title,x,h);
-	lv_label_set_align(
-		bi->title,
-		LV_LABEL_ALIGN_CENTER
-	);
-	h+=lv_obj_get_height(bi->title);
+	item->lbl=lv_label_create(item->box);
+	lv_label_set_text(item->lbl,_(title));
+	lv_obj_set_grid_cell(item->lbl,LV_GRID_ALIGN_START,0,1,LV_GRID_ALIGN_CENTER,0,1);
 
-	// abootimg title
-	h+=gui_font_size/2;
-	lv_obj_set_pos(bi->lbl_abootimg,x,h);
-	h+=lv_obj_get_height(bi->lbl_abootimg);
+	item->btn_edit=lv_btn_create(item->box);
+	lv_obj_set_style_radius(item->btn_edit,LV_RADIUS_CIRCLE,0);
+	lv_obj_add_event_cb(item->btn_edit,edit_cb,LV_EVENT_CLICKED,item->sel);
+	lv_obj_set_grid_cell(item->btn_edit,LV_GRID_ALIGN_CENTER,1,1,LV_GRID_ALIGN_CENTER,0,1);
 
-	// abootimg path text
-	lv_obj_set_pos(bi->txt_abootimg,x,h);
-	lv_obj_set_width(bi->txt_abootimg,w);
-	h+=lv_obj_get_height(bi->txt_abootimg);
+	item->lbl_edit=lv_label_create(item->btn_edit);
+	lv_label_set_text(item->lbl_edit,LV_SYMBOL_EDIT);
+	lv_obj_center(item->lbl_edit);
 
-	// kernel title
-	h+=gui_font_size/2;
-	lv_obj_set_pos(bi->lbl_kernel,x,h);
-	h+=lv_obj_get_height(bi->lbl_kernel);
+	item->btn_del=lv_btn_create(item->box);
+	lv_obj_set_style_radius(item->btn_del,LV_RADIUS_CIRCLE,0);
+	lv_obj_add_event_cb(item->btn_del,delete_cb,LV_EVENT_CLICKED,item->sel);
+	lv_obj_set_grid_cell(item->btn_del,LV_GRID_ALIGN_CENTER,2,1,LV_GRID_ALIGN_CENTER,0,1);
 
-	// kernel path text
-	lv_obj_set_pos(bi->txt_kernel,x,h);
-	lv_obj_set_width(bi->txt_kernel,w);
-	h+=lv_obj_get_height(bi->txt_kernel);
+	item->lbl_del=lv_label_create(item->btn_del);
+	lv_label_set_text(item->lbl_del,LV_SYMBOL_CLOSE);
+	lv_obj_center(item->lbl_del);
 
-	// initramfs title and add del button
-	h+=gui_font_size/2;
-	s=lv_obj_get_height(bi->sel_initrd);
-	lv_obj_set_size(bi->btn_initrd_edit,s,s);
-	lv_obj_set_size(bi->btn_initrd_del,s,s);
-	lv_obj_align(
-		bi->btn_initrd_del,NULL,
-		LV_ALIGN_IN_TOP_RIGHT,
-		-(gui_font_size/2),h
-	);
-	lv_obj_align(
-		bi->btn_initrd_edit,
-		bi->btn_initrd_del,
-		LV_ALIGN_OUT_LEFT_MID,
-		-(gui_font_size/2),0
-	);
-	lv_obj_align(
-		bi->lbl_initrd,
-		bi->btn_initrd_del,
-		LV_ALIGN_OUT_LEFT_MID,
-		0,0
-	);
-	lv_obj_set_x(bi->lbl_initrd,x);
-	h+=lv_obj_get_height(bi->btn_initrd_del)+(gui_font_size/2);
+	item->sel=lv_dropdown_create(item->box);
+	lv_obj_set_user_data(item->sel,item->lst);
+	lv_obj_add_event_cb(item->sel,lv_default_dropdown_cb,LV_EVENT_ALL,NULL);
+	lv_obj_set_grid_cell(item->sel,LV_GRID_ALIGN_STRETCH,0,3,LV_GRID_ALIGN_STRETCH,1,1);
 
-	// initramfs path dropdown
-	lv_obj_set_pos(bi->sel_initrd,x,h);
-	lv_obj_set_width(bi->sel_initrd,w);
-	h+=lv_obj_get_height(bi->sel_initrd);
+	return item->box;
+}
 
-	// dtbo title and add del button
-	h+=gui_font_size/2;
-	s=lv_obj_get_height(bi->sel_dtbo);
-	lv_obj_set_size(bi->btn_dtbo_edit,s,s);
-	lv_obj_set_size(bi->btn_dtbo_del,s,s);
-	lv_obj_align(
-		bi->btn_dtbo_del,NULL,
-		LV_ALIGN_IN_TOP_RIGHT,
-		-(gui_font_size/2),h
-	);
-	lv_obj_align(
-		bi->btn_dtbo_edit,
-		bi->btn_dtbo_del,
-		LV_ALIGN_OUT_LEFT_MID,
-		-(gui_font_size/2),0
-	);
-	lv_obj_align(
-		bi->lbl_dtbo,
-		bi->btn_dtbo_del,
-		LV_ALIGN_OUT_LEFT_MID,
-		0,0
-	);
-	lv_obj_set_x(bi->lbl_dtbo,x);
-	h+=lv_obj_get_height(bi->btn_dtbo_del)+(gui_font_size/2);
+static lv_obj_t*draw_memreg(
+	struct bootdata_linux*bi,
+	char*title,
+	lv_obj_t**btn,
+	lv_obj_t**txt
+){
+	static lv_coord_t grid_col[]={
+		LV_GRID_FR(1),
+		LV_GRID_CONTENT,
+		LV_GRID_TEMPLATE_LAST
+	},grid_row[]={
+		LV_GRID_CONTENT,
+		LV_GRID_CONTENT,
+		LV_GRID_TEMPLATE_LAST
+	};
+	if(!btn||!txt)return NULL;
+	lv_obj_t*box=lv_draw_line_wrapper(bi->box,grid_col,grid_row);
 
-	// dtbo path dropdown
-	lv_obj_set_pos(bi->sel_dtbo,x,h);
-	lv_obj_set_width(bi->sel_dtbo,w);
-	h+=lv_obj_get_height(bi->sel_dtbo);
+	lv_obj_t*lbl=lv_label_create(box);
+	lv_label_set_text(lbl,_(title));
+	lv_obj_set_grid_cell(lbl,LV_GRID_ALIGN_START,0,1,LV_GRID_ALIGN_CENTER,0,1);
 
-	// dtb title
-	h+=gui_font_size/2;
-	lv_obj_set_pos(bi->lbl_dtb,x,h);
-	h+=lv_obj_get_height(bi->lbl_dtb);
+	*txt=lv_label_create(box);
+	lv_obj_set_grid_cell(*txt,LV_GRID_ALIGN_START,0,1,LV_GRID_ALIGN_CENTER,1,1);
 
-	// dtb path text
-	lv_obj_set_pos(bi->txt_dtb,x,h);
-	lv_obj_set_width(bi->txt_dtb,w);
-	h+=lv_obj_get_height(bi->txt_dtb);
+	*btn=lv_btn_create(box);
+	lv_obj_add_event_cb(*btn,region_cb,LV_EVENT_CLICKED,bi);
+	lv_obj_set_grid_cell(*btn,LV_GRID_ALIGN_CENTER,1,1,LV_GRID_ALIGN_CENTER,0,2);
+	lv_obj_t*btn_edit=lv_label_create(*btn);
+	lv_label_set_text(btn_edit,LV_SYMBOL_EDIT);
+	lv_obj_center(btn_edit);
 
-	// cmdline title
-	h+=gui_font_size/2;
-	lv_obj_set_pos(bi->lbl_cmdline,x,h);
-	h+=lv_obj_get_height(bi->lbl_cmdline);
-
-	// cmdline path text
-	lv_obj_set_pos(bi->txt_cmdline,x,h);
-	lv_obj_set_width(bi->txt_cmdline,w);
-	h+=lv_obj_get_height(bi->txt_cmdline);
-
-	// splash title and edit button
-	h+=gui_font_size/2;
-	lv_obj_set_size(bi->btn_splash,s,s);
-	lv_obj_align(
-		bi->btn_splash,NULL,
-		LV_ALIGN_IN_TOP_RIGHT,
-		-(gui_font_size/2),h
-	);
-	lv_obj_align(
-		bi->lbl_splash,
-		bi->btn_splash,
-		LV_ALIGN_OUT_LEFT_MID,
-		0,0
-	);
-	lv_obj_set_x(bi->lbl_splash,x);
-	h+=lv_obj_get_height(bi->btn_splash);
-	lv_obj_set_pos(bi->txt_splash,x,h);
-	lv_obj_set_width(bi->txt_splash,w);
-	h+=lv_obj_get_height(bi->txt_splash)+(gui_font_size/2);
-
-	// system memory title and edit button
-	h+=gui_font_size/2;
-	lv_obj_set_size(bi->btn_memory,s,s);
-	lv_obj_align(
-		bi->btn_memory,NULL,
-		LV_ALIGN_IN_TOP_RIGHT,
-		-(gui_font_size/2),h
-	);
-	lv_obj_align(
-		bi->lbl_memory,
-		bi->btn_memory,
-		LV_ALIGN_OUT_LEFT_MID,
-		0,0
-	);
-	lv_obj_set_x(bi->lbl_memory,x);
-	h+=lv_obj_get_height(bi->btn_memory);
-	lv_obj_set_pos(bi->txt_memory,x,h);
-	lv_obj_set_width(bi->txt_memory,w);
-	h+=lv_obj_get_height(bi->txt_memory)+(gui_font_size/2);
-
-	// use uefi checkbox
-	h+=gui_font_size/2;
-	lv_obj_set_pos(bi->chk_use_efi,x,h);
-	h+=lv_obj_get_height(bi->chk_use_efi);
-
-	// skip dtb checkbox
-	h+=gui_font_size/2;
-	lv_obj_set_pos(bi->chk_skip_dtb,x,h);
-	h+=lv_obj_get_height(bi->chk_skip_dtb);
-
-	// skip dtbo checkbox
-	h+=gui_font_size/2;
-	lv_obj_set_pos(bi->chk_skip_dtbo,x,h);
-	h+=lv_obj_get_height(bi->chk_skip_dtbo);
-
-	// skip initramfs checkbox
-	h+=gui_font_size/2;
-	lv_obj_set_pos(bi->chk_skip_initrd,x,h);
-	h+=lv_obj_get_height(bi->chk_skip_initrd);
-
-	// skip uefi memory map checkbox
-	h+=gui_font_size/2;
-	lv_obj_set_pos(bi->chk_skip_efi_memory_map,x,h);
-	h+=lv_obj_get_height(bi->chk_skip_efi_memory_map);
-
-	// skip KernelFdtDxe system memory region checkbox
-	h+=gui_font_size/2;
-	lv_obj_set_pos(bi->chk_skip_kernel_fdt_memory,x,h);
-	h+=lv_obj_get_height(bi->chk_skip_kernel_fdt_memory);
-
-	// skip KernelFdtDxe kernel command line checkbox
-	h+=gui_font_size/2;
-	lv_obj_set_pos(bi->chk_skip_kernel_fdt_cmdline,x,h);
-	h+=lv_obj_get_height(bi->chk_skip_kernel_fdt_cmdline);
-
-	// match KernelFdtDxe model checkbox
-	h+=gui_font_size/2;
-	lv_obj_set_pos(bi->chk_match_kfdt_model,x,h);
-	h+=lv_obj_get_height(bi->chk_match_kfdt_model);
-
-	// ignore dtbo error checkbox
-	h+=gui_font_size/2;
-	lv_obj_set_pos(bi->chk_ignore_dtbo_error,x,h);
-	h+=lv_obj_get_height(bi->chk_ignore_dtbo_error);
-
-	// update splash checkbox
-	h+=gui_font_size/2;
-	lv_obj_set_pos(bi->chk_update_splash,x,h);
-	h+=lv_obj_get_height(bi->chk_update_splash);
-
-	// use custom load addresses checkbox
-	h+=gui_font_size/2;
-	lv_obj_set_pos(bi->chk_load_custom_address,x,h);
-	h+=lv_obj_get_height(bi->chk_load_custom_address);
-
-	// load address title and edit button
-	h+=gui_font_size/2;
-	lv_obj_set_size(bi->btn_address_load,s,s);
-	lv_obj_align(
-		bi->btn_address_load,NULL,
-		LV_ALIGN_IN_TOP_RIGHT,
-		-(gui_font_size/2),h
-	);
-	lv_obj_align(
-		bi->lbl_address_load,
-		bi->btn_address_load,
-		LV_ALIGN_OUT_LEFT_MID,
-		0,0
-	);
-	lv_obj_set_x(bi->lbl_address_load,x);
-	h+=lv_obj_get_height(bi->btn_address_load);
-	lv_obj_set_pos(bi->txt_address_load,x,h);
-	lv_obj_set_width(bi->txt_address_load,w);
-	h+=lv_obj_get_height(bi->txt_address_load)+(gui_font_size/2);
-
-	// kernel load address title and edit button
-	h+=gui_font_size/2;
-	lv_obj_set_size(bi->btn_address_kernel,s,s);
-	lv_obj_align(
-		bi->btn_address_kernel,NULL,
-		LV_ALIGN_IN_TOP_RIGHT,
-		-(gui_font_size/2),h
-	);
-	lv_obj_align(
-		bi->lbl_address_kernel,
-		bi->btn_address_kernel,
-		LV_ALIGN_OUT_LEFT_MID,
-		0,0
-	);
-	lv_obj_set_x(bi->lbl_address_kernel,x);
-	h+=lv_obj_get_height(bi->btn_address_kernel);
-	lv_obj_set_pos(bi->txt_address_kernel,x,h);
-	lv_obj_set_width(bi->txt_address_kernel,w);
-	h+=lv_obj_get_height(bi->txt_address_kernel)+(gui_font_size/2);
-
-	// initramfs load address title and edit button
-	h+=gui_font_size/2;
-	lv_obj_set_size(bi->btn_address_initrd,s,s);
-	lv_obj_align(
-		bi->btn_address_initrd,NULL,
-		LV_ALIGN_IN_TOP_RIGHT,
-		-(gui_font_size/2),h
-	);
-	lv_obj_align(
-		bi->lbl_address_initrd,
-		bi->btn_address_initrd,
-		LV_ALIGN_OUT_LEFT_MID,
-		0,0
-	);
-	lv_obj_set_x(bi->lbl_address_initrd,x);
-	h+=lv_obj_get_height(bi->btn_address_initrd);
-	lv_obj_set_pos(bi->txt_address_initrd,x,h);
-	lv_obj_set_width(bi->txt_address_initrd,w);
-	h+=lv_obj_get_height(bi->txt_address_initrd)+(gui_font_size/2);
-
-	// device tree load address title and edit button
-	h+=gui_font_size/2;
-	lv_obj_set_size(bi->btn_address_dtb,s,s);
-	lv_obj_align(
-		bi->btn_address_dtb,NULL,
-		LV_ALIGN_IN_TOP_RIGHT,
-		-(gui_font_size/2),h
-	);
-	lv_obj_align(
-		bi->lbl_address_dtb,
-		bi->btn_address_dtb,
-		LV_ALIGN_OUT_LEFT_MID,
-		0,0
-	);
-	lv_obj_set_x(bi->lbl_address_dtb,x);
-	h+=lv_obj_get_height(bi->btn_address_dtb);
-	lv_obj_set_pos(bi->txt_address_dtb,x,h);
-	lv_obj_set_width(bi->txt_address_dtb,w);
-	h+=lv_obj_get_height(bi->txt_address_dtb)+(gui_font_size/2);
-
-	// ok button
-	h+=gui_font_size;
-	lv_obj_set_size(
-		bi->ok,
-		w/2-gui_font_size,
-		gui_font_size*2
-	);
-	lv_obj_align(
-		bi->ok,NULL,
-		LV_ALIGN_IN_TOP_LEFT,
-		(x+(gui_font_size/2)),h
-	);
-
-	// cancel button
-	lv_obj_set_size(
-		bi->cancel,
-		w/2-gui_font_size,
-		gui_font_size*2
-	);
-	lv_obj_align(
-		bi->cancel,NULL,
-		LV_ALIGN_IN_TOP_RIGHT,
-		-(x+(gui_font_size/2)),h
-	);
-	h+=lv_obj_get_height(bi->cancel);
-
-	h+=gui_font_size/2;
-	lv_obj_set_height(bi->box,h);
-	h+=gui_font_size*2;
-	lv_obj_set_height(bi->page,MIN(h,(lv_coord_t)gui_sh/6*5));
-	lv_obj_align(bi->page,NULL,LV_ALIGN_CENTER,0,0);
-	return 0;
+	return box;
 }
 
 static int draw_bootdata_linux(struct gui_activity*act){
 	struct bootdata_linux*bi=act->data;
-
-	bi->page=lv_page_create(act->page,NULL);
-	lv_obj_set_click(bi->page,false);
-
-	bi->box=lv_obj_create(bi->page,NULL);
-	lv_obj_set_click(bi->box,false);
-	lv_obj_set_style_local_border_width(bi->box,LV_PAGE_PART_BG,LV_STATE_DEFAULT,0);
-
-	// Title
-	bi->title=lv_label_create(bi->box,NULL);
-	lv_label_set_text(bi->title,_("Edit Linux Boot Item"));
-	lv_label_set_long_mode(bi->title,LV_LABEL_LONG_BREAK);
-
-	bi->lbl_abootimg=lv_label_create(bi->box,NULL);
-	lv_label_set_text(bi->lbl_abootimg,_("Android Boot Image"));
-
-	bi->txt_abootimg=lv_textarea_create(bi->box,NULL);
-	lv_textarea_set_text(bi->txt_abootimg,"");
-	lv_textarea_set_one_line(bi->txt_abootimg,true);
-	lv_textarea_set_cursor_hidden(bi->txt_abootimg,true);
-	lv_obj_set_user_data(bi->txt_abootimg,bi);
-	lv_obj_set_event_cb(bi->txt_abootimg,lv_input_cb);
-
-	bi->lbl_kernel=lv_label_create(bi->box,NULL);
-	lv_label_set_text(bi->lbl_kernel,_("Linux Kernel"));
-
-	bi->txt_kernel=lv_textarea_create(bi->box,NULL);
-	lv_textarea_set_text(bi->txt_kernel,"");
-	lv_textarea_set_one_line(bi->txt_kernel,true);
-	lv_textarea_set_cursor_hidden(bi->txt_kernel,true);
-	lv_obj_set_user_data(bi->txt_kernel,bi);
-	lv_obj_set_event_cb(bi->txt_kernel,lv_input_cb);
-
-	bi->lbl_initrd=lv_label_create(bi->box,NULL);
-	lv_label_set_text(bi->lbl_initrd,_("Ramdisk (initramfs)"));
-
-	bi->sel_initrd=lv_dropdown_create(bi->box,NULL);
-	lv_obj_set_user_data(bi->sel_initrd,&bi->initrd);
-	lv_obj_set_event_cb(bi->sel_initrd,lv_default_dropdown_cb);
-
-	bi->btn_initrd_edit=lv_btn_create(bi->box,NULL);
-	lv_obj_set_event_cb(bi->btn_initrd_edit,edit_cb);
-	lv_obj_set_user_data(bi->btn_initrd_edit,bi->sel_initrd);
-	lv_style_set_action_button(bi->btn_initrd_edit,true);
-	lv_obj_set_style_local_radius(bi->btn_initrd_edit,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,LV_RADIUS_CIRCLE);
-	lv_label_set_text(lv_label_create(bi->btn_initrd_edit,NULL),LV_SYMBOL_EDIT);
-
-	bi->btn_initrd_del=lv_btn_create(bi->box,NULL);
-	lv_obj_set_event_cb(bi->btn_initrd_del,delete_cb);
-	lv_obj_set_user_data(bi->btn_initrd_del,bi->sel_initrd);
-	lv_style_set_action_button(bi->btn_initrd_del,true);
-	lv_obj_set_style_local_radius(bi->btn_initrd_del,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,LV_RADIUS_CIRCLE);
-	lv_label_set_text(lv_label_create(bi->btn_initrd_del,NULL),LV_SYMBOL_CLOSE);
-
-	bi->lbl_dtbo=lv_label_create(bi->box,NULL);
-	lv_label_set_text(bi->lbl_dtbo,_("Device Tree Overlay (dtbo)"));
-
-	bi->sel_dtbo=lv_dropdown_create(bi->box,NULL);
-	lv_obj_set_user_data(bi->sel_dtbo,&bi->dtbo);
-	lv_obj_set_event_cb(bi->sel_dtbo,lv_default_dropdown_cb);
-
-	bi->btn_dtbo_edit=lv_btn_create(bi->box,NULL);
-	lv_obj_set_event_cb(bi->btn_dtbo_edit,edit_cb);
-	lv_obj_set_user_data(bi->btn_dtbo_edit,bi->sel_dtbo);
-	lv_style_set_action_button(bi->btn_dtbo_edit,true);
-	lv_obj_set_style_local_radius(bi->btn_dtbo_edit,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,LV_RADIUS_CIRCLE);
-	lv_label_set_text(lv_label_create(bi->btn_dtbo_edit,NULL),LV_SYMBOL_EDIT);
-
-	bi->btn_dtbo_del=lv_btn_create(bi->box,NULL);
-	lv_obj_set_event_cb(bi->btn_dtbo_del,delete_cb);
-	lv_obj_set_user_data(bi->btn_dtbo_del,bi->sel_dtbo);
-	lv_style_set_action_button(bi->btn_dtbo_del,true);
-	lv_obj_set_style_local_radius(bi->btn_dtbo_del,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,LV_RADIUS_CIRCLE);
-	lv_label_set_text(lv_label_create(bi->btn_dtbo_del,NULL),LV_SYMBOL_CLOSE);
-
-	bi->lbl_dtb=lv_label_create(bi->box,NULL);
-	lv_label_set_text(bi->lbl_dtb,_("Device Tree Blob (dtb)"));
-
-	bi->txt_dtb=lv_textarea_create(bi->box,NULL);
-	lv_textarea_set_text(bi->txt_dtb,"");
-	lv_textarea_set_one_line(bi->txt_dtb,true);
-	lv_textarea_set_cursor_hidden(bi->txt_dtb,true);
-	lv_obj_set_user_data(bi->txt_dtb,bi);
-	lv_obj_set_event_cb(bi->txt_dtb,lv_input_cb);
-
-	bi->lbl_cmdline=lv_label_create(bi->box,NULL);
-	lv_label_set_text(bi->lbl_cmdline,_("Kernel Commandline"));
-
-	bi->txt_cmdline=lv_textarea_create(bi->box,NULL);
-	lv_textarea_set_text(bi->txt_cmdline,"");
-	lv_textarea_set_cursor_hidden(bi->txt_cmdline,true);
-	lv_obj_set_user_data(bi->txt_cmdline,bi);
-	lv_obj_set_event_cb(bi->txt_cmdline,lv_input_cb);
-
-	bi->lbl_splash=lv_label_create(bi->box,NULL);
-	lv_label_set_text(bi->lbl_splash,_("Screen Framebuffer"));
-
-	bi->btn_splash=lv_btn_create(bi->box,NULL);
-	lv_obj_set_user_data(bi->btn_splash,bi);
-	lv_obj_set_event_cb(bi->btn_splash,region_cb);
-	lv_style_set_action_button(bi->btn_splash,true);
-	lv_obj_set_style_local_radius(bi->btn_splash,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,LV_RADIUS_CIRCLE);
-	lv_label_set_text(lv_label_create(bi->btn_splash,NULL),LV_SYMBOL_EDIT);
-
-	bi->txt_splash=lv_label_create(bi->box,NULL);
-
-	bi->lbl_memory=lv_label_create(bi->box,NULL);
-	lv_label_set_text(bi->lbl_memory,_("System Memory"));
-
-	bi->btn_memory=lv_btn_create(bi->box,NULL);
-	lv_obj_set_user_data(bi->btn_memory,bi);
-	lv_obj_set_event_cb(bi->btn_memory,region_cb);
-	lv_style_set_action_button(bi->btn_memory,true);
-	lv_obj_set_style_local_radius(bi->btn_memory,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,LV_RADIUS_CIRCLE);
-	lv_label_set_text(lv_label_create(bi->btn_memory,NULL),LV_SYMBOL_EDIT);
-
-	bi->txt_memory=lv_label_create(bi->box,NULL);
-
-	bi->chk_use_efi=lv_checkbox_create(bi->box,NULL);
-	lv_obj_set_user_data(bi->chk_use_efi,bi);
-	lv_obj_set_drag_parent(bi->chk_use_efi,true);
-	lv_checkbox_set_text(bi->chk_use_efi,_("Boot with UEFI runtime"));
-	lv_checkbox_set_checked(bi->chk_use_efi,true);
-	lv_style_set_focus_checkbox(bi->chk_use_efi);
-
-	bi->chk_skip_dtb=lv_checkbox_create(bi->box,NULL);
-	lv_obj_set_user_data(bi->chk_skip_dtb,bi);
-	lv_obj_set_drag_parent(bi->chk_skip_dtb,true);
-	lv_checkbox_set_text(bi->chk_skip_dtb,_("Skip Device Tree Blob (dtb)"));
-	lv_checkbox_set_checked(bi->chk_skip_dtb,true);
-	lv_style_set_focus_checkbox(bi->chk_skip_dtb);
-
-	bi->chk_skip_dtbo=lv_checkbox_create(bi->box,NULL);
-	lv_obj_set_user_data(bi->chk_skip_dtbo,bi);
-	lv_obj_set_drag_parent(bi->chk_skip_dtbo,true);
-	lv_checkbox_set_text(bi->chk_skip_dtbo,_("Skip Device Tree Overlay (dtbo)"));
-	lv_checkbox_set_checked(bi->chk_skip_dtbo,true);
-	lv_style_set_focus_checkbox(bi->chk_skip_dtbo);
-
-	bi->chk_skip_initrd=lv_checkbox_create(bi->box,NULL);
-	lv_obj_set_user_data(bi->chk_skip_initrd,bi);
-	lv_obj_set_drag_parent(bi->chk_skip_initrd,true);
-	lv_checkbox_set_text(bi->chk_skip_initrd,_("Skip Initramfs"));
-	lv_checkbox_set_checked(bi->chk_skip_initrd,true);
-	lv_style_set_focus_checkbox(bi->chk_skip_initrd);
-
-	bi->chk_skip_efi_memory_map=lv_checkbox_create(bi->box,NULL);
-	lv_obj_set_user_data(bi->chk_skip_efi_memory_map,bi);
-	lv_obj_set_drag_parent(bi->chk_skip_efi_memory_map,true);
-	lv_checkbox_set_text(bi->chk_skip_efi_memory_map,_("Skip UEFI Memory Map"));
-	lv_checkbox_set_checked(bi->chk_skip_efi_memory_map,true);
-	lv_style_set_focus_checkbox(bi->chk_skip_efi_memory_map);
-
-	bi->chk_skip_kernel_fdt_memory=lv_checkbox_create(bi->box,NULL);
-	lv_obj_set_user_data(bi->chk_skip_kernel_fdt_memory,bi);
-	lv_obj_set_drag_parent(bi->chk_skip_kernel_fdt_memory,true);
-	lv_checkbox_set_text(bi->chk_skip_kernel_fdt_memory,_("Skip KernelFdtDxe System Memory"));
-	lv_checkbox_set_checked(bi->chk_skip_kernel_fdt_memory,true);
-	lv_style_set_focus_checkbox(bi->chk_skip_kernel_fdt_memory);
-
-	bi->chk_skip_kernel_fdt_cmdline=lv_checkbox_create(bi->box,NULL);
-	lv_obj_set_user_data(bi->chk_skip_kernel_fdt_cmdline,bi);
-	lv_obj_set_drag_parent(bi->chk_skip_kernel_fdt_cmdline,true);
-	lv_checkbox_set_text(bi->chk_skip_kernel_fdt_cmdline,_("Skip KernelFdtDxe Commandline"));
-	lv_checkbox_set_checked(bi->chk_skip_kernel_fdt_cmdline,true);
-	lv_style_set_focus_checkbox(bi->chk_skip_kernel_fdt_cmdline);
-
-	bi->chk_match_kfdt_model=lv_checkbox_create(bi->box,NULL);
-	lv_obj_set_user_data(bi->chk_match_kfdt_model,bi);
-	lv_obj_set_drag_parent(bi->chk_match_kfdt_model,true);
-	lv_checkbox_set_text(bi->chk_match_kfdt_model,_("Match KernelFdtDxe Model"));
-	lv_checkbox_set_checked(bi->chk_match_kfdt_model,true);
-	lv_style_set_focus_checkbox(bi->chk_match_kfdt_model);
-
-	bi->chk_ignore_dtbo_error=lv_checkbox_create(bi->box,NULL);
-	lv_obj_set_user_data(bi->chk_ignore_dtbo_error,bi);
-	lv_obj_set_drag_parent(bi->chk_ignore_dtbo_error,true);
-	lv_checkbox_set_text(bi->chk_ignore_dtbo_error,_("Ignore DTBO Error"));
-	lv_checkbox_set_checked(bi->chk_ignore_dtbo_error,true);
-	lv_style_set_focus_checkbox(bi->chk_ignore_dtbo_error);
-
-	bi->chk_update_splash=lv_checkbox_create(bi->box,NULL);
-	lv_obj_set_user_data(bi->chk_update_splash,bi);
-	lv_obj_set_drag_parent(bi->chk_update_splash,true);
-	lv_checkbox_set_text(bi->chk_update_splash,_("Update Screen Framebuffer"));
-	lv_checkbox_set_checked(bi->chk_update_splash,true);
-	lv_style_set_focus_checkbox(bi->chk_update_splash);
-
-	bi->chk_load_custom_address=lv_checkbox_create(bi->box,NULL);
-	lv_obj_set_user_data(bi->chk_load_custom_address,bi);
-	lv_obj_set_drag_parent(bi->chk_load_custom_address,true);
-	lv_checkbox_set_text(bi->chk_load_custom_address,_("Use Custom Load Addresses"));
-	lv_checkbox_set_checked(bi->chk_load_custom_address,true);
-	lv_style_set_focus_checkbox(bi->chk_load_custom_address);
-
-	bi->lbl_address_load=lv_label_create(bi->box,NULL);
-	lv_label_set_text(bi->lbl_address_load,_("Default Load Address"));
-
-	bi->btn_address_load=lv_btn_create(bi->box,NULL);
-	lv_obj_set_user_data(bi->btn_address_load,bi);
-	lv_obj_set_event_cb(bi->btn_address_load,region_cb);
-	lv_style_set_action_button(bi->btn_address_load,true);
-	lv_obj_set_style_local_radius(bi->btn_address_load,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,LV_RADIUS_CIRCLE);
-	lv_label_set_text(lv_label_create(bi->btn_address_load,NULL),LV_SYMBOL_EDIT);
-
-	bi->txt_address_load=lv_label_create(bi->box,NULL);
-
-	bi->lbl_address_kernel=lv_label_create(bi->box,NULL);
-	lv_label_set_text(bi->lbl_address_kernel,_("Kernel Load Address"));
-
-	bi->btn_address_kernel=lv_btn_create(bi->box,NULL);
-	lv_obj_set_user_data(bi->btn_address_kernel,bi);
-	lv_obj_set_event_cb(bi->btn_address_kernel,region_cb);
-	lv_style_set_action_button(bi->btn_address_kernel,true);
-	lv_obj_set_style_local_radius(bi->btn_address_kernel,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,LV_RADIUS_CIRCLE);
-	lv_label_set_text(lv_label_create(bi->btn_address_kernel,NULL),LV_SYMBOL_EDIT);
-
-	bi->txt_address_kernel=lv_label_create(bi->box,NULL);
-
-	bi->lbl_address_initrd=lv_label_create(bi->box,NULL);
-	lv_label_set_text(bi->lbl_address_initrd,_("Initramfs Load Address"));
-
-	bi->btn_address_initrd=lv_btn_create(bi->box,NULL);
-	lv_obj_set_user_data(bi->btn_address_initrd,bi);
-	lv_obj_set_event_cb(bi->btn_address_initrd,region_cb);
-	lv_style_set_action_button(bi->btn_address_initrd,true);
-	lv_obj_set_style_local_radius(bi->btn_address_initrd,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,LV_RADIUS_CIRCLE);
-	lv_label_set_text(lv_label_create(bi->btn_address_initrd,NULL),LV_SYMBOL_EDIT);
-
-	bi->txt_address_initrd=lv_label_create(bi->box,NULL);
-
-	bi->lbl_address_dtb=lv_label_create(bi->box,NULL);
-	lv_label_set_text(bi->lbl_address_dtb,_("Device Tree Load Address"));
-
-	bi->btn_address_dtb=lv_btn_create(bi->box,NULL);
-	lv_obj_set_user_data(bi->btn_address_dtb,bi);
-	lv_obj_set_event_cb(bi->btn_address_dtb,region_cb);
-	lv_style_set_action_button(bi->btn_address_dtb,true);
-	lv_obj_set_style_local_radius(bi->btn_address_dtb,LV_BTN_PART_MAIN,LV_STATE_DEFAULT,LV_RADIUS_CIRCLE);
-	lv_label_set_text(lv_label_create(bi->btn_address_dtb,NULL),LV_SYMBOL_EDIT);
-
-	bi->txt_address_dtb=lv_label_create(bi->box,NULL);
-
-	// OK Button
-	bi->ok=lv_btn_create(bi->box,NULL);
-	lv_style_set_action_button(bi->ok,true);
-	lv_obj_set_user_data(bi->ok,bi);
-	lv_obj_set_event_cb(bi->ok,ok_cb);
-	lv_label_set_text(lv_label_create(bi->ok,NULL),_("OK"));
-
-	// Cancel Button
-	bi->cancel=lv_btn_create(bi->box,NULL);
-	lv_style_set_action_button(bi->cancel,true);
-	lv_obj_set_user_data(bi->cancel,bi);
-	lv_obj_set_event_cb(bi->cancel,cancel_cb);
-	lv_label_set_text(lv_label_create(bi->cancel,NULL),_("Cancel"));
+	bi->box=lv_draw_dialog_box(act->page,&bi->title,"Edit Linux Boot Item");
+	lv_draw_input(bi->box,"Android Boot Image", NULL, &bi->clr_abootimg, &bi->txt_abootimg, NULL);
+	lv_draw_input(bi->box,"Linux Kernel",       NULL, &bi->clr_kernel,   &bi->txt_kernel,   NULL);
+	draw_multi_item(bi->box,"Ramdisk (initramfs)",        &bi->initrd);
+	draw_multi_item(bi->box,"Device Tree Overlay (dtbo)", &bi->dtbo);
+	lv_draw_input(bi->box,"Device Tree Blob (dtb)", NULL, &bi->clr_dtb,     &bi->txt_dtb,     NULL);
+	lv_draw_input(bi->box,"Kernel Commandline",     NULL, &bi->clr_cmdline, &bi->txt_cmdline, NULL);
+	lv_textarea_set_one_line(bi->txt_cmdline,false);
+	draw_memreg(bi,"Screen Framebuffer", &bi->btn_splash,   &bi->txt_splash);
+	draw_memreg(bi,"System Memory",      &bi->btn_memory,   &bi->txt_memory);
+	bi->chk_use_efi                 =lv_draw_checkbox(bi->box,_("Boot with UEFI runtime"),          false,NULL,NULL);
+	bi->chk_skip_dtb                =lv_draw_checkbox(bi->box,_("Skip Device Tree Blob (dtb)"),     false,NULL,NULL);
+	bi->chk_skip_dtbo               =lv_draw_checkbox(bi->box,_("Skip Device Tree Overlay (dtbo)"), false,NULL,NULL);
+	bi->chk_skip_initrd             =lv_draw_checkbox(bi->box,_("Skip Initramfs"),                  false,NULL,NULL);
+	bi->chk_skip_efi_memory_map     =lv_draw_checkbox(bi->box,_("Skip UEFI Memory Map"),            false,NULL,NULL);
+	bi->chk_skip_kernel_fdt_memory  =lv_draw_checkbox(bi->box,_("Skip KernelFdtDxe System Memory"), false,NULL,NULL);
+	bi->chk_skip_kernel_fdt_cmdline =lv_draw_checkbox(bi->box,_("Skip KernelFdtDxe Commandline"),   false,NULL,NULL);
+	bi->chk_match_kfdt_model        =lv_draw_checkbox(bi->box,_("Match KernelFdtDxe Model"),        false,NULL,NULL);
+	bi->chk_ignore_dtbo_error       =lv_draw_checkbox(bi->box,_("Ignore DTBO Error"),               false,NULL,NULL);
+	bi->chk_update_splash           =lv_draw_checkbox(bi->box,_("Update Screen Framebuffer"),       false,NULL,NULL);
+	bi->chk_load_custom_address     =lv_draw_checkbox(bi->box,_("Use Custom Load Addresses"),       false,NULL,NULL);
+	draw_memreg(bi,"Default Load Address",     &bi->btn_address_load,   &bi->txt_address_load);
+	draw_memreg(bi,"Kernel Load Address",      &bi->btn_address_kernel, &bi->txt_address_kernel);
+	draw_memreg(bi,"Initramfs Load Address",   &bi->btn_address_initrd, &bi->txt_address_initrd);
+	draw_memreg(bi,"Device Tree Load Address", &bi->btn_address_dtb,    &bi->txt_address_dtb);
+	lv_draw_btns_ok_cancel(bi->box,&bi->ok,&bi->cancel,ok_cb,bi);
 	return 0;
 }
 
@@ -906,7 +411,6 @@ struct gui_register guireg_bootdata_linux={
 	.lost_focus=bootdata_linux_lost_focus,
 	.draw=draw_bootdata_linux,
 	.data_load=do_load,
-	.resize=do_resize,
 	.back=true,
 	.mask=true,
 };

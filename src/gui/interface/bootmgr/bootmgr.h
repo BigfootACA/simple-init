@@ -81,13 +81,17 @@ struct bootdata_uefi_option{
 
 struct bootdata_linux{
 	struct gui_activity*act;
-	lv_obj_t*title,*page,*box,*ok,*cancel;
-	lv_obj_t*lbl_abootimg,*txt_abootimg;
-	lv_obj_t*lbl_kernel,*txt_kernel;
-	lv_obj_t*lbl_initrd,*sel_initrd,*btn_initrd_edit,*btn_initrd_del;
-	lv_obj_t*lbl_dtbo,*sel_dtbo,*btn_dtbo_edit,*btn_dtbo_del;
-	lv_obj_t*lbl_dtb,*txt_dtb;
-	lv_obj_t*lbl_cmdline,*txt_cmdline;
+	lv_obj_t*title,*box,*ok,*cancel;
+	lv_obj_t*txt_abootimg,*clr_abootimg;
+	lv_obj_t*txt_kernel,*clr_kernel;
+	struct bootdata_multi_item{
+		lv_obj_t*box,*lbl,*sel;
+		lv_obj_t*btn_edit,*lbl_edit;
+		lv_obj_t*btn_del,*lbl_del;
+		list*lst;
+	}initrd,dtbo;
+	lv_obj_t*txt_dtb,*clr_dtb;
+	lv_obj_t*txt_cmdline,*clr_cmdline;
 	lv_obj_t*lbl_splash,*btn_splash,*txt_splash;
 	lv_obj_t*lbl_memory,*btn_memory,*txt_memory;
 	lv_obj_t*chk_use_efi;
@@ -105,7 +109,6 @@ struct bootdata_linux{
 	lv_obj_t*lbl_address_kernel,*btn_address_kernel,*txt_address_kernel;
 	lv_obj_t*lbl_address_initrd,*btn_address_initrd,*txt_address_initrd;
 	lv_obj_t*lbl_address_dtb,*btn_address_dtb,*txt_address_dtb;
-	list*initrd,*dtbo;
 	char name[256];
 };
 

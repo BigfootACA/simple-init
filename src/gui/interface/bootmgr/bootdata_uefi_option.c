@@ -97,26 +97,18 @@ static void load_uefi_options(struct bootdata_uefi_option*bi,uint opt){
 	tlog_info("found %u options",(uint)pos);
 }
 
-static void option_cb(lv_obj_t*obj,lv_event_t e){
+static void option_cb(lv_event_t*e){
 	char option[8];
-	struct bootdata_uefi_option*bi=lv_obj_get_user_data(obj);
-	if(!bi||obj!=bi->sel_opt)return;
-	lv_default_dropdown_cb(obj,e);
-	if(e!=LV_EVENT_VALUE_CHANGED)return;
+	struct bootdata_uefi_option*bi=e->user_data;
 	uint16_t o=lv_dropdown_get_selected(bi->sel_opt);
 	memset(option,0,sizeof(option));
 	if(o>0)snprintf(option,5,"%04X",bi->options[o]);
 	lv_textarea_set_text(bi->txt_opt,option);
 }
-#endif
 
-static void input_cb(lv_obj_t*obj,lv_event_t e){
-	struct bootdata_uefi_option*bi=lv_obj_get_user_data(obj);
-	if(!bi||obj!=bi->txt_opt)return;
-	lv_input_cb(obj,e);
-	#ifdef ENABLE_UEFI
-	if(e!=LV_EVENT_DEFOCUSED)return;
+static void input_cb(lv_event_t*e){
 	char*end=NULL;
+	struct bootdata_uefi_option*bi=e->user_data;
 	const char*option=lv_textarea_get_text(bi->txt_opt);
 	if(!option)return;
 	errno=0;
@@ -131,8 +123,8 @@ static void input_cb(lv_obj_t*obj,lv_event_t e){
 	}
 	if(pos==0||pos>lv_dropdown_get_option_cnt(bi->sel_opt))return;
 	lv_dropdown_set_selected(bi->sel_opt,pos);
-	#endif
 }
+#endif
 
 static int do_load(struct gui_activity*act){
 	struct bootdata_uefi_option*bi=act->data;
@@ -164,144 +156,26 @@ static int do_cleanup(struct gui_activity*act){
 	return 0;
 }
 
-static void ok_cb(lv_obj_t*obj,lv_event_t e){
-	struct bootdata_uefi_option*bi=lv_obj_get_user_data(obj);
-	if(!bi||obj!=bi->ok||e!=LV_EVENT_CLICKED)return;
-	if(do_save(bi))guiact_do_back();
-}
-
-static void cancel_cb(lv_obj_t*obj,lv_event_t e){
-	struct bootdata_uefi_option*bi=lv_obj_get_user_data(obj);
-	if(!bi||obj!=bi->cancel||e!=LV_EVENT_CLICKED)return;
-	guiact_do_back();
-}
-
-static int do_resize(struct gui_activity*act){
-	lv_coord_t h=0,w=act->w/8*7,x=0;
-	struct bootdata_uefi_option*bi=act->data;
-	if(!bi)return 0;
-	lv_obj_set_style_local_pad_all(
-		bi->box,
-		LV_PAGE_PART_BG,
-		LV_STATE_DEFAULT,
-		gui_font_size
-	);
-	lv_obj_set_width(bi->page,w);
-	w=lv_page_get_scrl_width(bi->page);
-	lv_obj_set_width(bi->box,w);
-
-	lv_obj_set_width(bi->title,w);
-	lv_obj_set_pos(bi->title,x,h);
-	lv_label_set_align(
-		bi->title,
-		LV_LABEL_ALIGN_CENTER
-	);
-	h+=lv_obj_get_height(bi->title);
-
-	h+=gui_font_size/2;
-	lv_obj_set_pos(bi->lbl_opt,x,h);
-	lv_obj_align(
-		bi->txt_opt,bi->lbl_opt,
-		LV_ALIGN_OUT_RIGHT_MID,
-		gui_font_size/2,0
-	);
-	lv_obj_set_y(bi->txt_opt,h);
-	lv_obj_align(
-		bi->lbl_opt,bi->txt_opt,
-		LV_ALIGN_OUT_LEFT_MID,
-		-gui_font_size/2,0
-	);
-	lv_obj_set_width(
-		bi->txt_opt,w-
-		lv_obj_get_width(bi->lbl_opt)-
-		gui_font_size
-	);
-	h+=lv_obj_get_height(bi->txt_opt);
-
-	#ifdef ENABLE_UEFI
-	h+=gui_font_size/2;
-	lv_obj_set_width(bi->sel_opt,w);
-	lv_obj_set_pos(bi->sel_opt,x,h);
-	h+=lv_obj_get_height(bi->sel_opt);
-	#endif
-
-	h+=gui_font_size;
-	lv_obj_set_size(
-		bi->ok,
-		w/2-gui_font_size,
-		gui_font_size*2
-	);
-	lv_obj_align(
-		bi->ok,NULL,
-		LV_ALIGN_IN_TOP_LEFT,
-		(x+(gui_font_size/2)),h
-	);
-
-	lv_obj_set_size(
-		bi->cancel,
-		w/2-gui_font_size,
-		gui_font_size*2
-	);
-	lv_obj_align(
-		bi->cancel,NULL,
-		LV_ALIGN_IN_TOP_RIGHT,
-		-(x+(gui_font_size/2)),h
-	);
-	h+=lv_obj_get_height(bi->cancel);
-
-	h+=gui_font_size/2;
-	lv_obj_set_height(bi->box,h);
-	h+=gui_font_size*2;
-	lv_obj_set_height(bi->page,MIN(h,(lv_coord_t)gui_sh/6*5));
-	lv_obj_align(bi->page,NULL,LV_ALIGN_CENTER,0,0);
-	return 0;
+static void ok_cb(lv_event_t*e){
+	if(do_save(e->user_data))guiact_do_back();
 }
 
 static int draw_bootdata_uefi_option(struct gui_activity*act){
 	struct bootdata_uefi_option*bi=act->data;
-
-	bi->page=lv_page_create(act->page,NULL);
-	lv_obj_set_click(bi->page,false);
-
-	bi->box=lv_obj_create(bi->page,NULL);
-	lv_obj_set_click(bi->box,false);
-	lv_obj_set_style_local_border_width(bi->box,LV_PAGE_PART_BG,LV_STATE_DEFAULT,0);
-
-	// Title
-	bi->title=lv_label_create(bi->box,NULL);
-	lv_label_set_text(bi->title,_("Edit UEFI Option Boot Item"));
-	lv_label_set_long_mode(bi->title,LV_LABEL_LONG_BREAK);
-
-	bi->lbl_opt=lv_label_create(bi->box,NULL);
-	lv_label_set_text(bi->lbl_opt,_("UEFI Option:"));
-
-	bi->txt_opt=lv_textarea_create(bi->box,NULL);
-	lv_textarea_set_text(bi->txt_opt,"");
-	lv_textarea_set_one_line(bi->txt_opt,true);
-	lv_textarea_set_cursor_hidden(bi->txt_opt,true);
+	bi->box=lv_draw_dialog_box(act->page,&bi->title,"Edit UEFI Option Boot Item");
+	lv_draw_input(bi->box,"UEFI Option:", NULL,NULL,&bi->txt_opt,NULL);
 	lv_textarea_set_accepted_chars(bi->txt_opt,HEX);
-	lv_obj_set_user_data(bi->txt_opt,bi);
-	lv_obj_set_event_cb(bi->txt_opt,input_cb);
 
 	#ifdef ENABLE_UEFI
-	bi->sel_opt=lv_dropdown_create(bi->box,NULL);
+	lv_obj_add_event_cb(bi->txt_opt,input_cb,LV_EVENT_DEFOCUSED,bi);
+	bi->sel_opt=lv_dropdown_create(bi->box);
+	lv_obj_set_width(bi->sel_opt,lv_pct(100));
 	lv_obj_set_user_data(bi->sel_opt,bi);
-	lv_obj_set_event_cb(bi->sel_opt,option_cb);
+	lv_obj_add_event_cb(bi->sel_opt,lv_default_dropdown_cb,LV_EVENT_ALL,NULL);
+	lv_obj_add_event_cb(bi->sel_opt,option_cb,LV_EVENT_VALUE_CHANGED,bi);
 	#endif
 
-	// OK Button
-	bi->ok=lv_btn_create(bi->box,NULL);
-	lv_style_set_action_button(bi->ok,true);
-	lv_obj_set_user_data(bi->ok,bi);
-	lv_obj_set_event_cb(bi->ok,ok_cb);
-	lv_label_set_text(lv_label_create(bi->ok,NULL),_("OK"));
-
-	// Cancel Button
-	bi->cancel=lv_btn_create(bi->box,NULL);
-	lv_style_set_action_button(bi->cancel,true);
-	lv_obj_set_user_data(bi->cancel,bi);
-	lv_obj_set_event_cb(bi->cancel,cancel_cb);
-	lv_label_set_text(lv_label_create(bi->cancel,NULL),_("Cancel"));
+	lv_draw_btns_ok_cancel(bi->box,&bi->ok,&bi->cancel,ok_cb,bi);
 	return 0;
 }
 
@@ -316,7 +190,6 @@ struct gui_register guireg_bootdata_uefi_option={
 	.lost_focus=bootdata_uefi_option_lost_focus,
 	.draw=draw_bootdata_uefi_option,
 	.data_load=do_load,
-	.resize=do_resize,
 	.back=true,
 	.mask=true,
 };

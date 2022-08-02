@@ -73,8 +73,8 @@ struct bootdata_efi{
 
 struct bootdata_uefi_option{
 	struct gui_activity*act;
-	lv_obj_t*title,*page,*box,*ok,*cancel;
-	lv_obj_t*lbl_opt,*txt_opt,*sel_opt;
+	lv_obj_t*title,*box,*ok,*cancel;
+	lv_obj_t*txt_opt,*sel_opt;
 	char name[256];
 	uint options[256];
 };

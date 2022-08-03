@@ -10,6 +10,7 @@
 #include<stdlib.h>
 #include"gui.h"
 #include"logger.h"
+#include"gui/tools.h"
 #include"gui/msgbox.h"
 #include"gui/activity.h"
 
@@ -62,17 +63,7 @@ static int msgbox_draw(struct gui_activity*act){
 	for(box->btn_cnt=0;*box->buttons[box->btn_cnt];box->btn_cnt++);
 	if(box->btn_cnt>64)return 3;
 	box->act=act;
-
-	box->box=lv_obj_create(act->page);
-	lv_obj_set_style_pad_all(box->box,gui_font_size,0);
-	lv_obj_set_flex_flow(box->box,LV_FLEX_FLOW_COLUMN);
-	lv_obj_set_style_pad_row(box->box,gui_font_size,0);
-	lv_obj_set_style_max_width(box->box,lv_pct(80),0);
-	lv_obj_set_style_max_height(box->box,lv_pct(80),0);
-	lv_obj_set_style_min_width(box->box,gui_dpi*2,0);
-	lv_obj_set_style_min_height(box->box,gui_font_size*2,0);
-	lv_obj_set_height(box->box,LV_SIZE_CONTENT);
-	lv_obj_center(box->box);
+	box->box=lv_draw_dialog_box(act->page,NULL,NULL);
 
 	box->label=lv_label_create(box->box);
 	lv_label_set_text(box->label,box->text);
@@ -80,18 +71,8 @@ static int msgbox_draw(struct gui_activity*act){
 	lv_obj_set_style_text_align(box->label,LV_TEXT_ALIGN_CENTER,0);
 	lv_obj_set_width(box->label,lv_pct(100));
 
-	box->btns=lv_obj_create(box->box);
-	lv_obj_set_style_radius(box->btns,0,0);
-	lv_obj_set_scroll_dir(box->btns,LV_DIR_NONE);
-	lv_obj_set_style_border_width(box->btns,0,0);
-	lv_obj_set_style_bg_opa(box->btns,LV_OPA_0,0);
-	lv_obj_set_style_pad_all(box->btns,gui_dpi/50,0);
+	box->btns=lv_draw_line_wrapper(box->box,NULL,NULL);
 	lv_obj_set_flex_flow(box->btns,LV_FLEX_FLOW_ROW_WRAP);
-	lv_obj_clear_flag(box->btns,LV_OBJ_FLAG_SCROLLABLE|LV_OBJ_FLAG_CLICKABLE);
-	lv_obj_set_style_pad_row(box->btns,gui_font_size/2,0);
-	lv_obj_set_style_pad_column(box->btns,gui_font_size/2,0);
-	lv_obj_set_size(box->btns,lv_pct(100),LV_SIZE_CONTENT);
-	lv_obj_center(box->btns);
 
 	if(box->btn_cnt>0){
 		struct msgbox_btn*d=malloc(sizeof(struct msgbox_btn)*box->btn_cnt);
@@ -103,13 +84,9 @@ static int msgbox_draw(struct gui_activity*act){
 		box->btn_data_p=d;
 		for(uint16_t i=0;i<box->btn_cnt;i++){
 			d[i].box=box,d[i].id=i,d[i].text=box->buttons[i];
-			box->btn[i]=lv_btn_create(box->btns);
-			lv_obj_add_event_cb(box->btn[i],msg_click,LV_EVENT_CLICKED,&d[i]);
+			box->btn[i]=lv_draw_button(box->btns,_(box->buttons[i]),true,msg_click,&d[i]);
 			if(box->btn_cnt<4)lv_obj_set_flex_grow(box->btn[i],1);
 			else lv_obj_set_width(box->btn[i],lv_pct(100));
-			lv_obj_t*txt=lv_label_create(box->btn[i]);
-			lv_label_set_text(txt,_(box->buttons[i]));
-			lv_obj_center(txt);
 		}
 	}
 	return 0;

@@ -114,10 +114,10 @@ struct bootdata_linux{
 
 struct bootdata_memory_region{
 	struct gui_activity*act;
-	lv_obj_t*title,*page,*box,*ok,*cancel;
-	lv_obj_t*lbl_reg_base,*txt_reg_base;
-	lv_obj_t*lbl_reg_size,*txt_reg_size;
-	lv_obj_t*lbl_reg_end,*txt_reg_end;
+	lv_obj_t*title,*box,*ok,*cancel;
+	lv_obj_t*txt_reg_base;
+	lv_obj_t*txt_reg_size;
+	lv_obj_t*txt_reg_end;
 	char path[PATH_MAX];
 };
 

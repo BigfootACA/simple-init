@@ -247,10 +247,6 @@ static void ok_cb(lv_event_t*e){
 	else if(lv_obj_has_flag(am->opt_extract,LV_STATE_CHECKED))image_extract(am);
 }
 
-static void cancel_cb(lv_event_t*e __attribute__((unused))){
-	guiact_do_back();
-}
-
 static int init(struct gui_activity*act){
 	struct abootimg*am=malloc(sizeof(struct abootimg));
 	if(!am)return -ENOMEM;
@@ -284,82 +280,20 @@ static int do_cleanup(struct gui_activity*act){
 }
 
 static int draw_abootimg(struct gui_activity*act){
-	static lv_coord_t grid_col[]={
-		LV_GRID_FR(1),
-		LV_GRID_FR(1),
-		LV_GRID_TEMPLATE_LAST
-	},grid_row[]={
-		LV_GRID_CONTENT,
-		LV_GRID_TEMPLATE_LAST
-	};
 	struct abootimg*am=act->data;
-
-	am->box=lv_obj_create(act->page);
-	lv_obj_set_flex_flow(am->box,LV_FLEX_FLOW_COLUMN);
-	lv_obj_set_style_pad_all(am->box,gui_font_size/2,0);
-	lv_obj_set_style_max_width(am->box,lv_pct(80),0);
-	lv_obj_set_style_max_height(am->box,lv_pct(80),0);
-	lv_obj_set_style_min_width(am->box,gui_dpi*2,0);
-	lv_obj_set_style_min_height(am->box,gui_font_size*2,0);
-	lv_obj_set_height(am->box,LV_SIZE_CONTENT);
-	lv_obj_center(am->box);
-
-	// Title
-	lv_obj_t*title=lv_label_create(am->box);
-	lv_label_set_text(title,_("Android Boot Image Tools"));
-	lv_label_set_long_mode(title,LV_LABEL_LONG_WRAP);
-	lv_obj_set_width(title,lv_pct(100));
-	lv_obj_set_style_text_align(title,LV_TEXT_ALIGN_CENTER,0);
-
-	am->opt_create=lv_checkbox_create(am->box);
-	lv_checkbox_set_text(am->opt_create,_("Create"));
-	lv_obj_set_checked(am->opt_create,false);
-	lv_obj_add_event_cb(am->opt_create,chk_cb,LV_EVENT_VALUE_CHANGED,am);
-
-	am->opt_update=lv_checkbox_create(am->box);
-	lv_checkbox_set_text(am->opt_update,_("Update"));
-	lv_obj_set_checked(am->opt_update,false);
-	lv_obj_add_event_cb(am->opt_update,chk_cb,LV_EVENT_VALUE_CHANGED,am);
-
-	am->opt_extract=lv_checkbox_create(am->box);
-	lv_checkbox_set_text(am->opt_extract,_("Extract"));
-	lv_obj_set_checked(am->opt_extract,true);
-	lv_obj_add_event_cb(am->opt_extract,chk_cb,LV_EVENT_VALUE_CHANGED,am);
-
+	am->box=lv_draw_dialog_box(act->page,NULL,"Android Boot Image Tools");
+	am->opt_create=lv_draw_checkbox(am->box,_("Create"),false,chk_cb,am);
+	am->opt_update=lv_draw_checkbox(am->box,_("Update"),false,chk_cb,am);
+	am->opt_extract=lv_draw_checkbox(am->box,_("Extract"),true,chk_cb,am);
 	lv_draw_input(am->box, "Name",                    NULL, NULL,             &am->name,    NULL);
 	lv_draw_input(am->box, "Android Boot Image",      NULL, &am->clr_image,   &am->image,   &am->btn_image);
 	lv_draw_input(am->box, "Linux Kernel",            NULL, &am->clr_kernel,  &am->kernel,  &am->btn_kernel);
 	lv_draw_input(am->box, "Ramdisk (initramfs)",     NULL, &am->clr_initrd,  &am->initrd,  &am->btn_initrd);
 	lv_draw_input(am->box, "Second Stage Bootloader", NULL, &am->clr_second,  &am->second,  &am->btn_second);
 	lv_draw_input(am->box, "Kernel Commandline",      NULL, &am->clr_cmdline, &am->cmdline, NULL);
-
 	lv_obj_add_event_cb(am->image,abootimg_cb,LV_EVENT_DEFOCUSED,am);
 	lv_textarea_set_one_line(am->cmdline,false);
-
-	lv_obj_t*btns=lv_obj_create(am->box);
-	lv_obj_set_style_border_width(btns,0,0);
-	lv_obj_set_style_pad_all(btns,gui_font_size/4,0);
-	lv_obj_set_grid_dsc_array(btns,grid_col,grid_row);
-	lv_obj_set_size(btns,lv_pct(100),LV_SIZE_CONTENT);
-
-	// OK Button
-	am->ok=lv_btn_create(btns);
-	lv_obj_set_enabled(am->ok,true);
-	lv_obj_add_event_cb(am->ok,ok_cb,LV_EVENT_CLICKED,am);
-	lv_obj_set_grid_cell(am->ok,LV_GRID_ALIGN_STRETCH,0,1,LV_GRID_ALIGN_STRETCH,0,1);
-	lv_obj_t*lbl_ok=lv_label_create(am->ok);
-	lv_label_set_text(lbl_ok,_("OK"));
-	lv_obj_center(lbl_ok);
-
-	// Cancel Button
-	am->cancel=lv_btn_create(btns);
-	lv_obj_set_enabled(am->cancel,true);
-	lv_obj_add_event_cb(am->cancel,cancel_cb,LV_EVENT_CLICKED,am);
-	lv_obj_set_grid_cell(am->cancel,LV_GRID_ALIGN_STRETCH,1,1,LV_GRID_ALIGN_STRETCH,0,1);
-	lv_obj_t*lbl_cancel=lv_label_create(am->cancel);
-	lv_label_set_text(lbl_cancel,_("Cancel"));
-	lv_obj_center(lbl_cancel);
-
+	lv_draw_btns_ok_cancel(am->box,&am->ok,&am->cancel,ok_cb,am);
 	if(act->args){
 		lv_textarea_set_text(am->image,act->args);
 		auto_open_image(am);

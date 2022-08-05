@@ -153,52 +153,21 @@ static bool on_item_click(struct fileview*fv,char*item,enum item_type type){
 }
 
 static int filepicker_draw(struct gui_activity*act){
-	static lv_coord_t grid_col[]={
-		LV_GRID_FR(1),
-		LV_GRID_FR(1),
-		LV_GRID_FR(1),
-		LV_GRID_FR(1),
-		LV_GRID_FR(1),
-		LV_GRID_FR(1),
-		LV_GRID_TEMPLATE_LAST
-	},grid_row[]={
-		0,LV_GRID_FR(1),0,0,0,
-		LV_GRID_TEMPLATE_LAST
-	};
 	struct filepicker*fp=act->args;
-	if(grid_row[0]==0)grid_row[0]=gui_font_size;
-	if(grid_row[2]==0)grid_row[2]=gui_font_size;
-	if(grid_row[3]==0)grid_row[3]=gui_font_size*1.5;
-	if(grid_row[4]==0)grid_row[4]=gui_font_size*1.5;
 	fp->act=act;
 
-	fp->box=lv_obj_create(act->page);
-	lv_obj_set_style_pad_all(fp->box,gui_font_size,0);
-	lv_obj_set_style_pad_row(fp->box,gui_font_size,0);
-	lv_obj_set_style_max_width(fp->box,lv_pct(80),0);
-	lv_obj_set_style_max_height(fp->box,lv_pct(80),0);
-	lv_obj_set_style_min_width(fp->box,gui_dpi*2,0);
-	lv_obj_set_grid_dsc_array(fp->box,grid_col,grid_row);
-	lv_obj_set_height(fp->box,lv_pct(70));
-	lv_obj_center(fp->box);
+	fp->box=lv_draw_dialog_box(act->page,NULL,NULL);
+	lv_obj_set_height(fp->box,lv_pct(80));
 
 	fp->label=lv_label_create(fp->box);
+	lv_obj_set_width(fp->label,lv_pct(100));
 	lv_obj_set_style_text_align(fp->label,LV_TEXT_ALIGN_CENTER,0);
 	lv_label_set_long_mode(fp->label,LV_LABEL_LONG_WRAP);
 	lv_label_set_text(fp->label,fp->text);
-	lv_obj_set_grid_cell(
-		fp->label,
-		LV_GRID_ALIGN_STRETCH,0,6,
-		LV_GRID_ALIGN_STRETCH,0,1
-	);
 
 	fp->view=lv_obj_create(fp->box);
+	lv_obj_set_flex_grow(fp->view,1);
 	lv_obj_set_width(fp->view,lv_pct(100));
-	lv_obj_set_grid_cell(
-		fp->view,
-		LV_GRID_ALIGN_STRETCH,0,6,
-		LV_GRID_ALIGN_STRETCH,1,1
-	);
 
 	fp->fv=fileview_create(fp->view);
 	fileview_set_verbose(fp->fv,false);
@@ -208,73 +177,25 @@ static int filepicker_draw(struct gui_activity*act){
 	fileview_set_data(fp->fv,fp);
 
 	fp->cur_path=lv_label_create(fp->box);
+	lv_obj_set_width(fp->cur_path,lv_pct(100));
 	lv_obj_set_style_text_align(fp->cur_path,LV_TEXT_ALIGN_RIGHT,0);
 	lv_label_set_long_mode(fp->cur_path,LV_LABEL_LONG_CLIP);
 	lv_label_set_text(fp->cur_path,fp->path);
 	lv_obj_set_small_text_font(fp->cur_path,LV_PART_MAIN);
-	lv_obj_set_grid_cell(
-		fp->cur_path,
-		LV_GRID_ALIGN_STRETCH,0,6,
-		LV_GRID_ALIGN_STRETCH,2,1
-	);
 
-	fp->reload=lv_btn_create(fp->box);
-	lv_obj_t*lbl_reload=lv_label_create(fp->reload);
-	lv_label_set_text(lbl_reload,LV_SYMBOL_REFRESH);
-	lv_obj_center(lbl_reload);
-	lv_obj_add_event_cb(fp->reload,btn_click,LV_EVENT_CLICKED,fp);
-	lv_obj_set_grid_cell(
-		fp->reload,
-		LV_GRID_ALIGN_STRETCH,0,2,
-		LV_GRID_ALIGN_STRETCH,3,1
+	lv_draw_buttons_auto_arg(
+		fp->box,
+		#define BTN(tgt,en,title,cb,x,c,y)&(struct button_dsc){\
+			&tgt,en,title,cb,fp,x,c,y,1,NULL\
+		}
+		BTN(fp->reload, true,            LV_SYMBOL_REFRESH, btn_click,         0,2,0),
+		BTN(fp->new,    !fsext_is_multi, LV_SYMBOL_PLUS,    btn_click,         2,2,0),
+		BTN(fp->home,   true,            LV_SYMBOL_HOME,    btn_click,         4,2,0),
+		BTN(fp->ok,     false,           LV_SYMBOL_OK,      filepicker_click,  0,3,1),
+		BTN(fp->cancel, true,            LV_SYMBOL_CLOSE,   filepicker_click,  3,3,1),
+		NULL
+		#undef BTN
 	);
-
-	fp->new=lv_btn_create(fp->box);
-	lv_obj_set_enabled(fp->new,!fsext_is_multi);
-	lv_obj_t*lbl_new=lv_label_create(fp->new);
-	lv_label_set_text(lbl_new,LV_SYMBOL_PLUS);
-	lv_obj_center(lbl_new);
-	lv_obj_add_event_cb(fp->new,btn_click,LV_EVENT_CLICKED,fp);
-	lv_obj_set_grid_cell(
-		fp->new,
-		LV_GRID_ALIGN_STRETCH,2,2,
-		LV_GRID_ALIGN_STRETCH,3,1
-	);
-
-	fp->home=lv_btn_create(fp->box);
-	lv_obj_t*lbl_home=lv_label_create(fp->home);
-	lv_label_set_text(lbl_home,LV_SYMBOL_HOME);
-	lv_obj_center(lbl_home);
-	lv_obj_add_event_cb(fp->home,btn_click,LV_EVENT_CLICKED,fp);
-	lv_obj_set_grid_cell(
-		fp->home,
-		LV_GRID_ALIGN_STRETCH,4,2,
-		LV_GRID_ALIGN_STRETCH,3,1
-	);
-
-	fp->ok=lv_btn_create(fp->box);
-	lv_obj_set_enabled(fp->ok,false);
-	lv_obj_t*lbl_ok=lv_label_create(fp->ok);
-	lv_label_set_text(lbl_ok,LV_SYMBOL_OK);
-	lv_obj_center(lbl_ok);
-	lv_obj_add_event_cb(fp->ok,filepicker_click,LV_EVENT_CLICKED,fp);
-	lv_obj_set_grid_cell(
-		fp->ok,
-		LV_GRID_ALIGN_STRETCH,0,3,
-		LV_GRID_ALIGN_STRETCH,4,1
-	);
-
-	fp->cancel=lv_btn_create(fp->box);
-	lv_obj_t*lbl_cancel=lv_label_create(fp->cancel);
-	lv_label_set_text(lbl_cancel,LV_SYMBOL_CLOSE);
-	lv_obj_center(lbl_cancel);
-	lv_obj_add_event_cb(fp->cancel,filepicker_click,LV_EVENT_CLICKED,fp);
-	lv_obj_set_grid_cell(
-		fp->cancel,
-		LV_GRID_ALIGN_STRETCH,3,3,
-		LV_GRID_ALIGN_STRETCH,4,1
-	);
-
 	return 0;
 }
 

@@ -242,89 +242,39 @@ static int mount_lost_focus(struct gui_activity*d __attribute__((unused))){
 }
 
 static int mount_draw(struct gui_activity*act){
-	static lv_coord_t grid_col[]={
-		LV_GRID_FR(1),
-		LV_GRID_FR(1),
-		LV_GRID_FR(1),
-		LV_GRID_TEMPLATE_LAST
-	},grid_row[]={
-		LV_GRID_CONTENT,
-		LV_GRID_FR(1),
-		LV_GRID_CONTENT,
-		LV_GRID_CONTENT,
-		LV_GRID_TEMPLATE_LAST
-	};
-	lv_obj_set_style_pad_all(act->page,gui_font_size/2,0);
-	lv_obj_set_grid_dsc_array(act->page,grid_col,grid_row);
+	lv_obj_set_flex_flow(act->page,LV_FLEX_FLOW_COLUMN);
 
 	// function title
 	lv_obj_t*title=lv_label_create(act->page);
+	lv_obj_set_width(title,lv_pct(100));
 	lv_label_set_long_mode(title,LV_LABEL_LONG_WRAP);
 	lv_obj_set_style_text_align(title,LV_TEXT_ALIGN_CENTER,0);
 	lv_label_set_text(title,_("Mount Manager"));
-	lv_obj_set_grid_cell(
-		title,
-		LV_GRID_ALIGN_CENTER,0,3,
-		LV_GRID_ALIGN_CENTER,0,1
-	);
 
 	// options list
 	lst=lv_obj_create(act->page);
 	lv_obj_set_flex_flow(lst,LV_FLEX_FLOW_COLUMN);
 	lv_obj_set_width(lst,lv_pct(100));
-	lv_obj_set_grid_cell(
-		lst,
-		LV_GRID_ALIGN_STRETCH,0,3,
-		LV_GRID_ALIGN_STRETCH,1,1
-	);
+	lv_obj_set_flex_grow(lst,1);
 
 	// show all checkbox
-	show_all=lv_checkbox_create(act->page);
-	lv_obj_add_event_cb(show_all,show_all_click,LV_EVENT_VALUE_CHANGED,NULL);
-	lv_checkbox_set_text(show_all,_("Show all mountpoints"));
-	lv_obj_set_grid_cell(
-		show_all,
-		LV_GRID_ALIGN_START,0,3,
-		LV_GRID_ALIGN_CENTER,2,1
+	show_all=lv_draw_checkbox(
+		act->page,_("Show all mountpoints"),
+		false,show_all_click,NULL
 	);
 
-	// mount button
-	btn_mount=lv_btn_create(act->page);
-	lv_obj_add_event_cb(btn_mount,mount_click,LV_EVENT_CLICKED,NULL);
-	lv_obj_t*lbl_mount=lv_label_create(btn_mount);
-	lv_label_set_text(lbl_mount,_("Mount"));
-	lv_obj_center(lbl_mount);
-	lv_obj_set_grid_cell(
-		btn_mount,
-		LV_GRID_ALIGN_STRETCH,0,1,
-		LV_GRID_ALIGN_CENTER,3,1
+	lv_draw_buttons_auto_arg(
+		act->page,
+		#define BTN(tgt,title,x)&(struct button_dsc){\
+			&btn_##tgt,true,_(title),                   \
+			tgt##_click,NULL,x,1,0,1,NULL\
+		}
+		BTN(mount,  "Mount",   0),
+		BTN(umount, "Unmount", 1),
+		BTN(refresh,"Refresh", 2),
+		NULL
+		#undef BTN
 	);
-
-	// umount button
-	btn_umount=lv_btn_create(act->page);
-	lv_obj_add_event_cb(btn_umount,umount_click,LV_EVENT_CLICKED,NULL);
-	lv_obj_set_enabled(btn_umount,false);
-	lv_obj_t*lbl_umount=lv_label_create(btn_umount);
-	lv_label_set_text(lbl_umount,_("Unmount"));
-	lv_obj_center(lbl_umount);
-	lv_obj_set_grid_cell(
-		btn_umount,
-		LV_GRID_ALIGN_STRETCH,1,1,
-		LV_GRID_ALIGN_CENTER,3,1
-	);
-
-	// refresh button
-	btn_refresh=lv_btn_create(act->page);
-	lv_obj_add_event_cb(btn_refresh,refresh_click,LV_EVENT_CLICKED,NULL);
-	lv_obj_t*lbl_refresh=lv_label_create(btn_refresh);
-	lv_label_set_text(lbl_refresh,_("Refresh"));
-	lv_obj_center(lbl_refresh);
-	lv_obj_set_grid_cell(
-		btn_refresh,
-		LV_GRID_ALIGN_STRETCH,2,1,
-		LV_GRID_ALIGN_CENTER,3,1
-	);
-
 	return 0;
 }
 

@@ -380,80 +380,33 @@ static int acpi_init(struct gui_activity*act){
 }
 
 static int acpi_draw(struct gui_activity*act){
-	static lv_coord_t grid_col[]={
-		LV_GRID_FR(1),
-		LV_GRID_FR(1),
-		LV_GRID_FR(1),
-		LV_GRID_TEMPLATE_LAST
-	},grid_row[]={
-		LV_GRID_CONTENT,
-		LV_GRID_FR(1),
-		LV_GRID_CONTENT,
-		LV_GRID_TEMPLATE_LAST
-	};
 	struct acpi_mgr*am=act->data;
 	if(!am)return -1;
-	lv_obj_set_style_pad_all(act->page,gui_font_size/2,0);
-	lv_obj_set_grid_dsc_array(act->page,grid_col,grid_row);
+	lv_obj_set_flex_flow(act->page,LV_FLEX_FLOW_COLUMN);
 
 	// function title
 	am->title=lv_label_create(act->page);
+	lv_obj_set_width(am->title,lv_pct(100));
 	lv_label_set_long_mode(am->title,LV_LABEL_LONG_WRAP);
 	lv_obj_set_style_text_align(am->title,LV_TEXT_ALIGN_CENTER,0);
 	lv_label_set_text(am->title,_("ACPI Manager"));
-	lv_obj_set_grid_cell(
-		am->title,
-		LV_GRID_ALIGN_CENTER,0,3,
-		LV_GRID_ALIGN_CENTER,0,1
-	);
 
 	// options list
 	am->lst=lv_obj_create(act->page);
 	lv_obj_set_flex_flow(am->lst,LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_flex_grow(am->lst,1);
 	lv_obj_set_width(am->lst,lv_pct(100));
-	lv_obj_set_grid_cell(
-		am->lst,
-		LV_GRID_ALIGN_STRETCH,0,3,
-		LV_GRID_ALIGN_STRETCH,1,1
-	);
 
-	// load button
-	am->btn_load=lv_btn_create(act->page);
-	lv_obj_set_user_data(am->btn_load,am);
-	lv_obj_add_event_cb(am->btn_load,load_click,LV_EVENT_CLICKED,am);
-	lv_obj_t*lbl_load=lv_label_create(am->btn_load);
-	lv_label_set_text(lbl_load,_("Load"));
-	lv_obj_center(lbl_load);
-	lv_obj_set_grid_cell(
-		am->btn_load,
-		LV_GRID_ALIGN_STRETCH,0,1,
-		LV_GRID_ALIGN_CENTER,2,1
-	);
-
-	// refresh button
-	am->btn_refresh=lv_btn_create(act->page);
-	lv_obj_set_user_data(am->btn_refresh,am);
-	lv_obj_add_event_cb(am->btn_refresh,refresh_click,LV_EVENT_CLICKED,am);
-	lv_obj_t*lbl_refresh=lv_label_create(am->btn_refresh);
-	lv_label_set_text(lbl_refresh,_("Refresh"));
-	lv_obj_center(lbl_refresh);
-	lv_obj_set_grid_cell(
-		am->btn_refresh,
-		LV_GRID_ALIGN_STRETCH,1,1,
-		LV_GRID_ALIGN_CENTER,2,1
-	);
-
-	// save button
-	am->btn_save=lv_btn_create(act->page);
-	lv_obj_set_user_data(am->btn_save,am);
-	lv_obj_add_event_cb(am->btn_save,save_click,LV_EVENT_CLICKED,am);
-	lv_obj_t*lbl_save=lv_label_create(am->btn_save);
-	lv_label_set_text(lbl_save,_("Save"));
-	lv_obj_center(lbl_save);
-	lv_obj_set_grid_cell(
-		am->btn_save,
-		LV_GRID_ALIGN_STRETCH,2,1,
-		LV_GRID_ALIGN_CENTER,2,1
+	lv_draw_buttons_auto_arg(
+		act->page,
+		#define BTN(tgt,title,cb,x)&(struct button_dsc){\
+			&tgt,true,_(title),cb,am,x,1,0,1,NULL\
+		}
+		BTN(am->btn_load,    "Load",    load_click,    0),
+		BTN(am->btn_refresh, "Refresh", refresh_click, 1),
+		BTN(am->btn_save,    "Save",    save_click,    2),
+		#undef BTN
+		NULL
 	);
 
 	return 0;

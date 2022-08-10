@@ -156,62 +156,30 @@ static int bootmenu_option_lost_focus(struct gui_activity*d __attribute__((unuse
 }
 
 static int uefi_bootmenu_draw(struct gui_activity*act){
-	static lv_coord_t grid_col[]={
-		LV_GRID_FR(1),
-		LV_GRID_FR(1),
-		LV_GRID_TEMPLATE_LAST
-	},grid_row[]={
-		LV_GRID_CONTENT,
-		LV_GRID_FR(1),
-		LV_GRID_CONTENT,
-		LV_GRID_TEMPLATE_LAST
-	};
-	lv_obj_set_style_pad_all(act->page,gui_font_size/2,0);
-	lv_obj_set_grid_dsc_array(act->page,grid_col,grid_row);
+	lv_obj_set_flex_flow(act->page,LV_FLEX_FLOW_COLUMN);
 
 	// function title
 	lv_obj_t*title=lv_label_create(act->page);
+	lv_obj_set_width(title,lv_pct(100));
 	lv_label_set_long_mode(title,LV_LABEL_LONG_WRAP);
 	lv_obj_set_style_text_align(title,LV_TEXT_ALIGN_CENTER,0);
 	lv_label_set_text(title,_("UEFI Boot Menu"));
-	lv_obj_set_grid_cell(
-		title,
-		LV_GRID_ALIGN_CENTER,0,2,
-		LV_GRID_ALIGN_CENTER,0,1
-	);
 
 	// options list
 	lst=lv_obj_create(act->page);
+	lv_obj_set_flex_grow(lst,1);
 	lv_obj_set_flex_flow(lst,LV_FLEX_FLOW_COLUMN);
 	lv_obj_set_width(lst,lv_pct(100));
-	lv_obj_set_grid_cell(
-		lst,
-		LV_GRID_ALIGN_STRETCH,0,2,
-		LV_GRID_ALIGN_STRETCH,1,1
-	);
 
-	// ok button
-	btn_ok=lv_btn_create(act->page);
-	lv_obj_add_event_cb(btn_ok,ok_click,LV_EVENT_CLICKED,NULL);
-	lv_obj_t*lbl_ok=lv_label_create(btn_ok);
-	lv_label_set_text(lbl_ok,_("OK"));
-	lv_obj_center(lbl_ok);
-	lv_obj_set_grid_cell(
-		btn_ok,
-		LV_GRID_ALIGN_STRETCH,0,1,
-		LV_GRID_ALIGN_CENTER,2,1
-	);
-
-	// refresh button
-	btn_refresh=lv_btn_create(act->page);
-	lv_obj_add_event_cb(btn_refresh,refresh_click,LV_EVENT_CLICKED,NULL);
-	lv_obj_t*lbl_refresh=lv_label_create(btn_refresh);
-	lv_label_set_text(lbl_refresh,_("Refresh"));
-	lv_obj_center(lbl_refresh);
-	lv_obj_set_grid_cell(
-		btn_refresh,
-		LV_GRID_ALIGN_STRETCH,1,1,
-		LV_GRID_ALIGN_CENTER,2,1
+	lv_draw_buttons_auto_arg(
+		act->page,
+		#define BTN(tgt,en,title,cb,x)&(struct button_dsc){\
+			&tgt,en,_(title),cb,NULL,x,1,0,1,NULL\
+		}
+		BTN(btn_ok,      false, "OK",      ok_click,      0),
+		BTN(btn_refresh, true, "Refresh", refresh_click, 1),
+		#undef BTN
+		NULL
 	);
 
 	return 0;

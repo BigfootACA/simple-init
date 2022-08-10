@@ -14,6 +14,7 @@
 #include"confd.h"
 #include"logger.h"
 #include"defines.h"
+#include"gui/tools.h"
 #include"gui/sysbar.h"
 #include"gui/activity.h"
 #define TAG "logviewer"
@@ -128,6 +129,7 @@ static bool load_file(struct log_viewer*v){
 	fclose(f);
 	#endif
 	v->load=true;
+	free(xb);
 	calc_pages(v);
 	return true;
 	done:
@@ -303,49 +305,22 @@ static int logviewer_draw(struct gui_activity*act){
 	lv_obj_set_size(v->content,LV_SIZE_CONTENT,LV_SIZE_CONTENT);
 	lv_label_set_text(v->content,_("Loading..."));
 
-	v->pager=lv_obj_create(act->page);
-	lv_obj_set_style_radius(v->pager,0,0);
-	lv_obj_set_style_pad_all(v->pager,gui_dpi/50,0);
+	v->pager=lv_draw_line_wrapper(act->page,grid_col,grid_row);
 	lv_obj_set_style_pad_column(v->pager,gui_font_size,0);
-	lv_obj_set_scroll_dir(v->pager,LV_DIR_NONE);
-	lv_obj_set_style_border_width(v->pager,0,0);
-	lv_obj_set_style_bg_opa(v->pager,LV_OPA_0,0);
-	lv_obj_clear_flag(v->pager,LV_OBJ_FLAG_SCROLLABLE);
-	lv_obj_set_size(v->pager,lv_pct(100),LV_SIZE_CONTENT);
-	lv_obj_set_grid_dsc_array(v->pager,grid_col,grid_row);
 
-	struct btn{
-		lv_obj_t**obj;
-		const char*txt;
-		lv_event_cb_t cb;
-		uint8_t cp,cs,rp;
-	}btns[]={
-		{&v->arr_top,    LV_SYMBOL_PREV,  pager_click,  0,1,0},
-		{&v->arr_left,   LV_SYMBOL_LEFT,  pager_click,  1,1,0},
-		{&v->arr_right,  LV_SYMBOL_RIGHT, pager_click,  6,1,0},
-		{&v->arr_bottom, LV_SYMBOL_NEXT,  pager_click,  7,1,0},
-		{&v->btn_ctrl,   _("Control"),    ctrl_click,   0,3,1},
-		{&v->btn_reload, _("Reload"),     reload_click, 5,3,1},
-		{NULL,NULL,NULL,0,0,0}
-	};
-
-	for(size_t i=0;btns[i].obj;i++){
-		*btns[i].obj=lv_btn_create(v->pager);
-		lv_obj_add_event_cb(
-			*btns[i].obj,btns[i].cb,
-			LV_EVENT_CLICKED,v
-		);
-		lv_obj_t*lbl=lv_label_create(*btns[i].obj);
-		lv_label_set_text(lbl,btns[i].txt);
-		lv_obj_center(lbl);
-		lv_obj_set_grid_cell(
-			*btns[i].obj,
-			LV_GRID_ALIGN_STRETCH,
-			btns[i].cp,btns[i].cs,
-			LV_GRID_ALIGN_STRETCH,
-			btns[i].rp,1
-		);
-	}
+	lv_draw_buttons_arg(
+		v->pager,
+		#define BTN(tgt,title,cb,cp,cs,rp)&(struct button_dsc){\
+			&tgt,true,title,cb,v,cp,cs,rp,1,NULL\
+		}
+		BTN(v->arr_top,    LV_SYMBOL_PREV,  pager_click,  0,1,0),
+		BTN(v->arr_left,   LV_SYMBOL_LEFT,  pager_click,  1,1,0),
+		BTN(v->arr_right,  LV_SYMBOL_RIGHT, pager_click,  6,1,0),
+		BTN(v->arr_bottom, LV_SYMBOL_NEXT,  pager_click,  7,1,0),
+		BTN(v->btn_ctrl,   _("Control"),    ctrl_click,   0,3,1),
+		BTN(v->btn_reload, _("Reload"),     reload_click, 5,3,1),
+		NULL
+	);
 
 	v->slider=lv_slider_create(v->pager);
 	lv_obj_add_event_cb(

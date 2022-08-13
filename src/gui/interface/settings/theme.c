@@ -78,10 +78,6 @@ static int theme_menu_draw(struct gui_activity*act){
 		LV_GRID_CONTENT,
 		LV_GRID_CONTENT,
 		LV_GRID_TEMPLATE_LAST
-	},grid_col_f[]={
-		LV_GRID_FR(1),
-		LV_GRID_FR(1),
-		LV_GRID_TEMPLATE_LAST
 	},grid_row[]={
 		LV_GRID_CONTENT,
 		LV_GRID_TEMPLATE_LAST
@@ -89,22 +85,7 @@ static int theme_menu_draw(struct gui_activity*act){
 	struct theme_menu*tm=act->data;
 	if(!tm)return -1;
 
-	tm->box=lv_obj_create(act->page);
-	lv_obj_set_flex_flow(tm->box,LV_FLEX_FLOW_COLUMN);
-	lv_obj_set_style_pad_all(tm->box,gui_font_size/2,0);
-	lv_obj_set_style_pad_row(tm->box,gui_font_size/2,0);
-	lv_obj_set_style_max_width(tm->box,lv_pct(80),0);
-	lv_obj_set_style_max_height(tm->box,lv_pct(80),0);
-	lv_obj_set_style_min_width(tm->box,gui_dpi*2,0);
-	lv_obj_set_style_min_height(tm->box,gui_font_size*2,0);
-	lv_obj_set_height(tm->box,LV_SIZE_CONTENT);
-	lv_obj_center(tm->box);
-
-	tm->title=lv_label_create(tm->box);
-	lv_label_set_text(tm->title,_("Select theme"));
-	lv_label_set_long_mode(tm->title,LV_LABEL_LONG_WRAP);
-	lv_obj_set_style_text_align(tm->title,LV_TEXT_ALIGN_CENTER,0);
-	lv_obj_set_width(tm->title,lv_pct(100));
+	tm->box=lv_draw_dialog_box(act->page,&tm->title,"Select theme");
 
 	tm->input_box=lv_draw_input(
 		tm->box,_("Background"),
@@ -119,21 +100,15 @@ static int theme_menu_draw(struct gui_activity*act){
 	lv_textarea_set_text(tm->txt_bg,bg?bg:"");
 	if(bg)free(bg);
 
-	tm->chk_scroll=lv_checkbox_create(tm->box);
-	lv_obj_set_checked(
-		tm->chk_scroll,
-		confd_get_boolean("gui.text_scroll",true)
+	tm->chk_scroll=lv_draw_checkbox(
+		tm->box,"Scroll text when overflow",
+		confd_get_boolean("gui.text_scroll",true),
+		text_scroll,tm
 	);
-	lv_checkbox_set_text(
-		tm->chk_scroll,
-		_("Scroll text when overflow")
+	tm->chk_dark=lv_draw_checkbox(
+		tm->box,"Dark Mode",
+		gui_dark,dark_switch,tm
 	);
-	lv_obj_add_event_cb(tm->chk_scroll,text_scroll,LV_EVENT_VALUE_CHANGED,tm);
-
-	tm->chk_dark=lv_checkbox_create(tm->box);
-	lv_obj_set_checked(tm->chk_dark,gui_dark);
-	lv_checkbox_set_text(tm->chk_dark,_("Dark Mode"));
-	lv_obj_add_event_cb(tm->chk_dark,dark_switch,LV_EVENT_VALUE_CHANGED,tm);
 
 	tm->tip_line=lv_obj_create(tm->box);
 	lv_obj_add_flag(tm->tip_line,LV_OBJ_FLAG_HIDDEN);
@@ -157,25 +132,16 @@ static int theme_menu_draw(struct gui_activity*act){
 		_("Need to restart GUI when changing theme")
 	);
 
-	tm->btns=lv_obj_create(tm->box);
-	lv_obj_set_style_border_width(tm->btns,0,0);
-	lv_obj_set_style_pad_all(tm->btns,gui_font_size/4,0);
-	lv_obj_set_grid_dsc_array(tm->btns,grid_col_f,grid_row);
-	lv_obj_set_size(tm->btns,lv_pct(100),LV_SIZE_CONTENT);
-
-	tm->btn_ok=lv_btn_create(tm->btns);
-	lv_obj_add_event_cb(tm->btn_ok,ok_click,LV_EVENT_CLICKED,tm);
-	lv_obj_set_grid_cell(tm->btn_ok,LV_GRID_ALIGN_STRETCH,0,1,LV_GRID_ALIGN_STRETCH,0,1);
-	lv_obj_t*lbl_ok=lv_label_create(tm->btn_ok);
-	lv_label_set_text(lbl_ok,_("OK"));
-	lv_obj_center(lbl_ok);
-
-	tm->btn_restart=lv_btn_create(tm->btns);
-	lv_obj_add_event_cb(tm->btn_restart,restart_click,LV_EVENT_CLICKED,tm);
-	lv_obj_set_grid_cell(tm->btn_restart,LV_GRID_ALIGN_STRETCH,1,1,LV_GRID_ALIGN_STRETCH,0,1);
-	lv_obj_t*lbl_restart=lv_label_create(tm->btn_restart);
-	lv_label_set_text(lbl_restart,_("Restart"));
-	lv_obj_center(lbl_restart);
+	tm->btns=lv_draw_buttons_auto_arg(
+		tm->box,
+		#define BTN(tgt,title,cb,x)&(struct button_dsc){\
+			&tgt,true,_(title),cb,tm,x,1,0,1,NULL\
+		}
+		BTN(tm->btn_ok,      "OK",      ok_click,      0),
+		BTN(tm->btn_restart, "Restart", restart_click, 1),
+		NULL
+		#undef BTN
+	);
 	return 0;
 }
 

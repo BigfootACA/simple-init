@@ -175,35 +175,23 @@ static void add_button(struct gui_app*ga,struct gui_register*p){
 		LV_GRID_ALIGN_STRETCH,bx,1,
 		LV_GRID_ALIGN_STRETCH,by,1
 	);
-	ai->app=lv_obj_create(warp);
-	lv_obj_set_width(ai->app,LV_PCT(100));
-	lv_obj_set_style_radius(ai->app,0,0);
-	lv_obj_set_style_pad_all(ai->app,0,0);
-	lv_obj_set_style_border_width(ai->app,0,0);
-	lv_obj_set_scroll_dir(ai->app,LV_DIR_NONE);
-	lv_obj_set_style_bg_opa(ai->app,LV_OPA_0,0);
-	lv_obj_add_flag(ai->app,LV_OBJ_FLAG_CLICKABLE);
-	lv_obj_clear_flag(ai->app,LV_OBJ_FLAG_SCROLLABLE);
+	ai->app=lv_draw_line_wrapper(warp,NULL,NULL);
 	lv_color_t c=lv_obj_get_style_text_color(scr,LV_PART_MAIN);
 	lv_obj_set_style_outline_color(ai->app,c,LV_STATE_PRESSED);
 	lv_obj_set_style_outline_color(ai->app,c,LV_STATE_FOCUSED);
 	lv_obj_set_style_outline_width(ai->app,ls,LV_STATE_PRESSED);
 	lv_obj_set_style_outline_width(ai->app,ls,LV_STATE_FOCUSED);
+	lv_obj_add_flag(ai->app,LV_OBJ_FLAG_CLICKABLE);
 	lv_obj_set_style_radius(ai->app,10,0);
-	lv_obj_set_user_data(ai->app,ai);
+	lv_obj_set_style_pad_all(ai->app,0,0);
 	lv_obj_add_event_cb(ai->app,click_btn,LV_EVENT_CLICKED,ai);
 	lv_obj_add_event_cb(ai->app,focused_btn,LV_EVENT_FOCUSED,ai);
 	lv_obj_update_layout(ai->app);
 	if(guiact_is_active_page(ga->screen))lv_group_add_obj(gui_grp,ai->app);
 
 	lv_coord_t aw=lv_obj_get_width(ai->app);
-	lv_obj_t*icon_w=lv_obj_create(ai->app);
-	lv_obj_clear_flag(icon_w,LV_OBJ_FLAG_SCROLLABLE|LV_OBJ_FLAG_CLICKABLE);
-	lv_obj_set_scroll_dir(icon_w,LV_DIR_NONE);
-	lv_obj_set_style_bg_opa(icon_w,LV_OPA_0,0);
-	lv_obj_set_style_radius(icon_w,0,0);
+	lv_obj_t*icon_w=lv_draw_wrapper(ai->app,NULL,NULL,aw,aw);
 	lv_obj_set_style_pad_all(icon_w,ls,0);
-	lv_obj_set_style_border_width(icon_w,0,0);
 	lv_obj_set_size(icon_w,aw,aw);
 	lv_obj_set_style_radius(icon_w,gui_dpi/10,0);
 	lv_obj_t*icon=lv_img_create(icon_w);
@@ -213,11 +201,10 @@ static void add_button(struct gui_app*ga,struct gui_register*p){
 	if(x->w<=0||x->h<=0)lv_img_set_src(icon,"apps.svg");
 	lv_obj_center(icon);
 	lv_img_fill_image(icon,aw,aw);
-	aw-=ls;
+	aw-=ls*2;
 
 	lv_obj_t*txt=lv_label_create(ai->app);
 	lv_obj_set_width(txt,aw);
-	lv_obj_clear_flag(txt,LV_OBJ_FLAG_SCROLLABLE|LV_OBJ_FLAG_CLICKABLE);
 	lv_label_set_long_mode(txt,LV_LABEL_LONG_WRAP);
 	lv_obj_set_style_text_align(txt,LV_TEXT_ALIGN_CENTER,0);
 	lv_label_set_text(txt,_(p->title));

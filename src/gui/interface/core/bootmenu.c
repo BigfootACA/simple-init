@@ -273,12 +273,7 @@ static void bootmenu_add(struct bootmenu*bm,char*c){
 	}
 
 	// boot item image
-	bi->w_img=lv_obj_create(bi->btn);
-	lv_obj_set_size(bi->w_img,bm->si,bm->si);
-	lv_obj_clear_flag(bi->w_img,LV_OBJ_FLAG_CLICKABLE);
-	lv_obj_clear_flag(bi->w_img,LV_OBJ_FLAG_SCROLLABLE);
-	lv_obj_set_style_border_width(bi->w_img,0,0);
-	lv_obj_set_style_bg_opa(bi->w_img,LV_OPA_0,0);
+	bi->w_img=lv_draw_wrapper(bi->btn,NULL,NULL,bm->si,bm->si);
 	lv_obj_set_grid_cell(
 		bi->w_img,
 		LV_GRID_ALIGN_STRETCH,0,1,
@@ -377,27 +372,25 @@ static int bootmenu_draw(){
 	char*path;
 	if(
 		!bm->bg_path[0]&&
-		(path=confd_get_string(
-			"gui.background",
-			NULL
-		))
+		(path=confd_get_string("gui.background",NULL))
 	){
 		strncpy(
-			bm->bg_path,
-			path,
+			bm->bg_path,path,
 			sizeof(bm->bg_path)-1
 		);
 		free(path);
 	}
 	bm->do_auto_boot=true;
 
-	bm->scr=lv_obj_create(lv_scr_act());
-	lv_obj_set_pos(bm->scr,0,0);
-	lv_obj_set_size(bm->scr,gui_w,gui_h);
-	lv_obj_set_scroll_dir(bm->scr,LV_DIR_NONE);
-	lv_obj_set_style_bg_opa(bm->scr,LV_OPA_0,0);
-	lv_obj_set_style_radius(bm->scr,0,0);
-	lv_obj_set_style_border_width(bm->scr,0,0);
+	bm->scr=lv_draw_wrapper(lv_scr_act(),NULL,NULL,gui_w,gui_h);
+	lv_obj_set_style_pad_all(bm->scr,gui_font_size/2,0);
+	lv_obj_set_flex_flow(bm->scr,LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_flex_align(
+		bm->scr,
+		LV_FLEX_ALIGN_CENTER,
+		LV_FLEX_ALIGN_CENTER,
+		LV_FLEX_ALIGN_CENTER
+	);
 
 	bm->bg=lv_img_create(bm->scr);
 	lv_obj_set_size(bm->bg,gui_sw,gui_sh);
@@ -425,33 +418,18 @@ static int bootmenu_draw(){
 	lv_obj_set_style_border_width(bm->page,0,0);
 	lv_obj_set_style_bg_opa(bm->page,LV_OPA_0,LV_STATE_DEFAULT);
 	lv_obj_add_event_cb(bm->page,bootmenu_remove_auto_boot_cb,LV_EVENT_PRESSING,bm);
+	lv_obj_set_width(bm->page,lv_pct(100));
+	lv_obj_set_flex_flow(bm->page,LV_FLEX_FLOW_ROW_WRAP);
+	lv_obj_set_flex_grow(bm->page,1);
 
 	bm->time=lv_label_create(bm->scr);
 	lv_obj_set_style_text_font(bm->time,gui_font_small,LV_STATE_DEFAULT);
 	lv_obj_set_hidden(bm->time,true);
 
-	bm->btn=lv_btn_create(bm->scr);
-	lv_obj_t*lbl=lv_label_create(bm->btn);
-	lv_label_set_text(lbl,_("Boot"));
-	lv_obj_set_enabled(bm->btn,false);
-	lv_obj_set_user_data(bm->btn,bm);
-	lv_obj_add_event_cb(bm->btn,bootmenu_click,LV_EVENT_CLICKED,bm);
-
-	lv_obj_set_flex_flow(bm->scr,LV_FLEX_FLOW_COLUMN);
-	lv_obj_set_flex_align(
-		bm->scr,
-		LV_FLEX_ALIGN_CENTER,
-		LV_FLEX_ALIGN_CENTER,
-		LV_FLEX_ALIGN_CENTER
-	);
+	bm->btn=lv_draw_button(bm->scr,_("Boot"),false,bootmenu_click,bm);
 	lv_obj_set_style_max_width(bm->btn,gui_dpi*2,0);
-	lv_obj_set_width(bm->page,lv_pct(100));
 	lv_obj_set_width(bm->btn,lv_pct(100));
-	lv_obj_set_flex_grow(bm->page,1);
-	lv_obj_center(bm->btn);
-	lv_obj_center(lbl);
 
-	lv_obj_set_flex_flow(bm->page,LV_FLEX_FLOW_ROW_WRAP);
 	lv_obj_update_layout(bm->page);
 	bm->bw=(
 		lv_obj_get_width(bm->page)-

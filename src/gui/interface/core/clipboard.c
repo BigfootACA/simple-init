@@ -32,7 +32,7 @@ struct clipboard_app{
 };
 struct clipboard_item{
 	list*item;
-	lv_obj_t*btn,*chk;
+	lv_obj_t*btn,*lbl;
 	char key[256];
 	struct clipboard_app*clip;
 };
@@ -120,11 +120,9 @@ static void clipboard_item_click(lv_event_t*e){
 			found=true;
 			continue;
 		}
-		lv_obj_set_checked(i->chk,false);
 		lv_obj_set_checked(i->btn,false);
 	}while((f=f->next));
 	if(!found)return;
-	lv_obj_set_checked(item->chk,true);
 	lv_obj_set_checked(item->btn,true);
 	lv_obj_set_enabled(item->clip->use,true);
 	lv_obj_set_enabled(item->clip->edit,true);
@@ -145,15 +143,14 @@ static void clipboard_add_item(struct clipboard_app*clip,char*key){
 	i->clip=clip;
 
 	i->btn=lv_btn_create(i->clip->list);
-	lv_obj_set_size(i->btn,lv_pct(100),gui_dpi/3);
+	lv_obj_set_size(i->btn,lv_pct(100),LV_SIZE_CONTENT);
 	lv_style_set_btn_item(i->btn);
-	lv_obj_clear_flag(i->btn,LV_OBJ_FLAG_CLICKABLE);
+	lv_obj_add_event_cb(i->btn,clipboard_item_click,LV_EVENT_CLICKED,i);
+	lv_group_add_obj(gui_grp,i->btn);
 
-	i->chk=lv_checkbox_create(i->btn);
-	lv_obj_set_width(i->btn,lv_pct(100));
-	lv_checkbox_set_text(i->chk,str);
-	lv_obj_add_event_cb(i->chk,clipboard_item_click,LV_EVENT_CLICKED,i);
-	lv_group_add_obj(gui_grp,i->chk);
+	i->lbl=lv_label_create(i->btn);
+	lv_obj_set_width(i->lbl,lv_pct(100));
+	lv_label_set_text(i->lbl,str);
 
 	i->item=list_new_notnull(i);
 	list_obj_add(&clip->items,i->item);
@@ -278,33 +275,8 @@ static int clipboard_do_init(struct gui_activity*act){
 	return 0;
 }
 
-static lv_obj_t*add_button(struct clipboard_app*clip,const char*title,uint8_t col,uint8_t row){
-	lv_obj_t*btn=lv_btn_create(clip->btns);
-	lv_obj_add_event_cb(btn,clipboard_click,LV_EVENT_CLICKED,clip);
-	lv_obj_t*lbl=lv_label_create(btn);
-	lv_label_set_text(lbl,_(title));
-	lv_obj_center(lbl);
-	lv_obj_set_grid_cell(
-		btn,
-		LV_GRID_ALIGN_STRETCH,col,1,
-		LV_GRID_ALIGN_STRETCH,row,1
-	);
-	return btn;
-}
-
 static int clipboard_draw(struct gui_activity*act){
-	static lv_coord_t grid_col[]={
-		LV_GRID_FR(1),
-		LV_GRID_FR(1),
-		LV_GRID_FR(1),
-		LV_GRID_TEMPLATE_LAST
-	},grid_row[]={
-		LV_GRID_FR(1),
-		LV_GRID_FR(1),
-		LV_GRID_TEMPLATE_LAST
-	};
 	struct clipboard_app*clip=act->data;
-	lv_obj_set_style_pad_all(act->page,gui_font_size/2,0);
 	lv_obj_set_flex_flow(act->page,LV_FLEX_FLOW_COLUMN);
 
 	// function title
@@ -320,22 +292,22 @@ static int clipboard_draw(struct gui_activity*act){
 	lv_obj_set_flex_flow(clip->list,LV_FLEX_FLOW_COLUMN);
 	lv_obj_set_flex_grow(clip->list,1);
 
-	clip->btns=lv_obj_create(act->page);
-	lv_obj_set_style_radius(clip->btns,0,0);
-	lv_obj_set_style_pad_all(clip->btns,gui_dpi/50,0);
-	lv_obj_set_scroll_dir(clip->btns,LV_DIR_NONE);
-	lv_obj_set_style_border_width(clip->btns,0,0);
-	lv_obj_set_style_bg_opa(clip->btns,LV_OPA_0,0);
-	lv_obj_clear_flag(clip->btns,LV_OBJ_FLAG_SCROLLABLE);
-	lv_obj_set_size(clip->btns,lv_pct(100),gui_font_size*5);
-	lv_obj_set_grid_dsc_array(clip->btns,grid_col,grid_row);
-
-	clip->add    = add_button(clip,"Add",    0,0);
-	clip->reload = add_button(clip,"Reload", 1,0);
-	clip->clear  = add_button(clip,"Clear",  2,0);
-	clip->use    = add_button(clip,"Use",    0,1);
-	clip->delete = add_button(clip,"Delete", 1,1);
-	clip->edit   = add_button(clip,"Edit",   2,1);
+	clip->btns=lv_draw_buttons_auto_arg(
+		act->page,
+		#define BTN(tgt,title,x,y)&(struct button_dsc){\
+			&tgt,true,_(title),\
+			clipboard_click,\
+			clip,x,1,y,1,NULL\
+		}
+		BTN(clip->add,    "Add",    0,0),
+		BTN(clip->reload, "Reload", 1,0),
+		BTN(clip->clear,  "Clear",  2,0),
+		BTN(clip->use,    "Use",    0,1),
+		BTN(clip->delete, "Delete", 1,1),
+		BTN(clip->edit,   "Edit",   2,1),
+		#undef BTN
+		NULL
+	);
 
 	clipboard_reload(clip);
 	return 0;

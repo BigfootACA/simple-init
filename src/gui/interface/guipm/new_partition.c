@@ -175,10 +175,6 @@ static void ok_cb(lv_event_t*e){
 	if(fs)free(fs);
 }
 
-static void cancel_cb(lv_event_t*e __attribute__((unused))){
-	guiact_do_back();
-}
-
 static int guipm_part_init(struct gui_activity*act){
 	struct part_new_info*pi;
 	struct part_partition_info*info=act->args;
@@ -198,22 +194,7 @@ static int guipm_part_exit(struct gui_activity*act){
 
 static int guipm_draw_new_partition(struct gui_activity*act){
 	struct part_new_info*pi=act->data;
-
-	pi->box=lv_obj_create(act->page);
-	lv_obj_set_style_max_width(pi->box,lv_pct(80),0);
-	lv_obj_set_style_max_height(pi->box,lv_pct(80),0);
-	lv_obj_set_style_min_width(pi->box,gui_dpi*2,0);
-	lv_obj_set_style_min_height(pi->box,gui_dpi,0);
-	lv_obj_set_height(pi->box,LV_SIZE_CONTENT);
-	lv_obj_set_flex_flow(pi->box,LV_FLEX_FLOW_COLUMN);
-	lv_obj_center(pi->box);
-
-	// Title
-	lv_obj_t*title=lv_label_create(pi->box);
-	lv_obj_set_width(title,lv_pct(100));
-	lv_label_set_text(title,_("New Partition"));
-	lv_label_set_long_mode(title,LV_LABEL_LONG_WRAP);
-	lv_obj_set_style_text_align(title,LV_TEXT_ALIGN_CENTER,0);
+	pi->box=lv_draw_dialog_box(act->page,NULL,"New Partition");
 
 	// Partition Bar
 	pi->bar=lv_bar_create(pi->box);
@@ -246,33 +227,7 @@ static int guipm_draw_new_partition(struct gui_activity*act){
 	lv_obj_add_event_cb(pi->part_num,lv_default_dropdown_cb,LV_EVENT_ALL,NULL);
 	lv_obj_set_width(pi->part_num,lv_pct(100));
 
-	lv_obj_t*btns=lv_obj_create(pi->box);
-	lv_obj_set_style_radius(btns,0,0);
-	lv_obj_set_scroll_dir(btns,LV_DIR_NONE);
-	lv_obj_set_style_border_width(btns,0,0);
-	lv_obj_set_style_bg_opa(btns,LV_OPA_0,0);
-	lv_obj_set_style_pad_all(btns,gui_dpi/50,0);
-	lv_obj_set_flex_flow(btns,LV_FLEX_FLOW_ROW);
-	lv_obj_clear_flag(btns,LV_OBJ_FLAG_SCROLLABLE|LV_OBJ_FLAG_CLICKABLE);
-	lv_obj_set_style_pad_row(btns,gui_font_size/2,0);
-	lv_obj_set_style_pad_column(btns,gui_font_size/2,0);
-	lv_obj_set_size(btns,lv_pct(100),LV_SIZE_CONTENT);
-
-	// OK Button
-	pi->ok=lv_btn_create(btns);
-	lv_obj_add_event_cb(pi->ok,ok_cb,LV_EVENT_CLICKED,pi);
-	lv_obj_t*lbl_ok=lv_label_create(pi->ok);
-	lv_label_set_text(lbl_ok,_("OK"));
-	lv_obj_center(lbl_ok);
-	lv_obj_set_flex_grow(pi->ok,1);
-
-	// Cancel Button
-	pi->cancel=lv_btn_create(btns);
-	lv_obj_add_event_cb(pi->cancel,cancel_cb,LV_EVENT_CLICKED,pi);
-	lv_obj_t*lbl_cancel=lv_label_create(pi->cancel);
-	lv_label_set_text(lbl_cancel,_("Cancel"));
-	lv_obj_center(lbl_cancel);
-	lv_obj_set_flex_grow(pi->cancel,1);
+	lv_draw_btns_ok_cancel(pi->box,&pi->ok,&pi->cancel,ok_cb,pi);
 
 	reload_info(pi);
 	return 0;

@@ -81,10 +81,6 @@ static void ok_cb(lv_event_t*e){
 	guiact_do_back();
 }
 
-static void cancel_cb(lv_event_t*e __attribute__((unused))){
-	guiact_do_back();
-}
-
 static int guipm_part_init(struct gui_activity*act){
 	struct part_type_info*pi;
 	struct part_partition_info*info=act->args;
@@ -103,56 +99,11 @@ static int guipm_part_exit(struct gui_activity*act){
 
 static int guipm_draw_change_partition_type(struct gui_activity*act){
 	struct part_type_info*pi=act->data;
-	static lv_coord_t grid_row[]={
-		LV_GRID_CONTENT,
-		LV_GRID_FR(1),
-		LV_GRID_FR(1),
-		LV_GRID_TEMPLATE_LAST,
-	},grid_col[]={
-		LV_GRID_FR(1),
-		LV_GRID_FR(1),
-		LV_GRID_TEMPLATE_LAST,
-	};
-
-	pi->box=lv_obj_create(act->page);
-	lv_obj_set_style_pad_all(pi->box,gui_font_size,0);
-	lv_obj_set_style_pad_row(pi->box,gui_font_size,0);
-	lv_obj_set_style_max_width(pi->box,lv_pct(80),0);
-	lv_obj_set_style_max_height(pi->box,lv_pct(80),0);
-	lv_obj_set_style_min_width(pi->box,gui_dpi*2,0);
-	lv_obj_set_style_min_height(pi->box,gui_font_size*2,0);
-	lv_obj_set_grid_dsc_array(pi->box,grid_col,grid_row);
-	lv_obj_set_height(pi->box,LV_SIZE_CONTENT);
-	lv_obj_center(pi->box);
-
-	// Title
-	lv_obj_t*title=lv_label_create(pi->box);
-	lv_label_set_text(title,_("Change Partition Type"));
-	lv_label_set_long_mode(title,LV_LABEL_LONG_WRAP);
-	lv_obj_set_style_text_align(title,LV_TEXT_ALIGN_CENTER,0);
-	lv_obj_set_grid_cell(title,LV_GRID_ALIGN_CENTER,0,2,LV_GRID_ALIGN_CENTER,0,1);
-
-	// Partition Type
+	pi->box=lv_draw_dialog_box(act->page,NULL,"Change Partition Type");
 	pi->part_type=lv_dropdown_create(pi->box);
+	lv_obj_set_width(pi->part_type,lv_pct(100));
 	lv_obj_add_event_cb(pi->part_type,lv_default_dropdown_cb,LV_EVENT_ALL,NULL);
-	lv_obj_set_grid_cell(pi->part_type,LV_GRID_ALIGN_STRETCH,0,2,LV_GRID_ALIGN_CENTER,1,1);
-
-	// OK Button
-	pi->ok=lv_btn_create(pi->box);
-	lv_obj_add_event_cb(pi->ok,ok_cb,LV_EVENT_CLICKED,pi);
-	lv_obj_t*lbl_ok=lv_label_create(pi->ok);
-	lv_label_set_text(lbl_ok,_("OK"));
-	lv_obj_center(lbl_ok);
-	lv_obj_set_grid_cell(pi->ok,LV_GRID_ALIGN_STRETCH,0,1,LV_GRID_ALIGN_CENTER,2,1);
-
-	// Cancel Button
-	pi->cancel=lv_btn_create(pi->box);
-	lv_obj_add_event_cb(pi->cancel,cancel_cb,LV_EVENT_CLICKED,NULL);
-	lv_obj_t*lbl_cancel=lv_label_create(pi->cancel);
-	lv_label_set_text(lbl_cancel,_("Cancel"));
-	lv_obj_center(lbl_cancel);
-	lv_obj_set_grid_cell(pi->cancel,LV_GRID_ALIGN_STRETCH,1,1,LV_GRID_ALIGN_CENTER,2,1);
-
+	lv_draw_btns_ok_cancel(pi->box,&pi->ok,&pi->cancel,ok_cb,pi);
 	reload_info(pi);
 	return 0;
 }

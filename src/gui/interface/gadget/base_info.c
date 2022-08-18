@@ -143,17 +143,7 @@ static int base_info_clean(struct gui_activity*act __attribute__((unused))){
 }
 
 static int base_info_draw(struct gui_activity*act){
-	static lv_coord_t grid_view_col[]={
-		LV_GRID_FR(1),
-		LV_GRID_FR(1),
-		LV_GRID_FR(1),
-		LV_GRID_TEMPLATE_LAST
-	},grid_view_row[]={
-		LV_GRID_CONTENT,
-		LV_GRID_FR(1),
-		LV_GRID_CONTENT,
-		LV_GRID_TEMPLATE_LAST
-	},grid_fields_col[]={
+	static lv_coord_t grid_fields_col[]={
 		LV_GRID_FR(1),
 		LV_GRID_FR(1),
 		LV_GRID_TEMPLATE_LAST
@@ -174,13 +164,12 @@ static int base_info_draw(struct gui_activity*act){
 		LV_GRID_CONTENT,
 		LV_GRID_TEMPLATE_LAST
 	};
-	lv_obj_set_grid_dsc_array(act->page,grid_view_col,grid_view_row);
+	lv_obj_set_flex_flow(act->page,LV_FLEX_FLOW_COLUMN);
 
 	// app title
 	lv_obj_t*title=lv_label_create(act->page);
-	lv_obj_set_style_pad_all(title,gui_font_size/2,0);
+	lv_obj_set_width(title,lv_pct(100));
 	lv_obj_set_style_text_align(title,LV_TEXT_ALIGN_CENTER,0);
-	lv_obj_set_grid_cell(title,LV_GRID_ALIGN_CENTER,0,3,LV_GRID_ALIGN_CENTER,0,1);
 	lv_label_set_text(title,_("USB Gadget Base Info Edit"));
 	lv_label_set_long_mode(title,LV_LABEL_LONG_WRAP);
 
@@ -190,7 +179,7 @@ static int base_info_draw(struct gui_activity*act){
 	lv_obj_set_style_bg_opa(view,LV_OPA_0,0);
 	lv_obj_set_size(view,lv_pct(100),LV_SIZE_CONTENT);
 	lv_obj_set_grid_dsc_array(view,grid_fields_col,grid_fields_row);
-	lv_obj_set_grid_cell(view,LV_GRID_ALIGN_STRETCH,0,3,LV_GRID_ALIGN_STRETCH,1,1);
+	lv_obj_set_flex_grow(view,1);
 
 	// gadget name
 	lv_obj_t*lbl_name=lv_label_create(view);
@@ -274,28 +263,17 @@ static int base_info_draw(struct gui_activity*act){
 	lv_obj_set_grid_cell(sel_udc,LV_GRID_ALIGN_STRETCH,0,2,LV_GRID_ALIGN_STRETCH,13,1);
 
 	// ok button
-	btn_ok=lv_btn_create(act->page);
-	lv_obj_add_event_cb(btn_ok,btn_cb,LV_EVENT_CLICKED,NULL);
-	lv_obj_set_grid_cell(btn_ok,LV_GRID_ALIGN_STRETCH,0,1,LV_GRID_ALIGN_STRETCH,2,1);
-	lv_obj_t*lbl_ok=lv_label_create(btn_ok);
-	lv_label_set_text(lbl_ok,_("OK"));
-	lv_obj_center(lbl_ok);
-
-	// reset button
-	btn_reset=lv_btn_create(act->page);
-	lv_obj_add_event_cb(btn_reset,btn_cb,LV_EVENT_CLICKED,NULL);
-	lv_obj_set_grid_cell(btn_reset,LV_GRID_ALIGN_STRETCH,1,1,LV_GRID_ALIGN_STRETCH,2,1);
-	lv_obj_t*lbl_reset=lv_label_create(btn_reset);
-	lv_label_set_text(lbl_reset,_("Reset"));
-	lv_obj_center(lbl_reset);
-
-	// cancel button
-	btn_cancel=lv_btn_create(act->page);
-	lv_obj_add_event_cb(btn_cancel,btn_cb,LV_EVENT_CLICKED,NULL);
-	lv_obj_set_grid_cell(btn_cancel,LV_GRID_ALIGN_STRETCH,2,1,LV_GRID_ALIGN_STRETCH,2,1);
-	lv_obj_t*lbl_cancel=lv_label_create(btn_cancel);
-	lv_label_set_text(lbl_cancel,_("Cancel"));
-	lv_obj_center(lbl_cancel);
+	lv_draw_buttons_auto_arg(
+		act->page,
+		#define BTN(tgt,title,x)&(struct button_dsc){\
+			&tgt,true,_(title),btn_cb,NULL,x,1,0,1,NULL\
+		}
+		BTN(btn_ok,     "OK",     0),
+		BTN(btn_reset,  "Reset",  1),
+		BTN(btn_cancel, "Cancel", 2),
+		NULL
+		#undef BTN
+	);
 
 	load_base_info();
 

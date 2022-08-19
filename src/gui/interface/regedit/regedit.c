@@ -610,36 +610,9 @@ static void btns_cb(lv_event_t*e){
 }
 
 static int regedit_draw(struct gui_activity*act){
-	static lv_coord_t grid_col[]={
-		LV_GRID_FR(1),
-		LV_GRID_FR(1),
-		LV_GRID_FR(1),
-		LV_GRID_FR(1),
-		LV_GRID_FR(1),
-		LV_GRID_FR(1),
-		LV_GRID_FR(1),
-		LV_GRID_TEMPLATE_LAST
-	},grid_row[]={
-		LV_GRID_FR(1),
-		LV_GRID_TEMPLATE_LAST
-	};
 	struct regedit*reg=(struct regedit*)act->data;
 	if(!reg)return 0;
 	reg->scr=act->page;
-	struct btn{
-		lv_obj_t**tgt;
-		bool enabled;
-		const char*title;
-	}buttons[]={
-		{&reg->btn_add,    false, LV_SYMBOL_PLUS},
-		{&reg->btn_reload, false, LV_SYMBOL_REFRESH},
-		{&reg->btn_delete, false, LV_SYMBOL_TRASH},
-		{&reg->btn_edit,   false, LV_SYMBOL_EDIT},
-		{&reg->btn_home,   false, LV_SYMBOL_HOME},
-		{&reg->btn_save,   false, LV_SYMBOL_SAVE},
-		{&reg->btn_load,   true,  LV_SYMBOL_UPLOAD},
-		{NULL,false,NULL}
-	};
 
 	lv_obj_set_flex_flow(reg->scr,LV_FLEX_FLOW_COLUMN);
 
@@ -653,34 +626,29 @@ static int regedit_draw(struct gui_activity*act){
 	reg->lbl_path=lv_label_create(reg->scr);
 	lv_obj_set_width(reg->lbl_path,lv_pct(100));
 	lv_obj_set_style_text_align(reg->lbl_path,LV_TEXT_ALIGN_CENTER,0);
-	lv_label_set_long_mode(reg->lbl_path,confd_get_boolean("gui.text_scroll",true)?
+	lv_label_set_long_mode(
+		reg->lbl_path,
+		confd_get_boolean("gui.text_scroll",true)?
 		LV_LABEL_LONG_SCROLL_CIRCULAR:
 		LV_LABEL_LONG_DOT
 	);
 	lv_label_set_text(reg->lbl_path,get_string_path(reg,NULL));
 
-	lv_obj_t*btns=lv_obj_create(act->page);
-	lv_obj_set_style_radius(btns,0,0);
-	lv_obj_set_scroll_dir(btns,LV_DIR_NONE);
-	lv_obj_set_style_border_width(btns,0,0);
-	lv_obj_set_style_bg_opa(btns,LV_OPA_0,0);
-	lv_obj_clear_flag(btns,LV_OBJ_FLAG_SCROLLABLE);
-	lv_obj_set_grid_dsc_array(btns,grid_col,grid_row);
-	lv_obj_set_size(btns,lv_pct(100),LV_SIZE_CONTENT);
-
-	for(size_t i=0;buttons[i].tgt;i++){
-		*buttons[i].tgt=lv_btn_create(btns);
-		lv_obj_set_enabled(*buttons[i].tgt,buttons[i].enabled);
-		lv_obj_add_event_cb(*buttons[i].tgt,btns_cb,LV_EVENT_CLICKED,reg);
-		lv_obj_t*lbl=lv_label_create(*buttons[i].tgt);
-		lv_label_set_text(lbl,buttons[i].title);
-		lv_obj_set_grid_cell(
-			*buttons[i].tgt,
-			LV_GRID_ALIGN_STRETCH,i,1,
-			LV_GRID_ALIGN_STRETCH,0,1
-		);
-		lv_obj_center(lbl);
-	}
+	lv_draw_buttons_auto_arg(
+		act->page,
+		#define BTN(tgt,en,title,x)&(struct button_dsc){\
+			&tgt,en,_(title),btns_cb,reg,x,1,0,1,NULL\
+		}
+		BTN(reg->btn_add,    false, LV_SYMBOL_PLUS,    0),
+		BTN(reg->btn_reload, false, LV_SYMBOL_REFRESH, 1),
+		BTN(reg->btn_delete, false, LV_SYMBOL_TRASH,   2),
+		BTN(reg->btn_edit,   false, LV_SYMBOL_EDIT,    3),
+		BTN(reg->btn_home,   false, LV_SYMBOL_HOME,    4),
+		BTN(reg->btn_save,   false, LV_SYMBOL_SAVE,    5),
+		BTN(reg->btn_load,   true,  LV_SYMBOL_UPLOAD,  6),
+		#undef BTN
+		NULL
+	);
 
 	if(act->args)load_file(reg,act->args);
 	msgbox_alert(

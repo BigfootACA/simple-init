@@ -32,9 +32,8 @@ enum digital_base{
 struct edit_value{
 	struct gui_activity*act;
 	lv_obj_t*mask,*box,*label;
-	lv_obj_t*key,*lbl_key;
-	lv_obj_t*base,*lbl_base;
-	lv_obj_t*val,*lbl_val;
+	lv_obj_t*key,*base,*base_box;
+	lv_obj_t*val,*clr_val;
 	lv_obj_t*ok,*cancel;
 	enum digital_base cur_base;
 	bool loaded,is_number;
@@ -272,6 +271,8 @@ static int edit_value_get_focus(struct gui_activity*d){
 	struct edit_value*box=(struct edit_value*)d->data;
 	if(!box)return 0;
 	lv_group_add_obj(gui_grp,box->key);
+	lv_group_add_obj(gui_grp,box->base);
+	lv_group_add_obj(gui_grp,box->clr_val);
 	lv_group_add_obj(gui_grp,box->val);
 	lv_group_add_obj(gui_grp,box->ok);
 	lv_group_add_obj(gui_grp,box->cancel);
@@ -282,19 +283,20 @@ static int edit_value_lost_focus(struct gui_activity*d){
 	struct edit_value*box=(struct edit_value*)d->data;
 	if(!box)return 0;
 	lv_group_remove_obj(box->key);
+	lv_group_remove_obj(box->base);
+	lv_group_remove_obj(box->clr_val);
 	lv_group_remove_obj(box->val);
 	lv_group_remove_obj(box->ok);
 	lv_group_remove_obj(box->cancel);
 	return 0;
 }
 
-static void btn_cb(lv_event_t*e){
+static void ok_cb(lv_event_t*e){
 	struct edit_value*box=e->user_data;
 	if(!box||guiact_get_last()->data!=box)return;
 	sysbar_focus_input(NULL);
 	sysbar_keyboard_close();
-	if(e->target==box->cancel)guiact_do_back();
-	else if(e->target==box->ok)save(box);
+	save(box);
 }
 
 static void dropdown_cb(lv_event_t*e){
@@ -375,82 +377,19 @@ static int edit_value_load_data(struct gui_activity*act){
 			load_multi_string(box);
 		break;
 	}
-	if(!box->is_number){
-		lv_obj_set_hidden(box->base,true);
-		lv_obj_set_hidden(box->lbl_base,true);
-	}
+	if(!box->is_number)lv_obj_set_hidden(box->base_box,true);
 	box->loaded=true;
 	return 0;
 }
 
 static int edit_value_draw(struct gui_activity*act){
-	static lv_coord_t grid_col[]={
-		LV_GRID_FR(1),
-		LV_GRID_FR(1),
-		LV_GRID_TEMPLATE_LAST
-	},grid_row[]={
-		LV_GRID_FR(1),
-		LV_GRID_CONTENT,
-		LV_GRID_CONTENT,
-		LV_GRID_CONTENT,
-		LV_GRID_CONTENT,
-		LV_GRID_CONTENT,
-		LV_DPI_DEF,
-		LV_GRID_FR(1),
-		LV_GRID_TEMPLATE_LAST
-	};
 	struct edit_value*box=act->data;
 	if(!box)return -1;
-
-	box->box=lv_obj_create(act->page);
-	lv_obj_set_style_max_width(box->box,lv_pct(85),0);
-	lv_obj_set_style_max_height(box->box,lv_pct(85),0);
-	lv_obj_set_style_min_width(box->box,gui_dpi*2,0);
-	lv_obj_set_height(box->box,LV_SIZE_CONTENT);
-	lv_obj_set_grid_dsc_array(box->box,grid_col,grid_row);
-	lv_obj_set_style_pad_row(box->box,gui_font_size/2,0);
-	lv_obj_center(box->box);
-
-	box->label=lv_label_create(box->box);
-	lv_obj_set_style_text_align(box->label,LV_TEXT_ALIGN_CENTER,0);
-	lv_label_set_long_mode(box->label,LV_LABEL_LONG_WRAP);
-	lv_label_set_text(box->label,_("Edit registry value"));
-	lv_obj_set_grid_cell(
-		box->label,
-		LV_GRID_ALIGN_STRETCH,0,2,
-		LV_GRID_ALIGN_CENTER,0,1
-	);
-
-	box->lbl_key=lv_label_create(box->box);
-	lv_obj_set_small_text_font(box->lbl_key,LV_PART_MAIN);
-	lv_label_set_text(box->lbl_key,_("Value name:"));
-	lv_obj_set_grid_cell(
-		box->lbl_key,
-		LV_GRID_ALIGN_STRETCH,0,2,
-		LV_GRID_ALIGN_CENTER,1,1
-	);
-
-	box->key=lv_textarea_create(box->box);
-	lv_textarea_set_one_line(box->key,true);
-	lv_obj_add_event_cb(box->key,lv_input_cb,LV_EVENT_CLICKED,NULL);
-	lv_textarea_set_text(box->key,"");
-	lv_obj_set_grid_cell(
-		box->key,
-		LV_GRID_ALIGN_STRETCH,0,2,
-		LV_GRID_ALIGN_STRETCH,2,1
-	);
-
-	box->lbl_base=lv_label_create(box->box);
-	lv_obj_set_small_text_font(box->lbl_base,LV_PART_MAIN);
-	lv_label_set_text(box->lbl_base,_("Digital base:"));
-	lv_obj_set_grid_cell(
-		box->lbl_base,
-		LV_GRID_ALIGN_STRETCH,0,2,
-		LV_GRID_ALIGN_CENTER,3,1
-	);
-
-	box->base=lv_dropdown_create(box->box);
-	lv_obj_add_event_cb(box->base,lv_default_dropdown_cb,LV_EVENT_ALL,NULL);
+	box->box=lv_draw_dialog_box(act->page,NULL,"Edit registry value");
+	lv_draw_input(box->box,"Value name:",NULL,NULL,&box->key,NULL);
+	box->base_box=lv_draw_dropdown(box->box,"Digital base:",&box->base);
+	lv_draw_input(box->box,"Value:",NULL,&box->clr_val,&box->val,NULL);
+	lv_draw_btns_ok_cancel(box->box,&box->ok,&box->cancel,ok_cb,box);
 	lv_obj_add_event_cb(box->base,dropdown_cb,LV_EVENT_VALUE_CHANGED,box);
 	lv_dropdown_clear_options(box->base);
 	lv_dropdown_add_option(box->base,_("Octal (8)"),BASE_OCT);
@@ -458,55 +397,6 @@ static int edit_value_draw(struct gui_activity*act){
 	lv_dropdown_add_option(box->base,_("Hexadecimal (16)"),BASE_HEX);
 	lv_dropdown_set_selected(box->base,BASE_DEC);
 	box->cur_base=BASE_DEC;
-	lv_obj_set_grid_cell(
-		box->base,
-		LV_GRID_ALIGN_STRETCH,0,2,
-		LV_GRID_ALIGN_STRETCH,4,1
-	);
-
-	box->lbl_val=lv_label_create(box->box);
-	lv_obj_set_small_text_font(box->lbl_val,LV_PART_MAIN);
-	lv_label_set_text(box->lbl_val,_("Value:"));
-	lv_obj_set_grid_cell(
-		box->lbl_val,
-		LV_GRID_ALIGN_START,0,2,
-		LV_GRID_ALIGN_CENTER,5,1
-	);
-
-	box->val=lv_textarea_create(box->box);
-	lv_textarea_set_text(box->val,"");
-	lv_obj_add_event_cb(box->val,lv_input_cb,LV_EVENT_CLICKED,NULL);
-	lv_obj_set_user_data(box->val,box);
-	lv_obj_set_grid_cell(
-		box->val,
-		LV_GRID_ALIGN_STRETCH,0,2,
-		LV_GRID_ALIGN_STRETCH,6,1
-	);
-
-	box->ok=lv_btn_create(box->box);
-	lv_obj_t*lbl_ok=lv_label_create(box->ok);
-	lv_label_set_text(lbl_ok,LV_SYMBOL_OK);
-	lv_obj_center(lbl_ok);
-	lv_obj_add_event_cb(box->ok,btn_cb,LV_EVENT_CLICKED,box);
-	lv_obj_set_grid_cell(
-		box->ok,
-		LV_GRID_ALIGN_STRETCH,0,1,
-		LV_GRID_ALIGN_CENTER,7,1
-	);
-
-	box->cancel=lv_btn_create(box->box);
-	lv_obj_t*lbl_cancel=lv_label_create(box->cancel);
-	lv_label_set_text(lbl_cancel,LV_SYMBOL_CLOSE);
-	lv_obj_center(lbl_cancel);
-	lv_obj_set_grid_cell(
-		box->cancel,
-		LV_GRID_ALIGN_STRETCH,1,1,
-		LV_GRID_ALIGN_CENTER,7,1
-	);
-
-	lv_obj_set_user_data(box->cancel,box);
-	lv_obj_add_event_cb(box->cancel,btn_cb,LV_EVENT_CLICKED,box);
-
 	return 0;
 }
 

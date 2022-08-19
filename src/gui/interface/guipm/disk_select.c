@@ -379,47 +379,20 @@ static int guipm_draw_disk_sel(struct gui_activity*act){
 	lv_obj_set_flex_grow(di->lst,1);
 
 	// show all checkbox
-	di->show_all=lv_checkbox_create(act->page);
-	lv_obj_set_style_pad_hor(di->show_all,gui_font_size/2,0);
-	lv_obj_add_event_cb(di->show_all,show_all_click,LV_EVENT_CLICKED,di);
-	lv_checkbox_set_text(di->show_all,_("Show all blocks"));
+	di->show_all=lv_draw_checkbox(act->page,"Show all blocks",false,show_all_click,di);
 
-	lv_obj_t*btns=lv_obj_create(act->page);
-	lv_obj_set_style_radius(btns,0,0);
-	lv_obj_set_style_pad_all(btns,gui_dpi/50,0);
-	lv_obj_set_scroll_dir(btns,LV_DIR_NONE);
-	lv_obj_set_style_border_width(btns,0,0);
-	lv_obj_set_style_bg_opa(btns,LV_OPA_0,0);
-	lv_obj_clear_flag(btns,LV_OBJ_FLAG_SCROLLABLE);
-	lv_obj_set_flex_flow(btns,LV_FLEX_FLOW_ROW);
-	lv_obj_set_size(btns,lv_pct(100),LV_SIZE_CONTENT);
-
-	// ok button
-	di->btn_ok=lv_btn_create(btns);
-	lv_obj_set_enabled(di->btn_ok,false);
-	lv_obj_add_event_cb(di->btn_ok,ok_click,LV_EVENT_CLICKED,di);
-	lv_obj_t*lbl_ok=lv_label_create(di->btn_ok);
-	lv_label_set_text(lbl_ok,_("OK"));
-	lv_obj_center(lbl_ok);
-	lv_obj_set_flex_grow(di->btn_ok,1);
-
-	// refresh button
-	di->btn_refresh=lv_btn_create(btns);
-	lv_obj_set_enabled(di->btn_refresh,true);
-	lv_obj_add_event_cb(di->btn_refresh,refresh_click,LV_EVENT_CLICKED,di);
-	lv_obj_t*lbl_refresh=lv_label_create(di->btn_refresh);
-	lv_label_set_text(lbl_refresh,_("Refresh"));
-	lv_obj_center(lbl_refresh);
-	lv_obj_set_flex_grow(di->btn_refresh,1);
-
-	// cancel button
-	di->btn_cancel=lv_btn_create(btns);
-	lv_obj_set_enabled(di->btn_cancel,true);
-	lv_obj_add_event_cb(di->btn_cancel,cancel_click,LV_EVENT_CLICKED,di);
-	lv_obj_t*lbl_cancel=lv_label_create(di->btn_cancel);
-	lv_label_set_text(lbl_cancel,_("Cancel"));
-	lv_obj_center(lbl_cancel);
-	lv_obj_set_flex_grow(di->btn_cancel,1);
+	lv_draw_buttons_auto_arg(
+		act->page,
+		#define BTN(tgt,en,title,x)&(struct button_dsc){\
+			&di->btn_##tgt,en,_(title),\
+			tgt##_click,di,x,1,0,1,NULL\
+		}
+		BTN(ok,      false, "OK",      0),
+		BTN(refresh, true,  "Refresh", 1),
+		BTN(cancel,  true,  "Cancel",  2),
+		#undef BTN
+		NULL
+	);
 	return 0;
 }
 

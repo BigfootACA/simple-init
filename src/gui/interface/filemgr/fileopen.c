@@ -157,81 +157,16 @@ static void show_all_click(lv_event_t*e){
 }
 
 static int fileopen_draw(struct gui_activity*act){
-	static lv_coord_t grid_col[]={
-		LV_GRID_FR(1),
-		LV_GRID_FR(1),
-		LV_GRID_TEMPLATE_LAST
-	},grid_row[]={
-		0,LV_GRID_FR(1),
-		LV_GRID_CONTENT,0,
-		LV_GRID_TEMPLATE_LAST
-	};
 	struct fileopen*fo=act->args;
-	if(grid_row[0]==0)grid_row[0]=gui_font_size;
-	if(grid_row[3]==0)grid_row[3]=gui_font_size*2;
 	fo->act=act;
-
-	fo->box=lv_obj_create(act->page);
-	lv_obj_set_style_pad_all(fo->box,gui_font_size,0);
-	lv_obj_set_style_pad_row(fo->box,gui_font_size,0);
-	lv_obj_set_style_max_width(fo->box,lv_pct(80),0);
-	lv_obj_set_style_max_height(fo->box,lv_pct(80),0);
-	lv_obj_set_style_min_width(fo->box,gui_dpi*2,0);
-	lv_obj_set_style_min_height(fo->box,gui_dpi*2,0);
-	lv_obj_set_grid_dsc_array(fo->box,grid_col,grid_row);
-	lv_obj_set_height(fo->box,LV_SIZE_CONTENT);
-	lv_obj_center(fo->box);
-
-	fo->label=lv_label_create(fo->box);
-	lv_label_set_long_mode(fo->label,LV_LABEL_LONG_WRAP);
-	lv_obj_set_style_text_align(fo->label,LV_TEXT_ALIGN_CENTER,0);
-	lv_label_set_text(fo->label,_("Open file with"));
-	lv_obj_set_grid_cell(
-		fo->label,
-		LV_GRID_ALIGN_STRETCH,0,2,
-		LV_GRID_ALIGN_STRETCH,0,1
-	);
-
+	fo->box=lv_draw_dialog_box(act->page,&fo->label,"Open file with");
 	fo->view=lv_obj_create(fo->box);
+	fo->show_all=lv_draw_checkbox(fo->box,"Show all apps",false,show_all_click,fo);
+	lv_draw_btns_ok_cancel(fo->box,&fo->ok,&fo->cancel,fileopen_click,fo);
 	lv_obj_set_flex_flow(fo->view,LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_flex_grow(fo->view,1);
 	lv_obj_set_width(fo->view,lv_pct(100));
-	lv_obj_set_grid_cell(
-		fo->view,
-		LV_GRID_ALIGN_STRETCH,0,2,
-		LV_GRID_ALIGN_STRETCH,1,1
-	);
-
-	fo->show_all=lv_checkbox_create(fo->box);
-	lv_checkbox_set_text(fo->show_all,_("Show all apps"));
-	lv_obj_add_event_cb(fo->show_all,show_all_click,LV_EVENT_CLICKED,fo);
-	lv_obj_set_grid_cell(
-		fo->show_all,
-		LV_GRID_ALIGN_START,0,2,
-		LV_GRID_ALIGN_STRETCH,2,1
-	);
-
-	fo->ok=lv_btn_create(fo->box);
-	lv_obj_set_enabled(fo->ok,false);
-	lv_obj_t*lbl_ok=lv_label_create(fo->ok);
-	lv_label_set_text(lbl_ok,LV_SYMBOL_OK);
-	lv_obj_center(lbl_ok);
-	lv_obj_add_event_cb(fo->ok,fileopen_click,LV_EVENT_CLICKED,fo);
-	lv_obj_set_grid_cell(
-		fo->ok,
-		LV_GRID_ALIGN_STRETCH,0,1,
-		LV_GRID_ALIGN_STRETCH,3,1
-	);
-
-	fo->cancel=lv_btn_create(fo->box);
-	lv_obj_t*lbl_cancel=lv_label_create(fo->cancel);
-	lv_label_set_text(lbl_cancel,LV_SYMBOL_CLOSE);
-	lv_obj_center(lbl_cancel);
-	lv_obj_add_event_cb(fo->cancel,fileopen_click,LV_EVENT_CLICKED,fo);
-	lv_obj_set_grid_cell(
-		fo->cancel,
-		LV_GRID_ALIGN_STRETCH,1,1,
-		LV_GRID_ALIGN_STRETCH,3,1
-	);
+	lv_obj_set_height(fo->box,lv_pct(80));
 	return 0;
 }
 

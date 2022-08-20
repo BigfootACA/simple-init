@@ -21,47 +21,42 @@
 #include"gui/inputbox.h"
 #include"gui/activity.h"
 #define TAG "filemgr"
-
-static struct fm_button{
-	char*name;
-	char*symbol;
-	bool enabled;
-	lv_obj_t*btn;
-	lv_obj_t*lbl;
-}fm_btns[]={
-	{ .name="prev",    .symbol=LV_SYMBOL_LEFT,      .enabled=true,  .btn=NULL, .lbl=NULL },
-	{ .name="refresh", .symbol=LV_SYMBOL_REFRESH,   .enabled=true,  .btn=NULL, .lbl=NULL },
-	{ .name="edit",    .symbol=LV_SYMBOL_EDIT,      .enabled=false, .btn=NULL, .lbl=NULL },
-	{ .name="home",    .symbol=LV_SYMBOL_HOME,      .enabled=true,  .btn=NULL, .lbl=NULL },
-	{ .name="info",    .symbol=LV_SYMBOL_LIST,      .enabled=false, .btn=NULL, .lbl=NULL },
-	{ .name="next",    .symbol=LV_SYMBOL_RIGHT,     .enabled=true,  .btn=NULL, .lbl=NULL },
-	{ .name="paste",   .symbol=LV_SYMBOL_PASTE,     .enabled=false, .btn=NULL, .lbl=NULL },
-	{ .name="copy",    .symbol=LV_SYMBOL_COPY,      .enabled=false, .btn=NULL, .lbl=NULL },
-	{ .name="delete",  .symbol=LV_SYMBOL_TRASH,     .enabled=false, .btn=NULL, .lbl=NULL },
-	{ .name="new",     .symbol=LV_SYMBOL_PLUS,      .enabled=true,  .btn=NULL, .lbl=NULL },
-	{ .name="cut",     .symbol=LV_SYMBOL_CUT,       .enabled=false, .btn=NULL, .lbl=NULL },
-	{ .name="back",    .symbol=LV_SYMBOL_BACKSPACE, .enabled=true,  .btn=NULL, .lbl=NULL },
-};
+static lv_obj_t*btn_prev,*btn_refresh,*btn_edit,*btn_home,*btn_info,*btn_next;
+static lv_obj_t*btn_paste,*btn_copy,*btn_delete,*btn_new,*btn_cut,*btn_back;
 static lv_obj_t*tabview,*scr,*path;
 static struct filetab*tabs[4],*active=NULL;
 
-static void set_btn_enabled(char*name,bool enabled){
-	for(size_t i=0;i<ARRLEN(fm_btns);i++)
-		if(strcmp(fm_btns[i].name,name)==0)
-			lv_obj_set_enabled(fm_btns[i].btn,enabled);
-}
-
 static int filemgr_get_focus(struct gui_activity*d __attribute__((unused))){
-	for(size_t i=0;i<ARRLEN(fm_btns);i++)
-		lv_group_add_obj(gui_grp,fm_btns[i].btn);
 	if(active)filetab_add_group(active,gui_grp);
+	lv_group_add_obj(gui_grp,btn_prev);
+	lv_group_add_obj(gui_grp,btn_refresh);
+	lv_group_add_obj(gui_grp,btn_edit);
+	lv_group_add_obj(gui_grp,btn_home);
+	lv_group_add_obj(gui_grp,btn_info);
+	lv_group_add_obj(gui_grp,btn_next);
+	lv_group_add_obj(gui_grp,btn_paste);
+	lv_group_add_obj(gui_grp,btn_copy);
+	lv_group_add_obj(gui_grp,btn_delete);
+	lv_group_add_obj(gui_grp,btn_new);
+	lv_group_add_obj(gui_grp,btn_cut);
+	lv_group_add_obj(gui_grp,btn_back);
 	return 0;
 }
 
 static int filemgr_lost_focus(struct gui_activity*d __attribute__((unused))){
-	for(size_t i=0;i<ARRLEN(fm_btns);i++)
-		lv_group_remove_obj(fm_btns[i].btn);
 	if(active)filetab_remove_group(active);
+	lv_group_remove_obj(btn_prev);
+	lv_group_remove_obj(btn_refresh);
+	lv_group_remove_obj(btn_edit);
+	lv_group_remove_obj(btn_home);
+	lv_group_remove_obj(btn_info);
+	lv_group_remove_obj(btn_next);
+	lv_group_remove_obj(btn_paste);
+	lv_group_remove_obj(btn_copy);
+	lv_group_remove_obj(btn_delete);
+	lv_group_remove_obj(btn_new);
+	lv_group_remove_obj(btn_cut);
+	lv_group_remove_obj(btn_back);
 	return 0;
 }
 
@@ -123,20 +118,20 @@ static void on_item_select(
 	if(fv!=active)return;
 	if(fsext_is_multi&&filetab_is_top(fv))return;
 	if(cnt==1){
-		set_btn_enabled("edit",true);
-		set_btn_enabled("info",true);
+		lv_obj_set_enabled(btn_edit,true);
+		lv_obj_set_enabled(btn_info,true);
 	}else{
-		set_btn_enabled("edit",false);
-		set_btn_enabled("info",false);
+		lv_obj_set_enabled(btn_edit,false);
+		lv_obj_set_enabled(btn_info,false);
 	}
 	if(cnt>0){
-		set_btn_enabled("cut",true);
-		set_btn_enabled("copy",true);
-		set_btn_enabled("delete",true);
+		lv_obj_set_enabled(btn_cut,true);
+		lv_obj_set_enabled(btn_copy,true);
+		lv_obj_set_enabled(btn_delete,true);
 	}else{
-		set_btn_enabled("cut",false);
-		set_btn_enabled("copy",false);
-		set_btn_enabled("delete",false);
+		lv_obj_set_enabled(btn_cut,false);
+		lv_obj_set_enabled(btn_copy,false);
+		lv_obj_set_enabled(btn_delete,false);
 	}
 }
 
@@ -305,44 +300,34 @@ static int filemgr_draw(struct gui_activity*act){
 	// current path
 	path=lv_label_create(scr);
 	lv_obj_set_style_text_align(path,LV_TEXT_ALIGN_CENTER,0);
-	lv_label_set_long_mode(path,confd_get_boolean("gui.text_scroll",true)?
+	lv_label_set_long_mode(
+		path,confd_get_boolean("gui.text_scroll",true)?
 		LV_LABEL_LONG_SCROLL_CIRCULAR:
 		LV_LABEL_LONG_DOT
 	);
-	lv_obj_set_size(path,lv_pct(100),gui_font_size*1.2);
+	lv_obj_set_size(path,lv_pct(100),LV_SIZE_CONTENT);
 
-	lv_obj_t*btns=lv_obj_create(act->page);
-	lv_obj_set_style_radius(btns,0,0);
-	lv_obj_set_scroll_dir(btns,LV_DIR_NONE);
-	lv_obj_set_style_border_width(btns,0,0);
-	lv_obj_set_style_bg_opa(btns,LV_OPA_0,0);
-	lv_obj_clear_flag(btns,LV_OBJ_FLAG_SCROLLABLE);
-	lv_obj_set_width(btns,lv_pct(100));
-
-	bool lb=gui_sw>gui_sh;
-	size_t cs=ARRLEN(fm_btns);
-	if(!lb)cs/=2;
-	static lv_coord_t grid_col[16],grid_row[4];
-	grid_row[0]=LV_GRID_FR(1);
-	grid_row[1]=lb?LV_GRID_TEMPLATE_LAST:LV_GRID_FR(1);
-	grid_row[2]=LV_GRID_TEMPLATE_LAST;
-	for(size_t i=0;i<cs;i++)grid_col[i]=LV_GRID_FR(1);
-	grid_col[cs]=LV_GRID_TEMPLATE_LAST;
-	lv_obj_set_content_height(btns,gui_font_size*(lb?2:4));
-	lv_obj_set_grid_dsc_array(btns,grid_col,grid_row);
-	for(size_t i=0;i<ARRLEN(fm_btns);i++){
-		fm_btns[i].btn=lv_btn_create(btns);
-		lv_obj_set_enabled(fm_btns[i].btn,fm_btns[i].enabled);
-		lv_obj_add_event_cb(fm_btns[i].btn,btns_cb,LV_EVENT_CLICKED,fm_btns[i].name);
-		fm_btns[i].lbl=lv_label_create(fm_btns[i].btn);
-		lv_label_set_text(fm_btns[i].lbl,fm_btns[i].symbol);
-		lv_obj_center(fm_btns[i].lbl);
-		lv_obj_set_grid_cell(
-			fm_btns[i].btn,
-			LV_GRID_ALIGN_STRETCH,i%cs,1,
-			LV_GRID_ALIGN_STRETCH,i/cs,1
-		);
-	}
+	size_t cs=gui_sw>gui_sh?12:6;
+	lv_draw_buttons_auto_arg(
+		act->page,
+		#define BTN(tgt,title,en,x)&(struct button_dsc){\
+			&btn_##tgt,en,_(title),btns_cb,#tgt,x%cs,1,x/cs,1,NULL\
+		}
+		BTN(prev,    LV_SYMBOL_LEFT,      true,  0),
+		BTN(refresh, LV_SYMBOL_REFRESH,   true,  1),
+		BTN(edit,    LV_SYMBOL_EDIT,      false, 2),
+		BTN(home,    LV_SYMBOL_HOME,      true,  3),
+		BTN(info,    LV_SYMBOL_LIST,      false, 4),
+		BTN(next,    LV_SYMBOL_RIGHT,     true,  5),
+		BTN(paste,   LV_SYMBOL_PASTE,     false, 6),
+		BTN(copy,    LV_SYMBOL_COPY,      false, 7),
+		BTN(delete,  LV_SYMBOL_TRASH,     false, 8),
+		BTN(new,     LV_SYMBOL_PLUS,      true,  9),
+		BTN(cut,     LV_SYMBOL_CUT,       false, 10),
+		BTN(back,    LV_SYMBOL_BACKSPACE, true,  11),
+		#undef BTN
+		NULL
+	);
 	tabview_create();
 	return 0;
 }

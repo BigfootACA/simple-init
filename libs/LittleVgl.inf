@@ -33,26 +33,35 @@
   lvgl/src/core/lv_obj_tree.c
   lvgl/src/core/lv_refr.c
   lvgl/src/core/lv_theme.c
+  lvgl/src/draw/arm2d/lv_gpu_arm2d.c
   lvgl/src/draw/lv_draw_arc.c
   lvgl/src/draw/lv_draw.c
   lvgl/src/draw/lv_draw_img.c
   lvgl/src/draw/lv_draw_label.c
+  lvgl/src/draw/lv_draw_layer.c
   lvgl/src/draw/lv_draw_line.c
   lvgl/src/draw/lv_draw_mask.c
   lvgl/src/draw/lv_draw_rect.c
+  lvgl/src/draw/lv_draw_transform.c
   lvgl/src/draw/lv_draw_triangle.c
   lvgl/src/draw/lv_img_buf.c
   lvgl/src/draw/lv_img_cache.c
   lvgl/src/draw/lv_img_decoder.c
-  lvgl/src/draw/nxp_pxp/lv_gpu_nxp_pxp.c
-  lvgl/src/draw/nxp_pxp/lv_gpu_nxp_pxp_osa.c
-  lvgl/src/draw/nxp_vglite/lv_gpu_nxp_vglite.c
+  lvgl/src/draw/nxp/lv_gpu_nxp.c
+  lvgl/src/draw/nxp/pxp/lv_draw_pxp_blend.c
+  lvgl/src/draw/nxp/pxp/lv_gpu_nxp_pxp.c
+  lvgl/src/draw/nxp/pxp/lv_gpu_nxp_pxp_osa.c
+  lvgl/src/draw/nxp/vglite/lv_draw_vglite_arc.c
+  lvgl/src/draw/nxp/vglite/lv_draw_vglite_blend.c
+  lvgl/src/draw/nxp/vglite/lv_draw_vglite_rect.c
+  lvgl/src/draw/nxp/vglite/lv_gpu_nxp_vglite.c
   lvgl/src/draw/sdl/lv_draw_sdl_arc.c
   lvgl/src/draw/sdl/lv_draw_sdl_bg.c
   lvgl/src/draw/sdl/lv_draw_sdl.c
   lvgl/src/draw/sdl/lv_draw_sdl_composite.c
   lvgl/src/draw/sdl/lv_draw_sdl_img.c
   lvgl/src/draw/sdl/lv_draw_sdl_label.c
+  lvgl/src/draw/sdl/lv_draw_sdl_layer.c
   lvgl/src/draw/sdl/lv_draw_sdl_line.c
   lvgl/src/draw/sdl/lv_draw_sdl_mask.c
   lvgl/src/draw/sdl/lv_draw_sdl_polygon.c
@@ -67,10 +76,13 @@
   lvgl/src/draw/sw/lv_draw_sw_dither.c
   lvgl/src/draw/sw/lv_draw_sw_gradient.c
   lvgl/src/draw/sw/lv_draw_sw_img.c
+  lvgl/src/draw/sw/lv_draw_sw_layer.c
   lvgl/src/draw/sw/lv_draw_sw_letter.c
   lvgl/src/draw/sw/lv_draw_sw_line.c
   lvgl/src/draw/sw/lv_draw_sw_polygon.c
   lvgl/src/draw/sw/lv_draw_sw_rect.c
+  lvgl/src/draw/sw/lv_draw_sw_transform.c
+  lvgl/src/draw/swm341_dma2d/lv_gpu_swm341_dma2d.c
   lvgl/src/extra/layouts/flex/lv_flex.c
   lvgl/src/extra/layouts/grid/lv_grid.c
   lvgl/src/extra/libs/bmp/lv_bmp.c
@@ -87,8 +99,13 @@
   lvgl/src/extra/libs/sjpg/lv_sjpg.c
   lvgl/src/extra/libs/sjpg/tjpgd.c
   lvgl/src/extra/lv_extra.c
+  lvgl/src/extra/others/fragment/lv_fragment.c
+  lvgl/src/extra/others/fragment/lv_fragment_manager.c
   lvgl/src/extra/others/gridnav/lv_gridnav.c
+  lvgl/src/extra/others/ime/lv_ime_pinyin.c
+  lvgl/src/extra/others/imgfont/lv_imgfont.c
   lvgl/src/extra/others/monkey/lv_monkey.c
+  lvgl/src/extra/others/msg/lv_msg.c
   lvgl/src/extra/others/snapshot/lv_snapshot.c
   lvgl/src/extra/themes/basic/lv_theme_basic.c
   lvgl/src/extra/themes/default/lv_theme_default.c

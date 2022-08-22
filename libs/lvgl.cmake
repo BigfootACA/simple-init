@@ -40,8 +40,13 @@ add_library(lvgl STATIC
 	libs/lvgl/src/extra/libs/bmp/lv_bmp.c
 	libs/lvgl/src/extra/layouts/flex/lv_flex.c
 	libs/lvgl/src/extra/layouts/grid/lv_grid.c
+	libs/lvgl/src/extra/others/imgfont/lv_imgfont.c
 	libs/lvgl/src/extra/others/gridnav/lv_gridnav.c
+	libs/lvgl/src/extra/others/ime/lv_ime_pinyin.c
+	libs/lvgl/src/extra/others/fragment/lv_fragment.c
+	libs/lvgl/src/extra/others/fragment/lv_fragment_manager.c
 	libs/lvgl/src/extra/others/snapshot/lv_snapshot.c
+	libs/lvgl/src/extra/others/msg/lv_msg.c
 	libs/lvgl/src/extra/others/monkey/lv_monkey.c
 	libs/lvgl/src/extra/widgets/msgbox/lv_msgbox.c
 	libs/lvgl/src/extra/widgets/spinner/lv_spinner.c
@@ -78,12 +83,10 @@ add_library(lvgl STATIC
 	libs/lvgl/src/widgets/lv_line.c
 	libs/lvgl/src/widgets/lv_objx_templ.c
 	libs/lvgl/src/widgets/lv_dropdown.c
-	libs/lvgl/src/draw/nxp_pxp/lv_gpu_nxp_pxp_osa.c
-	libs/lvgl/src/draw/nxp_pxp/lv_gpu_nxp_pxp.c
 	libs/lvgl/src/draw/lv_draw_label.c
 	libs/lvgl/src/draw/lv_draw_triangle.c
 	libs/lvgl/src/draw/lv_draw_line.c
-	libs/lvgl/src/draw/nxp_vglite/lv_gpu_nxp_vglite.c
+	libs/lvgl/src/draw/sw/lv_draw_sw_transform.c
 	libs/lvgl/src/draw/sw/lv_draw_sw_rect.c
 	libs/lvgl/src/draw/sw/lv_draw_sw_letter.c
 	libs/lvgl/src/draw/sw/lv_draw_sw_polygon.c
@@ -93,13 +96,26 @@ add_library(lvgl STATIC
 	libs/lvgl/src/draw/sw/lv_draw_sw_gradient.c
 	libs/lvgl/src/draw/sw/lv_draw_sw_blend.c
 	libs/lvgl/src/draw/sw/lv_draw_sw_img.c
+	libs/lvgl/src/draw/sw/lv_draw_sw_layer.c
 	libs/lvgl/src/draw/sw/lv_draw_sw_dither.c
 	libs/lvgl/src/draw/lv_img_cache.c
+	libs/lvgl/src/draw/lv_draw_layer.c
 	libs/lvgl/src/draw/lv_draw_arc.c
+	libs/lvgl/src/draw/nxp/vglite/lv_gpu_nxp_vglite.c
+	libs/lvgl/src/draw/nxp/vglite/lv_draw_vglite_blend.c
+	libs/lvgl/src/draw/nxp/vglite/lv_draw_vglite_rect.c
+	libs/lvgl/src/draw/nxp/vglite/lv_draw_vglite_arc.c
+	libs/lvgl/src/draw/nxp/pxp/lv_gpu_nxp_pxp_osa.c
+	libs/lvgl/src/draw/nxp/pxp/lv_gpu_nxp_pxp.c
+	libs/lvgl/src/draw/nxp/pxp/lv_draw_pxp_blend.c
+	libs/lvgl/src/draw/nxp/lv_gpu_nxp.c
 	libs/lvgl/src/draw/stm32_dma2d/lv_gpu_stm32_dma2d.c
 	libs/lvgl/src/draw/lv_img_buf.c
+	libs/lvgl/src/draw/swm341_dma2d/lv_gpu_swm341_dma2d.c
 	libs/lvgl/src/draw/lv_img_decoder.c
 	libs/lvgl/src/draw/lv_draw_mask.c
+	libs/lvgl/src/draw/arm2d/lv_gpu_arm2d.c
+	libs/lvgl/src/draw/lv_draw_transform.c
 	libs/lvgl/src/draw/lv_draw_img.c
 	libs/lvgl/src/draw/lv_draw_rect.c
 	libs/lvgl/src/draw/sdl/lv_draw_sdl_rect.c
@@ -107,6 +123,7 @@ add_library(lvgl STATIC
 	libs/lvgl/src/draw/sdl/lv_draw_sdl_composite.c
 	libs/lvgl/src/draw/sdl/lv_draw_sdl_img.c
 	libs/lvgl/src/draw/sdl/lv_draw_sdl_bg.c
+	libs/lvgl/src/draw/sdl/lv_draw_sdl_layer.c
 	libs/lvgl/src/draw/sdl/lv_draw_sdl_polygon.c
 	libs/lvgl/src/draw/sdl/lv_draw_sdl_mask.c
 	libs/lvgl/src/draw/sdl/lv_draw_sdl_label.c

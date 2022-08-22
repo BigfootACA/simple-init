@@ -47,8 +47,7 @@ struct serial_port{
 
 struct serial_open{
 	lv_obj_t*box,*title;
-	lv_obj_t*lbl_port,*port;
-	lv_obj_t*lbl_speed,*speed;
+	lv_obj_t*port,*speed;
 	lv_obj_t*ok,*cancel;
 	bool changed;
 	list*ports;
@@ -101,10 +100,6 @@ static void ok_cb(lv_event_t*e){
 		confd_set_integer("gui.serial.speed",cfg.baudrate);
 	}
 	guiact_start_activity(&guireg_serial_port,&cfg);
-}
-
-static void cancel_cb(lv_event_t*e __attribute__((unused))){
-	guiact_do_back();
 }
 
 #ifndef ENABLE_UEFI
@@ -217,113 +212,12 @@ static int serial_open_load(struct gui_activity*act){
 }
 
 static int serial_open_draw(struct gui_activity*act){
-	static lv_coord_t grid_col[]={
-		LV_GRID_CONTENT,
-		LV_GRID_FR(1),
-		LV_GRID_TEMPLATE_LAST
-	},grid_row[]={
-		LV_GRID_FR(1),
-		LV_GRID_FR(1),
-		LV_GRID_TEMPLATE_LAST
-	};
 	struct serial_open*so=act->data;
 	if(!so)return -1;
-
-	so->box=lv_obj_create(act->page);
-	lv_obj_set_style_max_width(so->box,lv_pct(80),0);
-	lv_obj_set_style_max_height(so->box,lv_pct(80),0);
-	lv_obj_set_style_min_width(so->box,gui_dpi*2,0);
-	lv_obj_set_style_min_height(so->box,gui_dpi,0);
-	lv_obj_set_height(so->box,LV_SIZE_CONTENT);
-	lv_obj_set_flex_flow(so->box,LV_FLEX_FLOW_COLUMN);
-	lv_obj_center(so->box);
-
-	// Title
-	so->title=lv_label_create(so->box);
-	lv_obj_set_width(so->title,lv_pct(100));
-	lv_label_set_text(so->title,_("Open Serial Port"));
-	lv_obj_set_style_text_align(so->title,LV_TEXT_ALIGN_CENTER,0);
-	lv_label_set_long_mode(so->title,LV_LABEL_LONG_WRAP);
-	lv_obj_set_grid_cell(
-		so->title,
-		LV_GRID_ALIGN_STRETCH,0,2,
-		LV_GRID_ALIGN_STRETCH,0,1
-	);
-
-	lv_obj_t*fields=lv_obj_create(so->box);
-	lv_obj_set_style_radius(fields,0,0);
-	lv_obj_set_scroll_dir(fields,LV_DIR_NONE);
-	lv_obj_set_style_border_width(fields,0,0);
-	lv_obj_set_style_bg_opa(fields,LV_OPA_0,0);
-	lv_obj_set_style_pad_all(fields,gui_dpi/50,0);
-	lv_obj_set_grid_dsc_array(fields,grid_col,grid_row);
-	lv_obj_clear_flag(fields,LV_OBJ_FLAG_SCROLLABLE|LV_OBJ_FLAG_CLICKABLE);
-	lv_obj_set_style_pad_row(fields,gui_font_size/2,0);
-	lv_obj_set_style_pad_column(fields,gui_font_size/2,0);
-	lv_obj_set_size(fields,lv_pct(100),LV_SIZE_CONTENT);
-	lv_obj_center(fields);
-
-	// Serial Port Device
-	so->lbl_port=lv_label_create(fields);
-	lv_label_set_text(so->lbl_port,_("Port:"));
-	lv_obj_set_grid_cell(
-		so->lbl_port,
-		LV_GRID_ALIGN_STRETCH,0,1,
-		LV_GRID_ALIGN_CENTER,0,1
-	);
-	so->port=lv_dropdown_create(fields);
-	lv_obj_add_event_cb(so->port,lv_default_dropdown_cb,LV_EVENT_ALL,NULL);
-	lv_obj_set_grid_cell(
-		so->port,
-		LV_GRID_ALIGN_STRETCH,1,1,
-		LV_GRID_ALIGN_CENTER,0,1
-	);
-
-	// Baud rate Speeds
-	so->lbl_speed=lv_label_create(fields);
-	lv_label_set_text(so->lbl_speed,_("Speed:"));
-	lv_obj_set_grid_cell(
-		so->lbl_speed,
-		LV_GRID_ALIGN_STRETCH,0,1,
-		LV_GRID_ALIGN_CENTER,1,1
-	);
-	so->speed=lv_dropdown_create(fields);
-	lv_obj_add_event_cb(so->speed,lv_default_dropdown_cb,LV_EVENT_ALL,NULL);
-	lv_obj_set_grid_cell(
-		so->speed,
-		LV_GRID_ALIGN_STRETCH,1,1,
-		LV_GRID_ALIGN_CENTER,1,1
-	);
-
-	lv_obj_t*btns=lv_obj_create(so->box);
-	lv_obj_set_style_radius(btns,0,0);
-	lv_obj_set_scroll_dir(btns,LV_DIR_NONE);
-	lv_obj_set_style_border_width(btns,0,0);
-	lv_obj_set_style_bg_opa(btns,LV_OPA_0,0);
-	lv_obj_set_style_pad_all(btns,gui_dpi/50,0);
-	lv_obj_set_flex_flow(btns,LV_FLEX_FLOW_ROW);
-	lv_obj_clear_flag(btns,LV_OBJ_FLAG_SCROLLABLE|LV_OBJ_FLAG_CLICKABLE);
-	lv_obj_set_style_pad_row(btns,gui_font_size/2,0);
-	lv_obj_set_style_pad_column(btns,gui_font_size/2,0);
-	lv_obj_set_size(btns,lv_pct(100),LV_SIZE_CONTENT);
-	lv_obj_center(btns);
-
-	// OK Button
-	so->ok=lv_btn_create(btns);
-	lv_obj_add_event_cb(so->ok,ok_cb,LV_EVENT_CLICKED,so);
-	lv_obj_t*lbl_ok=lv_label_create(so->ok);
-	lv_label_set_text(lbl_ok,_("OK"));
-	lv_obj_center(lbl_ok);
-	lv_obj_set_flex_grow(so->ok,1);
-
-	// Cancel Button
-	so->cancel=lv_btn_create(btns);
-	lv_obj_add_event_cb(so->cancel,cancel_cb,LV_EVENT_CLICKED,NULL);
-	lv_obj_t*lbl_cancel=lv_label_create(so->cancel);
-	lv_label_set_text(lbl_cancel,_("Cancel"));
-	lv_obj_center(lbl_cancel);
-	lv_obj_set_flex_grow(so->cancel,1);
-
+	so->box=lv_draw_dialog_box(act->page,&so->title,"Open Serial Port");
+	lv_draw_dropdown(so->box,"Port:",&so->port);
+	lv_draw_dropdown(so->box,"Speed:",&so->speed);
+	lv_draw_btns_ok_cancel(so->box,&so->ok,&so->cancel,ok_cb,so);
 	return 0;
 }
 

@@ -194,7 +194,7 @@ int guiact_remove_last(bool focus){
 	return 0;
 }
 
-static void guiact_back_task(lv_timer_t*t __attribute__((unused))){
+static void guiact_back_task(void*d __attribute__((unused))){
 	if(sysbar.keyboard){
 		sysbar_keyboard_close();
 		return;
@@ -214,11 +214,11 @@ static void guiact_back_task(lv_timer_t*t __attribute__((unused))){
 }
 
 int guiact_do_back(){
-	lv_timer_set_repeat_count(lv_timer_create(guiact_back_task,0,NULL),1);
+	lv_async_call(guiact_back_task,NULL);
 	return 0;
 }
 
-static void guiact_home_task(lv_timer_t*t __attribute__((unused))){
+static void guiact_home_task(void*data __attribute__((unused))){
 	sysbar_keyboard_close();
 	list*d;
 	bool proc=false;
@@ -237,7 +237,7 @@ static void guiact_home_task(lv_timer_t*t __attribute__((unused))){
 }
 
 int guiact_do_home(){
-	lv_timer_set_repeat_count(lv_timer_create(guiact_home_task,0,NULL),1);
+	lv_async_call(guiact_home_task,NULL);
 	return 0;
 }
 
@@ -323,9 +323,9 @@ struct guiact_data{
 	void*args;
 };
 
-static void guiact_start_task(lv_timer_t*t){
+static void guiact_start_task(void*data){
 	int r;
-	struct guiact_data*d=t->user_data;
+	struct guiact_data*d=data;
 	if(!d)return;
 	struct gui_register*reg=d->reg;
 	void*args=d->args;
@@ -396,7 +396,7 @@ int guiact_start_activity(struct gui_register*reg,void*args){
 	if(!d)ERET(ENOMEM);
 	memset(d,0,sizeof(struct guiact_data));
 	d->reg=reg,d->args=args;
-	lv_timer_set_repeat_count(lv_timer_create(guiact_start_task,0,d),1);
+	lv_async_call(guiact_start_task,d);
 	return 0;
 }
 

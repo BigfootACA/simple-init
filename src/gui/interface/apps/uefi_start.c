@@ -36,8 +36,8 @@ static int after_exit(void*d __attribute__((unused))){
 	return r;
 }
 
-static void start_cb(lv_timer_t*t){
-	char*full_path=t->user_data;
+static void start_cb(void*d){
+	char*full_path=d;
 	EFI_STATUS st;
 	EFI_LOADED_IMAGE_PROTOCOL*li;
 	EFI_DEVICE_PATH_PROTOCOL*p=fs_get_device_path(full_path);
@@ -73,7 +73,7 @@ static void start_cb(lv_timer_t*t){
 }
 
 static bool confirm_click(uint16_t id,const char*text __attribute__((unused)),void*user_data){
-	if(id==0)lv_timer_set_repeat_count(lv_timer_create(start_cb,1,user_data),1);
+	if(id==0)lv_async_call(start_cb,user_data);
 	return false;
 }
 

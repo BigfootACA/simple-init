@@ -123,10 +123,6 @@ struct gui_register guireg_inputbox={
 	.allow_exclusive=true,
 };
 
-static void inputbox_cb(lv_timer_t*t){
-	guiact_start_activity(&guireg_inputbox,t->user_data);
-}
-
 struct inputbox*inputbox_create(inputbox_callback callback,const char*title,...){
 	struct inputbox*input=malloc(sizeof(struct inputbox));
 	if(!input)return NULL;
@@ -140,7 +136,7 @@ struct inputbox*inputbox_create(inputbox_callback callback,const char*title,...)
 	input->callback=callback;
 	input->one_line=true;
 	input->align=LV_TEXT_ALIGN_AUTO;
-	lv_timer_set_repeat_count(lv_timer_create(inputbox_cb,0,input),1);
+	guiact_start_activity(&guireg_inputbox,input);
 	return input;
 }
 

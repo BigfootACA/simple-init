@@ -66,7 +66,7 @@ static int bootmenu_clean(struct bootmenu*bm){
 }
 
 #ifdef ENABLE_UEFI
-static void enter_simple_init(lv_timer_t*t __attribute__((unused))){
+static void enter_simple_init(void*d __attribute__((unused))){
 	gui_screen_init();
 	gui_draw();
 }
@@ -109,19 +109,17 @@ static bool bootmenu_chdir(struct bootmenu_item*bi){
 	return true;
 }
 
-static void bootmenu_boot(lv_timer_t*tsk){
-	struct bootmenu*bm;
+static void bootmenu_boot(void*data){
+	struct bootmenu*bm=data;
 	struct bootmenu_item*bi;
-	if(!(bm=tsk->user_data)||!(bi=bm->selected))return;
+	if(!bm||!(bi=bm->selected))return;
 	if(bootmenu_chdir(bi))return;
 	tlog_debug("run config %s",bi->cfg.ident);
 	confd_set_string("boot.current",bi->cfg.ident);
 	confd_set_save("boot.current",false);
 	#ifdef ENABLE_UEFI
 	if(bi->cfg.mode==BOOT_SIMPLE_INIT){
-		lv_timer_set_repeat_count(lv_timer_create(
-			enter_simple_init,100,NULL
-		),1);
+		lv_async_call(enter_simple_init,NULL);
 		return;
 	}
 	memset(
@@ -151,9 +149,7 @@ static void bootmenu_remove_auto_boot_cb(lv_event_t*e){
 }
 
 static void bootmenu_click(lv_event_t*e){
-	lv_timer_set_repeat_count(lv_timer_create(
-		bootmenu_boot,10,e->user_data
-	),1);
+	lv_async_call(bootmenu_boot,e->user_data);
 }
 
 static void bootmenu_item_released(lv_event_t*e){

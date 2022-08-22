@@ -177,8 +177,8 @@ static bool open_read_cb(uint16_t id,const char*name __attribute__((unused)),voi
 	goto fail;
 }
 
-static void open_start_read(lv_timer_t*t){
-	open_read_cb(0,NULL,t->user_data);
+static void open_start_read(void*d){
+	open_read_cb(0,NULL,d);
 }
 
 static bool read_file(struct text_editor*te,const char*path){
@@ -193,7 +193,7 @@ static bool read_file(struct text_editor*te,const char*path){
 	if((res=lv_fs_size(&od->file,&od->size))!=LV_FS_RES_OK)
 		EDONE(msgbox_alert("Get file size failed: %s",lv_fs_res_to_i18n_string(res)));
 	if(od->size>0x800000)EDONE(msgbox_alert("File too large; size limit is 8MiB, file is %d bytes",od->size));
-	if(od->size<0x10000)lv_timer_set_repeat_count(lv_timer_create(open_start_read,20,od),1);
+	if(od->size<0x10000)lv_async_call(open_start_read,od);
 	else msgbox_set_user_data(msgbox_create_yesno(
 		open_read_cb,
 		"This file is bigger than 64 KiB (%d bytes), "

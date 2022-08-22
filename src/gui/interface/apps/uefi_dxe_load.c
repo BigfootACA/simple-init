@@ -59,8 +59,8 @@ static bool auto_cb(uint16_t id,const char*btn __attribute__((unused)),void*user
 	return false;
 }
 
-static void load_cb(lv_timer_t*t){
-	char*full_path=t->user_data;
+static void load_cb(void*d){
+	char*full_path=d;
 	EFI_STATUS st;
 	EFI_HANDLE ih;
 	EFI_LOADED_IMAGE_PROTOCOL*li;
@@ -108,7 +108,7 @@ static void load_cb(lv_timer_t*t){
 }
 
 static bool confirm_click(uint16_t id,const char*text __attribute__((unused)),void*user_data){
-	if(id==0)lv_timer_set_repeat_count(lv_timer_create(load_cb,1,user_data),1);
+	if(id==0)lv_async_call(load_cb,user_data);
 	return false;
 }
 

@@ -143,11 +143,11 @@ static bool load_file(struct log_viewer*v){
 	return false;
 }
 
-static void load_log_task(lv_timer_t*t){
+static void load_log_task(void*data){
 	list*l=NULL;
 	char*buff=NULL;
 	size_t start=0,end=0,i,size;
-	struct log_viewer*v=t->user_data;
+	struct log_viewer*v=data;
 	if(!load_file(v))goto fail;
 	if(v->per_page<=0||v->page_cur<=0)goto fail;
 	if(v->page_cur>v->page_cnt)v->page_cur=v->page_cnt;
@@ -184,7 +184,7 @@ static void load_log_task(lv_timer_t*t){
 }
 
 static void load_log(struct log_viewer*v){
-	lv_timer_set_repeat_count(lv_timer_create(load_log_task,20,v),1);
+	lv_async_call(load_log_task,v);
 }
 
 static void pager_change(lv_event_t*e){

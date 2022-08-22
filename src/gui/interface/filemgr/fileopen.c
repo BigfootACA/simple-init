@@ -215,16 +215,12 @@ struct gui_register guireg_fileopen={
 	.mask=true,
 };
 
-static void fileopen_cb(lv_timer_t*t){
-	guiact_start_activity(&guireg_fileopen,t->user_data);
-}
-
 void fileopen_open(const char*path){
 	struct fileopen*fo=malloc(sizeof(struct fileopen));
 	if(!fo)return;
 	memset(fo,0,sizeof(struct fileopen));
 	strcpy(fo->path,path);
-	lv_timer_set_repeat_count(lv_timer_create(fileopen_cb,0,fo),1);
+	guiact_start_activity(&guireg_fileopen,fo);
 }
 
 #endif

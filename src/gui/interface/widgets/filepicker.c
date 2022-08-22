@@ -268,10 +268,6 @@ struct gui_register guireg_filepicker={
 	.allow_exclusive=true,
 };
 
-static void filepicker_cb(lv_timer_t*t){
-	guiact_start_activity(&guireg_filepicker,t->user_data);
-}
-
 struct filepicker*filepicker_create(filepicker_callback callback,const char*title,...){
 	struct filepicker*fp=malloc(sizeof(struct filepicker));
 	if(!fp)return NULL;
@@ -286,7 +282,7 @@ struct filepicker*filepicker_create(filepicker_callback callback,const char*titl
 	strcpy(fp->path,p?p:"/");
 	if(p)free(p);
 	fp->callback=callback;
-	lv_timer_set_repeat_count(lv_timer_create(filepicker_cb,0,fp),1);
+	guiact_start_activity(&guireg_filepicker,fp);
 	return fp;
 }
 

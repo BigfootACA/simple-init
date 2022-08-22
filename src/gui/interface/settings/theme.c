@@ -48,7 +48,7 @@ static void ok_click(lv_event_t*e){
 	guiact_do_back();
 }
 
-static void do_restart(lv_timer_t*t __attribute__((unused))){
+static void do_restart(void*d __attribute__((unused))){
 	gui_screen_init();
 	gui_draw();
 }
@@ -56,7 +56,7 @@ static void do_restart(lv_timer_t*t __attribute__((unused))){
 static void restart_click(lv_event_t*e){
 	struct theme_menu*tm=e->user_data;
 	do_save(tm);
-	lv_timer_set_repeat_count(lv_timer_create(do_restart,100,NULL),1);
+	lv_async_call(do_restart,NULL);
 }
 
 static int theme_menu_init(struct gui_activity*act){

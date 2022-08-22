@@ -121,10 +121,6 @@ struct gui_register guireg_msgbox={
 	.allow_exclusive=true,
 };
 
-static void msgbox_cb(lv_timer_t*t){
-	guiact_start_activity(&guireg_msgbox,t->user_data);
-}
-
 static struct msgbox*_msgbox_create(
 	msgbox_callback callback,
 	const char**buttons,
@@ -137,7 +133,7 @@ static struct msgbox*_msgbox_create(
 	vsnprintf(msg->text,sizeof(msg->text)-1,_(content),va);
 	msg->callback=callback;
 	msg->buttons=buttons;
-	lv_timer_set_repeat_count(lv_timer_create(msgbox_cb,0,msg),1);
+	guiact_start_activity(&guireg_msgbox,msg);
 	return msg;
 }
 

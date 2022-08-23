@@ -104,7 +104,7 @@ static void uefiuga_exit(){
 		ZeroMem(&c,sizeof(c));
 		uga->Blt(
 			uga,&c,EfiUgaVideoFill,
-			0,0,ww,hh,ww,hh,0
+			0,0,0,0,ww,hh,0
 		);
 	}
 }

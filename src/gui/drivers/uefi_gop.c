@@ -175,7 +175,7 @@ static void uefigop_exit(){
 		ZeroMem(&c,sizeof(c));
 		gop->Blt(
 			gop,&c,EfiBltVideoFill,
-			0,0,ww,hh,ww,hh,0
+			0,0,0,0,ww,hh,0
 		);
 	}
 }

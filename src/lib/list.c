@@ -11,6 +11,7 @@
 #include<stdlib.h>
 #include<string.h>
 #include<stdbool.h>
+#include"str.h"
 #include"list.h"
 
 list*list_new(void*data){
@@ -345,4 +346,15 @@ int list_reverse(list*lst){
 		l->next=n;
 	}while((l=l->prev));
 	return 0;
+}
+
+char*list_string_append(list*lst,char*buff,size_t len,char*sep){
+	list*l;
+	if((l=list_first(lst)))do{
+		LIST_DATA_DECLARE(str,l,char*);
+		if(!str)continue;
+		if(sep)strlcat(buff,sep,len);
+		strlcat(buff,str,len);
+	}while((l=l->next));
+	return buff;
 }

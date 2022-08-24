@@ -139,6 +139,9 @@ extern int list_default_free(void*data);
 // src/lib/list.c: reverse a list
 extern int list_reverse(list*lst);
 
+// src/lib/list.c: convert list to string
+extern char*list_string_append(list*lst,char*buff,size_t len,char*sep);
+
 // require not null
 extern void*_memdup(void*mem,size_t len);
 #define memdup _memdup

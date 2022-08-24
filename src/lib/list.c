@@ -336,3 +336,13 @@ list*list_search_string(list*lst,const char*str){
 list*list_search_case_string(list*lst,const char*str){
 	return list_search_one(lst,list_string_case_comparator,(void*)str);
 }
+
+int list_reverse(list*lst){
+	list*l,*n;
+	if((l=list_first(lst)))do{
+		n=l->prev;
+		l->prev=l->next;
+		l->next=n;
+	}while((l=l->prev));
+	return 0;
+}

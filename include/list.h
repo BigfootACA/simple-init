@@ -136,6 +136,9 @@ extern list*list_search_case_string(list*lst,const char*str);
 // src/lib/list.c: default free runnable
 extern int list_default_free(void*data);
 
+// src/lib/list.c: reverse a list
+extern int list_reverse(list*lst);
+
 // require not null
 extern void*_memdup(void*mem,size_t len);
 #define memdup _memdup

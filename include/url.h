@@ -90,6 +90,9 @@ extern void url_clean(url*u);
 // src/lib/url.c: free url struct
 extern void url_free(url*u);
 
+// src/lib/url.c: duplicate url struct and all fields
+extern url*url_dup(url*u);
+
 // src/lib/url.c: generate url from url struct
 extern char*url_generate(char*buf,size_t len,url*u);
 

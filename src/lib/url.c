@@ -488,6 +488,23 @@ void url_clean(url*u){
 	u->port=-1;
 }
 
+url*url_dup(url*u){
+	if(!u)return NULL;
+	url*n=url_new();
+	if(u->query&&!(n->query=strdup(u->query)))goto fail;
+	if(u->scheme&&!(n->scheme=strdup(u->scheme)))goto fail;
+	if(u->username&&!(n->username=strdup(u->username)))goto fail;
+	if(u->password&&!(n->password=strdup(u->password)))goto fail;
+	if(u->fragment&&!(n->fragment=strdup(u->fragment)))goto fail;
+	if(u->host&&!(n->host=strdup(u->host)))goto fail;
+	if(u->path&&!(n->path=strdup(u->path)))goto fail;
+	n->port=u->port;
+	return n;
+	fail:
+	url_free(n);
+	return NULL;
+}
+
 void url_free(url*u){
 	if(!u)return;
 	url_clean(u);

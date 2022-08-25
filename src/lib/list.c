@@ -330,6 +330,14 @@ bool list_string_case_comparator(list*f,void*v){
 	return str&&v&&strcasecmp(str,(char*)v)==0;
 }
 
+bool list_string_sorter(list*l1,list*l2){
+	LIST_DATA_DECLARE(s1,l1,char*);
+	LIST_DATA_DECLARE(s2,l2,char*);
+	for(size_t i=0;s1[i]&&s2[i];i++)
+		if(s1[i]!=s2[i])return s1[i]>s2[i];
+	return false;
+}
+
 list*list_search_string(list*lst,const char*str){
 	return list_search_one(lst,list_string_comparator,(void*)str);
 }

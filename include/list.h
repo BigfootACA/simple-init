@@ -127,6 +127,9 @@ extern bool list_string_comparator(list*f,void*v);
 // src/lib/list.c: compare string without case
 extern bool list_string_case_comparator(list*f,void*v);
 
+// src/lib/list.c: sort string
+extern bool list_string_sorter(list*l1,list*l2);
+
 // src/lib/list.c: search a string
 extern list*list_search_string(list*lst,const char*str);
 

@@ -58,6 +58,9 @@ extern bool boot_locate_content(const char*file,void**data,size_t*size);
 // src/locate/locate.c: find a available locate name
 extern char*locate_find_name(char*buf,size_t len);
 
+// src/locate/locate.c: find a efi handle by locate tag name
+extern EFI_HANDLE*locate_get_handle_by_tag(const char*tag);
+
 // src/locate/locate.c: add new locate by device path
 bool locate_add_by_device_path(char*tag,bool save,EFI_DEVICE_PATH_PROTOCOL*dp);
 

@@ -424,6 +424,11 @@ bool boot_locate_content(const char*file,void**data,size_t*size){
 	return ret;
 }
 
+EFI_HANDLE*locate_get_handle_by_tag(const char*tag){
+	locate_dest*loc=get_locate(tag);
+	return loc?loc->file_hand:NULL;
+}
+
 char*locate_find_name(char*buf,size_t len){
 	CHAR8 name[255];
 	ZeroMem(buf,len);

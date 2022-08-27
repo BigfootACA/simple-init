@@ -49,6 +49,7 @@ option(ENABLE_MXML        "Enable mxml for config files"                      ON
 option(ENABLE_LUA         "Enable lua for scripts"                            ON)
 option(ENABLE_STB         "Enable stb"                                        ON)
 option(ENABLE_LIBTSM      "Enable Terminal-emulator State Machine"            ON)
+option(ENABLE_LIBZIP      "Enable for ZIP archive"                            ON)
 option(ENABLE_HIVEX       "Enable hivex for windows registry/bcd edit"        ON)
 option(ENABLE_VNCSERVER   "Enable VNC Server for remote GUI"                  OFF)
 option(ENABLE_MICROHTTPD  "Enable HTTP Server"                                OFF)
@@ -101,6 +102,11 @@ endif()
 
 if("${ENABLE_HIVEX}" STREQUAL "ON")
 	include(libs/hivex/hivex.cmake)
+endif()
+
+if("${ENABLE_LIBZIP}" STREQUAL "ON")
+	add_subdirectory(libs/libzip)
+	include_directories(libs/libzip/lib)
 endif()
 
 if("${DISABLE_WERROR}" STREQUAL "OFF")

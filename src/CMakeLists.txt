@@ -160,7 +160,7 @@ if("${ENABLE_HIVEX}" STREQUAL "ON")
 	target_link_libraries(simple-init hivex)
 endif()
 
-target_link_libraries(simple-init kmod mount uuid blkid fdisk smartcols)
+target_link_libraries(simple-init kmod mount uuid blkid fdisk smartcols md)
 
 target_link_libraries(simple-init -Wl,--end-group)
 

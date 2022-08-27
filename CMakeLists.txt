@@ -133,6 +133,7 @@ endif()
 
 include(libs/libkmod/libkmod.cmake)
 include(libs/util-linux/ul.cmake)
+include(libs/libmd/libmd.cmake)
 include(libs/regex/regex.cmake)
 include(libs/zlib/zlib.cmake)
 include(po/CMakeLists.txt)

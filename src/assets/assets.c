@@ -229,3 +229,21 @@ entry_dir*asset_dir_get_root(entry_dir*target){
 entry_dir*asset_file_get_root(entry_file*target){
 	return target?asset_dir_get_root(target->info.parent):NULL;
 }
+
+list*asset_dir_get_path_list(entry_dir*target,entry_dir*end){
+	list*l=NULL;
+	if(!target)return NULL;
+	while(target->info.parent&&target->info.parent!=end){
+		list_obj_add_new_strdup(&l,target->info.name);
+		target=target->info.parent;
+	}
+	list_reverse(l);
+	return list_first(l);
+}
+
+list*asset_file_get_path_list(entry_file*target,entry_dir*end){
+	if(!target)return NULL;
+	list*l=asset_dir_get_path_list(target->info.parent,end);
+	list_obj_add_new_strdup(&l,target->info.name);
+	return list_first(l);
+}

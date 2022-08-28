@@ -80,6 +80,16 @@ extern entry_dir*asset_dir_get_root(entry_dir*target);
 // src/assets/assets.c: get root of an asset file entry
 extern entry_dir*asset_file_get_root(entry_file*target);
 
+#ifdef _LIST_H
+
+// src/assets/assets.c: read folder path as list
+extern list*asset_dir_get_path_list(entry_dir*target,entry_dir*end);
+
+// src/assets/assets.c: read file path as list
+extern list*asset_file_get_path_list(entry_file*target,entry_dir*end);
+
+#endif
+
 // get from rootfs
 #define rootfs_get_assets_file(paths)get_assets_file(&assets_rootfs,paths)
 #define rootfs_get_assets_dir(paths)get_assets_dir(&assets_rootfs,paths)

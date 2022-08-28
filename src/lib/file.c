@@ -31,7 +31,7 @@ bool is_virt_dir(const struct dirent*d){
 		strcmp(d->d_name,"..")==0;
 }
 
-size_t get_fd_path(int fd,char*buff,size_t size){
+ssize_t get_fd_path(int fd,char*buff,size_t size){
 	if(fd<0||!buff)return -1;
 	memset(buff,0,size);
 	char path[64]={0};

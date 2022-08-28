@@ -39,7 +39,7 @@ extern void free_mounts(struct mount_item**c);
 extern bool is_virt_dir(const struct dirent*d);
 
 // src/lib/file.c: get file path of an opened fd
-extern size_t get_fd_path(int fd,char*buff,size_t size);
+extern ssize_t get_fd_path(int fd,char*buff,size_t size);
 
 // src/lib/file.c: check path is an invalid path
 extern bool is_invalid_path(char*path);

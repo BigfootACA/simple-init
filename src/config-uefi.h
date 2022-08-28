@@ -10,6 +10,7 @@
 #define ENABLE_FDT          1
 #define ENABLE_ZLIB         1
 #define ENABLE_LIBTSM       1
+#define ENABLE_LIBZIP       1
 #define ENABLE_HIVEX        1
 #define FT2_BUILD_LIBRARY   1
 #define FT_CONFIG_OPTIONS_H "libs/freetype-uefi/ftoption.h"

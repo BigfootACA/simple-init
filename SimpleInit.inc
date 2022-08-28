@@ -5,6 +5,7 @@
   LuaLib|libs/lua/LuaLib.inf
   TSMLib|libs/libtsm/TSMLib.inf
   UfdtLib|libs/libufdt/UfdtLib.inf
+  ZipLib|libs/libzip/ZipLib.inf
   MiniXML|libs/mxml/MiniXML.inf
   NanoSVG|libs/nanosvg/NanoSVG.inf
   LodePNG|libs/lodepng/LodePNG.inf
@@ -34,6 +35,7 @@
   libs/lua/LuaLib.inf
   libs/libtsm/TSMLib.inf
   libs/libufdt/UfdtLib.inf
+  libs/libzip/ZipLib.inf
   libs/mxml/MiniXML.inf
   libs/nanosvg/NanoSVG.inf
   libs/lodepng/LodePNG.inf

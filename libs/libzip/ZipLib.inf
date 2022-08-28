@@ -1,0 +1,130 @@
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = ZipLib
+  FILE_GUID                      = 21308B0B-C896-43AB-8A40-7783DBB731C2
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = ZipLib
+
+[BuildOptions]
+  GCC:*_*_*_CC_FLAGS = -include src/config-uefi.h
+
+[Packages]
+  MdePkg/MdePkg.dec
+  SimpleInit.dec
+
+[LibraryClasses]
+  SimpleInitCompatible
+  Zlib
+
+[Sources]
+  libs/libzip/uefi/zipconf.h
+  libs/libzip/uefi/config.h
+  libs/libzip/uefi/zip_err_str.c
+  libs/libzip/lib/zip_add.c
+  libs/libzip/lib/zip_add_dir.c
+  libs/libzip/lib/zip_add_entry.c
+  libs/libzip/lib/zip_algorithm_deflate.c
+  libs/libzip/lib/zip_buffer.c
+  libs/libzip/lib/zip_close.c
+  libs/libzip/lib/zip_delete.c
+  libs/libzip/lib/zip_dir_add.c
+  libs/libzip/lib/zip_dirent.c
+  libs/libzip/lib/zip_discard.c
+  libs/libzip/lib/zip_entry.c
+  libs/libzip/lib/zip_error.c
+  libs/libzip/lib/zip_error_clear.c
+  libs/libzip/lib/zip_error_get.c
+  libs/libzip/lib/zip_error_get_sys_type.c
+  libs/libzip/lib/zip_error_strerror.c
+  libs/libzip/lib/zip_error_to_str.c
+  libs/libzip/lib/zip_extra_field.c
+  libs/libzip/lib/zip_extra_field_api.c
+  libs/libzip/lib/zip_fclose.c
+  libs/libzip/lib/zip_file_add.c
+  libs/libzip/lib/zip_file_error_clear.c
+  libs/libzip/lib/zip_file_error_get.c
+  libs/libzip/lib/zip_file_get_comment.c
+  libs/libzip/lib/zip_file_get_external_attributes.c
+  libs/libzip/lib/zip_file_get_offset.c
+  libs/libzip/lib/zip_file_rename.c
+  libs/libzip/lib/zip_file_replace.c
+  libs/libzip/lib/zip_file_set_comment.c
+  libs/libzip/lib/zip_file_set_encryption.c
+  libs/libzip/lib/zip_file_set_external_attributes.c
+  libs/libzip/lib/zip_file_set_mtime.c
+  libs/libzip/lib/zip_file_strerror.c
+  libs/libzip/lib/zip_fopen.c
+  libs/libzip/lib/zip_fopen_encrypted.c
+  libs/libzip/lib/zip_fopen_index.c
+  libs/libzip/lib/zip_fopen_index_encrypted.c
+  libs/libzip/lib/zip_fread.c
+  libs/libzip/lib/zip_fseek.c
+  libs/libzip/lib/zip_ftell.c
+  libs/libzip/lib/zip_get_archive_comment.c
+  libs/libzip/lib/zip_get_archive_flag.c
+  libs/libzip/lib/zip_get_encryption_implementation.c
+  libs/libzip/lib/zip_get_file_comment.c
+  libs/libzip/lib/zip_get_name.c
+  libs/libzip/lib/zip_get_num_entries.c
+  libs/libzip/lib/zip_get_num_files.c
+  libs/libzip/lib/zip_hash.c
+  libs/libzip/lib/zip_io_util.c
+  libs/libzip/lib/zip_libzip_version.c
+  libs/libzip/lib/zip_memdup.c
+  libs/libzip/lib/zip_name_locate.c
+  libs/libzip/lib/zip_new.c
+  libs/libzip/lib/zip_open.c
+  libs/libzip/lib/zip_pkware.c
+  libs/libzip/lib/zip_progress.c
+  libs/libzip/lib/zip_random_uefi.c
+  libs/libzip/lib/zip_rename.c
+  libs/libzip/lib/zip_replace.c
+  libs/libzip/lib/zip_set_archive_comment.c
+  libs/libzip/lib/zip_set_archive_flag.c
+  libs/libzip/lib/zip_set_default_password.c
+  libs/libzip/lib/zip_set_file_comment.c
+  libs/libzip/lib/zip_set_file_compression.c
+  libs/libzip/lib/zip_set_name.c
+  libs/libzip/lib/zip_source_accept_empty.c
+  libs/libzip/lib/zip_source_begin_write.c
+  libs/libzip/lib/zip_source_begin_write_cloning.c
+  libs/libzip/lib/zip_source_buffer.c
+  libs/libzip/lib/zip_source_call.c
+  libs/libzip/lib/zip_source_close.c
+  libs/libzip/lib/zip_source_commit_write.c
+  libs/libzip/lib/zip_source_compress.c
+  libs/libzip/lib/zip_source_crc.c
+  libs/libzip/lib/zip_source_error.c
+  libs/libzip/lib/zip_source_file_common.c
+  libs/libzip/lib/zip_source_free.c
+  libs/libzip/lib/zip_source_function.c
+  libs/libzip/lib/zip_source_get_file_attributes.c
+  libs/libzip/lib/zip_source_is_deleted.c
+  libs/libzip/lib/zip_source_layered.c
+  libs/libzip/lib/zip_source_open.c
+  libs/libzip/lib/zip_source_pkware_decode.c
+  libs/libzip/lib/zip_source_pkware_encode.c
+  libs/libzip/lib/zip_source_read.c
+  libs/libzip/lib/zip_source_remove.c
+  libs/libzip/lib/zip_source_rollback_write.c
+  libs/libzip/lib/zip_source_seek.c
+  libs/libzip/lib/zip_source_seek_write.c
+  libs/libzip/lib/zip_source_stat.c
+  libs/libzip/lib/zip_source_supports.c
+  libs/libzip/lib/zip_source_tell.c
+  libs/libzip/lib/zip_source_tell_write.c
+  libs/libzip/lib/zip_source_window.c
+  libs/libzip/lib/zip_source_write.c
+  libs/libzip/lib/zip_source_zip.c
+  libs/libzip/lib/zip_source_zip_new.c
+  libs/libzip/lib/zip_stat.c
+  libs/libzip/lib/zip_stat_index.c
+  libs/libzip/lib/zip_stat_init.c
+  libs/libzip/lib/zip_strerror.c
+  libs/libzip/lib/zip_string.c
+  libs/libzip/lib/zip_unchange.c
+  libs/libzip/lib/zip_unchange_all.c
+  libs/libzip/lib/zip_unchange_archive.c
+  libs/libzip/lib/zip_unchange_data.c
+  libs/libzip/lib/zip_utf-8.c

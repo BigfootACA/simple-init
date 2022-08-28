@@ -42,7 +42,11 @@ extern "C" {
 #endif
 #endif
 
+#ifdef ENABLE_UEFI
+#include "../uefi/zipconf.h"
+#else
 #include <zipconf.h>
+#endif
 
 #ifndef ZIP_EXTERN
 #ifndef ZIP_STATIC

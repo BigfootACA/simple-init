@@ -15,6 +15,7 @@
   libs/lvgl
   libs/regex
   libs/lodepng
+  libs/libzip/lib
   libs/libufdt/include
   libs/libufdt/sysdeps/include
   libs/nanosvg/src

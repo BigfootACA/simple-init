@@ -74,6 +74,12 @@ extern bool asset_dir_check_out_bound(entry_dir*bound,entry_dir*target);
 // src/assets/assets.c: check file is out of bound
 extern bool asset_file_check_out_bound(entry_dir*bound,entry_file*target);
 
+// src/assets/assets.c: get root of an asset folder entry
+extern entry_dir*asset_dir_get_root(entry_dir*target);
+
+// src/assets/assets.c: get root of an asset file entry
+extern entry_dir*asset_file_get_root(entry_file*target);
+
 // get from rootfs
 #define rootfs_get_assets_file(paths)get_assets_file(&assets_rootfs,paths)
 #define rootfs_get_assets_dir(paths)get_assets_dir(&assets_rootfs,paths)

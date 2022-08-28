@@ -218,3 +218,14 @@ bool asset_dir_check_out_bound(entry_dir*bound,entry_dir*target){
 bool asset_file_check_out_bound(entry_dir*bound,entry_file*target){
 	return target?asset_dir_check_out_bound(bound,target->info.parent):true;
 }
+
+entry_dir*asset_dir_get_root(entry_dir*target){
+	if(!target)return NULL;
+	while(target->info.parent)
+		target=target->info.parent;
+	return target;
+}
+
+entry_dir*asset_file_get_root(entry_file*target){
+	return target?asset_dir_get_root(target->info.parent):NULL;
+}

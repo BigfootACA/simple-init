@@ -1,6 +1,5 @@
 add_library(ul-shared STATIC
 	libs/util-linux/lib/mangle.c
-	libs/util-linux/lib/md5.c
 	libs/util-linux/lib/crc32.c
 	libs/util-linux/lib/crc32c.c
 	libs/util-linux/lib/path.c

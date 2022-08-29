@@ -143,6 +143,7 @@ mxml_real_cb(mxml_node_t *node)		/* I - Current node */
 static pthread_key_t	_mxml_key;	/* Thread local storage key */
 static pthread_once_t	_mxml_key_once = PTHREAD_ONCE_INIT;
 					/* One-time initialization object */
+static int              _mxml_initialized = 0;
 static void		_mxml_init(void);
 static void		_mxml_destructor(void *g);
 
@@ -165,7 +166,9 @@ _mxml_destructor(void *g)		/* I - Global data */
 static void
 _MXML_FINI(void)
 {
-  pthread_key_delete(_mxml_key);
+  if (_mxml_initialized) {
+    pthread_key_delete(_mxml_key);
+  }
 }
 
 
@@ -203,6 +206,7 @@ static void
 _mxml_init(void)
 {
   pthread_key_create(&_mxml_key, _mxml_destructor);
+  _mxml_initialized = 1;
 }
 
 

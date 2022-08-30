@@ -247,3 +247,22 @@ list*asset_file_get_path_list(entry_file*target,entry_dir*end){
 	list_obj_add_new_strdup(&l,target->info.name);
 	return list_first(l);
 }
+
+char*asset_dir_get_path(entry_dir*target,entry_dir*end,char*buffer,size_t len){
+	list*l=NULL;
+	if(!target||!buffer||len<=0)return NULL;
+	memset(buffer,0,len);
+	if(!(l=asset_dir_get_path_list(target,end)))return NULL;
+	char*r=list_string_append(l,buffer,len,"/");
+	size_t s=strlen(buffer);
+	if(buffer[s-1]!='/')strlcat(buffer,"/",len);
+	return r;
+}
+
+char*asset_file_get_path(entry_file*target,entry_dir*end,char*buffer,size_t len){
+	list*l=NULL;
+	if(!target||!buffer||len<=0)return NULL;
+	memset(buffer,0,len);
+	if(!(l=asset_file_get_path_list(target,end)))return NULL;
+	return list_string_append(l,buffer,len,"/");
+}

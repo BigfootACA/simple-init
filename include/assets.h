@@ -90,6 +90,12 @@ extern list*asset_file_get_path_list(entry_file*target,entry_dir*end);
 
 #endif
 
+// src/assets/assets.c: read folder path as string
+extern char*asset_dir_get_path(entry_dir*target,entry_dir*end,char*buffer,size_t len);
+
+// src/assets/assets.c: read file path as string
+extern char*asset_file_get_path(entry_file*target,entry_dir*end,char*buffer,size_t len);
+
 // get from rootfs
 #define rootfs_get_assets_file(paths)get_assets_file(&assets_rootfs,paths)
 #define rootfs_get_assets_dir(paths)get_assets_dir(&assets_rootfs,paths)

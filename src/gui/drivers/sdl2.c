@@ -10,7 +10,6 @@
 #include"version.h"
 #include"gui/tools.h"
 #include"gui/guidrv.h"
-#include"src/draw/sw/lv_draw_sw.h"
 #include"src/draw/sdl/lv_draw_sdl.h"
 #define TAG "sdl2"
 typedef struct{

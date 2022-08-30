@@ -11,6 +11,7 @@
 #include<stdint.h>
 #include<stdbool.h>
 #include"gui.h"
+#include"src/draw/sw/lv_draw_sw.h"
 
 struct display_mode{
 	char name[24];

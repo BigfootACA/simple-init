@@ -176,6 +176,9 @@ static int _fbdev_register(){
 	tlog_notice("screen resolution: %dx%d",vinfo.xres,vinfo.yres);
 	disp_drv.draw_buf=&disp_buf;
 	disp_drv.flush_cb=fbdev_flush;
+	disp_drv.draw_ctx_init=lv_draw_sw_init_ctx;
+	disp_drv.draw_ctx_deinit=lv_draw_sw_init_ctx;
+	disp_drv.draw_ctx_size=sizeof(lv_draw_sw_ctx_t);
 	set_active_console(7);
 	vtconsole_all_bind(0);
 	lv_disp_drv_register(&disp_drv);

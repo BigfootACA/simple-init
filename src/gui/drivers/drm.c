@@ -501,6 +501,9 @@ static int _drm_register(){
 	);
 	drm_dev.drv.draw_buf=&drm_dev.dbuf;
 	drm_dev.drv.flush_cb=drm_flush;
+	drm_dev.drv.draw_ctx_init=lv_draw_sw_init_ctx;
+	drm_dev.drv.draw_ctx_deinit=lv_draw_sw_init_ctx;
+	drm_dev.drv.draw_ctx_size=sizeof(lv_draw_sw_ctx_t);
 	switch(gui_rotate){
 		case 0:break;
 		case 90:drm_dev.drv.sw_rotate=1,drm_dev.drv.rotated=LV_DISP_ROT_90;break;

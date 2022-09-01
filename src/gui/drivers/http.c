@@ -251,6 +251,9 @@ static int http_register(){
 	disp_drv.flush_cb=http_flush;
 	disp_drv.hor_res=state.ww;
 	disp_drv.ver_res=state.hh;
+	disp_drv.draw_ctx_init=lv_draw_sw_init_ctx;
+	disp_drv.draw_ctx_deinit=lv_draw_sw_init_ctx;
+	disp_drv.draw_ctx_size=sizeof(lv_draw_sw_ctx_t);
 	switch(gui_rotate){
 		case 0:break;
 		case 90:disp_drv.sw_rotate=1,disp_drv.rotated=LV_DISP_ROT_90;break;

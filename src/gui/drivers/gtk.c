@@ -237,6 +237,9 @@ static int gtkdrv_scan_init_register(){
 	disp.flush_cb=gtkdrv_flush_cb;
 	disp.hor_res=ww;
 	disp.ver_res=hh;
+	disp.draw_ctx_init=lv_draw_sw_init_ctx;
+	disp.draw_ctx_deinit=lv_draw_sw_init_ctx;
+	disp.draw_ctx_size=sizeof(lv_draw_sw_ctx_t);
 	switch(gui_rotate){
 		case 0:break;
 		case 90:disp.sw_rotate=1,disp.rotated=LV_DISP_ROT_90;break;

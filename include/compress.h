@@ -36,6 +36,9 @@ extern compressor*compressor_get_by_mime(const char*mime);
 // src/compress/compress.c: get compressor by file format
 extern compressor*compressor_get_by_format(unsigned char*data,size_t len);
 
+// src/compress/compress.c: check target is compressed data
+extern bool compressor_is_compressed(unsigned char*data,size_t len);
+
 // src/compress/compress.c: do compress
 extern int compressor_compress(
 	compressor*c,

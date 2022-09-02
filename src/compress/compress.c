@@ -66,6 +66,15 @@ compressor*compressor_get_by_format(unsigned char*data,size_t len){
 	EPRET(ENOENT);
 }
 
+bool compressor_is_compressed(unsigned char*data,size_t len){
+	compressor*c=NULL;
+	if(!data||len<=0)return false;
+	for(size_t i=0;(c=compressors[i]);i++)
+		if(c->is_format&&c->is_format(data,len))
+			return true;
+	return false;
+}
+
 int compressor_compress(
 	compressor*c,
 	unsigned char*inp,size_t inp_len,

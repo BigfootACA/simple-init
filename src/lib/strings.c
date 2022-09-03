@@ -90,7 +90,7 @@ char dec2hex(int dec,bool upper){
 	else return 0;
 }
 
-int hex2dex(char hex){
+int hex2dec(char hex){
 	if(hex>='0'&&hex<='9')return hex-'0';
 	if(hex>='a'&&hex<='f')return hex-'a'+0xA;
 	if(hex>='A'&&hex<='F')return hex-'A'+0xA;

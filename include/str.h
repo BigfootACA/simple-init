@@ -98,7 +98,7 @@ extern bool check_valid_default(char*source);
 extern char dec2hex(int dec,bool upper);
 
 // src/lib/strings.c: convert hexadecimal to decimal
-extern int hex2dex(char hex);
+extern int hex2dec(char hex);
 
 // src/lib/strings.c: generate random hexadecimal string
 extern char*gen_rand_hex(char*buff,int size,bool upper);

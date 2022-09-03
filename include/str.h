@@ -8,6 +8,7 @@
 
 #ifndef STRING_H
 #define STRING_H
+#include<stdint.h>
 #include<stdbool.h>
 #include<sys/types.h>
 #include"keyval.h"
@@ -99,6 +100,9 @@ extern char dec2hex(int dec,bool upper);
 
 // src/lib/strings.c: convert hexadecimal to decimal
 extern int hex2dec(char hex);
+
+// src/lib/strings.c: convert binary data to hexadecimal string
+extern char*bin2hexstr(char*buf,uint8_t*src,size_t len,bool upper);
 
 // src/lib/strings.c: generate random hexadecimal string
 extern char*gen_rand_hex(char*buff,int size,bool upper);

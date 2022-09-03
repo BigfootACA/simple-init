@@ -13,6 +13,7 @@
 #include<stdio.h>
 #include<stddef.h>
 #include<stdlib.h>
+#include<stdint.h>
 #include<stdbool.h>
 #include<string.h>
 #include<unistd.h>
@@ -95,6 +96,15 @@ int hex2dec(char hex){
 	if(hex>='a'&&hex<='f')return hex-'a'+0xA;
 	if(hex>='A'&&hex<='F')return hex-'A'+0xA;
 	return 16;
+}
+
+char*bin2hexstr(char*buf,uint8_t*src,size_t len,bool upper){
+	memset(buf,0,len*2+1);
+	for(size_t i=0;i<len;i++){
+		buf[i*2]=dec2hex(src[i]>>4,upper);
+		buf[i*2+1]=dec2hex(src[i]&0x0f,upper);
+	}
+	return buf;
 }
 
 char*gen_rand_hex(char*buff,int size,bool upper){

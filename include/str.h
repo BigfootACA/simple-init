@@ -243,4 +243,7 @@ extern char*mime_get_by_filename(char*buff,size_t bs,const char*filename);
 // src/lib/strings.c: print and append string
 extern size_t lsnprintf(char*buf,size_t len,const char*fmt,...);
 
+// src/lib/strings.c: convert path to unix style and remove duplicate slashes
+extern void trim_path(char*buf);
+
 #endif

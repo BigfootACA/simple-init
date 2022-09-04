@@ -527,3 +527,13 @@ size_t lsnprintf(char*buf,size_t len,const char*fmt,...){
 	va_end(va);
 	return r;
 }
+
+void trim_path(char*buf){
+	size_t i,a;
+	if(!buf||!buf[0])return;
+	for(i=0;buf[i];i++)if(buf[i]=='\\')buf[i]='/';
+	for(i=0;buf[i];i++)while(buf[i]=='/'&&buf[i+1]=='/'){
+		for(a=0;buf[i+a+1];a++)buf[i+a]=buf[i+a+1];
+		buf[i+a]=0;
+	}
+}

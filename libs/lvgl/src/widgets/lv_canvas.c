@@ -503,8 +503,8 @@ void lv_canvas_fill_bg(lv_obj_t * canvas, lv_color_t color, lv_opa_t opa)
         lv_memset((uint8_t *)dsc->data, opa > LV_OPA_50 ? 0xff : 0x00, row_byte_cnt * dsc->header.h);
     }
     else {
-        uint32_t x;
-        uint32_t y;
+        lv_coord_t x;
+        lv_coord_t y;
         for(y = 0; y < dsc->header.h; y++) {
             for(x = 0; x < dsc->header.w; x++) {
                 lv_img_buf_set_px_color(dsc, x, y, color);

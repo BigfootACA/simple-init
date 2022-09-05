@@ -18,6 +18,7 @@
 #define TAG "pointer-test"
 
 struct pointer_indev{
+	int id;
 	lv_point_t last;
 	lv_indev_t*indev;
 	lv_indev_data_t data;
@@ -26,6 +27,7 @@ struct pointer_indev{
 struct pointer_test{
 	lv_timer_t*tsk;
 	lv_obj_t*canvas;
+	lv_obj_t*text;
 	lv_color_t*buffer;
 	size_t size;
 	lv_coord_t w,h;
@@ -34,6 +36,8 @@ struct pointer_test{
 
 static void timer_cb(lv_timer_t*tsk){
 	list*l=NULL;
+	char*status=NULL;
+	lv_palette_t pa;
 	lv_draw_line_dsc_t dsc;
 	struct pointer_test*pv=tsk->user_data;
 	if(!pv||!pv->buffer||!pv->indevs)return;
@@ -45,13 +49,16 @@ static void timer_cb(lv_timer_t*tsk){
 		_lv_indev_read(p->indev,&p->data);
 		if(p->data.point.x<0||p->data.point.x>pv->w)continue;
 		if(p->data.point.y<0||p->data.point.y>pv->h)continue;
+		switch(p->data.state){
+			case LV_INDEV_STATE_PR:pa=LV_PALETTE_RED,status="PRESSED";break;
+			case LV_INDEV_STATE_REL:pa=LV_PALETTE_BLUE,status="RELEASE";break;
+			default:pa=LV_PALETTE_GREY,status="UNKNOWN";break;
+		}
+		lv_label_set_text_fmt(
+			pv->text,"DEV:%d,STAT:%s,X:%d,Y:%d",
+			p->id,status,p->data.point.x,p->data.point.y
+		);
 		if(p->last.x!=0&&p->last.y!=0){
-			lv_palette_t pa;
-			switch(p->data.state){
-				case LV_INDEV_STATE_PR:pa=LV_PALETTE_RED;break;
-				case LV_INDEV_STATE_REL:pa=LV_PALETTE_BLUE;break;
-				default:pa=LV_PALETTE_GREY;break;
-			}
 			dsc.color=lv_palette_main(pa);
 			lv_canvas_draw_line(
 				pv->canvas,
@@ -65,6 +72,7 @@ static void timer_cb(lv_timer_t*tsk){
 }
 
 static void block_indev(struct pointer_test*pv,bool state){
+	int cnt=0;
 	lv_indev_t*indev=NULL;
 	struct pointer_indev in;
 	list_free_all_def(pv->indevs);
@@ -73,7 +81,7 @@ static void block_indev(struct pointer_test*pv,bool state){
 		if(indev->driver->type!=LV_INDEV_TYPE_POINTER)continue;
 		if(state){
 			memset(&in,0,sizeof(in));
-			in.indev=indev;
+			in.indev=indev,in.id=cnt++;
 			list_obj_add_new_dup(&pv->indevs,&in,sizeof(in));
 		}
 		indev->proc.disabled=state;
@@ -161,6 +169,14 @@ static int pointer_test_draw(struct gui_activity*act){
 	if(!pv)return -1;
 	lv_obj_set_style_pad_all(act->page,0,0);
 	pv->canvas=lv_canvas_create(act->page);
+	pv->text=lv_label_create(act->page);
+	lv_obj_set_pos(pv->text,gui_font_size,gui_font_size);
+	lv_label_set_text(pv->text,"DEV:-,STAT:WAITING,X:-,Y:-");
+	lv_obj_set_style_pad_all(pv->text,gui_font_size/4,0);
+	lv_obj_set_style_text_font(pv->text,gui_font_small,0);
+	lv_obj_set_style_text_color(pv->text,lv_color_white(),0);
+	lv_obj_set_style_bg_color(pv->text,lv_color_black(),0);
+	lv_obj_set_style_bg_opa(pv->text,LV_OPA_50,0);
 	msgbox_set_user_data(msgbox_create_yesno(
 		msgbox_cb,
 		"This app will have exclusive pointer input,"

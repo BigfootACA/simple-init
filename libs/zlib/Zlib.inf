@@ -25,3 +25,8 @@
   libs/zlib/deflate.c
   libs/zlib/compress.c
   libs/zlib/crc32.c
+  libs/zlib/gzread.c
+  libs/zlib/gzwrite.c
+  libs/zlib/gzclose.c
+  libs/zlib/trees.c
+  libs/zlib/uncompr.c

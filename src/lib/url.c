@@ -592,19 +592,19 @@ keyval**url_get_query_array(url*u){
 
 #define DECL_SET(_name,_field,_alloc,_expr...) \
         char*url_set_##_name(url*u,const char*val,size_t len){\
-		if(!u||!val)return NULL;\
+		if(!u)return NULL;\
 		if(u->_field)free(u->_field);\
-                u->_field=NULL;\
-                if(!*val)return NULL;\
+		u->_field=NULL;\
+		if(!val||!*val)return NULL;\
 		if(len==0)len=strlen(val);\
-                _expr;\
-                if(!u->_field)u->_field=_alloc(val,len);\
+		_expr;\
+		if(!u->_field)u->_field=_alloc(val,len);\
 		return u->_field;\
 	}
 #define DECL_SET_RAW(_name,_field) \
 	DECL_SET(_name,_field,strndup,)
 #define DECL_SET_DECODE(_field) \
-        DECL_SET_RAW(_field##_decoded,_field) \
+	DECL_SET_RAW(_field##_decoded,_field) \
 	DECL_SET(_field,_field,url_decode_alloc,)
 
 DECL_SET_RAW(scheme,scheme)

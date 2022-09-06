@@ -107,6 +107,7 @@
 #define _PATH_SYS_BUS		_PATH_SYS"/bus"
 #define _PATH_SYS_BLOCK		_PATH_SYS"/block"
 #define _PATH_SYS_CLASS		_PATH_SYS"/class"
+#define _PATH_SYS_SCSI		_PATH_SYS"/scsi"
 #define _PATH_SYS_MODULE	_PATH_SYS"/module"
 #define _PATH_SYS_KERNEL	_PATH_SYS"/kernel"
 #define _PATH_SYS_DEVBLOCK	_PATH_SYS_DEV"/block"

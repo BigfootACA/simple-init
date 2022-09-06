@@ -325,9 +325,9 @@ char*url_decode(const char*src,size_t src_len,char*out,size_t out_len){
 		if(src[i]=='+')out[pos++]=' ',i++;
 		else if(src[i]=='%'){
 			i++;
-			if((x=hex2dex(src[i]))==16)return NULL;
+			if((x=hex2dec(src[i]))==16)return NULL;
 			c=x<<4,i++;
-			if((x=hex2dex(src[i]))==16)return NULL;
+			if((x=hex2dec(src[i]))==16)return NULL;
 			c|=x,i++;
 			out[pos++]=c;
 		}else out[pos++]=src[i++];
@@ -405,7 +405,7 @@ url*url_new(){
 bool url_parse(url*u,const char*url,size_t len){
 	size_t s;
 	char*c,*p,*full;
-	if(!u||!url||!*url)return NULL;
+	if(!u||!url||!*url)return false;
 	if(len<=0)len=strlen(url);
 	if(!(full=strndup(url,len)))goto done;
 	trim(full);
@@ -440,7 +440,7 @@ bool url_parse(url*u,const char*url,size_t len){
 		if(c!=p){
 			char*e=NULL;
 			errno=0,u->port=strtol(p,&e,0);
-			if(errno!=0||e!=c)goto done;
+			if(errno!=0||(*e&&e!=c))goto done;
 			if(!c)goto success;
 			p=c;
 		}

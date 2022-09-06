@@ -547,21 +547,28 @@ void url_clean(url*u){
 	u->port=-1;
 }
 
+url*url_copy(url*old,url*new){
+	if(!old||!new)return NULL;
+	url_clean(new);
+	if(old->query&&!(new->query=strdup(old->query)))goto fail;
+	if(old->scheme&&!(new->scheme=strdup(old->scheme)))goto fail;
+	if(old->username&&!(new->username=strdup(old->username)))goto fail;
+	if(old->password&&!(new->password=strdup(old->password)))goto fail;
+	if(old->fragment&&!(new->fragment=strdup(old->fragment)))goto fail;
+	if(old->host&&!(new->host=strdup(old->host)))goto fail;
+	if(old->path&&!(new->path=strdup(old->path)))goto fail;
+	new->port=old->port;
+	return new;
+	fail:url_clean(new);
+	return NULL;
+}
+
 url*url_dup(url*u){
 	if(!u)return NULL;
 	url*n=url_new();
-	if(u->query&&!(n->query=strdup(u->query)))goto fail;
-	if(u->scheme&&!(n->scheme=strdup(u->scheme)))goto fail;
-	if(u->username&&!(n->username=strdup(u->username)))goto fail;
-	if(u->password&&!(n->password=strdup(u->password)))goto fail;
-	if(u->fragment&&!(n->fragment=strdup(u->fragment)))goto fail;
-	if(u->host&&!(n->host=strdup(u->host)))goto fail;
-	if(u->path&&!(n->path=strdup(u->path)))goto fail;
-	n->port=u->port;
+	if(!n)return NULL;
+	url_copy(u,n);
 	return n;
-	fail:
-	url_free(n);
-	return NULL;
 }
 
 void url_free(url*u){

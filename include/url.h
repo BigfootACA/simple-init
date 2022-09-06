@@ -93,6 +93,9 @@ extern void url_clean(url*u);
 // src/lib/url.c: free url struct
 extern void url_free(url*u);
 
+// src/lib/url.c: copy url all fields
+extern url*url_copy(url*old,url*new);
+
 // src/lib/url.c: duplicate url struct and all fields
 extern url*url_dup(url*u);
 

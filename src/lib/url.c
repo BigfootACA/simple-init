@@ -467,6 +467,65 @@ bool url_parse(url*u,const char*url,size_t len){
 	return false;
 }
 
+url*url_parse_relative_path(url*u,url*n,const char*path,size_t len){
+	size_t s=8,k;
+	bool ls=false;
+	char*c,*p,*buf;
+	list*l=NULL,*lp=NULL,*lx;
+	if(!u||!path||!*path)return NULL;
+	if(len<=0)len=strlen(path);
+	if(!(buf=strndup(path,len)))goto done;
+	trim(buf);
+	p=buf;
+	if((c=strstr(buf,"://"))){
+		if(!url_parse(n,path,len))goto done;
+		free(buf);
+		return n;
+	}
+	if((c=strpbrk(p,"?#")))switch(*c){
+		case '?':{
+			*c=0,p=c+1,c=strchr(p,'#');
+			if(c!=p)url_set_query(n,p,c?c-p:0);
+		}//fallthrough
+		case '#':{
+			*c=0,p=c+1;
+			url_set_fragment(n,p,0);
+		}
+	}
+	trim_path(buf);
+	k=strlen(buf);
+	if(buf[k-1]=='/')ls=true,buf[k--]=0;
+	s+=k;
+	lp=path2list(buf,false);
+	if(u->path&&buf[0]!='/'){
+		free(buf);
+		if(!(buf=strdup(u->path)))goto done;
+		k=strlen(buf);
+		while(buf[k-1]!='/')buf[--k]=0;
+		l=path2list(buf,true);
+		free(buf);
+		s+=k,buf=NULL;
+		list_push(l,lp);
+	}
+	if(!l)l=lp;
+	lp=NULL;
+	lx=path_simplify(l,true);
+	l=lx;
+	if(n->path)free(n->path);
+	if(!(n->path=malloc(s)))goto done;
+	memset(n->path,0,s);
+	list_string_append(l,n->path,s,"/");
+	trim_path(n->path);
+	if(ls||!n->path[0])strlcat(n->path,"/",s);
+	list_free_all_def(l);
+	return n;
+	done:
+	if(buf)free(buf);
+	if(l)list_free_all_def(l);
+	if(lp)list_free_all_def(lp);
+	return NULL;
+}
+
 url*url_parse_new(const char*url,size_t len){
 	struct url*u=url_new();
 	if(!u)return NULL;

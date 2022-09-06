@@ -84,6 +84,9 @@ extern bool url_parse(url*u,const char*url,size_t len);
 // src/lib/url.c: allocate url struct and parse all url components
 extern url*url_parse_new(const char*url,size_t len);
 
+// src/lib/url.c: parse a relative url
+extern url*url_parse_relative_path(url*u,url*n,const char*path,size_t len);
+
 // src/lib/url.c: clean all fields in url struct
 extern void url_clean(url*u);
 

@@ -571,6 +571,28 @@ url*url_dup(url*u){
 	return n;
 }
 
+bool url_equals(url*u1,url*u2){
+	if(u1==u2)return true;
+	if(!u1||!u2)return false;
+	if(memcmp(u1,u2,sizeof(url))==0)return true;
+	if(u1->port!=u2->port)return false;
+	if((u1->host==NULL)!=(u2->host==NULL))return false;
+	if((u1->path==NULL)!=(u2->path==NULL))return false;
+	if((u1->query==NULL)!=(u2->query==NULL))return false;
+	if((u1->scheme==NULL)!=(u2->scheme==NULL))return false;
+	if((u1->fragment==NULL)!=(u2->fragment==NULL))return false;
+	if((u1->username==NULL)!=(u2->username==NULL))return false;
+	if((u1->password==NULL)!=(u2->password==NULL))return false;
+	if(u1->host&&strcmp(u1->host,u2->host)!=0)return false;
+	if(u1->path&&strcmp(u1->path,u2->path)!=0)return false;
+	if(u1->query&&strcmp(u1->query,u2->query)!=0)return false;
+	if(u1->scheme&&strcmp(u1->scheme,u2->scheme)!=0)return false;
+	if(u1->fragment&&strcmp(u1->fragment,u2->fragment)!=0)return false;
+	if(u1->username&&strcmp(u1->username,u2->username)!=0)return false;
+	if(u1->password&&strcmp(u1->password,u2->password)!=0)return false;
+	return true;
+}
+
 void url_free(url*u){
 	if(!u)return;
 	url_clean(u);

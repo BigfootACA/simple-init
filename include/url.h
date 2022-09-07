@@ -99,6 +99,9 @@ extern url*url_copy(url*old,url*new);
 // src/lib/url.c: duplicate url struct and all fields
 extern url*url_dup(url*u);
 
+// src/lib/url.c: compare two url struct and all fields
+extern bool url_equals(url*u1,url*u2);
+
 // src/lib/url.c: generate url from url struct
 extern char*url_generate(char*buf,size_t len,url*u);
 

@@ -593,6 +593,22 @@ bool url_equals(url*u1,url*u2){
 	return true;
 }
 
+bool url_go_back(url*u,bool clean){
+	size_t len;
+	bool s=false,ch=false;
+	if(!u||!u->path)return false;
+	if((len=strlen(u->path))<=0)return false;
+	if(strcmp(u->path,"/")==0)return false;
+	if(u->path[len-1]=='/')u->path[--len]=0,s=true,ch=true;
+	while(len>0&&u->path[len-1]!='/')u->path[--len]=0,ch=true;
+	if(ch&&!s&&len>0&&u->path[len-1]=='/')u->path[--len]=0;
+	if(ch&&clean){
+		url_set_query(u,NULL,0);
+		url_set_fragment(u,NULL,0);
+	}
+	return ch;
+}
+
 void url_free(url*u){
 	if(!u)return;
 	url_clean(u);

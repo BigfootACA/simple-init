@@ -105,6 +105,9 @@ extern bool url_equals(url*u1,url*u2);
 // src/lib/url.c: set url path go back
 extern bool url_go_back(url*u,bool clean);
 
+// src/lib/url.c: check url path is in top level
+extern bool url_is_on_top(url*u);
+
 // src/lib/url.c: generate url from url struct
 extern char*url_generate(char*buf,size_t len,url*u);
 

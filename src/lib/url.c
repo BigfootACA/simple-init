@@ -609,6 +609,13 @@ bool url_go_back(url*u,bool clean){
 	return ch;
 }
 
+bool url_is_on_top(url*u){
+	if(!u)return false;
+	if(!u->path||!u->path[0])return true;
+	if(u->path[0]=='/'&&!u->path[1])return true;
+	return false;
+}
+
 void url_free(url*u){
 	if(!u)return;
 	url_clean(u);

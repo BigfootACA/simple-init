@@ -36,3 +36,4 @@
   fdtparser.c
   aboot.c
   reboot.c
+  url.c

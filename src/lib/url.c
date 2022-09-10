@@ -670,12 +670,14 @@ char*url_dump_alloc(url*u){
 	return buffer;
 }
 
+#ifndef ENABLE_UEFI
 void url_dump_fd(int fd,url*u){
 	char*buffer=url_dump_alloc(u);
 	if(!buffer)return;
 	dprintf(fd,"%s",buffer);
 	free(buffer);
 }
+#endif
 
 char*url_set_query_list(url*u,list*queries){
 	if(!u||!queries)return NULL;

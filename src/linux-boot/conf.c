@@ -98,8 +98,8 @@ static inline void get_region_confd(linux_mem_region*reg,const char*key,const ch
 	int64_t end=confd_get_integer_dict(key,sub,"end",0);
 	if((base<=0&&start<=0)||(size<=0&&end<=0))return;
 	if((base>0&&start>0)||(size>0&&end>0))return;
-	reg->start=start>0?start:base;
-	reg->end=end>0?end:(reg->start+size);
+	reg->start=start>0?(uint64_t)start:(uint64_t)base;
+	reg->end=end>0?(uint64_t)end:(reg->start+(uint64_t)size);
 }
 
 static inline void get_memory_confd(linux_config*cfg,const char*key){

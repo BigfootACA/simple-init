@@ -87,11 +87,11 @@ int boot_linux_uefi(linux_boot*boot){
 }
 
 int linux_boot_update_uefi(linux_boot*lb){
+	int off,r;
 	UINT32 dv=0;
-	int off,r,l;
 	VOID*rsv=NULL;
 	EFI_STATUS st;
-	UINTN ms=0,mk=0,ds=0;
+	UINTN ms=0,mk=0,ds=0,l;
 	EFI_MEMORY_DESCRIPTOR*mm=NULL,*md;
 	if(!lb->dtb.address||!lb->initrd.address)return 0;
 	if(!lb->config||!lb->config->add_uefi_runtime)return 0;

@@ -186,7 +186,7 @@ __sfvwrite(FILE *fp, struct __suio *uio)
       GETIOV(nlknown = 0);
       if (!nlknown) {
         nl = memchr((void *)p, '\n', len);          // Divide the string at the first '\n'
-        nldist = (int)(nl ? nl + 1 - p : len + 1);
+        nldist = (int)(nl ? (nl + 1 - p) : (int)(len + 1));
         nlknown = 1;
       }
       s = (int)(MIN((int)len, nldist));

@@ -49,7 +49,11 @@ static int LuaUefiBootOptionOptionalData(lua_State*L){
 			bo->bo->OptionalData=AllocateCopyPool(ds,data);
 			if(!bo->bo->OptionalData)return luaL_error(L,"allocate for data failed");
 		}
-		if(bo->bo->OptionalData&&bo->bo->OptionalDataSize>=0){
+		if(
+			bo->bo->OptionalData&&
+			bo->bo->OptionalDataSize>0&&
+			bo->bo->OptionalDataSize!=(UINT32)-1
+		){
 			uefi_data_to_lua(
 				L,FALSE,
 				bo->bo->OptionalData,

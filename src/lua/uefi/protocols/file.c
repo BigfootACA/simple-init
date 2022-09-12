@@ -72,7 +72,7 @@ void uefi_file_protocol_get_mode(lua_State*L,int n,UINT64*mode,BOOLEAN nil){
 			if(strchr(mod,'c'))*mode|=EFI_FILE_MODE_CREATE;
 			if(strchr(mod,'+'))*mode|=EFI_FILE_MODE_CREATE;
 		};break;
-		case LUA_TNONE:case LUA_TNIL:if(nil)break;
+		case LUA_TNONE:case LUA_TNIL:if(nil)break;//fallthrough
 		default:luaL_argerror(L,n,"invalid file mode");
 	}
 }
@@ -95,7 +95,7 @@ void uefi_file_protocol_get_attr(lua_State*L,int n,UINT64*attr,BOOLEAN nil){
 				lua_pop(L,1);
 			}
 		break;
-		case LUA_TNONE:case LUA_TNIL:if(nil)break;
+		case LUA_TNONE:case LUA_TNIL:if(nil)break;//fallthrough
 		default:luaL_argerror(L,n,"invalid attribute");
 	}
 }

@@ -117,7 +117,7 @@ static int LuaUefiBlockIOProtocolWriteBlocks(lua_State*L){
 	lua_arg_get_data(L,4,false,&data,&ds);
 	UINTN size=luaL_optinteger(L,5,ds);
 	if(!data)return luaL_argerror(L,4,"empty data");
-	if(size<0)return luaL_argerror(L,5,"empty data");
+	if(size<=0)return luaL_argerror(L,5,"empty data");
 	EFI_STATUS status=proto->proto->WriteBlocks(
 		proto->proto,media,lba,size,data
 	);

@@ -93,7 +93,7 @@ static const unsigned short rev_jis[] = {
 static int fuzzycmp(const unsigned char *a, const unsigned char *b)
 {
 	for (; *a && *b; a++, b++) {
-		while (*a && (*a|32U)-'a'>26 && *a-'0'>10U) a++;
+		while (*a && (*a|32U)-'a'>26 && (unsigned)(*a-'0')>10U) a++;
 		if ((*a|32U) != *b) return 1;
 	}
 	return *a != *b;
@@ -142,8 +142,8 @@ iconv_t iconv_open(const char *to, const char *from)
 	size_t f, t;
 	struct stateful_cd *scd;
 
-	if ((t = find_charmap(to))==-1
-	 || (f = find_charmap(from))==-1
+	if ((t = find_charmap(to))==(size_t)-1
+	 || (f = find_charmap(from))==(size_t)-1
 	 || (charmaps[t] >= 0330)) {
 		errno = EINVAL;
 		return (iconv_t)-1;
@@ -283,7 +283,7 @@ size_t iconv(iconv_t cd, char **restrict in, size_t *restrict inb, char **restri
 			c = get_16((void *)*in, type);
 			if ((unsigned)(c-0xdc00) < 0x400) goto ilseq;
 			if ((unsigned)(c-0xd800) < 0x400) {
-				if (type-UCS2BE < 2U) goto ilseq;
+				if ((unsigned)(type-UCS2BE) < 2U) goto ilseq;
 				l = 4;
 				if (*inb < 4) goto starved;
 				d = get_16((void *)(*in + 2), type);
@@ -636,7 +636,7 @@ size_t iconv(iconv_t cd, char **restrict in, size_t *restrict inb, char **restri
 		case UTF_16:
 		case UTF_16BE:
 		case UTF_16LE:
-			if (c < 0x10000 || totype-UCS2BE < 2U) {
+			if (c < 0x10000 || (unsigned)(totype-UCS2BE) < 2U) {
 				if (c >= 0x10000) c = 0xFFFD;
 				if (*outb < 2) goto toobig;
 				put_16((void *)*out, c, totype);

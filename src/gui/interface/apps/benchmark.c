@@ -143,6 +143,9 @@ static void line_create(lv_style_t*style){
 		fall_anim(obj);
 	}
 }
+static inline void anim_lv_arc_set_end_angle(void*obj,int32_t val){
+	lv_arc_set_end_angle(obj,val);
+}
 static void arc_create(lv_style_t*style){
 	for(uint32_t i=0;i<OBJ_NUM;i++){
 		lv_obj_t*obj=lv_arc_create(scene_bg);
@@ -155,7 +158,7 @@ static void arc_create(lv_style_t*style){
 		lv_anim_t a;
 		lv_anim_init(&a);
 		lv_anim_set_var(&a,obj);
-		lv_anim_set_exec_cb(&a,(lv_anim_exec_xcb_t)lv_arc_set_end_angle);
+		lv_anim_set_exec_cb(&a,anim_lv_arc_set_end_angle);
 		lv_anim_set_values(&a,0,359);
 		lv_anim_set_time(&a,t);
 		lv_anim_set_playback_time(&a,t);

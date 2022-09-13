@@ -230,7 +230,7 @@ static int LuaUefiSerialIOProtocolWrite(lua_State*L){
 	lua_arg_get_data(L,2,true,&data,&ds);
 	UINTN size=luaL_optinteger(L,3,ds);
 	if(!data)return luaL_argerror(L,2,"empty data");
-	if(size<0)return luaL_argerror(L,3,"empty data");
+	if(size<=0)return luaL_argerror(L,3,"empty data");
 	EFI_STATUS status=proto->proto->Write(
 		proto->proto,&size,data
 	);

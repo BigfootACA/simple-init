@@ -64,7 +64,7 @@ void
 __smakebuf(FILE *fp)
 {
   void *p;
-  int flags;
+  int flags=0;
   size_t size=BUFSIZ;
 
   if (fp != NULL) {

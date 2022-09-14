@@ -755,7 +755,7 @@ void tsm_vte_hard_reset(struct tsm_vte *vte)
 
 static void send_primary_da(struct tsm_vte *vte)
 {
-	const static char str[] = "\e[?60;1;6;9;15c";
+	static const char str[] = "\e[?60;1;6;9;15c";
 	vte_write(vte, str, sizeof(str) - 1);
 }
 

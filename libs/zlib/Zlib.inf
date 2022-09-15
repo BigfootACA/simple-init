@@ -7,7 +7,7 @@
   LIBRARY_CLASS                  = Zlib
 
 [BuildOptions]
-  GCC:*_*_*_CC_FLAGS = -include src/config-uefi.h
+  GCC:*_*_*_CC_FLAGS = -include src/config-uefi.h -Wno-implicit-fallthrough
 
 [Packages]
   MdePkg/MdePkg.dec

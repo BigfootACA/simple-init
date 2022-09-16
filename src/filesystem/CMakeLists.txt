@@ -13,4 +13,5 @@ add_library(init_filesystem STATIC
 	layer/socket.c
 	layer/posix.c
 	layer/zip.c
+	volume/root.c
 )

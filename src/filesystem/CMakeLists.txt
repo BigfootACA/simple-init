@@ -10,5 +10,6 @@ add_library(init_filesystem STATIC
 	layer/template.c
 	layer/overlay.c
 	layer/assets.c
+	layer/socket.c
 	layer/zip.c
 )

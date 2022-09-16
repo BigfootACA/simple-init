@@ -9,6 +9,7 @@
 #include"fs_internal.h"
 
 extern void fsdrv_register_assets(bool deinit);
+extern void fsdrv_register_socket(bool deinit);
 extern void fsdrv_register_zip(bool deinit);
 
 list*fs_drivers=NULL;
@@ -19,6 +20,9 @@ mutex_t fsvol_lock;
 mutex_t fsvol_info_lock;
 fs_initiator_function*fs_initiator[]={
 	fsdrv_register_assets,
+	#ifndef ENABLE_UEFI
+	fsdrv_register_socket,
+	#endif
 	#ifdef ENABLE_LIBZIP
 	fsdrv_register_zip,
 	#endif

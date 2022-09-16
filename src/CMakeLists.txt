@@ -106,6 +106,7 @@ set(SUBDIRS
 	src/bcd
 	src/compress
 	src/lua
+	src/filesystem
 )
 
 target_link_libraries(simple-init -Wl,--start-group)

@@ -8,4 +8,5 @@ add_library(init_filesystem STATIC
 	drivers.c
 	internal.c
 	layer/template.c
+	layer/overlay.c
 )

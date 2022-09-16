@@ -7,4 +7,5 @@ add_library(init_filesystem STATIC
 	volume.c
 	drivers.c
 	internal.c
+	layer/template.c
 )

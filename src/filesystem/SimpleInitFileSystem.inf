@@ -17,6 +17,7 @@
   SimpleInitLib
   SimpleInitAssets
   SimpleInitCompatible
+  ZipLib
 
 [Sources]
   # Simple-Init filesystem
@@ -31,3 +32,4 @@
   layer/template.c
   layer/overlay.c
   layer/assets.c
+  layer/zip.c

@@ -257,6 +257,7 @@ extern const char*fs_type_to_string(const fs_type);
 extern const char*fs_type_to_name(const fs_type);
 extern bool fs_string_to_file_type(const char*string,fs_type*);
 extern bool fs_name_to_file_type(const char*name,fs_type*);
+extern int fs_register_zip(fsh*f,const char*name);
 extern void fsvol_rescan();
 extern void fsvol_update();
 extern fsvol_info*fsvol_lookup_by_id(const char*id);

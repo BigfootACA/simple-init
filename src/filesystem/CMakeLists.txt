@@ -11,5 +11,6 @@ add_library(init_filesystem STATIC
 	layer/overlay.c
 	layer/assets.c
 	layer/socket.c
+	layer/posix.c
 	layer/zip.c
 )

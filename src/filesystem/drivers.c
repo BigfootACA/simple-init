@@ -10,6 +10,7 @@
 
 extern void fsdrv_register_assets(bool deinit);
 extern void fsdrv_register_socket(bool deinit);
+extern void fsdrv_register_posix(bool deinit);
 extern void fsdrv_register_zip(bool deinit);
 
 list*fs_drivers=NULL;
@@ -22,6 +23,7 @@ fs_initiator_function*fs_initiator[]={
 	fsdrv_register_assets,
 	#ifndef ENABLE_UEFI
 	fsdrv_register_socket,
+	fsdrv_register_posix,
 	#endif
 	#ifdef ENABLE_LIBZIP
 	fsdrv_register_zip,

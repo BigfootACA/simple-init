@@ -8,6 +8,8 @@
 
 #include"fs_internal.h"
 
+extern void fsdrv_register_assets(bool deinit);
+
 list*fs_drivers=NULL;
 list*fs_volumes;
 list*fs_volume_infos;
@@ -15,5 +17,6 @@ mutex_t fsdrv_lock;
 mutex_t fsvol_lock;
 mutex_t fsvol_info_lock;
 fs_initiator_function*fs_initiator[]={
+	fsdrv_register_assets,
 	NULL
 };

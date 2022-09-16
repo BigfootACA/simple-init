@@ -9,4 +9,5 @@ add_library(init_filesystem STATIC
 	internal.c
 	layer/template.c
 	layer/overlay.c
+	layer/assets.c
 )

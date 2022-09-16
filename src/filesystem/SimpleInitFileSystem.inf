@@ -15,6 +15,7 @@
 
 [LibraryClasses]
   SimpleInitLib
+  SimpleInitAssets
   SimpleInitCompatible
 
 [Sources]
@@ -29,3 +30,4 @@
   internal.c
   layer/template.c
   layer/overlay.c
+  layer/assets.c

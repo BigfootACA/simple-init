@@ -39,6 +39,7 @@
   layer/assets.c
   layer/uefi.c
   layer/zip.c
+  volume/uefi.c
 
 [Guids]
   gEfiFileInfoGuid

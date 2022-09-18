@@ -14,5 +14,6 @@ add_library(init_filesystem STATIC
 	layer/posix.c
 	layer/zip.c
 	volume/linux.c
+	volume/mount.c
 	volume/root.c
 )

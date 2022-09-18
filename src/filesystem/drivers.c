@@ -15,6 +15,7 @@ extern void fsdrv_register_uefi(bool deinit);
 extern void fsdrv_register_zip(bool deinit);
 extern void fsvol_register_uefi(bool deinit);
 extern void fsvol_register_root(bool deinit);
+extern void fsvol_register_mount(bool deinit);
 
 list*fs_drivers=NULL;
 list*fs_volumes;
@@ -28,6 +29,7 @@ fs_initiator_function*fs_initiator[]={
 	fsdrv_register_socket,
 	fsdrv_register_posix,
 	fsvol_register_root,
+	fsvol_register_mount,
 	#else
 	fsvol_register_uefi,
 	fsdrv_register_uefi,

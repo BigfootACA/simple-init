@@ -28,6 +28,7 @@ typedef struct image_decoder{
 	char**types;
 }image_decoder;
 
+extern image_decoder*image_get_decoder(char*ext);
 extern void image_decoder_init(void);
 extern void image_set_cache_time(time_t time);
 extern void image_cache_clean(void);

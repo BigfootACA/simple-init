@@ -7,51 +7,22 @@
  */
 
 #ifdef ENABLE_GUI
-#include<fcntl.h>
 #include<stdlib.h>
 #include<string.h>
-#include<unistd.h>
 #include<sys/stat.h>
-#ifdef ENABLE_UEFI
-#include<Library/MemoryAllocationLib.h>
-#include<Guid/FileInfo.h>
-#include"uefi.h"
-#include"locate.h"
-#endif
 #include"list.h"
 #include"confd.h"
-#include"assets.h"
 #include"logger.h"
 #include"gui/image.h"
-#include"gui/fsext.h"
+#include"gui/icon_theme.h"
+#include"filesystem.h"
 #define TAG "image"
 
-#define IMG_RES1 _PATH_USR "/share/pixmaps/simple-init"
-#define IMG_RES2 _PATH_USR"/share/pixmaps/mime"
 extern image_decoder image_decoder_bmp;
 extern image_decoder image_decoder_png;
 extern image_decoder image_decoder_svg;
 extern image_decoder image_decoder_jpeg;
 extern image_decoder image_decoder_stb;
-typedef int(*img_backend)(char*,unsigned char**,size_t*);
-static int image_open_source_lvgl(char*,unsigned char**,size_t*);
-#ifdef ENABLE_UEFI
-static int image_open_source_locate(char*,unsigned char**,size_t*);
-#else
-static int image_open_source_native(char*,unsigned char**,size_t*);
-#endif
-static int image_open_source_assets(char*,unsigned char**,size_t*);
-
-static img_backend img_backends[]={
-	image_open_source_lvgl,
-	#ifdef ENABLE_UEFI
-	image_open_source_locate,
-	#else
-	image_open_source_native,
-	#endif
-	image_open_source_assets,
-	NULL
-};
 
 image_decoder*img_decoders[]={
 	&image_decoder_bmp,
@@ -74,161 +45,19 @@ static list*caches=NULL;
 static time_t cache_time=5;
 static long cache_hit=0,cache_miss=0,load_fail=0;
 
-static int image_open_source_lvgl(char*path,unsigned char**data,size_t*len){
-	lv_fs_res_t r;
-	lv_fs_file_t f;
-	uint32_t size=0,buf=0;
-	if(strlen(path)<=3||path[0]=='/'||path[1]!=':')return -1;
-	if((r=lv_fs_open(&f,path,LV_FS_MODE_RD))!=LV_FS_RES_OK)return -1;
-	if((r=lv_fs_size(&f,&size)!=LV_FS_RES_OK))
-		EDONE(tlog_warn("get image %s size failed: %s",path,lv_fs_res_to_i18n_string(r)));
-	if(size<=64)EDONE(tlog_warn("invalid image %s",path));
-	if(!(*data=malloc(size+1)))EDONE();
-	memset(*data,0,size+1);
-	if((r=lv_fs_read(&f,*data,size,&buf))!=LV_FS_RES_OK)
-		EDONE(tlog_warn("read image %s failed: %s",path,lv_fs_res_to_i18n_string(r)));
-	if(buf!=size)EDONE(tlog_warn("read image %s failed",path));
-	lv_fs_close(&f);
-	*len=(size_t)size;
-	return 0;
-	done:
-	if(f.file_d)lv_fs_close(&f);
-	if(*data)free(*data);
-	*data=NULL,*len=0;
-	return -1;
-}
-
-#ifdef ENABLE_UEFI
-static int image_open_source_locate(char*path,unsigned char**data,size_t*len){
-	EFI_STATUS st;
-	UINTN infos=0,read;
-	EFI_FILE_INFO*info=NULL;
-	locate_ret*loc=AllocateZeroPool(sizeof(locate_ret));
-	if(!loc||path[0]=='/'||!boot_locate_quiet(loc,path))goto done;
-	if(loc->type!=LOCATE_FILE)
-		EDONE(telog_warn("unsupported locate type for %s",path));
-
-	// get file info
-	st=efi_file_get_file_info(loc->file,&infos,&info);
-	if(EFI_ERROR(st))EDONE(tlog_warn(
-		"get file info of %s failed: %s",
-		path,efi_status_to_string(st)
-	));
-	if(info->FileSize<=0)
-		EDONE(tlog_warn("file %s size too small",path));
-	if(info->FileSize>=0x8000000)
-		EDONE(tlog_warn("file %s size too big",path));
-	if(info->Attribute&EFI_FILE_DIRECTORY)
-		EDONE(tlog_warn("file %s is a directory",path));
-	*len=info->FileSize;
-	FreePool(info);
-	info=NULL;
-
-	// read file to memory
-	read=*len;
-	if(!(*data=malloc(read+1)))
-		EDONE(tlog_error("allocate pool failed"));
-	memset(*data,0,read+1);
-	st=loc->file->Read(loc->file,&read,*data);
-	if(EFI_ERROR(st))EDONE(tlog_warn(
-		"read file %s failed: %s",
-		path,efi_status_to_string(st)
-	));
-	if(read!=*len)EDONE(tlog_warn(
-		"read file size %s not match %llu != %zu",
-		path,(unsigned long long)read,*len
-	));
-	loc->file->Close(loc->file);
-	FreePool(loc);
-	return 0;
-	done:
-	if(info)FreePool(info);
-	if(loc->file)loc->file->Close(loc->file);
-	if(loc)FreePool(loc);
-	if(*data)free(*data);
-	*data=NULL,*len=0;
-	return -1;
-}
-#else
-static int image_open_source_native(char*path,unsigned char**data,size_t*len){
-	int fd=-1;
-	struct stat st;
-	if((fd=open(path,O_RDONLY,0644))<0)return -1;
-	if(fstat(fd,&st)!=0)
-		EDONE(telog_warn("stat image %s failed",path));
-	if(!S_ISREG(st.st_mode)||st.st_size<=64)
-		EDONE(tlog_warn("invalid image %s",path));
-	if(!(*data=malloc(st.st_size+1)))EDONE();
-	memset(*data,0,st.st_size+1);
-	if(read(fd,*data,st.st_size)!=st.st_size)
-		EDONE(telog_warn("read image %s failed",path));
-	close(fd);
-	*len=st.st_size;
-	return 0;
-	done:
-	if(fd>=0)close(fd);
-	if(*data)free(*data);
-	*data=NULL,*len=0;
-	return -1;
-}
-#endif
-
-static int image_open_source_assets(char*path,unsigned char**data,size_t*len){
-	struct entry_file*f=rootfs_get_assets_file(path);
-	if(!f)return -1;
-	if(f->length<=64)return trlog_warn(-1,"invalid image %s",path);
-	if(!(*data=malloc(f->length+1)))return -1;
-	memset(*data,0,f->length+1);
-	memcpy(*data,f->content,f->length);
-	*len=f->length;
-	return 0;
-}
-
-static int image_open_source(char*path,unsigned char**data,size_t*len){
-	if(!path||!data||!len)return -1;
-	for(size_t i=0;img_backends[i];i++){
-		*len=0,*data=NULL;
-		if(img_backends[i](path,data,len)==0)return 0;
-	}
-	*len=0,*data=NULL;
-	return -1;
-}
-
-static int image_open_source_try(char*path,unsigned char**data,size_t*len){
-	int r=0,tr=0;
-	char rpath[PATH_MAX];
-	if(!path||!path[0]||!data||!len)return -1;
-	do{
-		if(*data)free(*data);
-		*data=NULL,*len=0;
-		memset(rpath,0,sizeof(rpath));
-		switch(tr){
-			case 0:strncpy(rpath,path,sizeof(rpath)-1);break;
-			case 1:snprintf(rpath,sizeof(rpath)-1,IMG_RES1"/%s",path);break;
-			case 2:snprintf(rpath,sizeof(rpath)-1,IMG_RES2"/%s",path);break;
-			default:return r;
-		}
-		r=image_open_source(rpath,data,len);
-		tr++;
-	}while(r==-1||!(*data)||(*len)<=0);
-	return r;
-}
-
-static image_decoder*image_get_decoder(char*path){
-	if(!path)return NULL;
-	static list*unsupports=NULL;
-	char*e=NULL,*ext;
+image_decoder*image_get_decoder(char*ext){
+	char*e=NULL;
 	image_decoder*d=NULL;
-	if(!(ext=strrchr(path,'.')))return NULL;
-	if(!*(++ext))return NULL;
+	static list*unsupports=NULL;
+	if(!ext)return NULL;
 	for(size_t i=0;(d=img_decoders[i]);i++){
 		if(!d->types)continue;
 		for(size_t t=0;(e=d->types[t]);t++)
 			if(strcasecmp(ext,e)==0)return d;
 	}
-	if(!list_search_string(unsupports,path)){
-		tlog_warn("unsupported image decoder for type %s (%s)",ext,path);
-		list_obj_add_new_strdup(&unsupports,path);
+	if(list_search_string(unsupports,ext)){
+		tlog_warn("unsupported image decoder for type %s",ext);
+		list_obj_add_new_strdup(&unsupports,ext);
 	}
 	return NULL;
 }
@@ -291,13 +120,99 @@ static void image_add_cache(image_data*img){
 	list_obj_add_new_notnull(&caches,img);
 }
 
+static bool load_icon(
+	struct icon_theme*theme,
+	struct icon_theme_search_path*s,
+	char*type,char*path,
+	unsigned char**data,
+	size_t*len,
+	image_decoder**d
+){
+	int r=0;
+	fsh*f=NULL;
+	if(!path||!data||!len||!d)return false;
+	if(!type){
+		if(!(type=strrchr(path,'.'))||strchr(type,'/')){
+			tlog_warn("'%s' image type not set",path);
+			return false;
+		}
+		type++;
+	}
+	if(!(*d=image_get_decoder(type))||!(*d)->decode_cb)return false;
+	r=fs_open(s?s->folder:theme->root,&f,path,FILE_FLAG_READ);
+	if(r!=0)return false;
+	r=fs_read_all(f,(void**)data,len);
+	fs_close(&f);
+	return r==0;
+}
+
+static bool load_search_path(
+	struct icon_theme*theme,
+	struct icon_theme_search_path*s,
+	char*path,
+	unsigned char**data,
+	size_t*len,
+	image_decoder**d
+){
+	list*l;
+	bool ret=false;
+	if(!theme||!path||!data||!len||!d)return false;
+	if(path[0]=='@'){
+		path++;
+		if((l=list_first(theme->name_mapping)))do{
+			LIST_DATA_DECLARE(icon,l,struct icon_theme_name_mapping*);
+			if(!icon)continue;
+			if(icon->name&&strcmp(path,icon->name)!=0)continue;
+			if(icon->regex&&regexp_exec(icon->regex,path,NULL,0)!=0)continue;
+			if(icon->search&&(!s||!s->id||strcmp(icon->search,s->id)!=0))continue;
+			if(load_icon(theme,s,icon->type,icon->path,data,len,d))return true;
+		}while((l=l->next));
+	}else ret=load_icon(theme,s,NULL,path,data,len,d);
+	return ret;
+}
+
+static bool load_theme(
+	char*path,
+	unsigned char**data,
+	size_t*len,
+	image_decoder**d
+){
+	list*l,*s;
+	static bool no_any=false;
+	if(!path||!data||!len||!d)return false;
+	*len=0,*data=NULL,*d=NULL;
+	if(!gui_icon_themes){
+		if(!no_any)tlog_warn("no any icon themes found");
+		no_any=true;
+		return false;
+	}
+	if((l=list_first(gui_icon_themes)))do{
+		LIST_DATA_DECLARE(theme,l,struct icon_theme*);
+		if(!theme)continue;
+		if((s=list_first(theme->search_path)))do{
+			LIST_DATA_DECLARE(search,s,struct icon_theme_search_path*);
+			if(!search)continue;
+			if(load_search_path(
+				theme,search,
+				path,data,len,d
+			))return true;
+		}while((s=s->next));
+		if(load_search_path(
+			theme,NULL,
+			path,data,len,d
+		))return true;
+	}while((l=l->next));
+	tlog_warn("icon %s not found",path);
+	return false;
+}
+
 static image_data*image_decode(char*path){
 	size_t len=0;
 	image_data*img=NULL;
 	image_decoder*d=NULL;
 	unsigned char*data=NULL;
-	if(!(d=image_get_decoder(path))||!d->decode_cb)return NULL;
-	if(image_open_source_try(path,&data,&len)==-1||!data||len<=0)goto done;
+	if(!load_theme(path,&data,&len,&d))goto done;
+	if(!data||len<=0||!d||!d->decode_cb)goto done;
 	if(!(img=malloc(sizeof(image_data))))goto done;
 	memset(img,0,sizeof(image_data));
 	strncpy(img->path,path,sizeof(img->path)-1);
@@ -362,6 +277,7 @@ void image_decoder_init(){
 	lv_img_decoder_set_open_cb(dec,decoder_open);
 	lv_img_decoder_set_close_cb(dec,decoder_close);
 	cache_time=confd_get_integer("gui.image_cache_time",5);
+	icon_theme_load_from_confd();
 }
 
 long image_get_cache_hits(){return cache_hit;}

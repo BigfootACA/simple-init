@@ -9,6 +9,7 @@ add_library(init_gui STATIC
 	lua/activity.c
 	lua/sysbar.c
 	lua/lua.c
+	theme/icon.c
 	engine/app.c
 	engine/lib.c
 	engine/code.c

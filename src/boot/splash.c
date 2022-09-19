@@ -16,17 +16,17 @@
 #include<unistd.h>
 #include"uefi.h"
 #include"boot.h"
-#include"locate.h"
 #include"logger.h"
 #include"compatible.h"
+#include"filesystem.h"
 #include"stb_image.h"
 #include"stb_image_resize.h"
 #define TAG "splash"
 
 int boot_draw_splash(boot_config*cfg){
+	UINTN ds=0;
+	size_t bs=0;
 	EFI_STATUS st;
-	UINTN bs=0,ds=0;
-	locate_ret*loc=NULL;
 	uint8_t*disp=NULL,*p,s;
 	int sw=0,sh=0,iw=0,ih=0;
 	int dw=0,dh=0,dx=0,dy=0,r=-1;
@@ -49,16 +49,8 @@ int boot_draw_splash(boot_config*cfg){
 	sw=info->HorizontalResolution,sh=info->VerticalResolution;
 	if(sw<=0||sh<=0)return trlog_warn(-1,"invalid gop resolution");
 	tlog_debug("screen resolution: %dx%d",sw,sh);
-	if(!(loc=AllocateZeroPool(sizeof(locate_ret))))
-		EDONE(tlog_warn("alloc locate failed"));
-	if(!boot_locate(loc,cfg->splash))
-		EDONE(tlog_warn("locate splash file failed"));
-	if(loc->type!=LOCATE_FILE)
-		EDONE(tlog_warn("locate target not a file"));
-	st=efi_file_read_whole(loc->file,(VOID**)&buffer,&bs);
-	loc->file->Close(loc->file);
-	FreePool(loc);
-	loc=NULL;
+	if(fs_read_whole_file(NULL,cfg->splash,(VOID**)&buffer,&bs)!=0||!buffer)
+		EDONE(telog_warn("read splash file %s failed",cfg->splash));
 	if(EFI_ERROR(st)||!buffer||bs<=0)EDONE(tlog_warn(
 		"read splash file failed: %s",
 		efi_status_to_string(st)
@@ -103,12 +95,7 @@ int boot_draw_splash(boot_config*cfg){
 		efi_status_to_string(st)
 	));
 	r=0;done:
-	if(loc){
-		if(loc->type==LOCATE_FILE&&loc->file)
-			loc->file->Close(loc->file);
-		FreePool(loc);
-	}
-	if(buffer)FreePool(buffer);
+	if(buffer)free(buffer);
 	if(disp)FreePool(disp);
 	return r;
 }

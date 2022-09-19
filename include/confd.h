@@ -11,9 +11,6 @@
 #include<stdint.h>
 #include<stdbool.h>
 #include<sys/types.h>
-#ifdef ENABLE_UEFI
-#include<Protocol/SimpleFileSystem.h>
-#endif
 #include"pathnames.h"
 #include"logger.h"
 #define DEFAULT_CONFD _PATH_RUN"/confd.sock"
@@ -53,25 +50,13 @@ extern int confd_quit(void);
 extern int confd_dump(enum log_level level);
 
 // src/confd/client.c: save config store as a file
-#ifdef ENABLE_UEFI
-extern int confd_save_file(EFI_FILE_PROTOCOL*fd,const char*file);
-#else
 extern int confd_save_file(const char*file);
-#endif
 
 // src/confd/client.c: load config store from a file
-#ifdef ENABLE_UEFI
-extern int confd_load_file(EFI_FILE_PROTOCOL*fd,const char*file);
-#else
 extern int confd_load_file(const char*file);
-#endif
 
 // src/confd/client.c: include config store from a file
-#ifdef ENABLE_UEFI
-extern int confd_include_file(EFI_FILE_PROTOCOL*fd,const char*file);
-#else
 extern int confd_include_file(const char*file);
-#endif
 
 // src/confd/client.c: set default config file path
 extern int confd_set_default_config(const char*file);

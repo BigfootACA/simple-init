@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<SimpleInitIconTheme compatible="1">
+	<Id>default</Id>
+	<Name>Default Icon Theme</Name>
+	<Version>0.0.1</Version>
+	<Author>BigfootACA</Author>
+	<Description>
+		Default Icon Theme for simple-init
+		Based on Papirus icon theme
+	</Description>
+	<SearchPath>
+		<Path path="rootfs:///usr/share/pixmaps/simple-init/"/>
+		<Path id="mime" path="rootfs:///usr/share/pixmaps/mime/"/>
+	</SearchPath>
+	<NameMapping>
+		<Icon name="background"                        path="bg.jpg"/>
+		<Icon name="app-unknown"                       path="apps.svg"/>
+		<Icon name="app-abootimg"                      path="abootimg.svg"/>
+		<Icon name="app-acpi-load"                     path="acpi.svg"/>
+		<Icon name="app-acpi-manager"                  path="acpi.svg"/>
+		<Icon name="app-mounts"                        path="mounts.svg"/>
+		<Icon name="app-backlight-menu"                path="backlight.svg"/>
+		<Icon name="app-back"                          path="back.svg"/>
+		<Icon name="app-backup"                        path="backup.svg"/>
+		<Icon name="app-battery"                       path="battery.svg"/>
+		<Icon name="app-bootmgr"                       path="bootmgr.svg"/>
+		<Icon name="app-calendar"                      path="calendar.svg"/>
+		<Icon name="app-cdrom"                         path="cdrom.svg"/>
+		<Icon name="app-clipboard"                     path="clipboard.svg"/>
+		<Icon name="app-config-load"                   path="conftool.svg"/>
+		<Icon name="app-config-save"                   path="conftool.svg"/>
+		<Icon name="app-config-manager"                path="conftool.svg"/>
+		<Icon name="app-config-manager-create"         path="conftool.svg"/>
+		<Icon name="app-vibrator"                      path="vibrator.svg"/>
+		<Icon name="app-picture-viewer"                path="photo-viewer.svg"/>
+		<Icon name="app-file-manager"                  path="filemgr.svg"/>
+		<Icon name="app-gui-benchmark"                 path="gui-benchmark.svg"/>
+		<Icon name="app-guipm-disk-select"             path="guipm.svg"/>
+		<Icon name="app-guipm-partitions"              path="guipm.svg"/>
+		<Icon name="app-guipm-new-partition"           path="guipm.svg"/>
+		<Icon name="app-guipm-resize-partition"        path="guipm.svg"/>
+		<Icon name="app-guipm-change-partition-type"   path="guipm.svg"/>
+		<Icon name="app-regedit"                       path="regedit.svg"/>
+		<Icon name="app-regedit-edit-value"            path="regedit.svg"/>
+		<Icon name="app-language-menu"                 path="language.svg"/>
+		<Icon name="app-mouse-tools-menu"              path="mouse.svg"/>
+		<Icon name="app-boot-linux"                    path="linux.svg"/>
+		<Icon name="app-logger-viewer"                 path="logviewer.svg"/>
+		<Icon name="app-mount-manager"                 path="mount.svg"/>
+		<Icon name="app-add-mount"                     path="mount.svg"/>
+		<Icon name="app-serial-open"                   path="serial.svg"/>
+		<Icon name="app-serial-port"                   path="serial.svg"/>
+		<Icon name="app-terminal"                      path="terminal.svg"/>
+		<Icon name="app-usb-gadget"                    path="usb.svg"/>
+		<Icon name="app-usb-gadget-add-mass"           path="usb.svg"/>
+		<Icon name="app-usb-gadget-base-info"          path="usb.svg"/>
+		<Icon name="app-usb-gadget"                    path="usb.svg"/>
+		<Icon name="app-text-editor"                   path="text-editor.svg"/>
+		<Icon name="app-theme-select-menu"             path="theme.svg"/>
+		<Icon name="app-pointer-test"                  path="pointer.svg"/>
+		<Icon name="app-screen-test"                   path="screen.svg"/>
+		<Icon name="app-uefi-bootmenu"                 path="bootmgr.svg"/>
+		<Icon name="app-add-ramdisk"                   path="cdrom.svg"/>
+		<Icon name="app-acpi-manager"                  path="acpi.svg"/>
+		<Icon name="app-uefi-shell"                    path="terminal.svg"/>
+		<Icon name="app-reboot-menu"                   path="reboot.svg"/>
+		<Icon name="reboot-reboot"                     path="reboot.svg"/>
+		<Icon name="reboot-reboot-cold"                path="reboot.svg"/>
+		<Icon name="reboot-reboot-warm"                path="reboot.svg"/>
+		<Icon name="reboot-edl"                        path="download.svg"/>
+		<Icon name="reboot-recovery"                   path="twrp.png"/>
+		<Icon name="reboot-fastboot"                   path="fastboot.svg"/>
+		<Icon name="reboot-poweroff"                   path="poweroff.svg"/>
+		<Icon name="distributor-logo-absolute"         path="distributor-logo-absolute.svg"/>
+		<Icon name="distributor-logo-academix"         path="distributor-logo-academix.svg"/>
+		<Icon name="distributor-logo-aix"              path="distributor-logo-aix.svg"/>
+		<Icon name="distributor-logo-alpine"           path="distributor-logo-alpine.svg"/>
+		<Icon name="distributor-logo-alt-linux"        path="distributor-logo-alt-linux.svg"/>
+		<Icon name="distributor-logo-android"          path="distributor-logo-android.svg"/>
+		<Icon name="distributor-logo-antix"            path="distributor-logo-antix.svg"/>
+		<Icon name="distributor-logo-archbang"         path="distributor-logo-archbang.svg"/>
+		<Icon name="distributor-logo-archlabs"         path="distributor-logo-archlabs.svg"/>
+		<Icon name="distributor-logo-archlinux"        path="distributor-logo-archlinux.svg"/>
+		<Icon name="distributor-logo-archman"          path="distributor-logo-archman.svg"/>
+		<Icon name="distributor-logo-artix"            path="distributor-logo-artix.svg"/>
+		<Icon name="distributor-logo-aryalinux"        path="distributor-logo-aryalinux.svg"/>
+		<Icon name="distributor-logo-backbox"          path="distributor-logo-backbox.svg"/>
+		<Icon name="distributor-logo-blackarch"        path="distributor-logo-blackarch.svg"/>
+		<Icon name="distributor-logo-bodhi-linux"      path="distributor-logo-bodhi-linux.svg"/>
+		<Icon name="distributor-logo-bunsenlabs"       path="distributor-logo-bunsenlabs.svg"/>
+		<Icon name="distributor-logo-calculate-linux"  path="distributor-logo-calculate-linux.svg"/>
+		<Icon name="distributor-logo-condres"          path="distributor-logo-condres.svg"/>
+		<Icon name="distributor-logo-debian"           path="distributor-logo-debian.svg"/>
+		<Icon name="distributor-logo-deepin"           path="distributor-logo-deepin.svg"/>
+		<Icon name="distributor-logo-devuan"           path="distributor-logo-devuan.svg"/>
+		<Icon name="distributor-logo-dragonflybsd"     path="distributor-logo-dragonflybsd.svg"/>
+		<Icon name="distributor-logo-endeavouros"      path="distributor-logo-endeavouros.svg"/>
+		<Icon name="distributor-logo-fedora"           path="distributor-logo-fedora.svg"/>
+		<Icon name="distributor-logo-freebsd"          path="distributor-logo-freebsd.svg"/>
+		<Icon name="distributor-logo-freedos"          path="distributor-logo-freedos.svg"/>
+		<Icon name="distributor-logo-ghostbsd"         path="distributor-logo-ghostbsd.svg"/>
+		<Icon name="distributor-logo-hyperbola"        path="distributor-logo-hyperbola.svg"/>
+		<Icon name="distributor-logo-kali-linux"       path="distributor-logo-kali-linux.svg"/>
+		<Icon name="distributor-logo-kaos"             path="distributor-logo-kaos.svg"/>
+		<Icon name="distributor-logo-knoppix"          path="distributor-logo-knoppix.svg"/>
+		<Icon name="distributor-logo-korora"           path="distributor-logo-korora.svg"/>
+		<Icon name="distributor-logo-linux-lite"       path="distributor-logo-linux-lite.svg"/>
+		<Icon name="distributor-logo-linux-mint"       path="distributor-logo-linux-mint.svg"/>
+		<Icon name="distributor-logo-lubuntu"          path="distributor-logo-lubuntu.svg"/>
+		<Icon name="distributor-logo-lxle"             path="distributor-logo-lxle.svg"/>
+		<Icon name="distributor-logo-mac"              path="distributor-logo-mac.svg"/>
+		<Icon name="distributor-logo-madlinux"         path="distributor-logo-madlinux.svg"/>
+		<Icon name="distributor-logo-manjaro"          path="distributor-logo-manjaro.svg"/>
+		<Icon name="distributor-logo-midnightbsd"      path="distributor-logo-midnightbsd.svg"/>
+		<Icon name="distributor-logo-ms-dos"           path="distributor-logo-ms-dos.svg"/>
+		<Icon name="distributor-logo-mx"               path="distributor-logo-mx.svg"/>
+		<Icon name="distributor-logo-netbsd"           path="distributor-logo-netbsd.svg"/>
+		<Icon name="distributor-logo-netrunner"        path="distributor-logo-netrunner.svg"/>
+		<Icon name="distributor-logo-openbsd"          path="distributor-logo-openbsd.svg"/>
+		<Icon name="distributor-logo-openmandriva"     path="distributor-logo-openmandriva.svg"/>
+		<Icon name="distributor-logo-opensuse"         path="distributor-logo-opensuse.svg"/>
+		<Icon name="distributor-logo-parrot"           path="distributor-logo-parrot.svg"/>
+		<Icon name="distributor-logo-pclinuxos"        path="distributor-logo-pclinuxos.svg"/>
+		<Icon name="distributor-logo-pisilinux"        path="distributor-logo-pisilinux.svg"/>
+		<Icon name="distributor-logo-pop-os"           path="distributor-logo-pop-os.svg"/>
+		<Icon name="distributor-logo-puppy-linux"      path="distributor-logo-puppy-linux.svg"/>
+		<Icon name="distributor-logo-pureos"           path="distributor-logo-pureos.svg"/>
+		<Icon name="distributor-logo-raspbian"         path="distributor-logo-raspbian.svg"/>
+		<Icon name="distributor-logo-rhel"             path="distributor-logo-rhel.svg"/>
+		<Icon name="distributor-logo-rosa"             path="distributor-logo-rosa.svg"/>
+		<Icon name="distributor-logo-salentos"         path="distributor-logo-salentos.svg"/>
+		<Icon name="distributor-logo-smartos"          path="distributor-logo-smartos.svg"/>
+		<Icon name="distributor-logo-solus"            path="distributor-logo-solus.svg"/>
+		<Icon name="distributor-logo-steamos"          path="distributor-logo-steamos.svg"/>
+		<Icon name="distributor-logo-trueos"           path="distributor-logo-trueos.svg"/>
+		<Icon name="distributor-logo-ubuntu-budgie"    path="distributor-logo-ubuntu-budgie.svg"/>
+		<Icon name="distributor-logo-ubuntu-mate"      path="distributor-logo-ubuntu-mate.svg"/>
+		<Icon name="distributor-logo-ubuntu-studio"    path="distributor-logo-ubuntu-studio.svg"/>
+		<Icon name="distributor-logo-ubuntu"           path="distributor-logo-ubuntu.svg"/>
+		<Icon name="distributor-logo-ultimate-edition" path="distributor-logo-ultimate-edition.svg"/>
+		<Icon name="distributor-logo-void"             path="distributor-logo-void.svg"/>
+		<Icon name="distributor-logo-voyager"          path="distributor-logo-voyager.svg"/>
+		<Icon name="distributor-logo-windows"          path="distributor-logo-windows.svg"/>
+		<Icon name="distributor-logo-zorin"            path="distributor-logo-zorin.svg"/>
+		<Icon name="bootitem-unknown"                  path="apps.svg"/>
+		<Icon name="bootitem-back"                     path="back.svg"/>
+		<Icon name="bootitem-continue"                 path="exit.svg"/>
+		<Icon name="bootitem-charger"                  path="battery.svg"/>
+		<Icon name="bootitem-system"                   path="launcher.svg"/>
+		<Icon name="bootitem-simple-init"              path="launcher.svg"/>
+		<Icon name="bootitem-uefi-bootmenu"            path="uefi.svg"/>
+		<Icon name="bootitem-uefi-bootitem"            path="uefi.svg"/>
+		<Icon name="bootitem-switchroot"               path="linux.svg"/>
+		<Icon name="bootitem-reboots"                  path="reboot.svg"/>
+		<Icon name="bootitem-poweroff"                 path="poweroff.svg"/>
+		<Icon name="bootitem-reboot"                   path="reboot.svg"/>
+		<Icon name="bootitem-edl"                      path="download.svg"/>
+		<Icon name="bootitem-recovery"                 path="twrp.png"/>
+		<Icon name="bootitem-bootloader"               path="fastboot.svg"/>
+		<Icon name="mime-inode-blockdevice" searchpath="mime" path="inode-blockdevice.svg"/>
+		<Icon name="mime-inode-chardevice"  searchpath="mime" path="inode-chardevice.svg"/>
+		<Icon name="mime-inode-dir"         searchpath="mime" path="inode-dir.svg"/>
+		<Icon name="mime-inode-disk"        searchpath="mime" path="inode-disk.svg"/>
+		<Icon name="mime-inode-fifo"        searchpath="mime" path="inode-fifo.svg"/>
+		<Icon name="mime-inode-file"        searchpath="mime" path="inode-file.svg"/>
+		<Icon name="mime-inode-mount-point" searchpath="mime" path="inode-mount-point.svg"/>
+		<Icon name="mime-inode-parent"      searchpath="mime" path="inode-parent.svg"/>
+		<Icon name="mime-inode-socket"      searchpath="mime" path="inode-socket.svg"/>
+		<Icon name="mime-inode-symlink"     searchpath="mime" path="inode-symlink.svg"/>
+		<Icon name="mime-text-x-plain"      searchpath="mime" path="text-x-plain.svg"/>
+		<Icon name="mime-unknown"           searchpath="mime" path="unknown.svg"/>
+	</NameMapping>
+</SimpleInitIconTheme>

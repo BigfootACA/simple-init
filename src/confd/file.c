@@ -7,18 +7,7 @@
  */
 
 #define _GNU_SOURCE
-#ifdef ENABLE_UEFI
-#include<Library/BaseLib.h>
-#include<Library/BaseMemoryLib.h>
-#include<Library/MemoryAllocationLib.h>
-#include<Protocol/SimpleFileSystem.h>
-#include<Guid/FileSystemInfo.h>
-#include<Guid/FileInfo.h>
-#include"locate.h"
-#include"uefi.h"
-#endif
 #include<string.h>
-#include<sys/stat.h>
 #include"confd_internal.h"
 #include"logger.h"
 #define TAG "config"
@@ -63,217 +52,46 @@ static struct conf_file_hand*find_hand_by_file(const char*file){
 	return find_hand(file_get_ext(file));
 }
 
-#ifdef ENABLE_UEFI
 static int do_close(struct conf_file_hand*hand,bool save){
 	int r=0;
 	if(save&&hand->off>0){
-		EFI_STATUS st;
-		UINTN w=hand->off;
-		st=hand->fd->Write(hand->fd,&w,hand->buff);
-		if(EFI_ERROR(st))r=trlog_warn(
-			ENUM(efi_status_to_errno(st)),
-			"write config failed: %s",
-			efi_status_to_string(st)
-		);
-		else if(w!=(UINTN)hand->off)r=trlog_warn(
-			-1,"write size mismatch %llu != %llu",
-			(unsigned long long)w,
-			(unsigned long long)hand->off
-		);
+		fs_seek(hand->file,0,SEEK_SET);
+		r=fs_full_write(hand->file,hand->buff,hand->off);
+		if(r!=0)tlog_warn("write config failed: %s",strerror(r));
 	}
-	if(hand->fd)hand->fd->Close(hand->fd);
+	if(hand->file)fs_close(&hand->file);
 	if(hand->buff)free(hand->buff);
-	hand->fd=NULL,hand->buff=NULL,hand->len=0,hand->off=0;
+	hand->file=NULL,hand->buff=NULL,hand->len=0,hand->off=0;
 	return r;
 }
 
 static int do_load(struct conf_file_hand*hand){
-	char*cp=hand->path;
-	UINTN xs=PATH_MAX*sizeof(CHAR16);
-	CHAR16*xp=NULL;
-	locate_ret*loc=NULL;
-	EFI_STATUS st=EFI_SUCCESS;
-	EFI_FILE_INFO*info=NULL;
-	do_close(hand,false);
-	if((cp[0]=='@'&&strchr(cp,':'))||!hand->dir){
-		if(!(loc=AllocateZeroPool(sizeof(locate_ret))))
-			EDONE(tlog_warn("alloc locate failed"));
-		if(!boot_locate(loc,cp))
-			EDONE(tlog_warn("locate %s failed",cp));
-		if(loc->type!=LOCATE_FILE||!loc->file)
-			EDONE(tlog_warn("locate %s type not supported failed",cp));
-		hand->fd=loc->file;
-	}else{
-		if(!(xp=AllocateZeroPool(xs)))goto done;
-		do{if(*cp=='/')*cp='\\';}while(*cp++);
-		AsciiStrToUnicodeStrS(hand->path,xp,xs/sizeof(CHAR16));
-		st=hand->dir->Open(hand->dir,&hand->fd,xp,EFI_FILE_MODE_READ,0);
-		if(EFI_ERROR(st)){
-			if(st!=EFI_NOT_FOUND)tlog_warn(
-				"open config '%s' failed: %s",
-				hand->path,efi_status_to_string(st)
-			);
-			goto done;
-		}
-	}
-	st=efi_file_get_file_info(hand->fd,NULL,&info);
-	if(EFI_ERROR(st))EDONE(tlog_warn(
-		"get config '%s' file info failed: %s",
-		hand->path,efi_status_to_string(st)
-	));
-	hand->len=info->FileSize;
-	if(info->Attribute&EFI_FILE_DIRECTORY)
-		EDONE(tlog_warn("config '%s' is a directory",hand->path));
-	if(hand->len>0x400000)
-		EDONE(tlog_warn("config '%s' too large",hand->path));
-	if(hand->len<=0)
-		EDONE(tlog_warn("config '%s' too small",hand->path));
-	if(!(hand->buff=malloc(hand->len+1)))
-		EDONE(tlog_warn("allocate file content failed"));
-	ZeroMem(hand->buff,hand->len+1);
-	st=hand->fd->Read(hand->fd,(UINTN*)&hand->len,hand->buff);
-	if(EFI_ERROR(st))EDONE(tlog_warn(
-		"read '%s' failed: %s",
-		hand->path,efi_status_to_string(st)
-	));
-	if(loc)FreePool(loc);
-	if(info)FreePool(info);
-	if(xp)FreePool(xp);
-	return 0;
-	done:
-	if(loc)FreePool(loc);
-	if(xp)FreePool(xp);
-	if(info)FreePool(info);
-	do_close(hand,false);
-	return EFI_ERROR(st)?ENUM(efi_status_to_errno(st)):-1;
-}
-
-static int do_save(struct conf_file_hand*hand){
-	char*cp=hand->path;
-	UINTN infos=0;
-	UINTN xs=PATH_MAX*sizeof(CHAR16);
-	CHAR16*xp=NULL;
-	locate_ret*loc=NULL;
-	EFI_STATUS st=EFI_SUCCESS;
-	EFI_FILE_INFO*info=NULL;
-	EFI_FILE_PROTOCOL*dir=hand->dir;
-	do_close(hand,false);
-	if((cp[0]=='@'&&strchr(cp,':'))||!dir){
-		if(!(loc=AllocateZeroPool(sizeof(locate_ret))))
-			EDONE(tlog_warn("alloc locate failed"));
-		if(!boot_locate_create_file(loc,cp))
-			EDONE(tlog_warn("locate %s failed",cp));
-		if(loc->type!=LOCATE_FILE||!loc->file)
-			EDONE(tlog_warn("locate %s type not supported failed",cp));
-		hand->fd=loc->file,dir=loc->root;
-	}else{
-		if(!(xp=AllocateZeroPool(xs)))goto done;
-		do{if(*cp=='/')*cp='\\';}while(*cp++);
-		AsciiStrToUnicodeStrS(hand->path,xp,xs/sizeof(CHAR16));
-		st=dir->Open(
-			dir,&hand->fd,xp,
-			EFI_FILE_MODE_READ|
-			EFI_FILE_MODE_WRITE|
-			EFI_FILE_MODE_CREATE,0
-		);
-		if(EFI_ERROR(st))EDONE(tlog_warn(
-			"open config '%s' failed: %s",
-			hand->path,efi_status_to_string(st)
-		));
-	}
-	st=efi_file_get_file_info(hand->fd,&infos,&info);
-	if(EFI_ERROR(st))EDONE(tlog_warn(
-		"get config '%s' file info failed: %s",
-		hand->path,efi_status_to_string(st)
-	));
-	if(info->Attribute&EFI_FILE_DIRECTORY)
-		EDONE(tlog_warn("config '%s' is a directory",hand->path));
-	info->FileSize=0;
-	st=hand->fd->SetInfo(hand->fd,&gEfiFileInfoGuid,infos,info);
-	if(EFI_ERROR(st)){
-		hand->fd->Delete(hand->fd);
-		hand->fd=NULL;
-		st=dir->Open(
-			dir,&hand->fd,xp,
-			EFI_FILE_MODE_READ|
-			EFI_FILE_MODE_WRITE|
-			EFI_FILE_MODE_CREATE,0
-		);
-		if(EFI_ERROR(st))EDONE(tlog_warn(
-			"create config '%s' failed: %s",
-			hand->path,efi_status_to_string(st)
-		));
-	}
-	hand->fd->SetPosition(hand->fd,0);
-	if(loc)FreePool(loc);
-	if(info)FreePool(info);
-	if(xp)FreePool(xp);
-	return 0;
-	done:
-	if(loc)FreePool(loc);
-	if(xp)FreePool(xp);
-	if(info)FreePool(info);
-	do_close(hand,false);
-	return EFI_ERROR(st)?ENUM(efi_status_to_errno(st)):-1;
-}
-
-#else
-
-static int do_close(struct conf_file_hand*hand,bool save){
 	int r=0;
-	if(save&&hand->off>0){
-		ssize_t w=write(hand->fd,hand->buff,hand->off);
-		if(w<0)r=terlog_warn(ENUM(errno),"write config failed");
-		else if((size_t)w!=(size_t)hand->off)r=trlog_warn(
-			-1,"write size mismatch %zu != %zu",
-			(size_t)w,hand->off
-		);
-	}
-	if(hand->fd>0)close(hand->fd);
-	if(hand->buff)free(hand->buff);
-	hand->fd=-1,hand->buff=NULL,hand->len=0,hand->off=0;
-	return r;
-}
-
-static int do_load(struct conf_file_hand*hand){
-	ssize_t r=-1;
-	struct stat st;
 	do_close(hand,false);
-	if((hand->fd=openat(hand->dir,hand->path,O_RDONLY))<0)
-		EDONE(telog_warn("open config '%s' failed",hand->path));
-	if(fstat(hand->fd,&st)<0)
-		EDONE(telog_warn("stat config '%s' failed",hand->path));
-	hand->len=st.st_size;
-	if(!S_ISREG(st.st_mode))
-		EDONE(tlog_warn("config '%s' not a file",hand->path));
-	if(hand->len>0x400000)
-		EDONE(tlog_warn("config '%s' too large",hand->path));
-	if(hand->len<=0)
-		EDONE(tlog_warn("config '%s' too small",hand->path));
-	if(!(hand->buff=malloc(hand->len+1)))
-		EDONE(tlog_warn("allocate file content failed"));
-	r=read(hand->fd,hand->buff,hand->len);
+	hand->file=NULL,hand->len=0;
+	r=fs_open(hand->parent,&hand->file,hand->path,FILE_FLAG_READ);
+	if(r!=0)EDONE(if(r!=ENOENT)tlog_warn("open config '%s' failed: %s",hand->path,strerror(r)));
+	r=fs_get_size(hand->file,&hand->len);
+	if(hand->len>0x400000)EDONE(tlog_warn("config '%s' too large",hand->path));
+	if(hand->len<=0)EDONE(tlog_warn("config '%s' too small",hand->path));
+	r=fs_read_all(hand->file,(void**)&hand->buff,&hand->len);
 	if(r<0)EDONE(telog_warn("read '%s' failed",hand->path));
-	if((size_t)r!=hand->len)EDONE(tlog_warn(
-		"read '%s' size mismatch",
-		hand->path
-	));
 	return 0;
 	done:do_close(hand,false);
 	return errno<0?-(errno):-1;
 }
 
 static int do_save(struct conf_file_hand*hand){
+	int r=0;
 	do_close(hand,false);
-	if((hand->fd=openat(hand->dir,hand->path,O_RDWR|O_CREAT,0644))<0)
-		EDONE(telog_warn("open config '%s' failed",hand->path));
-	lseek(hand->fd,0,SEEK_SET);
-	ftruncate(hand->fd,0);
+	r=fs_open(hand->parent,&hand->file,hand->path,FILE_FLAG_WRITE|FILE_FLAG_CREATE|0644);
+	if(r!=0)EDONE(telog_warn("open config '%s' failed: %s",hand->path,strerror(r)));
+	fs_seek(hand->file,0,SEEK_SET);
+	fs_set_size(hand->file,0);
 	return 0;
 	done:do_close(hand,false);
 	return errno<0?-(errno):-1;
 }
-#endif
 
 static ssize_t conf_read(struct conf_file_hand*hand,char*buff,size_t len){
 	if(!hand||!buff||len<=0)return -1;
@@ -302,16 +120,11 @@ static ssize_t conf_write(struct conf_file_hand*hand,char*buff,size_t len){
 	return len;
 }
 
-static int _conf_load_file(_ROOT_TYPE dir,const char*file,bool inc,int depth){
+static int _conf_load_file(fsh*parent,const char*file,bool inc,int depth){
 	int r=0;
 	static char xpath[PATH_MAX];
 	if(depth>=8)ERET(ELOOP);
 	if(!file)ERET(EINVAL);
-	#ifdef ENABLE_UEFI
-	if(!dir)ERET(EINVAL);
-	#else
-	if(dir<0&&dir!=AT_FDCWD)ERET(EINVAL);
-	#endif
 	struct conf_file_hand*hand=find_hand_by_file(file);
 	if(!hand)ERET(EINVAL);
 	if(!hand->load)ERET(ENOSYS);
@@ -323,7 +136,7 @@ static int _conf_load_file(_ROOT_TYPE dir,const char*file,bool inc,int depth){
 	memset(xpath,0,sizeof(xpath));
 	strncpy(xpath,file,sizeof(xpath)-1);
 	hand->include=inc;
-	hand->dir=dir;
+	hand->parent=parent;
 	hand->write=NULL;
 	hand->read=conf_read;
 	hand->path=xpath;
@@ -335,7 +148,7 @@ static int _conf_load_file(_ROOT_TYPE dir,const char*file,bool inc,int depth){
 		if(r==0)errno=0;
 	}else r=-1;
 	hand->include=false;
-	hand->dir=0;
+	hand->parent=NULL;
 	hand->write=NULL;
 	hand->read=NULL;
 	hand->path=NULL;
@@ -358,27 +171,22 @@ char**conf_get_supported_exts(){
 	return exts;
 }
 
-int conf_load_file(_ROOT_TYPE dir,const char*file){
-	return _conf_load_file(dir,file,false,0);
+int conf_load_file(fsh*parent,const char*file){
+	return _conf_load_file(parent,file,false,0);
 }
 
-int conf_include_file(_ROOT_TYPE dir,const char*file){
-	return _conf_load_file(dir,file,true,0);
+int conf_include_file(fsh*parent,const char*file){
+	return _conf_load_file(parent,file,true,0);
 }
 
-int conf_include_file_depth(_ROOT_TYPE dir,const char*file,int depth){
-	return _conf_load_file(dir,file,true,depth);
+int conf_include_file_depth(fsh*parent,const char*file,int depth){
+	return _conf_load_file(parent,file,true,depth);
 }
 
-int conf_save_file(_ROOT_TYPE dir,const char*file){
+int conf_save_file(fsh*parent,const char*file){
 	int r=0;
 	static char xpath[PATH_MAX];
 	if(!file)ERET(EINVAL);
-	#ifdef ENABLE_UEFI
-	if(!dir)ERET(EINVAL);
-	#else
-	if(dir<0&&dir!=AT_FDCWD)ERET(EINVAL);
-	#endif
 	struct conf_file_hand*hand=find_hand_by_file(file);
 	if(!hand)ERET(EINVAL);
 	if(!hand->save)ERET(ENOSYS);
@@ -389,7 +197,7 @@ int conf_save_file(_ROOT_TYPE dir,const char*file){
 	MUTEX_LOCK(hand->lock);
 	memset(xpath,0,sizeof(xpath));
 	strncpy(xpath,file,sizeof(xpath)-1);
-	hand->dir=dir;
+	hand->parent=parent;
 	hand->write=conf_write;
 	hand->read=NULL;
 	hand->path=xpath;
@@ -403,7 +211,7 @@ int conf_save_file(_ROOT_TYPE dir,const char*file){
 		r=-1;
 	}
 	hand->include=false;
-	hand->dir=0;
+	hand->parent=NULL;
 	hand->write=NULL;
 	hand->read=NULL;
 	hand->path=NULL;

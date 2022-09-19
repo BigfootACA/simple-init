@@ -57,7 +57,7 @@ static int include_xml(struct conf_file_hand*hand,mxml_node_t*node){
 		val=(char*)mxmlElementGetAttr(node,"path");
 	if(!(path=strdup(val)))return -1;
 	trim(path);
-	if(conf_include_file_depth(hand->dir,path,hand->depth+1)<0)
+	if(conf_include_file_depth(hand->file,path,hand->depth+1)<0)
 		telog_warn("include \"%s\" failed",path);
 	return 0;
 }

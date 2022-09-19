@@ -126,8 +126,8 @@ static void*_async_load_thread(void*d){
 	struct confd_msg ret;
 	confd_internal_init_msg(&ret,CONF_OK);
 	ret.code=-(data->include?
-		conf_include_file(AT_FDCWD,data->path[0]?data->path:def_path):
-		conf_load_file(AT_FDCWD,data->path[0]?data->path:def_path)
+		conf_include_file(NULL,data->path[0]?data->path:def_path):
+		conf_load_file(NULL,data->path[0]?data->path:def_path)
 	);
 	if(ret.code==0&&errno!=0)ret.code=errno;
 	confd_internal_send(data->fd,&ret);
@@ -140,7 +140,7 @@ static void*_async_save_thread(void*d){
 	struct async_load_save_data*data=d;
 	struct confd_msg ret;
 	confd_internal_init_msg(&ret,CONF_OK);
-	ret.code=-conf_save_file(AT_FDCWD,data->path[0]?data->path:def_path);
+	ret.code=-conf_save_file(NULL,data->path[0]?data->path:def_path);
 	if(ret.code==0){
 		if(errno!=0)ret.code=errno;
 		else if(!data->path[0])conf_store_changed=false;

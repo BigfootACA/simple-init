@@ -118,7 +118,7 @@ static void conf_parse_line(struct conf_file_hand*hand,int*err,const char*name,s
 		if(strncmp(data,"include ",8)==0){
 			data+=8;
 			if(conf_include_file_depth(
-				hand->dir,data,hand->depth+1
+				hand->file,data,hand->depth+1
 			)<0)telog_warn("include \"%s\" failed",data);
 		}else goto inv_key;
 		return;

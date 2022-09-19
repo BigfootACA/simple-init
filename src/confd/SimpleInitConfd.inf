@@ -22,6 +22,7 @@
   MemoryAllocationLib
   SimpleInitLib
   SimpleInitCompatible
+  SimpleInitFileSystem
 
 [Sources]
   # Simple-Init confd

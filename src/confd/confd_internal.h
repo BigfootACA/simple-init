@@ -13,6 +13,7 @@
 #include"lock.h"
 #include"list.h"
 #include"confd.h"
+#include"filesystem.h"
 
 #define CONFD_MAGIC0 0xEF
 #define CONFD_MAGIC1 0x66
@@ -87,13 +88,6 @@ struct conf{
 	};
 };
 
-#ifdef ENABLE_UEFI
-#include<Protocol/SimpleFileSystem.h>
-#define _ROOT_TYPE EFI_FILE_PROTOCOL*
-#else
-#define _ROOT_TYPE int
-#endif
-
 struct conf_file_hand;
 typedef int(*file_process_func)(struct conf_file_hand*hand);
 typedef ssize_t(*file_io_func)(struct conf_file_hand*hand,char*buff,size_t len);
@@ -109,8 +103,8 @@ struct conf_file_hand{
 	char*buff;
 	size_t len;
 	size_t off;
-	_ROOT_TYPE dir;
-	_ROOT_TYPE fd;
+	fsh*parent;
+	fsh*file;
 	file_process_func load;
 	file_process_func save;
 	file_io_func read;
@@ -200,16 +194,16 @@ extern int conf_set_mod(const char*path,mode_t mod,uid_t u,gid_t g);
 extern size_t conf_calc_size(struct conf*c);
 
 // src/confd/file.c: load config file to config store
-extern int conf_load_file(_ROOT_TYPE root,const char*path);
+extern int conf_load_file(fsh*parent,const char*path);
 
 // src/confd/file.c: include config file to config store
-extern int conf_include_file(_ROOT_TYPE root,const char*path);
+extern int conf_include_file(fsh*parent,const char*path);
 
 // src/confd/file.c: include config file to config store with depth
-extern int conf_include_file_depth(_ROOT_TYPE dir,const char*file,int depth);
+extern int conf_include_file_depth(fsh*parent,const char*file,int depth);
 
 // src/confd/file.c: save config store to config file
-extern int conf_save_file(_ROOT_TYPE root,const char*path);
+extern int conf_save_file(fsh*parent,const char*path);
 
 // src/confd/file.c: get all supported config file exts
 extern char**conf_get_supported_exts();

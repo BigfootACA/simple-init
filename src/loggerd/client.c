@@ -6,6 +6,7 @@
  *
  */
 
+#define _GNU_SOURCE
 #include<ctype.h>
 #include<errno.h>
 #include<stdio.h>
@@ -21,7 +22,6 @@
 #include<Library/BaseMemoryLib.h>
 #include<Library/MemoryAllocationLib.h>
 #include<Library/UefiRuntimeServicesTableLib.h>
-#include<Protocol/SimpleFileSystem.h>
 #include<Guid/FileInfo.h>
 #include"str.h"
 #include"locate.h"
@@ -34,6 +34,7 @@
 #include"output.h"
 #include"system.h"
 #include"defines.h"
+#include"filesystem.h"
 #include"logger_internal.h"
 #define TAG "logger"
 
@@ -140,122 +141,60 @@ int start_loggerd(pid_t*p){
 }
 #else
 bool console_output=true;
-EFI_FILE_PROTOCOL*logger_output=NULL;
+fsh*logger_output=NULL;
 
 void logger_set_console(bool enabled){
 	console_output=enabled;
 }
 
 static int logger_init_out(){
-	UINTN s=0;
+	bool ex=false;
+	fsh*f=NULL;
+	int old=0,i=0;
 	EFI_TIME tm;
-	EFI_STATUS st;
-	char*log=NULL;
-	EFI_FILE_INFO*info=NULL;
-	locate_ret*l=AllocateZeroPool(sizeof(locate_ret));
-	if(!l)EDONE(tlog_warn("allocate pool failed"));
+	size_t len,s;
+	char*log=NULL,*nb,*k;
+	fs_file_flag flag=FILE_FLAG_READ|FILE_FLAG_WRITE;
 	// 0: truncate
 	// 1: append
 	// 2: rename
-	int old=0;
 	switch((int)confd_get_type("logger.old_file")){
 		case -1:break;
 		case TYPE_INTEGER:old=confd_get_integer("logger.old_file",0);break;
-		case TYPE_STRING:{
-			char*k=confd_get_string("logger.old_file",NULL);
-			if(k){
-				size_t s=MIN(strlen(k),1);
-				if(strncasecmp(k,"truncate",s)==0)old=0;
-				else if(strncasecmp(k,"append",s)==0)old=1;
-				else if(strncasecmp(k,"rename",s)==0)old=2;
-				else tlog_warn("unknown old_file mode %s",k);
-				free(k);
-			}
-		}break;
-		default:tlog_warn("unknown type for old_file mode");
+		case TYPE_STRING:
+			if(!(k=confd_get_string("logger.old_file",NULL)))break;
+			s=MIN(strlen(k),1);
+			if(strncasecmp(k,"truncate",s)==0)old=0;
+			else if(strncasecmp(k,"append",s)==0)old=1;
+			else if(strncasecmp(k,"rename",s)==0)old=2;
+			else tlog_warn("unknown old file mode %s",k);
+			free(k);
+		break;
+		default:tlog_warn("unknown type for old file mode");
 	}
 	if(!(log=confd_get_string("logger.file_output",NULL)))return 0;
-	if(!boot_locate_create_file(l,log))
-		EDONE(tlog_warn("resolve logger file output locate failed"));
-	if(l->type!=LOCATE_FILE)
-		EDONE(tlog_warn("unsupported locate type for logger file output"));
-	if(old!=1)l->file->SetPosition(l->file,0);
-	st=l->file->GetInfo(l->file,&gEfiFileInfoGuid,&s,info);
-	if(st==EFI_BUFFER_TOO_SMALL){
-		s+=64;
-		if(!(info=AllocateZeroPool(s)))
-			EDONE(tlog_warn("allocate file info failed"));
-		st=l->file->GetInfo(l->file,&gEfiFileInfoGuid,&s,info);
+	switch(old){
+		case 0:flag|=FILE_FLAG_CREATE|FILE_FLAG_TRUNCATE;break;
+		case 1:flag|=FILE_FLAG_CREATE|FILE_FLAG_APPEND;break;
+		case 2:
+			if(fs_open(NULL,&f,log,flag)==0){
+				len=strlen(log);
+				if((nb=malloc(len+32))){
+					strncpy(nb,log,len);
+					do{snprintf(nb+len,32,".%d",i++);}
+					while(fs_exists(NULL,nb,&ex)==0&&ex);
+					errno=0,fs_rename(f,nb);
+					telog_debug("rename old log file %s to %s",log,nb);
+					free(nb);
+				}
+				fs_close(&f);
+			}else flag|=FILE_FLAG_TRUNCATE;
+			flag|=FILE_FLAG_CREATE;
+		break;
 	}
-	if(EFI_ERROR(st))EDONE(tlog_warn(
-		"get file info failed: %s",
-		efi_status_to_string(st)
-	));
-	if(info->FileSize==0)
-		tlog_verbose("old log file size is zero");
-	else if(old==0){
-		tlog_verbose(
-			"truncated old log file %llu bytes",
-			(unsigned long long)info->FileSize
-		);
-		info->FileSize=0;
-		st=l->file->SetInfo(l->file,&gEfiFileInfoGuid,s,info);
-		if(EFI_ERROR(st)){
-			tlog_warn(
-				"truncate file failed (%s), try to delete",
-				efi_status_to_string(st)
-			);
-			st=l->file->Delete(l->file);
-			if(EFI_ERROR(st))EDONE(tlog_warn(
-				"delete %s failed: %s",
-				log,efi_status_to_string(st)
-			));
-			l->file=NULL;
-		}
-	}else if(old==2){
-		int i=0;
-		EFI_FILE_PROTOCOL*fp=NULL;
-		UINTN bs=PATH_MAX*sizeof(CHAR16);
-		CHAR16*buff16=AllocatePool(bs);
-		if(!buff16)EDONE(tlog_warn("allocate pool failed"));
-		do{
-			ZeroMem(buff16,bs);
-			UnicodeSPrint(buff16,bs,L"%s.%d",l->path16,i);
-			st=l->root->Open(l->root,&fp,buff16,EFI_FILE_MODE_READ,0);
-			i++;
-		}while(!EFI_ERROR(st));
-		if(fp)fp->Close(fp);
-		ZeroMem(buff16,bs);
-		UnicodeSPrint(buff16,bs,L"%s.%d",info->FileName,i);
-		StrCpyS(info->FileName,(s-80)/sizeof(CHAR16),buff16);
-		tlog_verbose("rename old log file %s to %s.%d",l->path,l->path,i);
-		st=l->file->SetInfo(l->file,&gEfiFileInfoGuid,s,info);
-		FreePool(buff16);
-		if(EFI_ERROR(st))EDONE(tlog_warn(
-			"set info %s failed: %s",
-			log,efi_status_to_string(st)
-		));
-	}
-	if(!l->file){
-		st=l->root->Open(
-			l->root,&l->file,l->path16,
-			EFI_FILE_MODE_READ|
-			EFI_FILE_MODE_WRITE|
-			EFI_FILE_MODE_CREATE,0
-		);
-		if(EFI_ERROR(st))EDONE(tlog_warn(
-			"open %s failed: %s",
-			log,efi_status_to_string(st)
-		));
-	}
-	if(old==1){
-		tlog_verbose(
-			"old log file size: %llu bytes",
-			(unsigned long long)info->FileSize
-		);
-		l->file->SetPosition(l->file,info->FileSize);
-	}
-	logger_output=l->file;
+	if(fs_open(NULL,&f,log,flag)!=0)
+		EDONE(telog_warn("open logger file output failed"));
+	logger_output=f;
 	ZeroMem(&tm,sizeof(tm));
 	gRT->GetTime(&tm,NULL);
 	CHAR8*buff=AllocateZeroPool(PATH_MAX);
@@ -263,7 +202,7 @@ static int logger_init_out(){
 		AsciiSPrint(
 			buff,PATH_MAX,
 			"-------- file %a opened at %t --------",
-			l->path,&tm
+			log,&tm
 		);
 		logger_out_write(buff);
 		FreePool(buff);
@@ -271,17 +210,16 @@ static int logger_init_out(){
 	flush_buffer();
 	tlog_debug("opened logger file output %s",log);
 	free(log);
-	FreePool(info);
-	FreePool(l);
 	return 0;
 	done:
-	if(l)FreePool(l);
+	if(f)fs_close(&f);
 	if(log)free(log);
-	if(info)FreePool(info);
 	return -1;
 }
 
 void logger_init(){
+	char*k;
+	enum log_level level;
 	// PcdLoggerdUseConsole is in uefimain.c
 
 	logger_init_out();
@@ -295,31 +233,21 @@ void logger_init(){
 			"logger.min_level",
 			logger_level
 		);break;
-		case TYPE_STRING:{
-			char*k=confd_get_string("logger.min_level",NULL);
-			if(k){
-				enum log_level level;
-				level=logger_parse_level((char*)k);
-				if(level!=0)logger_level=level;
-				else tlog_warn("unknown log level %s",k);
-				free(k);
-			}
-		}break;
-		default:tlog_warn("unknown type for min_level");
+		case TYPE_STRING:
+			if(!(k=confd_get_string("logger.min_level",NULL)))break;
+			level=logger_parse_level((char*)k);
+			if(level!=0)logger_level=level;
+			else tlog_warn("unknown log level %s",k);
+			free(k);
+		break;
+		default:tlog_warn("unknown type for min level");
 	}
 }
 
 void logger_out_write(char*buff){
-	UINTN cnt,x,pos=0;
-	if(!logger_output)return;
-	cnt=AsciiStrLen(buff),x=cnt;
-	do{
-		logger_output->Write(logger_output,&x,buff+pos);
-		pos+=x,x=cnt-pos;
-	}while(pos<cnt);
-	x=1;
-	logger_output->Write(logger_output,&x,"\n");
-	logger_output->Flush(logger_output);
+	if(!logger_output||!*buff)return;
+	fs_println(logger_output,buff);
+	fs_flush(logger_output);
 }
 #endif
 

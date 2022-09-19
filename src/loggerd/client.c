@@ -309,14 +309,13 @@ int logger_print(enum log_level level,char*tag,char*content){
 }
 
 static int logger_printf_x(enum log_level level,char*tag,const char*fmt,va_list ap){
+	int r;
+	char*content=NULL;
 	if(!tag||!fmt)ERET(EINVAL);
 	if(level<logger_level)return 0;
-	size_t s=16384;
-	char*content=malloc(s);
-	if(!content)ERET(ENOMEM);
-	memset(content,0,s);
-	if(!vsnprintf(content,s-1,fmt,ap))return -errno;
-	int r=logger_print(level,tag,content);
+	r=vasprintf(&content,fmt,ap);
+	if(r<0||!content)return -errno;
+	r=logger_print(level,tag,content);
 	free(content);
 	return r;
 }

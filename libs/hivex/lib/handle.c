@@ -23,15 +23,11 @@
 #include <stdint.h>
 #include <inttypes.h>
 #include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/stat.h>
 #include <errno.h>
-#include <assert.h>
 #include <iconv.h>
 #include "lock.h"
 #include "ctype.h"
-#include "system.h"
+#include "filesystem.h"
 #include "hivex.h"
 #include "hivex-internal.h"
 
@@ -81,10 +77,9 @@ _hivex_release_iconv (hive_h *h, recode_type t)
 hive_h *
 hivex_open (const char *filename, int flags)
 {
+  int r = 0;
+  fsh *f = NULL;
   hive_h *h = NULL;
-
-  assert (sizeof (struct ntreg_header) == 0x1000);
-  assert (offsetof (struct ntreg_header, csum) == 0x1fc);
 
   h = calloc (1, sizeof *h);
   if (h == NULL)
@@ -104,15 +99,12 @@ hivex_open (const char *filename, int flags)
   if (h->filename == NULL)
     goto error;
 
-  h->fd = open (filename, O_RDONLY | O_CLOEXEC);
-  if (h->fd == -1)
+  r = fs_open (NULL, &f, filename, FILE_FLAG_READ);
+  if (r != 0)
     goto error;
 
-  struct stat statbuf;
-  if (fstat (h->fd, &statbuf) == -1)
+  if (fs_get_size(f, &h->size) != 0)
     goto error;
-
-  h->size = statbuf.st_size;
 
   if (h->size < 0x2000) {
     SET_ERRNO (EINVAL,
@@ -121,19 +113,14 @@ hivex_open (const char *filename, int flags)
     goto error;
   }
 
-  h->addr = malloc (h->size);
-  if (h->addr == NULL)
-    goto error;
-
-  if (full_read (h->fd, h->addr, h->size) < (ssize_t)h->size)
+  if (fs_full_read_alloc(f, &h->addr, h->size) != 0)
     goto error;
 
   /* We don't need the file descriptor along this path, since we
    * have read all the data.
    */
-  if (close (h->fd) == -1)
-    goto error;
-  h->fd = -1;
+  fs_close(&f);
+  f = NULL;
 
   /* Check header. */
   if (h->hdr->magic[0] != 'r' ||
@@ -204,7 +191,7 @@ hivex_open (const char *filename, int flags)
 
   DEBUG (2, "root offset = 0x%zx", h->rootoffs);
 
-  /* We'll set this flag when we see a block with the root offset (ie.
+  /* We'll set this flag when we see a block with the root offset (i.e.
    * the root block).
    */
   int seen_root_block = 0, bad_root_block = 0;
@@ -372,7 +359,7 @@ hivex_open (const char *filename, int flags)
         used_blocks++;
         used_size += seg_len;
 
-        /* Root block must be an nk-block. */
+        /* Root block must be a nk-block. */
         if (is_root && (block->id[0] != 'n' || block->id[1] != 'k'))
           bad_root_block = 1;
 
@@ -410,10 +397,11 @@ hivex_open (const char *filename, int flags)
     if (h->addr && h->size) {
       free (h->addr);
     }
-    if (h->fd >= 0)
-      close (h->fd);
     free (h->filename);
     free (h);
+  }
+  if (f) {
+    fs_close(&f);
   }
   errno = err;
   return NULL;
@@ -422,16 +410,10 @@ hivex_open (const char *filename, int flags)
 int
 hivex_close (hive_h *h)
 {
-  int r;
-
   DEBUG (1, "hivex_close");
 
   free (h->bitmap);
   free (h->addr);
-  if (h->fd >= 0)
-    r = close (h->fd);
-  else
-    r = 0;
   free (h->filename);
   for (int t=0; t<nr_recode_types; t++) {
     if (h->iconv_cache[t].handle != NULL) {
@@ -441,13 +423,14 @@ hivex_close (hive_h *h)
   }
   free (h);
 
-  return r;
+  return 0;
 }
 
 int
 hivex_commit (hive_h *h, const char *filename, int flags)
 {
-  int fd;
+  int r = 0;
+  fsh *f = NULL;
 
   if (flags != 0) {
     SET_ERRNO (EINVAL, "flags != 0");
@@ -457,8 +440,8 @@ hivex_commit (hive_h *h, const char *filename, int flags)
   CHECK_WRITABLE (-1);
 
   filename = filename ? : h->filename;
-  fd = open (filename, O_WRONLY|O_CREAT|O_TRUNC|O_NOCTTY|O_CLOEXEC, 0666);
-  if (fd == -1)
+  r = fs_open (NULL, &f, filename, FILE_FLAG_WRITE|FILE_FLAG_CREATE|FILE_FLAG_TRUNCATE|0644);
+  if (r != 0)
     return -1;
 
   /* Update the header fields. */
@@ -475,15 +458,14 @@ hivex_commit (hive_h *h, const char *filename, int flags)
 
   DEBUG (2, "hivex_commit: new header checksum: 0x%x", sum);
 
-  if (full_write (fd, h->addr, h->size) != (ssize_t)h->size) {
-    int err = errno;
-    close (fd);
-    errno = err;
+  r = fs_full_write (f, h->addr, h->size);
+  if (r != 0) {
+    fs_close (&f);
+    errno = r;
     return -1;
   }
 
-  if (close (fd) == -1)
-    return -1;
+  fs_close (&f);
 
   return 0;
 }

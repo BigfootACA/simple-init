@@ -50,13 +50,6 @@ typedef enum {
 
 struct hive_h {
   char *filename;
-#ifdef ENABLE_UEFI
-  bool use_locate;
-  EFI_FILE_PROTOCOL*dir;
-  EFI_FILE_PROTOCOL*fd;
-#else
-  int fd;
-#endif
   size_t size;
   int msglvl;                   /* 1 = verbose, 2 or 3 = debug */
   int writable;

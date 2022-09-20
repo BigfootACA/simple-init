@@ -54,7 +54,7 @@ static int uefigop_get_modes(int*cnt,struct display_mode**modes){
 	size_t size=(gop->Mode->MaxMode+1)*sizeof(struct display_mode);
 	if(!(*modes=malloc(size)))ERET(ENOMEM);
 	memset(*modes,0,size);
-	for(UINT32 i=0;i<*cnt;i++){
+	for(UINT32 i=0;i<(UINT32)(*cnt);i++){
 		s=sizeof(EFI_GRAPHICS_OUTPUT_MODE_INFORMATION),info=NULL;
 		st=gop->QueryMode(gop,i,&s,&info);
 		if(EFI_ERROR(st)||!info)continue;

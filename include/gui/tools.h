@@ -75,6 +75,7 @@ extern void lv_input_cb(lv_event_t*e);
 extern bool lv_parse_color_string(const char*val,lv_color_t*color);
 extern void lv_obj_add_drag(lv_obj_t*o);
 extern void lv_event_dump_handler(lv_event_t*e);
+extern void lv_img_src_try(lv_obj_t*img,const char*prefix,const char*id,const char*path);
 static inline lv_coord_t lv_coord_max(lv_coord_t a,lv_coord_t b){return a>b?a:b;}
 static inline lv_coord_t lv_coord_min(lv_coord_t a,lv_coord_t b){return a<b?a:b;}
 static inline lv_coord_t lv_coord_border(lv_coord_t val,lv_coord_t max,lv_coord_t min){

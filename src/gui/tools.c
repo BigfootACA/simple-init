@@ -606,4 +606,34 @@ void lv_event_dump_handler(lv_event_t*e){
 		lv_event_string[lv_event_get_code(e)]
 	);
 }
+
+void lv_img_src_try(
+	lv_obj_t*img,
+	const char*prefix,
+	const char*id,
+	const char*path
+){
+	char icon[64];
+	lv_img_t*x=(lv_img_t*)img;
+	if(!img||!prefix||!prefix[0])return;
+	if(path&&path[0]){
+		lv_img_set_src(img,path);
+		if(x->w>0&&x->h>0)return;
+	}
+	if(id&&id[0]){
+		memset(icon,0,sizeof(icon));
+		snprintf(
+			icon,sizeof(icon)-1,
+			"@%s-%s",prefix,id
+		);
+		lv_img_set_src(img,icon);
+		if(x->w>0&&x->h>0)return;
+	}
+	memset(icon,0,sizeof(icon));
+	snprintf(
+		icon,sizeof(icon)-1,
+		"@%s-unknown",prefix
+	);
+	lv_img_set_src(img,icon);
+}
 #endif

@@ -13,10 +13,8 @@
 #include"logger.h"
 #ifdef ENABLE_UEFI
 #include"uefi.h"
-#include"locate.h"
 #include"compatible.h"
 #include"uefi/lua_uefi.h"
-#include<Library/MemoryAllocationLib.h>
 #endif
 #undef TAG
 #define TAG "lua"
@@ -46,7 +44,7 @@ static int aboot_img_save(lua_State*L){
 		case LUA_TSTRING:{
 			const char*path=luaL_checkstring(L,1);
 			#ifdef ENABLE_UEFI
-			ret=abootimg_save_to_locate(img->img,path);
+			ret=abootimg_save_to_url_path(img->img,path);
 			#else
 			int cfd=luaL_optinteger(L,2,AT_FDCWD);
 			ret=abootimg_save_to_file(img->img,cfd,path);
@@ -74,8 +72,9 @@ static int aboot_img_save(lua_State*L){
 				}else ret=abootimg_save_to_fp(img->img,d2);
 				break;
 			}
-		}//fallthrough
+		}
 		#endif
+		//fallthrough
 		default:return luaL_argerror(L,1,"unknown argument type");
 	}
 	lua_pushboolean(L,ret);
@@ -96,7 +95,7 @@ static int aboot_img_size(lua_State*L){
 		switch(lua_type(L,1)){\
 			case LUA_TSTRING:{\
 				const char*path=luaL_checkstring(L,1);\
-				ret=abootimg_save_##tag##_to_locate(img->img,path);\
+				ret=abootimg_save_##tag##_to_url_path(img->img,path);\
 			}break;\
 			case LUA_TUSERDATA:{\
 				EFI_BLOCK_IO_PROTOCOL*d1;\
@@ -126,7 +125,7 @@ static int aboot_img_size(lua_State*L){
 		switch(lua_type(L,1)){\
 			case LUA_TSTRING:{\
 				const char*path=luaL_checkstring(L,1);\
-				ret=abootimg_load_##tag##_from_locate(img->img,path);\
+				ret=abootimg_load_##tag##_from_url_path(img->img,path);\
 			}break;\
 			case LUA_TUSERDATA:{\
 				EFI_BLOCK_IO_PROTOCOL*d1;\
@@ -273,7 +272,7 @@ static int aboot_img_lib_load(lua_State*L){
 		case LUA_TSTRING:{
 			const char*path=luaL_checkstring(L,1);
 			#ifdef ENABLE_UEFI
-			img=abootimg_load_from_locate(path);
+			img=abootimg_load_from_url_path(path);
 			#else
 			int cfd=luaL_optinteger(L,2,AT_FDCWD);
 			img=abootimg_load_from_file(cfd,path);
@@ -306,8 +305,9 @@ static int aboot_img_lib_load(lua_State*L){
 				img=abootimg_load_from_memory(d3->data,d3->size);
 				break;
 			}
-		}//fallthrough
+		}
 		#endif
+		//fallthrough
 		default:return luaL_argerror(L,1,"unknown argument type");
 	}
 	lua_abootimg_to_lua(L,img);

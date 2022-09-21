@@ -13,6 +13,7 @@
 #include<stdlib.h>
 #include<stdbool.h>
 #include<string.h>
+#include"filesystem.h"
 #ifdef ENABLE_UEFI
 #include<Protocol/SimpleFileSystem.h>
 #include<Protocol/BlockIo.h>
@@ -42,8 +43,26 @@ extern void abootimg_free(aboot_image*img);
 // src/lib/aboot.c: allocate and load image from a pointer
 extern aboot_image*abootimg_load_from_memory(void*file,size_t len);
 
-// src/lib/aboot.c: generate an full image for output
+// src/lib/aboot.c: generate a full image for output
 extern bool abootimg_generate(aboot_image*img,void**output,uint32_t*len);
+
+// src/lib/aboot.c: allocate and load image from a fs handle
+extern aboot_image*abootimg_load_from_fsh(fsh*f);
+
+// src/lib/aboot.c: allocate and load image from an url struct
+extern aboot_image*abootimg_load_from_url(url*u);
+
+// src/lib/aboot.c: allocate and load image from an url path
+extern aboot_image*abootimg_load_from_url_path(const char*path);
+
+// src/lib/aboot.c: write image to a fs handle
+extern bool abootimg_save_to_fsh(aboot_image*img,fsh*f);
+
+// src/lib/aboot.c: write image to an url struct
+extern bool abootimg_save_to_url(aboot_image*img,url*u);
+
+// src/lib/aboot.c: write image to an url path
+extern bool abootimg_save_to_url_path(aboot_image*img,const char*path);
 
 #ifdef ENABLE_UEFI
 
@@ -59,9 +78,6 @@ extern aboot_image*abootimg_load_from_wfile(EFI_FILE_PROTOCOL*root,CHAR16*path);
 // src/lib/aboot.c: allocate and load image from a file with ascii path
 extern aboot_image*abootimg_load_from_file(EFI_FILE_PROTOCOL*root,char*path);
 
-// src/lib/aboot.c: allocate and load image from locate path
-extern aboot_image*abootimg_load_from_locate(const char*path);
-
 // src/lib/aboot.c: write image to a block
 extern bool abootimg_save_to_blockio(aboot_image*img,EFI_BLOCK_IO_PROTOCOL*bio);
 
@@ -74,21 +90,16 @@ extern bool abootimg_save_to_wfile(aboot_image*img,EFI_FILE_PROTOCOL*root,CHAR16
 // src/lib/aboot.c: write image to a file with ascii path
 extern bool abootimg_save_to_file(aboot_image*img,EFI_FILE_PROTOCOL*root,char*path);
 
-// src/lib/aboot.c: write image to a file with locate path
-extern bool abootimg_save_to_locate(aboot_image*img,const char*path);
-
 // load and save kernel ramdisk second
 #define DECL_ABOOTIMG_LOAD_SAVE(tag)\
 	extern bool abootimg_load_##tag##_from_blockio(aboot_image*img,EFI_BLOCK_IO_PROTOCOL*bio);\
 	extern bool abootimg_load_##tag##_from_fp(aboot_image*img,EFI_FILE_PROTOCOL*fp);\
 	extern bool abootimg_load_##tag##_from_wfile(aboot_image*img,EFI_FILE_PROTOCOL*root,CHAR16*path);\
 	extern bool abootimg_load_##tag##_from_file(aboot_image*img,EFI_FILE_PROTOCOL*root,char*path);\
-	extern bool abootimg_load_##tag##_from_locate(aboot_image*img,const char*path);\
 	extern bool abootimg_save_##tag##_to_blockio(aboot_image*img,EFI_BLOCK_IO_PROTOCOL*bio);\
 	extern bool abootimg_save_##tag##_to_fp(aboot_image*img,EFI_FILE_PROTOCOL*fp);\
 	extern bool abootimg_save_##tag##_to_wfile(aboot_image*img,EFI_FILE_PROTOCOL*root,CHAR16*path);\
-	extern bool abootimg_save_##tag##_to_file(aboot_image*img,EFI_FILE_PROTOCOL*root,char*path);\
-	extern bool abootimg_save_##tag##_to_locate(aboot_image*img,const char*path);
+	extern bool abootimg_save_##tag##_to_file(aboot_image*img,EFI_FILE_PROTOCOL*root,char*path);
 #else
 
 // src/lib/aboot.c: allocate and load image from a file descriptor
@@ -109,6 +120,13 @@ extern bool abootimg_save_to_file(aboot_image*img,int cfd,const char*file);
 	extern bool abootimg_load_##tag##_from_file(aboot_image*img,int cfd,const char*file);
 #endif
 
+#define DECL_ABOOTIMG_FSH_LOAD_SAVE(tag)\
+	extern bool abootimg_save_##tag##_to_fsh(aboot_image*img,fsh*f);\
+	extern bool abootimg_save_##tag##_to_url(aboot_image*img,url*u);\
+	extern bool abootimg_save_##tag##_to_url_path(aboot_image*img,const char*path);\
+	extern bool abootimg_load_##tag##_from_fsh(aboot_image*img,fsh*f);\
+	extern bool abootimg_load_##tag##_from_url(aboot_image*img,url*u);\
+	extern bool abootimg_load_##tag##_from_url_path(aboot_image*img,const char*path);
 #define DECL_ABOOTIMG_GET_SET(tag)\
 	extern bool abootimg_copy_##tag(aboot_image*img,void*dest,size_t buf_len);\
 	extern uint32_t abootimg_get_##tag(aboot_image*img,void**tag);\
@@ -116,6 +134,7 @@ extern bool abootimg_save_to_file(aboot_image*img,int cfd,const char*file);
 	extern bool abootimg_set_##tag(aboot_image*img,void*tag,uint32_t len);\
         extern uint32_t abootimg_get_##tag##_offset(aboot_image*img);\
         extern bool abootimg_have_##tag(aboot_image*img);\
+	DECL_ABOOTIMG_FSH_LOAD_SAVE(tag)\
         DECL_ABOOTIMG_LOAD_SAVE(tag)
 #define DECL_ABOOTIMG_GET_VAR(type,key,def)extern type abootimg_get_##key(aboot_image*img);
 #define DECL_ABOOTIMG_SET_VAR(type,key,def)extern void abootimg_set_##key(aboot_image*img,type key);

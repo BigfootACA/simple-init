@@ -11,7 +11,6 @@
 #include<stdint.h>
 #ifdef ENABLE_UEFI
 #include"uefi.h"
-#include"locate.h"
 #include<limits.h>
 #include<Library/BaseLib.h>
 #include<Library/BaseMemoryLib.h>
@@ -188,6 +187,77 @@ bool abootimg_generate(aboot_image*img,void**output,uint32_t*len){
 	return true;
 }
 
+aboot_image*abootimg_load_from_fsh(fsh*f){
+	int r=0;
+	void*buf=NULL;
+	size_t len=0;
+	aboot_image*img=NULL;
+	if(!f)return NULL;
+	fs_seek(f,0,SEEK_SET);
+	r=fs_read_all(f,&buf,&len);
+	if(r!=0||!buf)return NULL;
+	img=abootimg_load_from_memory(buf,len);
+	free(buf);
+	return img;
+}
+
+aboot_image*abootimg_load_from_url(url*u){
+	int r=0;
+	fsh*f=NULL;
+	aboot_image*img=NULL;
+	if(!u)return NULL;
+	r=fs_open_uri(&f,u,FILE_FLAG_READ);
+	if(r!=0||!f)return NULL;
+	img=abootimg_load_from_fsh(f);
+	fs_close(&f);
+	return img;
+}
+
+aboot_image*abootimg_load_from_url_path(const char*path){
+	url*u=NULL;
+	aboot_image*img=NULL;
+	if(!path)return NULL;
+	if(!(u=url_parse_new(path,0)))return NULL;
+	img=abootimg_load_from_url(u);
+	url_free(u);
+	return img;
+}
+
+bool abootimg_save_to_fsh(aboot_image*img,fsh*f){
+	int r;
+	void*out=NULL;
+	uint32_t len=0;
+	if(!img||!f)return false;
+	if(!abootimg_generate(img,&out,&len))return false;
+	fs_seek(f,0,SEEK_SET);
+	fs_set_size(f,len);
+	r=fs_full_write(f,out,len);
+	free(out);
+	return r==0;
+}
+
+bool abootimg_save_to_url(aboot_image*img,url*u){
+	int r=0;
+	bool ret;
+	fsh*f=NULL;
+	if(!img||!u)return false;
+	r=fs_open_uri(&f,u,FILE_FLAG_WRITE);
+	if(r!=0||!f)return false;
+	ret=abootimg_save_to_fsh(img,f);
+	fs_close(&f);
+	return ret;
+}
+
+bool abootimg_save_to_url_path(aboot_image*img,const char*path){
+	bool ret;
+	url*u=NULL;
+	if(!img||!path)return false;
+	if(!(u=url_parse_new(path,0)))return false;
+	ret=abootimg_save_to_url(img,u);
+	url_free(u);
+	return ret;
+}
+
 #ifdef ENABLE_UEFI
 aboot_image*abootimg_load_from_blockio(EFI_BLOCK_IO_PROTOCOL*bio){
 	if(!bio)return NULL;
@@ -277,27 +347,6 @@ aboot_image*abootimg_load_from_file(EFI_FILE_PROTOCOL*root,char*path){
 	return ret;
 }
 
-aboot_image*abootimg_load_from_locate(const char*path){
-	if(!path)return NULL;
-	aboot_image*ret=NULL;
-	locate_ret*loc=AllocateZeroPool(sizeof(locate_ret));
-	if(!loc)return NULL;
-	if(boot_locate(loc,path))switch(loc->type){
-		case LOCATE_FILE:
-			if(loc->file){
-				ret=abootimg_load_from_fp(loc->file);
-				loc->file->Close(loc->file);
-			}
-		break;
-		case LOCATE_BLOCK:
-			ret=abootimg_load_from_blockio(loc->block);
-		break;
-		default:;
-	}
-	FreePool(loc);
-	return ret;
-}
-
 bool abootimg_save_to_fp(aboot_image*img,EFI_FILE_PROTOCOL*fp){
 	if(!img||!fp)return false;
 	void*out=NULL;
@@ -342,36 +391,6 @@ bool abootimg_save_to_file(aboot_image*img,EFI_FILE_PROTOCOL*root,char*path){
 		FreePool(wp);
 	}
 	return ret;
-}
-
-bool abootimg_save_to_locate(aboot_image*img,const char*path){
-	if(!path)return false;
-	bool ret=false;
-	locate_ret*loc=AllocateZeroPool(sizeof(locate_ret));
-	if(!loc)return false;
-	if(!boot_locate_create_file(loc,path))goto fail;
-	if(!boot_locate(loc,path))goto fail;
-	switch(loc->type){
-		case LOCATE_FILE:
-			if(loc->file){
-				ret=abootimg_save_to_fp(img,loc->file);
-				loc->file->Close(loc->file);
-			}
-		break;
-		case LOCATE_BLOCK:
-			ret=abootimg_save_to_blockio(img,loc->block);
-		break;
-		default:;
-	}
-	FreePool(loc);
-	return ret;
-	fail:
-	if(loc){
-		if(loc->type==LOCATE_FILE&&loc->file)
-			loc->file->Close(loc->file);
-		FreePool(loc);
-	}
-	return false;
 }
 
 #define ABOOTIMG_LOAD_SAVE(tag) \
@@ -431,26 +450,6 @@ bool abootimg_save_to_locate(aboot_image*img,const char*path){
 		}\
 		return ret;\
 	}\
-	bool abootimg_load_##tag##_from_locate(aboot_image*img,const char*path){\
-		if(!path)return false;\
-		bool ret=false;\
-		locate_ret*loc=AllocateZeroPool(sizeof(locate_ret));\
-		if(!loc)return false;\
-		if(boot_locate(loc,path))switch(loc->type){\
-			case LOCATE_FILE:\
-				if(loc->file){\
-					ret=abootimg_load_##tag##_from_fp(img,loc->file);\
-					loc->file->Close(loc->file);\
-				}\
-			break;\
-			case LOCATE_BLOCK:\
-				ret=abootimg_load_##tag##_from_blockio(img,loc->block);\
-			break;\
-			default:;\
-		}\
-		FreePool(loc);\
-		return ret;\
-	}\
 	bool abootimg_save_##tag##_to_blockio(aboot_image*img,EFI_BLOCK_IO_PROTOCOL*bio){\
 		if(!bio)return false;\
 		EFI_STATUS st;\
@@ -500,35 +499,6 @@ bool abootimg_save_to_locate(aboot_image*img,const char*path){
 			FreePool(wp);\
 		}\
 		return ret;\
-	}\
-	bool abootimg_save_##tag##_to_locate(aboot_image*img,const char*path){\
-		if(!path)return false;\
-		bool ret=false;\
-		locate_ret*loc=AllocateZeroPool(sizeof(locate_ret));\
-		if(!loc)return false;\
-		if(!boot_locate_create_file(loc,path))goto fail;\
-		if(!boot_locate(loc,path))goto fail;\
-		switch(loc->type){\
-			case LOCATE_FILE:\
-				if(loc->file){\
-					ret=abootimg_save_##tag##_to_fp(img,loc->file);\
-					loc->file->Close(loc->file);\
-				}\
-			break;\
-			case LOCATE_BLOCK:\
-				ret=abootimg_save_##tag##_to_blockio(img,loc->block);\
-			break;\
-			default:;\
-		}\
-		FreePool(loc);\
-		return ret;\
-		fail:\
-		if(loc){\
-			if(loc->type==LOCATE_FILE&&loc->file)\
-				loc->file->Close(loc->file);\
-			FreePool(loc);\
-		}\
-		return false;\
 	}
 #else
 static bool allocate_read(int fd,size_t blk,void**buf,size_t*len){
@@ -657,6 +627,67 @@ bool abootimg_save_to_file(aboot_image*img,int cfd,const char*file){
 		return ret;\
 	}
 #endif
+#define ABOOTIMG_FSH_LOAD_SAVE(tag)\
+	bool abootimg_save_##tag##_to_fsh(aboot_image*img,fsh*f){\
+		if(!img||!f||!img->tag)return false;\
+		ssize_t s=(ssize_t)abootimg_get_##tag##_size(img);\
+		fs_seek(f,0,SEEK_SET);\
+		fs_set_size(f,s);\
+		return fs_full_write(f,img->tag,s)==0;\
+	}\
+	bool abootimg_save_##tag##_to_url(aboot_image*img,url*u){\
+		int r=0;\
+		bool ret;\
+		fsh*f=NULL;\
+		if(!img||!u)return false;\
+		r=fs_open_uri(&f,u,FILE_FLAG_WRITE);\
+		if(r!=0||!f)return false;\
+		ret=abootimg_save_##tag##_to_fsh(img,f);\
+		fs_close(&f);\
+		return ret;\
+	}\
+	bool abootimg_save_##tag##_to_url_path(aboot_image*img,const char*path){\
+		bool ret;\
+		url*u=NULL;\
+		if(!img||!path)return false;\
+		if(!(u=url_parse_new(path,0)))return false;\
+		ret=abootimg_save_##tag##_to_url(img,u);\
+		url_free(u);\
+		return ret;\
+	}\
+        bool abootimg_load_##tag##_from_fsh(aboot_image*img,fsh*f){\
+                bool ret;\
+		int r=0;\
+		void*buf=NULL;\
+		size_t len=0;\
+		if(!img||!f)return false;\
+		fs_seek(f,0,SEEK_SET);\
+		r=fs_read_all(f,&buf,&len);\
+		if(r!=0||!buf)return false;\
+		ret=abootimg_set_##tag(img,buf,len);\
+		free(buf);\
+		return ret;\
+	}\
+	bool abootimg_load_##tag##_from_url(aboot_image*img,url*u){\
+                int r=0;\
+                bool ret;\
+                fsh*f=NULL;\
+                if(!u)return false;\
+                r=fs_open_uri(&f,u,FILE_FLAG_READ);\
+                if(r!=0||!f)return false;\
+                ret=abootimg_load_##tag##_from_fsh(img,f);\
+                fs_close(&f);\
+                return ret;\
+        }\
+	bool abootimg_load_##tag##_from_url_path(aboot_image*img,const char*path){\
+		bool ret;\
+		url*u=NULL;\
+		if(!img||!path)return false;\
+		if(!(u=url_parse_new(path,0)))return false;\
+		ret=abootimg_load_##tag##_from_url(img,u);\
+		url_free(u);\
+		return ret;\
+	}
 #define ABOOTIMG_GET_SET(tag)\
 	bool abootimg_set_##tag(aboot_image*img,void*tag,uint32_t len){\
 		if(!img||!tag||len<=0)return false;\
@@ -695,7 +726,7 @@ bool abootimg_save_to_file(aboot_image*img,int cfd,const char*file){
 	}
 #define ABOOTIMG_GETSET_VAR(key) ABOOTIMG_GET_VAR(uint32_t,key,0) ABOOTIMG_SET_VAR(key)
 #define ABOOTIMG_GETSET_STRING(key) ABOOTIMG_GET_VAR(const char*,key,NULL) ABOOTIMG_SET_STRING(key)
-#define ABOOTIMG_CONT(tag) ABOOTIMG_GET_SET(tag) ABOOTIMG_LOAD_SAVE(tag)
+#define ABOOTIMG_CONT(tag) ABOOTIMG_GET_SET(tag) ABOOTIMG_LOAD_SAVE(tag) ABOOTIMG_FSH_LOAD_SAVE(tag)
 
 ABOOTIMG_CONT(kernel)
 ABOOTIMG_CONT(ramdisk)

@@ -98,3 +98,6 @@
   mbtowc.c
   mbrtowc.c
   mb.c
+
+[Sources.AARCH64]
+  aarch64/lse.S

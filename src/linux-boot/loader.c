@@ -26,6 +26,7 @@
 #include"internal.h"
 #include"fdtparser.h"
 #include"KernelFdt.h"
+#include"filesystem.h"
 #define TAG "loader"
 
 bool linux_file_allocate(linux_file_info*fi,size_t size){
@@ -48,6 +49,36 @@ static void load_done(linux_file_info*fi){
 		make_readable_str_buf(buff,sizeof(buff),fi->size,1,0)
 	);
 	linux_file_dump(NULL,fi);
+}
+
+static int load_fsh(linux_file_info*fi,fsh*f){
+	char buf[64];
+	size_t size=0;
+
+	if(fs_get_size(f,&size)!=0)
+		EDONE(telog_warn("get file size failed"));
+	if(size<=0)EDONE(tlog_warn("file size too small"));
+	if(size>=0x8000000)EDONE(tlog_warn("file size too big"));
+	fi->size=size;
+	tlog_debug(
+		"file size of %p: %zu (%s)",f,fi->size,
+		make_readable_str_buf(buf,sizeof(buf),fi->size,1,0)
+	);
+
+	// allocate memory for file
+	if(!linux_file_allocate(fi,fi->size))goto done;
+
+	// read file to memory
+	if(fs_full_read(f,fi->address,fi->size)!=0)
+		EDONE(telog_warn("read file failed"));
+
+	fs_close(&f);
+	load_done(fi);
+	return 0;
+	done:
+	if(f)fs_close(&f);
+	linux_file_clean(fi);
+	return -1;
 }
 
 static int load_fp(linux_file_info*fi,EFI_FILE_PROTOCOL*fp){
@@ -160,27 +191,22 @@ static int load_pointer(linux_file_info*fi,void*p,size_t size){
 
 int linux_file_load(linux_file_info*fi,linux_load_from*from){
 	int r=-1;
-	locate_ret*loc=AllocateZeroPool(sizeof(locate_ret));
-	if(!loc||!fi||!from||!from->enabled)goto done;
+	fsh*f=NULL;
+	if(!fi||!from||!from->enabled)return r;
 	switch(from->type){
 		case FROM_LOCATE:
-			if(!boot_locate(loc,from->locate)){
-				tlog_warn("resolve locate failed");
+			if(fs_open(NULL,&f,from->locate,FILE_FLAG_READ)!=0){
+				telog_warn("resolve locate failed");
 				break;
 			}
-			switch(loc->type){
-				case LOCATE_FILE:r=load_fp(fi,loc->file);break;
-				case LOCATE_BLOCK:r=load_bp(fi,loc->block);break;
-				default:tlog_warn("unsupported locate type");
-			}
+			r=load_fsh(fi,f);
 		break;
+		case FROM_FILE_SYSTEM_HANDLE:r=load_fsh(fi,from->fsh);break;
 		case FROM_FILE_PROTOCOL:r=load_fp(fi,from->file_proto);break;
 		case FROM_BLOCKIO_PROTOCOL:r=load_bp(fi,from->blk_proto);break;
 		case FROM_POINTER:r=load_pointer(fi,from->pointer,from->size);break;
 		default:tlog_warn("unsupported from type");
 	}
-	done:
-	FreePool(loc);
 	return r;
 }
 

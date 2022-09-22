@@ -88,26 +88,17 @@ int linux_boot_load_abootimg(linux_boot*lb,aboot_image*img){
 	return 0;
 }
 
-int linux_boot_load_abootimg_locate(linux_boot*lb,locate_ret*loc){
+int linux_boot_load_abootimg_fsh(linux_boot*lb,fsh*f){
 	int ret=-1;
+	char buff[512];
 	aboot_image*img=NULL;
-	switch(loc->type){
-		case LOCATE_FILE:
-			if(!loc->path[0])break;
-			tlog_debug(
-				"parse android boot image from file '%s'...",
-				loc->path
-			);
-			img=abootimg_load_from_fp(loc->file);
-		break;
-		case LOCATE_BLOCK:
-			if(loc->path[0])break;
-			tlog_debug("parse android boot image from block...");
-			img=abootimg_load_from_blockio(loc->block);
-		break;
-		default:return trlog_warn(-1,"unknown locate type");
-	}
-	if(!img)return trlog_warn(-1,"parse android boot image failed");
+	fs_get_path(f,buff,sizeof(buff));
+	tlog_debug(
+		"parse android boot image from %s ...",
+		buff[0]?buff:"(unknown)"
+	);
+	if(!(img=abootimg_load_from_fsh(f)))
+		return trlog_warn(-1,"parse android boot image failed");
 	ret=linux_boot_load_abootimg(lb,img);
 	abootimg_free(img);
 	return ret;
@@ -115,11 +106,10 @@ int linux_boot_load_abootimg_locate(linux_boot*lb,locate_ret*loc){
 
 int linux_boot_load_abootimg_path(linux_boot*lb,char*path){
 	int r=-1;
-	locate_ret*loc=AllocateZeroPool(sizeof(locate_ret));
-	if(loc){
-		if(boot_locate(loc,path))
-			r=linux_boot_load_abootimg_locate(lb,loc);
-		FreePool(loc);
+	fsh*f=NULL;
+	if(fs_open(NULL,&f,path,FILE_FLAG_READ)==0){
+		r=linux_boot_load_abootimg_fsh(lb,f);
+		fs_close(&f);
 	}
 	return r;
 }
@@ -131,6 +121,7 @@ int linux_boot_load_abootimg_config(linux_boot*lb){
 	if(!from->enabled)return 0;
 	switch(from->type){
 		case FROM_LOCATE:return linux_boot_load_abootimg_path(lb,from->locate);
+		case FROM_FILE_SYSTEM_HANDLE:return linux_boot_load_abootimg_fsh(lb,from->fsh);
 		case FROM_POINTER:img=abootimg_load_from_memory(from->pointer,from->size);break;
 		case FROM_BLOCKIO_PROTOCOL:img=abootimg_load_from_blockio(from->blk_proto);break;
 		case FROM_FILE_PROTOCOL:img=abootimg_load_from_fp(from->file_proto);break;

@@ -64,7 +64,7 @@ int boot_linux_uefi(linux_boot*boot){
 		cmdline,
 		sizeof(cmdline)/sizeof(CHAR16)
 	);
-	confd_save_file(NULL,NULL);
+	confd_save_file(NULL);
 	li->LoadOptions=cmdline;
 	li->LoadOptionsSize=(StrLen(cmdline)+1)*sizeof(CHAR16);
 	gBS->SetWatchdogTimer(60,0x10000,0,NULL);

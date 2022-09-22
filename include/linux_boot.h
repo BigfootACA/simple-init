@@ -17,6 +17,7 @@
 #include"boot.h"
 #include"aboot.h"
 #include"limits.h"
+#include"filesystem.h"
 
 // linux kernel boot arch
 typedef enum linux_boot_arch{
@@ -33,6 +34,7 @@ typedef enum linux_load_from_type{
 	FROM_NONE=0,
 	FROM_LOCATE,
 	FROM_FILE_PROTOCOL,
+	FROM_FILE_SYSTEM_HANDLE,
 	FROM_BLOCKIO_PROTOCOL,
 	FROM_POINTER,
 }linux_load_from_type;
@@ -61,6 +63,7 @@ typedef struct linux_load_from{
 		EFI_FILE_PROTOCOL*file_proto;
 		EFI_BLOCK_IO_PROTOCOL*blk_proto;
 		void*pointer;
+		fsh*fsh;
 	};
 }linux_load_from;
 

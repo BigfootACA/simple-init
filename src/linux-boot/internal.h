@@ -107,8 +107,8 @@ extern int linux_boot_init(linux_boot*boot);
 // src/linux-boot/aboot.c: load abootimg
 extern int linux_boot_load_abootimg(linux_boot*lb,aboot_image*img);
 
-// src/linux-boot/aboot.c: load abootimg from locate
-extern int linux_boot_load_abootimg_locate(linux_boot*lb,locate_ret*loc);
+// src/linux-boot/aboot.c: load abootimg from filesystem handle
+extern int linux_boot_load_abootimg_fsh(linux_boot*lb,fsh*f);
 
 // src/linux-boot/aboot.c: load abootimg from path
 extern int linux_boot_load_abootimg_path(linux_boot*lb,char*path);

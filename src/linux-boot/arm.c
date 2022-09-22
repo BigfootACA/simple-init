@@ -135,7 +135,7 @@ int boot_linux_arm(linux_boot*boot){
 	);
 
 	tlog_info("prepare platform for arm linux boot...");
-	confd_save_file(NULL,NULL);
+	confd_save_file(NULL);
 	exit_boot_services();
 	platform_cleanup(boot);
 

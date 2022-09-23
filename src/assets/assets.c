@@ -192,16 +192,17 @@ entry_file*get_assets_file(entry_dir*dir,const char*path){
 		if(dir)xp=n+1;
 	}
 	if(!*xp)errno=ENOTDIR;
-	else if(dir)f=_get_assets_subfile(dir,xp);
-	else errno=ENOENT;
-	while(f&&S_ISLNK(f->info.mode)){
-		if(cnt++>=40){f=NULL,errno=ELOOP;break;}
-		if(!f->content){f=NULL,errno=ENOENT;break;}
-		if(f->content[0]=='/')
-			while(dir->info.parent)
-				dir=dir->info.parent;
-		f=get_assets_file(dir,f->content);
-	}
+	else if(dir){
+		f=_get_assets_subfile(dir,xp);
+		while(f&&S_ISLNK(f->info.mode)){
+			if(cnt++>=40){f=NULL,errno=ELOOP;break;}
+			if(!f->content){f=NULL,errno=ENOENT;break;}
+			if(f->content[0]=='/')
+				while(dir->info.parent)
+					dir=dir->info.parent;
+			f=get_assets_file(dir,f->content);
+		}
+	}else errno=ENOENT;
 	free(p);
 	if(f)errno=0;
 	return f;

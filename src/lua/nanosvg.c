@@ -12,9 +12,9 @@
 #include"logger.h"
 #include"nanosvg.h"
 #include"nanosvgrast.h"
+#include"filesystem.h"
 #ifdef ENABLE_UEFI
 #include"uefi.h"
-#include"locate.h"
 #include"compatible.h"
 #include<Library/MemoryAllocationLib.h>
 #endif
@@ -97,27 +97,11 @@ static int nanosvg_lib_parse_file(lua_State*L){
 	const char*file=luaL_checkstring(L,1);
 	const char*units=luaL_optstring(L,2,"px");
 	float dpi=luaL_optnumber(L,3,200.0);
-	#ifdef ENABLE_UEFI
 	char*data=NULL;
-	EFI_STATUS st=EFI_SUCCESS;
-	locate_ret*loc=AllocateZeroPool(sizeof(locate_ret));
-	if(loc){
-		if(!boot_locate(loc,file))
-			return luaL_error(L,"locate file %s failed",file);
-		if(loc->type!=LOCATE_FILE||!loc->file)
-			return luaL_error(L,"locate file %s type failed",file);
-		st=efi_file_read_whole(loc->file,(VOID**)&data,NULL);
-		if(EFI_ERROR(st)||!data)return luaL_error(
-			L,"read file %s failed: %s",
-			file,efi_status_to_string(st)
-		);
-		loc->file->Close(loc->file);
-		img=nsvgParse(data,units,dpi);
-		FreePool(data);
-	}
-	#else
-	img=nsvgParseFromFile(file,units,dpi);
-	#endif
+	if(fs_read_whole_file(NULL,file,(void**)&data,NULL)!=0||!data)
+		return luaL_error(L,"open file %s failed",file);
+	img=nsvgParse(data,units,dpi);
+	free(data);
 	lua_nanosvg_img_to_lua(L,img);
 	return 1;
 }

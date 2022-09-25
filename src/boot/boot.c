@@ -161,7 +161,7 @@ boot_config*boot_get_config(const char*name){
 		strncpy(cfg->desc,buff,sizeof(cfg->desc)-1);
 		free(buff);
 	}
-	if((buff=confd_get_string_base(cfg->base,"icon","boot"))){
+	if((buff=confd_get_string_base(cfg->base,"icon",NULL))){
 		strncpy(cfg->icon,buff,sizeof(cfg->icon)-1);
 		free(buff);
 	}

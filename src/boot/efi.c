@@ -18,7 +18,7 @@
 #include"uefi.h"
 #include"confd.h"
 #include"logger.h"
-#include"locate.h"
+#include"filesystem.h"
 #define TAG "efi"
 
 typedef EFI_DEVICE_PATH_PROTOCOL*image_locator(boot_config*boot);
@@ -53,40 +53,21 @@ static EFI_DEVICE_PATH_PROTOCOL*locate_fv_guid(boot_config*boot){
 		(EFI_DEVICE_PATH_PROTOCOL*)&fn
 	)))EDONE(tlog_error("AppendDevicePathNode failed"));
 	done:
-	return dp;
+	return DuplicateDevicePath(dp);
 }
 
 static EFI_DEVICE_PATH_PROTOCOL*locate_file(boot_config*boot){
-	EFI_STATUS st;
-	EFI_FILE_INFO*info=NULL;
-	EFI_DEVICE_PATH_PROTOCOL*ret=NULL;
-	locate_ret*loc=AllocateZeroPool(sizeof(locate_ret));
+	fsh*f=NULL;
+	EFI_DEVICE_PATH_PROTOCOL*ret=NULL,*dp=NULL;
 	char*efi=confd_get_string_base(boot->key,"efi_file",NULL);
-	if(!loc||!efi||!*efi)goto done;
-	if(!boot_locate(loc,efi))goto done;
-	if(loc->type!=LOCATE_FILE)goto done;
-
-	st=efi_file_get_file_info(loc->file,NULL,&info);
-	if(EFI_ERROR(st))EDONE(tlog_error(
-		"get file '%s' info failed: %s",
-		loc->path,efi_status_to_string(st)
-	));
-
-	if(info->Attribute&EFI_FILE_DIRECTORY)EDONE(tlog_error(
-		"file '%s' is a directory",
-		loc->path
-	));
-	if(info->FileSize<=0)EDONE(tlog_error(
-		"invalid file '%s'",
-		loc->path
-	));
-	ret=loc->device;
+	if(!efi||!*efi)goto done;
+	if(fs_open(NULL,&f,efi,FILE_FLAG_READ)!=0)
+		EDONE(telog_error("open efi %s failed",efi));
+	if(fs_ioctl(f,FS_IOCTL_UEFI_GET_DEVICE_PATH,&dp)!=0)
+		EDONE(telog_error("get device path of %s failed",efi));
+	ret=DuplicateDevicePath(dp);
 	done:
-	if(loc){
-		if(loc->file)loc->file->Close(loc->file);
-		FreePool(loc);
-	}
-	if(info)FreePool(info);
+	if(f)fs_close(&f);
 	if(efi)free(efi);
 	return ret;
 }
@@ -163,7 +144,7 @@ int run_boot_efi(boot_config*boot){
 	dpt=ConvertDevicePathToText(dp,TRUE,FALSE);
 	if(dpt)UnicodeStrToAsciiStrS(dpt,img,sizeof(img));
 	else AsciiStrCpyS(img,sizeof(img),"(Unknown)");
-	confd_save_file(NULL,NULL);
+	confd_save_file(NULL);
 	tlog_info("start image '%s' ...",img);
 	st=gBS->StartImage(ih,&size,NULL);
 	if(EFI_ERROR(st)){
@@ -175,6 +156,7 @@ int run_boot_efi(boot_config*boot){
 	}
 	r=0;
 	done:
+	if(dp)FreePool(dp);
 	if(buf)FreePool(buf);
 	if(options)free(options);
 	if(ih)gBS->UnloadImage(ih);

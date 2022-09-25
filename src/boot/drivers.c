@@ -16,6 +16,7 @@
 #include"logger.h"
 #include"locate.h"
 #include"compatible.h"
+#include"filesystem.h"
 #define TAG "drivers"
 
 bool boot_load_driver(EFI_DEVICE_PATH_PROTOCOL*p){
@@ -54,32 +55,25 @@ bool boot_load_driver(EFI_DEVICE_PATH_PROTOCOL*p){
 }
 
 void boot_load_drivers(){
+	fsh*f=NULL;
+	EFI_DEVICE_PATH_PROTOCOL*dp=NULL;
 	char*d,**ds=NULL,*b="uefi.drivers";
-	locate_ret*loc=AllocateZeroPool(sizeof(locate_ret));
-	if(!loc||!(ds=confd_ls(b)))goto done;
+	if(!(ds=confd_ls(b)))return;
 	for(int i=0;ds[i];i++){
 		if(!(d=confd_get_string_base(b,ds[i],NULL)))continue;
 		tlog_verbose("try to load dxe driver from %s",d);
-		if(!boot_locate(loc,d)){
-			tlog_warn("resolve locate %s failed",d);
-			free(d);
-			continue;
-		}
-		if(loc->type!=LOCATE_FILE){
-			tlog_warn("only support load dxe driver from file");
-			free(d);
-			continue;
-		}
-		if(boot_load_driver(loc->device))
+		if(fs_open(NULL,&f,d,FILE_FLAG_READ)!=0)
+			EDONE(telog_warn("open %s failed",d));
+		if(fs_ioctl(f,FS_IOCTL_UEFI_GET_DEVICE_PATH,&dp)!=0)
+			EDONE(telog_warn("get device path of %s failed",d));
+		if(boot_load_driver(dp))
 			tlog_debug("loaded dxe driver %s",d);
-		loc->file->Close(loc->file);
-		free(d);
+		done:
+		if(f)fs_close(&f);
+		if(d)free(d);
+		d=NULL,d=NULL,dp=NULL;
 	}
-	done:
-	if(ds){
-		if(ds[0])free(ds[0]);
-		free(ds);
-	}
-	if(loc)FreePool(loc);
+	if(ds[0])free(ds[0]);
+	free(ds);
 }
 #endif

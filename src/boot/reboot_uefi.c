@@ -28,7 +28,7 @@ int run_boot_reboot(boot_config*boot){
 		case BOOT_POWEROFF:cmd=REBOOT_POWEROFF;break;
 		default:ERET(EINVAL);
 	}
-	confd_save_file(NULL,NULL);
+	confd_save_file(NULL);
 	adv_reboot(cmd,data);
 	tlog_warn("reset system failed");
 	return -1;

@@ -149,6 +149,7 @@ static void add_page(struct gui_app*ga){
 }
 
 static void add_button(struct gui_app*ga,struct gui_register*p){
+	struct app_info*ai;
 	if(!p->show_app)return;
 	lv_coord_t bx=ga->app_num%ga->col_cnt;
 	lv_coord_t by=ga->app_num/ga->col_cnt;
@@ -157,8 +158,7 @@ static void add_button(struct gui_app*ga,struct gui_register*p){
 		add_button(ga,p);
 		return;
 	}
-	struct app_info*ai=malloc(sizeof(struct app_info));
-	if(!ai)return;
+	if(!(ai=malloc(sizeof(struct app_info))))return;
 	memset(ai,0,sizeof(struct app_info));
 	lv_coord_t ls=gui_dpi/100;
 	lv_obj_t*scr=ga->pages[ga->app_page];
@@ -196,9 +196,7 @@ static void add_button(struct gui_app*ga,struct gui_register*p){
 	lv_obj_set_style_radius(icon_w,gui_dpi/10,0);
 	lv_obj_t*icon=lv_img_create(icon_w);
 	lv_obj_clear_flag(icon,LV_OBJ_FLAG_SCROLLABLE|LV_OBJ_FLAG_CLICKABLE);
-	lv_img_t*x=(lv_img_t*)icon;
-	lv_img_set_src(icon,p->icon);
-	if(x->w<=0||x->h<=0)lv_img_set_src(icon,"apps.svg");
+	lv_img_src_try(icon,"app",p->name,p->icon);
 	lv_obj_center(icon);
 	lv_img_fill_image(icon,aw,aw);
 	aw-=ls*2;

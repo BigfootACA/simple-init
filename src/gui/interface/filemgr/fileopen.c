@@ -221,4 +221,20 @@ void fileopen_open(const char*path){
 	guiact_start_activity(&guireg_fileopen,fo);
 }
 
+void fileopen_open_url(url*uri){
+	struct fileopen*fo;
+	if(!(fo=malloc(sizeof(struct fileopen))))return;
+	memset(fo,0,sizeof(struct fileopen));
+	url_generate(fo->path,sizeof(fo->path),uri);
+	guiact_start_activity(&guireg_fileopen,fo);
+}
+
+void fileopen_open_fsh(fsh*f){
+	struct fileopen*fo;
+	if(!(fo=malloc(sizeof(struct fileopen))))return;
+	memset(fo,0,sizeof(struct fileopen));
+	fs_get_path(f,fo->path,sizeof(fo->path));
+	guiact_start_activity(&guireg_fileopen,fo);
+}
+
 #endif

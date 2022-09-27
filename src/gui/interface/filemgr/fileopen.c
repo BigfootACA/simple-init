@@ -111,9 +111,7 @@ static void add_app(struct fileopen*fo,struct gui_register*reg){
 		LV_GRID_ALIGN_STRETCH,0,1
 	);
 	app->img=lv_img_create(app->w_img);
-	lv_img_t*ext=(lv_img_t*)app->img;
-	lv_img_set_src(app->img,reg->icon);
-	if(ext->w<=0||ext->h<=0)lv_img_set_src(app->img,"apps.svg");
+	lv_img_src_try(app->img,"app",reg->name,reg->icon);
 	lv_img_set_size_mode(app->img,LV_IMG_SIZE_MODE_REAL);
 	lv_img_fill_image(app->img,grid_col[0],grid_col[0]);
 	lv_obj_center(app->img);
@@ -216,8 +214,8 @@ struct gui_register guireg_fileopen={
 };
 
 void fileopen_open(const char*path){
-	struct fileopen*fo=malloc(sizeof(struct fileopen));
-	if(!fo)return;
+	struct fileopen*fo;
+	if(!(fo=malloc(sizeof(struct fileopen))))return;
 	memset(fo,0,sizeof(struct fileopen));
 	strcpy(fo->path,path);
 	guiact_start_activity(&guireg_fileopen,fo);

@@ -81,12 +81,20 @@ static bool restart_cb(
 }
 
 static void ok_cb(lv_event_t*e){
+	char*x;
 	struct gadget_add_mass*am=e->user_data;
 	static char*base="gadget.func";
 	struct stat st;
 	int cnt=confd_count(base);
 	if(cnt<0)cnt=0;
 	const char*path=lv_textarea_get_text(am->txt_path);
+	if((x=strstr(path,"://"))){
+		if(strncmp(path,"file",x-path)!=0){
+			msgbox_alert("Only file:// path supported");
+			return;
+		}
+		path=x+3;
+	}
 	if(path[0]!='/'){
 		msgbox_alert("Disk file path is not absolute");
 		return;
@@ -141,10 +149,13 @@ static int add_mass_init(struct gui_activity*act){
 	if(!am)return -ENOMEM;
 	memset(am,0,sizeof(struct gadget_add_mass));
 	act->data=am;
-	char*p=act->args;
-	if(p&&p[0]!='/'){
-		if(p[1]!=':')return -EINVAL;
-		act->args+=2;
+	char*p=act->args,*x;
+	if(p&&(x=strstr(p,"://"))){
+		if(strncmp(p,"file",x-p)!=0){
+			msgbox_alert("Only file:// path supported");
+			return -1;
+		}
+		act->args=x+3;
 	}
 	return 0;
 }
@@ -187,7 +198,7 @@ struct gui_register guireg_add_mass={
 	.open_file=true,
 	.open_regex=(char*[]){
 		"^/dev/.+",
-		"^[A-Z]?:/dev/.+",
+		"file:///dev/.+",
 		".*\\.img$",
 		".*\\.raw$",
 		".*\\.iso$",

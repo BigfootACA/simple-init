@@ -25,8 +25,8 @@
 #include"logger.h"
 #include"language.h"
 #include"compatible.h"
+#include"filesystem.h"
 #include"gui/tools.h"
-#include"gui/fsext.h"
 #include"gui/msgbox.h"
 #include"gui/activity.h"
 #include"gui/filepicker.h"
@@ -179,11 +179,11 @@ static void acpi_reload(struct acpi_mgr*am){
 }
 
 static void load_aml(const char*path){
+	int r=0;
 	UINTN k=0;
+	fsh*f=NULL;
+	size_t size;
 	EFI_STATUS st;
-	lv_fs_res_t r;
-	lv_fs_file_t f;
-	uint32_t size=0,buf=0;
 	EFI_ACPI_TABLE_PROTOCOL*p=NULL;
 	EFI_ACPI_DESCRIPTION_HEADER*data=NULL;
 	if(!path)return;
@@ -198,98 +198,63 @@ static void load_aml(const char*path){
 		);
 		return;
 	}
-	r=lv_fs_open(&f,path,LV_FS_MODE_RD);
-	if(r!=LV_FS_RES_OK)EDONE(tlog_warn(
+	r=fs_open(NULL,&f,path,FILE_FLAG_READ);
+	if(r!=0)EDONE(tlog_warn(
 		"open file %s failed: %s",
-		path,lv_fs_res_to_string(r)
+		path,strerror(r)
 	));
-	r=lv_fs_size(&f,&size);
-	if(r!=LV_FS_RES_OK)EDONE(tlog_warn(
-		"get file %s size failed: %s",
-		path,lv_fs_res_to_string(r)
+	r=fs_read_all(f,(void**)&data,&size);
+	if(r!=0)EDONE(tlog_warn(
+		"read file %s failed: %s",
+		path,strerror(r)
 	));
 	if(size<=sizeof(EFI_ACPI_DESCRIPTION_HEADER))
 		EDONE(tlog_warn("invalid aml %s",path));
-	if(!(data=AllocateZeroPool(size+1)))EDONE();
-	r=lv_fs_read(&f,data,size,&buf);
-	if(r!=LV_FS_RES_OK)EDONE(tlog_warn(
-		"read file %s failed: %s",
-		path,lv_fs_res_to_string(r)
-	));
-	if(buf!=size)EDONE(tlog_warn(
-		"read file %s size mismatch",
-		path
-	));
 	if(data->Length!=size)EDONE(tlog_warn(
-		"aml file %s size mismatch",
-		path
+		"aml file %s size mismatch",path
 	));
-	lv_fs_close(&f);
-	f.file_d=NULL;
+	fs_close(&f);
+	f=NULL;
 	st=p->InstallAcpiTable(p,data,size,&k);
 	if(EFI_ERROR(st))EDONE(msgbox_alert(
 		"Install ACPI Table failed: %s",
 		_(efi_status_to_string(st))
 	));
-	FreePool(data);
+	free(data);
 	msgbox_alert("Load %s done",path);
 	return;
 	done:
-	if(data)FreePool(data);
-	if(f.file_d){
-		lv_fs_close(&f);
+	if(data)free(data);
+	if(f){
+		fs_close(&f);
 		msgbox_alert("Read file %s failed",path);
 	}
 }
 
 static void save_aml(const char*path,EFI_ACPI_DESCRIPTION_HEADER*table){
-	UINTN s=0;
-	EFI_STATUS st;
-	lv_fs_res_t r;
-	lv_fs_file_t f;
-	EFI_FILE_PROTOCOL*fp;
-	EFI_FILE_INFO*info=NULL;
+	int r;
+	fsh*f=NULL;
 	if(!path||!table)return;
-	r=lv_fs_open(&f,path,LV_FS_MODE_WR);
-	if(r!=LV_FS_RES_OK)EDONE(tlog_warn(
+	r=fs_open(
+		NULL,&f,path,
+		FILE_FLAG_READWRITE|
+		FILE_FLAG_CREATE|
+		FILE_FLAG_TRUNCATE
+	);
+	if(r!=0)EDONE(tlog_warn(
 		"open file %s failed: %s",
-		path,lv_fs_res_to_string(r)
+		path,strerror(r)
 	));
-	if(!(fp=lv_fs_file_to_fp(&f)))EDONE();
-	st=efi_file_get_file_info(fp,&s,&info);
-	if(EFI_ERROR(st))EDONE(tlog_warn(
-		"get file info %s failed: %s",
-		path,efi_status_to_string(st)
-	));
-	info->FileSize=0;
-	st=fp->SetInfo(fp,&gEfiFileInfoGuid,s,info);
-	if(EFI_ERROR(st)){
-		st=fp->Delete(fp);
-		r=lv_fs_open(&f,path,LV_FS_MODE_WR);
-		if(r!=LV_FS_RES_OK)EDONE(tlog_warn(
-			"open file %s failed: %s",
-			path,lv_fs_res_to_string(r)
-		));
-		if(!(fp=lv_fs_file_to_fp(&f)))EDONE();
-	}
-	fp->SetPosition(fp,0);
-	s=table->Length;
-	st=fp->Write(fp,&s,table);
-	if(EFI_ERROR(st))EDONE(tlog_warn(
+	r=fs_full_write(f,table,table->Length);
+	if(r!=0)EDONE(tlog_warn(
 		"write file %s failed: %s",
-		path,efi_status_to_string(st)
+		path,strerror(r)
 	));
-	if(s!=table->Length)EDONE(tlog_warn(
-		"write file %s size mismatch",
-		path
-	));
-	FreePool(info);
-	lv_fs_close(&f);
+	fs_close(&f);
 	msgbox_alert("Save %s done",path);
 	return;
 	done:
-	if(info)FreePool(info);
-	if(f.file_d)lv_fs_close(&f);
+	if(f)fs_close(&f);
 	msgbox_alert("Save %s failed",path);
 }
 

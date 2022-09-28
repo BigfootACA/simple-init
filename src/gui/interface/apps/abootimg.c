@@ -17,9 +17,6 @@
 #include"gui/tools.h"
 #include"gui/msgbox.h"
 #include"gui/activity.h"
-#ifdef ENABLE_UEFI
-#include"gui/fsext.h"
-#endif
 #define TAG "abootimg"
 
 struct abootimg{
@@ -31,29 +28,6 @@ struct abootimg{
 	lv_obj_t*name,*cmdline;
 	aboot_image*img;
 };
-
-#ifdef ENABLE_UEFI
-#define ABOOT_WRAP(path,call,ret,...){ \
-                lv_fs_file_t f;\
-		lv_fs_res_t res=lv_fs_open(&f,path,LV_FS_MODE_WR);\
-		if(res==LV_FS_RES_OK){\
-			ret=call##_fp(__VA_ARGS__ lv_fs_file_to_fp(&f));\
-			lv_fs_close(&f);\
-		}else tlog_warn(\
-			"open file '%s' failed: %s",\
-			path,lv_fs_res_to_string(res)\
-		);\
-	}
-#else
-#define ABOOT_WRAP(path,call,ret,...){\
-		int fd=open(path,O_RDWR|O_CREAT,0644);\
-                if(fd<0)fd=open(path,O_RDONLY);\
-		if(fd>=0){\
-			ret=call##_fd(__VA_ARGS__ fd);\
-			close(fd);\
-		}else telog_warn("open file '%s' failed",path);\
-	}
-#endif
 
 static int abootimg_get_focus(struct gui_activity*d){
 	struct abootimg*am=d->data;
@@ -110,8 +84,8 @@ static int abootimg_lost_focus(struct gui_activity*d){
 static int open_image(struct abootimg*am){
 	if(am->img)abootimg_free(am->img);
 	const char*path=lv_textarea_get_text(am->image);
-	ABOOT_WRAP(path,abootimg_load_from,am->img);
-	return 0;
+	am->img=abootimg_load_from_url_path(path);
+	return am->img==NULL?(errno?:EINVAL):0;
 }
 
 static int auto_open_image(struct abootimg*am){
@@ -164,7 +138,7 @@ static void abootimg_cb(lv_event_t*e){
 		bool ret=false;\
 		const char*path=lv_textarea_get_text(am->type);\
                 if(!path[0])return true;\
-		ABOOT_WRAP(path,abootimg_save_##tag##_to,ret,am->img,);\
+                ret=abootimg_save_##tag##_to_url_path(am->img,path);\
 		if(!ret)msgbox_alert("Save "#tag" failed");\
 		return ret;\
 	}\
@@ -173,7 +147,7 @@ static void abootimg_cb(lv_event_t*e){
 		bool ret=false;\
 		const char*path=lv_textarea_get_text(am->type);\
 		if(!path[0])return true;\
-		ABOOT_WRAP(path,abootimg_load_##tag##_from,ret,am->img,);\
+                ret=abootimg_load_##tag##_from_url_path(am->img,path);\
 		if(!ret)msgbox_alert("Load "#tag" failed");\
 		return ret;\
 	}
@@ -195,7 +169,7 @@ static bool image_save(struct abootimg*am){
 	bool ret=false;
 	const char*path=lv_textarea_get_text(am->image);
 	if(!path[0])return true;
-	ABOOT_WRAP(path,abootimg_save_to,ret,am->img,);
+	ret=abootimg_save_to_url_path(am->img,path);
 	if(!ret)msgbox_alert("Save image failed");
 	return ret;
 }
@@ -309,7 +283,7 @@ struct gui_register guireg_abootimg={
 	.open_file=true,
 	.open_regex=(char*[]){
 		"^/dev/.+",
-		"^[A-Z]?:/dev/.+",
+		"file:///dev/.+",
 		".*\\.img$",
 		".*/boot.*",
 		".*/recovery.*",

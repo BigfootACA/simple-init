@@ -14,7 +14,6 @@
 #include"array.h"
 #include"logger.h"
 #include"gui/tools.h"
-#include"gui/fsext.h"
 #include"gui/msgbox.h"
 #include"gui/filetab.h"
 #include"gui/fileopen.h"
@@ -89,34 +88,43 @@ static void tabview_cb(lv_event_t*e __attribute__((unused))){
 	update_active();
 }
 
-static void on_change_dir(struct filetab*fv,char*old __attribute__((unused)),char*new){
-	if(!filetab_is_active(fv))return;
-	lv_label_set_text(path,new);
+static void on_change_dir(struct filetab*fv,url*old __attribute__((unused)),url*new){
+	char*str;
 	size_t tab=0;
+	if(!filetab_is_active(fv))return;
 	for(tab=0;tab<ARRLEN(tabs);tab++)if(tabs[tab]==fv)break;
-	confd_set_string_array("gui.filemgr.tab",(int)tab,"dir",new);
+	if(new){
+		if(!(str=url_generate_alloc(new)))return;
+		lv_label_set_text(path,str);
+		confd_set_string_array("gui.filemgr.tab",(int)tab,"dir",str);
+		free(str);
+	}else{
+		lv_label_set_text(path,"/");
+		confd_delete_array("gui.filemgr.tab",(int)tab,"dir");
+	}
 }
 
-static bool on_item_click(struct filetab*fv,char*item,enum item_type type){
-	if(!filetab_is_active(fv)||type==TYPE_DIR)return true;
-	char full_path[PATH_MAX]={0};
-	char*parent=filetab_get_lvgl_path(fv);
-	char*x=parent+strlen(parent)-1;
-	if(*x=='/')*x=0;
-	snprintf(full_path,PATH_MAX-1,"%s/%s",parent,item);
-	fileopen_open(full_path);
+static bool on_item_click(struct filetab*fv,char*item,fs_type type){
+	fsh*f=NULL,*nf=NULL;
+	if(!filetab_is_active(fv))return true;
+	if(!fs_has_type(type,FS_TYPE_FILE))return true;
+	if(fs_has_type(type,FS_TYPE_FILE_FOLDER))return true;
+	if(!(nf=filetab_get_fsh(fv)))return true;
+	if(fs_open(nf,&f,item,FILE_FLAG_READ)!=0)return true;
+	fileopen_open_fsh(f);
+	fs_close(&f);
 	return true;
 }
 
 static void on_item_select(
 	struct filetab*fv,
 	char*name __attribute__((unused)),
-	enum item_type type __attribute__((unused)),
+	fs_type type __attribute__((unused)),
 	bool checked __attribute__((unused)),
 	uint16_t cnt
 ){
 	if(fv!=active)return;
-	if(fsext_is_multi&&filetab_is_top(fv))return;
+	if(filetab_is_top(fv))return;
 	if(cnt==1){
 		lv_obj_set_enabled(btn_edit,true);
 		lv_obj_set_enabled(btn_info,true);
@@ -173,20 +181,22 @@ static int do_back(struct gui_activity*d __attribute__((unused))){
 }
 
 static bool create_name_cb(bool ok,const char*name,void*user_data){
+	int r=0;
+	fsh*f=NULL,*pf=NULL;
+	fs_file_flag flag=FILE_FLAG_CREATE;
 	if(!ok)return false;
-	char*fp=filetab_get_lvgl_path(active);
-	char xp[PATH_MAX]={0};
-	snprintf(xp,PATH_MAX-1,"%s/%s",fp,name);
-	lv_res_t r;
+	if(!(pf=filetab_get_fsh(active)))return false;
 	switch(*(uint16_t*)user_data){
-		case 0:r=lv_fs_creat(xp);break;//file
-		case 1:r=lv_fs_mkdir(xp);break;//folder
+		case 0:flag|=0644;break;//file
+		case 1:flag|=0755|FILE_FLAG_FOLDER;break;//folder
 		default:return false;
 	}
+	r=fs_open(pf,&f,name,flag);
+	if(f)fs_close(&f);
 	filetab_set_path(active,NULL);
 	if(r!=LV_FS_RES_OK)msgbox_alert(
 		"Create '%s' failed: %s",
-		name,lv_fs_res_to_i18n_string(r)
+		name,strerror(r)
 	);
 	return false;
 }
@@ -200,32 +210,20 @@ static bool create_cb(uint16_t id,const char*text __attribute__((unused)),void*u
 }
 
 static bool rename_cb(bool ok,const char*name,void*user_data __attribute__((unused))){
-	if(!ok||filetab_get_checked_count(active)!=1)return false;
-	char*buff=malloc(PATH_MAX*3);
-	if(!buff)return true;
-	memset(buff,0,PATH_MAX*3);
-	char*oldname=buff;
-	char*oldpath=oldname+PATH_MAX;
-	char*newpath=oldpath+PATH_MAX;
-	char*fp=filetab_get_lvgl_path(active);
+	fsh*f=filetab_get_fsh(active);
+	if(!f||!ok||filetab_get_checked_count(active)!=1)return false;
 	char**sel=filetab_get_checked(active);
 	if(!sel||!sel[0]||sel[1]){
 		if(sel)free(sel);
 		msgbox_alert("File select invalid");
-		free(buff);
 		return true;
 	}
-	strncpy(oldname,sel[0],PATH_MAX-1);
-	snprintf(oldpath,PATH_MAX-1,"%s/%s",fp,sel[0]);
-	snprintf(newpath,PATH_MAX-1,"%s/%s",fp,name);
-	lv_res_t r=lv_fs_rename(oldpath,newpath);
+	int r=fs_rename_at(f,sel[0],name);
 	filetab_set_path(active,NULL);
-	if(r!=LV_FS_RES_OK)msgbox_alert(
+	if(r!=0)msgbox_alert(
 		"Rename '%s' to '%s' failed: %s",
-		oldname,name,
-		lv_fs_res_to_i18n_string(r)
+		sel[0],name,strerror(r)
 	);
-	free(buff);
 	free(sel);
 	return false;
 }
@@ -273,7 +271,7 @@ static void btns_cb(lv_event_t*e){
 			LV_SYMBOL_DIRECTORY,
 			""
 		};
-		if(fsext_is_multi&&filetab_is_top(active))return;
+		if(filetab_is_top(active))return;
 		msgbox_create_custom(create_cb,types,"Choose type to create");
 	}else if(strcmp(btn,"cut")==0){
 		msgbox_alert("This function does not implemented");

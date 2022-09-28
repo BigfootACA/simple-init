@@ -9,13 +9,13 @@
 #ifndef _FILEMGR_H
 #define _FILEMGR_H
 #include<stdbool.h>
+#include"filesystem.h"
 #include"defines.h"
 #include"gui.h"
-#include"gui/fsext.h"
 struct filetab;
-typedef void(*filetab_on_item_select)(struct filetab*,char*item,enum item_type type,bool checked,uint16_t cnt);
-typedef bool(*filetab_on_item_click)(struct filetab*,char*item,enum item_type type);
-typedef void(*filetab_on_change_dir)(struct filetab*,char*old,char*new);
+typedef void(*filetab_on_item_select)(struct filetab*,char*item,fs_type type,bool checked,uint16_t cnt);
+typedef bool(*filetab_on_item_click)(struct filetab*,char*item,fs_type type);
+typedef void(*filetab_on_change_dir)(struct filetab*,url*old,url*new);
 
 // src/gui/interface/filemgr/filetab.c: create file tab
 extern struct filetab*filetab_create(lv_obj_t*view,char*path);
@@ -38,8 +38,8 @@ extern lv_obj_t*filetab_get_tab(struct filetab*tab);
 // src/gui/interface/filemgr/filetab.c: get filetab path
 extern char*filetab_get_path(struct filetab*tab);
 
-// src/gui/interface/filemgr/filetab.c: get filetab lvgl path for lv_fs
-extern char*filetab_get_lvgl_path(struct filetab*tab);
+// src/gui/interface/filemgr/filetab.c: get filetab fs handler
+extern fsh*filetab_get_fsh(struct filetab*tab);
 
 // src/gui/interface/filemgr/filetab.c: get filetab checked items
 extern char**filetab_get_checked(struct filetab*tab);

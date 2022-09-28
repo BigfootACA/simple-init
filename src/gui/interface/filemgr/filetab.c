@@ -26,16 +26,18 @@ struct filetab{
 	filetab_on_item_select on_item_select;
 };
 
-static void on_change_dir(struct fileview*fv,char*old,char*new){
+static void on_change_dir(struct fileview*fv,url*old,url*new){
+	char path[PATH_MAX],*p;
 	struct filetab*ft=fileview_get_data(fv);
-	size_t cnt=strlen(new);
-	char path[PATH_MAX]={0},*p;
-	strncpy(path,new,cnt);
-	if(cnt>1&&(path[cnt-1]=='/'||path[cnt-1]=='\\'))path[cnt-1]=0;
-	p=strrchr(path,'/');
-	if(!p)p=strrchr(path,'\\');
-	if(!p)p=path;
-	else if(cnt>1)p++;
+	if(new&&new->path){
+		size_t cnt=strlen(new->path);
+		memset(path,0,sizeof(path));
+		strncpy(path,new->path,cnt);
+		if(cnt>1&&path[cnt-1]=='/')path[cnt-1]=0;
+		p=strrchr(path,'/');
+		if(!p)p=path;
+		else if(cnt>1)p++;
+	}else p=_("File Manager");
 	lv_tabview_t*tv=(lv_tabview_t*)ft->view;
 	lv_obj_t*btns=lv_tabview_get_tab_btns(ft->view);
 	lv_mem_free(tv->map[ft->tab_id]);
@@ -48,12 +50,12 @@ static void on_change_dir(struct fileview*fv,char*old,char*new){
 	if(ft->on_change_dir)ft->on_change_dir(ft,old,new);
 }
 
-static bool on_item_click(struct fileview*fv,char*item,enum item_type type){
+static bool on_item_click(struct fileview*fv,char*item,fs_type type){
 	struct filetab*ft=fileview_get_data(fv);
 	return (ft->on_item_click)?ft->on_item_click(ft,item,type):true;
 }
 
-static void on_item_select(struct fileview*fv,char*item,enum item_type type,bool checked,uint16_t cnt){
+static void on_item_select(struct fileview*fv,char*item,fs_type type,bool checked,uint16_t cnt){
 	struct filetab*ft=fileview_get_data(fv);
 	if(ft->on_item_select)ft->on_item_select(ft,item,type,checked,cnt);
 }
@@ -113,8 +115,8 @@ char*filetab_get_path(struct filetab*tab){
 	return tab?fileview_get_path(tab->fv):NULL;
 }
 
-char*filetab_get_lvgl_path(struct filetab*tab){
-	return tab?fileview_get_lvgl_path(tab->fv):NULL;
+fsh*filetab_get_fsh(struct filetab*tab){
+	return tab?fileview_get_fsh(tab->fv):NULL;
 }
 
 uint16_t filetab_get_checked_count(struct filetab*tab){

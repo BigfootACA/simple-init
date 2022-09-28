@@ -21,7 +21,6 @@
 #include"uefi.h"
 #else
 #include<fcntl.h>
-#include<sys/stat.h>
 #include<sys/sysmacros.h>
 #endif
 #include"gui.h"
@@ -30,15 +29,14 @@
 #include"confd.h"
 #include"logger.h"
 #include"system.h"
-#include"gui/fsext.h"
+#include"filesystem.h"
 #include"gui/tools.h"
 #include"gui/fileview.h"
 #define TAG "fileview"
-#define MIME_EXT ".svg"
+
+static lv_label_long_mode_t lm;
 
 struct fileview{
-	char letter;
-	char path[PATH_MAX],full_path[PATH_MAX];
 	lv_obj_t*view,*info;
 	list*items;
 	bool hidden,parent,verbose,check_mode;
@@ -47,6 +45,8 @@ struct fileview{
 	fileview_on_item_select on_select_item;
 	fileview_on_item_click on_click_item;
 	fileview_on_change_dir on_change_dir;
+	url*url,*root;
+	fsh*folder;
 	void*data;
 };
 
@@ -54,111 +54,133 @@ struct fileitem{
 	struct fileview*view;
 	lv_obj_t*btn,*fn,*w_img,*img;
 	lv_obj_t*size,*info1,*info2;
-	char name[256],letter;
-	struct stat st;
-	char path[PATH_MAX];
-	enum item_type type;
+	fs_type type;
+	fs_file_info file;
+	fsvol_info*vol;
 };
 
-static char*get_parent(char*buff,size_t size,char*path){
-	if(!buff||!path||size<=0)return NULL;
-	memset(buff,0,size);
-	strncpy(buff,path,size-1);
-	size_t len=strlen(buff);
-	if(len==0)return buff;
-	if(buff[len-1]=='/')buff[len-1]=0,len--;
-	while(len>0&&buff[len-1]!='/')buff[len-1]=0,len--;
-	return buff;
-}
-
 static const char*get_icon(struct fileitem*fi){
-	switch(fi->type){
-		case TYPE_DIR:return strcmp(fi->name,"..")==0?
-			"inode-parent"MIME_EXT:
-			"inode-dir"MIME_EXT;
-		case TYPE_BLOCK:return "inode-blockdevice"MIME_EXT;
-		case TYPE_CHAR:return "inode-chardevice"MIME_EXT;
-		case TYPE_SOCK:return "inode-socket"MIME_EXT;
-		case TYPE_LINK:return "inode-symlink"MIME_EXT;
-		case TYPE_FIFO:return "inode-fifo"MIME_EXT;
-		case TYPE_FILE:return "inode-file"MIME_EXT;
-		case TYPE_DISK:return "inode-disk"MIME_EXT;
-		default:return "unknown"MIME_EXT;
+	if(fs_has_type(fi->type,FS_TYPE_PARENT))return "@mime-inode-parent";
+	if(fs_has_type(fi->type,FS_TYPE_VOLUME))return "@mime-inode-disk";
+	if(fs_has_type(fi->type,FS_TYPE_FILE))switch(fi->type){
+		case FS_TYPE_FILE_FOLDER:return "@mime-inode-dir";
+		case FS_TYPE_FILE_BLOCK:return "@mime-inode-blockdevice";
+		case FS_TYPE_FILE_CHAR:return "@mime-inode-chardevice";
+		case FS_TYPE_FILE_SOCKET:return "@mime-inode-socket";
+		case FS_TYPE_FILE_LINK:return "@mime-inode-symlink";
+		case FS_TYPE_FILE_FIFO:return "@mime-inode-fifo";
+		case FS_TYPE_FILE_REG:return "@mime-inode-file";
+		default:;
 	}
+	return "@mime-unknown";
 }
 
-static void call_on_change_dir(struct fileview*view,char*oldpath){
-	if(strcmp(view->full_path,oldpath)==0)return;
-	tlog_debug("change dir to %s",view->full_path);
-	if(view->on_change_dir)view->on_change_dir(view,oldpath,view->full_path);
+static void call_on_change_dir(struct fileview*view,url*old){
+	char buff[PATH_MAX],*path;
+	if(url_equals(old,view->url))return;
+	path=view->url?url_generate(buff,sizeof(buff),view->url):"/";
+	tlog_debug("change dir to %s",path);
+	if(view->on_change_dir)view->on_change_dir(view,old,view->url);
 }
 
-static bool call_on_click_item(struct fileitem*fi,enum item_type type){
+static bool call_on_click_item(struct fileitem*fi){
+	char*name;
 	if(!fi->view||!fi->view->on_click_item)return true;
-	return fi->view->on_click_item(fi->view,fi->name,type);
+	if(fs_has_type(fi->type,FS_TYPE_PARENT))name="..";
+	else if(fs_has_type(fi->type,FS_TYPE_FILE))name=fi->file.name;
+	else if(fs_has_type(fi->type,FS_TYPE_VOLUME))name=fi->vol->name;
+	else return true;
+	return fi->view->on_click_item(fi->view,name,fi->type);
 }
 
-static void call_on_select_item(struct fileview*view,char*item,enum item_type type,bool checked,uint16_t cnt){
+static void call_on_select_item(
+	struct fileview*view,
+	char*item,
+	fs_type type,
+	bool checked,
+	uint16_t cnt
+){
 	if(!view||!view->on_select_item)return;
 	view->on_select_item(view,item,type,checked,cnt);
 }
 
 void fileview_go_back(struct fileview*fv){
-	char*p=fv->path;
-	if(p[1]==':')p+=2;
-	if(strcmp(p,"/")!=0){
-		char path[PATH_MAX];
-		path[0]=fv->letter;
-		path[1]=':';
-		get_parent(path+2,sizeof(path)-2,p);
-		fileview_set_path(fv,fsext_is_multi?path:path+2);
-		return;
-	}
-	if(fsext_is_multi&&fv->letter){
-		fv->letter=0;
-		fileview_set_path(fv,"/");
+	url*old;
+	if(!fv||!fv->url)return;
+	if(
+		url_is_on_top(fv->url)||
+		(fv->url->path&&fv->root&&fv->root->path&&
+		strcmp(fv->root->path,fv->url->path)==0)
+	){
+		old=fv->url,fv->url=NULL;
+		fs_close(&fv->folder);
+		call_on_change_dir(fv,old);
+		fileview_set_path(fv,NULL);
+		url_free(old);
+	}else{
+		if(!(old=url_dup(fv->url)))return;
+		url_go_back(old,true);
+		fileview_set_url(fv,old);
+		url_free(old);
 	}
 }
 
 static void check_item(struct fileitem*fi,bool checked){
 	if(!fi||!fi->view||!fi->btn)return;
-	if(strcmp(fi->name,"..")==0){
+	if(fs_has_type(fi->type,FS_TYPE_PARENT)){
 		fileview_go_back(fi->view);
 		return;
 	}
-	if(fi->letter){
+	if(fs_has_type(fi->type,FS_TYPE_VOLUME)){
 		lv_obj_set_checked(fi->btn,false);
 		return;
 	}
 	lv_obj_set_checked(fi->btn,checked);
 	call_on_select_item(
-		fi->view,fi->name,fi->type,checked,
+		fi->view,fi->file.name,fi->type,checked,
 		fileview_get_checked_count(fi->view)
 	);
 }
 
 static void click_item(struct fileitem*fi){
-	if(!fi)return;
-	struct fileview*fv=fi->view;
-	if(!fv)return;
-	if(fi->letter){
-		fv->letter=fi->letter;
-		fileview_set_path(fv,(char[]){fi->letter,':','/',0});
-		return;
-	}
-	if(fileview_get_checked_count(fi->view)>0){
-		check_item(fi,!lv_obj_is_checked(fi->btn));
-		return;
-	}
-	if(strcmp(fi->name,"..")==0)fileview_go_back(fv);
-	else{
-		if(!call_on_click_item(fi,fi->type))return;
-		if(fi->type!=TYPE_DIR)return;
-		size_t s=strlen(fv->path);
-		if(fv->path[s-1]=='/')fv->path[s-1]=0;
-		char xpath[sizeof(fv->path)+sizeof(fi->name)+2]={0};
-		snprintf(xpath,sizeof(xpath)-1,"%s/%s",fv->path,fi->name);
-		fileview_set_path(fv,xpath);
+	int r;
+	url*n=NULL;
+	fsh*nf=NULL;
+	struct fileview*fv;
+	if(!fi||!(fv=fi->view))return;
+	if(fs_has_type(fi->type,FS_TYPE_VOLUME)){
+		if(fv->url||fv->folder)return;
+		if((r=fsvol_open_volume(fi->vol,&fv->folder))!=0){
+			tlog_warn("open volume failed: %s",strerror(r));
+			return;
+		}
+		fs_get_url(fv->folder,&n);
+		fv->root=n;
+		fileview_set_url(fv,n);
+	}else if(fs_has_type(fi->type,FS_TYPE_PARENT)){
+		fileview_go_back(fv);
+	}else if(fs_has_type(fi->type,FS_TYPE_FILE)){
+		if(fileview_get_checked_count(fi->view)>0){
+			if(fs_has_type(fi->type,FS_TYPE_FILE))
+				check_item(fi,!lv_obj_is_checked(fi->btn));
+			return;
+		}
+		if(!call_on_click_item(fi))return;
+		if(fs_has_type(fi->type,FS_TYPE_FILE_FOLDER)){
+			if((r=fs_open_with(&nf,&fi->file,FILE_FLAG_FOLDER))!=0){
+				tlog_warn("open folder failed: %s",strerror(r));
+				return;
+			}
+			if((r=fs_get_url(nf,&n))!=0){
+				fs_close(&nf);
+				tlog_warn("get url failed: %s",strerror(r));
+				return;
+			}
+			fs_close(&fv->folder);
+			fv->folder=nf;
+			fileview_set_url(fv,n);
+			url_free(n);
+		}
 	}
 }
 
@@ -176,18 +198,172 @@ static void item_check(lv_event_t*e){
 }
 
 static struct fileitem*get_item(struct fileview*view,const char*name){
+	list*l;
+	bool parent;
 	if(!view||!name)return NULL;
-	list*l=list_first(view->items);
-	if(l)do{
+	parent=strcmp(name,"..")==0;
+	if((l=list_first(view->items)))do{
 		LIST_DATA_DECLARE(fi,l,struct fileitem*);
-		if(!fi||fi->view!=view||strcmp(fi->name,name)!=0)continue;
-		return fi;
+		if(!fi||fi->view!=view)continue;
+		if(fs_has_type(fi->type,FS_TYPE_PARENT))
+			if(parent)return fi;
+		if(fs_has_type(fi->type,FS_TYPE_FILE))
+			if(strcmp(fi->file.name,name)==0)return fi;
+		if(fs_has_type(fi->type,FS_TYPE_VOLUME))
+			if(strcmp(fi->vol->name,name)==0)return fi;
 	}while((l=l->next));
 	return NULL;
 }
 
-static struct fileitem*add_item(struct fileview*view,char*name,char letter){
-	if(!view->view||!name)return NULL;
+static void draw_item_file_info(struct fileitem*fi){
+	char dev[32];
+	uint8_t cs=2,rs=3;
+	memset(dev,0,sizeof(dev));
+
+	if(
+		fi->file.type==FS_TYPE_FILE_REG&&
+		fs_has_feature(fi->file.features,FS_FEATURE_HAVE_SIZE)
+	){
+		char size[32];
+		make_readable_str_buf(size,sizeof(size)-1,fi->file.size,1,0);
+		fi->size=lv_label_create(fi->btn);
+		lv_label_set_text(fi->size,size);
+		lv_label_set_long_mode(fi->size,lm);
+		lv_obj_set_small_text_font(fi->size,0);
+		lv_obj_set_grid_cell(
+			fi->size,
+			LV_GRID_ALIGN_START,2,1,
+			LV_GRID_ALIGN_CENTER,0,1
+		);
+		cs=1;
+	}
+
+	if(
+		fs_has_feature(fi->file.features,FS_FEATURE_UNIX_PERM)||
+		fs_has_feature(fi->file.features,FS_FEATURE_HAVE_TIME)
+	){
+		char times[64];
+		memset(times,0,sizeof(times));
+		if(fs_has_feature(
+			fi->file.features,
+			FS_FEATURE_HAVE_TIME
+		))strftime(
+			times,sizeof(times),
+			"%Y/%m/%d %H:%M:%S",
+			localtime(&fi->file.mtime)
+		);
+
+		// file info1 (time and permission)
+		fi->info1=lv_label_create(fi->btn);
+		lv_obj_set_small_text_font(fi->info1,LV_PART_MAIN);
+		#ifdef ENABLE_UEFI
+		lv_label_set_text(fi->info1,times);
+		#else
+		lv_label_set_text_fmt(
+			fi->info1,"%s %s",
+			times,mode_string(fi->file.mode)
+		);
+		#endif
+		lv_obj_set_grid_cell(
+			fi->info1,
+			LV_GRID_ALIGN_START,1,2,
+			LV_GRID_ALIGN_CENTER,1,1
+		);
+		rs--;
+	}
+
+	#ifndef ENABLE_UEFI
+	if(fs_has_feature(fi->file.features,FS_FEATURE_UNIX_DEVICE)){
+		char*dt=NULL;
+		if(fi->file.type==FS_TYPE_FILE_CHAR)dt="char";
+		if(fi->file.type==FS_TYPE_FILE_BLOCK)dt="block";
+		if(dt)snprintf(
+			dev,sizeof(dev)-1,
+			"%s[%d:%d] ",dt,
+			major(fi->file.device),
+			minor(fi->file.device)
+		);
+	}
+
+	if(fs_has_feature(fi->file.features,FS_FEATURE_UNIX_PERM)){
+		char owner[128],group[128];
+		memset(owner,0,sizeof(owner));
+		memset(group,0,sizeof(group));
+		// file info2 (owner/group, device node and symbolic link target)
+		fi->info2=lv_label_create(fi->btn);
+		lv_obj_align_to(fi->info2,fi->info1,LV_ALIGN_OUT_BOTTOM_LEFT,0,0);
+		lv_obj_set_small_text_font(fi->info2,LV_PART_MAIN);
+		lv_label_set_text_fmt(
+			fi->info2,"%s:%s %s%s",
+			get_username(fi->file.owner,owner,sizeof(owner)-1),
+			get_groupname(fi->file.group,group,sizeof(group)-1),
+			dev,fi->file.type==FS_TYPE_FILE_LINK?fi->file.target:""
+		);
+		lv_obj_set_grid_cell(
+			fi->info2,
+			LV_GRID_ALIGN_START,1,2,
+			LV_GRID_ALIGN_CENTER,2,1
+		);
+		rs--;
+	}
+	#else
+	rs--;
+	#endif
+
+	lv_obj_set_grid_cell(
+		fi->fn,
+		LV_GRID_ALIGN_STRETCH,1,cs,
+		LV_GRID_ALIGN_CENTER,0,rs
+	);
+}
+
+static void draw_item_volume_info(struct fileitem*fi){
+	uint8_t rs=3;
+	char used[32],size[32];
+
+	if(fi->vol->part.label[0]){
+		// partition name
+		fi->info1=lv_label_create(fi->btn);
+		lv_obj_set_small_text_font(fi->info1,LV_PART_MAIN);
+		lv_label_set_text(fi->info1,fi->vol->part.label);
+		lv_obj_set_grid_cell(
+			fi->info1,
+			LV_GRID_ALIGN_START,1,2,
+			LV_GRID_ALIGN_CENTER,1,1
+		);
+		rs--;
+	}
+
+	if(fi->vol->fs.size>0){
+		int pct=fi->vol->fs.used*100/fi->vol->fs.size;
+		make_readable_str_buf(used,sizeof(used),fi->vol->fs.used,1,0);
+		make_readable_str_buf(size,sizeof(size),fi->vol->fs.size,1,0);
+		fi->info2=lv_label_create(fi->btn);
+		lv_label_set_text_fmt(fi->info2,"%s/%s (%d%%)",used,size,pct);
+		lv_label_set_long_mode(fi->info2,lm);
+		lv_obj_set_small_text_font(fi->info2,0);
+		lv_obj_set_grid_cell(
+			fi->info2,
+			LV_GRID_ALIGN_START,1,2,
+			LV_GRID_ALIGN_CENTER,2,1
+		);
+		rs--;
+	}
+
+	lv_obj_set_grid_cell(
+		fi->fn,
+		LV_GRID_ALIGN_STRETCH,1,2,
+		LV_GRID_ALIGN_CENTER,0,rs
+	);
+}
+
+static struct fileitem*add_item(
+	struct fileview*view,
+	fs_type type,
+	fs_file_info*file,
+	fsvol_info*vol
+){
+	struct fileitem*fi;
 	static lv_coord_t grid_col[]={
 		0,
 		LV_GRID_FR(1),
@@ -199,40 +375,25 @@ static struct fileitem*add_item(struct fileview*view,char*name,char letter){
 		LV_GRID_FR(1),
 		LV_GRID_TEMPLATE_LAST
 	};
-	struct fileitem*fi=malloc(sizeof(struct fileitem));
-	if(!fi){
+	if(!view->view)return NULL;
+	if(fs_has_type(type,FS_TYPE_PARENT)){
+		if(file||vol)return NULL;
+	}else if(fs_has_type(type,FS_TYPE_FILE)){
+		if(!file||vol)return NULL;
+	}else if(fs_has_type(type,FS_TYPE_VOLUME)){
+		if(file||!vol)return NULL;
+	}else return NULL;
+	if(!(fi=malloc(sizeof(struct fileitem)))){
 		telog_error("cannot allocate fileitem");
 		abort();
 	}
 	grid_col[0]=gui_font_size*(view->verbose?3:1);
 	memset(fi,0,sizeof(struct fileitem));
-	fi->view=view;
-	strncpy(fi->name,name,sizeof(fi->name)-1);
-	if(view->path[1]!=':')strlcat(
-		fi->path,
-		(char[]){view->letter,':',0},
-		sizeof(fi->path)-1
-	);
-	strlcat(
-		fi->path,view->path,
-		sizeof(fi->path)-1
-	);
-	size_t len=strlen(fi->path);
-	for(size_t i=0;i<len;i++)
-		if(fi->path[i]=='\\')
-			fi->path[i]='/';
-	if(len>0&&fi->path[len-1]!='/')
-		fi->path[len]='/';
-	strlcat(
-		fi->path,fi->name,
-		sizeof(fi->path)-1
-	);
-	if(!view->letter)fi->type=TYPE_DISK;
-	else if(strcmp(name,"..")==0)fi->type=TYPE_DIR;
-	else lv_fs_get_type(&fi->type,fi->path);
-	lv_label_long_mode_t lm=confd_get_boolean("gui.text_scroll",true)?
-		LV_LABEL_LONG_SCROLL_CIRCULAR:
-		LV_LABEL_LONG_DOT;
+	fi->view=view,fi->type=type;
+	if(fs_has_type(fi->type,FS_TYPE_FILE))
+		memcpy(&fi->file,file,sizeof(fs_file_info));
+	else if(fs_has_type(fi->type,FS_TYPE_VOLUME))
+		fi->vol=vol;
 
 	// file item button
 	fi->btn=lv_btn_create(view->view);
@@ -263,7 +424,7 @@ static struct fileitem*add_item(struct fileview*view,char*name,char letter){
 	lv_img_t*ext=(lv_img_t*)fi->img;
 	lv_img_set_src(fi->img,get_icon(fi));
 	if(ext->w<=0||ext->h<=0)
-		lv_img_set_src(fi->img,"inode-file"MIME_EXT);
+		lv_img_set_src(fi->img,"@mime-inode-file");
 	lv_img_set_size_mode(fi->img,LV_IMG_SIZE_MODE_REAL);
 	lv_img_fill_image(fi->img,grid_col[0],grid_col[0]);
 	lv_obj_center(fi->img);
@@ -271,151 +432,33 @@ static struct fileitem*add_item(struct fileview*view,char*name,char letter){
 	fi->fn=lv_label_create(fi->btn);
 	lv_obj_set_small_text_font(fi->fn,0);
 	lv_label_set_long_mode(fi->fn,lm);
-	lv_label_set_text(fi->fn,strcmp(fi->name,"..")==0?_("Parent folder"):name);
+	if(fs_has_type(type,FS_TYPE_PARENT)){
+		lv_label_set_text(fi->fn,_("Parent folder"));
+	}else if(fs_has_type(type,FS_TYPE_FILE)){
+		lv_label_set_text(fi->fn,fi->file.name);
+	}else if(fs_has_type(type,FS_TYPE_VOLUME)){
+		lv_label_set_text(fi->fn,fi->vol->title);
+	}
 
 	// add group
 	if(view->grp)lv_group_add_obj(view->grp,fi->btn);
 
-	uint8_t cs=2,rs=3;
 	if(view->verbose){
-		uint32_t s=0;
-		lv_fs_file_t f;
-		char size[32];
-		memset(size,0,sizeof(size));
-		if(
-			fi->type==TYPE_FILE&&
-			lv_fs_open(&f,fi->path,LV_FS_MODE_RD)==LV_FS_RES_OK
-		){
-			if(lv_fs_size(&f,&s)==LV_FS_RES_OK)
-				make_readable_str_buf(size,sizeof(size)-1,s,1,0);
-			lv_fs_close(&f);
-		}
-		if(size[0]){
-			fi->size=lv_label_create(fi->btn);
-			lv_label_set_text(fi->size,size);
-			lv_label_set_long_mode(fi->size,lm);
-			lv_obj_set_small_text_font(fi->size,0);
-			cs=1;
-			lv_obj_set_grid_cell(
-				fi->size,
-				LV_GRID_ALIGN_START,2,1,
-				LV_GRID_ALIGN_CENTER,0,1
-			);
-		}
-
-		#ifdef ENABLE_UEFI
-		if(fi->type==TYPE_DISK){
-			EFI_STATUS st;
-			CHAR8 name[256];
-			EFI_PARTITION_INFO_PROTOCOL*pi=NULL;
-			EFI_HANDLE hand=fs_get_root_handle_by_letter(letter);
-			EFI_FILE_PROTOCOL*root=fs_get_root_by_letter(letter);
-			EFI_FILE_SYSTEM_INFO*info=NULL;
-			if(hand){
-				st=gBS->HandleProtocol(
-					hand,
-					&gEfiPartitionInfoProtocolGuid,
-					(VOID**)&pi
-				);
-				if(!EFI_ERROR(st)&&pi->Type==PARTITION_TYPE_GPT){
-					ZeroMem(name,sizeof(name));
-					UnicodeStrToAsciiStrS(
-						pi->Info.Gpt.PartitionName,
-						name,sizeof(name)-1
-					);
-					// disk info1 (gpt partition name)
-					fi->info1=lv_label_create(fi->btn);
-					lv_label_set_text(fi->info1,name);
-					lv_obj_set_small_text_font(fi->info1,LV_PART_MAIN);
-					lv_obj_set_grid_cell(
-						fi->info1,
-						LV_GRID_ALIGN_START,1,2,
-						LV_GRID_ALIGN_CENTER,1,1
-					);
-					rs--;
-				}
-			}
-
-			st=efi_file_get_info(root,&gEfiFileSystemInfoGuid,NULL,(VOID**)&info);
-			if(!EFI_ERROR(st)){
-				uint8_t percent=0;
-				size_t sx=sizeof(name)/2;
-				char*b1=name,*b2=name+sx;
-				UINT64 used=info->VolumeSize-info->FreeSpace;
-				make_readable_str_buf(b1,sx,used,1,0);
-				make_readable_str_buf(b2,sx,info->VolumeSize,1,0);
-				if(info->VolumeSize>0)percent=used*100/info->VolumeSize;
-				// disk info2 (disk used, disk size)
-				fi->info2=lv_label_create(fi->btn);
-				lv_label_set_text_fmt(
-					fi->info2,
-					"%s/%s (%d%%)",
-					b1,b2,percent
-				);
-				lv_obj_set_small_text_font(fi->info2,LV_PART_MAIN);
-				lv_obj_set_grid_cell(
-					fi->info2,
-					LV_GRID_ALIGN_START,1,2,
-					LV_GRID_ALIGN_CENTER,2,1
-				);
-				rs--;
-			}
-
-		}
-		#else
-		int fd=open(view->path,O_DIR);
-		if(fd>=0&&fstatat(fd,name,&fi->st,AT_SYMLINK_NOFOLLOW)==0){
-			mode_t m=fi->st.st_mode;
-			char times[64]={0};
-			strftime(times,63,"%Y/%m/%d %H:%M:%S",localtime(&fi->st.st_mtime));
-
-			// file info1 (time and permission)
-			fi->info1=lv_label_create(fi->btn);
-			lv_obj_set_small_text_font(fi->info1,LV_PART_MAIN);
-			lv_label_set_text_fmt(fi->info1,"%s %s",times,mode_string(fi->st.st_mode));
-			lv_obj_set_grid_cell(
-				fi->info1,
-				LV_GRID_ALIGN_START,1,2,
-				LV_GRID_ALIGN_CENTER,1,1
-			);
-
-			dev_t d=fi->st.st_dev;
-			char dev[32]={0};
-			if(S_ISCHR(m))snprintf(dev,31,"char[%d:%d] ",major(d),minor(d));
-			if(S_ISBLK(m))snprintf(dev,31,"block[%d:%d] ",major(d),minor(d));
-			// symbolic link target
-			char tgt[128]={0};
-			if(S_ISLNK(m))readlinkat(fd,name,tgt,127);
-
-			// file info2 (owner/group, device node and symbolic link target)
-			char owner[128]={0},group[128]={0};
-			fi->info2=lv_label_create(fi->btn);
-			lv_obj_align_to(fi->info2,fi->info1,LV_ALIGN_OUT_BOTTOM_LEFT,0,0);
-			lv_obj_set_small_text_font(fi->info2,LV_PART_MAIN);
-			lv_label_set_text_fmt(
-				fi->info2,
-				"%s:%s %s%s",
-				get_username(fi->st.st_uid,owner,127),
-				get_groupname(fi->st.st_gid,group,127),
-				dev,tgt
-			);
-			lv_obj_set_grid_cell(
-				fi->info2,
-				LV_GRID_ALIGN_START,1,2,
-				LV_GRID_ALIGN_CENTER,2,1
-			);
-			rs=1;
-			close(fd);
-		}
-		#endif
-	}
-	lv_obj_set_grid_cell(
+		if(fs_has_type(type,FS_TYPE_FILE))
+			draw_item_file_info(fi);
+		else if(fs_has_type(type,FS_TYPE_VOLUME))
+			draw_item_volume_info(fi);
+		else lv_obj_set_grid_cell(
+			fi->fn,
+			LV_GRID_ALIGN_STRETCH,1,2,
+			LV_GRID_ALIGN_CENTER,0,3
+		);
+	}else lv_obj_set_grid_cell(
 		fi->fn,
-		LV_GRID_ALIGN_STRETCH,1,cs,
-		LV_GRID_ALIGN_CENTER,0,rs
+		LV_GRID_ALIGN_STRETCH,1,2,
+		LV_GRID_ALIGN_CENTER,0,3
 	);
 	view->count++;
-	if(fsext_is_multi)fi->letter=letter;
 	return fi;
 }
 
@@ -451,96 +494,85 @@ static void set_info(struct fileview*view,char*text,...){
 }
 
 static void scan_items(struct fileview*view){
-	if(!view->view||!view->path[0])return;
+	int r=0;
+	fs_file_info info;
+	fsvol_info**vols;
+	if(!view->view)return;
 	clean_items(view);
-	if(fsext_is_multi&&!view->letter){
-		char letters[64]={0},x;
-		lv_fs_get_letters(letters);
-		for(int i=0;(x=letters[i]);i++){
-			char name[256]={0};
-			lv_fs_drv_t*t=lv_fs_get_drv(x);
-			if(!t)continue;
-			name[0]=x,name[1]=':',name[2]=' ';
-			lv_fs_get_volume_label(t,name+3,253);
-			add_item(view,name,x);
+	if(view->url){
+		if(view->parent&&!fileview_is_top(view))
+			add_item(view,FS_TYPE_PARENT,NULL,NULL);
+		if(!view->folder){
+			if((r=fs_open_uri(
+				&view->folder,
+				view->url,
+				FILE_FLAG_FOLDER
+			))!=0){
+				telog_warn("open folder failed: %s",strerror(r));
+				set_info(view,_("open dir failed: %s"),strerror(r));
+				return;
+			}
+		}else fs_seek(view->folder,0,SEEK_SET);
+		while((r=fs_readdir(view->folder,&info))==0){
+			if(info.name[0]=='.'&&!view->hidden)continue;
+			add_item(view,info.type,&info,NULL);
+			if(view->count>=1024)tlog_warn("too many files, skip");
 		}
-		return;
+		if(r==EOF)r=0;
+	}else if((vols=fsvol_get_volumes())){
+		for(size_t i=0;vols[i];i++){
+			if(!view->hidden&&fs_has_vol_feature(
+				vols[i]->features,FSVOL_HIDDEN
+			))continue;
+			if(!fs_has_vol_feature(
+				vols[i]->features,FSVOL_FILES
+			))continue;
+			add_item(view,FS_TYPE_VOLUME,NULL,vols[i]);
+			if(view->count>=1024)tlog_warn("too many volumes, skip");
+		}
+		free(vols);
 	}
-	if(view->parent&&!fileview_is_top(view))
-		add_item(view,"..",0);
-	lv_fs_dir_t dir;
-	int i;
-	char fn[256],*fp;
-	char path[PATH_MAX+4]={0};
-	if(view->path[1]==':'){
-		view->letter=view->path[0];
-		strncpy(
-			path,
-			view->path,
-			sizeof(path)-1
-		);
-	}else snprintf(
-		path,
-		sizeof(path)-1,
-		"%c:%s",
-		view->letter,
-		view->path
-	);
-	lv_fs_res_t res=lv_fs_dir_open(&dir,path);
-	if(res!=LV_FS_RES_OK){
-		telog_warn(
-			"open folder %s failed (%s)",
-			view->path,
-			lv_fs_res_to_string(res)
-		);
-		set_info(
-			view,
-			_("open dir failed: %s"),
-			lv_fs_res_to_i18n_string(res)
-		);
-		return;
-	}
-	for(i=0;i<1024;i++){
-		fp=fn;
-		if(lv_fs_dir_read(&dir,fn)!=LV_FS_RES_OK)break;
-		if(strlen(fn)==0)break;
-		if(fp[0]=='/')fp++;
-		if(fp[0]=='.'&&!view->hidden)continue;
-		add_item(view,fp,0);
-	}
-	lv_fs_dir_close(&dir);
-	if(i>=1024)tlog_warn("too many files, skip");
 	if(view->count<=0)set_info(view,_("nothing here"));
-	return;
+	if(r!=0){
+		tlog_warn("read dir failed: %s",strerror(r));
+		set_info(view,_("read dir failed: %s"),strerror(r));
+	}
+}
+
+void fileview_set_url(struct fileview*view,url*u){
+	url*old=NULL;
+	if(!view||u==view->url)return;
+	old=view->url,view->url=url_dup(u);
+	if(u&&!view->url){
+		view->url=old;
+		return;
+	}
+	call_on_change_dir(view,old);
+	if(old)url_free(old);
+	if(!u){
+		url_free(view->root);
+		view->root=NULL;
+	}
+	fs_close(&view->folder);
+	scan_items(view);
 }
 
 void fileview_set_path(struct fileview*view,char*path){
 	if(!view)return;
 	if(path&&path[0]){
-		char oldpath[sizeof(view->path)]={0};
-		strncpy(oldpath,view->full_path,sizeof(oldpath)-1);
-		strncpy(view->path,path,sizeof(view->path)-1);
-		if(strcmp(view->path,"/")==0&&fsext_is_multi)view->letter=0;
-		if((!view->letter&&!view->path[1])||!fsext_is_multi){
-			strcpy(
-				view->full_path,
-				view->path
-			);
-		}else if(view->path[1]==':'){
-			view->letter=view->path[0];
-			strncpy(
-				view->full_path,
-				view->path,
-				sizeof(view->full_path)-1
-			);
-		}else snprintf(
-			view->full_path,
-			sizeof(view->full_path)-1,
-			"%c:%s",
-			view->letter,
-			view->path
-		);
-		call_on_change_dir(view,oldpath);
+		url*n=NULL;
+		if(strcmp(path,"/")!=0){
+			if(!(n=url_new()))return;
+			if(!url_parse(n,path,0)){
+				tlog_warn("parse url %s failed",path);
+				url_free(n);
+				return;
+			}
+		}
+		if(n!=view->url){
+			fileview_set_url(view,n);
+			return;
+		}
 	}
 	scan_items(view);
 }
@@ -554,13 +586,9 @@ struct fileview*fileview_create(lv_obj_t*screen){
 	view->view=screen;
 	view->parent=true;
 	lv_obj_set_flex_flow(view->view,LV_FLEX_FLOW_COLUMN);
-	#ifdef ENABLE_UEFI
-	view->letter=0;
-	lvgl_init_all_fs_uefi(true);
-	#else
-	view->letter='C';
-	init_lvgl_fs('C',"/",true);
-	#endif
+	lm=confd_get_boolean("gui.text_scroll",true)?
+		LV_LABEL_LONG_SCROLL_CIRCULAR:
+		LV_LABEL_LONG_DOT;
 	return view;
 }
 
@@ -596,19 +624,23 @@ uint16_t fileview_get_checked_count(struct fileview*view){
 }
 
 char**fileview_get_checked(struct fileview*view){
+	list*l;
 	uint16_t checked=fileview_get_checked_count(view),num=0;
 	size_t size=sizeof(char*)*(checked+1);
 	char**arr=malloc(size);
 	if(!arr)return NULL;
 	memset(arr,0,size);
-	if(checked>0){
-		list*l=list_first(view->items);
-		if(l)do{
-			LIST_DATA_DECLARE(ffi,l,struct fileitem*);
-			if(ffi&&lv_obj_is_checked(ffi->btn))
-				arr[num++]=ffi->name;
-		}while((l=l->next));
-	}
+	if(checked>0&&(l=list_first(view->items)))do{
+		LIST_DATA_DECLARE(ffi,l,struct fileitem*);
+		if(!ffi||!lv_obj_is_checked(ffi->btn))continue;
+		if(fs_has_type(ffi->type,FS_TYPE_PARENT)){
+			arr[num++]=ffi->file.name;
+		}else if(fs_has_type(ffi->type,FS_TYPE_FILE)){
+			arr[num++]=ffi->file.name;
+		}else if(fs_has_type(ffi->type,FS_TYPE_VOLUME)){
+			arr[num++]=ffi->vol->name;
+		}
+	}while((l=l->next));
 	return arr;
 }
 
@@ -617,17 +649,13 @@ void*fileview_get_data(struct fileview*view){
 }
 
 char*fileview_get_path(struct fileview*view){
-	return view?view->full_path:NULL;
+	if(!view)return NULL;
+	if(!view->url)return strdup("/");
+	return url_generate_alloc(view->url);
 }
 
-char*fileview_get_lvgl_path(struct fileview*view){
-	if(!view)return NULL;
-	static char path[PATH_MAX];
-	memset(path,0,sizeof(path));
-	if(!view->letter)strcpy(path,"/");
-	else if(view->path[1]==':')strncpy(path,view->path,sizeof(path)-1);
-	else snprintf(path,sizeof(path)-1,"%c:%s",view->letter,view->path);
-	return path;
+fsh*fileview_get_fsh(struct fileview*view){
+	return view?view->folder:NULL;
 }
 
 void fileview_set_show_parent(struct fileview*view,bool parent){
@@ -636,8 +664,8 @@ void fileview_set_show_parent(struct fileview*view,bool parent){
 
 bool fileview_is_top(struct fileview*view){
 	if(!view)return true;
-	if(fsext_is_multi&&view->letter)return false;
-	return strcmp(view->path,"/")==0;
+	if(view->url)return false;
+	return true;
 }
 
 bool fileview_click_item(struct fileview*view,const char*name){

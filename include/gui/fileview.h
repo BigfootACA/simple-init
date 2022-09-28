@@ -10,11 +10,11 @@
 #define _FILEVIEW_H
 #include<stdbool.h>
 #include"gui.h"
-#include"gui/fsext.h"
+#include"filesystem.h"
 struct fileview;
-typedef void(*fileview_on_item_select)(struct fileview*,char*item,enum item_type type,bool checked,uint16_t cnt);
-typedef bool(*fileview_on_item_click)(struct fileview*,char*item,enum item_type type);
-typedef void(*fileview_on_change_dir)(struct fileview*,char*old,char*new);
+typedef void(*fileview_on_item_select)(struct fileview*,char*item,fs_type type,bool checked,uint16_t cnt);
+typedef bool(*fileview_on_item_click)(struct fileview*,char*item,fs_type type);
+typedef void(*fileview_on_change_dir)(struct fileview*,url*old,url*new);
 
 // src/gui/interface/filemgr/fileview.c: create fileview
 extern struct fileview*fileview_create(lv_obj_t*screen);
@@ -27,6 +27,9 @@ extern void fileview_remove_group(struct fileview*view);
 
 // src/gui/interface/filemgr/fileview.c: set fileview user data
 extern void fileview_set_data(struct fileview*view,void*data);
+
+// src/gui/interface/filemgr/fileview.c: set fileview path use url
+extern void fileview_set_url(struct fileview*view,url*u);
 
 // src/gui/interface/filemgr/fileview.c: set fileview path and refresh
 extern void fileview_set_path(struct fileview*view,char*path);
@@ -58,8 +61,8 @@ extern void*fileview_get_data(struct fileview*view);
 // src/gui/interface/filemgr/fileview.c: get fileview path
 extern char*fileview_get_path(struct fileview*view);
 
-// src/gui/interface/filemgr/fileview.c: get fileview lvgl path for lv_fs
-extern char*fileview_get_lvgl_path(struct fileview*view);
+// src/gui/interface/filemgr/fileview.c: get fileview fs handler
+extern fsh*fileview_get_fsh(struct fileview*view);
 
 // src/gui/interface/filemgr/fileview.c: is fileview in folder top
 extern bool fileview_is_top(struct fileview*view);

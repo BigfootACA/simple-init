@@ -65,7 +65,7 @@ static int add_mount_lost_focus(struct gui_activity*d){
 static void ok_cb(lv_event_t*e){
 	int r=0;
 	struct libmnt_context*cxt;
-	char buf[BUFSIZ]={0},type[64]={0};
+	char buf[BUFSIZ]={0},type[64]={0},*x;
 	struct add_mount*am=e->user_data;
 	const char*source=lv_textarea_get_text(am->source);
 	const char*target=lv_textarea_get_text(am->target);
@@ -78,9 +78,25 @@ static void ok_cb(lv_event_t*e){
 		msgbox_alert("Invalid mount source");
 		return;
 	}
-	if(!target||target[0]!='/'){
-		msgbox_alert("Invalid mount target");
-		return;
+	if((x=strstr(source,"://"))){
+		if(strncmp(source,"file",x-source)!=0){
+			msgbox_alert("Only file:// path supported");
+			return;
+		}
+		source=x+3;
+	}
+	if(!target){
+		if((x=strstr(target,"://"))){
+			if(strncmp(target,"file",x-target)!=0){
+				msgbox_alert("Only file:// path supported");
+				return;
+			}
+			target=x+3;
+		}
+		if(target[0]!='/'){
+			msgbox_alert("Invalid mount target");
+			return;
+		}
 	}
 	mkdir(target,0755);
 	if(!(cxt=mnt_new_context())){
@@ -137,10 +153,13 @@ static int init(struct gui_activity*act){
 	if(!am)return -ENOMEM;
 	memset(am,0,sizeof(struct add_mount));
 	act->data=am;
-	char*p=act->args;
-	if(p&&p[0]!='/'){
-		if(p[1]!=':')return -EINVAL;
-		act->args+=2;
+	char*p=act->args,*x;
+	if(p&&(x=strstr(p,"://"))){
+		if(strncmp(p,"file",x-p)!=0){
+			msgbox_alert("Only file:// path supported");
+			return -1;
+		}
+		act->args=x+3;
 	}
 	return 0;
 }
@@ -252,7 +271,7 @@ struct gui_register guireg_add_mount={
 	.open_file=true,
 	.open_regex=(char*[]){
 		"^/dev/.+",
-		"^[A-Z]?:/dev/.+",
+		"file:///dev/.+",
 		".*\\.img$",
 		".*\\.raw$",
 		".*\\.iso$",

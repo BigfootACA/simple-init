@@ -26,8 +26,8 @@
 #include"uefi.h"
 #include"logger.h"
 #include"system.h"
+#include"filesystem.h"
 #include"compatible.h"
-#include"gui/fsext.h"
 #include"gui/tools.h"
 #include"gui/sysbar.h"
 #include"gui/msgbox.h"
@@ -69,28 +69,20 @@ static int add_ramdisk_lost_focus(struct gui_activity*d){
 }
 
 static void load_size(struct add_ramdisk*am){
+	fsh*f;
+	size_t len=0;
 	char size[64];
-	lv_fs_file_t file;
 	const char*source;
-	EFI_FILE_PROTOCOL*fp;
-	EFI_FILE_INFO*info=NULL;
 	if(am->size_changed)return;
 	source=lv_textarea_get_text(am->source);
 	if(!source||!*source)return;
-	if(lv_fs_open(&file,source,LV_FS_MODE_RD)!=LV_FS_RES_OK)return;
-	ZeroMem(size,sizeof(size));
-	if(
-		(fp=lv_fs_file_to_fp(&file))&&
-		!EFI_ERROR(efi_file_get_file_info(fp,NULL,&info))&&info
-	){
-		AsciiSPrint(
-			size,sizeof(size)-1,
-			"0x%llx",info->FileSize
-		);
-		FreePool(info);
+	if(fs_open(NULL,&f,source,FILE_FLAG_READ)!=0)return;
+	memset(size,0,sizeof(size));
+	if(fs_get_size(f,&len)==0){
+		snprintf(size,sizeof(size)-1,"0x%zx",len);
 		lv_textarea_set_text(am->size,size);
 	}
-	lv_fs_close(&file);
+	fs_close(&f);
 }
 
 static void ok_cb(lv_event_t*e){
@@ -150,54 +142,42 @@ static void ok_cb(lv_event_t*e){
 	}
 	ZeroMem(buffer,ms);
 	if(source){
-		lv_fs_file_t file;
-		lv_res_t r=lv_fs_open(&file,source,LV_FS_MODE_RD);
-		if(r!=LV_FS_RES_OK){
+		int r;
+		fsh*f=NULL;
+		size_t size=0;
+		if((r=fs_open(NULL,&f,source,FILE_FLAG_READ))!=0){
 			gBS->FreePool(buffer);
 			msgbox_alert(
 				"Failed to open file %s: %s",
-				lv_fs_res_to_i18n_string(r),source
+				source,strerror(r)
 			);
 			return;
 		}
-		EFI_FILE_PROTOCOL*fp=lv_fs_file_to_fp(&file);
-		if(!fp){
-			lv_fs_close(&file);
-			gBS->FreePool(buffer);
-			return;
-		}
-		EFI_FILE_INFO*info=NULL;
-		st=efi_file_get_file_info(fp,NULL,&info);
-		if(EFI_ERROR(st)||!info){
-			lv_fs_close(&file);
+		if(fs_get_size(f,&size)){
+			fs_close(&f);
 			gBS->FreePool(buffer);
 			msgbox_alert(
-				"Get file info failed: %s",
-				_(efi_status_to_string(st))
+				"Get file size failed: %s",
+				strerror(r)
 			);
 			return;
 		}
-		if(ms<info->FileSize){
-			FreePool(info);
-			lv_fs_close(&file);
+		if(ms<size){
+			fs_close(&f);
 			gBS->FreePool(buffer);
 			msgbox_alert("Memory too small to read file");
 			return;
 		}
-		UINTN size=info->FileSize;
-		st=fp->Read(fp,&size,buffer);
-		if(EFI_ERROR(st)||size!=info->FileSize){
-			FreePool(info);
-			lv_fs_close(&file);
+		if((r=fs_full_read(f,buffer,size))!=0){
+			fs_close(&f);
 			gBS->FreePool(buffer);
 			msgbox_alert(
 				"Read file failed: %s",
-				_(efi_status_to_string(st))
+				strerror(r)
 			);
 			return;
 		}
-		FreePool(info);
-		lv_fs_close(&file);
+		fs_close(&f);
 	}
 	st=ramdisk->Register((UINT64)(UINTN)buffer,ms,dt,NULL,&dp);
 	if(EFI_ERROR(st)){

@@ -11,13 +11,15 @@
 #include<stdlib.h>
 #include<Uefi.h>
 #include<Library/UefiLib.h>
+#include<Library/DevicePathLib.h>
+#include<Library/MemoryAllocationLib.h>
 #include<Library/UefiBootServicesTableLib.h>
 #include<Protocol/LoadedImage.h>
 #include"gui.h"
 #include"logger.h"
 #include"language.h"
+#include"filesystem.h"
 #include"gui/tools.h"
-#include"gui/fsext.h"
 #include"gui/msgbox.h"
 #include"gui/activity.h"
 #define TAG "start"
@@ -37,16 +39,12 @@ static int after_exit(void*d __attribute__((unused))){
 }
 
 static void start_cb(void*d){
-	char*full_path=d;
 	EFI_STATUS st;
 	EFI_LOADED_IMAGE_PROTOCOL*li;
-	EFI_DEVICE_PATH_PROTOCOL*p=fs_get_device_path(full_path);
-	if(!p){
-		msgbox_alert("get device path failed");
-		tlog_warn("get device path failed");
-		return;
-	}
+	EFI_DEVICE_PATH_PROTOCOL*p=d;
+	if(!p)return;
 	st=gBS->LoadImage(FALSE,gImageHandle,p,NULL,0,&ih);
+	FreePool(p);
 	if(EFI_ERROR(st)){
 		if(ih)gBS->UnloadImage(ih);
 		msgbox_alert("load image failed: %s",efi_status_to_string(st));
@@ -78,15 +76,27 @@ static bool confirm_click(uint16_t id,const char*text __attribute__((unused)),vo
 }
 
 static int uefi_start_draw(struct gui_activity*d){
-	if(!d)return -1;
-	static char full_path[PATH_MAX];
-	memset(full_path,0,sizeof(full_path));
-	strncpy(full_path,(char*)d->args,sizeof(full_path)-1);
+	int r;
+	fsh*f=NULL;
+	EFI_DEVICE_PATH_PROTOCOL*p=NULL;
+	if(!d||!d->args)return -1;
+	if((r=fs_open(NULL,&f,d->args,FILE_FLAG_READ))!=0){
+		msgbox_alert("Open file failed: %s",strerror(r));
+		tlog_error("open file failed: %s",strerror(r));
+		return -r;
+	}
+	if((r=fs_ioctl(f,FS_IOCTL_UEFI_GET_DEVICE_PATH,&p))!=0||!p){
+		fs_close(&f);
+		msgbox_alert("get device path failed");
+		tlog_warn("get device path failed: %s",strerror(r));
+		return -r;
+	}
 	msgbox_set_user_data(msgbox_create_yesno(
 		confirm_click,
 		"Start UEFI Application '%s'?",
-		full_path
-	),full_path);
+		(char*)d->args
+	),DuplicateDevicePath(p));
+	fs_close(&f);
 	return -10;
 }
 

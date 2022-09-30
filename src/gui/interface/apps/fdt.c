@@ -20,7 +20,7 @@
 #include"uefi.h"
 #include"logger.h"
 #include"language.h"
-#include"gui/fsext.h"
+#include"filesystem.h"
 #include"gui/msgbox.h"
 #include"gui/activity.h"
 #define TAG "fdt"
@@ -29,35 +29,30 @@ static void load_fdt(const char*path){
 	int s=0;
 	UINTN ps=0;
 	EFI_STATUS st;
-	lv_fs_res_t r;
-	lv_fs_file_t f;
+	int r;
+	fsh*f;
 	bool inv=false;
 	VOID*data=NULL;
-	uint32_t size=0,buf=0;
+	size_t size=0;
 	if(!path)return;
-	r=lv_fs_open(&f,path,LV_FS_MODE_RD);
+	r=fs_open(NULL,&f,path,FILE_FLAG_READ);
 	if(r!=LV_FS_RES_OK)EDONE(tlog_warn(
 		"open file %s failed: %s",
-		path,lv_fs_res_to_string(r)
+		path,strerror(r)
 	));
-	r=lv_fs_size(&f,&size);
-	if(r!=LV_FS_RES_OK)EDONE(tlog_warn(
+	r=fs_get_size(f,&size);
+	if(r!=0)EDONE(tlog_warn(
 		"get file %s size failed: %s",
-		path,lv_fs_res_to_string(r)
+		path,strerror(r)
 	));
-	if(size<=sizeof(EFI_ACPI_DESCRIPTION_HEADER))
-		EDONE(tlog_warn("invalid aml %s",path));
+	if(size<=32)EDONE(tlog_warn("invalid fdt %s",path));
 	ps=EFI_SIZE_TO_PAGES(size);
 	if(!(data=AllocatePages(ps)))EDONE();
 	ZeroMem(data,EFI_PAGES_TO_SIZE(ps));
-	r=lv_fs_read(&f,data,size,&buf);
-	if(r!=LV_FS_RES_OK)EDONE(tlog_warn(
+	r=fs_full_read(f,data,size);
+	if(r!=0)EDONE(tlog_warn(
 		"read file %s failed: %s",
-		path,lv_fs_res_to_string(r)
-	));
-	if(buf!=size)EDONE(tlog_warn(
-		"read file %s size mismatch",
-		path
+		path,strerror(r)
 	));
 	inv=true;
 	if((s=fdt_check_header(data))<0)EDONE(tlog_warn(
@@ -68,8 +63,8 @@ static void load_fdt(const char*path){
 		"fdt file %s size mismatch",
 		path
 	));
-	lv_fs_close(&f);
-	f.file_d=NULL;
+	fs_close(&f);
+	f=NULL;
 	st=gBS->InstallConfigurationTable(
 		&gFdtTableGuid,
 		data
@@ -82,8 +77,8 @@ static void load_fdt(const char*path){
 	return;
 	done:
 	if(data)FreePages(data,ps);
-	if(f.file_d){
-		lv_fs_close(&f);
+	if(f){
+		fs_close(&f);
 		if(inv)msgbox_alert("Invalid device tree %s",path);
 		else msgbox_alert("Read file %s failed",path);
 	}

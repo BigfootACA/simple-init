@@ -20,7 +20,7 @@
 #include"confd.h"
 #include"logger.h"
 #include"linux_boot.h"
-#include"gui/fsext.h"
+#include"filesystem.h"
 #include"gui/tools.h"
 #include"gui/sysbar.h"
 #include"gui/msgbox.h"
@@ -108,32 +108,29 @@ static int after_exit(void*d __attribute__((unused))){
 }
 
 static bool set_path(lv_obj_t*ta,linux_load_from*from,const char*key){
-	lv_fs_res_t r;
-	lv_fs_file_t f;
+	int r;
+	fsh*f=NULL;
 	const char*txt;
 	if(!ta||!from)return false;
 	if(!(txt=lv_textarea_get_text(ta)))return false;
 	if(!txt[0])return true;
 	confd_set_string_base(base,key,(char*)txt);
-	r=lv_fs_open(&f,txt,LV_FS_MODE_RD);
-	if(r!=LV_FS_RES_OK){
+	r=fs_open(NULL,&f,txt,FILE_FLAG_READ);
+	if(r!=0){
 		msgbox_alert(
 			"Load file '%s' failed: %s",
-			txt,lv_fs_res_to_i18n_string(r)
+			txt,strerror(r)
 		);
 		tlog_warn(
 			"load file '%s' failed: %s",
-			txt,lv_fs_res_to_string(r)
+			txt,strerror(r)
 		);
 		return false;
 	}
 	from->enabled=true;
-	from->type=FROM_FILE_PROTOCOL;
-	from->file_proto=lv_fs_file_to_fp(&f);
-	tlog_debug(
-		"loaded %s from '%s' as file protocol %p",
-		key,txt,from->file_proto
-	);
+	from->type=FROM_FILE_SYSTEM_HANDLE;
+	from->fsh=f;
+	tlog_debug("loaded %s from '%s'",key,txt);
 	return true;
 }
 

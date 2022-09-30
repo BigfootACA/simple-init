@@ -11,8 +11,8 @@
 #include<string.h>
 #include"gui.h"
 #include"logger.h"
+#include"filesystem.h"
 #include"gui/tools.h"
-#include"gui/fsext.h"
 #include"gui/msgbox.h"
 #include"gui/sysbar.h"
 #include"gui/activity.h"
@@ -35,8 +35,8 @@ struct text_editor{
 struct open_data{
 	struct text_editor*te;
 	char*path;
-	uint32_t size;
-	lv_fs_file_t file;
+	size_t size;
+	fsh*file;
 };
 
 static const char*adv_menu[]={
@@ -120,8 +120,8 @@ static void do_paste(struct text_editor*te){
 static bool open_read_cb(uint16_t id,const char*name __attribute__((unused)),void*user_data){
 	struct open_data*od=user_data;
 	char*buf=NULL;
-	uint32_t rs=0;
-	lv_fs_res_t res;
+	size_t rs=0;
+	int res=0;
 	if(id==0){
 		if(od->te->cur_path)free(od->te->cur_path);
 		od->te->cur_path=od->path;
@@ -131,49 +131,24 @@ static bool open_read_cb(uint16_t id,const char*name __attribute__((unused)),voi
 		lv_textarea_t*ext=(lv_textarea_t*)od->te->text;
 		ext->sel_start=ext->sel_end=0;
 		lv_obj_set_enabled(od->te->btn_copy,false);
-		if(od->size==0){
-			size_t bs=BUFSIZ,cs=bs;
-			if(!(buf=malloc(bs)))goto e_buf;
-			char*xb=buf,*x;
-			for(;;){
-				if(cs>0x800000){
-					msgbox_alert("File too large; size limit is 8MiB, file is %d bytes",(int)cs);
-					goto fail;
-				}
-				memset(xb,0,bs);
-				rs=bs;
-				res=lv_fs_read(&od->file,xb,rs,&rs);
-				if(res!=LV_FS_RES_OK)goto e_read;
-				if(rs<bs)break;
-				cs+=bs;
-				if(!(x=realloc(buf,cs)))goto e_buf;
-				buf=x,xb=buf+cs-bs;
-			}
-		}else{
-			if(!(buf=malloc(od->size+1)))goto e_buf;
-			memset(buf,0,od->size+1);
-			res=lv_fs_read(&od->file,buf,od->size,&rs);
-			if(res!=LV_FS_RES_OK)goto e_read;
-		}
+		res=fs_read_all(od->file,(void**)&buf,&rs);
+		if(res!=0)goto e_read;
 		lv_textarea_set_text(od->te->text,buf);
 		lv_textarea_set_cursor_pos(od->te->text,0);
 		free(buf);
 		set_changed(od->te,false);
-		tlog_debug("read %d bytes",rs);
+		tlog_debug("read %zu bytes",rs);
 	}
 	end:
-	lv_fs_close(&od->file);
+	fs_close(&od->file);
 	free(od);
 	return false;
 	fail:
 	free(od->path);
 	od->te->cur_path=NULL;
 	goto end;
-	e_buf:
-	msgbox_alert("Allocate file buffer failed");
-	goto fail;
 	e_read:
-	msgbox_alert("Read file failed: %s",lv_fs_res_to_i18n_string(res));
+	msgbox_alert("Read file failed: %s",strerror(res));
 	goto fail;
 }
 
@@ -188,21 +163,21 @@ static bool read_file(struct text_editor*te,const char*path){
 	memset(od,0,sizeof(struct open_data));
 	if(!(od->path=strdup(path)))EDONE();
 	od->te=te;
-	if((res=lv_fs_open(&od->file,od->path,LV_FS_MODE_RD))!=LV_FS_RES_OK)
-		EDONE(msgbox_alert("Open file failed: %s",lv_fs_res_to_i18n_string(res)));
-	if((res=lv_fs_size(&od->file,&od->size))!=LV_FS_RES_OK)
-		EDONE(msgbox_alert("Get file size failed: %s",lv_fs_res_to_i18n_string(res)));
-	if(od->size>0x800000)EDONE(msgbox_alert("File too large; size limit is 8MiB, file is %d bytes",od->size));
+	if((res=fs_open(NULL,&od->file,od->path,FILE_FLAG_READ))!=LV_FS_RES_OK)
+		EDONE(msgbox_alert("Open file failed: %s",strerror(res)));
+	if((res=fs_get_size(od->file,&od->size))!=LV_FS_RES_OK)
+		EDONE(msgbox_alert("Get file size failed: %s",strerror(res)));
+	if(od->size>0x800000)EDONE(msgbox_alert("File too large; size limit is 8MiB, file is %zu bytes",od->size));
 	if(od->size<0x10000)lv_async_call(open_start_read,od);
 	else msgbox_set_user_data(msgbox_create_yesno(
 		open_read_cb,
-		"This file is bigger than 64 KiB (%d bytes), "
+		"This file is bigger than 64 KiB (%zu bytes), "
 		"are you sure you want to open this file?",od->size
 	),od);
 	return true;
 	done:
 	if(od){
-		if(open)lv_fs_close(&od->file);
+		if(open)fs_close(&od->file);
 		if(od->path)free(od->path);
 		free(od);
 	}
@@ -258,24 +233,23 @@ static void do_new(struct text_editor*te){
 }
 
 static void write_save(struct text_editor*te){
-	lv_fs_file_t file;
-	lv_res_t res;
+	int res;
+	fsh*file=NULL;
 	const char*cont=lv_textarea_get_text(te->text);
-	uint32_t s=(uint32_t)strlen(cont),bs=0;
-	lv_fs_remove(te->cur_path);
-	if((res=lv_fs_open(&file,te->cur_path,LV_FS_MODE_WR))!=LV_FS_RES_OK){
-		msgbox_alert("Open file failed: %s",lv_fs_res_to_i18n_string(res));
+	size_t s=(uint32_t)strlen(cont),bs=0;
+	if((res=fs_open(NULL,&file,te->cur_path,FILE_FLAG_WRITE))!=0){
+		msgbox_alert("Open file failed: %s",strerror(res));
 		return;
 	}
-	if((res=lv_fs_write(&file,cont,s,&bs))!=LV_FS_RES_OK){
-		msgbox_alert("Write file failed: %s",lv_fs_res_to_i18n_string(res));
-		lv_fs_close(&file);
+	res=fs_write(file,(void*)cont,s,&bs);
+	fs_close(&file);
+	if(res!=0){
+		msgbox_alert("Write file failed: %s",strerror(res));
 		return;
 	}
-	lv_fs_close(&file);
-	tlog_debug("wrote %d of %d bytes",bs,s);
+	tlog_debug("wrote %zu of %zu bytes",bs,s);
 	if(bs!=s){
-		msgbox_alert("Write file maybe failed, wrote %d of %d bytes",bs,s);
+		msgbox_alert("Write file maybe failed, wrote %zu of %zu bytes",bs,s);
 		return;
 	}
 	set_changed(te,false);
@@ -472,8 +446,6 @@ static int editor_draw(struct gui_activity*act){
 	if(act->args){
 		char*path=(char*)act->args;
 		if(!*path)return -1;
-		if(strlen(path)<3||path[1]!=':')
-			return trlog_warn(-1,"invalid file %s",path);
 		read_file(te,path);
 	}
 	return 0;

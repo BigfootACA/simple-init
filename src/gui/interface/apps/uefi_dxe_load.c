@@ -25,57 +25,45 @@
 #include"logger.h"
 #include"language.h"
 #include"gui/tools.h"
-#include"gui/fsext.h"
+#include"filesystem.h"
 #include"gui/msgbox.h"
 #include"gui/activity.h"
 #define TAG "dxe-load"
 
 static bool auto_cb(uint16_t id,const char*btn __attribute__((unused)),void*user_data){
-	EFI_DEVICE_PATH_PROTOCOL*dp;
-	char*buffer=AllocateZeroPool(PATH_MAX*4);
-	if(!buffer)return true;
-	char*path=buffer;
-	char*buff=path+PATH_MAX;
-	char*loc=buff+PATH_MAX;
-	char*drv=loc+PATH_MAX;
-	char*p=user_data,*cp=path;
 	int did=0;
-	if(id==0){
-		if(!p||p[1]!=':'||(p[2]!='/'&&p[2]!='\\'))return true;
-		if(!(dp=fs_drv_get_device_path(p[0])))return true;
-		if(!locate_auto_add_by_device_path(loc,PATH_MAX,dp))return true;
-		ZeroMem(path,PATH_MAX);
-		AsciiStrCpyS(path,PATH_MAX,p);
-		do{if(*cp=='/')*cp='\\';}while(*cp++);
-		ZeroMem(buff,PATH_MAX);
-		AsciiSPrint(buff,PATH_MAX,"@%a:%a",loc,p+2);
+	fsh*f=user_data;
+	char*path=NULL,drv[32];
+	if(!f)return true;
+	if(id==0&&fs_get_path_alloc(f,&path)==0&&path){
 		do{
-			ZeroMem(drv,PATH_MAX);
-			AsciiSPrint(drv,PATH_MAX,"driver-%d",did);
-			did++;
+			memset(drv,0,sizeof(drv));
+			snprintf(drv,sizeof(drv)-1,"driver-%d",did++);
 		}while(confd_get_type_base("uefi.drivers",drv)==TYPE_STRING);
-		confd_set_string_base("uefi.drivers",drv,buff);
+		confd_set_string_base("uefi.drivers",drv,path);
+		free(path);
 	}
+	fs_close(&f);
 	return false;
 }
 
 static void load_cb(void*d){
-	char*full_path=d;
+	int r;
+	fsh*f=d;
 	EFI_STATUS st;
-	EFI_HANDLE ih;
+	EFI_HANDLE ih=NULL;
 	EFI_LOADED_IMAGE_PROTOCOL*li;
-	EFI_DEVICE_PATH_PROTOCOL*p=fs_get_device_path(full_path);
-	if(!p){
+	EFI_DEVICE_PATH_PROTOCOL*p=NULL;
+	if((r=fs_ioctl(f,FS_IOCTL_UEFI_GET_DEVICE_PATH,&p))!=0||!p){
 		msgbox_alert("get device path failed");
-		tlog_warn("get device path failed");
-		return;
+		tlog_warn("get device path failed: %s",strerror(r));
+		goto done;
 	}
 	st=gBS->LoadImage(FALSE,gImageHandle,p,NULL,0,&ih);
 	if(EFI_ERROR(st)){
-		if(ih)gBS->UnloadImage(ih);
 		msgbox_alert("load image failed: %s",efi_status_to_string(st));
 		tlog_warn("load image failed: %s",efi_status_to_string(st));
-		return;
+		goto done;
 	}
 	st=gBS->OpenProtocol(
 		ih,&gEfiLoadedImageProtocolGuid,
@@ -85,43 +73,56 @@ static void load_cb(void*d){
 	if(EFI_ERROR(st)){
 		msgbox_alert("open protocol failed: %s",_(efi_status_to_string(st)));
 		tlog_warn("open protocol failed: %s",efi_status_to_string(st));
-		return;
+		goto done;
 	}
 	if(
 		li->ImageCodeType!=EfiBootServicesCode&&
 		li->ImageCodeType!=EfiRuntimeServicesCode
 	){
-		if(ih)gBS->UnloadImage(ih);
 		msgbox_alert("not a UEFI Driver");
 		tlog_warn("not a UEFI Driver");
-		return;
+		goto done;
 	}
 	st=gBS->StartImage(ih,NULL,NULL);
 	if(EFI_ERROR(st)){
-		if(ih)gBS->UnloadImage(ih);
 		msgbox_alert("start dxe failed: %s",_(efi_status_to_string(st)));
 		tlog_error("start dxe failed: %s",efi_status_to_string(st));
+		goto done;
 	}else msgbox_set_user_data(msgbox_create_yesno(
 		auto_cb,
 		"auto load this dxe driver on next boot?"
-	),full_path);
+	),f);
+	return;
+	done:
+	if(f)fs_close(&f);
+	if(ih)gBS->UnloadImage(ih);
 }
 
-static bool confirm_click(uint16_t id,const char*text __attribute__((unused)),void*user_data){
-	if(id==0)lv_async_call(load_cb,user_data);
+static bool confirm_click(
+	uint16_t id,
+	const char*text __attribute__((unused)),
+	void*user_data
+){
+	fsh*f=user_data;
+	if(id==0)lv_async_call(load_cb,f);
+	else fs_close(&f);
 	return false;
 }
 
 static int uefi_dxe_load_draw(struct gui_activity*d){
-	if(!d)return -1;
-	static char full_path[PATH_MAX];
-	memset(full_path,0,sizeof(full_path));
-	strncpy(full_path,(char*)d->args,sizeof(full_path)-1);
+	int r;
+	fsh*f=NULL;
+	if(!d||!d->args)return -1;
+	if((r=fs_open(NULL,&f,d->args,FILE_FLAG_READ))!=0){
+		msgbox_alert("Open file failed: %s",strerror(r));
+		tlog_error("open file failed: %s",strerror(r));
+		return -r;
+	}
 	msgbox_set_user_data(msgbox_create_yesno(
 		confirm_click,
 		"Load UEFI Driver (DXE) '%s'?",
-		full_path
-	),full_path);
+		(char*)d->args
+	),f);
 	return -10;
 }
 

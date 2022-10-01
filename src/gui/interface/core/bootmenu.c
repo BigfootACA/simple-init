@@ -277,10 +277,9 @@ static void bootmenu_add(struct bootmenu*bm,char*c){
 	);
 	bi->img=lv_img_create(bi->w_img);
 	lv_obj_clear_flag(bi->img,LV_OBJ_FLAG_CLICKABLE);
-	lv_img_t*ext=(lv_img_t*)bi->img;
 	lv_img_set_size_mode(bi->img,LV_IMG_SIZE_MODE_REAL);
-	lv_img_set_src(bi->img,c?bi->cfg.icon:"back.svg");
-	if(ext->w<=0||ext->h<=0)lv_img_set_src(bi->img,"apps.svg");
+	if(c)lv_img_src_try(bi->img,"bootitem",bi->cfg.ident,bi->cfg.icon);
+	else lv_img_src_try(bi->img,"bootitem",NULL,"@bootitem-back");
 	lv_img_fill_image(bi->img,bm->si,bm->si);
 	lv_obj_center(bi->img);
 

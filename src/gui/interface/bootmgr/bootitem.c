@@ -125,10 +125,10 @@ static int init(struct gui_activity*act){
 }
 
 static void load_icon(struct bootitem*bi){
+	const char*img;
 	lv_coord_t s=lv_obj_get_height(bi->txt_icon);
-	lv_img_t*ext=(lv_img_t*)bi->img_icon;
-	lv_img_set_src(bi->img_icon,lv_textarea_get_text(bi->txt_icon));
-	if((ext->w<=0||ext->h<=0))lv_img_set_src(bi->img_icon,"apps.svg");
+	img=lv_textarea_get_text(bi->txt_icon);
+	lv_img_src_try(bi->img_icon,"bootitem",bi->name,img);
 	lv_img_fill_image(bi->img_icon,s,s);
 	lv_obj_center(bi->img_icon);
 }

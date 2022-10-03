@@ -393,15 +393,21 @@ static int do_cleanup(struct gui_activity*d){
 }
 
 static int init(struct gui_activity*act){
+	struct part_disk_info*di;
 	if(!act->args){
 		tlog_warn("target disk not set");
 		return -EINVAL;
 	}
-	struct part_disk_info*di=malloc(sizeof(struct part_disk_info));
-	if(!di)return -ENOMEM;
+	if(!(di=malloc(sizeof(struct part_disk_info))))return -ENOMEM;
 	memset(di,0,sizeof(struct part_disk_info));
-	char*disk=act->args;
-	if(disk[0]!='/'&&disk[1]==':')disk+=2;
+	char*disk=act->args,*x;
+	if((x=strstr(disk,"://"))){
+		if(strncmp(disk,"file",x-disk)!=0){
+			msgbox_alert("Only file:// path supported");
+			return -1;
+		}
+		disk=x+3;
+	}
 	if(!(di->target=strdup(disk))){
 		free(di);
 		return -ENOMEM;
@@ -459,7 +465,7 @@ struct gui_register guireg_guipm_partitions={
 	.open_file=true,
 	.open_regex=(char*[]){
 		"^/dev/.+",
-		"^[A-Z]?:/dev/.+",
+		"file:///dev/.+",
 		".*\\.img$",
 		".*\\.raw$",
 		NULL

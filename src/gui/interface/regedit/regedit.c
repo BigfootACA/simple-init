@@ -18,7 +18,6 @@
 #include"logger.h"
 #include"regedit.h"
 #include"gui/tools.h"
-#include"gui/fsext.h"
 #include"gui/msgbox.h"
 #include"gui/activity.h"
 #include"gui/inputbox.h"
@@ -368,18 +367,7 @@ static void close_file(struct regedit*reg){
 static void load_file(struct regedit*reg,char*xpath){
 	if(!reg)return;
 	close_file(reg);
-	#ifdef ENABLE_UEFI
-	if(xpath[2]!=':')return;
-	EFI_FILE_PROTOCOL*dir=fs_get_root_by_letter(xpath[0]);
-	if(!dir){
-		msgbox_alert("get root '%c' failed",xpath[0]);
-		return;
-	}
-	reg->hive=hivex_open_uefi(dir,xpath+2,HIVEX_OPEN_WRITE);
-	#else
-	if(xpath[0]!='/'&&xpath[1]==':')xpath+=2;
 	reg->hive=hivex_open(xpath,HIVEX_OPEN_WRITE);
-	#endif
 	if(!reg->hive){
 		msgbox_alert("open registry file '%s' failed: %m",xpath);
 		return;

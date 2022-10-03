@@ -20,7 +20,6 @@
 #include"gui/activity.h"
 #include"gui/filepicker.h"
 #define TAG "conftool"
-#define MIME_EXT ".svg"
 
 static lv_obj_t*view,*scr,*info,*lbl_path;
 static lv_obj_t*btn_add,*btn_reload,*btn_delete,*btn_edit,*btn_home,*btn_load,*btn_save;
@@ -54,13 +53,13 @@ static char*get_string_path(char*sub){
 }
 
 static const char*get_icon(struct conf_item*ci){
-	if(ci->parent)return "inode-parent"MIME_EXT;
+	if(ci->parent)return "inode-parent";
 	switch(ci->type){
-		case TYPE_KEY:return "inode-dir"MIME_EXT;
+		case TYPE_KEY:return "inode-dir";
 		case TYPE_STRING:
 		case TYPE_INTEGER:
-		case TYPE_BOOLEAN:return "text-x-plain"MIME_EXT;
-		default:return "unknown"MIME_EXT;
+		case TYPE_BOOLEAN:return "text-x-plain";
+		default:return "unknown";
 	}
 }
 
@@ -215,10 +214,7 @@ static void add_item(bool parent,char*name){
 		LV_GRID_ALIGN_STRETCH,0,2
 	);
 	ci->img=lv_img_create(ci->w_img);
-	lv_img_t*ext=(lv_img_t*)ci->img;
-	lv_img_set_src(ci->img,get_icon(ci));
-	if(ext->w<=0||ext->h<=0)
-		lv_img_set_src(ci->img,"inode-file"MIME_EXT);
+	lv_img_src_try(ci->img,"mime",get_icon(ci),NULL);
 	lv_img_set_size_mode(ci->img,LV_IMG_SIZE_MODE_REAL);
 	lv_img_fill_image(ci->img,grid_col[0],grid_col[0]);
 	lv_obj_center(ci->img);

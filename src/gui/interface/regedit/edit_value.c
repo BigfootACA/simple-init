@@ -215,7 +215,7 @@ static bool save_binary(const char*val,struct hive_set_value*set){
 	memset(set->value,0,size);
 	for(size_t i=0;i<len&&real_size<len;i++){
 		if(isspace(val[i]))continue;
-		uint8_t v=hex2dex(val[i]);
+		uint8_t v=hex2dec(val[i]);
 		if(v==16)goto fail;
 		set->value[real_size/2]|=v;
 		if(!(real_size%2))set->value[real_size/2]<<=4;

@@ -23,7 +23,6 @@
 #include"gui/inputbox.h"
 #include"gui/filepicker.h"
 #define TAG "regedit"
-#define MIME_EXT ".svg"
 
 struct reg_item{
 	struct regedit*reg;
@@ -59,12 +58,12 @@ static char*get_string_path(struct regedit*reg,char*sub){
 
 static const char*get_icon(struct reg_item*ci){
 	if(!ci)return NULL;
-	if(ci->parent)return "inode-parent"MIME_EXT;
+	if(ci->parent)return "inode-parent";
 	switch(ci->type){
-		case hive_t_REG_NONE:return "inode-dir"MIME_EXT;
-		default:return "text-x-plain"MIME_EXT;
+		case hive_t_REG_NONE:return "inode-dir";
+		default:return "text-x-plain";
 	}
-	return "unknown"MIME_EXT;
+	return "unknown";
 }
 
 static int clean_item(void*d){
@@ -215,10 +214,7 @@ static void add_item(struct reg_item*ci){
 		LV_GRID_ALIGN_STRETCH,0,2
 	);
 	ci->img=lv_img_create(ci->w_img);
-	lv_img_t*ext=(lv_img_t*)ci->img;
-	lv_img_set_src(ci->img,get_icon(ci));
-	if(ext->w<=0||ext->h<=0)
-		lv_img_set_src(ci->img,"inode-file"MIME_EXT);
+	lv_img_src_try(ci->img,"mime",get_icon(ci),NULL);
 	lv_img_set_size_mode(ci->img,LV_IMG_SIZE_MODE_REAL);
 	lv_img_fill_image(ci->img,grid_col[0],grid_col[0]);
 	lv_obj_center(ci->img);

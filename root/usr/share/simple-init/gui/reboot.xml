@@ -32,7 +32,7 @@
 					<Image
 						attr:size-mode="real"
 						attr:fill="?gui_font_size*2"
-						attr:src="reboot.svg"
+						attr:src="@reboot-reboot-cold"
 						attr:center="true"/>
 				</Wrapper>
 				<Label
@@ -52,7 +52,7 @@
 					<Image
 						attr:size-mode="real"
 						attr:fill="?gui_font_size*2"
-						attr:src="reboot.svg"
+						attr:src="@reboot-reboot-warm"
 						attr:center="true"/>
 				</Wrapper>
 				<Label
@@ -73,7 +73,7 @@
 					<Image
 						attr:size-mode="real"
 						attr:fill="?gui_font_size*2"
-						attr:src="reboot.svg"
+						attr:src="@reboot-reboot"
 						attr:center="true"/>
 				</Wrapper>
 				<Label
@@ -94,7 +94,7 @@
 				<Image
 					attr:size-mode="real"
 					attr:fill="?gui_font_size*2"
-					attr:src="download.svg"
+					attr:src="@reboot-edl"
 					attr:center="true"/>
 			</Wrapper>
 			<Label
@@ -114,7 +114,7 @@
 				<Image
 					attr:size-mode="real"
 					attr:fill="?gui_font_size*2"
-					attr:src="twrp.png"
+					attr:src="@reboot-recovery"
 					attr:center="true"/>
 			</Wrapper>
 			<Label
@@ -135,7 +135,7 @@
 				<Image
 					attr:size-mode="real"
 					attr:fill="?gui_font_size*2"
-					attr:src="fastboot.svg"
+					attr:src="@reboot-fastboot"
 					attr:center="true"/>
 			</Wrapper>
 			<Label
@@ -155,7 +155,7 @@
 				<Image
 					attr:size-mode="real"
 					attr:fill="?gui_font_size*2"
-					attr:src="poweroff.svg"
+					attr:src="@reboot-poweroff"
 					attr:center="true"/>
 			</Wrapper>
 			<Label

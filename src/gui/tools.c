@@ -114,11 +114,7 @@ void lv_input_cb(lv_event_t*e){
 static bool select_cb(bool ok,const char**path,uint16_t cnt,void*user_data){
 	if(!ok)return false;
 	if(!path||!path[0]||path[1]||cnt!=1)return true;
-	#ifdef ENABLE_UEFI
 	lv_textarea_set_text(user_data,path[0]);
-	#else
-	lv_textarea_set_text(user_data,path[0]+2);
-	#endif
 	lv_event_send(user_data,LV_EVENT_DEFOCUSED,NULL);
 	return false;
 }

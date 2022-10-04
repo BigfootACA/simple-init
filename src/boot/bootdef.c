@@ -84,7 +84,7 @@ static struct initial_cfg{
 		.valid=true,
 		.cfg={
 			.mode=BOOT_EXIT,
-			.ident="continue",.icon="exit.svg",
+			.ident="continue",
 			.desc="Continue Boot",
 			.save=false,.replace=false,
 			.show=true,.enabled=true
@@ -93,7 +93,7 @@ static struct initial_cfg{
 		.valid=true,
 		.cfg={
 			.mode=BOOT_SIMPLE_INIT,
-			.ident="simple-init",.icon="launcher.svg",
+			.ident="simple-init",
 			.desc="Enter Simple Init",
 			.save=false,.replace=false,
 			.show=true,.enabled=true
@@ -103,7 +103,6 @@ static struct initial_cfg{
 		.cfg={
 			.mode=BOOT_FOLDER,
 			.ident="uefi-bootmenu",
-			.icon="uefi.svg",
 			.desc="UEFI Boot Menu",
 			.save=false,.replace=false,
 			.show=false,.enabled=true
@@ -114,7 +113,7 @@ static struct initial_cfg{
 		.valid=true,
 		.cfg={
 			.mode=BOOT_SWITCHROOT,
-			.ident="switchroot",.icon="linux.svg",
+			.ident="switchroot",
 			.desc="Default SwitchRoot",
 			.save=false,.replace=false,
 			.show=true,.enabled=false
@@ -123,7 +122,7 @@ static struct initial_cfg{
 		.valid=true,
 		.cfg={
 			.mode=BOOT_SYSTEM,
-			.ident="system",.icon="launcher.svg",
+			.ident="system",
 			.desc="Enter Simple Init",
 			.save=false,.replace=false,
 			.show=true,.enabled=true
@@ -132,10 +131,10 @@ static struct initial_cfg{
 		.valid=true,
 		.cfg={
 			.mode=BOOT_CHARGER,
-			.ident="charger",.icon="battery.svg",
+			.ident="charger",
 			.desc="Charger Screen",
 			.save=false,.replace=false,
-			.show=false,.enabled=false
+			.show=false,.enabled=true
 		},.args=NULL
 	},
 	#endif
@@ -143,7 +142,7 @@ static struct initial_cfg{
 		.valid=true,
 		.cfg={
 			.mode=BOOT_FOLDER,
-			.ident="reboots",.icon="reboot.svg",
+			.ident="reboots",
 			.desc="Reboot Menu",
 			.save=false,.replace=false,
 			.show=true,.enabled=true
@@ -152,7 +151,7 @@ static struct initial_cfg{
 		.valid=true,
 		.cfg={
 			.mode=BOOT_POWEROFF,
-			.ident="poweroff",.icon="poweroff.svg",
+			.ident="poweroff",
 			.desc="Power off system",
 			.parent="reboots",
 			.save=false,.replace=false,
@@ -162,7 +161,7 @@ static struct initial_cfg{
 		.valid=true,
 		.cfg={
 			.mode=BOOT_REBOOT,
-			.ident="reboot",.icon="reboot.svg",
+			.ident="reboot",
 			.desc="Reboot system",
 			.parent="reboots",
 			.save=false,.replace=false,
@@ -172,7 +171,7 @@ static struct initial_cfg{
 		.valid=true,
 		.cfg={
 			.mode=BOOT_REBOOT,
-			.ident="edl",.icon="download.svg",
+			.ident="edl",
 			.desc="Reboot into EDL",
 			.parent="reboots",
 			.save=false,.replace=false,
@@ -182,7 +181,7 @@ static struct initial_cfg{
 		.valid=true,
 		.cfg={
 			.mode=BOOT_REBOOT,
-			.ident="recovery",.icon="twrp.png",
+			.ident="recovery",
 			.desc="Reboot into recovery",
 			.parent="reboots",
 			.save=false,.replace=false,
@@ -192,7 +191,7 @@ static struct initial_cfg{
 		.valid=true,
 		.cfg={
 			.mode=BOOT_REBOOT,
-			.ident="bootloader",.icon="fastboot.svg",
+			.ident="bootloader",
 			.desc="Reboot into bootloader",
 			.parent="reboots",
 			.save=false,.replace=false,
@@ -211,7 +210,7 @@ static void load_uefi_boot(){
 	if(!(def=AllocateZeroPool(sizeof(struct boot_config))))goto done;
 	def->mode=BOOT_UEFI_OPTION;
 	strcpy(def->parent,"uefi-bootmenu");
-	strcpy(def->icon,"uefi.svg");
+	strcpy(def->icon,"@bootitem-uefi-bootitem");
 	def->save=false;
 	def->replace=false;
 	def->show=true;

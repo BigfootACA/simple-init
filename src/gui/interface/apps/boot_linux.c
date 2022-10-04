@@ -221,7 +221,6 @@ static int draw_boot_linux(struct gui_activity*act){
 struct gui_register guireg_boot_linux={
 	.name="boot-linux",
 	.title="Boot Linux",
-	.icon="linux.svg",
 	.show_app=true,
 	.open_file=false,
 	.quiet_exit=do_cleanup,

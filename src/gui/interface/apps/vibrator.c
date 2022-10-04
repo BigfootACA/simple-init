@@ -321,7 +321,6 @@ static int vibrator_draw(struct gui_activity*act){
 struct gui_register guireg_vibrator={
 	.name="vibrator",
 	.title="Vibrator Tester",
-	.icon="vibrator.svg",
 	.show_app=true,
 	.quiet_exit=do_clean,
 	.draw=vibrator_draw,

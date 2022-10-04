@@ -255,7 +255,6 @@ static int draw_add_ramdisk(struct gui_activity*act){
 struct gui_register guireg_add_ramdisk={
 	.name="add-ramdisk",
 	.title="Add Ramdisk",
-	.icon="cdrom.svg",
 	.show_app=true,
 	.open_file=true,
 	.open_regex=(char*[]){

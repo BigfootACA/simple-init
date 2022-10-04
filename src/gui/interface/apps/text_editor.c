@@ -454,7 +454,6 @@ static int editor_draw(struct gui_activity*act){
 struct gui_register guireg_text_edit={
 	.name="text-editor",
 	.title="Text Editor",
-	.icon="text-editor.svg",
 	.show_app=true,
 	.open_file=true,
 	.ask_exit=do_back,

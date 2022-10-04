@@ -262,7 +262,6 @@ static int terminal_draw(struct gui_activity*act){
 struct gui_register guireg_terminal={
 	.name="terminal",
 	.title="Terminal",
-	.icon="terminal.svg",
 	.show_app=true,
 	.init=terminal_init,
 	.draw=terminal_draw,

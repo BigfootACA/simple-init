@@ -188,7 +188,6 @@ static int pointer_test_draw(struct gui_activity*act){
 struct gui_register guireg_pointer_test={
 	.name="pointer-test",
 	.title="Pointer Test",
-	.icon="pointer.svg",
 	.open_file=false,
 	.show_app=true,
 	.draw=pointer_test_draw,

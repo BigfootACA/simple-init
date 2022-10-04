@@ -403,7 +403,6 @@ static int draw_bootdata_linux(struct gui_activity*act){
 struct gui_register guireg_bootdata_linux={
 	.name="bootdata-linux",
 	.title="Boot Item Extra Data Editor",
-	.icon="bootmgr.svg",
 	.show_app=false,
 	.quiet_exit=do_cleanup,
 	.init=init,

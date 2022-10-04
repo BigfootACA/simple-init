@@ -693,7 +693,6 @@ static int do_init(struct gui_activity*d){
 struct gui_register guireg_regedit={
 	.name="regedit",
 	.title="Registry Editor",
-	.icon="regedit.svg",
 	.show_app=true,
 	.open_file=true,
 	.open_regex=(char*[]){

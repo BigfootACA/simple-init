@@ -105,7 +105,6 @@ static int fdt_load_draw(struct gui_activity*act){
 struct gui_register guireg_fdt_load={
 	.name="fdt-load",
 	.title="Load device tree blob",
-	.icon="linux.svg",
 	.open_regex=(char*[]){
 		".*\\.dtb$",
 		".*\\.fdt$",

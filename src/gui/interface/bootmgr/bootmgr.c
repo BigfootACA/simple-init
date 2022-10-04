@@ -331,7 +331,6 @@ static int do_back(struct gui_activity*a){
 struct gui_register guireg_bootmgr={
 	.name="bootmgr",
 	.title="Boot Manager",
-	.icon="bootmgr.svg",
 	.show_app=true,
 	.ask_exit=do_back,
 	.quiet_exit=do_clean,

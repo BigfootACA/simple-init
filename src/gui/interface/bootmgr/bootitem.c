@@ -343,7 +343,6 @@ static int draw_bootitem(struct gui_activity*act){
 struct gui_register guireg_bootitem={
 	.name="bootitem",
 	.title="Boot Item Editor",
-	.icon="bootmgr.svg",
 	.show_app=false,
 	.quiet_exit=do_cleanup,
 	.init=init,

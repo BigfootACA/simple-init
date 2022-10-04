@@ -244,7 +244,6 @@ static int serial_open_lost_focus(struct gui_activity*act){
 struct gui_register guireg_serial_open={
 	.name="serial-open",
 	.title="Open Serial Port",
-	.icon="serial.svg",
 	#ifndef ENABLE_UEFI
 	.open_file=true,
 	.open_regex=(char*[]){

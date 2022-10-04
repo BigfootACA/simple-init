@@ -182,7 +182,6 @@ static int draw_bootdata_uefi_option(struct gui_activity*act){
 struct gui_register guireg_bootdata_uefi_option={
 	.name="bootdata-uefi-option",
 	.title="Boot Item Extra Data Editor",
-	.icon="bootmgr.svg",
 	.show_app=false,
 	.quiet_exit=do_cleanup,
 	.init=init,

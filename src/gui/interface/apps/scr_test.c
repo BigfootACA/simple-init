@@ -129,7 +129,6 @@ static int cleanup(struct gui_activity*act){
 struct gui_register guireg_screen_test={
 	.name="screen-test",
 	.title="Screen Color Test",
-	.icon="screen.svg",
 	.show_app=true,
 	.full_screen=true,
 	.quiet_exit=cleanup,

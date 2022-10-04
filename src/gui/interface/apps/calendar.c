@@ -59,7 +59,6 @@ static int calendar_draw(struct gui_activity*act){
 struct gui_register guireg_calendar={
 	.name="calendar",
 	.title="Calendar",
-	.icon="calendar.svg",
 	.show_app=true,
 	.draw=calendar_draw,
 	.quiet_exit=calendar_cleanup,

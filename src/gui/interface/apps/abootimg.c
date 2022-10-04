@@ -278,7 +278,6 @@ static int draw_abootimg(struct gui_activity*act){
 struct gui_register guireg_abootimg={
 	.name="abootimg",
 	.title="Android Boot Image",
-	.icon="abootimg.svg",
 	.show_app=true,
 	.open_file=true,
 	.open_regex=(char*[]){

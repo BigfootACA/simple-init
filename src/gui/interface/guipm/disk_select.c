@@ -399,7 +399,6 @@ static int guipm_draw_disk_sel(struct gui_activity*act){
 struct gui_register guireg_guipm_disk_select={
 	.name="guipm-disk-select",
 	.title="Partition Manager",
-	.icon="guipm.svg",
 	.show_app=true,
 	.quiet_exit=do_cleanup,
 	.init=guipm_init,

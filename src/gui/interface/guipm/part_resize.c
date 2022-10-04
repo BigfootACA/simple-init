@@ -116,7 +116,6 @@ static int guipm_draw_resize_partition(struct gui_activity*act){
 struct gui_register guireg_guipm_resize_partition={
 	.name="guipm-resize-partition",
 	.title="Partition Manager",
-	.icon="guipm.svg",
 	.show_app=false,
 	.open_file=false,
 	.init=guipm_part_init,

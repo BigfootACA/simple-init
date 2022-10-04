@@ -333,7 +333,6 @@ static int filemgr_draw(struct gui_activity*act){
 struct gui_register guireg_filemgr={
 	.name="file-manager",
 	.title="File Manager",
-	.icon="filemgr.svg",
 	.show_app=true,
 	.ask_exit=do_back,
 	.quiet_exit=do_cleanup,

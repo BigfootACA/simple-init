@@ -233,7 +233,6 @@ static int picture_draw(struct gui_activity*act){
 struct gui_register guireg_picture_viewer={
 	.name="picture-viewer",
 	.title="Picture Viewer",
-	.icon="photo-viewer.svg",
 	.open_file=true,
 	.open_regex=(char*[]){
 		".*\\.png$",

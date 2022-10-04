@@ -353,7 +353,6 @@ static int do_load(struct gui_activity*act){
 struct gui_register guireg_logviewer={
 	.name="logger-viewer",
 	.title="Loggerd Viewer",
-	.icon="logviewer.svg",
 	.show_app=true,
 	.quiet_exit=do_clean,
 	.init=logviewer_init,

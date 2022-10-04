@@ -129,7 +129,6 @@ static int uefi_dxe_load_draw(struct gui_activity*d){
 struct gui_register guireg_uefi_dxe_load={
 	.name="uefi-dxe-load",
 	.title="UEFI Driver (DXE) Load",
-	.icon="efi.svg",
 	.show_app=false,
 	.open_file=true,
 	.open_regex=(char*[]){

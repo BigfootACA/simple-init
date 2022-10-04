@@ -175,7 +175,6 @@ static int theme_lost_focus(struct gui_activity*d){
 struct gui_register guireg_theme_menu={
 	.name="theme-select-menu",
 	.title="Themes",
-	.icon="theme.svg",
 	.show_app=true,
 	.init=theme_menu_init,
 	.draw=theme_menu_draw,

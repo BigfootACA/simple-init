@@ -82,7 +82,6 @@ static int mass_draw(struct gui_activity*act){
 struct gui_register guireg_linux_simple_mass_storage={
 	.name="linux-simple-mass-storage",
 	.title="Mass Storage",
-	.icon="scsi.svg",
 	.show_app=true,
 	.draw=mass_draw,
 };

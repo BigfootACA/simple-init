@@ -368,7 +368,6 @@ static int guiapp_draw(struct gui_activity*act){
 struct gui_register guireg_guiapp={
 	.name="guiapp",
 	.title="GUI Application",
-	.icon="apps.svg",
 	.show_app=false,
 	.init=guiapp_init,
 	.quiet_exit=guiapp_exit,

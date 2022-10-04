@@ -193,7 +193,6 @@ static int draw_add_mass(struct gui_activity*act){
 struct gui_register guireg_add_mass={
 	.name="usb-gadget-add-mass",
 	.title="Add Mass Storage",
-	.icon="usb.svg",
 	.show_app=false,
 	.open_file=true,
 	.open_regex=(char*[]){

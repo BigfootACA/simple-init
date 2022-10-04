@@ -459,7 +459,6 @@ static int do_back(struct gui_activity*d __attribute__((unused))){
 struct gui_register guireg_conftool={
 	.name="config-manager",
 	.title="Config Manager",
-	.icon="conftool.svg",
 	.show_app=true,
 	.ask_exit=do_back,
 	.quiet_exit=do_clean,

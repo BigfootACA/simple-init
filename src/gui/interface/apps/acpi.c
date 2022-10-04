@@ -398,7 +398,6 @@ static int acpi_load_draw(struct gui_activity*act){
 struct gui_register guireg_acpi_load={
 	.name="acpi-load",
 	.title="Load ACPI Table",
-	.icon="acpi.svg",
 	.open_regex=(char*[]){
 		".*\\.aml$",
 		NULL
@@ -411,7 +410,6 @@ struct gui_register guireg_acpi_load={
 struct gui_register guireg_acpi_manager={
 	.name="acpi-manager",
 	.title="ACPI Manager",
-	.icon="acpi.svg",
 	.open_file=true,
 	.open_regex=(char*[]){
 		".*\\.aml$",

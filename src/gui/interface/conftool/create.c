@@ -230,7 +230,6 @@ static int createbox_draw(struct gui_activity*act){
 struct gui_register guireg_conftool_create={
 	.name="config-manager-create",
 	.title="Config Manager Create",
-	.icon="conftool.svg",
 	.show_app=false,
 	.init=createbox_init,
 	.quiet_exit=createbox_clean,

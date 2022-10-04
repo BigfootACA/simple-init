@@ -103,7 +103,6 @@ static int uefi_start_draw(struct gui_activity*d){
 struct gui_register guireg_uefi_start={
 	.name="uefi-app-start",
 	.title="UEFI Application Start",
-	.icon="efi.svg",
 	.show_app=false,
 	.open_file=true,
 	.open_regex=(char*[]){

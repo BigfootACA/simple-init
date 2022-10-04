@@ -325,7 +325,6 @@ static int serial_port_draw(struct gui_activity*act){
 struct gui_register guireg_serial_port={
 	.name="serial-port",
 	.title="Serial Port",
-	.icon="serial.svg",
 	.init=serial_port_init,
 	.draw=serial_port_draw,
 	.data_load=serial_port_launch,

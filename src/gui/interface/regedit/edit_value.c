@@ -403,7 +403,6 @@ static int edit_value_draw(struct gui_activity*act){
 struct gui_register guireg_regedit_value={
 	.name="regedit-edit-value",
 	.title="Edit Registry Value",
-	.icon="regedit.svg",
 	.show_app=false,
 	.init=edit_value_init,
 	.quiet_exit=edit_value_clean,

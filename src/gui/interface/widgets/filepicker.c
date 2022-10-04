@@ -20,7 +20,6 @@
 struct filepicker{
 	char text[BUFSIZ];
 	char path[PATH_MAX];
-	char disp_path[PATH_MAX];
 	filepicker_callback callback;
 	lv_obj_t*box,*label;
 	lv_obj_t*view,*cur_path;
@@ -46,7 +45,7 @@ static void filepicker_click(lv_event_t*e){
 	char**fn=NULL,**name,*path;
 	if(e->target==fp->ok){
 		cnt=fileview_get_checked_count(fp->fv);
-		ss=strlen(path=fileview_get_lvgl_path(fp->fv));
+		ss=strlen(path=fileview_get_path(fp->fv));
 		if(path[ss-1]=='/')path[ss-1]=0;
 		vs=sizeof(char*)*(cnt+1),cs=ss+260,as=vs+(cs*cnt);
 		if((dp=malloc(as))){
@@ -72,22 +71,24 @@ static void filepicker_click(lv_event_t*e){
 }
 
 static bool create_name_cb(bool ok,const char*name,void*user_data){
+	int r=0;
+	fsh*f=NULL,*pf=NULL;
+	fs_file_flag flag=FILE_FLAG_CREATE;
 	if(!ok||!user_data)return false;
 	struct create_data*cd=user_data;
 	if(!cd->fp)return false;
-	char*fp=fileview_get_lvgl_path(cd->fp->fv);
-	char xp[PATH_MAX]={0};
-	snprintf(xp,PATH_MAX-1,"%s/%s",fp,name);
-	lv_res_t r;
+	if(!(pf=fileview_get_fsh(cd->fp->fv)))return false;
 	switch(cd->xid){
-		case 0:r=lv_fs_creat(xp);break;//file
-		case 1:r=lv_fs_mkdir(xp);break;//folder
+		case 0:flag|=0644;break;//file
+		case 1:flag|=0755|FILE_FLAG_FOLDER;break;//folder
 		default:return false;
 	}
+	r=fs_open(pf,&f,name,flag);
+	if(f)fs_close(&f);
 	fileview_set_path(cd->fp->fv,NULL);
 	if(r!=LV_FS_RES_OK)msgbox_alert(
 		"Create '%s' failed: %s",
-		name,lv_fs_res_to_i18n_string(r)
+		name,strerror(r)
 	);
 	return false;
 }
@@ -111,7 +112,7 @@ static void btn_click(lv_event_t*e){
 			LV_SYMBOL_DIRECTORY,
 			""
 		};
-		if(fsext_is_multi&&fileview_is_top(fp->fv))return;
+		if(fileview_is_top(fp->fv))return;
 		msgbox_set_user_data(msgbox_create_custom(
 			create_cb,types,
 			"Choose type to create"
@@ -119,36 +120,44 @@ static void btn_click(lv_event_t*e){
 	}
 }
 
-static void on_change_dir(struct fileview*fv,char*old __attribute__((unused)),char*new){
+static void on_change_dir(struct fileview*fv,url*old __attribute__((unused)),url*new){
+	char*str=NULL,path[PATH_MAX];
 	struct filepicker*fp=fileview_get_data(fv);
 	if(!fp)return;
-	confd_set_string("gui.filepicker.dir",new);
-	lv_label_set_text(fp->cur_path,new);
-	lv_obj_set_enabled(fp->new,!fsext_is_multi||!fileview_is_top(fv));
-	memset(fp->disp_path,0,sizeof(fp->disp_path));
-	strncpy(fp->disp_path,new,sizeof(fp->disp_path)-1);
+	if(new){
+		if(!(str=url_generate(path,sizeof(path),new)))return;
+		confd_set_string("gui.filepicker.dir",str);
+		lv_label_set_text(fp->cur_path,str);
+	}else{
+		confd_delete("gui.filepicker.dir");
+		lv_label_set_text(fp->cur_path,"/");
+		str="/";
+	}
+	lv_obj_set_enabled(fp->new,!fileview_is_top(fv));
+	memset(fp->path,0,sizeof(fp->path));
+	strncpy(fp->path,str,sizeof(fp->path)-1);
 }
 
 static void on_item_select(
 	struct fileview*fv,
 	char*name __attribute__((unused)),
-	enum item_type type __attribute__((unused)),
+	fs_type type __attribute__((unused)),
 	bool checked __attribute__((unused)),
 	uint16_t cnt
 ){
-	if(fsext_is_multi&&fileview_is_top(fv))return;
+	if(fileview_is_top(fv))return;
 	struct filepicker*fp=fileview_get_data(fv);
 	if(!fp)return;
 	lv_obj_set_enabled(fp->ok,cnt>0&&(cnt<=fp->max||fp->max==0));
 	if(cnt==fp->max)lv_group_focus_obj(fp->ok);
 }
 
-static bool on_item_click(struct fileview*fv,char*item,enum item_type type){
-	if(type!=TYPE_DIR){
-		struct filepicker*fp=fileview_get_data(fv);
-		uint16_t cnt=fileview_get_checked_count(fv);
-		if(cnt<fp->max)fileview_check_item(fv,item,true);
-	}
+static bool on_item_click(struct fileview*fv,char*item,fs_type type){
+	if(!fs_has_type(type,FS_TYPE_FILE))return true;
+	if(fs_has_type(type,FS_TYPE_FILE_FOLDER))return true;
+	struct filepicker*fp=fileview_get_data(fv);
+	uint16_t cnt=fileview_get_checked_count(fv);
+	if(cnt<fp->max)fileview_check_item(fv,item,true);
 	return true;
 }
 
@@ -188,11 +197,11 @@ static int filepicker_draw(struct gui_activity*act){
 		#define BTN(tgt,en,title,cb,x,c,y)&(struct button_dsc){\
 			&tgt,en,title,cb,fp,x,c,y,1,NULL\
 		}
-		BTN(fp->reload, true,            LV_SYMBOL_REFRESH, btn_click,         0,2,0),
-		BTN(fp->new,    !fsext_is_multi, LV_SYMBOL_PLUS,    btn_click,         2,2,0),
-		BTN(fp->home,   true,            LV_SYMBOL_HOME,    btn_click,         4,2,0),
-		BTN(fp->ok,     false,           LV_SYMBOL_OK,      filepicker_click,  0,3,1),
-		BTN(fp->cancel, true,            LV_SYMBOL_CLOSE,   filepicker_click,  3,3,1),
+		BTN(fp->reload, true,  LV_SYMBOL_REFRESH, btn_click,         0,2,0),
+		BTN(fp->new,    false, LV_SYMBOL_PLUS,    btn_click,         2,2,0),
+		BTN(fp->home,   true,  LV_SYMBOL_HOME,    btn_click,         4,2,0),
+		BTN(fp->ok,     false, LV_SYMBOL_OK,      filepicker_click,  0,3,1),
+		BTN(fp->cancel, true,  LV_SYMBOL_CLOSE,   filepicker_click,  3,3,1),
 		NULL
 		#undef BTN
 	);
@@ -235,11 +244,7 @@ static int filepicker_lost_focus(struct gui_activity*d){
 static int filepicker_load(struct gui_activity*d){
 	struct filepicker*box=d->args;
 	if(!box)return 0;
-	if(!box->disp_path[0])strncpy(
-		box->disp_path,box->path,
-		sizeof(box->disp_path)-1
-	);
-	fileview_set_path(box->fv,box->disp_path);
+	fileview_set_path(box->fv,box->path);
 	return 0;
 }
 

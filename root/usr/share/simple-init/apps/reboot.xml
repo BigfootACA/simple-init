@@ -2,7 +2,6 @@
 <SimpleInitActivity compatible="2">
 	<Name>reboot-menu</Name>
 	<Title>Reboot Menu</Title>
-	<Icon>reboot.svg</Icon>
 	<ShowApp>true</ShowApp>
 	<AllowBack>true</AllowBack>
 	<MaskBackground>true</MaskBackground>

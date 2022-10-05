@@ -2860,3 +2860,6 @@ msgstr "添加注册表项失败: %m"
 
 msgid "Edit Registry Value"
 msgstr "编辑注册表值"
+
+msgid "Only file:// path supported"
+msgstr "只支持file://路径"

@@ -25,6 +25,8 @@ struct bootmenu;
 struct bootmenu_item;
 
 struct bootmenu{
+	bool anim,anim_done;
+	lv_anim_t anim_exec;
 	lv_coord_t si,bw;
 	lv_label_long_mode_t lm;
 	lv_obj_t*scr;
@@ -73,7 +75,7 @@ static void enter_simple_init(void*d __attribute__((unused))){
 
 static char target_boot_name[PATH_MAX];
 int bootmenu_main(int argc __attribute((unused)),char**argv __attribute((unused)));
-static int bootmenu_draw();
+extern int bootmenu_draw();
 static int after_exit(void*d __attribute__((unused))){
 	boot_name(target_boot_name);
 	memset(target_boot_name,0,sizeof(target_boot_name));
@@ -207,6 +209,7 @@ static void bootmenu_auto_boot(struct bootmenu*bm){
 			bootmenu_auto_boot_cb,1000,bm
 		);
 	}else{
+		if(bm->anim&&!bm->anim_done)return;
 		lv_obj_set_hidden(bm->time,false);
 		char*tout=confd_get_string("boot.timeout_text",NULL);
 		lv_label_set_text_fmt(
@@ -359,7 +362,29 @@ static int bootmenu_load(struct bootmenu*bm){
 	return 0;
 }
 
-static int bootmenu_draw(){
+static void anim_ready_cb(lv_anim_t*anim){
+	struct bootmenu*bm=lv_anim_get_user_data(anim);
+	bm->anim_done=true;
+}
+
+static void anim_opa(void*obj,int32_t val){
+	lv_obj_set_style_opa(obj,val,0);
+}
+
+static void anim_init(struct bootmenu*bm){
+	bm->anim=true,bm->anim_done=false;
+	lv_obj_set_style_opa(bm->scr,LV_OPA_TRANSP,0);
+	lv_anim_init(&bm->anim_exec);
+	lv_anim_set_var(&bm->anim_exec,bm->scr);
+	lv_anim_set_user_data(&bm->anim_exec,bm);
+	lv_anim_set_values(&bm->anim_exec,LV_OPA_TRANSP,LV_OPA_COVER);
+	lv_anim_set_ready_cb(&bm->anim_exec,anim_ready_cb);
+	lv_anim_set_exec_cb(&bm->anim_exec,(lv_anim_exec_xcb_t)anim_opa);
+	lv_anim_set_time(&bm->anim_exec,500);
+	lv_anim_start(&bm->anim_exec);
+}
+
+int bootmenu_draw(){
 	struct bootmenu*bm=malloc(sizeof(struct bootmenu));
 	if(!bm)abort();
 	memset(bm,0,sizeof(struct bootmenu));
@@ -435,6 +460,8 @@ static int bootmenu_draw(){
 		"gui.bootmenu.column",gui_w>gui_h?2:1
 	),255,1);
 	bootmenu_load(bm);
+
+	if(confd_get_boolean("gui.anim",true))anim_init(bm);
 	return 0;
 }
 

@@ -73,6 +73,7 @@ add_library(init_gui STATIC
 	interface/regedit/string.c
 	interface/regedit/regedit.c
 	interface/regedit/edit_value.c
+	interface/core/splash.c
 	interface/core/bootmenu.c
 	interface/core/sysbar.c
 	interface/core/snackbar.c

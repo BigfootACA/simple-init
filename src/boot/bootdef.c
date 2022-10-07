@@ -10,6 +10,7 @@
 #include"array.h"
 #include"confd.h"
 #include"keyval.h"
+#include"gui/splash.h"
 #ifdef ENABLE_UEFI
 #include<Library/BaseLib.h>
 #include<Library/PrintLib.h>
@@ -245,12 +246,15 @@ static void load_uefi_boot(){
 
 void boot_init_configs(void){
 	#ifdef ENABLE_UEFI
+	gui_splash_set_text(true,_("Probing OS on all disks..."));
 	boot_scan_efi();
 	#endif
 	struct initial_cfg*c;
+	gui_splash_set_text(true,_("Loading builtin boot configs..."));
 	for(size_t i=0;(c=&initial_cfgs[i])->valid;i++)
 		boot_create_config(&c->cfg,c->args);
 	#ifdef ENABLE_UEFI
+	gui_splash_set_text(true,_("Loading UEFI boot options..."));
 	load_uefi_boot();
 	#endif
 	if(confd_get_type("boot.default")!=TYPE_STRING)

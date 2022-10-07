@@ -13,13 +13,7 @@
 #include"confd.h"
 #include"logger.h"
 #include"assets.h"
-#ifdef ENABLE_UEFI
-#include"uefi.h"
-#include"locate.h"
-#include<Library/MemoryAllocationLib.h>
-#else
-#include<unistd.h>
-#endif
+#include"filesystem.h"
 
 LUALIB_API void luaL_openlibs(lua_State*L){
 	const luaL_Reg *lib;
@@ -112,45 +106,15 @@ int xlua_create_metatable(
 }
 
 int xlua_loadfile(lua_State*L,const char*name){
-	#ifdef ENABLE_UEFI
-	locate_ret*ret=AllocateZeroPool(sizeof(locate_ret));
-	if(ret){
-		if(
-			boot_locate(ret,name)&&
-			ret->type==LOCATE_FILE
-		){
-			int r=-255;
-			VOID*data=NULL;
-			UINTN size=0;
-			EFI_STATUS status=efi_file_read_whole(
-				ret->file,&data,&size
-			);
-			if(data){
-				if(!EFI_ERROR(status))r=luaL_loadbufferx(
-					L,data,size,name,NULL
-				);
-				FreePool(data);
-			}
-			return r;
-		}
-		FreePool(ret);
-	}
-	#else
-	if(access(name,R_OK)==0)return luaL_loadfile(L,name);
-	#endif
-	entry_file*f;
-	char*path=malloc(PATH_MAX);
-	memset(path,0,PATH_MAX);
-	strncpy(path,name,PATH_MAX-1);
-	if((f=rootfs_get_assets_file(path)))goto found;
-	memset(path,0,PATH_MAX);
-	snprintf(path,PATH_MAX-1,_PATH_USR"/share/simple-init/lua/%s",name);
-	if((f=rootfs_get_assets_file(path)))goto found;
-	free(path);
-	return -255;
-	found:
-	free(path);
-	return luaL_loadbufferx(L,f->content,f->length,name,NULL);
+	int r=0;
+	size_t len=0;
+	void*buffer=NULL;
+	r=fs_read_whole_file(NULL,name,&buffer,&len);
+	if(r!=0)return r;
+	if(!buffer)return EIO;
+	r=luaL_loadbufferx(L,buffer,len,name,NULL);
+	free(buffer);
+	return r;
 }
 
 int xlua_run(lua_State*L,char*tag,const char*name){

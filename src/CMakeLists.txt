@@ -34,6 +34,10 @@ if("${ENABLE_FFMPEG}" STREQUAL "ON")
 	set(DEPENDS ${DEPENDS} libavcodec libavutil libswscale)
 endif()
 
+if("${ENABLE_LIBCURL}" STREQUAL "ON")
+	set(DEPENDS ${DEPENDS} libcurl)
+endif()
+
 if("${ENABLE_ASAN}" STREQUAL "ON")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_ASAN=1 -fsanitize=address")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=undefined -fsanitize=leak")

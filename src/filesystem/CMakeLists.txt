@@ -12,6 +12,7 @@ add_library(init_filesystem STATIC
 	layer/assets.c
 	layer/socket.c
 	layer/posix.c
+	layer/curl.c
 	layer/zip.c
 	volume/linux.c
 	volume/mount.c

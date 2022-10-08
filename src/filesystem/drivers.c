@@ -12,6 +12,7 @@ extern void fsdrv_register_assets(bool deinit);
 extern void fsdrv_register_socket(bool deinit);
 extern void fsdrv_register_posix(bool deinit);
 extern void fsdrv_register_uefi(bool deinit);
+extern void fsdrv_register_curl(bool deinit);
 extern void fsdrv_register_zip(bool deinit);
 extern void fsvol_register_uefi(bool deinit);
 extern void fsvol_register_root(bool deinit);
@@ -28,6 +29,9 @@ fs_initiator_function*fs_initiator[]={
 	#ifndef ENABLE_UEFI
 	fsdrv_register_socket,
 	fsdrv_register_posix,
+	#ifdef ENABLE_LIBCURL
+	fsdrv_register_curl,
+	#endif
 	fsvol_register_root,
 	fsvol_register_mount,
 	#else

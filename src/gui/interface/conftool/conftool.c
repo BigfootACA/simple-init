@@ -257,7 +257,7 @@ static void add_item(bool parent,char*name){
 				free(r);
 			break;
 			case TYPE_INTEGER:
-				lv_label_set_text_fmt(ci->val,"%ld",confd_get_integer(p,0));
+				lv_label_set_text_fmt(ci->val,"%lld",(long long int)confd_get_integer(p,0));
 				lv_label_set_text_fmt(ci->size,"%zu",sizeof(int64_t));
 			break;
 			case TYPE_BOOLEAN:

@@ -16,7 +16,7 @@ extern bool gui_dark;
 extern uint32_t custom_tick_get(void);
 #define LV_COLOR_DEPTH                      32
 #define LV_COLOR_16_SWAP                    0
-#define LV_COLOR_SCREEN_TRANSP              0
+#define LV_COLOR_SCREEN_TRANSP              1
 #define LV_COLOR_MIX_ROUND_OFS              0
 #define LV_COLOR_CHROMA_KEY                 lv_color_hex(0x00ff00)
 #define LV_COLOR_TRANSP                     LV_COLOR_LIME

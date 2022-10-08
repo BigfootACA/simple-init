@@ -17,6 +17,7 @@
 #include"locate.h"
 #include"compatible.h"
 #include"filesystem.h"
+#include"gui/splash.h"
 #define TAG "drivers"
 
 bool boot_load_driver(EFI_DEVICE_PATH_PROTOCOL*p){
@@ -61,6 +62,7 @@ void boot_load_drivers(){
 	if(!(ds=confd_ls(b)))return;
 	for(int i=0;ds[i];i++){
 		if(!(d=confd_get_string_base(b,ds[i],NULL)))continue;
+		gui_splash_set_text(true,_("Loading UEFI driver %s..."),d);
 		tlog_verbose("try to load dxe driver from %s",d);
 		if(fs_open(NULL,&f,d,FILE_FLAG_READ)!=0)
 			EDONE(telog_warn("open %s failed",d));

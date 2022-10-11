@@ -314,7 +314,7 @@ static VOID EFIAPI efi_timer(IN EFI_EVENT e,IN VOID*ctx){
 extern bool conf_store_changed;
 static void conf_save_cb(lv_timer_t*t __attribute__((unused))){
 	if(!conf_store_changed)return;
-	int r=confd_save_file(NULL,NULL);
+	int r=confd_save_file(NULL);
 	if(r!=0||errno!=0)return;
 	tlog_debug("config changed");
 	conf_store_changed=false;

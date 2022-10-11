@@ -13,15 +13,7 @@
 #include"keyval.h"
 #include"locate.h"
 #include"logger.h"
-#include<Library/BaseLib.h>
-#include<Library/PrintLib.h>
-#include<Library/BaseMemoryLib.h>
-#include<Library/DevicePathLib.h>
-#include<Library/UefiBootManagerLib.h>
-#include<Library/MemoryAllocationLib.h>
-#include<Library/UefiBootServicesTableLib.h>
-#include<Protocol/DevicePath.h>
-#include<Protocol/SimpleFileSystem.h>
+#include"filesystem.h"
 #define TAG "prober"
 
 static struct boot_config def={
@@ -30,21 +22,15 @@ static struct boot_config def={
 	.show=true,.enabled=true
 };
 
-static bool boot_scan_part(int part,int*id,char*tag,EFI_FILE_PROTOCOL*root){
+static bool boot_scan_part(int part,int*id,fsh*root){
+	fsh*nf=NULL;
 	list*probes=NULL;
-	CHAR16*path16=NULL;
-	CHAR8*path8=NULL,*locate=NULL;
-	UINTN ls=PATH_MAX*sizeof(CHAR8);
-	UINTN ps=PATH_MAX*sizeof(CHAR16);
-	EFI_FILE_PROTOCOL*fp=NULL;
-	EFI_STATUS st;
+	char path[PATH_MAX];
 	bool found=false;
-	char*dir,*name;
+	char*dir,*name,*url;
 	struct efi_path*ep;
 	struct boot_config*use=NULL;
-	if(!(use=AllocateZeroPool(sizeof(struct boot_config))))goto done;
-	if(!(path16=AllocateZeroPool(ps)))goto done;
-	if(!(locate=AllocateZeroPool(ls)))goto done;
+	if(!(use=malloc(sizeof(struct boot_config))))goto done;
 	for(size_t p=0;(ep=&boot_efi_paths[p])&&ep->title;p++){
 		if(
 			!ep->enable||
@@ -53,96 +39,50 @@ static bool boot_scan_part(int part,int*id,char*tag,EFI_FILE_PROTOCOL*root){
 		)continue;
 		if(ep->cpu!=CPU_ANY&&ep->cpu!=current_cpu)continue;
 		for(size_t d=0;(dir=ep->dir[d]);d++)for(size_t d=0;(name=ep->name[d]);d++){
-			ZeroMem(locate,ls);
-			ZeroMem(path16,ps);
-			AsciiSPrint(locate,ls,"@%a:%a%a",tag,dir,name);
-			path8=locate+strlen(tag)+2;
-			UnicodeSPrint(path16,ps,L"%a%a",dir,name);
-			if(list_search_case_string(probes,path8))continue;
-			st=root->Open(root,&fp,path16,EFI_FILE_MODE_READ,0);
-			if(EFI_ERROR(st))continue;
-			tlog_debug("found %s at %s from part %d",ep->title,path8,part);
-			list_obj_add_new_strdup(&probes,path8);
-			fp->Close(fp);
-			CopyMem(use,&def,sizeof(struct boot_config));
-			AsciiSPrint(use->desc,sizeof(use->desc),"%a on #%d",ep->title,part);
-			AsciiSPrint(use->ident,sizeof(use->ident),"prober-%d",*id);
-			AsciiStrCpyS(use->icon,sizeof(use->icon),ep->icon);
+			nf=NULL,url=NULL;
+			memset(path,0,sizeof(path));
+			snprintf(path,sizeof(path)-1,"%s%s",dir,name);
+			if(list_search_case_string(probes,path))continue;
+			if(fs_open(root,&nf,path,FILE_FLAG_READ)!=0)continue;
+			fs_get_path_alloc(nf,&url);
+			fs_close(&nf);
+			if(!url)continue;
+			tlog_debug("found %s at %s from part %d",ep->title,path,part);
+			list_obj_add_new_strdup(&probes,path);
+			memcpy(use,&def,sizeof(struct boot_config));
+			snprintf(use->desc,sizeof(use->desc)-1,"%s on #%d",ep->title,part);
+			snprintf(use->ident,sizeof(use->ident)-1,"prober-%d",*id);
+			strncpy(use->icon,ep->icon,sizeof(use->icon));
 			boot_create_config(use,NULL);
-			confd_set_string_base(use->key,"efi_file",locate);
+			confd_set_string_base(use->key,"efi_file",url);
 			if(ep->load_opt){
 				confd_set_string_base(use->key,"options",ep->load_opt);
 				confd_set_boolean_base(use->key,"options_widechar",ep->unicode);
 			}
+			free(url);
 			(*id)++,found=true;
 		}
 	}
 	done:
-	if(use)FreePool(use);
-	if(path16)FreePool(path16);
-	if(locate)FreePool(locate);
+	if(use)free(use);
 	list_free_all_def(probes);
 	return found;
 }
 
 void boot_scan_efi(){
+	fsh*nf;
 	int id=0;
-	UINTN cnt=0;
-	EFI_STATUS st;
-	CHAR16*dt=NULL;
-	CHAR8*xt=NULL,loc_name[255];
-	EFI_HANDLE*hands=NULL;
-	EFI_FILE_PROTOCOL*root=NULL;
-	EFI_DEVICE_PATH_PROTOCOL*dp=NULL;
-	EFI_SIMPLE_FILE_SYSTEM_PROTOCOL*fs=NULL;
+	fsvol_info**vols,*v;
 	if(!confd_get_boolean("boot.uefi_probe",true))return;
-	st=gBS->LocateHandleBuffer(
-		ByProtocol,
-		&gEfiSimpleFileSystemProtocolGuid,
-		NULL,&cnt,&hands
-	);
-	if(EFI_ERROR(st)){
-		tlog_error(
-			"locate Simple File System Protocol failed: %s",
-			efi_status_to_string(st)
-		);
-		return;
+	if(!(vols=fsvol_get_volumes()))return;
+	for(size_t i=0;(v=vols[i]);i++){
+		nf=NULL;
+		if(!fs_has_vol_feature(v->features,FSVOL_FILES))continue;
+		if(fsvol_open_volume(vols[i],&nf)!=0)continue;
+		boot_scan_part((int)i,&id,nf);
+		fs_close(&nf);
 	}
-	if(!(xt=AllocatePool(PATH_MAX)))return;
-	for(UINTN i=0;i<cnt;i++){
-		if(
-			!(dp=DevicePathFromHandle(hands[i]))||
-			!(dt=ConvertDevicePathToText(dp,FALSE,FALSE))
-		){
-			tlog_warn("get device path failed");
-			continue;
-		}
-		if(!locate_find_name(loc_name,sizeof(loc_name)))break;
-		st=gBS->HandleProtocol(
-			hands[i],
-			&gEfiSimpleFileSystemProtocolGuid,(VOID**)&fs);
-		if(EFI_ERROR(st)||!fs){
-			tlog_warn(
-				"locate Simple File System Protocol failed: %s",
-				efi_status_to_string(st)
-			);
-			continue;
-		}
-		st=fs->OpenVolume(fs,&root);
-		if(EFI_ERROR(st)||!root){
-			tlog_warn(
-				"open volume failed: %s",
-				efi_status_to_string(st)
-			);
-			continue;
-		}
-		ZeroMem(xt,PATH_MAX);
-		UnicodeStrToAsciiStrS(dt,xt,PATH_MAX);
-		tlog_debug("scan part #%d %s",(int)i,xt);
-		if(boot_scan_part((int)i,&id,loc_name,root))
-			locate_add_by_device_path(loc_name,false,dp);
-	}
-	FreePool(xt);
+	free(vols);
 	tlog_debug("%d items found",id);
 }
 #endif

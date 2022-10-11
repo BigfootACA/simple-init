@@ -8,6 +8,7 @@ add_definitions(
 	"-Wextra "
 	"-Wno-frame-address "
 	"-Wno-unused-parameter "
+	"-Wno-mismatched-dealloc "
 	"-fdiagnostics-color=always "
 	"-include ${CONFIG_H}"
 )

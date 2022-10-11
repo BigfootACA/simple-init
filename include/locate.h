@@ -9,62 +9,12 @@
 #ifndef _LOCATE_H
 #define _LOCATE_H
 #include<Uefi.h>
-#include<Protocol/BlockIo.h>
-#include<Protocol/DevicePath.h>
-#include<Protocol/PartitionInfo.h>
-#include<Protocol/SimpleFileSystem.h>
-#include<stdint.h>
-#include"boot.h"
-#include"aboot.h"
-
-typedef enum locate_type{
-	LOCATE_NONE,
-	LOCATE_FILE,
-	LOCATE_BLOCK,
-}locate_type;
-
-typedef struct locate_ret{
-	char tag[256];
-	char path[PATH_MAX-256-sizeof(void*)*7];
-	CHAR16 path16[PATH_MAX*sizeof(CHAR16)];
-	locate_type type;
-	EFI_HANDLE*hand;
-	union{
-		struct{
-			EFI_SIMPLE_FILE_SYSTEM_PROTOCOL*fs;
-			EFI_FILE_PROTOCOL*file;
-			EFI_FILE_PROTOCOL*root;
-		};
-		struct{
-			EFI_BLOCK_IO_PROTOCOL*block;
-		};
-	};
-	EFI_DEVICE_PATH_PROTOCOL*device;
-	EFI_PARTITION_INFO_PROTOCOL*part;
-}locate_ret;
-
-// src/locate/locate.c: parse path for get target block or file
-extern bool boot_locate(locate_ret*ret,const char*pattern);
-
-// src/locate/locate.c: quiet parse path for get target block or file
-extern bool boot_locate_quiet(locate_ret*ret,const char*file);
-
-// src/locate/locate.c: parse path for locate file path and create
-extern bool boot_locate_create_file(locate_ret*ret,const char*file);
-
-// src/locate/locate.c: parse path and read file content
-extern bool boot_locate_content(const char*file,void**data,size_t*size);
+#include<sys/types.h>
 
 // src/locate/locate.c: find a available locate name
 extern char*locate_find_name(char*buf,size_t len);
 
 // src/locate/locate.c: find a efi handle by locate tag name
 extern EFI_HANDLE*locate_get_handle_by_tag(const char*tag);
-
-// src/locate/locate.c: add new locate by device path
-bool locate_add_by_device_path(char*tag,bool save,EFI_DEVICE_PATH_PROTOCOL*dp);
-
-// src/locate/locate.c: auto add new locate by device path
-bool locate_auto_add_by_device_path(char*buf,size_t len,EFI_DEVICE_PATH_PROTOCOL*dp);
 
 #endif

@@ -127,6 +127,7 @@ static int close_zip_ctx(
 		list_obj_del_data(&opened_zip,ctx,NULL);
 		MUTEX_UNLOCK(lock);
 	}
+	list_free_all(ctx->opened,NULL);
 	MUTEX_UNLOCK(ctx->lock);
 	MUTEX_DESTROY(ctx->lock);
 	free(ctx);

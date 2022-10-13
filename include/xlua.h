@@ -12,6 +12,7 @@
 #include"list.h"
 #include"lualib.h"
 #include"lauxlib.h"
+#include"filesystem.h"
 
 #define LUA_DATA "RAW Data"
 #define CHECK_NULL(L,n,var) luaL_argcheck(L,var!=NULL,n,"not null")
@@ -51,8 +52,9 @@ extern lua_State*xlua_math();
 extern int xlua_eval_string(lua_State*L,const char*expr);
 extern int xlua_return_string(lua_State*L,const char*expr);
 extern void xlua_show_error(lua_State*L,char*tag);
-extern int xlua_loadfile(lua_State*L,const char*name);
+extern int xlua_loadfile(lua_State*L,fsh*f,const char*name);
 extern int xlua_run(lua_State*L,char*tag,const char*name);
+extern int xlua_run_by(lua_State*L,char*tag,fsh*f,const char*name);
 extern void xlua_run_confd(lua_State*L,char*tag,const char*key,...);
 extern int xlua_create_metatable(
 	lua_State*L,

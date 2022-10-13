@@ -105,11 +105,11 @@ int xlua_create_metatable(
 	return 1;
 }
 
-int xlua_loadfile(lua_State*L,const char*name){
+int xlua_loadfile(lua_State*L,fsh*f,const char*name){
 	int r=0;
 	size_t len=0;
 	void*buffer=NULL;
-	r=fs_read_whole_file(NULL,name,&buffer,&len);
+	r=fs_read_whole_file(f,name,&buffer,&len);
 	if(r!=0)return r;
 	if(!buffer)return EIO;
 	r=luaL_loadbufferx(L,buffer,len,name,NULL);
@@ -117,8 +117,8 @@ int xlua_loadfile(lua_State*L,const char*name){
 	return r;
 }
 
-int xlua_run(lua_State*L,char*tag,const char*name){
-	int r=xlua_loadfile(L,name);
+int xlua_run_by(lua_State*L,char*tag,fsh*f,const char*name){
+	int r=xlua_loadfile(L,f,name);
 	if(r!=LUA_OK){
 		log_error(tag,"load lua %s failed",name);
 		if(r!=-255)xlua_show_error(L,tag);
@@ -130,6 +130,10 @@ int xlua_run(lua_State*L,char*tag,const char*name){
 		xlua_show_error(L,tag);
 	}
 	return r;
+}
+
+int xlua_run(lua_State*L,char*tag,const char*name){
+	return xlua_run_by(L,tag,NULL,name);
 }
 
 static void xlua_run_conf(lua_State*L,char*tag,char*path){

@@ -192,6 +192,7 @@ extern void fsh_free(fsh**h);
 extern bool fsh_check(fsh*f);
 extern bool fsvol_check(const fsvol*drv);
 extern bool fsvol_info_check(const fsvol_info*info);
+extern bool fs_file_info_check(fs_file_info*f);
 extern void fs_close(fsh**f);
 extern int fs_flush(fsh*f);
 extern int fs_exists(fsh*f,const char*uri,bool*exists);

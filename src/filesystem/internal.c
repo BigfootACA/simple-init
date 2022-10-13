@@ -11,6 +11,16 @@
 
 static bool fsdrv_initialized=false;
 
+bool fs_file_info_check(fs_file_info*f){
+	if(!f)return false;
+	if(memcmp(
+		f->magic,FS_INFO_MAGIC,
+		sizeof(f->magic)
+	)!=0)return false;
+	if(!fsh_check(f->parent))return false;
+	return true;
+}
+
 bool fsdrv_check(const fsdrv*drv){
 	if(!drv)return false;
 	if(memcmp(

@@ -85,7 +85,7 @@ static void ok_cb(lv_event_t*e){
 		}
 		source=x+3;
 	}
-	if(!target){
+	if(target){
 		if((x=strstr(target,"://"))){
 			if(strncmp(target,"file",x-target)!=0){
 				msgbox_alert("Only file:// path supported");
@@ -97,8 +97,8 @@ static void ok_cb(lv_event_t*e){
 			msgbox_alert("Invalid mount target");
 			return;
 		}
+		mkdir(target,0755);
 	}
-	mkdir(target,0755);
 	if(!(cxt=mnt_new_context())){
 		telog_error("failed to init libmount context");
 		msgbox_alert("Init libmount context failed");
@@ -219,6 +219,7 @@ static void source_cb(lv_event_t*e){
 		reload_type(am);
 		focus_type(am,type);
 	}
+	free(type);
 }
 
 static void target_cb(lv_event_t*e){

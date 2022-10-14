@@ -181,7 +181,7 @@ int guiact_remove_last(bool focus){
 	sysbar_focus_input(NULL);
 	call_lost_focus_last();
 	call_unload_data_last();
-	if(l->page)lv_obj_del_async(l->page);
+	if(l->page)lv_obj_del(l->page);
 	bool reload=!l->reg->mask||!l->mask||l->data_changed;
 	bool fs=l->reg->full_screen;
 	guiact_remove_last_list();

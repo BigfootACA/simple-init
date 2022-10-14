@@ -60,6 +60,7 @@ static int filemgr_lost_focus(struct gui_activity*d __attribute__((unused))){
 }
 
 static void update_active(){
+	char*np;
 	struct filetab*old=active;
 	filetab_remove_group(active);
 	active=NULL;
@@ -67,7 +68,10 @@ static void update_active(){
 		if(!filetab_is_active(tabs[i]))continue;
 		active=tabs[i];
 		filetab_add_group(active,gui_grp);
-		lv_label_set_text(path,filetab_get_path(active));
+		if((np=filetab_get_path(active))){
+			lv_label_set_text(path,np);
+			free(np);
+		}
 		uint16_t id=filetab_get_id(active);
 		confd_set_integer("gui.filemgr.active",id);
 		if(old!=active)tlog_debug("switch to tab %d",id);

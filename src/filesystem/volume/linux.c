@@ -31,16 +31,26 @@ void fill_from_block_path(fsvol_private_info*info,char*block){
 	char*value;
 	struct fsvol_info_fs*fs=&info->info.fs;
 	struct fsvol_info_part*p=&info->info.part;
-	if((value=blkid_get_tag_value(NULL,"TYPE",block)))
+	if((value=blkid_get_tag_value(NULL,"TYPE",block))){
 		strncpy(fs->type,value,sizeof(fs->type)-1);
-	if((value=blkid_get_tag_value(NULL,"UUID",block)))
+		free(value);
+	}
+	if((value=blkid_get_tag_value(NULL,"UUID",block))){
 		strncpy(fs->uuid,value,sizeof(fs->uuid)-1);
-	if((value=blkid_get_tag_value(NULL,"PARTUUID",block)))
+		free(value);
+	}
+	if((value=blkid_get_tag_value(NULL,"PARTUUID",block))){
 		strncpy(p->uuid,value,sizeof(p->uuid)-1);
-	if((value=blkid_get_tag_value(NULL,"LABEL",block)))
+		free(value);
+	}
+	if((value=blkid_get_tag_value(NULL,"LABEL",block))){
 		strncpy(fs->label,value,sizeof(fs->label)-1);
-	if((value=blkid_get_tag_value(NULL,"PARTLABEL",block)))
+		free(value);
+	}
+	if((value=blkid_get_tag_value(NULL,"PARTLABEL",block))){
 		strncpy(p->label,value,sizeof(p->label)-1);
+		free(value);
+	}
 	int fd=open(block,O_RDONLY);
 	if(fd>=0){
 		ioctl(fd,BLKGETSIZE64,&p->size);

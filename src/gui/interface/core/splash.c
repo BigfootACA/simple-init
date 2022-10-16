@@ -13,11 +13,12 @@
 #endif
 #include"confd.h"
 #include"logger.h"
+#include"gui/tools.h"
 #include"gui/splash.h"
 #define TAG "splash"
 
 static bool initialized=false,exited=true;
-static lv_obj_t*img=NULL,*text=NULL;
+static lv_obj_t*img=NULL,*text=NULL,*scr=NULL;
 static lv_color_t real_color;
 
 #ifdef ENABLE_UEFI
@@ -107,10 +108,10 @@ static void load_splash(lv_obj_t*obj){
 int gui_splash_draw(){
 	if(!lv_is_initialized())return -1;
 	if(initialized||!exited)return 0;
-	lv_obj_t*scr=lv_scr_act();
-	lv_obj_clean(scr);
+	scr=lv_draw_wrapper(lv_scr_act(),NULL,NULL,gui_w,gui_h);
 	real_color=lv_obj_get_style_bg_color(scr,0);
 	lv_obj_set_style_bg_color(scr,lv_color_black(),0);
+	lv_obj_set_style_bg_opa(scr,LV_OPA_COVER,0);
 
 	img=lv_img_create(scr);
 	load_splash(img);
@@ -146,8 +147,7 @@ void gui_splash_set_text(bool out,const char*fmt,...){
 
 static void gui_splash_exit_done(void*d){
 	lv_async_cb_t after_exit=d;
-	lv_obj_clean(lv_scr_act());
-	lv_obj_set_style_bg_color(lv_scr_act(),real_color,0);
+	lv_obj_del_async(scr);
 	exited=true,img=NULL,text=NULL;
 	if(after_exit)lv_async_call(after_exit,NULL);
 }

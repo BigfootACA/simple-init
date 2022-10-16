@@ -226,6 +226,7 @@ static int fs_volume_open(
 	EFI_DEVICE_PATH_PROTOCOL*dp=NULL;
 	if(!info||!hand)RET(EINVAL);
 	if(!vol||info->vol!=vol)RET(EINVAL);
+	if(!fs_has_vol_feature(info->info.features,FSVOL_FILES))RET(ENOTSUP);
 	if(!(d=info->data)||!d->hand)RET(EBADF);
 	if(!(dp=DevicePathFromHandle(d->hand)))RET(ENOENT);
 	if(!(txt=ConvertDevicePathToText(dp,TRUE,TRUE)))DONE(ENOMEM);

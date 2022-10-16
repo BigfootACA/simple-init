@@ -17,6 +17,7 @@ static int fs_volume_update_core(fsvol_private_info*info,struct statfs*st){
 	struct mount_item**ms,*mnt;
 	char block[PATH_MAX];
 	if(!info)RET(EINVAL);
+	memset(block,0,sizeof(block));
 	if(st)fill_from_statfs(info,st);
 	if((ms=read_proc_mounts())){
 		for(size_t i=0;(mnt=ms[i]);i++){

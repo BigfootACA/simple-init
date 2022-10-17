@@ -222,7 +222,7 @@ void lv_obj_enable_style_refresh(bool en)
 
 lv_style_value_t lv_obj_get_style_prop(const lv_obj_t * obj, lv_part_t part, lv_style_prop_t prop)
 {
-    lv_style_value_t value_act;
+    lv_style_value_t value_act = {0};
     bool inheritable = lv_style_prop_has_flag(prop, LV_STYLE_PROP_INHERIT);
     lv_style_res_t found = LV_STYLE_RES_NOT_FOUND;
     while(obj) {
@@ -570,10 +570,10 @@ static lv_style_res_t get_prop_core(const lv_obj_t * obj, lv_part_t part, lv_sty
     int32_t weight = -1;
     lv_state_t state = obj->state;
     lv_state_t state_inv = ~state;
-    lv_style_value_t value_tmp;
+    lv_style_value_t value_tmp = {0};
     bool skip_trans = obj->skip_trans;
-    uint32_t i;
-    lv_style_res_t found;
+    uint32_t i = 0;
+    lv_style_res_t found = 0;
     for(i = 0; i < obj->style_cnt; i++) {
         _lv_obj_style_t * obj_style = &obj->styles[i];
         if(obj_style->is_trans == false) break;
@@ -723,7 +723,7 @@ static void trans_anim_cb(void * _tr, int32_t v)
     for(i = 0; i < obj->style_cnt; i++) {
         if(obj->styles[i].is_trans == 0 || obj->styles[i].selector != tr->selector) continue;
 
-        lv_style_value_t value_final;
+        lv_style_value_t value_final = {0};
         switch(tr->prop) {
 
             case LV_STYLE_BORDER_SIDE:
@@ -761,7 +761,7 @@ static void trans_anim_cb(void * _tr, int32_t v)
                 break;
         }
 
-        lv_style_value_t old_value;
+        lv_style_value_t old_value = {0};
         bool refr = true;
         if(lv_style_get_prop(obj->styles[i].style, tr->prop, &old_value)) {
             if(value_final.ptr == old_value.ptr && value_final.color.full == old_value.color.full &&

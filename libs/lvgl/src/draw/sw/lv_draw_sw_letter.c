@@ -95,7 +95,7 @@ const uint8_t _lv_bpp8_opa_table[256] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 1
 void lv_draw_sw_letter(lv_draw_ctx_t * draw_ctx, const lv_draw_label_dsc_t * dsc,  const lv_point_t * pos_p,
                        uint32_t letter)
 {
-    lv_font_glyph_dsc_t g;
+    lv_font_glyph_dsc_t g = {NULL, 0, 0, 0, 0, 0, 0, 0};
     bool g_ret = lv_font_get_glyph_dsc(dsc->font, &g, letter, '\0');
     if(g_ret == false) {
         /*Add warning if the dsc is not found

@@ -312,6 +312,10 @@ void * lv_mem_buf_get(uint32_t size)
             LV_ASSERT_MSG(buf != NULL, "Out of memory, can't allocate a new buffer (increase your LV_MEM_SIZE/heap size)");
             if(buf == NULL) return NULL;
 
+            uint16_t old = LV_GC_ROOT(lv_mem_buf[i]).size;
+            if(size > old) {
+                lv_memset_00(buf + old, size - old);
+            }
             LV_GC_ROOT(lv_mem_buf[i]).used = 1;
             LV_GC_ROOT(lv_mem_buf[i]).size = size;
             LV_GC_ROOT(lv_mem_buf[i]).p    = buf;

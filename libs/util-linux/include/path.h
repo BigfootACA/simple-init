@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include "defines.h"
 
 struct path_cxt {
 	int	dir_fd;

@@ -7,6 +7,7 @@
 #include <string.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include "defines.h"
 
 extern int mkstemp_cloexec(char *template);
 

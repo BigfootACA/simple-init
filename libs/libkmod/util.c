@@ -30,6 +30,17 @@
 #include <unistd.h>
 #include "util.h"
 
+#ifndef strndupa
+/* Return an alloca'd copy of at most N bytes of string.  */
+# define strndupa(s, n)                                                       \
+    ({                                                                       \
+      const char *__old = (s);                                                \
+      size_t __len = strnlen (__old, (n));                                    \
+      char *__new = (char *) __builtin_alloca (__len + 1);                    \
+      __new[__len] = '\0';                                                    \
+      (char *) memcpy (__new, __old, __len);                                  \
+    })
+#endif
 #define USEC_PER_SEC  1000000ULL
 #define NSEC_PER_USEC 1000ULL
 

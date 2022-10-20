@@ -119,43 +119,11 @@ target_sources(zip PRIVATE
   zip_random_unix.c
   )
 
-if(HAVE_LIBBZ2)
-  target_sources(zip PRIVATE zip_algorithm_bzip2.c)
-  target_link_libraries(zip PRIVATE BZip2::BZip2)
-endif()
-
-if(HAVE_LIBLZMA)
-  target_sources(zip PRIVATE zip_algorithm_xz.c)
-  target_link_libraries(zip PRIVATE LibLZMA::LibLZMA)
-endif()
-
-if(HAVE_LIBZSTD)
-  target_sources(zip PRIVATE zip_algorithm_zstd.c)
-  target_link_libraries(zip PRIVATE Zstd::Zstd)
-endif()
-
-if(HAVE_COMMONCRYPTO)
-  target_sources(zip PRIVATE zip_crypto_commoncrypto.c)
-elseif(HAVE_GNUTLS)
-  target_sources(zip PRIVATE zip_crypto_gnutls.c)
-  target_link_libraries(zip PRIVATE GnuTLS::GnuTLS Nettle::Nettle)
-elseif(HAVE_OPENSSL)
-  target_sources(zip PRIVATE zip_crypto_openssl.c)
-  target_link_libraries(zip PRIVATE OpenSSL::Crypto)
-elseif(HAVE_MBEDTLS)
-  target_sources(zip PRIVATE zip_crypto_mbedtls.c)
-  target_link_libraries(zip PRIVATE MbedTLS::MbedTLS)
-endif()
-
-if(HAVE_CRYPTO)
-  target_sources(zip PRIVATE zip_winzip_aes.c zip_source_winzip_aes_decode.c zip_source_winzip_aes_encode.c)
-endif()
-
 if(SHARED_LIB_VERSIONNING)
   set_target_properties(zip PROPERTIES VERSION 5.5 SOVERSION 5)
 endif()
 
-target_link_libraries(zip PRIVATE ZLIB::ZLIB)
+target_link_libraries(zip PRIVATE z)
 target_include_directories(zip
   PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/lib>

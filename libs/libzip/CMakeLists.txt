@@ -9,15 +9,6 @@ project(libzip
   VERSION 1.9.2
   LANGUAGES C)
 
-option(ENABLE_COMMONCRYPTO "Enable use of CommonCrypto" ON)
-option(ENABLE_GNUTLS "Enable use of GnuTLS" ON)
-option(ENABLE_MBEDTLS "Enable use of mbed TLS" ON)
-option(ENABLE_OPENSSL "Enable use of OpenSSL" ON)
-
-option(ENABLE_BZIP2 "Enable use of BZip2" ON)
-option(ENABLE_LZMA "Enable use of LZMA" ON)
-option(ENABLE_ZSTD "Enable use of Zstandard" ON)
-
 include(CheckFunctionExists)
 include(CheckIncludeFiles)
 include(CheckLibraryExists)
@@ -30,19 +21,6 @@ include(TestBigEndian)
 include(GNUInstallDirs)
 
 unset(CMAKE_REQUIRED_LIBRARIES)
-if(ENABLE_COMMONCRYPTO)
-  check_include_files(CommonCrypto/CommonCrypto.h COMMONCRYPTO_FOUND)
-endif()
-if(ENABLE_GNUTLS)
-  find_package(Nettle 3.0)
-  find_package(GnuTLS)
-endif()
-if(ENABLE_MBEDTLS)
-  find_package(MbedTLS 1.0)
-endif()
-if(ENABLE_OPENSSL)
-  find_package(OpenSSL)
-endif()
 
 set(ZIP_STATIC TRUE)
 
@@ -130,53 +108,6 @@ int foo(char * _Nullable bar);
 int main(int argc, char *argv[]) { }" HAVE_NULLABLE)
 
 test_big_endian(WORDS_BIGENDIAN)
-
-find_package(ZLIB 1.1.2 REQUIRED)
-
-if(ENABLE_BZIP2)
-  find_package(BZip2)
-  if(BZIP2_FOUND)
-    set(HAVE_LIBBZ2 1)
-  else()
-    message(WARNING "-- bzip2 library not found; bzip2 support disabled")
-  endif(BZIP2_FOUND)
-endif(ENABLE_BZIP2)
-
-if(ENABLE_LZMA)
-  find_package(LibLZMA 5.2)
-  if(LIBLZMA_FOUND)
-    set(HAVE_LIBLZMA 1)
-  else()
-    message(WARNING "-- lzma library not found; lzma/xz support disabled")
-  endif(LIBLZMA_FOUND)
-endif(ENABLE_LZMA)
-
-if(ENABLE_ZSTD)
-  find_package(Zstd 1.3.6)
-  if(Zstd_FOUND)
-    set(HAVE_LIBZSTD 1)
-  else()
-    message(WARNING "-- zstd library not found; zstandard support disabled")
-  endif(Zstd_FOUND)
-endif(ENABLE_ZSTD)
-
-if (COMMONCRYPTO_FOUND)
-  set(HAVE_CRYPTO 1)
-  set(HAVE_COMMONCRYPTO 1)
-elseif (GNUTLS_FOUND AND NETTLE_FOUND)
-  set(HAVE_CRYPTO 1)
-  set(HAVE_GNUTLS 1)
-elseif (OPENSSL_FOUND)
-  set(HAVE_CRYPTO 1)
-  set(HAVE_OPENSSL 1)
-elseif (MBEDTLS_FOUND)
-  set(HAVE_CRYPTO 1)
-  set(HAVE_MBEDTLS 1)
-endif()
-
-if ((ENABLE_COMMONCRYPTO OR ENABLE_GNUTLS OR ENABLE_MBEDTLS OR ENABLE_OPENSSL) AND NOT HAVE_CRYPTO)
-  message(WARNING "-- neither Common Crypto, GnuTLS, mbed TLS, nor OpenSSL Cryptography found; AES support disabled")
-endif()
 
 # rpath handling: use rpath in installed binaries
 if(NOT CMAKE_SYSTEM_NAME MATCHES Linux)

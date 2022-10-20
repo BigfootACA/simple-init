@@ -45,7 +45,7 @@ extern "C" {
 #ifdef ENABLE_UEFI
 #include "../uefi/zipconf.h"
 #else
-#include <zipconf.h>
+#include "zipconf.h"
 #endif
 
 #ifndef ZIP_EXTERN

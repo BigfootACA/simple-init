@@ -11,6 +11,9 @@
 #include <inttypes.h>
 
 #include "superblocks.h"
+#ifndef loff_t
+#define loff_t off_t
+#endif
 
 #define VDEV_LABEL_UBERBLOCK	(128 * 1024ULL)
 #define VDEV_LABEL_NVPAIR	( 16 * 1024ULL)

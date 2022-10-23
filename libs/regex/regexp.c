@@ -653,7 +653,7 @@ static Reinst *emit(Reprog *prog, int opcode)
 
 static void compile(Reprog *prog, Renode *node)
 {
-	Reinst *inst, *split, *jump;
+	Reinst *inst = NULL, *split = NULL, *jump = NULL;
 	unsigned int i;
 
 	if (!node)

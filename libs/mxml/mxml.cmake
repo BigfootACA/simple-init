@@ -28,6 +28,7 @@ set(MXML_SOURCES
 add_library(mxml ${MXML_SOURCES} ${MXML_HEADERS})
 target_include_directories(mxml PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/mxml)
 target_compile_options(mxml PRIVATE
+	-Wno-use-after-free
 	-Wno-sign-compare
 	-Wno-implicit-fallthrough
 )

@@ -7,3 +7,4 @@ add_library(md STATIC
 	libs/libmd/src/sha2.c
 )
 include_directories(libs/libmd/include)
+target_compile_options(md PRIVATE -Wno-stringop-overread)

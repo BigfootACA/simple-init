@@ -28,6 +28,7 @@
 #include"xlua.h"
 #include"gui/lua.h"
 #endif
+#include"str.h"
 #include"gui.h"
 #include"confd.h"
 #include"system.h"
@@ -107,6 +108,9 @@ static int font_sizes[]={10,16,24,32,48,64,72,96};
 // run on exit
 static runnable_t*run_exit=NULL;
 
+void*lv_mem_pool=NULL;
+size_t lv_mem_pool_size=0;
+
 void gui_do_quit(){
 	#ifdef ENABLE_LUA
 	if(gui_global_lua)
@@ -118,6 +122,14 @@ void gui_do_quit(){
 	#endif
 	image_cache_clean();
 	guidrv_exit();
+	#if !LV_MEM_CUSTOM
+	lv_deinit();
+	if(lv_mem_pool){
+		free(lv_mem_pool);
+		lv_mem_pool_size=0;
+		lv_mem_pool=NULL;
+	}
+	#endif
 	#ifdef ENABLE_LUA
 	if(gui_global_lua)lua_close(gui_global_lua);
 	gui_global_lua=NULL;
@@ -157,7 +169,25 @@ static void lvgl_logger(const char*buf){
 
 int gui_pre_init(){
 	// initialize lvgl
-	if(!lv_is_initialized())lv_init();
+	if(!lv_is_initialized()){
+		#if !LV_MEM_CUSTOM
+		char buf[64];
+		if(lv_mem_pool_size<=0)lv_mem_pool_size=16*1024*1024;
+		if(lv_mem_pool)free(lv_mem_pool);
+		if(!(lv_mem_pool=malloc(lv_mem_pool_size))){
+			telog_emerg("alloc mem pool failed");
+			abort();
+		}
+		tlog_debug(
+			"allocate %zu bytes (%s) memory pool at %p",
+			lv_mem_pool_size,
+			make_readable_str_buf(buf,sizeof(buf),lv_mem_pool_size,1,0),
+			lv_mem_pool
+		);
+		memset(lv_mem_pool,0,lv_mem_pool_size);
+		#endif
+		lv_init();
+	}
 
 	#ifdef ENABLE_LUA
 	if(!gui_global_lua)

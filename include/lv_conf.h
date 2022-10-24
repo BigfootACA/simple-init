@@ -13,6 +13,8 @@
 #include<stdbool.h>
 extern int gui_dpi;
 extern bool gui_dark;
+extern void*lv_mem_pool;
+extern size_t lv_mem_pool_size;
 extern uint32_t custom_tick_get(void);
 #define LV_COLOR_DEPTH                      32
 #define LV_COLOR_16_SWAP                    0
@@ -31,12 +33,15 @@ extern uint32_t custom_tick_get(void);
 #define LV_DISP_SMALL_LIMIT                 30
 #define LV_DISP_MEDIUM_LIMIT                50
 #define LV_DISP_LARGE_LIMIT                 70
-#define LV_MEM_CUSTOM                       1
+#define LV_MEM_CUSTOM                       0
+#define LV_MEM_SIZE                         lv_mem_pool_size
+#define LV_MEM_ADR                          lv_mem_pool
 #define LV_MEM_CUSTOM_INCLUDE               <stdlib.h>
 #define LV_MEM_CUSTOM_ALLOC                 malloc
 #define LV_MEM_CUSTOM_FREE                  free
+#define LV_USE_MEM_MONITOR                  0
 #define LV_ENABLE_GC                        0
-#define LV_INDEV_DEF_READ_PERIOD            30
+#define LV_INDEV_DEF_READ_PERIOD            15
 #define LV_INDEV_DEF_DRAG_LIMIT             10
 #define LV_INDEV_DEF_DRAG_THROW             10
 #define LV_INDEV_DEF_LONG_PRESS_TIME        400
@@ -67,6 +72,7 @@ extern uint32_t custom_tick_get(void);
 #define LV_ATTRIBUTE_FLUSH_READY
 #define LV_ATTRIBUTE_MEM_ALIGN
 #define LV_ATTRIBUTE_LARGE_CONST
+#define LV_ATTRIBUTE_LARGE_RAM_ARRAY
 #define LV_ATTRIBUTE_FAST_MEM
 #define LV_EXPORT_CONST_INT(int_value)      struct _silence_gcc_warning
 #define LV_TICK_CUSTOM                      1
@@ -80,7 +86,14 @@ extern uint32_t custom_tick_get(void);
 #define LV_USE_LOG                          1
 #define LV_LOG_LEVEL                        LV_LOG_LEVEL_WARN
 #define LV_LOG_PRINTF                       0
-#define LV_USE_DEBUG                        1
+#define LV_LOG_TRACE_MEM                    0
+#define LV_LOG_TRACE_TIMER                  1
+#define LV_LOG_TRACE_INDEV                  1
+#define LV_LOG_TRACE_DISP_REFR              1
+#define LV_LOG_TRACE_EVENT                  0
+#define LV_LOG_TRACE_OBJ_CREATE             0
+#define LV_LOG_TRACE_LAYOUT                 1
+#define LV_LOG_TRACE_ANIM                   1
 #define LV_FONT_MONTSERRAT_12               0
 #define LV_FONT_MONTSERRAT_14               0
 #define LV_FONT_MONTSERRAT_16               0

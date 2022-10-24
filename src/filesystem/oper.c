@@ -195,15 +195,17 @@ int fs_open_uri(fsh**nf,url*uri,fs_file_flag flag){
 		if(!*nf)EXRET(ENOMEM);
 	}else if(nf)RET(EINVAL);
 	r=use->open(drv,nf?*nf:NULL,uri,flag);
-	if(r!=0&&r!=ENOENT){
-		tlog_warn(
-			"open from driver %p (%s) failed: %s",
-			drv,drv->protocol,strerror(r)
-		);
-		if(fs_debug){
-			d=url_dump_alloc(uri);
-			logger_print(LEVEL_WARNING,TAG,d);
-			free(d);
+	if(r!=0){
+		if(r!=ENOENT){
+			tlog_warn(
+				"open from driver %p (%s) failed: %s",
+				drv,drv->protocol,strerror(r)
+			);
+			if(fs_debug){
+				d=url_dump_alloc(uri);
+				logger_print(LEVEL_WARNING,TAG,d);
+				free(d);
+			}
 		}
 		if(nf)fsh_free(nf);
 	}

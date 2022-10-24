@@ -322,24 +322,6 @@ static void gui_enter_sleep(){
 	#endif
 }
 #else
-static EFI_EVENT e_timer,e_loop;
-
-static VOID EFIAPI efi_loop(IN EFI_EVENT e,IN VOID*ctx){}
-
-static VOID EFIAPI efi_timer(IN EFI_EVENT e,IN VOID*ctx){
-	tick_ms+=10;
-	MUTEX_LOCK(gui_lock);
-	lv_task_handler();
-	guidrv_taskhandler();
-	MUTEX_UNLOCK(gui_lock);
-	if(!gui_run){
-		tlog_notice("exiting");
-		gBS->CloseEvent(e_timer);
-		gBS->CloseEvent(e_loop);
-		e_timer=NULL;
-		e_loop=NULL;
-	}
-}
 
 extern bool conf_store_changed;
 static void conf_save_cb(lv_timer_t*t __attribute__((unused))){
@@ -350,6 +332,9 @@ static void conf_save_cb(lv_timer_t*t __attribute__((unused))){
 	conf_store_changed=false;
 }
 
+static void gui_enter_sleep(){
+	lv_disp_trig_activity(NULL);
+}
 #endif
 
 uint32_t custom_tick_get(void){
@@ -495,29 +480,10 @@ int gui_main(){
 	if(i>0)lv_timer_create(image_cache_cb,i,NULL);
 	MUTEX_INIT(gui_lock);
 	#ifdef ENABLE_UEFI
-	EFI_STATUS st;
 	REPORT_STATUS_CODE(EFI_PROGRESS_CODE,(EFI_SOFTWARE_DXE_BS_DRIVER|EFI_SW_PC_INPUT_WAIT));
 
 	// kill the watchdog
 	gBS->SetWatchdogTimer(0,0,0,NULL);
-
-	st=gBS->CreateEvent(
-		EVT_NOTIFY_SIGNAL|EVT_TIMER,TPL_CALLBACK,
-		efi_timer,NULL,&e_timer
-	);
-	if(EFI_ERROR(st))return trlog_error(-1,"create timer event failed");
-
-	st=gBS->CreateEvent(
-		EVT_NOTIFY_WAIT,TPL_NOTIFY,
-		efi_loop,NULL,&e_loop
-	);
-	if(EFI_ERROR(st))return trlog_error(-1,"create loop event failed");
-
-	st=gBS->SetTimer(
-		e_timer,TimerPeriodic,
-		EFI_TIMER_PERIOD_MILLISECONDS(10)
-	);
-	if(EFI_ERROR(st))return trlog_error(-1,"create timer failed");
 
 	lv_timer_create(
 		conf_save_cb,
@@ -525,17 +491,10 @@ int gui_main(){
 		NULL
 	);
 
-	#ifdef ENABLE_LUA
-	if(gui_global_lua)
-		xlua_run_confd(gui_global_lua,TAG,"lua.on_gui_pre_main");
-	#endif
-	UINTN wi;
-	if(e_loop)do{st=gBS->WaitForEvent(1,&e_loop,&wi);}
-	while(gui_run&&e_loop&&!EFI_ERROR(st));
-
 	#else
 	sem_init(&gui_wait,0,0);
 	handle_signals((int[]){SIGINT,SIGQUIT,SIGTERM},3,gui_quit_handler);
+	#endif
 	bool cansleep=guidrv_can_sleep();
 	if(!cansleep)tlog_notice("gui driver disabled sleep");
 	if(!confd_get_boolean("gui.can_sleep",true)){
@@ -555,9 +514,17 @@ int gui_main(){
 			guidrv_taskhandler();
 			MUTEX_UNLOCK(gui_lock);
 		}else gui_enter_sleep();
-		usleep(time*1000);
+		if(time>0){
+			#ifdef ENABLE_UEFI
+			tick_ms+=time;
+			gBS->Stall(EFI_TIMER_PERIOD_MILLISECONDS(time));
+			#else
+			usleep(time*1000);
+			#endif
+		}
 	}
-	#endif
+	tlog_notice("exiting");
+
 	gui_do_quit();
 	#ifdef ENABLE_UEFI
 	conf_save_cb(NULL);

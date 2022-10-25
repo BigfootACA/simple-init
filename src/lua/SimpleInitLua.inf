@@ -88,6 +88,10 @@
   locate.c
   abootimg.c
   url.c
+  filesystem/fsh.c
+  filesystem/fs_info.c
+  filesystem/fs.c
+  filesystem/string.c
   uefi/uefi.c
   uefi/system_table.c
   uefi/guids.c

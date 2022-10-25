@@ -14,6 +14,7 @@
 #include"lauxlib.h"
 #include"filesystem.h"
 
+#define LUA_URL "URL"
 #define LUA_DATA "RAW Data"
 #define CHECK_NULL(L,n,var) luaL_argcheck(L,var!=NULL,n,"not null")
 #define OPT_UDATA(L,n,var,type,name)\
@@ -21,6 +22,7 @@
 	if(!lua_isnoneornil(L,n)){\
 		var=luaL_checkudata(L,n,name);\
 	}
+struct lua_url{url*u;};
 struct lua_data{
 	bool allocated;
 	#ifdef ENABLE_UEFI
@@ -34,6 +36,7 @@ struct lua_data{
 extern const luaL_Reg lua_core_libs[];
 extern const luaL_Reg simple_init_lua_libs[];
 extern const luaL_Reg simple_init_lua_regs[];
+LUAMOD_API int luaopen_url(lua_State*L);
 LUAMOD_API int luaopen_data(lua_State*L);
 LUAMOD_API int luaopen_conf(lua_State*L);
 LUAMOD_API int luaopen_init(lua_State*L);
@@ -63,6 +66,8 @@ extern int xlua_create_metatable(
 	lua_CFunction tostring,
 	lua_CFunction gc
 );
+extern void lua_url_to_lua(lua_State*L,url*u);
+extern void lua_url_dup_to_lua(lua_State*L,url*u);
 extern void lua_arg_get_data(lua_State*L,int idx,bool nil,void**data,size_t*size);
 extern void lua_data_to_lua(lua_State*L,bool allocated,void*data,size_t size);
 extern void lua_data_dup_to_lua(lua_State*L,void*data,size_t size);

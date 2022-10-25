@@ -8,4 +8,5 @@ add_library(init_lua STATIC
 	nanosvg.c
 	abootimg.c
 	init.c
+	url.c
 )

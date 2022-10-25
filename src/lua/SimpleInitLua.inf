@@ -87,6 +87,7 @@
   data.c
   locate.c
   abootimg.c
+  url.c
   uefi/uefi.c
   uefi/system_table.c
   uefi/guids.c

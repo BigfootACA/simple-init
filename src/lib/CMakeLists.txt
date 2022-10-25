@@ -27,4 +27,5 @@ add_library(init_lib STATIC
 	websocket.c
 	http.c
 	url.c
+	recovery.c
 )

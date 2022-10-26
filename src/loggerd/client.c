@@ -27,6 +27,7 @@
 #include"locate.h"
 #include"compatible.h"
 #else
+#include"recovery.h"
 #include<sys/un.h>
 #include<sys/socket.h>
 #endif
@@ -264,7 +265,10 @@ int logger_write(struct log_item*log){
 		else log->content[s]=0,s--;
 	#ifndef ENABLE_UEFI
 	static size_t xs=sizeof(struct log_msg);
-	if(logfd<0)return fprintf(stderr,"%s: %s\n",log->tag,log->content);
+	if(logfd<0){
+		if(recovery_out_fd>=0)recovery_ui_printf("%s: %s",log->tag,log->content);
+		return fprintf(stderr,"%s: %s\n",log->tag,log->content);
+	}
 	struct log_msg msg;
 	logger_internal_init_msg(&msg,LOG_ADD);
 	memcpy(&msg.data.log,log,sizeof(struct log_item));

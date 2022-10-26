@@ -12,13 +12,13 @@
 
 #define ARR(...)((char*[]){__VA_ARGS__,NULL})
 #define EFI ".efi"
-static char*ms_dir[]=ARR("\\EFI\\Microsoft\\Boot\\");
-static char*mac_dir[]=ARR("\\System\\Library\\CoreServices\\");
+static char*ms_dir[]=ARR("/EFI/Microsoft/Boot/");
+static char*mac_dir[]=ARR("/System/Library/CoreServices/");
 static char*ms_boot[]=ARR("bootmgfw"EFI);
 static char*mac_boot[]=ARR("boot"EFI);
-static char*mac_diag[]=ARR(".diagnostics\\diags"EFI);
-#define BOOT_DIR(...) ARR("\\","\\EFI\\","\\EFI\\BOOT\\",__VA_ARGS__)
-#define CUST_DIR(_cust) BOOT_DIR(("\\EFI\\"_cust"\\"))
+static char*mac_diag[]=ARR(".diagnostics/diags"EFI);
+#define BOOT_DIR(...) ARR("/","/EFI/","/EFI/BOOT/",__VA_ARGS__)
+#define CUST_DIR(_cust) BOOT_DIR(("/EFI/"_cust"/"))
 #define ARCH_FILE(_name,_in,_arch) (_name _in _arch EFI)
 #define ARCH1_FILE(_name,_arch) ARCH_FILE(_name,"",_arch)
 #define ARCH2_FILE(_name,_arch) ARCH_FILE(_name,"-",_arch)
@@ -57,20 +57,20 @@ static char*mac_diag[]=ARR(".diagnostics\\diags"EFI);
 #define OPT_CUST_ALL3(_icon,_title,_cust,_name) _OPT_CUST_ALL(_icon,_title,_cust,_name,ARCH3_FILE)
 #define OPT_CUST_ALL(_icon,_title,_cust,_name)  OPT_CUST_ALL1(_icon,_title,_cust,_name),OPT_CUST_ALL2(_icon,_title,_cust,_name),OPT_CUST_ALL3(_icon,_title,_cust,_name)
 #define OPT_DISTRO(_icon,_title,_name)\
-	OPT(CPU_ANY,         _icon,_title,ARR("\\EFI\\"_name"\\"), ARR(ARCH1_FILE("grub",""),        ARCH1_FILE("elilo",""))),\
-	OPT(CPU_IA32,        _icon,_title,ARR("\\EFI\\"_name"\\"), ARR(ARCH1_FILE("grub","ia32"),    ARCH1_FILE("elilo","ia32"))),\
-	OPT(CPU_IA64,        _icon,_title,ARR("\\EFI\\"_name"\\"), ARR(ARCH1_FILE("grub","ia64"),    ARCH1_FILE("elilo","ia64"))),\
-	OPT(CPU_X64,         _icon,_title,ARR("\\EFI\\"_name"\\"), ARR(ARCH1_FILE("grub","x64"),     ARCH1_FILE("elilo","x64"))),\
-	OPT(CPU_ARM,         _icon,_title,ARR("\\EFI\\"_name"\\"), ARR(ARCH1_FILE("grub","arm"),     ARCH1_FILE("elilo","arm"))),\
-	OPT(CPU_AARCH64,     _icon,_title,ARR("\\EFI\\"_name"\\"), ARR(ARCH1_FILE("grub","aa64"),    ARCH1_FILE("elilo","aa64"))),\
-	OPT(CPU_RISCV32,     _icon,_title,ARR("\\EFI\\"_name"\\"), ARR(ARCH1_FILE("grub","riscv32"), ARCH1_FILE("elilo","riscv32"))),\
-	OPT(CPU_RISCV64,     _icon,_title,ARR("\\EFI\\"_name"\\"), ARR(ARCH1_FILE("grub","riscv64"), ARCH1_FILE("elilo","riscv64")))
-#define LOGO(n) "distributor-logo-"n".svg"
+	OPT(CPU_ANY,         _icon,_title,ARR("/EFI/"_name"/"), ARR(ARCH1_FILE("grub",""),        ARCH1_FILE("elilo",""))),\
+	OPT(CPU_IA32,        _icon,_title,ARR("/EFI/"_name"/"), ARR(ARCH1_FILE("grub","ia32"),    ARCH1_FILE("elilo","ia32"))),\
+	OPT(CPU_IA64,        _icon,_title,ARR("/EFI/"_name"/"), ARR(ARCH1_FILE("grub","ia64"),    ARCH1_FILE("elilo","ia64"))),\
+	OPT(CPU_X64,         _icon,_title,ARR("/EFI/"_name"/"), ARR(ARCH1_FILE("grub","x64"),     ARCH1_FILE("elilo","x64"))),\
+	OPT(CPU_ARM,         _icon,_title,ARR("/EFI/"_name"/"), ARR(ARCH1_FILE("grub","arm"),     ARCH1_FILE("elilo","arm"))),\
+	OPT(CPU_AARCH64,     _icon,_title,ARR("/EFI/"_name"/"), ARR(ARCH1_FILE("grub","aa64"),    ARCH1_FILE("elilo","aa64"))),\
+	OPT(CPU_RISCV32,     _icon,_title,ARR("/EFI/"_name"/"), ARR(ARCH1_FILE("grub","riscv32"), ARCH1_FILE("elilo","riscv32"))),\
+	OPT(CPU_RISCV64,     _icon,_title,ARR("/EFI/"_name"/"), ARR(ARCH1_FILE("grub","riscv64"), ARCH1_FILE("elilo","riscv64")))
+#define LOGO(n) "@distributor-logo-"n
 #define LOAD_OPT(_str,_unicode).load_opt=_str,.unicode=_unicode
 #define UTF8_OPT(_str) LOAD_OPT(_str,false)
 #define UTF16_OPT(_str) LOAD_OPT(_str,true)
 struct efi_path boot_efi_paths[]={
-	OPT_ANY(LOGO("windows"), "Windows Boot Manager", ms_dir, ms_boot),
+	OPT_ANY(LOGO("windows"), "Windows Boot Manager",  ms_dir,  ms_boot),
 
 	OPT_ANY(LOGO("mac"), "Mac OS",                    mac_dir, mac_boot),
 	OPT_X64(LOGO("mac"), "Mac OS with i386 kernel",   mac_dir, mac_boot, UTF16_OPT("arch=i386")),
@@ -85,11 +85,11 @@ struct efi_path boot_efi_paths[]={
 	OPT_CUST(CPU_IA32,"syslinux.svg",     "Syslinux",              "syslinux", ARCH1_FILE("syslinux","ia32")),
 	OPT_CUST(CPU_X64, "syslinux.svg",     "Syslinux",              "syslinux", ARCH1_FILE("syslinux","x64")),
 	OPT_CUST(CPU_X64, "fwupd.svg",        "Linux Firmware Update", "fwupd",    ARCH1_FILE("fwupd","x64")),
-	OPT_CUST_ALL( "pxe.svg",              "IPXE",                  "tools",    "ipxe"),
-	OPT_CUST_ALL( "terminal.svg",         "UEFI Shell",            "tools",    "shell"),
-	OPT_CUST_ALL( "memtest.svg",          "MemTest",               "tools",    "memtest"),
-	OPT_CUST_ALL( "memtest.svg",          "MemTest86",             "tools",    "memtest86"),
-	OPT_CUST_ALL( "limine.svg",           "Limine",                "limine",   "limine"),
+	OPT_CUST(CPU_ANY, "pxe.svg",          "IPXE",                  "tools",    "ipxe"EFI),
+	OPT_CUST(CPU_ANY, "terminal.svg",     "UEFI Shell",            "tools",    "shell"EFI),
+	OPT_CUST(CPU_ANY, "memtest.svg",      "MemTest",               "tools",    "memtest"EFI),
+	OPT_CUST(CPU_ANY, "memtest.svg",      "MemTest86",             "tools",    "memtest86"EFI),
+	OPT_CUST(CPU_ANY, "limine.svg",       "Limine",                "limine",   "limine"EFI),
 	OPT_CUST_ALL( "linux.svg",            "Linux",                 "Linux",    "linux"),
 	OPT_CUST_ALL3("gptsync.svg",          "GPT Sync",              "tools",    "gptsync"),
 	OPT_CUST_ALL3("gdisk.svg",            "GDisk",                 "tools",    "gdisk"),
@@ -109,7 +109,6 @@ struct efi_path boot_efi_paths[]={
 	OPT_DISTRO(LOGO("centos"),     "CentOS",     "centos"),
 	OPT_DISTRO(LOGO("fedora"),     "Fedora",     "fedora"),
 	OPT_DISTRO("proxmox.png",      "Proxmox VE", "proxmox"),
-	OPT_ANY(LOGO("freebsd"),       "FreeBSD",    ARR("\\"), ARR("loader"EFI)),
 
 	OPT_CUST_ALL1("uefi.svg","UEFI OS","","boot"),
 

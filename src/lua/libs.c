@@ -46,6 +46,7 @@ const luaL_Reg simple_init_lua_libs[]={
 	{"locate",   luaopen_locate},
 	#else
 	{"init",     luaopen_init},
+	{"recovery", luaopen_recovery},
 	#endif
 	{NULL,NULL}
 };

@@ -54,6 +54,7 @@ LUAMOD_API int luaopen_logger(lua_State*L);
 LUAMOD_API int luaopen_sysbar(lua_State*L);
 LUAMOD_API int luaopen_nanosvg(lua_State*L);
 LUAMOD_API int luaopen_abootimg(lua_State*L);
+LUAMOD_API int luaopen_recovery(lua_State*L);
 LUAMOD_API int luaopen_activity(lua_State*L);
 LUAMOD_API int luaopen_xml_render(lua_State*L);
 LUAMOD_API int lua_feature(lua_State*L);

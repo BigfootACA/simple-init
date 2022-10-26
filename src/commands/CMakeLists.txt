@@ -39,4 +39,5 @@ add_library(init_commands STATIC
 	simple-init.c
 	abootimg.c
 	dumpinput.c
+	update-binary.c
 )

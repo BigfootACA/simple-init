@@ -62,6 +62,7 @@ DECLARE_MAIN(halt);
 DECLARE_MAIN(poweroff);
 DECLARE_MAIN(write);
 DECLARE_MAIN(simple_init);
+DECLARE_MAIN(update_binary);
 DECLARE_MAIN(lua);
 
 const struct shell_command*shell_cmds[]={
@@ -126,6 +127,8 @@ const struct shell_command*shell_cmds[]={
 	#ifdef ENABLE_LUA
 	DECLARE_CMD(true,  lua,         "Lua programming language interpreter")
 	#endif
+	DECLARE_CMD_MAIN(true,  updater, "Android recovery updater",update_binary_main)
+	DECLARE_CMD_MAIN(true,  update-binary, "Android recovery updater",update_binary_main)
 	DECLARE_CMD_MAIN(false, simple-init, "Simple Init Main",simple_init_main)
 	NULL
 };

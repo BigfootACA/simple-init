@@ -39,9 +39,9 @@ static EFI_STATUS setvar(EFI_GUID*guid,CHAR16*key,VOID*buf,UINTN size){
 	);
 }
 static EFI_STATUS setvar_str(EFI_GUID*guid,CHAR16*key,CHAR16*str,VA_LIST va){
-	CHAR16 Buffer[4096];
+	CHAR16 Buffer[512];
 	UnicodeVSPrint(Buffer,sizeof(Buffer),str,va);
-	return setvar(guid,key,Buffer,(StrLen(Buffer)+1)*sizeof(CHAR16));
+	return setvar(guid,key,Buffer,StrSize(Buffer));
 }
 
 EFI_STATUS efi_setvar(CHAR16*key,VOID*buf,UINTN size){

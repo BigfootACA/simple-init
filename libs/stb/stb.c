@@ -1,5 +1,6 @@
 #ifdef ENABLE_UEFI
 #define STBI_ASSERT(x) {ASSERT(x);if(!(x))abort();}
+#define STBI_NO_GIF
 #define STBI_NO_SIMD
 #define STBI_NO_STDIO
 #define STBI_NO_THREAD_LOCALS

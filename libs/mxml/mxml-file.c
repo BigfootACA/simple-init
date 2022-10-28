@@ -47,7 +47,7 @@ typedef struct _mxml_fdbuf_s		/**** File descriptor buffer ****/
   int		fd;			/* File descriptor */
   unsigned char	*current,		/* Current position in buffer */
 		*end,			/* End of buffer */
-		buffer[8192];		/* Character buffer */
+		buffer[4096];		/* Character buffer */
 } _mxml_fdbuf_t;
 
 
@@ -203,7 +203,7 @@ mxmlSaveAllocString(
     mxml_save_cb_t cb)			/* I - Whitespace callback or @code MXML_NO_CALLBACK@ */
 {
   int	bytes;				/* Required bytes */
-  char	buffer[8192];			/* Temporary buffer */
+  char	buffer[4096];			/* Temporary buffer */
   char	*s;				/* Allocated string */
 
 

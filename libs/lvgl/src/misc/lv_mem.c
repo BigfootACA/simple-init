@@ -87,7 +87,7 @@ void lv_mem_init(void)
 {
 #if LV_MEM_CUSTOM == 0
 
-#if LV_MEM_ADR == 0
+#ifndef LV_MEM_ADR
 #ifdef LV_MEM_POOL_ALLOC
     tlsf = lv_tlsf_create_with_pool((void *)LV_MEM_POOL_ALLOC(LV_MEM_SIZE), LV_MEM_SIZE);
 #else

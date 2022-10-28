@@ -249,17 +249,7 @@ enum tlsf_private {
     ** blocks below that size into the 0th first-level list.
     */
 
-#if defined (TLSF_MAX_POOL_SIZE)
-    FL_INDEX_MAX = TLSF_LOG2_CEIL(TLSF_MAX_POOL_SIZE),
-#elif defined (TLSF_64BIT)
-    /*
-    ** TODO: We can increase this to support larger sizes, at the expense
-    ** of more overhead in the TLSF structure.
-    */
     FL_INDEX_MAX = 32,
-#else
-    FL_INDEX_MAX = 30,
-#endif
     SL_INDEX_COUNT = (1 << SL_INDEX_COUNT_LOG2),
     FL_INDEX_SHIFT = (SL_INDEX_COUNT_LOG2 + ALIGN_SIZE_LOG2),
     FL_INDEX_COUNT = (FL_INDEX_MAX - FL_INDEX_SHIFT + 1),

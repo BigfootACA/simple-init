@@ -108,7 +108,7 @@ endif()
 
 if("${ENABLE_LIBZIP}" STREQUAL "ON")
 	add_subdirectory(libs/libzip)
-	include_directories(libs/libzip/lib)
+	include_directories(libs/libzip/lib ${PROJECT_BINARY_DIR}/libs/libzip)
 endif()
 
 if("${DISABLE_WERROR}" STREQUAL "OFF")

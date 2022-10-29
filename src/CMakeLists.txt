@@ -166,7 +166,7 @@ if("${ENABLE_HIVEX}" STREQUAL "ON")
 endif()
 
 if("${ENABLE_LIBZIP}" STREQUAL "ON")
-	target_link_libraries(simple-init zip)
+	target_link_libraries(simple-init ziptools zip)
 endif()
 
 target_link_libraries(simple-init kmod mount uuid blkid fdisk smartcols md)

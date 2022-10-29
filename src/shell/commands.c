@@ -64,6 +64,9 @@ DECLARE_MAIN(write);
 DECLARE_MAIN(simple_init);
 DECLARE_MAIN(update_binary);
 DECLARE_MAIN(lua);
+DECLARE_MAIN(zipcmp);
+DECLARE_MAIN(zipmerge);
+DECLARE_MAIN(ziptool);
 
 const struct shell_command*shell_cmds[]={
 	#ifdef ENABLE_READLINE
@@ -126,6 +129,11 @@ const struct shell_command*shell_cmds[]={
 	DECLARE_CMD(false, write,       "Write data to file descriptor")
 	#ifdef ENABLE_LUA
 	DECLARE_CMD(true,  lua,         "Lua programming language interpreter")
+	#endif
+	#ifdef ENABLE_LIBZIP
+	DECLARE_CMD(true,  zipcmp,      "Compare contents of zip archives")
+	DECLARE_CMD(true,  zipmerge,    "Merge zip archives")
+	DECLARE_CMD(true,  ziptool,     "Modify zip archives")
 	#endif
 	DECLARE_CMD_MAIN(true,  updater, "Android recovery updater",update_binary_main)
 	DECLARE_CMD_MAIN(true,  update-binary, "Android recovery updater",update_binary_main)

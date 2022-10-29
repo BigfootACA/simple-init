@@ -48,10 +48,7 @@
 #endif
 #endif
 
-#ifndef HAVE_GETOPT
 #include "getopt.h"
-#endif
-extern int optopt;
 
 #include "zip.h"
 
@@ -879,7 +876,7 @@ ziptool_post_close(const char *archive) {
 #endif
 
 int
-main(int argc, char *argv[]) {
+ziptool_main(int argc, char *argv[]) {
     const char *archive;
     unsigned int i;
     int c, arg, err, flags;
@@ -890,7 +887,7 @@ main(int argc, char *argv[]) {
     flags = 0;
     prg = argv[0];
 
-    while ((c = getopt(argc, argv, "ceghl:no:rst" OPTIONS_REGRESS)) != -1) {
+    while ((c = b_getopt(argc, argv, "ceghl:no:rst" OPTIONS_REGRESS)) != -1) {
         switch (c) {
         case 'c':
             flags |= ZIP_CHECKCONS;
@@ -905,13 +902,13 @@ main(int argc, char *argv[]) {
             usage(prg, NULL);
             break;
         case 'l':
-            len = strtoull(optarg, NULL, 10);
+            len = strtoull(b_optarg, NULL, 10);
             break;
         case 'n':
             flags |= ZIP_CREATE;
             break;
         case 'o':
-            offset = strtoull(optarg, NULL, 10);
+            offset = strtoull(b_optarg, NULL, 10);
             break;
         case 'r':
             stat_flags = ZIP_FL_ENC_RAW;
@@ -928,16 +925,16 @@ main(int argc, char *argv[]) {
 
         default: {
             char reason[128];
-            snprintf(reason, sizeof(reason), "invalid option -%c", optopt);
+            snprintf(reason, sizeof(reason), "invalid option -%c", b_optopt);
             usage(prg, reason);
         }
         }
     }
 
-    if (optind >= argc - 1)
+    if (b_optind >= argc - 1)
         usage(prg, "too few arguments");
 
-    arg = optind;
+    arg = b_optind;
 
     archive = argv[arg++];
 

@@ -47,9 +47,7 @@
 #endif
 #include <zlib.h>
 
-#ifndef HAVE_GETOPT
 #include "getopt.h"
-#endif
 
 #include "zip.h"
 
@@ -180,15 +178,15 @@ const enum_map_t extra_fields[] = {
 };
 
 
-const char *progname;
+static const char *progname;
 
 #define PROGRAM "zipcmp"
 
 #define USAGE "usage: %s [-hipqtVv] archive1 archive2\n"
 
-char help_head[] = PROGRAM " (" PACKAGE ") by Dieter Baron and Thomas Klausner\n\n";
+static char help_head[] = PROGRAM " (" PACKAGE ") by Dieter Baron and Thomas Klausner\n\n";
 
-char help[] = "\n\
+static char help[] = "\n\
   -h       display this help message\n\
   -C       check archive consistencies\n\
   -i       compare names ignoring case distinctions\n\
@@ -201,7 +199,7 @@ char help[] = "\n\
 \n\
 Report bugs to <libzip@nih.at>.\n";
 
-char version_string[] = PROGRAM " (" PACKAGE " " VERSION ")\n\
+static char version_string[] = PROGRAM " (" PACKAGE " " VERSION ")\n\
 Copyright (C) 2003-2022 Dieter Baron and Thomas Klausner\n\
 " PACKAGE " comes with ABSOLUTELY NO WARRANTY, to the extent permitted by law.\n";
 
@@ -238,7 +236,7 @@ diff_output_t output;
 
 
 int
-main(int argc, char *const argv[]) {
+zipcmp_main(int argc, char *const argv[]) {
     int c;
 
     progname = argv[0];
@@ -251,7 +249,7 @@ main(int argc, char *const argv[]) {
     verbose = 1;
     summary = 0;
 
-    while ((c = getopt(argc, argv, OPTIONS)) != -1) {
+    while ((c = b_getopt(argc, argv, OPTIONS)) != -1) {
         switch (c) {
             case 'C':
                 check_consistency = 1;
@@ -290,12 +288,12 @@ main(int argc, char *const argv[]) {
         }
     }
 
-    if (argc != optind + 2) {
+    if (argc != b_optind + 2) {
         fprintf(stderr, USAGE, progname);
         exit(2);
     }
 
-    exit((compare_zip(argv + optind) == 0) ? 0 : 1);
+    exit((compare_zip(argv + b_optind) == 0) ? 0 : 1);
 }
 
 

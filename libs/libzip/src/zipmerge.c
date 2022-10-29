@@ -39,22 +39,19 @@
 #include <string.h>
 
 #include "config.h"
-
-#ifndef HAVE_GETOPT
 #include "getopt.h"
-#endif
 
 #include "zip.h"
 
-char *progname;
+static char *progname;
 
 #define PROGRAM "zipmerge"
 
 #define USAGE "usage: %s [-DhIiSsV] target-zip zip...\n"
 
-char help_head[] = PROGRAM " (" PACKAGE ") by Dieter Baron and Thomas Klausner\n\n";
+static char help_head[] = PROGRAM " (" PACKAGE ") by Dieter Baron and Thomas Klausner\n\n";
 
-char help[] = "\n\
+static char help[] = "\n\
   -h       display this help message\n\
   -V       display version number\n\
   -D       ignore directory component in file names\n\
@@ -65,7 +62,7 @@ char help[] = "\n\
 \n\
 Report bugs to <libzip@nih.at>.\n";
 
-char version_string[] = PROGRAM " (" PACKAGE " " VERSION ")\n\
+static char version_string[] = PROGRAM " (" PACKAGE " " VERSION ")\n\
 Copyright (C) 2004-2021 Dieter Baron and Thomas Klausner\n\
 " PACKAGE " comes with ABSOLUTELY NO WARRANTY, to the extent permitted by law.\n";
 
@@ -84,7 +81,7 @@ static zip_t *merge_zip(zip_t *, const char *, const char *);
 
 
 int
-main(int argc, char *argv[]) {
+zipmerge_main(int argc, char *argv[]) {
     zip_t *za;
     zip_t **zs;
     int c, err;
@@ -96,7 +93,7 @@ main(int argc, char *argv[]) {
     confirm = CONFIRM_ALL_YES;
     name_flags = 0;
 
-    while ((c = getopt(argc, argv, OPTIONS)) != -1) {
+    while ((c = b_getopt(argc, argv, OPTIONS)) != -1) {
         switch (c) {
         case 'D':
             name_flags |= ZIP_FL_NODIR;
@@ -131,15 +128,15 @@ main(int argc, char *argv[]) {
         }
     }
 
-    if (argc < optind + 2) {
+    if (argc < b_optind + 2) {
         fprintf(stderr, USAGE, progname);
         exit(2);
     }
 
-    tname = argv[optind++];
-    argv += optind;
+    tname = argv[b_optind++];
+    argv += b_optind;
 
-    n = (unsigned int)(argc - optind);
+    n = (unsigned int)(argc - b_optind);
     if ((zs = (zip_t **)malloc(sizeof(zs[0]) * n)) == NULL) {
         fprintf(stderr, "%s: out of memory\n", progname);
         exit(1);

@@ -358,12 +358,13 @@ static void draw_item_volume_info(struct fileitem*fi){
 }
 
 static struct fileitem*add_item(
+	struct fileitem*item,
 	struct fileview*view,
 	fs_type type,
 	fs_file_info*file,
 	fsvol_info*vol
 ){
-	struct fileitem*fi;
+	struct fileitem*fi=item;
 	static lv_coord_t grid_col[]={
 		0,
 		LV_GRID_FR(1),
@@ -383,17 +384,23 @@ static struct fileitem*add_item(
 	}else if(fs_has_type(type,FS_TYPE_VOLUME)){
 		if(file||!vol)return NULL;
 	}else return NULL;
-	if(!(fi=malloc(sizeof(struct fileitem)))){
-		telog_error("cannot allocate fileitem");
-		abort();
-	}
+	if(!fi){
+		if(!(fi=malloc(sizeof(struct fileitem)))){
+			telog_error("cannot allocate fileitem");
+			abort();
+		}
+		memset(fi,0,sizeof(struct fileitem));
+		fi->view=view,fi->type=type;
+		if(fs_has_type(fi->type,FS_TYPE_FILE))
+			memcpy(&fi->file,file,sizeof(fs_file_info));
+		else if(fs_has_type(fi->type,FS_TYPE_VOLUME))
+			fi->vol=vol;
+		if(list_obj_add_new(&view->items,fi)!=0){
+			telog_error("cannot add file item list");
+			abort();
+		}
+	}else if(!fi->view||fi->type==FS_TYPE_NONE)abort();
 	grid_col[0]=gui_font_size*(view->verbose?3:1);
-	memset(fi,0,sizeof(struct fileitem));
-	fi->view=view,fi->type=type;
-	if(fs_has_type(fi->type,FS_TYPE_FILE))
-		memcpy(&fi->file,file,sizeof(fs_file_info));
-	else if(fs_has_type(fi->type,FS_TYPE_VOLUME))
-		fi->vol=vol;
 
 	// file item button
 	fi->btn=lv_btn_create(view->view);
@@ -403,10 +410,6 @@ static struct fileitem*add_item(
 	lv_obj_add_event_cb(fi->btn,item_click,LV_EVENT_CLICKED,fi);
 	lv_obj_add_event_cb(fi->btn,item_check,LV_EVENT_LONG_PRESSED,fi);
 	lv_obj_set_grid_dsc_array(fi->btn,grid_col,grid_row);
-	if(list_obj_add_new(&view->items,fi)!=0){
-		telog_error("cannot add file item list");
-		abort();
-	}
 
 	// file image
 	fi->w_img=lv_obj_create(fi->btn);
@@ -493,15 +496,36 @@ static void set_info(struct fileview*view,char*text,...){
 	lv_label_set_text(view->info,buf);
 }
 
+static bool fileitem_sorter(list*a,list*b){
+	LIST_DATA_DECLARE(fa,a,struct fileitem*);
+	LIST_DATA_DECLARE(fb,b,struct fileitem*);
+	if(!fa||!fb)return false;
+	if(
+		fs_has_type(fa->type,FS_TYPE_PARENT)!=
+		fs_has_type(fb->type,FS_TYPE_PARENT)
+	)return !fs_has_type(fa->type,FS_TYPE_PARENT);
+	if(
+		fs_has_type(fa->type,FS_TYPE_FILE_FOLDER)!=
+		fs_has_type(fb->type,FS_TYPE_FILE_FOLDER)
+	)return !fs_has_type(fa->type,FS_TYPE_FILE_FOLDER);
+	char*na=fa->file.name,*nb=fb->file.name;
+	if(!na[0]||!nb[0])return false;
+	for(size_t i=0;na[i]&&nb[i];i++)
+		if(na[i]!=nb[i])return na[i]>nb[i];
+	return false;
+}
+
 static void scan_items(struct fileview*view){
+	list*l;
 	int r=0;
 	fs_file_info info;
 	fsvol_info**vols;
+	struct fileitem item;
 	if(!view->view)return;
 	clean_items(view);
 	if(view->url){
 		if(view->parent&&!fileview_is_top(view))
-			add_item(view,FS_TYPE_PARENT,NULL,NULL);
+			add_item(NULL,view,FS_TYPE_PARENT,NULL,NULL);
 		if(!view->folder){
 			if((r=fs_open_uri(
 				&view->folder,
@@ -515,9 +539,17 @@ static void scan_items(struct fileview*view){
 		}else fs_seek(view->folder,0,SEEK_SET);
 		while((r=fs_readdir(view->folder,&info))==0){
 			if(info.name[0]=='.'&&!view->hidden)continue;
-			add_item(view,info.type,&info,NULL);
-			if(view->count>=1024)tlog_warn("too many files, skip");
+			memset(&item,0,sizeof(item));
+			memcpy(&item.file,&info,sizeof(info));
+			item.view=view,item.type=info.type;
+			list_obj_add_new_dup(&view->items,&item,sizeof(item));
+			if(view->count>=256)tlog_warn("too many files, skip");
 		}
+		list_sort(view->items,fileitem_sorter);
+		if((l=list_first(view->items)))do{
+			LIST_DATA_DECLARE(i,l,struct fileitem*);
+			add_item(i,view,i->type,&i->file,NULL);
+		}while((l=l->next));
 		if(r==EOF)r=0;
 	}else if((vols=fsvol_get_volumes())){
 		for(size_t i=0;vols[i];i++){
@@ -527,8 +559,8 @@ static void scan_items(struct fileview*view){
 			if(!fs_has_vol_feature(
 				vols[i]->features,FSVOL_FILES
 			))continue;
-			add_item(view,FS_TYPE_VOLUME,NULL,vols[i]);
-			if(view->count>=1024)tlog_warn("too many volumes, skip");
+			add_item(NULL,view,FS_TYPE_VOLUME,NULL,vols[i]);
+			if(view->count>=256)tlog_warn("too many volumes, skip");
 		}
 		free(vols);
 	}

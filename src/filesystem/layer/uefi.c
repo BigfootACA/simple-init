@@ -43,12 +43,12 @@ struct fsd{
 			EFI_FILE_PROTOCOL*file;
 			EFI_FILE_PROTOCOL*root;
 			EFI_SIMPLE_FILE_SYSTEM_PROTOCOL*fs;
-		};
+		}file;
 		struct{
 			UINT64 offset;
 			EFI_BLOCK_IO_PROTOCOL*blk;
 			EFI_DISK_IO_PROTOCOL*disk;
-		};
+		}block;
 	};
 };
 
@@ -95,10 +95,10 @@ static void fsdrv_close(const fsdrv*drv,fsh*f){
 	if(!f||!drv||drv!=f->driver)return;
 	if((d=f->data)){
 		if(d->dp)FreePool(d->dp);
-		if(d->path)FreePool(d->path);
 		if(d->type==TYPE_FILE){
-			if(d->file)st=d->file->Close(d->file);
-			if(d->root)d->root->Close(d->root);
+			if(d->file.path)FreePool(d->file.path);
+			if(d->file.file)st=d->file.file->Close(d->file.file);
+			if(d->file.root)d->file.root->Close(d->file.root);
 		}
 		memset(d,0,sizeof(struct fsd));
 	}
@@ -109,10 +109,12 @@ static int fsdrv_flush(const fsdrv*drv,fsh*f){
 	errno=0;
 	struct fsd*d;
 	if(!f||!drv||f->driver!=drv)RET(EINVAL);
-	if(!(d=f->data)||!d->file)RET(EBADF);
+	if(!(d=f->data))RET(EBADF);
+	if(d->type!=TYPE_FILE)RET(ENOTSUP);
+	if(!d->file.file)RET(EBADF);
 	if(fs_has_flag(f->flags,FILE_FLAG_FOLDER))RET(EISDIR);
 	if(!fs_has_flag(f->flags,FILE_FLAG_WRITE))RET(EROFS);
-	RET(efi_status_to_errno(d->file->Flush(d->file)));
+	RET(efi_status_to_errno(d->file.file->Flush(d->file.file)));
 }
 
 static EFI_HANDLE*fs_get_hand(url*u,enum fsd_type*type){
@@ -206,14 +208,14 @@ static int fs_get_root(
 					hand,fs,efi_status_to_string(st)
 				));
 			}
-			if(d)d->root=fp,d->fs=fs;
+			if(d)d->file.root=fp,d->file.fs=fs;
 		}break;
 		case TYPE_BLOCK:{
 			if(hand&&!disk){
 				st=gBS->HandleProtocol(
 					hand,
 					&gEfiDiskIoProtocolGuid,
-					(VOID**)disk
+					(VOID**)&disk
 				);
 				if(EFI_ERROR(st)||!disk)ERET(trlog_error(
 					efi_status_to_errno(st),
@@ -225,7 +227,7 @@ static int fs_get_root(
 				st=gBS->HandleProtocol(
 					hand,
 					&gEfiBlockIoProtocolGuid,
-					(VOID**)blk
+					(VOID**)&blk
 				);
 				if(EFI_ERROR(st)||!blk)ERET(trlog_error(
 					efi_status_to_errno(st),
@@ -233,7 +235,7 @@ static int fs_get_root(
 					hand,efi_status_to_string(st)
 				));
 			}
-			if(d)d->disk=disk,d->blk=blk;
+			if(d)d->block.disk=disk,d->block.blk=blk;
 		}break;
 		default:ERET(EINVAL);
 	}
@@ -255,7 +257,7 @@ static int fsdrv_open(
 	EFI_FILE_INFO*info=NULL;
 	enum fsd_type type=TYPE_NONE;
 	UINT64 attr=0,mode=EFI_FILE_MODE_READ;
-	if(!drv||!uri||!uri->path)RET(EINVAL);
+	if(!drv||!uri)RET(EINVAL);
 	memset(&d,0,sizeof(struct fsd));
 	if(fs_has_flag(flags,FILE_FLAG_FOLDER))
 		attr|=EFI_FILE_DIRECTORY;
@@ -268,7 +270,8 @@ static int fsdrv_open(
 	if(!d.hand)DONE(errno?:EHOSTUNREACH);
 	switch(type){
 		case TYPE_FILE:
-			if(!d.root)DONE(errno?:EHOSTUNREACH);
+			if(!uri->path)RET(EINVAL);
+			if(!d.file.root)DONE(errno?:EHOSTUNREACH);
 			len=(AsciiStrLen(uri->path)+1)*sizeof(CHAR16);
 			if(!(buf=AllocateZeroPool(len)))DONE(errno?:ENOMEM);
 			AsciiStrToUnicodeStrS(uri->path,buf,len);
@@ -277,43 +280,43 @@ static int fsdrv_open(
 				for(a=0;buf[i+a+1];a++)buf[i+a]=buf[i+a+1];
 				buf[i+a]=0;
 			}
-			st=d.root->Open(d.root,&d.file,buf,mode,attr);
-			if(EFI_ERROR(st)||!d.file)DONE(efi_status_to_errno(st));
+			st=d.file.root->Open(d.file.root,&d.file.file,buf,mode,attr);
+			if(EFI_ERROR(st)||!d.file.file)DONE(efi_status_to_errno(st));
 			if(!fs_has_flag(flags,FILE_FLAG_ACCESS)){
 				if(!nf||!nf->uri||!nf->data)DONE(EINVAL);
 				if((l=strlen(nf->uri->path))<=0)goto done;
 				if(fs_has_flag(flags,FILE_FLAG_FOLDER))
 					if(nf->uri->path[l-1]!='/')
 						strcat(nf->uri->path,"/");
-				d.file=d.file,d.path=buf,buf=NULL;
-				d.dp=FileDevicePath(d.hand,d.path);
+				d.file=d.file,d.file.path=buf,buf=NULL;
+				d.dp=FileDevicePath(d.hand,d.file.path);
 				if(!fs_has_flag(flags,FILE_FLAG_FOLDER)){
-					st=efi_file_get_file_info(d.file,&infos,&info);
+					st=efi_file_get_file_info(d.file.file,&infos,&info);
 					if(EFI_ERROR(st)||!info)DONE(efi_status_to_errno(st));
 					if(fs_has_flag(flags,FILE_FLAG_APPEND))
-						d.file->SetPosition(d.file,info->FileSize);
+						d.file.file->SetPosition(d.file.file,info->FileSize);
 					if(fs_has_flag(flags,FILE_FLAG_TRUNCATE)){
-						d.file->SetPosition(d.file,0);
+						d.file.file->SetPosition(d.file.file,0);
 						if(fs_has_flag(flags,FILE_FLAG_WRITE)){
 							info->FileSize=0;
-							st=d.file->SetInfo(d.file,&gEfiFileInfoGuid,infos,info);
+							st=d.file.file->SetInfo(d.file.file,&gEfiFileInfoGuid,infos,info);
 							if(EFI_ERROR(st)){
-								d.file->Delete(d.file);
-								d.file=NULL,mode|=EFI_FILE_MODE_CREATE;
-								st=d.root->Open(d.root,&d.file,buf,mode,attr);
-								if(EFI_ERROR(st)||!d.file)DONE(efi_status_to_errno(st));
+								d.file.file->Delete(d.file.file);
+								d.file.file=NULL,mode|=EFI_FILE_MODE_CREATE;
+								st=d.file.root->Open(d.file.root,&d.file.file,buf,mode,attr);
+								if(EFI_ERROR(st)||!d.file.file)DONE(efi_status_to_errno(st));
 							}
 						}
 					}
 					FreePool(info);
 				}
-			}else d.file->Close(d.file),d.file=NULL;
-			if(d.root)d.root->Close(d.root),d.root=NULL;
+			}else d.file.file->Close(d.file.file),d.file.file=NULL;
+			if(d.file.root)d.file.root->Close(d.file.root),d.file.root=NULL;
 			if(buf)FreePool(buf);
 		break;
 		case TYPE_BLOCK:
 			if(uri->path)RET(EINVAL);
-			d.dp=DevicePathFromHandle(d.hand);
+			d.dp=DuplicateDevicePath(DevicePathFromHandle(d.hand));
 		break;
 		default:RET(ENOTSUP);
 	}
@@ -321,8 +324,8 @@ static int fsdrv_open(
 	RET(0);
 	done:
 	if(buf)FreePool(buf);
-	if(d.file)d.file->Close(d.file);
-	if(d.root)d.root->Close(d.root);
+	if(d.file.file)d.file.file->Close(d.file.file);
+	if(d.file.root)d.file.root->Close(d.file.root);
 	EXRET(EIO);
 }
 
@@ -342,17 +345,21 @@ static int fsdrv_read(
 	if(fs_has_flag(f->flags,FILE_FLAG_FOLDER))RET(EISDIR);
 	switch(d->type){
 		case TYPE_FILE:{
-			if(!d->file)RET(EBADF);
-			st=d->file->Read(d->file,&size,buffer);
+			if(!d->file.file)RET(EBADF);
+			st=d->file.file->Read(d->file.file,&size,buffer);
 		}break;
 		case TYPE_BLOCK:{
-			if(!d->disk||!d->blk||!d->blk->Media)RET(EBADF);
-			st=d->disk->ReadDisk(
-				d->disk,
-				d->blk->Media->MediaId,
-				d->offset,btr,buffer
+			if(
+				!d->block.disk||
+				!d->block.blk||
+				!d->block.blk->Media
+			)RET(EBADF);
+			st=d->block.disk->ReadDisk(
+				d->block.disk,
+				d->block.blk->Media->MediaId,
+				d->block.offset,btr,buffer
 			);
-			d->offset+=btr;
+			d->block.offset+=btr;
 		}break;
 		default:RET(ENOSYS);
 	}
@@ -371,11 +378,13 @@ static int fsdrv_readdir(
         UINTN infos=0,si;
 	if(!f||!drv||!info)RET(EINVAL);
 	if(f->driver!=drv)RET(EINVAL);
-	if(!(d=f->data)||!d->file)RET(EBADF);
+	if(!(d=f->data))RET(EBADF);
+	if(d->type!=TYPE_FILE)RET(ENOTSUP);
+	if(!d->file.file)RET(EBADF);
 	if(d->type!=TYPE_FILE)RET(ENOSYS);
 	if(!fs_has_flag(f->flags,FILE_FLAG_FOLDER))RET(ENOTDIR);
 	for(;;){
-                si=infos,st=d->file->Read(d->file,&si,fi);
+                si=infos,st=d->file.file->Read(d->file.file,&si,fi);
                 if(st==EFI_BUFFER_TOO_SMALL){
                         if(si<=0)break;
                         if(fi)FreePool(fi);
@@ -419,17 +428,21 @@ static int fsdrv_write(
 	if(fs_has_flag(f->flags,FILE_FLAG_FOLDER))RET(EISDIR);
 	switch(d->type){
 		case TYPE_FILE:{
-			if(!d->file)RET(EBADF);
-			st=d->file->Write(d->file,&size,buffer);
+			if(!d->file.file)RET(EBADF);
+			st=d->file.file->Write(d->file.file,&size,buffer);
 		}break;
 		case TYPE_BLOCK:{
-			if(!d->disk||!d->blk||!d->blk->Media)RET(EBADF);
-			st=d->disk->WriteDisk(
-				d->disk,
-				d->blk->Media->MediaId,
-				d->offset,btw,buffer
+			if(
+				!d->block.disk||
+				!d->block.blk||
+				!d->block.blk->Media
+			)RET(EBADF);
+			st=d->block.disk->WriteDisk(
+				d->block.disk,
+				d->block.blk->Media->MediaId,
+				d->block.offset,btw,buffer
 			);
-			d->offset+=btw;
+			d->block.offset+=btw;
 		}break;
 		default:RET(ENOSYS);
 	}
@@ -458,10 +471,10 @@ static int fsdrv_seek(const fsdrv*drv,fsh*f,size_t pos,int whence){
 		break;
 		case SEEK_SET:switch(d->type){
 			case TYPE_FILE:
-				if(!d->file)RET(EBADF);
-				st=d->file->SetPosition(d->file,pos);
+				if(!d->file.file)RET(EBADF);
+				st=d->file.file->SetPosition(d->file.file,pos);
 			break;
-			case TYPE_BLOCK:d->offset=pos;break;
+			case TYPE_BLOCK:d->block.offset=pos;break;
 			default:RET(ENOSYS);
 		}break;
 	}
@@ -474,13 +487,15 @@ static int fsdrv_tell(const fsdrv*drv,fsh*f,size_t*pos){
 	EFI_STATUS st=EFI_SUCCESS;
 	if(!f||!drv||!pos)RET(EINVAL);
 	if(f->driver!=drv)RET(EINVAL);
-	if(!(d=f->data)||!d->file)RET(EBADF);
+	if(!(d=f->data))RET(EBADF);
+	if(d->type!=TYPE_FILE)RET(ENOTSUP);
+	if(!d->file.file)RET(EBADF);
 	switch(d->type){
 		case TYPE_FILE:
-			if(!d->file)RET(EBADF);
-			st=d->file->GetPosition(d->file,&p);
+			if(!d->file.file)RET(EBADF);
+			st=d->file.file->GetPosition(d->file.file,&p);
 		break;
-		case TYPE_BLOCK:p=d->offset;break;
+		case TYPE_BLOCK:p=d->block.offset;break;
 		default:RET(ENOSYS);
 	}
 	*pos=p;
@@ -500,8 +515,8 @@ static int fsdrv_get_info(
 	if(!(d=f->data))RET(EBADF);
 	switch(d->type){
 		case TYPE_FILE:
-			if(!d->file)RET(EBADF);
-			st=efi_file_get_file_info(d->file,NULL,&fi);
+			if(!d->file.file)RET(EBADF);
+			st=efi_file_get_file_info(d->file.file,NULL,&fi);
 			if(EFI_ERROR(st))RET(efi_status_to_errno(st));
 			file_info_to_info(fi,info);
 			FreePool(fi);
@@ -515,8 +530,12 @@ static int fsdrv_get_info(
 				FS_FEATURE_HAVE_FOLDER;
 		break;
 		case TYPE_BLOCK:
-			if(!d->disk||!d->blk||!d->blk->Media)RET(EBADF);
-			media_info_to_info(d->blk->Media,info);
+			if(
+				!d->block.disk||
+				!d->block.blk||
+				!d->block.blk->Media
+			)RET(EBADF);
+			media_info_to_info(d->block.blk->Media,info);
 			info->features=FS_FEATURE_READABLE|
 				FS_FEATURE_WRITABLE|
 				FS_FEATURE_SEEKABLE|
@@ -536,12 +555,18 @@ static int fsdrv_resize(const fsdrv*drv,fsh*f,size_t pos){
 	EFI_FILE_INFO*fi=NULL;
 	if(!f||!drv)RET(EINVAL);
 	if(f->driver!=drv)RET(EINVAL);
-	if(!(d=f->data)||!d->file)RET(EBADF);
+	if(!(d=f->data))RET(EBADF);
+	if(d->type!=TYPE_FILE)RET(ENOTSUP);
+	if(!d->file.file)RET(EBADF);
 	if(d->type!=TYPE_FILE)RET(ENOSYS);
-	st=efi_file_get_file_info(d->file,&size,&fi);
+	st=efi_file_get_file_info(d->file.file,&size,&fi);
 	if(EFI_ERROR(st))RET(efi_status_to_errno(st));
 	fi->FileSize=pos;
-	st=d->file->SetInfo(d->file,&gEfiFileInfoGuid,size,fi);
+	st=d->file.file->SetInfo(
+		d->file.file,
+		&gEfiFileInfoGuid,
+		size,fi
+	);
 	FreePool(fi);
 	RET(efi_status_to_errno(st));
 }
@@ -553,9 +578,11 @@ static int fsdrv_rename(const fsdrv*drv,fsh*f,url*to){
 	EFI_FILE_INFO*fi=NULL,*ni=NULL;
 	if(!f||!drv||!to||!to->path)RET(EINVAL);
 	if(f->driver!=drv)RET(EINVAL);
-	if(!(d=f->data)||!d->file)RET(EBADF);
+	if(!(d=f->data))RET(EBADF);
+	if(d->type!=TYPE_FILE)RET(ENOTSUP);
+	if(!d->file.file)RET(EBADF);
 	if(d->type!=TYPE_FILE)RET(ENOSYS);
-	st=efi_file_get_file_info(d->file,&size,&fi);
+	st=efi_file_get_file_info(d->file.file,&size,&fi);
 	if(EFI_ERROR(st))RET(efi_status_to_errno(st));
 	sl=(AsciiStrLen(to->path)+1)*sizeof(CHAR16);
 	nl=sizeof(EFI_FILE_INFO)+sl;
@@ -566,7 +593,7 @@ static int fsdrv_rename(const fsdrv*drv,fsh*f,url*to){
 	AsciiStrToUnicodeStrS(to->path,fi->FileName,sl);
 	for(UINTN i=0;fi->FileName[i];i++)
 		if(fi->FileName[i]=='/')fi->FileName[i]='\\';
-	st=d->file->SetInfo(d->file,&gEfiFileInfoGuid,size,fi);
+	st=d->file.file->SetInfo(d->file.file,&gEfiFileInfoGuid,size,fi);
 	if(!EFI_ERROR(st))f->cache_info_time=0;
 	FreePool(fi);
 	RET(efi_status_to_errno(st));
@@ -595,7 +622,9 @@ static int fsdrv_ioctl(const fsdrv*drv,fsh*f,fs_ioctl_id id,va_list args){
         struct fsd*d;
 	if(!f||!drv)RET(EINVAL);
 	if(f->driver!=drv)RET(EINVAL);
-	if(!(d=f->data)||!d->file)RET(EBADF);
+	if(!(d=f->data))RET(EBADF);
+	if(d->type!=TYPE_FILE)RET(ENOTSUP);
+	if(!d->file.file)RET(EBADF);
 	switch(id){
 		case FS_IOCTL_UEFI_GET_HANDLE:{
 			EFI_HANDLE*hand;
@@ -608,7 +637,7 @@ static int fsdrv_ioctl(const fsdrv*drv,fsh*f,fs_ioctl_id id,va_list args){
 			EFI_FILE_PROTOCOL**fp;
 			if(d->type!=TYPE_FILE)RET(ENOTSUP);
 			if((fp=va_arg(args,EFI_FILE_PROTOCOL**))){
-				*fp=d->file;
+				*fp=d->file.file;
 				RET(0);
 			}else RET(EINVAL);
 		}break;

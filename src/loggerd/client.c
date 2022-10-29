@@ -40,6 +40,7 @@
 #define TAG "logger"
 
 #ifdef ENABLE_UEFI
+static char print_buff[16384];
 static enum log_level logger_level=FixedPcdGet32(PcdLoggerdMinLevel);
 #else
 static enum log_level logger_level=LEVEL_DEBUG;
@@ -279,16 +280,14 @@ int logger_write(struct log_item*log){
 	errno=msg.data.code;
 	return xs;
 	#else
-	char*buff=AllocateZeroPool(16384);
-	if(!buff)ERET(ENOMEM);
-	AsciiSPrint(buff,16384,"%a: %a",log->tag,log->content);
-	DebugPrint(EFI_D_INFO,"%a",buff);
+	AsciiSPrint(print_buff,sizeof(print_buff),"%a: %a",log->tag,log->content);
+	DebugPrint(EFI_D_INFO,"%a",print_buff);
 	DebugPrint(EFI_D_INFO,"\n");
 	if(console_output){
-		AsciiPrint("%a",buff);
+		AsciiPrint("%a",print_buff);
 		AsciiPrint("\n");
 	}
-	logger_out_write(buff);
+	logger_out_write(print_buff);
 	return 0;
 	#endif
 }

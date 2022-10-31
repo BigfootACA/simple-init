@@ -486,14 +486,15 @@ static void set_info(struct fileview*view,char*text,...){
 	if(view->info)lv_obj_del(view->info);
 	view->info=lv_label_create(view->view);
 	lv_label_set_long_mode(view->info,LV_LABEL_LONG_WRAP);
-	lv_obj_set_width(view->info,lv_obj_get_width(view->view)-gui_font_size);
+	lv_obj_set_width(view->info,lv_pct(100));
 	lv_obj_set_style_text_align(view->info,LV_TEXT_ALIGN_CENTER,0);
-	char buf[BUFSIZ]={0};
+	char*buf=NULL;
 	va_list va;
 	va_start(va,text);
-	vsnprintf(buf,BUFSIZ-1,text,va);
+	vasprintf(&buf,text,va);
 	va_end(va);
-	lv_label_set_text(view->info,buf);
+	lv_label_set_text(view->info,buf?buf:"");
+	if(buf)free(buf);
 }
 
 static bool fileitem_sorter(list*a,list*b){

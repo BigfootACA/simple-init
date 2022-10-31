@@ -249,7 +249,7 @@ enum tlsf_private {
     ** blocks below that size into the 0th first-level list.
     */
 
-    FL_INDEX_MAX = 32,
+    FL_INDEX_MAX = 30,
     SL_INDEX_COUNT = (1 << SL_INDEX_COUNT_LOG2),
     FL_INDEX_SHIFT = (SL_INDEX_COUNT_LOG2 + ALIGN_SIZE_LOG2),
     FL_INDEX_COUNT = (FL_INDEX_MAX - FL_INDEX_SHIFT + 1),

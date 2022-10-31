@@ -296,6 +296,7 @@ static int filemgr_draw(struct gui_activity*act){
 	// file view
 	tabview=lv_tabview_create(scr,LV_DIR_TOP,gui_font_size*2);
 	lv_obj_set_width(tabview,lv_pct(100));
+	lv_obj_set_style_bg_opa(tabview,LV_OPA_TRANSP,0);
 	lv_obj_add_event_cb(tabview,tabview_cb,LV_EVENT_VALUE_CHANGED,NULL);
 	lv_obj_set_flex_grow(tabview,1);
 
@@ -313,7 +314,7 @@ static int filemgr_draw(struct gui_activity*act){
 	lv_draw_buttons_auto_arg(
 		act->page,
 		#define BTN(tgt,title,en,x)&(struct button_dsc){\
-			&btn_##tgt,en,_(title),btns_cb,#tgt,x%cs,1,x/cs,1,NULL\
+			&btn_##tgt,en,title,btns_cb,#tgt,x%cs,1,x/cs,1,NULL\
 		}
 		BTN(prev,    LV_SYMBOL_LEFT,      true,  0),
 		BTN(refresh, LV_SYMBOL_REFRESH,   true,  1),

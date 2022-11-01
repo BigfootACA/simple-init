@@ -7,7 +7,7 @@
   LIBRARY_CLASS                  = TSMLib
 
 [BuildOptions]
-  GCC:*_*_*_CC_FLAGS = -include src/config-uefi.h -Wno-sign-compare
+  GCC:*_*_*_CC_FLAGS = -include src/config-uefi.h
 
 [Packages]
   MdePkg/MdePkg.dec

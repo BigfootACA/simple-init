@@ -390,7 +390,7 @@ static void screen_write(struct tsm_screen *con, unsigned int x,
 	line = con->lines[y];
 
 	if ((con->flags & TSM_SCREEN_INSERT_MODE) &&
-	    (int)x < ((int)con->size_x - len)) {
+	    (int)x < ((int)con->size_x - (int)len)) {
 		line->age = con->age_cnt;
 		memmove(&line->cells[x + len], &line->cells[x],
 			sizeof(struct cell) * (con->size_x - len - x));

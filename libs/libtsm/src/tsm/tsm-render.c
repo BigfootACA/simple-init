@@ -101,13 +101,13 @@ tsm_age_t tsm_screen_draw(struct tsm_screen *con, tsm_screen_draw_cb draw_cb,
 		if (con->sel_active) {
 			if (con->sel_start.line == line ||
 			    (!con->sel_start.line &&
-			     con->sel_start.y == k - 1))
+			     con->sel_start.y == (int)k - 1))
 				sel_start = true;
 			else
 				sel_start = false;
 			if (con->sel_end.line == line ||
 			    (!con->sel_end.line &&
-			     con->sel_end.y == k - 1))
+			     con->sel_end.y == (int)k - 1))
 				sel_end = true;
 			else
 				sel_end = false;

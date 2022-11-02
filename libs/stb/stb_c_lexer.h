@@ -320,6 +320,7 @@ static int stb__clex_iswhite(int x)
    return x == ' ' || x == '\t' || x == '\r' || x == '\n' || x == '\f';
 }
 
+__attribute__((used))
 static const char *stb__strchr(const char *str, int ch)
 {
    for (; *str; ++str)
@@ -343,7 +344,7 @@ static int stb__clex_parse_suffixes(stb_lexer *lexer, long tokenid, char *start,
       lexer->string[lexer->string_len++] = *cur++;
    }
    #else
-   suffixes = suffixes; // attempt to suppress warnings
+   (void)suffixes; // attempt to suppress warnings
    #endif
    return stb__clex_token(lexer, tokenid, start, cur-1);
 }

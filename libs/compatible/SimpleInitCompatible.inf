@@ -7,7 +7,7 @@
   LIBRARY_CLASS                  = SimpleInitCompatible
 
 [BuildOptions]
-  GCC:*_*_*_CC_FLAGS = -include src/config-uefi.h -Wno-missing-braces -Wno-sign-compare
+  GCC:*_*_*_CC_FLAGS = -include src/config-uefi.h -Wno-sign-compare -Wno-error=missing-braces -Wno-missing-braces -Wno-error=null-pointer-subtraction -Wno-null-pointer-subtraction
 
 [Packages]
   MdePkg/MdePkg.dec

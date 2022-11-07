@@ -82,7 +82,7 @@ xml_render_obj*render_lookup_object(
 	const char*name
 ){
 	list*l;
-	if(!render||!name||!name[0])return false;
+	if(!render||!name||!name[0])return NULL;
 	MUTEX_LOCK(render->lock);
 	l=list_search_one(
 		render->objects,
@@ -98,7 +98,7 @@ xml_render_style*render_lookup_style(
 	const char*name
 ){
 	list*l;
-	if(!render||!name||!name[0])return false;
+	if(!render||!name||!name[0])return NULL;
 	MUTEX_LOCK(render->lock);
 	l=list_search_one(
 		render->styles,
@@ -114,7 +114,7 @@ xml_render_code*render_lookup_code(
 	const char*name
 ){
 	list*l;
-	if(!render||!name||!name[0])return false;
+	if(!render||!name||!name[0])return NULL;
 	MUTEX_LOCK(render->lock);
 	l=list_search_one(
 		render->codes,

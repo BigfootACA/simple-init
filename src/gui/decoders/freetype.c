@@ -256,7 +256,7 @@ static lv_font_t*_lv_ft_init(
 		sizeof(lv_font_fmt_ft_dsc_t)+
 		sizeof(lv_font_t);
 	lv_font_fmt_ft_dsc_t*dsc=lv_mem_alloc(need_size);
-	if(!dsc)return false;
+	if(!dsc)return NULL;
 	lv_memset_00(dsc,need_size);
 	dsc->font=
 		(lv_font_t*)(((char*)dsc)+

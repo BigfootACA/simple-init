@@ -37,7 +37,7 @@ static bool draw_edk2_logo(lv_obj_t*obj){
 	if(dsc.data)free((void*)dsc.data);
 	memset(&dsc,0,sizeof(dsc));
 	st=gBS->LocateProtocol(&gEdkiiPlatformLogoProtocolGuid,NULL,(VOID**)&plogo);
-	if(EFI_ERROR(st)&&plogo){
+	if(EFI_ERROR(st)||!plogo){
 		tlog_debug(
 			"get edk2 platform logo protocol failed: %s",
 			efi_status_to_string(st)

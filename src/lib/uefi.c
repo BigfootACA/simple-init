@@ -44,11 +44,11 @@ static EFI_STATUS setvar_str(EFI_GUID*guid,CHAR16*key,CHAR16*str,VA_LIST va){
 	return setvar(guid,key,Buffer,StrSize(Buffer));
 }
 
-EFI_STATUS efi_setvar(CHAR16*key,VOID*buf,UINTN size){
+EFIAPI EFI_STATUS efi_setvar(CHAR16*key,VOID*buf,UINTN size){
         return setvar(&gSimpleInitFileGuid,key,buf,size);
 }
 
-EFI_STATUS efi_setvar_str(CHAR16*key,CHAR16*str,...){
+EFIAPI EFI_STATUS efi_setvar_str(CHAR16*key,CHAR16*str,...){
 	VA_LIST va;
 	VA_START(va,str);
 	EFI_STATUS r=setvar_str(&gSimpleInitFileGuid,key,str,va);
@@ -56,11 +56,11 @@ EFI_STATUS efi_setvar_str(CHAR16*key,CHAR16*str,...){
 	return r;
 }
 
-EFI_STATUS efi_setvar_int(CHAR16 *name,UINTN num){
+EFIAPI EFI_STATUS efi_setvar_int(CHAR16 *name,UINTN num){
         return efi_setvar_str(name,L"%u",num);
 }
 
-EFI_STATUS efi_file_get_info(EFI_FILE_PROTOCOL*file,EFI_GUID*guid,UINTN*size,VOID**data){
+EFIAPI EFI_STATUS efi_file_get_info(EFI_FILE_PROTOCOL*file,EFI_GUID*guid,UINTN*size,VOID**data){
 	UINTN cnt=0;
 	EFI_STATUS ret;
 	if(!guid||!data)return EFI_INVALID_PARAMETER;
@@ -79,11 +79,11 @@ EFI_STATUS efi_file_get_info(EFI_FILE_PROTOCOL*file,EFI_GUID*guid,UINTN*size,VOI
 	return ret;
 }
 
-EFI_STATUS efi_file_get_file_info(EFI_FILE_PROTOCOL*file,UINTN*size,EFI_FILE_INFO**data){
+EFIAPI EFI_STATUS efi_file_get_file_info(EFI_FILE_PROTOCOL*file,UINTN*size,EFI_FILE_INFO**data){
 	return efi_file_get_info(file,&gEfiFileInfoGuid,size,(VOID**)data);
 }
 
-EFI_STATUS efi_file_read(EFI_FILE_PROTOCOL*file,UINTN size,VOID**data,UINTN*read){
+EFIAPI EFI_STATUS efi_file_read(EFI_FILE_PROTOCOL*file,UINTN size,VOID**data,UINTN*read){
 	UINTN rs=size;
 	EFI_STATUS ret;
 	if(!file||!data)return EFI_INVALID_PARAMETER;
@@ -100,7 +100,7 @@ EFI_STATUS efi_file_read(EFI_FILE_PROTOCOL*file,UINTN size,VOID**data,UINTN*read
 	return ret;
 }
 
-EFI_STATUS efi_file_read_dir(EFI_FILE_PROTOCOL*file,EFI_FILE_INFO**data){
+EFIAPI EFI_STATUS efi_file_read_dir(EFI_FILE_PROTOCOL*file,EFI_FILE_INFO**data){
 	UINTN size=sizeof(EFI_FILE_INFO)+256;
 	EFI_STATUS status=efi_file_read(file,size,(VOID**)data,&size);
 	if(status==EFI_BUFFER_TOO_SMALL)status=efi_file_read(file,size,(VOID**)data,&size);
@@ -111,7 +111,7 @@ EFI_STATUS efi_file_read_dir(EFI_FILE_PROTOCOL*file,EFI_FILE_INFO**data){
 	return status;
 }
 
-EFI_STATUS efi_file_read_whole(EFI_FILE_PROTOCOL*file,VOID**data,UINTN*read){
+EFIAPI EFI_STATUS efi_file_read_whole(EFI_FILE_PROTOCOL*file,VOID**data,UINTN*read){
 	UINTN size=0;
 	EFI_STATUS ret;
 	EFI_FILE_INFO*info=NULL;

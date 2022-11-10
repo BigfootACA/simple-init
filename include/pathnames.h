@@ -135,8 +135,8 @@
 #define _PATH_PROC_MOUNTINFO	_PATH_PROC_SELF"/mountinfo"
 #define _PATH_PROC_FDDIR	_PATH_PROC_SELF"/fd"
 #define _PATH_BINFMT_MISC	_PATH_PROC_SYS_FS"/binfmt_misc"
-#define	_PATH_MNTTAB		_PATH_ETC"/fstab"
-#define	_PATH_MOUNTED		_PATH_PROC_SELF"/mounts"
+#define _PATH_MNTTAB		_PATH_ETC"/fstab"
+#define _PATH_MOUNTED		_PATH_ETC"/mtab"
 #define _PATH_RUNSTATEDIR	_PATH_RUN
 #define _PATH_SYSCONFSTATICDIR	_PATH_ETC
 #define _PATH_OS_RELEASE_ETC	_PATH_ETC"/os-release"

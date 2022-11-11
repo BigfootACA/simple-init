@@ -1317,7 +1317,7 @@ static void draw_cursors(lv_obj_t * obj, lv_draw_ctx_t * draw_ctx)
         }
         else {
             if(cursor->point_id == LV_CHART_POINT_NONE) continue;
-            lv_point_t p;
+            lv_point_t p = {0, 0};
             lv_chart_get_point_pos_by_id(obj, cursor->ser, cursor->point_id, &p);
             cx = p.x;
             cy = p.y;

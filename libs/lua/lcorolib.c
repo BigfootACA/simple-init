@@ -30,7 +30,7 @@ static lua_State *getco (lua_State *L) {
 ** cases or -1 for errors.
 */
 static int auxresume (lua_State *L, lua_State *co, int narg) {
-  int status, nres;
+  int status = 0, nres = 0;
   if (l_unlikely(!lua_checkstack(co, narg))) {
     lua_pushliteral(L, "too many arguments to resume");
     return -1;  /* error flag */

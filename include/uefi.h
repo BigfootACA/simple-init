@@ -40,4 +40,11 @@ extern EFIAPI EFI_STATUS efi_file_read_dir(EFI_FILE_PROTOCOL*file,EFI_FILE_INFO*
 // src/lib/uefi.c: auto allocate buffer and read whole file
 extern EFIAPI EFI_STATUS efi_file_read_whole(EFI_FILE_PROTOCOL*file,VOID**data,UINTN*read);
 
+extern BOOLEAN uefi_str_to_tpl(IN CONST CHAR8*str,OUT EFI_TPL*tpl);
+extern BOOLEAN uefi_str_to_event_type(IN CONST CHAR8*str,OUT UINT32*type);
+extern BOOLEAN uefi_str_to_reset_type(IN CONST CHAR8*str,OUT EFI_RESET_TYPE*type);
+extern BOOLEAN uefi_str_to_memory_type(IN CONST CHAR8*str,OUT EFI_MEMORY_TYPE*type);
+extern BOOLEAN uefi_str_to_load_option_type(IN CONST CHAR8*str,EFI_BOOT_MANAGER_LOAD_OPTION_TYPE*type);
+extern const char*uefi_memory_type_to_str(EFI_MEMORY_TYPE type);
+extern const char*uefi_load_option_type_to_str(EFI_BOOT_MANAGER_LOAD_OPTION_TYPE type);
 #endif

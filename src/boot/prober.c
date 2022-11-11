@@ -67,20 +67,22 @@ static int free_cache(void*d){
 
 static bool add_item(fsh*f,struct efi_path*ep,char*path,int id,int part){
 	char*url=NULL;
-	struct boot_config use;
+	struct boot_config*use;
 	if(!f||!ep||!path)return false;
 	if(fs_get_path_alloc(f,&url)!=0||!url)return false;
 	telog_debug("found %s at %s from part %d",ep->title,path,part);
-	memcpy(&use,&def,sizeof(struct boot_config));
-	snprintf(use.desc,sizeof(use.desc)-1,"%s on #%d",ep->title,part);
-	snprintf(use.ident,sizeof(use.ident)-1,"prober-%d",id);
-	strncpy(use.icon,ep->icon,sizeof(use.icon));
-	boot_create_config(&use,NULL);
-	confd_set_string_base(use.key,"efi_file",url);
+	if(!(use=malloc(sizeof(struct boot_config))))return false;
+	memcpy(use,&def,sizeof(struct boot_config));
+	snprintf(use->desc,sizeof(use->desc)-1,"%s on #%d",ep->title,part);
+	snprintf(use->ident,sizeof(use->ident)-1,"prober-%d",id);
+	strncpy(use->icon,ep->icon,sizeof(use->icon));
+	boot_create_config(use,NULL);
+	confd_set_string_base(use->key,"efi_file",url);
 	if(ep->load_opt){
-		confd_set_string_base(use.key,"options",ep->load_opt);
-		confd_set_boolean_base(use.key,"options_widechar",ep->unicode);
+		confd_set_string_base(use->key,"options",ep->load_opt);
+		confd_set_boolean_base(use->key,"options_widechar",ep->unicode);
 	}
+	free(use);
 	free(url);
 	return true;
 }

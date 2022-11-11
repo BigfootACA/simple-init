@@ -591,7 +591,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
             s = (char *)"null";
          // get the length, limited to desired precision
          // always limit to ~0u chars since our counts are 32b
-         l = stbsp__strlen_limited(s, (pr >= 0) ? pr : ~0u);
+         l = stbsp__strlen_limited(s, (pr >= 0) ? (size_t)pr : ~0u);
          lead[0] = 0;
          tail[0] = 0;
          pr = 0;

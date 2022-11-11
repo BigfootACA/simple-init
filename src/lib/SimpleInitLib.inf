@@ -11,6 +11,7 @@
 
 [Packages]
   MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
   EmbeddedPkg/EmbeddedPkg.dec
   SimpleInit.dec
 
@@ -37,3 +38,5 @@
   aboot.c
   reboot.c
   url.c
+  uefi_string.c
+

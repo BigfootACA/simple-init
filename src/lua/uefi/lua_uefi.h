@@ -122,13 +122,6 @@ struct lua_uefi_event_data{
 };
 
 extern void uefi_lua_check_status(lua_State*L,EFI_STATUS st);
-extern BOOLEAN uefi_str_to_tpl(IN CONST CHAR8*str,OUT EFI_TPL*tpl);
-extern BOOLEAN uefi_str_to_event_type(IN CONST CHAR8*str,OUT UINT32*type);
-extern BOOLEAN uefi_str_to_reset_type(IN CONST CHAR8*str,OUT EFI_RESET_TYPE*type);
-extern BOOLEAN uefi_str_to_memory_type(IN CONST CHAR8*str,OUT EFI_MEMORY_TYPE*type);
-extern BOOLEAN uefi_str_to_load_option_type(IN CONST CHAR8*str,EFI_BOOT_MANAGER_LOAD_OPTION_TYPE*type);
-extern const char*uefi_memory_type_to_str(EFI_MEMORY_TYPE type);
-extern const char*uefi_load_option_type_to_str(EFI_BOOT_MANAGER_LOAD_OPTION_TYPE type);
 
 extern void uefi_absolute_pointer_protocol_to_lua(lua_State*L,EFI_ABSOLUTE_POINTER_PROTOCOL*proto);
 extern void uefi_acpi_table_protocol_to_lua(lua_State*L,EFI_ACPI_TABLE_PROTOCOL*proto);

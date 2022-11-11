@@ -424,7 +424,7 @@ int ufdt_to_fdt(const struct ufdt *tree, void *buf, int buf_size) {
      to be in compliance with the DTO behavior of libfdt. */
   int n_mem_rsv = fdt_num_mem_rsv(tree->fdtps[0]);
   for (int i = 0; i < n_mem_rsv; i++) {
-    uint64_t addr, size;
+    uint64_t addr = 0, size = 0;
     fdt_get_mem_rsv(tree->fdtps[0], i, &addr, &size);
     fdt_add_reservemap_entry(buf, addr, size);
   }

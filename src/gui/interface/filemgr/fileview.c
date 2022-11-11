@@ -519,7 +519,6 @@ static bool fileitem_sorter(list*a,list*b){
 static void scan_items(struct fileview*view){
 	list*l;
 	int r=0;
-	fs_file_info info;
 	fsvol_info**vols;
 	struct fileitem item;
 	if(!view->view)return;
@@ -538,12 +537,12 @@ static void scan_items(struct fileview*view){
 				return;
 			}
 		}else fs_seek(view->folder,0,SEEK_SET);
-		while((r=fs_readdir(view->folder,&info))==0){
-			if(info.name[0]=='.'&&!view->hidden)continue;
-			memset(&item,0,sizeof(item));
-			memcpy(&item.file,&info,sizeof(info));
-			item.view=view,item.type=info.type;
+		memset(&item,0,sizeof(item));
+		while((r=fs_readdir(view->folder,&item.file))==0){
+			if(item.file.name[0]=='.'&&!view->hidden)continue;
+			item.view=view,item.type=item.file.type;
 			list_obj_add_new_dup(&view->items,&item,sizeof(item));
+			memset(&item,0,sizeof(item));
 			if(view->count>=256)tlog_warn("too many files, skip");
 		}
 		list_sort(view->items,fileitem_sorter);

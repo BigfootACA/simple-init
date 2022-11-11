@@ -30,7 +30,6 @@ static int fbfd=-1;
 static sem_t flush;
 struct fb_var_screeninfo vinfo;
 struct fb_fix_screeninfo finfo;
-static lv_color_t buf[846000];
 static lv_disp_draw_buf_t disp_buf;
 static lv_disp_drv_t disp_drv;
 static void*fbdev_refresh(void*args __attribute__((unused))){
@@ -163,7 +162,14 @@ static int _fbdev_register(){
 		fbdev_exit();
 		return -1;
 	}
-	lv_disp_draw_buf_init(&disp_buf,buf,NULL,sizeof(buf));
+	size_t s=vinfo.xres*vinfo.yres;
+	static lv_color_t*buf=NULL;
+	if(!(buf=malloc(s*sizeof(lv_color_t)))){
+		telog_error("malloc display buffer");
+		return -1;
+	}
+	memset(buf,0,s);
+	lv_disp_draw_buf_init(&disp_buf,buf,NULL,s);
 	lv_disp_drv_init(&disp_drv);
 	disp_drv.hor_res=vinfo.xres;
 	disp_drv.ver_res=vinfo.yres;

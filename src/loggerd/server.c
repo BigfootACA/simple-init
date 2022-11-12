@@ -288,7 +288,9 @@ int loggerd_thread(int fd){
 	struct epoll_event*evs;
 	struct socket_data*sd;
 	logger_internal_add("stderr",LEVEL_DEBUG,&file_logger);
+	logger_internal_add("printk",LEVEL_DEBUG,&printk_logger);
 	logger_internal_set("stderr",true);
+	logger_internal_set("printk",true);
 	logger_internal_send_string(fd,LOG_OK,NULL);
 	logger_internal_printf(
 		LEVEL_INFO,

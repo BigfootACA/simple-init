@@ -12,25 +12,32 @@
 #include<stdlib.h>
 #include<string.h>
 #include<unistd.h>
+#include<sys/stat.h>
+#include<sys/sysmacros.h>
 #include"pathnames.h"
 #include"logger.h"
 #include"defines.h"
 
-static char*device=NULL;
-
-int init_klog_manual(char*dev){
-	return access(device=dev,F_OK);
-}
-
-int init_klog(){
-	return init_klog_manual(_PATH_DEV_KMSG);
+static int init_kmsg(){
+	struct stat st;
+	bool mk=false;
+	if(stat(_PATH_DEV_KMSG,&st)==0){
+		if(!S_ISCHR(st.st_mode))mk=true;
+		if(major(st.st_dev)!=1)mk=true;
+		if(minor(st.st_dev)!=11)mk=true;
+	}else mk=true;
+	if(mk){
+		unlink(_PATH_DEV_KMSG);
+		mknod(_PATH_DEV_KMSG,S_IFCHR|0644,makedev(1,11));
+	}
+	return open(_PATH_DEV_KMSG,O_WRONLY|O_NOCTTY|O_CLOEXEC);
 }
 
 int printk_logger(char*name __attribute__((unused)),struct log_item *log){
+	static int fd=-1;
 	if(!log->time)ERET(EFAULT);
-	if(!device)ERET(ENOENT);
-	FILE*klog=NULL;
-	size_t size=sizeof(char)*(16+
+	if(strcmp(log->tag,"kernel")==0&&log->pid==0)return 0;
+	size_t size=sizeof(char)*(20+
 		strlen(log->tag)+
 		strlen(log->content)
 	);
@@ -40,21 +47,15 @@ int printk_logger(char*name __attribute__((unused)),struct log_item *log){
 	size=snprintf(
 		buff,
 		size,
-		"<%d>%s: %s\n",
+		"<%d>simple-init %s: %s\n",
 		logger_level2klevel(log->level),
 		log->tag,
 		log->content
 	);
-	int r=0;
+	int r=-1;
 	errno=0;
-	if(!(klog=fopen(device,"w"))){
-		free(buff);
-		return -errno;
-	}
-	if((size_t)fputs(buff,klog)!=size)
-		r=(errno==0?-1:-errno);
-	fflush(klog);
-	fclose(klog);
+	if(fd<0)fd=init_kmsg();
+	if(fd>=0)r=write(fd,buff,size);
 	free(buff);
 	errno=r;
 	return r==0?(int)size:-1;

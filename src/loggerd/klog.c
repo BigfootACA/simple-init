@@ -114,8 +114,10 @@ static int read_kmsg_thread(void*data __attribute__((unused))){
 			break;
 		}else if(r==0)continue;
 		else if(FD_ISSET(klogfd,&fs)){
-			if(read_kmsg_item(&item,klogfd,false))
-				logger_write(&item);
+			if(
+				read_kmsg_item(&item,klogfd,false)&&
+				strncmp(item.content,"simple-init ",12)!=0
+			)logger_write(&item);
 		}else if(FD_ISSET(logfd,&fs)){
 			struct log_msg l;
 			int x=logger_internal_read_msg(logfd,&l);

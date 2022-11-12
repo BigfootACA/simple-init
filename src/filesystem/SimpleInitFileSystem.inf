@@ -11,6 +11,7 @@
 
 [Packages]
   MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
   SimpleInit.dec
 
 [LibraryClasses]

@@ -27,6 +27,7 @@
 int main_retval=0;
 jmp_buf main_exit;
 extern int bootmenu_draw();
+extern void uefi_dump_info();
 
 static void show_bootmenu(void*d __attribute__((unused))){
 	bootmenu_draw();
@@ -43,6 +44,7 @@ static int post_main(){
 	if((r=gui_screen_init())!=0)return r;
 	gui_splash_draw();
 	lv_task_handler();
+	uefi_dump_info();
 
 	gui_splash_set_text(true,_("Initializing config store..."));
 	confd_dump(LEVEL_VERBOSE);

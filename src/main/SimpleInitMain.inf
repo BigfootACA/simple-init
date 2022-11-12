@@ -24,6 +24,22 @@
 
 [Guids]
   gSimpleInitFileGuid
+  gEfiMemoryTypeInformationGuid
+  gEfiDebugImageInfoTableGuid
+  gEfiAcpiTableGuid
+  gEfiDebugImageInfoTableGuid
+  gEfiGlobalVariableGuid
+  gEfiHobListGuid
+  gEfiMemoryAttributesTableGuid
+  gEfiGraphicsInfoHobGuid
+  gEfiGraphicsDeviceInfoHobGuid
+  gEfiSystemResourceTableGuid
+  gEfiMdePkgTokenSpaceGuid
+  gEfiSmbiosTableGuid
+  gEfiFileInfoGuid
+  gEfiVariableIndexTableGuid
+  gEfiDxeServicesTableGuid
+  gEfiCrc32GuidedSectionExtractionGuid
 
 [Pcd]
   gSimpleInitTokenSpaceGuid.PcdLoggerdUseConsole
@@ -31,3 +47,4 @@
 [Sources]
   # UEFI entry point
   uefimain.c
+  dump.c

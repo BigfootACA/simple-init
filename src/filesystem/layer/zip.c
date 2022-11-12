@@ -450,6 +450,7 @@ int fs_register_zip(fsh*f,const char*name){
 	if(!fsh_check(f))RET(EBADF);
 	if(name&&!name[0])RET(EINVAL);
 	MUTEX_LOCK(lock);
+	memset(&error,0,sizeof(error));
 	if(name){
 		if(strlen(name)>=sizeof(pn))
 			DONE(ENAMETOOLONG);
@@ -498,7 +499,7 @@ int fs_register_zip(fsh*f,const char*name){
 	done:e=errno;
 	if(zip)zip_close(zip);
 	else if(src)zip_source_free(src);
-	zip_error_fini(&error);
+	if(error.str)zip_error_fini(&error);
 	MUTEX_UNLOCK(lock);
 	XRET(e,EIO);
 }

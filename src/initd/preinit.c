@@ -61,6 +61,9 @@ int preinit(){
 	if(access(_PATH_PROC_CMDLINE,R_OK)!=0)
 		return terlog_error(2,"failed to find proc mountpoint");
 
+	// disable printk ratelimit
+	simple_file_write(_PATH_PROC_SYS"/kernel/printk_devkmsg","on\n");
+
 	// vibrate device
 	vibrate(100);
 

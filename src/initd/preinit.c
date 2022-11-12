@@ -155,6 +155,11 @@ int preinit(){
 	// start syslog forwarder
 	logger_syslog();
 
+	// open /dev/pmsg0 (pstore)
+	char*dev_pmsg=_PATH_DEV"/pmsg0";
+	if(access(dev_pmsg,F_OK)==0)
+		logger_open(dev_pmsg);
+
 	// open /dev/logger.log
 	char*dev_logger=_PATH_DEV"/logger.log";
 	logger_open(dev_logger);

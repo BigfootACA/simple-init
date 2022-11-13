@@ -30,6 +30,9 @@ const luaL_Reg simple_init_lua_libs[]={
 	{"conf",     luaopen_conf},
 	{"logger",   luaopen_logger},
 	{"abootimg", luaopen_abootimg},
+	#ifdef ENABLE_STB
+	{"stb",      luaopen_stb},
+	#endif
 	#ifdef ENABLE_NANOSVG
 	{"nanosvg",  luaopen_nanosvg},
 	#endif

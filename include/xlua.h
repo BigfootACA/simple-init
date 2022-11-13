@@ -43,6 +43,7 @@ extern const luaL_Reg lua_core_libs[];
 extern const luaL_Reg simple_init_lua_libs[];
 extern const luaL_Reg simple_init_lua_regs[];
 LUAMOD_API int luaopen_fs(lua_State*L);
+LUAMOD_API int luaopen_stb(lua_State*L);
 LUAMOD_API int luaopen_url(lua_State*L);
 LUAMOD_API int luaopen_data(lua_State*L);
 LUAMOD_API int luaopen_conf(lua_State*L);

@@ -9,6 +9,7 @@ add_library(init_lua STATIC
 	abootimg.c
 	init.c
 	url.c
+	stb.c
 	recovery.c
 	filesystem/fs.c
 	filesystem/fsh.c

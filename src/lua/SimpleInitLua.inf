@@ -88,6 +88,7 @@
   locate.c
   abootimg.c
   url.c
+  stb.c
   filesystem/fsh.c
   filesystem/fs_info.c
   filesystem/fs.c

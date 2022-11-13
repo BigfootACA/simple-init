@@ -86,12 +86,10 @@ static int lua_fs_write_file(lua_State*L){
 	int r=0;
 	size_t size=0;
 	void*buffer=NULL;
-	GET_HANDLER(L,1,f);
-	if(!f->f)return luaL_argerror(L,1,"invalid fsh");
-	lua_arg_get_data(L,3,false,&buffer,&size);
-	int64_t len=luaL_optinteger(L,4,size);
-	if(len<=0)return luaL_argerror(L,4,"invalid length");
-	if(size>0&&(size_t)len>size)return luaL_argerror(L,4,"out of range");
+	lua_arg_get_data(L,2,false,&buffer,&size);
+	int64_t len=luaL_optinteger(L,3,size);
+	if(len<=0)return luaL_argerror(L,3,"invalid length");
+	if(size>0&&(size_t)len>size)return luaL_argerror(L,3,"out of range");
 	switch(lua_type(L,1)){
 		case LUA_TSTRING:{
 			const char*path=luaL_checkstring(L,1);
@@ -109,7 +107,7 @@ static int lua_fs_write_file(lua_State*L){
 	}
 	lua_pushboolean(L,r==0);
 	lua_pushinteger(L,r);
-	return 3;
+	return 2;
 }
 
 static const luaL_Reg fs_lib[]={

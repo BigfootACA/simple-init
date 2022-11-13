@@ -26,7 +26,10 @@ static void init_gadget_conf(){
 	char*udc=confd_get_string("runtime.cmdline.udc",NULL);
 	char*serial=confd_get_string("runtime.cmdline.serial","1234567890");
 	if(!serial)return;
-	if(!udc)udc=strdup(gadget_find_udc());
+	if(!udc){
+		udc=gadget_find_udc();
+		if(udc)udc=strdup(udc);
+	}
 
 	confd_set_string("gadget.name","gadget");
 	confd_set_integer("gadget.id_vendor",0x0519);

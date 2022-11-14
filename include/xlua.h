@@ -25,6 +25,7 @@
 	if(!lua_isnoneornil(L,n)){\
 		var=luaL_checkudata(L,n,name);\
 	}
+#define LUA_ARG_MAX(idx)if(lua_gettop(L)>(idx)){return luaL_argerror(L,(idx)+1,"too many arguments");}
 struct lua_url{url*u;};
 struct lua_fsh{fsh*f;};
 struct lua_fs_info{fs_file_info info;};

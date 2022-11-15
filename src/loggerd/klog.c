@@ -147,6 +147,7 @@ int init_kmesg(){
 
 	while(read_kmsg_item(&log,klogfd,true)){
 		if(!(buff=logger_internal_item2buff(&log)))goto fail;
+		if(strncmp(buff->tag,"simple-init ",12)==0)continue;
 		if(!(item=list_new(buff)))goto fail;
 		if(conts)list_add(conts,item);
 		conts=item;

@@ -49,6 +49,7 @@ const luaL_Reg simple_init_lua_libs[]={
 	{"locate",   luaopen_locate},
 	#else
 	{"init",     luaopen_init},
+	{"fdisk",    luaopen_fdisk},
 	{"recovery", luaopen_recovery},
 	#endif
 	{NULL,NULL}

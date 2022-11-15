@@ -51,6 +51,7 @@ LUAMOD_API int luaopen_conf(lua_State*L);
 LUAMOD_API int luaopen_init(lua_State*L);
 LUAMOD_API int luaopen_uefi(lua_State*L);
 LUAMOD_API int luaopen_lvgl(lua_State*L);
+LUAMOD_API int luaopen_fdisk(lua_State*L);
 LUAMOD_API int luaopen_locate(lua_State*L);
 LUAMOD_API int luaopen_logger(lua_State*L);
 LUAMOD_API int luaopen_sysbar(lua_State*L);

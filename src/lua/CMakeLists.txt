@@ -15,4 +15,15 @@ add_library(init_lua STATIC
 	filesystem/fsh.c
 	filesystem/fs_info.c
 	filesystem/string.c
+	fdisk/fdisk.c
+	fdisk/fdisk_ask.c
+	fdisk/fdisk_context.c
+	fdisk/fdisk_field.c
+	fdisk/fdisk_label.c
+	fdisk/fdisk_labelitem.c
+	fdisk/fdisk_partition.c
+	fdisk/fdisk_parttype.c
+	fdisk/fdisk_script.c
+	fdisk/fdisk_table.c
+	fdisk/fdisk_iter.c
 )

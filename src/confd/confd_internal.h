@@ -71,6 +71,7 @@ struct confd_msg{
 // config struct
 struct conf{
 	struct rb_node node;
+	mutex_t lock;
 	char name[256];
 	struct conf*parent;
 	enum conf_type type;

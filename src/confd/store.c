@@ -17,7 +17,6 @@
 #include"lock.h"
 #define KEY_MODE 0755
 #define VAL_MODE 0644
-static mutex_t store_lock;
 
 bool conf_store_changed=false;
 static struct conf conf_store={
@@ -92,18 +91,18 @@ static struct conf*conf_lookup(const char*path,bool create,enum conf_type type,u
 	if(!path[0]&&type==0)return &conf_store;
 	if(!(xpath=strdup(path)))EPRET(ENOMEM);
 	p=xpath,key=xpath;
-	MUTEX_LOCK(store_lock);
+	MUTEX_LOCK(cur->lock);
 	if(p)do{
 		if(*p!='.')continue;
 		*p=0;
 		if(!(x=conf_get(cur,key))){
 			if(!create){
-				MUTEX_UNLOCK(store_lock);
+				MUTEX_UNLOCK(cur->lock);
 				free(xpath);
 				EPRET(ENOENT);
 			}
 			if(!(x=conf_create(cur,key,u,g))){
-				MUTEX_UNLOCK(store_lock);
+				MUTEX_UNLOCK(cur->lock);
 				free(xpath);
 				return NULL;
 			}
@@ -111,32 +110,34 @@ static struct conf*conf_lookup(const char*path,bool create,enum conf_type type,u
 			x->mode=KEY_MODE;
 		}
 		if(!check_perm_read(x,u,g)){
-			MUTEX_UNLOCK(store_lock);
+			MUTEX_UNLOCK(cur->lock);
 			free(xpath);
 			EPRET(EACCES);
 		}
+		MUTEX_LOCK(x->lock);
+		MUTEX_UNLOCK(cur->lock);
 		cur=x,key=++p;
 	}while(*p++);
 	if(!key[0]){
-		MUTEX_UNLOCK(store_lock);
+		MUTEX_UNLOCK(cur->lock);
 		free(xpath);
 		EPRET(EINVAL);
 	}
 	if(!(x=conf_get(cur,key))){
 		if(!create){
-			MUTEX_UNLOCK(store_lock);
+			MUTEX_UNLOCK(cur->lock);
 			free(xpath);
 			EPRET(ENOENT);
 		}
 		if(!(x=conf_create(cur,key,u,g))){
-			MUTEX_UNLOCK(store_lock);
+			MUTEX_UNLOCK(cur->lock);
 			free(xpath);
 			return NULL;
 		}
 		x->type=type;
 		x->mode=type==TYPE_KEY?KEY_MODE:VAL_MODE;
 	}
-	MUTEX_UNLOCK(store_lock);
+	MUTEX_UNLOCK(cur->lock);
 	free(xpath);
 	if(!check_perm_read(x,u,g))EPRET(EACCES);
 	if(x->type==0)EPRET(EBADMSG);
@@ -168,20 +169,20 @@ const char**conf_ls(const char*path,uid_t u,gid_t g){
 	struct conf*c=conf_lookup(path,false,0,u,g);
 	if(!c)return NULL;
 	if(c->type!=TYPE_KEY)EPRET(ENOTDIR);
-	MUTEX_LOCK(store_lock);
+	MUTEX_LOCK(c->lock);
 	int i=c->count,x=0;
 	if(i<0)i=0;
 	size_t s=sizeof(char*)*(i+1);
 	const char**r=malloc(s);
 	if(!r){
-		MUTEX_UNLOCK(store_lock);
+		MUTEX_UNLOCK(c->lock);
 		EPRET(ENOMEM);
 	}
 	memset(r,0,s);
 	struct conf*d;
 	rb_for_each_entry(d,&c->keys,node)
 		r[x++]=d->name;
-	MUTEX_UNLOCK(store_lock);
+	MUTEX_UNLOCK(c->lock);
 	return r;
 }
 
@@ -189,40 +190,38 @@ int conf_count(const char*path,uid_t u,gid_t g){
 	struct conf*c=conf_lookup(path,false,0,u,g);
 	if(!c)return -1;
 	if(c->type!=TYPE_KEY)ERET(ENOTDIR);
-	MUTEX_LOCK(store_lock);
+	MUTEX_LOCK(c->lock);
 	int i=c->count;
 	if(i<0)i=0;
-	MUTEX_UNLOCK(store_lock);
+	MUTEX_UNLOCK(c->lock);
 	return i;
 }
 
-static int conf_del_obj(struct conf*c){
+static int conf_del_obj(struct conf*c) {
 	if(!c)return -1;
 	if(!c->parent)ERET(EINVAL);
-	MUTEX_LOCK(store_lock);
+	MUTEX_LOCK(c->lock);
 	struct conf*d,*t;
 	if(c->type==TYPE_KEY){
 		rb_post_for_each_entry_safe(d,t,&c->keys,node) {
-			MUTEX_UNLOCK(store_lock);
 			conf_del_obj(d);
-			MUTEX_LOCK(store_lock);
+			free(d);
 		}
-	}else if(c->type==TYPE_STRING&&c->value.string)free(c->value.string);
-	rb_post_for_each_entry_safe(d,t,&c->parent->keys,node){
-		if(d!=c)continue;
-		rb_delete(&c->parent->keys,&d->node);
-		c->parent->count--;
-		break;
-	}
-	free(c);
+	} else if(c->type==TYPE_STRING&&c->value.string)free(c->value.string);
 	conf_store_changed=true;
-	MUTEX_UNLOCK(store_lock);
+	MUTEX_UNLOCK(c->lock);
 	return 0;
 }
 
 int conf_del(const char*path,uid_t u,gid_t g){
 	struct conf*c=conf_lookup(path,false,0,u,g);
-	return c?conf_del_obj(c):-(errno);
+	if (!c) return -(errno);
+	int i = conf_del_obj(c);
+	if (i) return i;
+	rb_delete(&c->parent->keys, &c->node);
+	c->parent->count--;
+	free(c);
+	return 0;
 }
 
 int conf_rename(const char*path,const char*name,uid_t u,gid_t g){
@@ -248,14 +247,14 @@ static int _conf_set_save(bool lock,struct conf*c,bool save,uid_t u,gid_t g){
 	struct conf*d;
 	int r=0;
 	if(!c)ERET(EINVAL);
-	if(lock)MUTEX_LOCK(store_lock);
+	if(lock)MUTEX_LOCK(c->lock);
 	if(c->type==TYPE_KEY)rb_for_each_entry(d,&c->keys,node){
 		if(!check_perm_write(d,u,g))r=EPERM;
 		else if(_conf_set_save(false,d,save,u,g)!=0)r=-errno;
 	}
 	if(!check_perm_write(c,u,g))r=EPERM;
 	else c->save=save;
-	if(lock)MUTEX_UNLOCK(store_lock);
+	if(lock)MUTEX_UNLOCK(c->lock);
 	return r;
 }
 
@@ -331,15 +330,15 @@ size_t conf_calc_size(struct conf*c){
 	int conf_set_##_func##_inc(const char*path,_type data,uid_t u,gid_t g,bool inc){\
 		struct conf*c=conf_lookup(path,true,TYPE_##_tag,u,g);\
 		if(!c)return -errno;\
-		MUTEX_LOCK(store_lock);\
+		MUTEX_LOCK(c->lock);\
 		if(c->type!=TYPE_##_tag){\
-			MUTEX_UNLOCK(store_lock);\
+			MUTEX_UNLOCK(c->lock);\
 			ERET(EBADMSG);\
 		}\
                 c->include=inc;\
 		VALUE_##_tag(c)=data;\
 		conf_store_changed=true;\
-		MUTEX_UNLOCK(store_lock);\
+		MUTEX_UNLOCK(c->lock);\
 		return 0;\
 	}\
 	int conf_set_##_func(const char*path,_type data,uid_t u,gid_t g){\

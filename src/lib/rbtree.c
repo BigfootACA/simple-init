@@ -5,6 +5,7 @@
  */
 
 #include "rbtree.h"
+#include "titer.h"
 
 /**
  * child_change - replace old child by new one.
@@ -13,12 +14,12 @@
  * @old: node to be replaced.
  * @new: new node to insert.
  */
-static inline void
+static __always_inline void
 child_change(struct rb_root *root, struct rb_node *parent,
              struct rb_node *old, struct rb_node *new)
 {
     if (!parent)
-        root->rb_node = new;
+        root->node = new;
     else if (parent->left == old)
         parent->left = new;
     else
@@ -33,10 +34,12 @@ child_change(struct rb_root *root, struct rb_node *parent,
  * @child: managed child node.
  * @color: color after rotation.
  * @ccolor: color of child.
+ * @callbacks: augmented callback function.
  */
-static inline void
+static __always_inline void
 rotate_set(struct rb_root *root, struct rb_node *node, struct rb_node *new,
-           struct rb_node *child, unsigned int color, unsigned int ccolor)
+           struct rb_node *child, unsigned int color, unsigned int ccolor,
+           const struct rb_callbacks *callbacks)
 {
     struct rb_node *parent = node->parent;
 
@@ -55,6 +58,7 @@ rotate_set(struct rb_root *root, struct rb_node *node, struct rb_node *new,
     }
 
     child_change(root, parent, node, new);
+    callbacks->rotate(node, new);
 }
 
 /**
@@ -63,10 +67,12 @@ rotate_set(struct rb_root *root, struct rb_node *node, struct rb_node *new,
  * @node: node to rotation.
  * @color: color after rotation.
  * @ccolor: color of child.
+ * @callbacks: augmented callback function.
  */
-static inline struct rb_node *
+static __always_inline struct rb_node *
 left_rotate(struct rb_root *root, struct rb_node *node,
-            unsigned int color, unsigned int ccolor)
+            unsigned int color, unsigned int ccolor,
+            const struct rb_callbacks *callbacks)
 {
     struct rb_node *child, *successor = node->right;
 
@@ -74,7 +80,7 @@ left_rotate(struct rb_root *root, struct rb_node *node,
     child = node->right = successor->left;
     successor->left = node;
 
-    rotate_set(root, node, successor, child, color, ccolor);
+    rotate_set(root, node, successor, child, color, ccolor, callbacks);
     return child;
 }
 
@@ -84,10 +90,12 @@ left_rotate(struct rb_root *root, struct rb_node *node,
  * @node: node to rotation.
  * @color: color after rotation.
  * @ccolor: color of child.
+ * @callbacks: augmented callback function.
  */
-static inline struct rb_node *
+static __always_inline struct rb_node *
 right_rotate(struct rb_root *root, struct rb_node *node,
-             unsigned int color, unsigned int ccolor)
+             unsigned int color, unsigned int ccolor,
+             const struct rb_callbacks *callbacks)
 {
     struct rb_node *child, *successor = node->left;
 
@@ -95,16 +103,18 @@ right_rotate(struct rb_root *root, struct rb_node *node,
     child = node->left = successor->right;
     successor->right = node;
 
-    rotate_set(root, node, successor, child, color, ccolor);
+    rotate_set(root, node, successor, child, color, ccolor, callbacks);
     return child;
 }
 
 /**
- * rb_fixup - balance after insert node.
+ * rb_fixup_augmented - augmented balance after insert node.
  * @root: rbtree root of node.
  * @node: new inserted node.
+ * @callbacks: augmented callback function.
  */
-void rb_fixup(struct rb_root *root, struct rb_node *node)
+void rb_fixup_augmented(struct rb_root *root, struct rb_node *node,
+                        const struct rb_callbacks *callbacks)
 {
     struct rb_node *parent, *gparent, *tmp;
 
@@ -174,7 +184,7 @@ void rb_fixup(struct rb_root *root, struct rb_node *node)
              */
 
             if (node == parent->right)
-                left_rotate(root, parent, RB_NSET, RB_BLACK);
+                left_rotate(root, parent, RB_NSET, RB_BLACK, callbacks);
 
             /*
              * Case 3 - node's uncle is black and node is
@@ -187,7 +197,7 @@ void rb_fixup(struct rb_root *root, struct rb_node *node)
              *    n   s           S   U
              */
 
-            right_rotate(root, gparent, RB_RED, RB_BLACK);
+            right_rotate(root, gparent, RB_RED, RB_BLACK, callbacks);
             break;
         } else {
             /* parent == gparent->right */
@@ -203,21 +213,23 @@ void rb_fixup(struct rb_root *root, struct rb_node *node)
 
             /* Case 2 - right rotate at parent */
             if (node == parent->left)
-                right_rotate(root, parent, RB_NSET, RB_BLACK);
+                right_rotate(root, parent, RB_NSET, RB_BLACK, callbacks);
 
             /* Case 3 - left rotate at gparent */
-            left_rotate(root, gparent, RB_RED, RB_BLACK);
+            left_rotate(root, gparent, RB_RED, RB_BLACK, callbacks);
             break;
         }
     }
 }
 
 /**
- * rb_erase - balance after remove node.
+ * rb_erase_augmented - augmented balance after remove node.
  * @root: rbtree root of node.
  * @parent: parent of removed node.
+ * @callbacks: augmented callback function.
  */
-void rb_erase(struct rb_root *root, struct rb_node *parent)
+void rb_erase_augmented(struct rb_root *root, struct rb_node *parent,
+                        const struct rb_callbacks *callbacks)
 {
     struct rb_node *tmp1, *tmp2, *sibling, *node = NULL;
 
@@ -243,7 +255,7 @@ void rb_erase(struct rb_root *root, struct rb_node *parent)
              */
 
             if (sibling->color == RB_RED)
-                sibling = left_rotate(root, parent, RB_RED, RB_BLACK);
+                sibling = left_rotate(root, parent, RB_RED, RB_BLACK, callbacks);
 
             tmp2 = sibling->right;
             if (!tmp2 || tmp2->color == RB_BLACK) {
@@ -306,7 +318,7 @@ void rb_erase(struct rb_root *root, struct rb_node *parent)
                  *          Sr
                  */
 
-                right_rotate(root, sibling, RB_NSET, RB_BLACK);
+                right_rotate(root, sibling, RB_NSET, RB_BLACK, callbacks);
                 tmp2 = sibling;
             }
 
@@ -323,7 +335,7 @@ void rb_erase(struct rb_root *root, struct rb_node *parent)
              *      (sl) sr      N  (sl)
              */
 
-            left_rotate(root, parent, RB_BLACK, RB_NSET);
+            left_rotate(root, parent, RB_BLACK, RB_NSET, callbacks);
             tmp2->color = RB_BLACK;
             break;
         } else {
@@ -331,7 +343,7 @@ void rb_erase(struct rb_root *root, struct rb_node *parent)
 
             /* Case 1 - right rotate at parent */
             if (sibling->color == RB_RED)
-                sibling = right_rotate(root, parent, RB_RED, RB_BLACK);
+                sibling = right_rotate(root, parent, RB_RED, RB_BLACK, callbacks);
 
             tmp1 = sibling->left;
             if (!tmp1 || tmp1->color == RB_BLACK) {
@@ -352,12 +364,12 @@ void rb_erase(struct rb_root *root, struct rb_node *parent)
                 }
 
                 /* Case 3 - left rotate at sibling */
-                left_rotate(root, sibling, RB_NSET, RB_BLACK);
+                left_rotate(root, sibling, RB_NSET, RB_BLACK, callbacks);
                 tmp1 = sibling;
             }
 
             /* Case 4 - right rotate at parent + color flips */
-            right_rotate(root, parent, RB_BLACK, RB_NSET);
+            right_rotate(root, parent, RB_BLACK, RB_NSET, callbacks);
             tmp1->color = RB_BLACK;
             break;
         }
@@ -365,11 +377,13 @@ void rb_erase(struct rb_root *root, struct rb_node *parent)
 }
 
 /**
- * rb_remove - remove node form rbtree.
+ * rb_remove_augmented - augmented remove node form rbtree.
  * @root: rbtree root of node.
  * @node: node to remove.
+ * @callbacks: augmented callback function.
  */
-struct rb_node *rb_remove(struct rb_root *root, struct rb_node *node)
+struct rb_node *rb_remove_augmented(struct rb_root *root, struct rb_node *node,
+                                    const struct rb_callbacks *callbacks)
 {
     struct rb_node *parent = node->parent, *rebalance = NULL;
     struct rb_node *child1 = node->left;
@@ -434,6 +448,7 @@ struct rb_node *rb_remove(struct rb_root *root, struct rb_node *node)
 
             parent = successor;
             tmp = successor->right;
+            callbacks->copy(node, successor);
         } else {
             /*
              * Case 3: node's successor is leftmost under
@@ -460,6 +475,9 @@ struct rb_node *rb_remove(struct rb_root *root, struct rb_node *node)
             parent->left = tmp;
             successor->right = child2;
             child2->parent = successor;
+
+            callbacks->copy(node, successor);
+            callbacks->propagate(parent, successor);
         }
 
         child1 = node->left;
@@ -477,9 +495,51 @@ struct rb_node *rb_remove(struct rb_root *root, struct rb_node *node)
 
         successor->parent = child1;
         successor->color = node->color;
+        parent = successor;
     }
 
+    callbacks->propagate(parent, NULL);
     return rebalance;
+}
+
+static void dummy_rotate(struct rb_node *node, struct rb_node *successor) {}
+static void dummy_copy(struct rb_node *node, struct rb_node *successor) {}
+static void dummy_propagate(struct rb_node *node, struct rb_node *stop) {}
+
+static const struct rb_callbacks dummy_callbacks = {
+    .rotate = dummy_rotate,
+    .copy = dummy_copy,
+    .propagate = dummy_propagate,
+};
+
+/**
+ * rb_fixup - balance after insert node.
+ * @root: rbtree root of node.
+ * @node: new inserted node.
+ */
+void rb_fixup(struct rb_root *root, struct rb_node *node)
+{
+    rb_fixup_augmented(root, node, &dummy_callbacks);
+}
+
+/**
+ * rb_erase - balance after remove node.
+ * @root: rbtree root of node.
+ * @parent: parent of removed node.
+ */
+void rb_erase(struct rb_root *root, struct rb_node *parent)
+{
+    rb_erase_augmented(root, parent, &dummy_callbacks);
+}
+
+/**
+ * rb_remove - remove node form rbtree.
+ * @root: rbtree root of node.
+ * @node: node to remove.
+ */
+struct rb_node *rb_remove(struct rb_root *root, struct rb_node *node)
+{
+    return rb_remove_augmented(root, node, &dummy_callbacks);
 }
 
 /**
@@ -510,7 +570,7 @@ void rb_replace(struct rb_root *root, struct rb_node *old, struct rb_node *new)
  */
 struct rb_node *rb_find(const struct rb_root *root, const void *key, rb_find_t cmp)
 {
-    struct rb_node *node = root->rb_node;
+    struct rb_node *node = root->node;
     long ret;
 
     while (node) {
@@ -541,7 +601,7 @@ struct rb_node *rb_find_last(struct rb_root *root, const void *key, rb_find_t cm
 {
     long ret;
 
-    *linkp = &root->rb_node;
+    *linkp = &root->node;
     if (unlikely(!**linkp)) {
         *parentp = NULL;
         return NULL;
@@ -580,7 +640,7 @@ struct rb_node **rb_parent(struct rb_root *root, struct rb_node **parentp,
     if (!leftmost)
         leftmost = &leftmost_none;
 
-    link = &root->rb_node;
+    link = &root->node;
     if (unlikely(!*link)) {
         *parentp = NULL;
         return link;
@@ -617,7 +677,7 @@ struct rb_node **rb_parent_conflict(struct rb_root *root, struct rb_node **paren
     if (!leftmost)
         leftmost = &leftmost_none;
 
-    link = &root->rb_node;
+    link = &root->node;
     if (unlikely(!*link)) {
         *parentp = NULL;
         return link;
@@ -637,172 +697,8 @@ struct rb_node **rb_parent_conflict(struct rb_root *root, struct rb_node **paren
     return link;
 }
 
-/**
- * rb_left_far - go left as we can.
- * @node: node to go left.
- */
-struct rb_node *rb_left_far(const struct rb_node *node)
-{
-    while (node->left)
-        node = node->left;
-
-    return (struct rb_node *)node;
-}
-
-/**
- * rb_right_far - go right as we can.
- * @node: node to go right.
- */
-struct rb_node *rb_right_far(const struct rb_node *node)
-{
-    while (node->right)
-        node = node->right;
-
-    return (struct rb_node *)node;
-}
-
-/**
- * rb_left_deep - go left deep as we can.
- * @node: node to go left deep.
- */
-struct rb_node *rb_left_deep(const struct rb_node *node)
-{
-    while (node) {
-        if (node->left)
-            node = node->left;
-        else if (node->right)
-            node = node->right;
-        else
-            return (struct rb_node *)node;
-    }
-
-    return NULL;
-}
-
-/**
- * rb_right_deep - go right deep as we can.
- * @node: node to go right deep.
- */
-struct rb_node *rb_right_deep(const struct rb_node *node)
-{
-    while (node) {
-        if (node->right)
-            node = node->right;
-        else if (node->left)
-            node = node->left;
-        else
-            return (struct rb_node *)node;
-    }
-
-    return NULL;
-}
-
-/**
- * rb_first/last/prev/next - Middle iteration (Sequential)
- * NOTE: find logical next and previous nodes
- */
-struct rb_node *rb_first(const struct rb_root *root)
-{
-    struct rb_node *node = root->rb_node;
-
-    if (!root || !node)
-        return NULL;
-
-    /* Get the leftmost node */
-    node = rb_left_far(node);
-    return node;
-}
-
-struct rb_node *rb_last(const struct rb_root *root)
-{
-    struct rb_node *node = root->rb_node;
-
-    if (!root || !node)
-        return NULL;
-
-    /* Get the rightmost node */
-    node = rb_right_far(node);
-    return node;
-}
-
-struct rb_node *rb_prev(const struct rb_node *node)
-{
-    struct rb_node *parent;
-
-    if (!node)
-        return NULL;
-
-    /*
-     * If there is a left-hand node, go down
-     * and then as far right as possible.
-     */
-    if (node->left) {
-        node = node->left;
-        return rb_right_far(node);
-    }
-
-    /*
-     * No left-hand children. Go up till we find an ancestor
-     * which is a right-hand child of its parent.
-     */
-    while ((parent = node->parent) && node != parent->right)
-        node = parent;
-
-    return parent;
-}
-
-struct rb_node *rb_next(const struct rb_node *node)
-{
-    struct rb_node *parent;
-
-    if (!node)
-        return NULL;
-
-    /*
-     * If there is a right-hand node, go down
-     * and then as far left as possible.
-     */
-    if (node->right) {
-        node = node->right;
-        return rb_left_far(node);
-    }
-
-    /*
-     * No right-hand children. Go up till we find an ancestor
-     * which is a left-hand child of its parent.
-     */
-    while ((parent = node->parent) && node != parent->left)
-        node = parent;
-
-    return parent;
-}
-
-/**
- * rb_post_first/next - Postorder iteration (Depth-first)
- * NOTE: always visit the parent after its children
- */
-struct rb_node *rb_post_first(const struct rb_root *root)
-{
-    struct rb_node *node = root->rb_node;
-
-    if (!root || !node)
-        return NULL;
-
-    node = rb_left_deep(node);
-    return node;
-}
-
-struct rb_node *rb_post_next(const struct rb_node *node)
-{
-    const struct rb_node *parent;
-
-    if (!node)
-        return NULL;
-
-    parent = node->parent;
-
-    if (parent && node == parent->left && parent->right)
-        return rb_left_deep(parent->right);
-    else
-        return (struct rb_node *)parent;
-}
+TITER_BASE_DEFINE(, rb, struct rb_node, left, right)
+TITER_INORDER_DEFINE(, rb, struct rb_root, node, struct rb_node, parent, left, right)
+TITER_PREORDER_DEFINE(, rb, struct rb_root, node, struct rb_node, parent, left, right)
+TITER_POSTORDER_DEFINE(, rb, struct rb_root, node, struct rb_node, parent, left, right)
+TITER_LEVELORDER_DEFINE(, rb, struct rb_root, node, struct rb_node, left, right)

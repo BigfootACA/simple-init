@@ -19,6 +19,8 @@
 #define VAL_MODE 0644
 
 bool conf_store_changed=false;
+static rwlock_t store_lock;
+
 static struct conf conf_store={
 	.type=TYPE_KEY,
 	.save=true,
@@ -27,7 +29,14 @@ static struct conf conf_store={
 	.mode=0777
 };
 
-struct conf*conf_get_store(){return &conf_store;}
+struct conf*conf_get_store(){
+	RWLOCK_RDLOCK(store_lock);
+	return &conf_store;
+}
+
+void conf_put_store(){
+	RWLOCK_UNLOCK(store_lock);
+}
 
 static long conf_cmp(const struct rb_node*a,const struct rb_node*b){
 	struct conf*confa = rb_to_conf(a);
@@ -91,18 +100,15 @@ static struct conf*conf_lookup(const char*path,bool create,enum conf_type type,u
 	if(!path[0]&&type==0)return &conf_store;
 	if(!(xpath=strdup(path)))EPRET(ENOMEM);
 	p=xpath,key=xpath;
-	MUTEX_LOCK(cur->lock);
 	if(p)do{
 		if(*p!='.')continue;
 		*p=0;
 		if(!(x=conf_get(cur,key))){
 			if(!create){
-				MUTEX_UNLOCK(cur->lock);
 				free(xpath);
 				EPRET(ENOENT);
 			}
 			if(!(x=conf_create(cur,key,u,g))){
-				MUTEX_UNLOCK(cur->lock);
 				free(xpath);
 				return NULL;
 			}
@@ -110,34 +116,27 @@ static struct conf*conf_lookup(const char*path,bool create,enum conf_type type,u
 			x->mode=KEY_MODE;
 		}
 		if(!check_perm_read(x,u,g)){
-			MUTEX_UNLOCK(cur->lock);
 			free(xpath);
 			EPRET(EACCES);
 		}
-		MUTEX_LOCK(x->lock);
-		MUTEX_UNLOCK(cur->lock);
 		cur=x,key=++p;
 	}while(*p++);
 	if(!key[0]){
-		MUTEX_UNLOCK(cur->lock);
 		free(xpath);
 		EPRET(EINVAL);
 	}
 	if(!(x=conf_get(cur,key))){
 		if(!create){
-			MUTEX_UNLOCK(cur->lock);
 			free(xpath);
 			EPRET(ENOENT);
 		}
 		if(!(x=conf_create(cur,key,u,g))){
-			MUTEX_UNLOCK(cur->lock);
 			free(xpath);
 			return NULL;
 		}
 		x->type=type;
 		x->mode=type==TYPE_KEY?KEY_MODE:VAL_MODE;
 	}
-	MUTEX_UNLOCK(cur->lock);
 	free(xpath);
 	if(!check_perm_read(x,u,g))EPRET(EACCES);
 	if(x->type==0)EPRET(EBADMSG);
@@ -145,9 +144,39 @@ static struct conf*conf_lookup(const char*path,bool create,enum conf_type type,u
 	return x;
 }
 
+static int conf_del_obj(struct conf*c) {
+	if(!c)return -1;
+	if(!c->parent)ERET(EINVAL);
+	struct conf*d,*t;
+	if(c->type==TYPE_KEY){
+		rb_post_for_each_entry_safe(d,t,&c->keys,node) {
+			conf_del_obj(d);
+			free(d);
+		}
+	} else if(c->type==TYPE_STRING&&c->value.string)free(c->value.string);
+	conf_store_changed=true;
+	return 0;
+}
+
+static int _conf_set_save(struct conf*c,bool save,uid_t u,gid_t g){
+	struct conf*d;
+	int r=0;
+	if(!c)ERET(EINVAL);
+	if(c->type==TYPE_KEY)rb_for_each_entry(d,&c->keys,node){
+		if(!check_perm_write(d,u,g))r=EPERM;
+		else if(_conf_set_save(d,save,u,g)!=0)r=-errno;
+	}
+	if(!check_perm_write(c,u,g))r=EPERM;
+	else c->save=save;
+	return r;
+}
+
 enum conf_type conf_get_type(const char*path,uid_t u,gid_t g){
+	RWLOCK_RDLOCK(store_lock);
 	struct conf*c=conf_lookup(path,false,0,u,g);
-	return c?c->type:(enum conf_type)-1;
+	enum conf_type type=c?c->type:(enum conf_type)-1;
+	RWLOCK_UNLOCK(store_lock);
+	return type;
 }
 
 const char*conf_type2string(enum conf_type type){
@@ -161,149 +190,189 @@ const char*conf_type2string(enum conf_type type){
 }
 
 const char*conf_get_type_string(const char*path,uid_t u,gid_t g){
+	RWLOCK_RDLOCK(store_lock);
 	enum conf_type t=conf_get_type(path,u,g);
-	return (((int)t)<0)?NULL:conf_type2string(t);
+	const char* string=(((int)t)<0)?NULL:conf_type2string(t);
+	RWLOCK_UNLOCK(store_lock);
+	return string;
 }
 
 const char**conf_ls(const char*path,uid_t u,gid_t g){
+	RWLOCK_RDLOCK(store_lock);
 	struct conf*c=conf_lookup(path,false,0,u,g);
 	if(!c)return NULL;
-	if(c->type!=TYPE_KEY)EPRET(ENOTDIR);
-	MUTEX_LOCK(c->lock);
+	if(c->type!=TYPE_KEY){
+		RWLOCK_UNLOCK(store_lock);
+		EPRET(ENOTDIR);
+	}
 	int i=c->count,x=0;
 	if(i<0)i=0;
 	size_t s=sizeof(char*)*(i+1);
 	const char**r=malloc(s);
 	if(!r){
-		MUTEX_UNLOCK(c->lock);
+		RWLOCK_UNLOCK(store_lock);
 		EPRET(ENOMEM);
 	}
 	memset(r,0,s);
 	struct conf*d;
 	rb_for_each_entry(d,&c->keys,node)
 		r[x++]=d->name;
-	MUTEX_UNLOCK(c->lock);
+	RWLOCK_UNLOCK(store_lock);
 	return r;
 }
 
 int conf_count(const char*path,uid_t u,gid_t g){
+	RWLOCK_RDLOCK(store_lock);
 	struct conf*c=conf_lookup(path,false,0,u,g);
-	if(!c)return -1;
-	if(c->type!=TYPE_KEY)ERET(ENOTDIR);
-	MUTEX_LOCK(c->lock);
+	if(!c){
+		RWLOCK_UNLOCK(store_lock);
+		return -1;
+	}
+	if(c->type!=TYPE_KEY){
+		RWLOCK_UNLOCK(store_lock);
+		ERET(ENOTDIR);
+	}
 	int i=c->count;
 	if(i<0)i=0;
-	MUTEX_UNLOCK(c->lock);
+	RWLOCK_UNLOCK(store_lock);
 	return i;
 }
 
-static int conf_del_obj(struct conf*c) {
-	if(!c)return -1;
-	if(!c->parent)ERET(EINVAL);
-	MUTEX_LOCK(c->lock);
-	struct conf*d,*t;
-	if(c->type==TYPE_KEY){
-		rb_post_for_each_entry_safe(d,t,&c->keys,node) {
-			conf_del_obj(d);
-			free(d);
-		}
-	} else if(c->type==TYPE_STRING&&c->value.string)free(c->value.string);
-	conf_store_changed=true;
-	MUTEX_UNLOCK(c->lock);
-	return 0;
-}
-
 int conf_del(const char*path,uid_t u,gid_t g){
+	RWLOCK_WRLOCK(store_lock);
 	struct conf*c=conf_lookup(path,false,0,u,g);
-	if (!c) return -(errno);
+	if (!c){
+		RWLOCK_UNLOCK(store_lock);
+		return -(errno);
+	}
 	int i = conf_del_obj(c);
-	if (i) return i;
+	if (i){
+		RWLOCK_UNLOCK(store_lock);
+		return i;
+	}
 	rb_delete(&c->parent->keys, &c->node);
 	c->parent->count--;
+	RWLOCK_UNLOCK(store_lock);
 	free(c);
 	return 0;
 }
 
 int conf_rename(const char*path,const char*name,uid_t u,gid_t g){
+	RWLOCK_WRLOCK(store_lock);
 	struct conf*c=conf_lookup(path,false,0,u,g);
 	if(!c)return -(errno);
-	if(!name||!*name||strchr(name,'.'))ERET(EINVAL);
-	if(strlen(name)>=sizeof(c->name)-1)ERET(EINVAL);
-	if(!c->parent||!c->name[0])ERET(EACCES);
-	if(strcmp(c->name,name)==0)return 0;
-	if(!check_perm_read(c->parent,u,g))ERET(EACCES);
-	if(rb_find(&c->keys,(char*)name,conf_find))ERET(EEXIST);
-	if(!check_perm_write(c,u,g))ERET(EACCES);
-	memset(c->name,0,sizeof(c->name));
+	if(!name||!*name||strchr(name,'.')){
+		RWLOCK_UNLOCK(store_lock);
+		ERET(EINVAL);
+	}
+	if(strlen(name)>=sizeof(c->name)-1){
+		RWLOCK_UNLOCK(store_lock);
+		ERET(EINVAL);
+	}
+	if(!c->parent||!c->name[0]){
+		RWLOCK_UNLOCK(store_lock);
+		ERET(EACCES);
+	}
+	if(strcmp(c->name,name)==0){
+		RWLOCK_UNLOCK(store_lock);
+		return 0;
+	}
+	if(!check_perm_read(c->parent,u,g)){
+		RWLOCK_UNLOCK(store_lock);
+		ERET(EACCES);
+	}
+	if(rb_find(&c->parent->keys,(char*)name,conf_find)){
+		RWLOCK_UNLOCK(store_lock);
+		ERET(EEXIST);
+	}
+	if(!check_perm_write(c,u,g)){
+		RWLOCK_UNLOCK(store_lock);
+		ERET(EACCES);
+	}
+	rb_delete(&c->parent->keys, &c->node);
 	strncpy(c->name,name,sizeof(c->name)-1);
+	rb_insert(&c->parent->keys, &c->node, conf_cmp);
+	RWLOCK_UNLOCK(store_lock);
 	return 0;
 }
 
 int conf_add_key(const char*path,uid_t u,gid_t g){
-	return conf_lookup(path,true,TYPE_KEY,u,g)!=NULL;
-}
-
-static int _conf_set_save(bool lock,struct conf*c,bool save,uid_t u,gid_t g){
-	struct conf*d;
-	int r=0;
-	if(!c)ERET(EINVAL);
-	if(lock)MUTEX_LOCK(c->lock);
-	if(c->type==TYPE_KEY)rb_for_each_entry(d,&c->keys,node){
-		if(!check_perm_write(d,u,g))r=EPERM;
-		else if(_conf_set_save(false,d,save,u,g)!=0)r=-errno;
-	}
-	if(!check_perm_write(c,u,g))r=EPERM;
-	else c->save=save;
-	if(lock)MUTEX_UNLOCK(c->lock);
-	return r;
+	RWLOCK_WRLOCK(store_lock);
+	int ret=conf_lookup(path,true,TYPE_KEY,u,g)!=NULL;
+	RWLOCK_UNLOCK(store_lock);
+	return ret;
 }
 
 int conf_set_save(const char*path,bool save,uid_t u,gid_t g){
-	return _conf_set_save(true,conf_lookup(path,false,0,u,g),save,u,g);
+	RWLOCK_WRLOCK(store_lock);
+	int ret=_conf_set_save(conf_lookup(path,false,0,u,g),save,u,g);
+	RWLOCK_UNLOCK(store_lock);
+	return ret;
 }
 
 bool conf_get_save(const char*path,uid_t u,gid_t g){
+	RWLOCK_WRLOCK(store_lock);
 	struct conf*c=conf_lookup(path,false,0,u,g);
-	return c?c->save:false;
+	bool ret=c?c->save:false;
+	RWLOCK_UNLOCK(store_lock);
+	return ret;
 }
 
 int conf_get_own(const char*path,uid_t*own,uid_t u,gid_t g){
+	RWLOCK_RDLOCK(store_lock);
 	struct conf*c=conf_lookup(path,false,0,u,g);
 	if(c&&own)*own=c->user;
+	RWLOCK_UNLOCK(store_lock);
 	return c&&own;
 }
 
 int conf_get_grp(const char*path,gid_t*grp,uid_t u,gid_t g){
+	RWLOCK_RDLOCK(store_lock);
 	struct conf*c=conf_lookup(path,false,0,u,g);
 	if(c&&grp)*grp=c->group;
+	RWLOCK_UNLOCK(store_lock);
 	return c&&grp;
 }
 
 int conf_get_mod(const char*path,mode_t*mod,uid_t u,gid_t g){
+	RWLOCK_RDLOCK(store_lock);
 	struct conf*c=conf_lookup(path,false,0,u,g);
 	if(c&&mod)*mod=c->mode;
+	RWLOCK_UNLOCK(store_lock);
 	return c&&mod;
 }
 
 int conf_set_own(const char*path,uid_t own,uid_t u,gid_t g){
 	if(u!=0&&g!=0)ERET(EPERM);
+	RWLOCK_WRLOCK(store_lock);
 	struct conf*c=conf_lookup(path,false,0,u,g);
 	if(c)c->user=own;
+	RWLOCK_UNLOCK(store_lock);
 	return c!=NULL;
 }
 
 int conf_set_grp(const char*path,gid_t grp,uid_t u,gid_t g){
 	if(u!=0&&g!=0)ERET(EPERM);
+	RWLOCK_WRLOCK(store_lock);
 	struct conf*c=conf_lookup(path,false,0,u,g);
 	if(c)c->group=grp;
+	RWLOCK_UNLOCK(store_lock);
 	return c!=NULL;
 }
 
 int conf_set_mod(const char*path,mode_t mod,uid_t u,gid_t g){
+	RWLOCK_WRLOCK(store_lock);
 	struct conf*c=conf_lookup(path,false,0,u,g);
-	if(!c)return -1;
-	if(u!=0&&u!=c->user)ERET(EPERM);
+	if(!c){
+		RWLOCK_UNLOCK(store_lock);
+		return -1;
+	}
+	if(u!=0&&u!=c->user){
+		RWLOCK_UNLOCK(store_lock);
+		ERET(EPERM);
+	}
 	c->mode=mod;
+	RWLOCK_UNLOCK(store_lock);
 	return 0;
 }
 
@@ -328,25 +397,28 @@ size_t conf_calc_size(struct conf*c){
 
 #define FUNCTION_CONF_GET_SET(_tag,_type,_func) \
 	int conf_set_##_func##_inc(const char*path,_type data,uid_t u,gid_t g,bool inc){\
+		RWLOCK_WRLOCK(store_lock);\
 		struct conf*c=conf_lookup(path,true,TYPE_##_tag,u,g);\
 		if(!c)return -errno;\
-		MUTEX_LOCK(c->lock);\
 		if(c->type!=TYPE_##_tag){\
-			MUTEX_UNLOCK(c->lock);\
+			RWLOCK_UNLOCK(store_lock);\
 			ERET(EBADMSG);\
 		}\
-                c->include=inc;\
+		c->include=inc;\
 		VALUE_##_tag(c)=data;\
 		conf_store_changed=true;\
-		MUTEX_UNLOCK(c->lock);\
+		RWLOCK_UNLOCK(store_lock);\
 		return 0;\
 	}\
 	int conf_set_##_func(const char*path,_type data,uid_t u,gid_t g){\
 		return conf_set_##_func##_inc(path,data,u,g,false);\
 	}\
 	_type conf_get_##_func(const char*path,_type def,uid_t u,gid_t g){\
+		RWLOCK_RDLOCK(store_lock);\
 		struct conf*c=conf_lookup(path,false,TYPE_##_tag,u,g);\
-		return c?VALUE_##_tag(c):def;\
+		_type ret=c?VALUE_##_tag(c):def;\
+		RWLOCK_UNLOCK(store_lock);\
+		return ret;\
 	}
 
 FUNCTION_CONF_GET_SET(STRING,char*,string)

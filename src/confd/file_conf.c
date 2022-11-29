@@ -85,6 +85,7 @@ static int conf_save(struct conf_file_hand*hand){
 	hand->write(hand,"##\n## Simple Init Configuration Store for Linux\n##\n\n",0);
 	#endif
 	print_conf(hand,store,"");
+	conf_put_store();
 	hand->write(hand,"\n# vim: ts=8 sw=8\n",0);
 	get_buffer(0);
 	return 0;

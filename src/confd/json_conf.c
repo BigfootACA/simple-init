@@ -119,6 +119,7 @@ static int conf_save(struct conf_file_hand*hand){
 	struct json_object*obj=json_object_new_object();
 	if(!obj)EDONE(tlog_warn("new json object failed"));
 	save_json_object(hand,obj,conf_get_store());
+	conf_put_store();
 	buff=(char*)json_object_to_json_string_length(
 		obj,
 		JSON_C_TO_STRING_PRETTY|

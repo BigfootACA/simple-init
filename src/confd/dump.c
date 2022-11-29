@@ -88,10 +88,11 @@ static int dump(enum log_level l,struct conf*key,int depth){
 int conf_dump_store(enum log_level level){
 	int r=0;
 	char buf[64];
-	struct conf*c=conf_get_store();
 	logger_print(level,TAG,"dump configuration store:");
+	struct conf*c=conf_get_store();
 	if(dump(level,c,0)!=0)r=-1;
 	size_t size=conf_calc_size(c);
+	conf_put_store();
 	logger_printf(
 		level,TAG,
 		"used memory size: %zu bytes (%s)",size,

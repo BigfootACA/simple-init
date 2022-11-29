@@ -222,6 +222,7 @@ static int save_xml(struct conf_file_hand*hand,struct conf*c,int depth){
 static int conf_save(struct conf_file_hand*hand){
 	hand->write(hand,"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n",0);
 	save_xml(hand,conf_get_store(),0);
+	conf_put_store();
 	return 0;
 }
 

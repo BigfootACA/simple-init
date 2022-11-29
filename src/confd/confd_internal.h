@@ -71,7 +71,6 @@ struct confd_msg{
 // config struct
 struct conf{
 	struct rb_node node;
-	mutex_t lock;
 	char name[256];
 	struct conf*parent;
 	enum conf_type type;
@@ -149,6 +148,9 @@ extern int conf_dump_store(enum log_level level);
 
 // src/confd/store.c: get config store root struct
 extern struct conf*conf_get_store(void);
+
+// src/confd/store.c: put config store root struct
+extern void conf_put_store(void);
 
 // src/confd/store.c: convert config item type to string
 extern const char*conf_type2string(enum conf_type type);

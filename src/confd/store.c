@@ -200,23 +200,34 @@ const char*conf_get_type_string(const char*path,uid_t u,gid_t g){
 const char**conf_ls(const char*path,uid_t u,gid_t g){
 	RWLOCK_RDLOCK(store_lock);
 	struct conf*c=conf_lookup(path,false,0,u,g);
-	if(!c)return NULL;
+	if(!c){
+		RWLOCK_UNLOCK(store_lock);
+		return NULL;
+	}
 	if(c->type!=TYPE_KEY){
 		RWLOCK_UNLOCK(store_lock);
 		EPRET(ENOTDIR);
 	}
 	int i=c->count,x=0;
 	if(i<0)i=0;
-	size_t s=sizeof(char*)*(i+1);
+	size_t l,s=sizeof(char*)*(i+1);
+	struct conf*d;
+	rb_for_each_entry(d,&c->keys,node)
+		s+=strlen(d->name)+1;
 	const char**r=malloc(s);
+	char*p;
 	if(!r){
 		RWLOCK_UNLOCK(store_lock);
 		EPRET(ENOMEM);
 	}
-	memset(r,0,s);
-	struct conf*d;
-	rb_for_each_entry(d,&c->keys,node)
-		r[x++]=d->name;
+    p=(void *)(r+i+1);
+	rb_for_each_entry(d,&c->keys,node){
+        l=strlen(d->name)+1;
+        memcpy(p,d->name,l);
+        r[x++]=p;
+        p+=l;
+    }
+    r[x]=NULL;
 	RWLOCK_UNLOCK(store_lock);
 	return r;
 }
@@ -260,7 +271,10 @@ int conf_del(const char*path,uid_t u,gid_t g){
 int conf_rename(const char*path,const char*name,uid_t u,gid_t g){
 	RWLOCK_WRLOCK(store_lock);
 	struct conf*c=conf_lookup(path,false,0,u,g);
-	if(!c)return -(errno);
+	if(!c){
+		RWLOCK_UNLOCK(store_lock);
+		return -(errno);
+	}
 	if(!name||!*name||strchr(name,'.')){
 		RWLOCK_UNLOCK(store_lock);
 		ERET(EINVAL);

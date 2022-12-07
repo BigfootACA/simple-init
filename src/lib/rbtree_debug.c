@@ -7,17 +7,12 @@
 #include "rbtree.h"
 #define TAG "rbtree"
 
+#ifdef DEBUG_RBTREE
 bool rb_debug_link_check(struct rb_node *parent, struct rb_node **link, struct rb_node *node)
 {
     if (unlikely(*link == node)) {
         telog_crit("rb_insert corruption (%p) *link should not be node (%p)\n",
             link, node);
-        return false;
-    }
-
-    if (unlikely(node->parent && node->parent == parent)) {
-        telog_crit("rb_insert corruption (%p) node->parent should not be next (%p)\n",
-             node, parent);
         return false;
     }
 
@@ -46,3 +41,4 @@ bool rb_debug_delete_check(struct rb_node *node)
 
     return true;
 }
+#endif

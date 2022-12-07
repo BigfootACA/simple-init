@@ -34,6 +34,7 @@ option(ENABLE_STRIP       "Strip target"                                      OF
 option(ENABLE_STATIC      "Enable static link"                                OFF)
 option(ENABLE_PIE         "Enable Position-Independent-Executable"            OFF)
 option(ENABLE_ASAN        "Enable Address Sanitizer"                          OFF)
+option(ENBALE_DBGRB       "Dynamic debug rbtree library"                      OFF)
 
 option(ENABLE_READLINE    "Enable readline for  builtin shell"                ON)
 option(ENABLE_DRM         "Enable DRM"                                        ON)
@@ -125,6 +126,10 @@ endif()
 
 if("${ENABLE_ASAN}" STREQUAL "ON")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -fsanitize=undefined -fsanitize=leak -fsanitize-recover=all -fno-omit-frame-pointer -fno-stack-protector -fsanitize=leak")
+endif()
+
+if("${ENABLE_DBGRB}" STREQUAL "ON")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D DEBUG_RBTREE")
 endif()
 
 if("${ENABLE_STATIC}" STREQUAL "ON")

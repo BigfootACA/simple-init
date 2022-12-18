@@ -19,6 +19,14 @@
 #include<Protocol/BlockIo.h>
 #endif
 
+enum aboot_header_version {
+        ABOOT_HEADER_V0,
+		ABOOT_HEADER_V1,
+        ABOOT_HEADER_V2,
+        ABOOT_HEADER_V3,
+		ABOOT_HEADER_V4,
+};
+
 // android boot image struct
 typedef struct aboot_image aboot_image;
 

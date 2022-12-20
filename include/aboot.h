@@ -20,15 +20,23 @@
 #endif
 
 enum aboot_header_version {
-        ABOOT_HEADER_V0,
-		ABOOT_HEADER_V1,
-        ABOOT_HEADER_V2,
-        ABOOT_HEADER_V3,
-		ABOOT_HEADER_V4,
+	ABOOT_HEADER_V0,
+	ABOOT_HEADER_V1,
+	ABOOT_HEADER_V2,
+	ABOOT_HEADER_V3,
+	ABOOT_HEADER_V4,
 };
 
 // android boot image struct
 typedef struct aboot_image aboot_image;
+
+typedef struct aboot_image_v1 aboot_image_v1;
+
+typedef struct aboot_image_v2 aboot_image_v2;
+
+typedef struct aboot_image_v3 aboot_image_v3;
+
+typedef struct vndrboot_image vndrboot_image;
 
 // src/lib/aboot.c: is an empty image without any parts
 extern bool abootimg_is_empty(aboot_image*img);
@@ -151,6 +159,8 @@ extern bool abootimg_save_to_file(aboot_image*img,int cfd,const char*file);
 DECL_ABOOTIMG_GET_SET(kernel)
 DECL_ABOOTIMG_GET_SET(ramdisk)
 DECL_ABOOTIMG_GET_SET(second)
+DECL_ABOOTIMG_GET_SET(recovery_dtbo)
+DECL_ABOOTIMG_GET_SET(dtb)
 DECL_ABOOTIMG_GETSET_VAR(const char*,name,NULL)
 DECL_ABOOTIMG_GETSET_VAR(const char*,cmdline,NULL)
 DECL_ABOOTIMG_GETSET_VAR(uint32_t,kernel_size,0)
@@ -161,6 +171,10 @@ DECL_ABOOTIMG_GETSET_VAR(uint32_t,second_size,0)
 DECL_ABOOTIMG_GETSET_VAR(uint32_t,second_address,0)
 DECL_ABOOTIMG_GETSET_VAR(uint32_t,tags_address,0)
 DECL_ABOOTIMG_GETSET_VAR(uint32_t,page_size,0)
+DECL_ABOOTIMG_GETSET_VAR(uint32_t,recovery_dtbo_size,0)
+DECL_ABOOTIMG_GETSET_VAR(uint64_t,recovery_dtbo_address,0)
+DECL_ABOOTIMG_GETSET_VAR(uint32_t,dtb_size,0)
+DECL_ABOOTIMG_GETSET_VAR(uint64_t,dtb_address,0)
 
 #undef DECL_ABOOTIMG_GETSET_VAR
 #undef DECL_ABOOTIMG_GET_SET

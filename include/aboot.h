@@ -30,12 +30,7 @@ enum aboot_header_version {
 // android boot image struct
 typedef struct aboot_image aboot_image;
 
-typedef struct aboot_image_v1 aboot_image_v1;
-
-typedef struct aboot_image_v2 aboot_image_v2;
-
-typedef struct aboot_image_v3 aboot_image_v3;
-
+// vendor boot image struct
 typedef struct vndrboot_image vndrboot_image;
 
 // src/lib/aboot.c: is an empty image without any parts

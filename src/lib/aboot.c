@@ -270,6 +270,10 @@ uint32_t abootimg_get_recovery_dtbo_offset(aboot_image*img){
 	return 0;
 }
 
+uint32_t abootimg_get_dtb_offset(aboot_image*img){
+	return 0;
+}
+
 uint32_t abootimg_get_image_size(aboot_image*img){
 	return SEC_OFF(img)+get_aligned_size(img,SEC_SIZ(img));
 }
@@ -1010,4 +1014,4 @@ ABOOTIMG_GETSET_VAR_V2_ONLY(dtb_size,uint32_t)
 ABOOTIMG_GETSET_VAR_V2_ONLY(dtb_address,uint64_t)
 
 ABOOTIMG_CONT_V1(recovery_dtbo)
-// ABOOTIMG_CONT_V2_ONLY(dtb)
+ABOOTIMG_CONT_V2_ONLY(dtb)

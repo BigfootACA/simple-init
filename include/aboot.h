@@ -30,9 +30,6 @@ enum aboot_header_version {
 // android boot image struct
 typedef struct aboot_image aboot_image;
 
-// vendor boot image struct
-typedef struct vndrboot_image vndrboot_image;
-
 // src/lib/aboot.c: is an empty image without any parts
 extern bool abootimg_is_empty(aboot_image*img);
 
@@ -45,8 +42,11 @@ extern bool abootimg_check_page(size_t p);
 // src/lib/aboot.c: get image theoretical size (head + kernel size + ramdisk size + second size)
 extern uint32_t abootimg_get_image_size(aboot_image*img);
 
+// src/lib/aboot.c: get header version from image struct
+extern enum aboot_header_version abootimg_get_header_version(aboot_image*img);
+
 // src/lib/aboot.c: allocate an empty image
-extern aboot_image*abootimg_new_image();
+extern aboot_image*abootimg_new_image(enum aboot_header_version header_version);
 
 // src/lib/aboot.c: deallocate image
 extern void abootimg_free(aboot_image*img);

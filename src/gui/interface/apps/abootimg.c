@@ -177,7 +177,7 @@ static bool image_save(struct abootimg*am){
 static void image_create(struct abootimg*am){
 	char*buf;
 	if(am->img)abootimg_free(am->img);
-	if(!(am->img=abootimg_new_image())){
+	if(!(am->img=abootimg_new_image(ABOOT_HEADER_V0))){
 		msgbox_alert("Create new image failed");
 		return;
 	}

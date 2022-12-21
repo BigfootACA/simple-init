@@ -262,7 +262,7 @@ static int abootimg_gc(lua_State*L){
 }
 
 static int aboot_img_lib_create(lua_State*L){
-	lua_abootimg_to_lua(L,abootimg_new_image());
+	lua_abootimg_to_lua(L,abootimg_new_image(ABOOT_HEADER_V0));
 	return 1;
 }
 

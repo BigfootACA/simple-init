@@ -21,9 +21,10 @@ enum oper{
 	OPER_EXTRACT,
 	OPER_UPDATE,
 };
-static char*name=NULL,*cmdline=NULL,*page_size=NULL;
-static char*kernel=NULL,*ramdisk=NULL,*second=NULL,*image=NULL;
+static char*name=NULL,*cmdline=NULL,*page_size=NULL,*header_version=NULL;
+static char*kernel=NULL,*ramdisk=NULL,*second=NULL,*dtb=NULL,*recovery_dtbo=NULL,*image=NULL;
 static int page=4096;
+static int header_ver=0;
 static bool force=false,overwrite=false;
 
 static int usage(int e){
@@ -38,6 +39,9 @@ static int usage(int e){
 		"\t-k, --kernel <KERNEL>   kernel path\n"
 		"\t-r, --ramdisk <RAMDISK> ramdisk path (initramfs)\n"
 		"\t-s, --second <SECOND>   second stage bootloader path\n"
+		"\t-d, --dtb <DTB>         device tree blob path\n"
+		"\t-e, --recovery_dtbo <DTBO>   recovery dtb overlay path\n"
+		"\t-v, --header_version <VER>   set header version (default 0)\n"
 		"\t-b, --cmdline <CMDLINE> set boot cmdline (bootargs max 511 chars)\n"
 		"\t-n, --name <NAME>       set image name (max 15 chars)\n"
 		"\t-p, --page <PAGE>       set page size (default 4096)\n"
@@ -90,6 +94,7 @@ static aboot_image*load_image(){
 		abootimg_load_from_fd(STDIN_FILENO):
 		abootimg_load_from_file(AT_FDCWD,image);
 	if(!img)exit_perror(1,"load image failed");
+	header_ver=abootimg_get_header_version(img);
 	return img;
 }
 
@@ -158,26 +163,42 @@ static void check_image(aboot_image*img){
 static void do_load(aboot_image*img){
 	DO_LOAD(kernel)
 	DO_LOAD(ramdisk)
-	DO_LOAD(second)
-	if(page_size)abootimg_set_page_size(img,page);
+	if(header_ver<3)
+		DO_LOAD(second)
+	if(header_ver==1||header_ver==2){
+		DO_LOAD(recovery_dtbo)
+		if(header_ver==2)
+			DO_LOAD(dtb)
+	}
+	if(page_size&&header_ver<3)abootimg_set_page_size(img,page);
 	if(cmdline)abootimg_set_cmdline(img,cmdline);
-	if(name)abootimg_set_name(img,name);
+	if(name&&header_ver<3)abootimg_set_name(img,name);
 	save_image(img);
 }
 
 static void do_save(aboot_image*img){
 	if(!kernel)kernel="zImage";
 	if(!ramdisk)ramdisk="initrd.img";
-	if(!second)second="stage2.img";
+	if(header_ver<3){
+		if(!second)second="stage2.img";
+		DO_SAVE(second)
+	}
+	if(header_ver==1||header_ver==2){
+		if(!recovery_dtbo)recovery_dtbo="recovery_dtbo.img";
+		DO_SAVE(recovery_dtbo)
+		if(header_ver==2){
+			if(!dtb)dtb="dtb.img";
+			DO_SAVE(dtb)
+		}
+	}
 	DO_SAVE(kernel)
 	DO_SAVE(ramdisk)
-	DO_SAVE(second)
 }
 
 static void do_create(){
 	fprintf(stderr,_("create new image...\n"));
 	errno=0;
-	aboot_image*img=abootimg_new_image();
+	aboot_image*img=abootimg_new_image(header_ver);
 	if(!img)exit_perror(1,"create image failed");
 	if(!kernel)ee_printf(1,"no kernel specified\n");
 	do_load(img);
@@ -187,6 +208,7 @@ static void do_create(){
 static void do_extract(){
 	aboot_image*img=load_image();
 	check_image(img);
+	fprintf(stderr,_("header_version: %d\n"),(int)abootimg_get_header_version(img));
 	do_save(img);
 	abootimg_free(img);
 }
@@ -215,6 +237,9 @@ int abootimg_main(int argc,char**argv){
 		{"cmdline",   required_argument, NULL,'b'},
 		{"name",      required_argument, NULL,'n'},
 		{"page",      required_argument, NULL,'p'},
+		{"header_version", required_argument,NULL,'v'},
+		{"recovery_dtbo",  required_argument,NULL,'e'},
+		{"dtb",       required_argument, NULL,'d'},
 		{"force",     no_argument,       NULL,'f'},
 		{"overwrite", no_argument,       NULL,'o'},
 		{"help",      no_argument,       NULL,'h'},
@@ -227,9 +252,12 @@ int abootimg_main(int argc,char**argv){
 		case 'k':if(kernel)goto conflict;kernel=b_optarg;break;
 		case 'r':if(ramdisk)goto conflict;ramdisk=b_optarg;break;
 		case 's':if(second)goto conflict;second=b_optarg;break;
+		case 'd':if(dtb)goto conflict;dtb=b_optarg;break;
+		case 'e':if(recovery_dtbo)goto conflict;recovery_dtbo=b_optarg;break;
 		case 'b':if(cmdline)goto conflict;cmdline=b_optarg;break;
 		case 'n':if(name)goto conflict;name=b_optarg;break;
 		case 'p':if(page_size)goto conflict;page_size=b_optarg;break;
+		case 'v':if(header_version)goto conflict;header_version=b_optarg;break;
 		case 'f':force=true;break;
 		case 'o':overwrite=true;break;
 		case 'h':return usage(0);
@@ -239,10 +267,14 @@ int abootimg_main(int argc,char**argv){
 	check_var(&kernel);
 	check_var(&ramdisk);
 	check_var(&second);
+	check_var(&dtb);
+	check_var(&recovery_dtbo);
 	check_var(&cmdline);
 	check_var(&page_size);
+	check_var(&header_version);
 	if(!image)return usage(1);
 	if(page_size&&(page=parse_int(page_size,0))<=0)goto invalid;
+	if(header_version&&(header_ver=parse_int(header_version,0))<=0)goto invalid;
 	if(!abootimg_check_page(page))goto invalid;
 	switch(oper){
 		case OPER_NONE:return usage(1);

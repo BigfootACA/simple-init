@@ -177,16 +177,24 @@ static void do_load(aboot_image*img){
 }
 
 static void do_save(aboot_image*img){
+	if(abootimg_is_vendor_boot(img)){
+		fprintf(stderr,_("This is a vendor_boot image\n"));
+		if(!ramdisk)ramdisk="vendor_initrd.img";
+		if(!dtb)dtb="dtb.img";
+		DO_SAVE(ramdisk)
+		DO_SAVE(dtb)
+		return;
+	}
 	if(!kernel)kernel="zImage";
 	if(!ramdisk)ramdisk="initrd.img";
-	if(header_ver<3){
+	if(header_ver<ABOOT_HEADER_V3){
 		if(!second)second="stage2.img";
 		DO_SAVE(second)
 	}
-	if(header_ver==1||header_ver==2){
+	if(header_ver==ABOOT_HEADER_V1||header_ver==ABOOT_HEADER_V2){
 		if(!recovery_dtbo)recovery_dtbo="recovery_dtbo.img";
 		DO_SAVE(recovery_dtbo)
-		if(header_ver==2){
+		if(header_ver==ABOOT_HEADER_V2){
 			if(!dtb)dtb="dtb.img";
 			DO_SAVE(dtb)
 		}

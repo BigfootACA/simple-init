@@ -147,13 +147,13 @@ static aboot_image*abootimg_allocate(){
 
 static bool abootimg_check_header(aboot_image*img){
 	if(!img)return false;
-	if(memcmp(img->header.v0.magic,ABOOT_MAGIC,BOOT_MAGIC_SIZE)!=0){
-		if(memcmp(img->header.v0.magic,VENDOR_BOOT_MAGIC,BOOT_MAGIC_SIZE)==0)
-			img->is_vndrboot=true;
-		else return false;
+	if(img->is_vndrboot&&memcmp(img->header.vndr_v3.magic,VENDOR_BOOT_MAGIC,BOOT_MAGIC_SIZE)==0)
+		return true;
+	else if(memcmp(img->header.v0.magic,ABOOT_MAGIC,BOOT_MAGIC_SIZE)==0){
+		img->is_vndrboot=false;
+		return true;
 	}
-	img->is_vndrboot=false;
-	return true;
+	return false;
 }
 
 static uint32_t get_aligned_size(aboot_image*img,uint32_t size){
@@ -195,6 +195,11 @@ static bool parse_image(aboot_image*img,void*file,size_t len){
 #define ABOOTIMG_HDR_VERSION_OFFSET 40
 static bool abootimg_parse_header_version(aboot_image*img,void*file){
 	if(!file||!img)return false;
+	if(!memcmp(file,VENDOR_BOOT_MAGIC,BOOT_MAGIC_SIZE)){
+		img->is_vndrboot=true;
+		img->header_version=ABOOT_HEADER_V3;
+		return true;
+	}
 	uint32_t hdr_version = 0;
 	memcpy(&hdr_version,file+ABOOTIMG_HDR_VERSION_OFFSET,sizeof(uint32_t));
 	switch(hdr_version){
@@ -212,12 +217,16 @@ static bool abootimg_allocate_header(aboot_image*img){
 	if(!img)return false;
 	if(img->header_version<ABOOT_HEADER_V3)
 		img->header.v0.page_size=4096;
-	memcpy(img->header.v0.magic,ABOOT_MAGIC,BOOT_MAGIC_SIZE);
+	//memcpy(img->header.v0.magic,ABOOT_MAGIC,BOOT_MAGIC_SIZE);
 	return true;
 }
 
 enum aboot_header_version abootimg_get_header_version(aboot_image*img){
 	return img->header_version;
+}
+
+bool abootimg_is_vendor_boot(aboot_image*img){
+	return img->is_vndrboot;
 }
 
 bool abootimg_is_empty(aboot_image*img){
@@ -232,28 +241,32 @@ bool abootimg_is_invalid(aboot_image*img){
 }
 
 uint32_t abootimg_get_kernel_offset(aboot_image*img){
-	return abootimg_get_page_size(img);
+	return img->is_vndrboot?0:abootimg_get_page_size(img);
 }
 
 uint32_t abootimg_get_ramdisk_offset(aboot_image*img){
-	return KERN_OFF(img)+get_aligned_size(img,KERN_SIZ(img));
+	if(img->is_vndrboot)return abootimg_get_page_size(img);
+	else return KERN_OFF(img)+get_aligned_size(img,KERN_SIZ(img));
 }
 
 uint32_t abootimg_get_second_offset(aboot_image*img){
-	return RAMDISK_OFF(img)+get_aligned_size(img,RAMDISK_SIZ(img));
+	return img->is_vndrboot?0:RAMDISK_OFF(img)+get_aligned_size(img,RAMDISK_SIZ(img));
 }
 
 uint32_t abootimg_get_recovery_dtbo_offset(aboot_image*img){
-	return SEC_OFF(img)+get_aligned_size(img,SEC_SIZ(img));
+	return img->is_vndrboot?0:SEC_OFF(img)+get_aligned_size(img,SEC_SIZ(img));
 }
 
 uint32_t abootimg_get_dtb_offset(aboot_image*img){
-	return REC_DTBO_OFF(img)+get_aligned_size(img,REC_DTBO_SIZ(img));
+	if(img->is_vndrboot)return RAMDISK_OFF(img)+get_aligned_size(img,RAMDISK_SIZ(img));
+	else return REC_DTBO_OFF(img)+get_aligned_size(img,REC_DTBO_SIZ(img));
 }
 
 uint32_t abootimg_get_image_size(aboot_image*img){
-	if(img->header_version>=ABOOT_HEADER_V3)
-		return RAMDISK_OFF(img)+get_aligned_size(img,RAMDISK_SIZ(img));
+	if(img->header_version>=ABOOT_HEADER_V3){
+		if(img->is_vndrboot)return DTB_OFF(img)+get_aligned_size(img,DTB_SIZ(img));
+		else return RAMDISK_OFF(img)+get_aligned_size(img,RAMDISK_SIZ(img));
+	}
 	else if(img->header_version==ABOOT_HEADER_V2)
 		return DTB_OFF(img)+get_aligned_size(img,DTB_SIZ(img));
 	else if(img->header_version==ABOOT_HEADER_V1)
@@ -292,7 +305,9 @@ aboot_image*abootimg_load_from_memory(void*file,size_t len){
 	if(!abootimg_parse_header_version(img,file))goto fail;
 	if(!abootimg_allocate_header(img))goto fail;
 	switch(img->header_version){
-		case ABOOT_HEADER_V3:memcpy(&img->header,file,sizeof(aboot_header_v3));break;
+		case ABOOT_HEADER_V3:
+			memcpy(&img->header,file,img->is_vndrboot?sizeof(vendor_boot_header_v3):sizeof(aboot_header_v3));
+			break;
 		case ABOOT_HEADER_V2:memcpy(&img->header,file,sizeof(aboot_header_v2));break;
 		case ABOOT_HEADER_V1:memcpy(&img->header,file,sizeof(aboot_header_v1));break;
 		case ABOOT_HEADER_V0:
@@ -888,14 +903,18 @@ bool abootimg_save_to_file(aboot_image*img,int cfd,const char*file){
 		img->header.v1.tag##_size=len;\
 		return true;\
 	}
-#define ABOOTIMG_SET_V2_ONLY(tag)\
+#define ABOOTIMG_SET_V2_VNDRV3(tag)\
 	bool abootimg_set_##tag(aboot_image*img,void*tag,uint32_t len){\
 		if(!img||!tag||len<=0)return false;\
 		if(img->tag)free(img->tag);\
-		img->tag=NULL,img->header.v2.tag##_size=0;\
+		img->tag=NULL;\
+		if(img->header_version==ABOOT_HEADER_V2)img->header.v2.tag##_size=0;\
+		else if(img->is_vndrboot)img->header.vndr_v3.tag##_size=0;\
+		else return false;\
 		if(!(img->tag=malloc(len)))return false;\
 		memcpy(img->tag,tag,len);\
-		img->header.v2.tag##_size=len;\
+		if(img->header_version==ABOOT_HEADER_V2)img->header.v2.tag##_size=len;\
+		else if(img->is_vndrboot)img->header.vndr_v3.tag##_size=len;\
 		return true;\
 	}
 #define ABOOTIMG_SET_V3(tag)\
@@ -965,7 +984,23 @@ bool abootimg_save_to_file(aboot_image*img,int cfd,const char*file){
 	}
 #define ABOOTIMG_SET_VAR_V2_ONLY(key,type)\
 	void abootimg_set_##key(aboot_image*img,type key){\
-		if(img&&img->header_version==ABOOT_HEADER_V2){img->header.v2.key=key;}\
+		if(img&&img->header_version==ABOOT_HEADER_V2)img->header.v2.key=key;\
+	}
+
+#define ABOOTIMG_GET_VAR_V2_VNDRV3(type,key,def)\
+	type abootimg_get_##key(aboot_image*img){\
+		if(img){\
+			if(img->header_version==ABOOT_HEADER_V2)return img->header.v2.key;\
+			else if(img->is_vndrboot)return img->header.vndr_v3.key;\
+		}\
+		return def;\
+	}
+#define ABOOTIMG_SET_VAR_V2_VNDRV3(key,type)\
+	void abootimg_set_##key(aboot_image*img,type key){\
+		if(img){\
+			if(img->header_version==ABOOT_HEADER_V2)img->header.v2.key=key;\
+			else if(img->is_vndrboot)img->header.vndr_v3.key=key;\
+		}\
 	}
 
 #define ABOOTIMG_GET_VAR_V3(type,key,def)\
@@ -1005,8 +1040,9 @@ bool abootimg_save_to_file(aboot_image*img,int cfd,const char*file){
 #define ABOOTIMG_CONT_V1(tag) ABOOTIMG_GET(tag) ABOOTIMG_GET_END(tag) ABOOTIMG_SET_V1(tag) ABOOTIMG_COPY_HAVE(tag)\
 	ABOOTIMG_LOAD_SAVE(tag) ABOOTIMG_FSH_LOAD_SAVE(tag)
 
+#define ABOOTIMG_GETSET_VAR_V2_VNDRV3(key,type) ABOOTIMG_GET_VAR_V2_VNDRV3(type,key,0) ABOOTIMG_SET_VAR_V2_VNDRV3(key,type)
 #define ABOOTIMG_GETSET_VAR_V2_ONLY(key,type) ABOOTIMG_GET_VAR_V2_ONLY(type,key,0) ABOOTIMG_SET_VAR_V2_ONLY(key,type)
-#define ABOOTIMG_CONT_V2_ONLY(tag) ABOOTIMG_GET(tag) ABOOTIMG_GET_END(tag) ABOOTIMG_SET_V2_ONLY(tag) ABOOTIMG_COPY_HAVE(tag)\
+#define ABOOTIMG_CONT_V2_VNDRV3(tag) ABOOTIMG_GET(tag) ABOOTIMG_GET_END(tag) ABOOTIMG_SET_V2_VNDRV3(tag) ABOOTIMG_COPY_HAVE(tag)\
 	ABOOTIMG_LOAD_SAVE(tag) ABOOTIMG_FSH_LOAD_SAVE(tag)
 
 #define ABOOTIMG_GETSET_VAR_V3(key) ABOOTIMG_GET_VAR_V3(uint32_t,key,0) ABOOTIMG_SET_VAR_V3(key)
@@ -1018,7 +1054,7 @@ ABOOTIMG_CONT_V3(kernel)
 ABOOTIMG_CONT_V3(ramdisk)
 ABOOTIMG_CONT(second)
 ABOOTIMG_CONT_V1(recovery_dtbo)
-ABOOTIMG_CONT_V2_ONLY(dtb)
+ABOOTIMG_CONT_V2_VNDRV3(dtb)
 ABOOTIMG_GETSET_STRING(name)
 ABOOTIMG_GETSET_STRING_V3(cmdline)
 ABOOTIMG_GETSET_VAR_V3(kernel_size)
@@ -1030,13 +1066,15 @@ ABOOTIMG_GETSET_VAR(second_address)
 ABOOTIMG_GETSET_VAR(tags_address)
 ABOOTIMG_GETSET_VAR_V1(recovery_dtbo_size,uint32_t)
 ABOOTIMG_GETSET_VAR_V1(recovery_dtbo_address,uint64_t)
-ABOOTIMG_GETSET_VAR_V2_ONLY(dtb_size,uint32_t)
+ABOOTIMG_GETSET_VAR_V2_VNDRV3(dtb_size,uint32_t)
 ABOOTIMG_GETSET_VAR_V2_ONLY(dtb_address,uint64_t)
 
 uint32_t abootimg_get_page_size(aboot_image*img){
 	if(img){
-		if(img->header_version>=ABOOT_HEADER_V3)
-			return 4096;
+		if(img->header_version>=ABOOT_HEADER_V3){
+			if(img->is_vndrboot)return img->header.vndr_v3.page_size;
+			else return 4096;
+		}
 		else return img->header.v0.page_size;
 	}
 	return 0;
@@ -1045,5 +1083,6 @@ void abootimg_set_page_size(aboot_image*img,uint32_t page_size){
 	if(img){
 		if(img->header_version<ABOOT_HEADER_V3)
 			img->header.v0.page_size=page_size;
+		else if(img->is_vndrboot) img->header.vndr_v3.page_size=page_size;
 	}
 }

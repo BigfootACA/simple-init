@@ -45,6 +45,9 @@ extern uint32_t abootimg_get_image_size(aboot_image*img);
 // src/lib/aboot.c: get header version from image struct
 extern enum aboot_header_version abootimg_get_header_version(aboot_image*img);
 
+// src/lib/aboot.c: is the image a vendor boot or not
+extern bool abootimg_is_vendor_boot(aboot_image*img);
+
 // src/lib/aboot.c: allocate an empty image
 extern aboot_image*abootimg_new_image(enum aboot_header_version header_version);
 

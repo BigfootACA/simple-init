@@ -150,6 +150,7 @@ linux_config*linux_config_new_from_confd(const char*key){
 	if(!cfg)return NULL;
 	confd_get_sstring_base(key,"cmdline",NULL,cfg->cmdline,sizeof(cfg->cmdline));
 	get_from_confd(&cfg->abootimg,key,"abootimg");
+	get_from_confd(&cfg->vndrboot,key,"vendor_boot");
 	get_from_confd(&cfg->kernel,key,"kernel");
 	get_multi_from_confd(&cfg->initrd,key,"initrd");
 	get_multi_from_confd(&cfg->dtbo,key,"dtbo");

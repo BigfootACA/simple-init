@@ -67,7 +67,7 @@ typedef struct linux_load_from{
 	};
 }linux_load_from;
 
-// linux file source load from
+// qualcomm chip info
 typedef struct qcom_chip_info{
 	uint32_t soc_id;
 	uint32_t soc_rev;
@@ -114,6 +114,7 @@ typedef struct linux_config{
 	linux_load_from kernel;
 	linux_load_from dtb;
 	linux_load_from abootimg;
+	linux_load_from vndrboot;
 	list*initrd;
 	list*dtbo;
 	linux_mem_region memory[8];

@@ -460,7 +460,7 @@ aboot_image*abootimg_load_from_blockio(EFI_BLOCK_IO_PROTOCOL*bio){
 		cont=NULL;
 		if(!(cont=AllocateZeroPool(size)))goto fail;
 		if(EFI_ERROR(bio->ReadBlocks(bio,mid,0,size,cont)))goto fail;
-		CopyMem(img->header.v3,cont,sizeof(aboot_header_v3));
+		CopyMem(&img->header.v3,cont,sizeof(aboot_header_v3));
 	}else{
 		CopyMem(&img->header.v0,cont,sizeof(aboot_header));
 	}

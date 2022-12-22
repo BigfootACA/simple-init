@@ -42,94 +42,151 @@ static void load_kernel(linux_boot*lb,aboot_image*img){
 	}
 }
 
-static void load_ramdisk(linux_boot*lb,aboot_image*img){
+static void load_ramdisk(linux_boot*lb,aboot_image*img,aboot_image*vndr){
 	if(!abootimg_have_ramdisk(img))return;
-	if(lb->config->skip_abootimg_initrd)
+	if(lb->config->skip_abootimg_initrd){
 		tlog_debug("skip ramdisk from abootimg");
-	linux_file_info*f=malloc(sizeof(linux_file_info));
-	int cur=list_count(lb->initrd_buf);
-	if(cur<0)cur=0;
-	if(!f){
-		tlog_warn("failed to allocate memory for initrd file info");
 		return;
 	}
-	ZeroMem(f,sizeof(linux_file_info));
-	f->size=abootimg_get_ramdisk_size(img);
-	if(linux_file_allocate(f,f->size)){
-		abootimg_copy_ramdisk(img,f->address,f->mem_size);
+	linux_file_info*ramdisk=NULL,*vndr_ramdisk=NULL;
+	if(abootimg_get_header_version(img)>=ABOOT_HEADER_V3){
+		vndr_ramdisk=malloc(sizeof(linux_file_info));
+		if(!vndr_ramdisk){
+			tlog_warn("failed to allocate memory for vendor initrd file info");
+			return;
+		}
+	}
+	int cur=list_count(lb->initrd_buf);
+	if(cur<0)cur=0;
+	if(vndr_ramdisk){
+		ZeroMem(vndr_ramdisk,sizeof(linux_file_info));
+		vndr_ramdisk->size=abootimg_get_ramdisk_size(vndr);
+		if(linux_file_allocate(ramdisk,ramdisk->size)){
+			abootimg_copy_ramdisk(vndr,vndr_ramdisk->address,vndr_ramdisk->mem_size);
+			tlog_info("loaded initramfs #%d image from vendor_boot",cur);
+			linux_file_dump("vendor_boot initramfs",vndr_ramdisk);
+			list_obj_add_new(&lb->initrd_buf,vndr_ramdisk);
+			cur++;
+		}else{
+			tlog_warn("allocate pages for initramfs failed");
+			free(vndr_ramdisk);
+			return;
+		}
+	}
+	ramdisk=malloc(sizeof(linux_file_info));
+	if(!ramdisk){
+		tlog_warn("failed to allocate memory for initrd file info");
+		if(vndr_ramdisk)free(vndr_ramdisk);
+		return;
+	}
+	ZeroMem(ramdisk,sizeof(linux_file_info));
+	ramdisk->size=abootimg_get_ramdisk_size(img);
+	if(linux_file_allocate(ramdisk,ramdisk->size)){
+		abootimg_copy_ramdisk(img,ramdisk->address,ramdisk->mem_size);
 		tlog_info("loaded initramfs #%d image from abootimg",cur);
-		linux_file_dump("abootimg initramfs",f);
-		list_obj_add_new(&lb->initrd_buf,f);
+		linux_file_dump("abootimg initramfs",ramdisk);
+		list_obj_add_new(&lb->initrd_buf,ramdisk);
 	}else{
 		tlog_warn("allocate pages for initramfs failed");
-		free(f);
+		free(ramdisk);
 	}
 }
 
-int linux_boot_load_abootimg(linux_boot*lb,aboot_image*img){
-	const char*name,*cmdline;
+int linux_boot_load_abootimg(linux_boot*lb,aboot_image*img,aboot_image*vndr){
+	const char*name,*cmdline,*vndr_cmdline=NULL;
 
 	if(abootimg_is_invalid(img))
 		return trlog_warn(-1,"invalid android boot image");
+	
+	if(abootimg_get_header_version(img)>=ABOOT_HEADER_V3){
+		if(!vndr||(vndr&&!abootimg_is_vendor_boot(vndr)))
+			return trlog_warn(-1,"invalid vendor_boot image");
+		name=abootimg_get_name(vndr);
+		vndr_cmdline=abootimg_get_cmdline(vndr);
+	}else{
+		name=abootimg_get_name(img);
+	}
 
-	name=abootimg_get_name(img);
 	cmdline=abootimg_get_cmdline(img);
 	if(name&&*name)tlog_info("image name '%s'",name);
 
 	load_kernel(lb,img);
-	load_ramdisk(lb,img);
+	load_ramdisk(lb,img,vndr);
 
 	if(abootimg_have_second(img))
 		tlog_warn("second stage bootloader is not supported");
 
-	if(!lb->config->skip_abootimg_cmdline)linux_boot_append_cmdline(lb,cmdline);
+	if(!lb->config->skip_abootimg_cmdline){
+		linux_boot_append_cmdline(lb,cmdline);
+		if(!vndr_cmdline)linux_boot_append_cmdline(lb,vndr_cmdline);
+	}
 	else tlog_debug("skip cmdline from abootimg");
 
 	return 0;
 }
 
-int linux_boot_load_abootimg_fsh(linux_boot*lb,fsh*f){
-	int ret=-1;
-	char buff[512];
+aboot_image*linux_boot_load_abootimg_fsh(fsh*f){
 	aboot_image*img=NULL;
+	char buff[512];
 	fs_get_path(f,buff,sizeof(buff));
 	tlog_debug(
 		"parse android boot image from %s ...",
 		buff[0]?buff:"(unknown)"
 	);
 	if(!(img=abootimg_load_from_fsh(f)))
-		return trlog_warn(-1,"parse android boot image failed");
-	ret=linux_boot_load_abootimg(lb,img);
-	abootimg_free(img);
-	return ret;
+		tlog_warn("parse android boot image failed");
+	return img;
 }
 
-int linux_boot_load_abootimg_path(linux_boot*lb,char*path){
-	int r=-1;
+aboot_image*linux_boot_load_abootimg_path(char*path){
+	aboot_image*img=NULL;
 	fsh*f=NULL;
 	if(fs_open(NULL,&f,path,FILE_FLAG_READ)==0){
-		r=linux_boot_load_abootimg_fsh(lb,f);
+		img=linux_boot_load_abootimg_fsh(f);
 		fs_close(&f);
 	}
-	return r;
+	return img;
 }
 
 int linux_boot_load_abootimg_config(linux_boot*lb){
-	aboot_image*img;
+	aboot_image*img=NULL,*vndr=NULL;
+	int ret=0;
 	if(!lb||!lb->config)return -1;
 	linux_load_from*from=&lb->config->abootimg;
+	linux_load_from*vndrboot=&lb->config->vndrboot;
 	if(!from->enabled)return 0;
 	switch(from->type){
-		case FROM_LOCATE:return linux_boot_load_abootimg_path(lb,from->locate);
-		case FROM_FILE_SYSTEM_HANDLE:return linux_boot_load_abootimg_fsh(lb,from->fsh);
+		case FROM_LOCATE:img=linux_boot_load_abootimg_path(from->locate);break;
+		case FROM_FILE_SYSTEM_HANDLE:img=linux_boot_load_abootimg_fsh(from->fsh);break;
 		case FROM_POINTER:img=abootimg_load_from_memory(from->pointer,from->size);break;
 		case FROM_BLOCKIO_PROTOCOL:img=abootimg_load_from_blockio(from->blk_proto);break;
 		case FROM_FILE_PROTOCOL:img=abootimg_load_from_fp(from->file_proto);break;
 		default:return trlog_warn(-1,"unknown load from type");
 	}
 	if(!img)return trlog_warn(-1,"parse android boot image failed");
-	int ret=linux_boot_load_abootimg(lb,img);
-	abootimg_free(img);
+	if(abootimg_get_header_version(img)>=ABOOT_HEADER_V3){
+		if(!vndrboot->enabled){
+			abootimg_free(img);
+			ret=trlog_warn(-1,"image has header version above 3 with no vendor_boot specified");
+			goto exit;
+		}
+		switch(from->type){
+			case FROM_LOCATE:vndr=linux_boot_load_abootimg_path(vndrboot->locate);break;
+			case FROM_FILE_SYSTEM_HANDLE:vndr=linux_boot_load_abootimg_fsh(vndrboot->fsh);break;
+			case FROM_POINTER:vndr=abootimg_load_from_memory(vndrboot->pointer,vndrboot->size);break;
+			case FROM_BLOCKIO_PROTOCOL:vndr=abootimg_load_from_blockio(vndrboot->blk_proto);break;
+			case FROM_FILE_PROTOCOL:vndr=abootimg_load_from_fp(vndrboot->file_proto);break;
+			default:return trlog_warn(-1,"unknown load from type for vendor_boot");
+		}
+		if(!vndr){
+			ret=trlog_warn(-1,"parse vendor boot image failed");
+			goto exit;
+		}
+	}
+	ret=linux_boot_load_abootimg(lb,img,vndr);
+exit:
+	if(img)abootimg_free(img);
+	if(vndr)abootimg_free(vndr);
 	return ret;
 }
 
@@ -181,7 +238,7 @@ int linux_boot_load_abootimg_kfdt(linux_boot*lb){
 		initrd=bo,size=len;
 	}
 	if((img=abootimg_load_from_memory(initrd,size))){
-		ret=linux_boot_load_abootimg(lb,img);
+		ret=linux_boot_load_abootimg(lb,img,NULL);
 		abootimg_free(img);
 	}else ret=trlog_error(-1,"parse abootimg failed");
 	if(bo)FreePool(bo);

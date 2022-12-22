@@ -42,6 +42,22 @@ static void load_kernel(linux_boot*lb,aboot_image*img){
 	}
 }
 
+static void load_dtb(linux_boot*lb,aboot_image*img,aboot_image*vndr){
+	if(!img)return;
+	if(abootimg_get_header_version(img)<ABOOT_HEADER_V2||(abootimg_get_header_version(img)>=3&&!vndr))return;
+	linux_file_clean(&lb->dtb);
+	aboot_image*ptr=(vndr==NULL)?img:vndr;
+	lb->dtb.size=abootimg_get_dtb_size(ptr);
+	if(linux_file_allocate(&lb->dtb,lb->dtb.size)){
+		abootimg_copy_dtb(ptr,lb->dtb.address,lb->dtb.mem_size);
+		tlog_info("loaded dtb image from %s",vndr==NULL?"abootimg":"vendor_boot");
+		linux_file_dump("abootimg/vendor_boot dtb",&lb->dtb);
+	}else{
+		ZeroMem(&lb->dtb,sizeof(linux_file_info));
+		tlog_warn("allocate pages for dtb failed");
+	}
+}
+
 static void load_ramdisk(linux_boot*lb,aboot_image*img,aboot_image*vndr){
 	if(!abootimg_have_ramdisk(img))return;
 	if(lb->config->skip_abootimg_initrd){
@@ -112,6 +128,7 @@ int linux_boot_load_abootimg(linux_boot*lb,aboot_image*img,aboot_image*vndr){
 
 	load_kernel(lb,img);
 	load_ramdisk(lb,img,vndr);
+	load_dtb(lb,img,vndr);
 
 	if(abootimg_have_second(img))
 		tlog_warn("second stage bootloader is not supported");

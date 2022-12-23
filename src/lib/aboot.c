@@ -1046,7 +1046,6 @@ bool abootimg_save_to_file(aboot_image*img,int cfd,const char*file){
 	ABOOTIMG_LOAD_SAVE(tag) ABOOTIMG_FSH_LOAD_SAVE(tag)
 
 #define ABOOTIMG_GETSET_VAR_V3(key) ABOOTIMG_GET_VAR_V3(uint32_t,key,0) ABOOTIMG_SET_VAR_V3(key)
-#define ABOOTIMG_GETSET_STRING_V3(key) ABOOTIMG_GET_VAR_V3(const char*,key,NULL) ABOOTIMG_SET_STRING_V3(key)
 #define ABOOTIMG_CONT_V3(tag) ABOOTIMG_GET(tag) ABOOTIMG_GET_END(tag) ABOOTIMG_SET_V3(tag) ABOOTIMG_COPY_HAVE(tag)\
 	ABOOTIMG_LOAD_SAVE(tag) ABOOTIMG_FSH_LOAD_SAVE(tag)
 
@@ -1055,8 +1054,6 @@ ABOOTIMG_CONT_V3(ramdisk)
 ABOOTIMG_CONT(second)
 ABOOTIMG_CONT_V1(recovery_dtbo)
 ABOOTIMG_CONT_V2_VNDRV3(dtb)
-ABOOTIMG_GETSET_STRING(name)
-ABOOTIMG_GETSET_STRING_V3(cmdline)
 ABOOTIMG_GETSET_VAR_V3(kernel_size)
 ABOOTIMG_GETSET_VAR_V3(ramdisk_size)
 ABOOTIMG_GETSET_VAR(second_size)
@@ -1085,4 +1082,49 @@ void abootimg_set_page_size(aboot_image*img,uint32_t page_size){
 			img->header.v0.page_size=page_size;
 		else if(img->is_vndrboot) img->header.vndr_v3.page_size=page_size;
 	}
+}
+
+void abootimg_set_cmdline(aboot_image*img,const char*cmdline){
+	if(!img)return;
+	if(img->header_version>=ABOOT_HEADER_V3){
+		if(img->is_vndrboot){
+			memset(img->header.vndr_v3.cmdline,0,sizeof(img->header.vndr_v3.cmdline));
+			if(cmdline)strncpy((char*)img->header.vndr_v3.cmdline,cmdline,sizeof(img->header.vndr_v3.cmdline)-1);
+		}else{
+			memset(img->header.v3.cmdline,0,sizeof(img->header.v3.cmdline));
+			if(cmdline)strncpy((char*)img->header.v3.cmdline,cmdline,sizeof(img->header.v3.cmdline)-1);
+		}
+	}else{
+		memset(img->header.v0.cmdline,0,sizeof(img->header.v0.cmdline));
+		if(cmdline)strncpy((char*)img->header.v0.cmdline,cmdline,sizeof(img->header.v0.cmdline)-1);
+	}
+}
+
+const char*abootimg_get_cmdline(aboot_image*img){
+	if(img){
+		if(img->header_version>=ABOOT_HEADER_V3)
+			return img->is_vndrboot?(const char*)(img->header.vndr_v3.cmdline):(const char*)(img->header.v3.cmdline);
+		else return img->header.v0.cmdline;
+	}
+	return NULL;
+}
+
+void abootimg_set_name(aboot_image*img,const char*name){
+	if(!img)return;
+	if(img->header_version>=ABOOT_HEADER_V3&&img->is_vndrboot){
+		memset(img->header.vndr_v3.name,0,sizeof(img->header.vndr_v3.name));
+		if(name)strncpy((char*)img->header.vndr_v3.name,name,sizeof(img->header.vndr_v3.name)-1);
+	}else{
+		memset(img->header.v0.name,0,sizeof(img->header.v0.name));
+		if(name)strncpy((char*)img->header.v0.name,name,sizeof(img->header.v0.name)-1);
+	}
+}
+
+const char*abootimg_get_name(aboot_image*img){
+	if(img){
+		if(img->header_version>=ABOOT_HEADER_V3)
+			return img->is_vndrboot?(const char*)(img->header.vndr_v3.name):NULL;
+		else return img->header.v0.name;
+	}
+	return NULL;
 }

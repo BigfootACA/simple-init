@@ -303,7 +303,7 @@ static int fsdrv_open(
 							if(EFI_ERROR(st)){
 								d.file.file->Delete(d.file.file);
 								d.file.file=NULL,mode|=EFI_FILE_MODE_CREATE;
-								st=d.file.root->Open(d.file.root,&d.file.file,buf,mode,attr);
+								st=d.file.root->Open(d.file.root,&d.file.file,d.file.path,mode,attr);
 								if(EFI_ERROR(st)||!d.file.file)DONE(efi_status_to_errno(st));
 							}
 						}

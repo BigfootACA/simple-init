@@ -77,7 +77,7 @@ static void load_ramdisk(linux_boot*lb,aboot_image*img,aboot_image*vndr){
 	if(vndr_ramdisk){
 		ZeroMem(vndr_ramdisk,sizeof(linux_file_info));
 		vndr_ramdisk->size=abootimg_get_ramdisk_size(vndr);
-		if(linux_file_allocate(ramdisk,ramdisk->size)){
+		if(linux_file_allocate(vndr_ramdisk,vndr_ramdisk->size)){
 			abootimg_copy_ramdisk(vndr,vndr_ramdisk->address,vndr_ramdisk->mem_size);
 			tlog_info("loaded initramfs #%d image from vendor_boot",cur);
 			linux_file_dump("vendor_boot initramfs",vndr_ramdisk);

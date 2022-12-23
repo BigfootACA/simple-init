@@ -111,7 +111,7 @@ const char*uefi_memory_type_to_str(EFI_MEMORY_TYPE type){
 		case EfiMemoryMappedIOPortSpace:return "memory-mapped-io-port-space";
 		case EfiPalCode:return "pal-code";
 		case EfiPersistentMemory:return "persistent-memory";
-		default:return NULL;
+		default:return "unknown";
 	}
 }
 
@@ -121,6 +121,6 @@ const char*uefi_load_option_type_to_str(EFI_BOOT_MANAGER_LOAD_OPTION_TYPE type){
 		case LoadOptionTypeDriver:return "driver";
 		case LoadOptionTypeSysPrep:return "sysprep";
 		case LoadOptionTypePlatformRecovery:return "platform-recovery";
-		default:return NULL;
+		default:return "unknown";
 	}
 }

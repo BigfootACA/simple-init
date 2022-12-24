@@ -1,4 +1,5 @@
 add_library(init_lib STATIC
+	libmo/libmo.c
 	array.c
 	credential.c
 	exit.c

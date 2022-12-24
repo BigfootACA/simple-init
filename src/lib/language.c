@@ -25,6 +25,7 @@
 #include"defines.h"
 #include"version.h"
 #include"pathnames.h"
+#include"libmo.h"
 #include"language.h"
 #define DEFAULT_LOCALE _PATH_USR"/share/locale"
 
@@ -40,29 +41,7 @@ static char cur_lang[64]={0};
 static bool mmap_map=false;
 static void*locale_map=NULL;
 static size_t map_size=-1;
-
-// swapc and mo_lookup from musl libc
-static inline uint32_t swapc(uint32_t x,int c){return c?x>>24|(x>>8&0xff00)|(x<<8&0xff0000)|x<<24:x;}
-
-static char*mo_lookup(const void*p,size_t size,const char*s){
-	const uint32_t*mo=p;
-	int sw=*mo-0x950412de;
-	uint32_t b=0,n=swapc(mo[2],sw),o=swapc(mo[3],sw),t=swapc(mo[4],sw);
-	if(n>=size/4||o>=size-4*n||t>=size-4*n||((o|t)%4))return 0;
-	o/=4,t/=4;
-	for(;;){
-		uint32_t ol=swapc(mo[o+2*(b+n/2)],sw),os=swapc(mo[o+2*(b+n/2)+1],sw);
-		if(os>=size||ol>=size-os||((char*)p)[os+ol])return 0;
-		int sign=strcmp(s,(char*)p+os);
-		if(!sign){
-			uint32_t tl=swapc(mo[t+2*(b+n/2)],sw),ts=swapc(mo[t+2*(b+n/2)+1],sw);
-			if(ts>=size||tl>=size-ts||((char*)p)[ts+tl])return 0;
-			return(char*)p+ts;
-		}else if(n==1)return 0;
-		else if(sign<0)n/=2;
-		else b+=n/2,n-=n/2;
-	}
-}
+static struct libmo_context moctx;
 
 static int lang_open_locale(char*path){
 	int r=-1;
@@ -83,6 +62,10 @@ static int lang_open_locale(char*path){
 		locale_map=file->content;
 		map_size=file->length;
 		mmap_map=false;
+		r=libmo_load(&moctx, locale_map, map_size);
+		if(r)goto clean;
+		r=libmo_verify(&moctx);
+		if(r)goto clean;
 	#ifndef ENABLE_UEFI
 	}else if((fd=open(path,O_RDONLY))<0)goto clean;
 	else{
@@ -93,6 +76,10 @@ static int lang_open_locale(char*path){
 			goto clean;
 		}
 		mmap_map=true;
+		r=libmo_load(&moctx, locale_map, map_size);
+		if(r)goto clean;
+		r=libmo_verify(&moctx);
+		if(r)goto clean;
 	#endif
 	}
 	if(locale_map)r=0;
@@ -139,8 +126,7 @@ void lang_load_locale(const char*dir,const char*lang,const char*domain){
 
 char*lang_gettext(const char*msgid){
 	if(!locale_map||!msgid)return (char*)msgid;
-	char*ret=mo_lookup(locale_map,map_size,msgid);
-	return ret?ret:(char*)msgid;
+	return (char*)libmo_gettext(&moctx, msgid);
 }
 
 void lang_init_locale(){

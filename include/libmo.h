@@ -97,8 +97,8 @@ struct libmo_context {
 #define LIBMO_MAGIC_SWAB 0xde120495
 #define PJWHASH_BITS 32
 
-#define LIBMO_MAJOR(revision) ((revision) >> 8)
-#define LIBMO_MINOR(revision) ((revision) & 0xff)
+#define LIBMO_MAJOR(revision) ((revision) >> 16)
+#define LIBMO_MINOR(revision) ((revision) & 0xffff)
 
 #define LIBMO_ORIG_OFFSET(ctx, index) ((ctx)->orig_offset + (sizeof(struct libmo_sdesc) * (index)))
 #define LIBMO_TRAN_OFFSET(ctx, index) ((ctx)->tran_offset + (sizeof(struct libmo_sdesc) * (index)))

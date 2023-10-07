@@ -11,6 +11,7 @@
 #include<stdio.h>
 #include<dirent.h>
 #include<unistd.h>
+#include<limits.h>
 #include<string.h>
 #include<stdarg.h>
 #include<stdlib.h>

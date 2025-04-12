@@ -1,4 +1,4 @@
 [submodule "libs/freetype"]
 	path = libs/freetype
-	url = https://gitlab.freedesktop.org/freetype/freetype.git
+	url = https://github.com/freetype/freetype.git
 	ignore = dirty
